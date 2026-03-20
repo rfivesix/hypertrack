@@ -1,6 +1,6 @@
-# Statistics Module — Source of Truth (v0.7 Pre-Refactor)
+# Statistics Module — Source of Truth (v0.7 Pre-Refactor, Corrected Current-State Baseline)
 
-This document provides a complete technical reference for the Statistics module as it exists before the v0.7 overhaul. It covers every screen, chart, data query, and utility involved in analytics. Use it as a stable baseline when planning and executing the refactor.
+This document is the implementation-grounded technical reference for the Statistics module as currently implemented. It reflects actual behavior in code and is intended as the authoritative baseline before v0.7 refactor planning.
 
 ---
 
@@ -16,23 +16,23 @@ This document provides a complete technical reference for the Statistics module 
   - [Recovery Tracker](#5-recovery-tracker)
 - [Function Mapping Table](#function-mapping-table)
 - [Shared Widgets & Utilities](#shared-widgets--utilities)
-- [Technical Debt & Observations](#technical-debt--observations)
+- [Technical Debt & Observations (Current State)](#technical-debt--observations-current-state)
 
 ---
 
 ## Functional Overview
 
-The Statistics module is a read-only analytics layer sitting above the workout, nutrition, and body-measurement data. It has no write operations of its own — every screen queries the `WorkoutDatabaseHelper` or `DatabaseHelper` (nutrition/body), transforms the results in-memory, and renders charts or summary cards.
+The Statistics module is a read-only analytics layer over workout, nutrition, and body-measurement data. It does not create/update/delete analytics records; screens query helpers/utilities, transform data in memory, and render cards/charts.
 
 ### What it does
 
 | Category | Description |
 | :--- | :--- |
-| **Performance tracking** | Surfaces personal records (PRs) per exercise, by rep bracket, and as trending e1RM improvements |
-| **Training consistency** | Visualises weekly volume, duration, and frequency; provides a heatmap calendar and streak/rhythm KPIs |
-| **Muscle group analysis** | Aggregates equivalent sets per muscle using primary (1.0×) and secondary (0.5×) weighting; shows distribution, frequency, and weekly breakdown |
-| **Recovery estimation** | Infers readiness per muscle from time-since-last-significant-load and RPE/RIR fatigue context |
-| **Body & nutrition trends** | Plots smoothed weight and calorie series side-by-side; classifies the macro-trend via a rule-based insight engine |
+| **Performance tracking** | Surfaces PRs per exercise, PRs by rep bracket, and e1RM-based notable improvement trends |
+| **Training consistency** | Shows weekly volume/duration/frequency, calendar workout density, and streak/rhythm/rolling consistency KPIs |
+| **Muscle group analysis** | Aggregates equivalent sets by muscle (primary 1.0, secondary 0.5), plus distribution/frequency/weekly breakdown |
+| **Recovery estimation** | Derives per-muscle recovery state from time-since-significant-load and fatigue context (RIR/RPE) |
+| **Body & nutrition trends** | Compares smoothed weight and calorie trends and classifies macro-pattern via rule-based insight logic |
 
 ### High-level data flow
 
@@ -42,15 +42,15 @@ SQLite (Drift)
   └── WorkoutDatabaseHelper  ──►  consistency_tracker_screen
   └── WorkoutDatabaseHelper  ──►  muscle_group_analytics_screen
   └── WorkoutDatabaseHelper  ──►  recovery_tracker_screen
-  └── DatabaseHelper         ──►  body_nutrition_correlation_screen
+  └── DatabaseHelper         ──►  body_nutrition_correlation_screen (via utility)
   └── MuscleAnalyticsUtils   ──►  muscle_group_analytics_screen (post-processing)
-  └── BodyNutritionAnalyticsUtils ──► body_nutrition_correlation_screen (post-processing)
+  └── BodyNutritionAnalyticsUtils ──► body_nutrition_correlation_screen + statistics_hub_screen
                                         │
                                  statistics_hub_screen
-                                 (inline summaries of all five)
+                                 (inline summaries + navigation)
 ```
 
-All screens are **StatefulWidget** classes that load data once in `initState` via `Future.wait()` for parallelism. State management is purely local (`setState`). There is no shared analytics provider or cache layer.
+All statistics screens are **StatefulWidget** classes with local `setState` state management. Data loads are initiated in `initState`, but not all screens use `Future.wait`; some run a single async query/utility call.
 
 ---
 
@@ -58,49 +58,70 @@ All screens are **StatefulWidget** classes that load data once in `initState` vi
 
 **File:** `lib/screens/statistics_hub_screen.dart`
 
-The hub is a single scrollable screen that renders abbreviated summaries of all five sub-modules and provides navigation buttons to each full screen. It owns its own full data-load (it does not share data with child screens).
+The hub is a scrollable summary screen that shows compact analytics sections and navigates into full drill-down screens. It performs its own independent load and does not share a cache/provider with child analytics screens.
 
 ### Time-range selector
 
-A row of five chips at the top governs every query on the page:
+Five chips are shown at the top and map to `_selectedDays`:
 
-| Index | Label | `daysBack` | `weeksBack` |
-| :---: | :---: | :---: | :---: |
-| 0 | 7 d | 7 | 1 |
-| 1 | 30 d | 30 | 4 |
-| 2 | 90 d | 90 | 13 |
-| 3 | 180 d | 180 | 26 |
-| 4 | All | 3,650 | 520 |
+| Index | Label | `_selectedDays` |
+| :---: | :---: | :---: |
+| 0 | 7 d | 7 |
+| 1 | 30 d | 30 |
+| 2 | 90 d | 90 |
+| 3 | 180 d | 180 |
+| 4 | All | 3,650 |
 
-> **Note:** The 3,650-day (10-year) window for "All" is a practical upper bound chosen so that the query remains bounded. It is not expected to return meaningful data for all users; it simply ensures no records are excluded for active users with multi-year histories. This large constant is a candidate for replacement with a true "no lower-date filter" SQL clause during the v0.7 refactor.
+Tapping a chip updates `_selectedTimeRangeIndex` and calls `_loadHubAnalytics()`.
 
-Tapping a chip calls `_loadData()`, which fires all queries in parallel.
+### Hub query behavior (actual)
+
+`_loadHubAnalytics()` executes the following in parallel via `Future.wait`:
+
+- `getRecentGlobalPRs(limit: 3)`
+- `getWeeklyVolumeData(weeksBack: 6)`
+- `getWorkoutsPerWeek(weeksBack: 6)`
+- `getWeeklyConsistencyMetrics(weeksBack: 6)`
+- `getMuscleGroupAnalytics(daysBack: _selectedDays, weeksBack: 8)`
+- `getTrainingStats()`
+- `getRecoveryAnalytics()`
+- `getNotablePrImprovements(daysWindow: _selectedDays > 120 ? 90 : _selectedDays, limit: 3)`
+- `BodyNutritionAnalyticsUtils.build(rangeIndex: _selectedTimeRangeIndex)`
+
+> Time-range chips do **not** govern every hub query equally; several hub queries are fixed-window or range-independent.
 
 ### Hub state variables
 
 ```dart
 int _selectedTimeRangeIndex = 1;
-List<Map<String, dynamic>> _recentPRs            = [];
-List<Map<String, dynamic>> _weeklyVolume          = [];
-List<Map<String, dynamic>> _workoutsPerWeek       = [];
+List<Map<String, dynamic>> _recentPRs = [];
+List<Map<String, dynamic>> _weeklyVolume = [];
+List<Map<String, dynamic>> _workoutsPerWeek = [];
 List<Map<String, dynamic>> _weeklyConsistencyMetrics = [];
-Map<String, dynamic>       _muscleAnalytics       = const {};
-List<Map<String, dynamic>> _notableImprovements   = [];
-Map<String, dynamic>       _trainingStats         = const {};
-Map<String, dynamic>       _recoveryAnalytics     = const {};
+Map<String, dynamic> _muscleAnalytics = const {};
+List<Map<String, dynamic>> _notableImprovements = [];
+Map<String, dynamic> _trainingStats = const {};
+Map<String, dynamic> _recoveryAnalytics = const {};
 BodyNutritionAnalyticsResult? _bodyNutrition;
-_HubConsistencyMetric      _hubConsistencyMetric  = _HubConsistencyMetric.volume;
+_HubConsistencyMetric _hubConsistencyMetric = _HubConsistencyMetric.volume;
 ```
 
 ### Hub sections (inline summaries)
 
 | Section | Mini-visualisation | Data source |
 | :--- | :--- | :--- |
-| **Consistency** | Mini bar chart (volume / duration / frequency toggle) | `getWeeklyConsistencyMetrics` |
-| **Muscle Volume** | Horizontal progress bars — top 5 muscles + share % | `getMuscleGroupAnalytics` |
-| **Performance** | Recent PRs list + weekly tonnage number | `getRecentGlobalPRs`, `getWeeklyVolumeData` |
-| **Recovery** | Radar chart + overall readiness label | `getRecoveryAnalytics` |
-| **Body / Nutrition** | Dual-line chart (normalised weight + calories) | `BodyNutritionAnalyticsUtils.build` |
+| **Consistency** | Mini bar chart (volume / duration / frequency toggle) | `getWeeklyConsistencyMetrics` (fallback to `getWorkoutsPerWeek`) |
+| **Muscle Volume** | Horizontal progress bars (top 5 by distribution share) | `getMuscleGroupAnalytics` |
+| **Performance** | Recent PR rows + weekly tonnage + top notable improvement | `getRecentGlobalPRs`, `getWeeklyVolumeData`, `getNotablePrImprovements` |
+| **Recovery** | Summary card (overall label + counts), **no hub radar** | `getRecoveryAnalytics` |
+| **Body / Nutrition** | Mini dual-line normalized chart + KPI row | `BodyNutritionAnalyticsUtils.build` + `normalizedSeries` |
+
+### Additional hub navigation cards
+
+In addition to the five analytics summaries, the hub also links to:
+
+- `ExerciseCatalogScreen`
+- `MeasurementsScreen`
 
 ---
 
@@ -112,33 +133,35 @@ _HubConsistencyMetric      _hubConsistencyMetric  = _HubConsistencyMetric.volume
 
 #### Purpose
 
-Tracks the heaviest and most-recent lifts, organises them by rep bracket, and highlights the exercises showing the strongest recent momentum.
+Tracks recent/all-time PRs, groups PR bests by rep range, and highlights strongest recent e1RM momentum.
 
 #### Sections & components
 
 | Section | UI widget | Data method | Description |
 | :--- | :--- | :--- | :--- |
-| Recent Records | Scrollable list of `ListTile` rows | `getRecentGlobalPRs(limit: 8)` | Latest PR (most recent by `start_time`) per exercise |
-| All-Time Records | Same list format | `getAllTimeGlobalPRs(limit: 10)` | Heaviest weight ever recorded per exercise |
-| PRs by Rep Range | 2-column `Wrap` of badge tiles | `getAllTimePRsByRepBracket()` | Best weight per rep bracket (1 RM / 2–3 / 4–6 / 7–10 / 11–15 / 15+) |
-| Notable Improvements | Chip-filtered list with green % badge | `getNotablePrImprovements(daysWindow, limit: 6)` | Exercises with the largest recent e1RM gain |
+| Recent Records | Ranked row list inside `SummaryCard` | `getRecentGlobalPRs(limit: 8)` | Most recently active max-weight PR per exercise |
+| All-Time Records | Ranked row list inside `SummaryCard` | `getAllTimeGlobalPRs(limit: 10)` | Highest weight PR per exercise |
+| PRs by Rep Range | 2-column `Wrap` badge tiles | `getAllTimePRsByRepBracket()` | Best set per bracket (1 / 2–3 / 4–6 / 7–10 / 11–15 / 15+) |
+| Notable Improvements | List with green percentage | `getNotablePrImprovements(daysWindow, limit: 6)` | Exercises with best recent-vs-prior e1RM improvements |
 
-#### Notable Improvements — time window chips
+#### Notable Improvements window
 
-Three chips (7 d / 30 d / 90 d) set `_daysWindow` and re-fetch data. The method compares the *recent window* (last N days) against the *prior window* (N–2N days ago) using the Epley e1RM formula:
+Three chips (7 d / 30 d / 90 d) set `_selectedWindowDays` and trigger reload.
+
+Formula used in helper:
 
 ```
 e1RM = weight × (1 + reps / 30)
 ```
 
-If `recentBestE1rm > previousBestE1rm`, the improvement percentage is computed and shown as a green badge.
+Rows are included when `recentBestE1rm > previousBestE1rm`.
 
 #### Weight formatting
 
 ```dart
 weight == weight.truncateToDouble()
-    ? weight.toInt().toString()   // "25"
-    : weight.toStringAsFixed(1);  // "25.5"
+    ? weight.toInt().toString()
+    : weight.toStringAsFixed(1);
 ```
 
 ---
@@ -149,41 +172,40 @@ weight == weight.truncateToDouble()
 
 #### Purpose
 
-Gives a longitudinal view of training regularity through KPI cards, a bar chart with a three-metric toggle, and a calendar heatmap.
+Shows training regularity via KPI cards, weekly metric bars, and calendar density.
 
-#### KPI cards (top row — 2 × 3 grid)
+#### KPI cards (2 × 3 grid)
 
 | Card | Calculation | Data source |
 | :--- | :--- | :--- |
-| Workouts This Week | Count from Monday of current week | `getTrainingStats()` → `thisWeekCount` |
-| Training Days / Week (last 4 wks) | Unique calendar days with ≥1 workout ÷ 4 | `getWeeklyConsistencyMetrics` |
-| Avg Per Week | Workouts in last 28 d ÷ 4 | `getTrainingStats()` → `avgPerWeek` |
-| Current Streak | Consecutive weeks backwards from now with ≥1 workout | `getTrainingStats()` → `streakWeeks` |
-| Rhythm | Recent 4-wk avg minus prior 4-wk avg of workout counts | Derived from `getWeeklyConsistencyMetrics` |
-| Rolling Consistency | % of last 8 weeks with ≥2 workouts | Derived from `getWeeklyConsistencyMetrics` |
+| Workouts This Week | Count since current week Monday | `getTrainingStats()` → `thisWeekCount` |
+| Training Days / Week (last 4 wks) | Unique workout days in last 28 days ÷ 4 | Derived from `_workoutDayCounts` (`getWorkoutDayCounts`) |
+| Avg Per Week | Workouts in last 28 days ÷ 4 | `getTrainingStats()` → `avgPerWeek` |
+| Current Streak | Consecutive weeks backward with ≥1 workout | `getTrainingStats()` → `streakWeeks` |
+| Rhythm | Recent 4-week avg count − prior 4-week avg count | Derived from `getWeeklyConsistencyMetrics` |
+| Rolling Consistency | % of recent 8 weeks with ≥2 workouts | Derived from `getWeeklyConsistencyMetrics` |
 
 #### Weekly metric bar chart
 
-- **Data:** `getWeeklyConsistencyMetrics(weeksBack: 12)` — 12 weeks pre-filled (0-value weeks included)
-- **Toggle chips:** Volume (tonnage, kg), Duration (minutes), Frequency (workouts)
-- **Y-axis labels:** Compact formatting — values ≥1 000 displayed as `"1.2k"`
-- **X-axis labels:** Week start date formatted as `"DD.MM."`
-- **Library:** `fl_chart` `BarChart`
+- **Data:** `getWeeklyConsistencyMetrics(weeksBack: 12)` (pre-filled weeks, including 0-value)
+- **Toggle chips:** Volume (`tonnage`), Duration (`durationMinutes`), Frequency (`count`)
+- **Y-axis formatting:** For volume, values ≥1000 shown as `x.xk`
+- **X-axis labels:** `weekLabel` (`DD.MM.`)
+- **Library:** `fl_chart` `BarChart` (vertical bars)
 
 #### Training calendar heatmap
 
-- **Component:** `TableCalendar` (package `table_calendar`)
-- **Data:** `getWorkoutDayCounts(daysBack: 120)` — returns `Map<DateTime, int>` (normalised to midnight)
-- **Visual intensity:**
-  - 1 workout → primary colour at alpha `0.18`
-  - 2 workouts → alpha `0.40`
-  - 3+ workouts → alpha `0.65`
-- **Tap interaction:** Displays "You logged N workouts on DD.MM.YYYY" below the calendar
-- **Marker:** Small count badge rendered at the bottom of the cell
+- **Component:** `TableCalendar<int>`
+- **Data:** `getWorkoutDayCounts(daysBack: 120)` → `Map<DateTime, int>` normalized to day
+- **Cell intensity:** `0.18 + count * 0.14`, clamped to `[0.18, 0.65]`
+- **Tap interaction:** selected-day summary text with day and count
+- **Marker:** per-day numeric marker at cell bottom
+
+> Calendar visual window spans wider dates, but populated intensity data is sourced only from the last 120 days query.
 
 #### Total sessions card
 
-A plain `ListTile` showing `getTrainingStats()` → `totalWorkouts` as an all-time count.
+A `ListTile` displays all-time `totalWorkouts` from `getTrainingStats()`.
 
 ---
 
@@ -193,29 +215,29 @@ A plain `ListTile` showing `getTrainingStats()` → `totalWorkouts` as an all-ti
 
 #### Purpose
 
-Shows how training volume and frequency are distributed across muscle groups, flags potential imbalances, and breaks down effort week by week.
+Shows muscle distribution/frequency/weekly equivalent sets and highlights potential low-emphasis muscles.
 
 #### Period filter chips
 
-| Chip | `daysBack` | Calculated `weeksBack` (`daysBack / 7`) |
+| Chip | `daysBack` | Calculated `weeksBack` in code |
 | :---: | :---: | :---: |
-| 7 d | 7 | 1 |
-| 30 d | 30 | 4 |
-| 90 d | 90 | 13 |
-| 180 d | 180 | 26 |
+| 7 d | 7 | `ceil(7/7)=1` → clamped to **4** |
+| 30 d | 30 | `ceil(30/7)=5` |
+| 90 d | 90 | `ceil(90/7)=13` |
+| 180 d | 180 | `ceil(180/7)=26` → clamped to **16** |
 
-`weeksBack = daysBack / 7` (integer division).
+`weeksBack` is computed as `(daysBack / 7).ceil().clamp(4, 16)`.
 
 #### Sections & components
 
 | Section | UI component | Data source | Metric |
 | :--- | :--- | :--- | :--- |
-| Equivalent Sets explainer | Static text card | — | Describes 1.0 / 0.5 weighting |
-| Radar overview | `MuscleRadarChart` widget | `getMuscleGroupAnalytics` → `muscles` | Top 8 muscles by equivalent sets; 9th axis = average of the rest |
-| Weekly sets by muscle | `fl_chart` `HorizontalBarChart` | `getMuscleGroupAnalytics` → `weekly[selectedWeek]` | Equivalent sets per muscle for the selected week |
-| Frequency by muscle | `fl_chart` `HorizontalBarChart` | `getMuscleGroupAnalytics` → `muscles[].frequencyPerWeek` | Trained days per muscle ÷ total weeks |
-| Distribution heatmap | Stacked `LinearProgressIndicator` rows | `getMuscleGroupAnalytics` → `muscles[].distributionShare` | % of total sets per muscle |
-| Guidance card | Dynamic text card | `getMuscleGroupAnalytics` → `undertrained`, `dataQualityOk` | Flags muscles in the bottom 3 with <60 % of average share |
+| Equivalent Sets explainer | Static text card | — | Explains 1.0 / 0.5 weighting |
+| Radar overview | `MuscleRadarChart` | `getMuscleGroupAnalytics` → `muscles` | Top 8 by equivalent sets + “Other” average remainder |
+| Weekly sets by muscle | `fl_chart` `BarChart` (vertical) | `getMuscleGroupAnalytics` → `weekly[selectedWeek]` | Equivalent sets per muscle for selected week |
+| Frequency by muscle | `fl_chart` `BarChart` (vertical) | `getMuscleGroupAnalytics` → `muscles[].frequencyPerWeek` | Trained days per muscle ÷ total period weeks |
+| Distribution heatmap | `LinearProgressIndicator` rows | `getMuscleGroupAnalytics` → `muscles[].distributionShare` | Share of total equivalent sets |
+| Guidance card | Dynamic text card | `getMuscleGroupAnalytics` → `undertrained`, `dataQualityOk` | Undertrained list from utility summary logic |
 
 #### Data quality gate
 
@@ -223,17 +245,17 @@ Shows how training volume and frequency are distributed across muscle groups, fl
 bool dataQualityOk = dataPointDays >= 3 && spanDays >= 14;
 ```
 
-- **`dataPointDays`** — the number of *unique calendar days* on which at least one set was logged within the selected period. Used as a proxy for "how much data do we actually have?"
-- **`spanDays`** — the number of calendar days from the earliest logged workout in the period to the most recent one. A span of fewer than 14 days means there is not enough temporal spread to derive meaningful frequency or trend data.
+- `dataPointDays`: number of unique training dates with logged contributions.
+- `spanDays`: day span between earliest and latest contribution date, inclusive.
 
-#### Equivalent sets weighting
+#### Equivalent set weighting
 
 | Role | Weight |
 | :--- | :---: |
 | Primary muscle | 1.0 |
 | Secondary muscle | 0.5 |
 
-A "trained day" for frequency purposes is a day where a muscle accumulates ≥1.0 equivalent sets.
+A trained day counts when a muscle accumulates `>= 1.0` equivalent sets for that day.
 
 ---
 
@@ -243,60 +265,63 @@ A "trained day" for frequency purposes is a day where a muscle accumulates ≥1.
 
 #### Purpose
 
-Overlays smoothed weight and calorie trends to reveal whether intake changes are tracking with bodyweight changes.
+Compares smoothed weight and calorie trends and derives rule-based interpretation labels.
 
 #### Time range filter
 
-Five chips (7 d / 30 d / 90 d / 180 d / All) map to `rangeIndex` 0–4 passed to `BodyNutritionAnalyticsUtils.build`.
+Five chips map to `rangeIndex` 0–4 and call `BodyNutritionAnalyticsUtils.build(rangeIndex: ...)`.
+
+Range behavior:
+
+- Index 0–3: fixed windows (7/30/90/180 days)
+- Index 4 (“All”): dynamic range from earliest relevant date (`measurement`, `food`, or `fluid`) to today
 
 #### Key metric cards (top row)
 
 | Card | Value | Sub-label |
 | :--- | :--- | :--- |
-| Current Weight | Latest logged weight or "—" | "N days with weight data" |
-| Weight Change | Last − first (within range), prefixed "+" or "−" | Time-range label |
-| Avg Daily Calories | Σ logged kcal ÷ days in range | "kcal per day" |
+| Current Weight | Latest logged weight or `-` | `${weightDays} days with weight data` |
+| Weight Change | Last − first (smoothed if available), signed | `${totalDays} day(s)` |
+| Avg Daily Calories | Total calories across range ÷ `totalDays` | per-day label |
 
 #### Charts
 
 | Chart | Smoothing | Y-axis | Colour |
 | :--- | :--- | :--- | :--- |
-| Weight trend | 5-point MA if `weightDays >= 14`, else 3-point | kg | Primary theme colour |
-| Calories trend | 7-point MA if `loggedCalorieDays >= 30`, else 3-point | kcal | Secondary theme colour |
+| Weight trend | 5-point MA if `weightDaily.length >= 14`, else 3-point | kg | Primary color |
+| Calories trend | 7-point MA if `caloriesDaily.length >= 30`, else 3-point | kcal | Secondary color |
 
-Both charts share the same sparse X-axis date labels (every ~4 data points) and use horizontal-only grid lines via `AnalyticsChartDefaults.compactGrid`.
+Both charts use sparse bottom-date ticks (roughly 4 intervals) and horizontal grid lines (`FlGridData(show: true, drawVerticalLine: false)`).
 
 #### Insight engine
 
-`BodyNutritionAnalyticsUtils._deriveInsight()` classifies results into one of six `BodyNutritionInsightType` values:
+`BodyNutritionAnalyticsUtils._deriveInsight()` returns one of:
 
-| Type | Trigger condition | Displayed message |
-| :--- | :--- | :--- |
-| `stableWeightCaloriesUp` | Weight Δ ≤ ±0.35 kg AND calorie half-delta > +120 | "Body composition maintained despite increased intake" |
-| `weightUpCaloriesUp` | Weight Δ ≥ +0.45 kg AND calorie half-delta > +80 | "Gaining while eating more — monitor for desired progress" |
-| `caloriesDownWeightNotYetChanged` | Calorie half-delta < −120 AND weight Δ > −0.2 kg | "Calorie reduction hasn't yet impacted weight" |
-| `weightDownCaloriesDown` | Weight Δ ≤ −0.45 kg AND calorie half-delta < −80 | "Successfully reducing calorie intake with weight loss" |
-| `mixed` | None of the above | "Inconsistent pattern — track longer for clarity" |
-| `notEnoughData` | Quality thresholds not met | "Insufficient data to derive insight" |
+- `stableWeightCaloriesUp`
+- `weightUpCaloriesUp`
+- `caloriesDownWeightNotYetChanged`
+- `weightDownCaloriesDown`
+- `mixed`
+- `notEnoughData`
 
-**Data quality thresholds:**
+Thresholds implemented:
 
 ```dart
 spanDays >= 14 && totalDays >= 14 && weightDays >= 5 && loggedCalorieDays >= 7
 ```
 
-- **`spanDays`** — calendar days from the earliest data point in the selected range to the most recent (weight *or* calorie entry). Ensures the analysis covers a meaningful time window.
-- **`totalDays`** — total number of days in the selected range that have *any* data (weight or calories). Prevents insights from very sparse datasets.
-- **`weightDays`** — days within the range that have at least one weight measurement logged.
-- **`loggedCalorieDays`** — days within the range that have at least one food or fluid entry.
+- `spanDays`: inclusive span between `range.start` and `range.end`.
+- `totalDays`: enumerated number of days in the selected range (not “days containing data”).
+- `weightDays`: days with weight measurements.
+- `loggedCalorieDays`: days with calories > 0 from food+fluid aggregation.
 
 #### Data sources
 
-- **Weight:** `DatabaseHelper.getChartDataForTypeAndRange('weight', range)`
-- **Food calories:** `DatabaseHelper.getEntriesForDateRange()`
-- **Fluid calories:** `DatabaseHelper.getFluidEntriesForDateRange()`
+- Weight: `DatabaseHelper.getChartDataForTypeAndRange('weight', range)`
+- Food entries: `DatabaseHelper.getEntriesForDateRange(start, end)`
+- Fluid entries: `DatabaseHelper.getFluidEntriesForDateRange(start, end)`
 
-All processing (moving averages, deduplication, normalization) is performed in `BodyNutritionAnalyticsUtils`, not in the screen.
+All aggregation/smoothing/insight logic is inside `BodyNutritionAnalyticsUtils`.
 
 ---
 
@@ -306,30 +331,29 @@ All processing (moving averages, deduplication, normalization) is performed in `
 
 #### Purpose
 
-Estimates per-muscle readiness using a time-based heuristic adjusted for session fatigue (RPE/RIR).
+Shows per-muscle recovery state from DB-derived facts and UI-derived recovery-pressure radar scoring.
 
 #### Overall readiness card
 
-Displays one of four states derived from `getRecoveryAnalytics()` → `overallState`:
+Displays `overallState` from `getRecoveryAnalytics()`:
 
 | State value | Display label | Condition |
 | :--- | :--- | :--- |
-| `mostlyRecovered` | "Mostly Recovered" | All or most muscles fresh/ready |
-| `mixedRecovery` | "Mixed Recovery" | Mix of recovering and ready |
-| `severalRecovering` | "Several Recovering" | ≥3 muscles or ≥40 % in recovering state |
-| `insufficientData` | "Insufficient Data" | No significant loading recorded |
+| `mostlyRecovered` | Mostly Recovered | No recovering muscles |
+| `mixedRecovery` | Mixed Recovery | Some recovering, below severe threshold |
+| `severalRecovering` | Several Recovering | recovering count ≥3 or recovering share ≥40% |
+| `insufficientData` | Insufficient Data | No significant load sessions |
 
-Below the state label, a summary count line ("N recovering, M ready, K fresh") is shown.
-
-A disclaimer beneath the card reads: *"Based on time-since-load heuristic; not a replacement for professional advice."*
+Shows counts (`recovering`, `ready`, `fresh`) and heuristic disclaimer text.
 
 #### Recovery pressure radar chart
 
-- **Component:** `MuscleRadarChart` — top 8 muscles + "Other" (average of remaining)
-- **Score formula (0–100 scale, pseudocode):**
+- **Component:** `MuscleRadarChart` using top 8 muscles + “Other” average
+- **Important location:** pressure score is computed in **screen code**, not in `WorkoutDatabaseHelper`
+
+Formula:
 
 ```
-// All variables are Dart doubles; clamp() is Dart's num.clamp
 loadComponent    = (lastEquivalentSets * 24).clamp(0, 45)
 freshnessPenalty = ((96 - hoursSinceLoad).clamp(0, 96) / 96) * 45
 fatiguePenalty   = highSessionFatigue ? 10 : 0
@@ -338,60 +362,52 @@ pressureScore    = (loadComponent + freshnessPenalty + fatiguePenalty).clamp(0, 
 
 #### Per-muscle recovery cards
 
-One card per tracked muscle (muscle "Brachialis" is filtered out as too granular).
+- One card per visible muscle (`Brachialis` is filtered out in UI)
+- Status badge by state (`recovering`, `ready`, `fresh`)
+- Shows recent equivalent sets, hours since last significant load, fatigue context, and heuristic window text
 
-| Field | Value |
-| :--- | :--- |
-| Status badge | `recovering` (orange) / `ready` (blue) / `fresh` (green) |
-| Recent load | `lastEquivalentSets` formatted to 1 d.p. |
-| Last loaded | `hoursSinceLastSignificantLoad` in hours |
-| Fatigue context | "High" if `avgRIR == 0 OR avgRPE >= 9`, else "Baseline" |
-| Recovery window label | "0–48 h", "48–72 h", or ">72 h" (thresholds shift by +24 h when high fatigue) |
-
-**State thresholds:**
+State windows in DB helper:
 
 | Fatigue | Recovering | Ready | Fresh |
 | :--- | :---: | :---: | :---: |
 | Baseline | < 48 h | 48–72 h | > 72 h |
 | High | < 72 h | 72–96 h | > 96 h |
 
-**Significant load threshold:** ≥1.0 equivalent sets in a single session.
+Significant load threshold is `>= 1.0` equivalent sets per muscle per session.
 
 ---
 
 ## Function Mapping Table
 
-Maps visible UI elements to the corresponding screen files, database methods, and utility helpers.
-
 | UI Element | Screen file | Database method | Utility / post-processing |
 | :--- | :--- | :--- | :--- |
-| Time-range chip bar (hub) | `statistics_hub_screen.dart` | All queries re-fired on tap | — |
-| Hub — Consistency mini bars | `statistics_hub_screen.dart` | `getWeeklyConsistencyMetrics(weeksBack)` | Inline normalisation to relative bar heights |
-| Hub — Muscle volume heatmap | `statistics_hub_screen.dart` | `getMuscleGroupAnalytics(daysBack, weeksBack)` | Top-5 slice from `muscles[]` |
+| Time-range chip bar (hub) | `statistics_hub_screen.dart` | Triggers `_loadHubAnalytics()` with mixed fixed/range-dependent queries | — |
+| Hub — Consistency mini bars | `statistics_hub_screen.dart` | `getWeeklyConsistencyMetrics(weeksBack: 6)` | Fallback to `getWorkoutsPerWeek(weeksBack: 6)`; inline bar normalization |
+| Hub — Muscle volume heatmap | `statistics_hub_screen.dart` | `getMuscleGroupAnalytics(daysBack: _selectedDays, weeksBack: 8)` | Top-5 `muscles[]` slice |
 | Hub — Recent PRs list | `statistics_hub_screen.dart` | `getRecentGlobalPRs(limit: 3)` | — |
-| Hub — Weekly tonnage number | `statistics_hub_screen.dart` | `getWeeklyVolumeData(weeksBack: 6)` | Sum of latest week |
-| Hub — Recovery radar chart | `statistics_hub_screen.dart` | `getRecoveryAnalytics()` | `MuscleRadarChart` widget |
-| Hub — Body / nutrition dual-line chart | `statistics_hub_screen.dart` | (multiple via `BodyNutritionAnalyticsUtils`) | `BodyNutritionAnalyticsUtils.build(rangeIndex)` |
-| PR — Recent Records list | `pr_dashboard_screen.dart` | `getRecentGlobalPRs(limit: 8)` | — |
-| PR — All-Time Records list | `pr_dashboard_screen.dart` | `getAllTimeGlobalPRs(limit: 10)` | — |
+| Hub — Weekly tonnage number | `statistics_hub_screen.dart` | `getWeeklyVolumeData(weeksBack: 6)` | Uses latest week tonnage |
+| Hub — Recovery summary | `statistics_hub_screen.dart` | `getRecoveryAnalytics()` | Overall label + counts; no hub radar |
+| Hub — Body/Nutrition mini chart | `statistics_hub_screen.dart` | (via utility) | `BodyNutritionAnalyticsUtils.build(rangeIndex)` + `normalizedSeries()` |
+| PR — Recent Records | `pr_dashboard_screen.dart` | `getRecentGlobalPRs(limit: 8)` | — |
+| PR — All-Time Records | `pr_dashboard_screen.dart` | `getAllTimeGlobalPRs(limit: 10)` | — |
 | PR — Rep bracket badges | `pr_dashboard_screen.dart` | `getAllTimePRsByRepBracket()` | — |
-| PR — Notable Improvements list | `pr_dashboard_screen.dart` | `getNotablePrImprovements(daysWindow, limit: 6)` | Epley e1RM formula inline |
-| Consistency — KPI cards (6) | `consistency_tracker_screen.dart` | `getTrainingStats()`, `getWeeklyConsistencyMetrics(weeksBack: 12)` | Rhythm / rolling-consistency derived in screen |
-| Consistency — Weekly bar chart | `consistency_tracker_screen.dart` | `getWeeklyConsistencyMetrics(weeksBack: 12)` | Metric toggle (volume / duration / frequency) |
-| Consistency — Calendar heatmap | `consistency_tracker_screen.dart` | `getWorkoutDayCounts(daysBack: 120)` | Alpha intensity mapping in cell builder |
+| PR — Notable Improvements | `pr_dashboard_screen.dart` | `getNotablePrImprovements(daysWindow, limit: 6)` | Epley e1RM comparison performed in helper |
+| Consistency — KPI cards | `consistency_tracker_screen.dart` | `getTrainingStats()`, `getWeeklyConsistencyMetrics(weeksBack: 12)`, `getWorkoutDayCounts(daysBack: 120)` | Rhythm/rolling/training-days-per-week derived in screen |
+| Consistency — Weekly bar chart | `consistency_tracker_screen.dart` | `getWeeklyConsistencyMetrics(weeksBack: 12)` | Metric toggle in screen |
+| Consistency — Calendar heatmap | `consistency_tracker_screen.dart` | `getWorkoutDayCounts(daysBack: 120)` | Intensity and marker rendering in cell builders |
 | Consistency — Total sessions tile | `consistency_tracker_screen.dart` | `getTrainingStats()` → `totalWorkouts` | — |
-| Muscle — Radar chart | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics(daysBack, weeksBack)` | `MuscleRadarChart` widget; 9th axis = averaged remainder |
-| Muscle — Weekly sets bar chart | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics` → `weekly[]` | Selected-week slice; chip selector |
-| Muscle — Frequency bar chart | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics` → `muscles[].frequencyPerWeek` | — |
+| Muscle — Radar chart | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics(daysBack, weeksBack)` | Radar data built in screen (top 8 + averaged remainder) |
+| Muscle — Weekly sets bar chart | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics` → `weekly[]` | Vertical `BarChart`; selected-week chip |
+| Muscle — Frequency bar chart | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics` → `muscles[].frequencyPerWeek` | Vertical `BarChart` |
 | Muscle — Distribution heatmap | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics` → `muscles[].distributionShare` | Top-10 slice |
-| Muscle — Guidance card | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics` → `undertrained`, `dataQualityOk` | `MuscleAnalyticsUtils.buildSummary` |
-| Body — Key metric cards | `body_nutrition_correlation_screen.dart` | (via `BodyNutritionAnalyticsUtils`) | `currentWeightKg`, `weightChangeKg`, `avgDailyCalories` fields |
-| Body — Weight trend line chart | `body_nutrition_correlation_screen.dart` | `DatabaseHelper.getChartDataForTypeAndRange` | `BodyNutritionAnalyticsUtils._movingAverage` |
-| Body — Calories trend line chart | `body_nutrition_correlation_screen.dart` | `DatabaseHelper.getEntriesForDateRange`, `getFluidEntriesForDateRange` | `BodyNutritionAnalyticsUtils._movingAverage` |
+| Muscle — Guidance card | `muscle_group_analytics_screen.dart` | `getMuscleGroupAnalytics` → `undertrained`, `dataQualityOk` | `MuscleAnalyticsUtils.buildSummary()` output |
+| Body — Key metric cards | `body_nutrition_correlation_screen.dart` | (via utility) | `BodyNutritionAnalyticsResult` fields |
+| Body — Weight trend chart | `body_nutrition_correlation_screen.dart` | `DatabaseHelper.getChartDataForTypeAndRange` | `BodyNutritionAnalyticsUtils._movingAverage()` |
+| Body — Calories trend chart | `body_nutrition_correlation_screen.dart` | `DatabaseHelper.getEntriesForDateRange`, `getFluidEntriesForDateRange` | `BodyNutritionAnalyticsUtils._movingAverage()` |
 | Body — Insight text | `body_nutrition_correlation_screen.dart` | — | `BodyNutritionAnalyticsUtils._deriveInsight()` |
 | Recovery — Readiness card | `recovery_tracker_screen.dart` | `getRecoveryAnalytics()` → `overallState`, `totals` | — |
-| Recovery — Radar chart | `recovery_tracker_screen.dart` | `getRecoveryAnalytics()` → `muscles[].pressureScore` | `MuscleRadarChart` widget |
-| Recovery — Per-muscle cards | `recovery_tracker_screen.dart` | `getRecoveryAnalytics()` → `muscles[]` | State/threshold logic in `WorkoutDatabaseHelper` |
+| Recovery — Radar chart | `recovery_tracker_screen.dart` | `getRecoveryAnalytics()` → `muscles[]` raw fields | Pressure score computed in screen (`_recoveryPressureScore`) |
+| Recovery — Per-muscle cards | `recovery_tracker_screen.dart` | `getRecoveryAnalytics()` → `muscles[]` | State/threshold logic computed in `WorkoutDatabaseHelper`; display mapping in screen |
 
 ---
 
@@ -401,126 +417,89 @@ Maps visible UI elements to the corresponding screen files, database methods, an
 
 | Widget | File | Purpose |
 | :--- | :--- | :--- |
-| `AnalyticsSectionHeader` | `lib/widgets/analytics_section_header.dart` | Labelled section divider — `labelLarge`, bold, 0.2 letter spacing |
-| `AnalyticsChartDefaults` | `lib/widgets/analytics_chart_defaults.dart` | Shared `FlGridData` (horizontal lines only) and `straightLine()` factory |
-| `MuscleRadarChart` | `lib/widgets/muscle_radar_chart.dart` | Custom radar chart; accepts `List<MuscleRadarDatum>` + `maxValue` + `centerLabel` |
-| `SummaryCard` | `lib/widgets/summary_card.dart` | Reusable card container used across metric-card layouts |
+| `AnalyticsSectionHeader` | `lib/widgets/analytics_section_header.dart` | Section label (`labelLarge`, bold, 0.2 letter spacing) |
+| `AnalyticsChartDefaults` | `lib/widgets/analytics_chart_defaults.dart` | Shared hidden titles, compact grid constant, `straightLine()` helper |
+| `MuscleRadarChart` | `lib/widgets/muscle_radar_chart.dart` | Custom radar chart (`List<MuscleRadarDatum>`, `maxValue`, `centerLabel`) |
+| `SummaryCard` | `lib/widgets/summary_card.dart` | Shared card container with optional tap handling |
 
 ### Utility classes
 
 | Class | File | Responsibilities |
 | :--- | :--- | :--- |
-| `MuscleAnalyticsUtils` | `lib/util/muscle_analytics_utils.dart` | Aggregates raw set contributions into weekly buckets, calculates distribution and frequency, identifies undertrained muscles |
-| `BodyNutritionAnalyticsUtils` | `lib/util/body_nutrition_analytics_utils.dart` | Fetches weight and calorie data, applies moving averages, derives insight classification, exposes `BodyNutritionAnalyticsResult` |
+| `MuscleAnalyticsUtils` | `lib/util/muscle_analytics_utils.dart` | Pure transformation of contributions into weekly/per-muscle summary, quality flags, undertrained list |
+| `BodyNutritionAnalyticsUtils` | `lib/util/body_nutrition_analytics_utils.dart` | Data fetch + calorie aggregation + smoothing + insight derivation + `BodyNutritionAnalyticsResult` construction |
 
-### Chart library summary
+### Chart/library summary
 
 | Chart type | Library | Used in |
 | :--- | :--- | :--- |
-| Line chart | `fl_chart ^1.1.0` | Weight trend, calorie trend |
-| Bar chart (vertical) | `fl_chart ^1.1.0` | Weekly consistency |
-| Bar chart (horizontal) | `fl_chart ^1.1.0` | Weekly sets by muscle, frequency by muscle |
-| Radar chart | Custom `MuscleRadarChart` | Muscle distribution, recovery pressure |
-| Calendar heatmap | `table_calendar ^3.2.0` | Training calendar |
-| Progress bars | Flutter built-in | Muscle distribution share |
+| Line chart | `fl_chart ^1.1.0` | Body/Nutrition charts (full + mini) |
+| Bar chart (vertical) | `fl_chart ^1.1.0` | Consistency weekly metrics; Muscle weekly/frequency charts |
+| Radar chart | Custom `MuscleRadarChart` | Muscle overview; Recovery pressure |
+| Calendar heatmap | `table_calendar ^3.2.0` | Consistency calendar |
+| Progress bars | Flutter built-in | Muscle distribution share (hub + muscle screen) |
 | Mini bars | Custom `Container` rows | Hub consistency summary |
 
 ---
 
-## Technical Debt & Observations
+## Technical Debt & Observations (Current State)
 
-The following issues were identified by comparing the UI states against the source code. They are prioritised roughly by impact.
+The points below describe current implementation characteristics relevant to refactor planning (no target design implied).
 
----
+### 1. No shared statistics data layer across hub + drill-down screens
 
-### 1. No shared data layer — hub re-loads everything independently
+`StatisticsHubScreen` loads its own dataset, and each drill-down screen performs separate loads. There is no shared cache/provider for statistics.
 
-**Problem:** `StatisticsHubScreen` fires its own full parallel data load. Each drill-down screen then repeats the same queries from scratch. There is no cache, provider, or shared ViewModel. On slow devices or large databases, the user experiences reload delays every time they navigate in and out of a sub-screen.
+**Observed impact:** repeated DB/utility work and potential reload latency across navigation paths.
 
-**Impact:** High — performance, redundant DB reads, increased perceived latency.
+### 2. Recovery logic is split between data helper and UI
 
-**Suggested fix:** Extract a `StatisticsAnalyticsProvider` (or equivalent `ChangeNotifier` / `Riverpod` pod) that caches the last-loaded results keyed by time-range index. Screens observe the provider and only re-load when the selected range changes.
+`WorkoutDatabaseHelper.getRecoveryAnalytics()` computes recovery state thresholds and per-muscle recovery metadata. Recovery radar pressure score is computed separately in `recovery_tracker_screen.dart`.
 
----
+**Observed impact:** heuristic logic is distributed across layers (DB helper + UI).
 
-### 2. Recovery pressure score is assembled inline in the database helper
+### 3. `getTrainingStats()` is a mixed metric bundle
 
-**Problem:** `getRecoveryAnalytics()` in `workout_database_helper.dart` performs the pressure-score arithmetic (load component, freshness penalty, fatigue penalty) directly inside the database query method. Business logic and data-access are mixed in the same class.
+`getTrainingStats()` returns a single `Map<String, dynamic>` for `totalWorkouts`, `thisWeekCount`, `avgPerWeek`, and `streakWeeks`.
 
-**Impact:** Medium — makes unit testing the heuristic difficult; any change to the formula requires touching the data layer.
+**Observed impact:** callers depend on dynamic map keys and coupled metric retrieval.
 
-**Suggested fix:** Move the pressure-score calculation to a dedicated `RecoveryAnalyticsUtils` class (parallel to `MuscleAnalyticsUtils` and `BodyNutritionAnalyticsUtils`), and have the DB helper return raw per-muscle facts (last load, hours since load, fatigue flags) only.
+### 4. Utility purity differs by analytics domain
 
----
+`BodyNutritionAnalyticsUtils` performs async data access directly. `MuscleAnalyticsUtils` is a pure aggregation utility that receives pre-built contributions.
 
-### 3. `getTrainingStats()` returns mixed-granularity data in a single map
+**Observed impact:** body analytics utility has stronger data-layer coupling than muscle utility.
 
-**Problem:** `getTrainingStats()` returns `totalWorkouts`, `thisWeekCount`, `avgPerWeek`, and `streakWeeks` as a single `Map<String, dynamic>`. These four metrics require four separate SQL queries with different aggregation logic (all-time count, week-to-date count, 28-day average, consecutive-week streak). Bundling them silently makes the method unpredictable regarding which fields are present and adds unnecessary load when only one is needed.
+### 5. Hub mini-visuals are independently rendered
 
-**Impact:** Medium — callers in both `statistics_hub_screen` and `consistency_tracker_screen` access the same map but use different subsets. If any query inside the method fails, all fields are lost.
+Hub mini charts/heatmaps are implemented as compact custom render logic separate from full-screen chart rendering code.
 
-**Suggested fix:** Either split into separate methods (`getTotalWorkoutCount()`, `getThisWeekCount()`, `getAvgPerWeek()`, `getCurrentStreakWeeks()`) or define a typed `TrainingStats` data class so field presence is guaranteed at compile time.
+**Observed impact:** parallel rendering logic paths must be kept behaviorally aligned.
 
----
+### 6. Consistency heatmap uses fixed 120-day data query
 
-### 4. `BodyNutritionAnalyticsUtils` and `MuscleAnalyticsUtils` are standalone classes, not services
+`getWorkoutDayCounts(daysBack: 120)` is fixed in consistency tracker.
 
-**Problem:** Both utilities carry out their own database access by accepting or calling `DatabaseHelper`/`WorkoutDatabaseHelper` directly. They are pure utility classes but they perform async I/O, making them hard to test without a real database.
+**Observed impact:** heatmap intensity data reflects last ~4 months regardless of broader history.
 
-**Impact:** Medium — unit tests require database setup; mocking is not straightforward.
+### 7. Undertrained heuristic is fixed-threshold + capped list
 
-**Suggested fix:** Accept pre-fetched data lists as constructor arguments (or parameters to `build()`/`buildSummary()`) rather than fetching internally. This makes both classes pure transformation units and trivially testable.
+`MuscleAnalyticsUtils` computes undertrained muscles by relative share threshold (`< 60%` of average active-share) and returns up to 3 candidates.
 
----
+**Observed impact:** heuristic behavior is deterministic but intentionally coarse.
 
-### 5. Hub inline summaries duplicate chart-rendering logic from sub-screens
+### 8. Notable PR improvements are computed in Dart post-query
 
-**Problem:** The hub's mini bar chart, dual-line chart, and muscle heatmap are all custom-rendered inline. The same `fl_chart` setup (axes, colours, spot construction) is partially duplicated from the full sub-screens.
+`getNotablePrImprovements()` loads rows for the combined prior+recent window and computes window split, e1RM, and ranking in Dart.
 
-**Impact:** Medium — two code paths to maintain; visual inconsistencies are possible if one is updated and the other is not.
+**Observed impact:** runtime work scales with dataset size for the selected windows.
 
-**Suggested fix:** Extract small reusable chart widgets (e.g., `ConsistencyMiniChart`, `BodyNutritionMiniChart`) that accept pre-computed data and accept a `compact: true` parameter to switch between hub summary and full-screen layouts.
+### 9. Localization key namespace is mixed/flat
 
----
+Analytics-related ARB keys currently use mixed prefixes (`analytics*`, `metrics*`, `recovery*`, etc.) in a shared flat keyspace.
 
-### 6. Calendar heatmap range is hardcoded to 120 days regardless of selected time range
-
-**Problem:** `getWorkoutDayCounts(daysBack: 120)` is called with a fixed constant in `consistency_tracker_screen.dart`. The screen has no time-range selector of its own, but 120 days is an arbitrary cutoff that is inconsistent with the hub's configurable range.
-
-**Impact:** Low — users cannot see heatmap data beyond 4 months even if they have years of history.
-
-**Suggested fix:** Either make `daysBack` configurable via a filter chip consistent with other screens, or at minimum increase the default to match the "All" range window.
+**Observed impact:** naming consistency is low for large-scale localization maintenance.
 
 ---
 
-### 7. Undertrained muscle logic uses a fixed bottom-3 heuristic
-
-**Problem:** `MuscleAnalyticsUtils.buildSummary()` flags the bottom 3 muscles whose `distributionShare` is <60 % of the average share. The "bottom 3" cutoff is a magic number; for athletes training fewer than 4 muscle groups the entire tracked set could be flagged.
-
-**Impact:** Low — guidance card may show misleading recommendations for minimalist programmes.
-
-**Suggested fix:** Replace the fixed-count approach with a relative threshold check only (e.g., flag any muscle below 40 % of the average and add a minimum muscle count guard).
-
----
-
-### 8. `getNotablePrImprovements` uses a raw Dart list loop in Dart rather than SQL aggregation
-
-**Problem:** The method fetches all relevant sets for the combined 2× window, then performs the window-split, e1RM computation, and comparison entirely in Dart. For users with large datasets (thousands of sets) this can be slow.
-
-**Impact:** Low for typical users; noticeable for power users with multi-year histories.
-
-**Suggested fix:** Push the window aggregation into SQL using conditional aggregation (`CASE WHEN start_time >= threshold THEN ... END`) and compute the max e1RM approximation in SQL to reduce the in-memory dataset size.
-
----
-
-### 9. Localisation key namespace is flat and unsorted
-
-**Problem:** All analytics localisation keys (100+) live in the same flat namespace in the ARB files without a consistent prefix scheme. Keys like `analyticsKpisHeader`, `recoveryTrackerTitle`, and `metricsVolumeLifted` use three different prefix conventions.
-
-**Impact:** Low — developer ergonomics only; no runtime impact.
-
-**Suggested fix:** Adopt a two-segment prefix convention (`screen.key`) for all new keys added in v0.7, e.g., `consistency.totalSessions`, `recovery.stateRecovering`, `pr.repBracket1rm`.
-
----
-
-*Last updated: pre-v0.7 refactor baseline. This document should be archived once the refactor is complete and replaced by updated architecture documentation.*
+*Last updated: 2026-03-20 (implementation-grounded baseline prior to v0.7 refactor execution).*
