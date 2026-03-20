@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../data/workout_database_helper.dart';
+import '../features/statistics/domain/recovery_domain_service.dart';
 import '../generated/app_localizations.dart';
 import '../util/body_nutrition_analytics_utils.dart';
 import '../util/design_constants.dart';
@@ -505,16 +506,21 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   Widget _buildRecoverySection() {
     final totals =
         (_recoveryAnalytics['totals'] as Map<String, dynamic>?) ?? const {};
-    final recovering = (totals['recovering'] as num?)?.toInt() ?? 0;
-    final ready = (totals['ready'] as num?)?.toInt() ?? 0;
-    final fresh = (totals['fresh'] as num?)?.toInt() ?? 0;
+    final recovering =
+        (totals[RecoveryDomainService.stateRecovering] as num?)?.toInt() ?? 0;
+    final ready =
+        (totals[RecoveryDomainService.stateReady] as num?)?.toInt() ?? 0;
+    final fresh =
+        (totals[RecoveryDomainService.stateFresh] as num?)?.toInt() ?? 0;
     final hasData = (_recoveryAnalytics['hasData'] as bool?) ?? false;
 
     final overallState = _recoveryAnalytics['overallState'] as String?;
     final overallLabel = switch (overallState) {
-      'mostlyRecovered' => l10n.recoveryOverallMostlyRecovered,
-      'mixedRecovery' => l10n.recoveryOverallMixed,
-      'severalRecovering' => l10n.recoveryOverallSeveralRecovering,
+      RecoveryDomainService.overallMostlyRecovered =>
+        l10n.recoveryOverallMostlyRecovered,
+      RecoveryDomainService.overallMixedRecovery => l10n.recoveryOverallMixed,
+      RecoveryDomainService.overallSeveralRecovering =>
+        l10n.recoveryOverallSeveralRecovering,
       _ => l10n.recoveryOverallInsufficientData,
     };
 
@@ -523,9 +529,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         : l10n.recoveryHubNoDataSummary;
 
     final iconColor = switch (overallState) {
-      'severalRecovering' => Colors.orange,
-      'mixedRecovery' => Colors.blue,
-      'mostlyRecovered' => Colors.green,
+      RecoveryDomainService.overallSeveralRecovering => Colors.orange,
+      RecoveryDomainService.overallMixedRecovery => Colors.blue,
+      RecoveryDomainService.overallMostlyRecovered => Colors.green,
       _ => Theme.of(context).colorScheme.outline,
     };
 
