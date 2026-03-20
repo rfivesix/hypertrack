@@ -506,9 +506,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   Widget _buildRecoverySection() {
     final totals =
         (_recoveryAnalytics['totals'] as Map<String, dynamic>?) ?? const {};
-    final recovering = (totals['recovering'] as num?)?.toInt() ?? 0;
-    final ready = (totals['ready'] as num?)?.toInt() ?? 0;
-    final fresh = (totals['fresh'] as num?)?.toInt() ?? 0;
+    final recovering =
+        (totals[RecoveryDomainService.stateRecovering] as num?)?.toInt() ?? 0;
+    final ready =
+        (totals[RecoveryDomainService.stateReady] as num?)?.toInt() ?? 0;
+    final fresh =
+        (totals[RecoveryDomainService.stateFresh] as num?)?.toInt() ?? 0;
     final hasData = (_recoveryAnalytics['hasData'] as bool?) ?? false;
 
     final overallState = _recoveryAnalytics['overallState'] as String?;

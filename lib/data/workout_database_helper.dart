@@ -1649,7 +1649,11 @@ class WorkoutDatabaseHelper {
     }
 
     muscles.sort((a, b) {
-      const stateOrder = {'recovering': 0, 'ready': 1, 'fresh': 2};
+      const stateOrder = {
+        RecoveryDomainService.stateRecovering: 0,
+        RecoveryDomainService.stateReady: 1,
+        RecoveryDomainService.stateFresh: 2,
+      };
       final stateCmp = (stateOrder[a['state'] as String] ?? 9)
           .compareTo(stateOrder[b['state'] as String] ?? 9);
       if (stateCmp != 0) return stateCmp;
@@ -1658,9 +1662,11 @@ class WorkoutDatabaseHelper {
     });
 
     final recoveringCount =
-        muscles.where((m) => m['state'] == 'recovering').length;
-    final readyCount = muscles.where((m) => m['state'] == 'ready').length;
-    final freshCount = muscles.where((m) => m['state'] == 'fresh').length;
+        muscles.where((m) => m['state'] == RecoveryDomainService.stateRecovering).length;
+    final readyCount =
+        muscles.where((m) => m['state'] == RecoveryDomainService.stateReady).length;
+    final freshCount =
+        muscles.where((m) => m['state'] == RecoveryDomainService.stateFresh).length;
     final total = muscles.length;
 
     final overallState = RecoveryDomainService.overallState(
@@ -1672,9 +1678,9 @@ class WorkoutDatabaseHelper {
       'hasData': total > 0,
       'overallState': overallState,
       'totals': {
-        'recovering': recoveringCount,
-        'ready': readyCount,
-        'fresh': freshCount,
+        RecoveryDomainService.stateRecovering: recoveringCount,
+        RecoveryDomainService.stateReady: readyCount,
+        RecoveryDomainService.stateFresh: freshCount,
         'tracked': total,
       },
       'muscles': muscles,

@@ -122,9 +122,12 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     final totals = (_recovery['totals'] as Map<String, dynamic>?) ?? const {};
-    final recovering = (totals['recovering'] as num?)?.toInt() ?? 0;
-    final ready = (totals['ready'] as num?)?.toInt() ?? 0;
-    final fresh = (totals['fresh'] as num?)?.toInt() ?? 0;
+    final recovering =
+        (totals[RecoveryDomainService.stateRecovering] as num?)?.toInt() ?? 0;
+    final ready =
+        (totals[RecoveryDomainService.stateReady] as num?)?.toInt() ?? 0;
+    final fresh =
+        (totals[RecoveryDomainService.stateFresh] as num?)?.toInt() ?? 0;
     final hasData = (_recovery['hasData'] as bool?) ?? false;
 
     final muscles = (_recovery['muscles'] as List<dynamic>? ?? const [])
