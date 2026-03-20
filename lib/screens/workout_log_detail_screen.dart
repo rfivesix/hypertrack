@@ -16,7 +16,6 @@ import '../widgets/summary_card.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
 import '../widgets/workout_card.dart';
-import '../services/statistics/domain/recovery/recovery_scoring_service.dart';
 
 /// A detailed view for a single completed [WorkoutLog].
 ///
@@ -122,7 +121,17 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
 
     // Volumen (nur Kraft) für den Header
-    final catVol = RecoveryScoringService.categoryVolume(data.sets, details);
+    final catVol = <String, double>{};
+    for (var set in data.sets) {
+      // Nur wenn nicht Cardio zum Volumen zählen?
+      // Vereinfacht: wir zählen alles was weight*reps hat.
+      // Cardio hat weight=0/null im Log (da in distanceKm gespeichert), also automatisch 0.
+      final v = (set.weightKg ?? 0) * (set.reps ?? 0);
+      if (v > 0) {
+        final cat = details[set.exerciseName]?.categoryName ?? 'Other';
+        catVol.update(cat, (val) => val + v, ifAbsent: () => v);
+      }
+    }
 
     _notesController.text = data.notes ?? '';
     _editedStartTime = data.startTime;
@@ -293,8 +302,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    final totalVolume =
-        _log == null ? 0.0 : RecoveryScoringService.totalVolume(_log!.sets);
+    double totalVolume = 0.0;
+    if (_log != null) {
+      for (final set in _log!.sets) {
+        totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
+      }
+    }
     final Duration duration =
         _log?.endTime?.difference(_log!.startTime) ?? Duration.zero;
 
@@ -493,7 +506,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   List<Widget> _buildCategoryBars(BuildContext context) {
     final total = _categoryVolume.values.fold<double>(0, (a, b) => a + b);
     return _categoryVolume.entries.map((entry) {
-      final fraction = RecoveryScoringService.share(entry.value, total);
+      final fraction = total > 0 ? entry.value / total : 0.0;
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0),
         child: Row(
