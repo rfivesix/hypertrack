@@ -87,5 +87,13 @@ void main() {
     test('share returns zero when total is zero', () {
       expect(RecoveryScoringService.share(10, 0), 0);
     });
+
+    test('share returns value/total for positive values', () {
+      expect(RecoveryScoringService.share(25, 100), 0.25);
+    });
+
+    test('share returns zero when value is zero and total is positive', () {
+      expect(RecoveryScoringService.share(0, 100), 0);
+    });
   });
 }
