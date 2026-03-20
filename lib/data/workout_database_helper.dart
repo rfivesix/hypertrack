@@ -10,6 +10,7 @@ import '../models/routine_exercise.dart';
 import '../models/set_log.dart';
 import '../models/set_template.dart';
 import '../models/workout_log.dart';
+import '../features/statistics/domain/recovery_domain_service.dart';
 import '../util/muscle_analytics_utils.dart';
 
 /// Helper class for managing workout-specific data in the Drift database.
@@ -1616,20 +1617,22 @@ class WorkoutDatabaseHelper {
       final avgRpe =
           rpeCount > 0 ? (lastSession['rpeSum'] as double) / rpeCount : null;
 
-      final highSessionFatigue =
-          (avgRir != null && avgRir == 0) || (avgRpe != null && avgRpe >= 9);
+      final highSessionFatigue = RecoveryDomainService.hasHighSessionFatigue(
+        avgRir: avgRir,
+        avgRpe: avgRpe,
+      );
 
-      final recoveringUpper = 48 + (highSessionFatigue ? 24 : 0);
-      final readyUpper = 72 + (highSessionFatigue ? 24 : 0);
+      final recoveringUpper = RecoveryDomainService.recoveringUpperHours(
+        highSessionFatigue: highSessionFatigue,
+      );
+      final readyUpper = RecoveryDomainService.readyUpperHours(
+        highSessionFatigue: highSessionFatigue,
+      );
 
-      final String state;
-      if (hoursSince < recoveringUpper) {
-        state = 'recovering';
-      } else if (hoursSince <= readyUpper) {
-        state = 'ready';
-      } else {
-        state = 'fresh';
-      }
+      final state = RecoveryDomainService.muscleState(
+        hoursSinceLastSignificantLoad: hoursSince,
+        highSessionFatigue: highSessionFatigue,
+      );
 
       muscles.add({
         'muscleGroup': muscle,
@@ -1660,16 +1663,10 @@ class WorkoutDatabaseHelper {
     final freshCount = muscles.where((m) => m['state'] == 'fresh').length;
     final total = muscles.length;
 
-    final String overallState;
-    if (total == 0) {
-      overallState = 'insufficientData';
-    } else if (recoveringCount >= 3 || recoveringCount / total >= 0.4) {
-      overallState = 'severalRecovering';
-    } else if (recoveringCount == 0) {
-      overallState = 'mostlyRecovered';
-    } else {
-      overallState = 'mixedRecovery';
-    }
+    final overallState = RecoveryDomainService.overallState(
+      totalTrackedMuscles: total,
+      recoveringCount: recoveringCount,
+    );
 
     return {
       'hasData': total > 0,

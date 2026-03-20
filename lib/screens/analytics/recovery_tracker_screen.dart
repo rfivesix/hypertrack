@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/workout_database_helper.dart';
+import '../../features/statistics/domain/recovery_domain_service.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/analytics_section_header.dart';
@@ -37,27 +38,29 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
 
   String _overallLabel(AppLocalizations l10n, String? state) {
     return switch (state) {
-      'mostlyRecovered' => l10n.recoveryOverallMostlyRecovered,
-      'mixedRecovery' => l10n.recoveryOverallMixed,
-      'severalRecovering' => l10n.recoveryOverallSeveralRecovering,
+      RecoveryDomainService.overallMostlyRecovered =>
+        l10n.recoveryOverallMostlyRecovered,
+      RecoveryDomainService.overallMixedRecovery => l10n.recoveryOverallMixed,
+      RecoveryDomainService.overallSeveralRecovering =>
+        l10n.recoveryOverallSeveralRecovering,
       _ => l10n.recoveryOverallInsufficientData,
     };
   }
 
   String _stateLabel(AppLocalizations l10n, String state) {
     return switch (state) {
-      'recovering' => l10n.recoveryStateRecovering,
-      'ready' => l10n.recoveryStateReady,
-      'fresh' => l10n.recoveryStateFresh,
+      RecoveryDomainService.stateRecovering => l10n.recoveryStateRecovering,
+      RecoveryDomainService.stateReady => l10n.recoveryStateReady,
+      RecoveryDomainService.stateFresh => l10n.recoveryStateFresh,
       _ => l10n.recoveryStateUnknown,
     };
   }
 
   Color _stateColor(BuildContext context, String state) {
     return switch (state) {
-      'recovering' => Colors.orange,
-      'ready' => Colors.blue,
-      'fresh' => Colors.green,
+      RecoveryDomainService.stateRecovering => Colors.orange,
+      RecoveryDomainService.stateReady => Colors.blue,
+      RecoveryDomainService.stateFresh => Colors.green,
       _ => Theme.of(context).colorScheme.outline,
     };
   }
@@ -84,21 +87,11 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   }
 
   bool _shouldHideMuscle(String name) {
-    final normalized = name.trim().toLowerCase();
-    return normalized == 'brachialis';
+    return RecoveryDomainService.shouldHideMuscle(name);
   }
 
   double _recoveryPressureScore(Map<String, dynamic> muscle) {
-    final eqSets = (muscle['lastEquivalentSets'] as num?)?.toDouble() ?? 0.0;
-    final hours =
-        (muscle['hoursSinceLastSignificantLoad'] as num?)?.toDouble() ?? 999.0;
-    final highFatigue = (muscle['highSessionFatigue'] as bool?) ?? false;
-
-    final loadComponent = (eqSets * 24).clamp(0, 45);
-    final freshnessPenalty = ((96 - hours).clamp(0, 96) / 96) * 45;
-    final fatiguePenalty = highFatigue ? 10.0 : 0.0;
-    return (loadComponent + freshnessPenalty + fatiguePenalty)
-        .clamp(0.0, 100.0);
+    return RecoveryDomainService.recoveryPressureScore(muscle);
   }
 
   List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
