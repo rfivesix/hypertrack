@@ -26,8 +26,9 @@ class StatisticsHubScreen extends StatefulWidget {
 }
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
-  static const _volumeKiloThreshold = 1000.0;
   static const _miniSignalPoints = 8;
+  static const _fixedConsistencyWeeks = 6;
+  static const _bodyTrendPoints = 10;
   static const _chipBackgroundOpacity = 0.14;
   static const _miniBarOpacity = 0.75;
 
@@ -40,8 +41,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   int _selectedTimeRangeIndex = 1;
 
   bool _isLoadingStats = true;
-  List<Map<String, dynamic>> _recentPRs = [];
-  List<Map<String, dynamic>> _weeklyVolume = [];
+  List<Map<String, dynamic>> _workoutsPerWeek = [];
   Map<String, dynamic> _muscleAnalytics = const {};
   List<Map<String, dynamic>> _notableImprovements = [];
   TrainingStatsPayload _trainingStats = const TrainingStatsPayload(
@@ -76,8 +76,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
     if (!mounted) return;
     setState(() {
-      _recentPRs = hub.recentPrs;
-      _weeklyVolume = hub.weeklyVolume;
+      _workoutsPerWeek = hub.workoutsPerWeek;
       _muscleAnalytics = hub.muscleAnalytics;
       _trainingStats = hub.trainingStats;
       _recoveryAnalytics = hub.recoveryAnalytics;
@@ -166,11 +165,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildConsistencySection() {
-    final avgWorkouts = _trainingStats.avgPerWeek <= 0
+    final counts = _workoutsPerWeek
+        .map((w) => ((w['count'] as num?) ?? 0).toDouble())
+        .toList(growable: false);
+    final avgWorkouts = counts.isEmpty
         ? '-'
-        : _trainingStats.avgPerWeek.toStringAsFixed(1);
-    final weeklyTrend = _weeklyVolume
-        .map((w) => ((w['setCount'] as num?) ?? 0).toDouble())
+        : (counts.reduce((a, b) => a + b) / counts.length).toStringAsFixed(1);
+    final weeklyTrend = counts
         .toList(growable: false);
     final streakText = _isLoadingStats
         ? l10n.load_dots
@@ -186,9 +187,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCardHeading(
+            _buildHeaderWithChevron(
               label: l10n.workoutsPerWeekLabel,
-              chipText: _timeRanges[_selectedTimeRangeIndex],
+              chipText: _fixedWeeksChipLabel(_fixedConsistencyWeeks),
             ),
             const SizedBox(height: 4),
             Text(
@@ -208,14 +209,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   ),
             ),
             const SizedBox(height: 8),
+            _buildMicroCaption(
+              '${l10n.analyticsRollingConsistency} • ${_fixedWeeksChipLabel(_fixedConsistencyWeeks)}',
+            ),
+            const SizedBox(height: 4),
             _buildMiniBars(
               values:
                   weeklyTrend.take(_miniSignalPoints).toList(growable: false),
               color: Theme.of(context).colorScheme.primary,
               semanticsLabel: l10n.sectionConsistency,
             ),
-            const SizedBox(height: 8),
-            _buildDrillDownHint(),
           ],
         ),
       ),
@@ -248,8 +251,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCardHeading(
+            _buildHeaderWithChevron(
               label: l10n.analyticsMuscleTopFrequency,
+              trailingIcon: true,
               chipText: topMuscle == null
                   ? null
                   : '${(topMuscleShare * 100).toStringAsFixed(0)}%',
@@ -284,8 +288,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 ),
               ),
             ],
-            const SizedBox(height: 8),
-            _buildDrillDownHint(),
+            const SizedBox(height: 6),
+            _buildMicroCaption(_timeRanges[_selectedTimeRangeIndex]),
           ],
         ),
       ),
@@ -295,28 +299,18 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   Widget _buildPerformanceSection() {
     final topImprovement =
         _notableImprovements.isNotEmpty ? _notableImprovements.first : null;
-    final latestVolume =
-        _weeklyVolume.isNotEmpty ? (_weeklyVolume.last['tonnage'] as num?) : null;
     final momentumValue = topImprovement == null
         ? '-'
         : '+${((topImprovement['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%';
     final topExerciseName = topImprovement == null
         ? l10n.metricsMostImproved
         : (topImprovement['exerciseName'] as String? ?? l10n.metricsMostImproved);
-    final recentRecordsText = _recentPRs.isEmpty
+    final performanceSummaryText = _notableImprovements.isEmpty
         ? l10n.exerciseAnalyticsNoData
-        : '${l10n.analyticsRecentRecords}: ${_recentPRs.length}';
-    final performanceSummaryText = _recentPRs.isEmpty
-        ? recentRecordsText
-        : '$recentRecordsText • ${l10n.metricsVolumeLifted}: ${_formatVolume(latestVolume)}';
-    final latestVolumeValue = (latestVolume ?? 0).toDouble();
-    final rollingMaxVolume = _weeklyVolume
-        .map((v) => ((v['tonnage'] as num?) ?? 0).toDouble())
-        .fold<double>(0, (a, b) => a > b ? a : b);
-    final compactSignals = <double>[
-      _recentPRs.isEmpty ? 0 : (_recentPRs.length.clamp(0, 6) / 6),
-      rollingMaxVolume <= 0 ? 0 : (latestVolumeValue / rollingMaxVolume),
-    ];
+        : '${l10n.analyticsRecentRecords}: ${_notableImprovements.length}';
+    final compactSignals = _notableImprovements
+        .map((row) => ((row['improvementPct'] as num?) ?? 0).toDouble())
+        .toList(growable: false);
     final momentumColor = topImprovement == null
         ? Theme.of(context).colorScheme.outline
         : Theme.of(context).colorScheme.primary;
@@ -333,9 +327,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCardHeading(
+                _buildHeaderWithChevron(
                   label: l10n.metricsMostImproved,
-                  chipText: _timeRanges[_selectedTimeRangeIndex],
+                  chipText: _effectivePerformanceRangeLabel(),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -358,13 +352,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       ),
                 ),
                 const SizedBox(height: 8),
+                _buildMicroCaption(l10n.analyticsRecentRecords),
+                const SizedBox(height: 4),
                 _buildMiniBars(
                   values: compactSignals,
                   color: Theme.of(context).colorScheme.primary,
                   semanticsLabel: l10n.analyticsSectionPerformanceRecords,
                 ),
-                const SizedBox(height: 8),
-                _buildDrillDownHint(),
               ],
             ),
           ),
@@ -429,7 +423,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 Expanded(
                   child: _buildCardHeading(
                     label: l10n.metricsMuscleReadiness,
-                    chipText: hasData ? l10n.sectionRecovery : null,
+                    chipText: hasData ? l10n.currentlyTracking : null,
                   ),
                 ),
                 _buildDrillDownHint(),
@@ -466,6 +460,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   ready: ready,
                   fresh: fresh,
                 ),
+                const SizedBox(height: 6),
+                _buildMicroCaption(l10n.currentlyTracking),
               ],
             ],
           ],
@@ -540,7 +536,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCardHeading(
+                _buildHeaderWithChevron(
                   label: l10n.metricsCurrentWeight,
                   chipText: _effectiveBodyRangeLabel(),
                 ),
@@ -560,13 +556,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       ),
                 ),
                 const SizedBox(height: 8),
+                _buildMicroCaption(_effectiveBodyRangeLabel()),
+                const SizedBox(height: 4),
                 _buildMiniBars(
-                  values: weightTrend.take(10).toList(growable: false),
+                  values: weightTrend.take(_bodyTrendPoints).toList(growable: false),
                   color: Theme.of(context).colorScheme.secondary,
                   semanticsLabel: l10n.sectionBodyNutrition,
                 ),
-                const SizedBox(height: 8),
-                _buildDrillDownHint(),
               ],
             ),
           ),
@@ -605,7 +601,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final days = resolved.effectiveDays;
     if (days == null || days <= 0) return _timeRanges[_selectedTimeRangeIndex];
     if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
-      return '${l10n.filterAll} (${days}d)';
+      return '${l10n.filterAll} (${_dayCountLabel(days)})';
     }
     return _timeRanges[_selectedTimeRangeIndex];
   }
@@ -625,14 +621,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return '$changeText • ${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay}';
   }
 
-  String _formatVolume(num? volume) {
-    if (volume == null) return l10n.exerciseAnalyticsNoData;
-    if (volume >= _volumeKiloThreshold) {
-      return '${(volume / _volumeKiloThreshold).toStringAsFixed(1)}k ${l10n.analyticsUnitKg}';
-    }
-    return '${volume.toStringAsFixed(0)} ${l10n.analyticsUnitKg}';
-  }
-
   String _formatPerWeek(String valueText) {
     return '$valueText / ${l10n.analyticsPerWeekAbbrev}';
   }
@@ -649,7 +637,30 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   String _noClearFocusLabel() {
-    return l10n.analyticsGuidanceNoClearWeakPoint;
+    final source = l10n.analyticsGuidanceNoClearWeakPoint;
+    final stripped = source.replaceFirst(RegExp(r'^[^:]+:\s*'), '');
+    return stripped.trim().isEmpty ? source : stripped.trim();
+  }
+
+  String _fixedWeeksChipLabel(int weeks) {
+    return '$weeks ${l10n.weeksLabel}';
+  }
+
+  String _effectivePerformanceRangeLabel() {
+    final resolved = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubNotablePrImprovements,
+      selectedRangeIndex: _selectedTimeRangeIndex,
+    );
+    final days = resolved.effectiveDays;
+    if (days == null) return _timeRanges[_selectedTimeRangeIndex];
+    if (days == _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex)) {
+      return _timeRanges[_selectedTimeRangeIndex];
+    }
+    return _dayCountLabel(days);
+  }
+
+  String _dayCountLabel(int days) {
+    return '$days ${l10n.analyticsDayUnitLabel}';
   }
 
   Widget _buildCardHeading({
@@ -686,11 +697,42 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     );
   }
 
+  Widget _buildHeaderWithChevron({
+    required String label,
+    String? chipText,
+    bool trailingIcon = true,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildCardHeading(
+            label: label,
+            chipText: chipText,
+          ),
+        ),
+        if (trailingIcon) ...[
+          const SizedBox(width: 8),
+          _buildDrillDownHint(),
+        ],
+      ],
+    );
+  }
+
   Widget _buildDrillDownHint() {
     return Icon(
       Icons.chevron_right,
       size: 18,
       color: Theme.of(context).colorScheme.outline,
+    );
+  }
+
+  Widget _buildMicroCaption(String text) {
+    if (text.trim().isEmpty) return const SizedBox.shrink();
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
     );
   }
 
