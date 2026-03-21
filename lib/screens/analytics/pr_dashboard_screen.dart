@@ -16,6 +16,8 @@ class PRDashboardScreen extends StatefulWidget {
 
 class _PRDashboardScreenState extends State<PRDashboardScreen> {
   final _rangePolicy = StatisticsRangePolicyService.instance;
+  static const int _topMomentumIndex = 0;
+  static const int _twoColumnGridCount = 2;
   bool _isLoading = true;
   int _selectedWindowDays = 30;
 
@@ -91,10 +93,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionHeader(
-                    l10n.analyticsNotableImprovements,
-                    isPrimary: true,
-                  ),
+                  _buildPrimarySectionHeader(l10n.analyticsNotableImprovements),
                   Row(
                     children: [
                       _windowChip(7, l10n.filter7Days),
@@ -126,7 +125,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                               return ListTile(
                                 dense: true,
                                 contentPadding: EdgeInsets.zero,
-                                leading: entry.key == 0
+                                leading: entry.key == _topMomentumIndex
                                     ? Icon(
                                         Icons.trending_up,
                                         color: Theme.of(context)
@@ -140,7 +139,10 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Text(
-                                  '${l10n.analyticsE1rmProgress(_formatWeight(previous), _formatWeight(recent))} • Δ +${_formatWeight(delta)} kg',
+                                  l10n.analyticsE1rmProgress(
+                                    _formatWeight(previous),
+                                    _formatWeight(recent),
+                                  ),
                                 ),
                                 trailing: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -154,7 +156,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                       ),
                                     ),
                                     Text(
-                                      '+${_formatWeight(delta)} kg',
+                                      'Δ ${_formatWeight(delta)}',
                                       style: Theme.of(
                                         context,
                                       ).textTheme.labelSmall,
@@ -192,121 +194,136 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                             padding: const EdgeInsets.all(12.0),
                             child: Text(l10n.noWorkoutDataLabel),
                           )
-                        : Wrap(
-                            spacing: DesignConstants.spacingS,
-                            runSpacing: DesignConstants.spacingS,
-                            children: _allTimePrs.asMap().entries.map((entry) {
-                              return Container(
-                                width:
-                                    (MediaQuery.of(context).size.width - 56) /
-                                    2,
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerHighest
-                                      .withValues(alpha: 0.35),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '#${entry.key + 1}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                          ),
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final tileWidth =
+                                  _calculateTileWidth(constraints.maxWidth);
+                              return Wrap(
+                                spacing: DesignConstants.spacingS,
+                                runSpacing: DesignConstants.spacingS,
+                                children:
+                                    _allTimePrs.asMap().entries.map((entry) {
+                                  return Container(
+                                    width: tileWidth,
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                          .withValues(alpha: 0.35),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _perfLabel(entry.value),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '#${entry.key + 1}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _perfLabel(entry.value),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                        Text(
+                                          entry.value['exerciseName'] as String,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      entry.value['exerciseName'] as String,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                }).toList(),
                               );
-                            }).toList(),
+                            },
                           ),
                   ),
                   const SizedBox(height: DesignConstants.spacingL),
                   _buildSectionHeader(l10n.prsByRepRangeLabel),
                   SummaryCard(
-                    child: Wrap(
-                      spacing: DesignConstants.spacingS,
-                      runSpacing: DesignConstants.spacingS,
-                      children: _prsByRepRange.entries.map((entry) {
-                        final data = entry.value;
-                        final hasData = data != null;
-                        return Container(
-                          width: (MediaQuery.of(context).size.width - 56) / 2,
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withValues(alpha: 0.35),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry.key.replaceAll(
-                                    'RM', l10n.analyticsRepRangeSuffix),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final tileWidth =
+                            _calculateTileWidth(constraints.maxWidth);
+                        return Wrap(
+                          spacing: DesignConstants.spacingS,
+                          runSpacing: DesignConstants.spacingS,
+                          children: _prsByRepRange.entries.map((entry) {
+                            final data = entry.value;
+                            final hasData = data != null;
+                            return Container(
+                              width: tileWidth,
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                    .withValues(alpha: 0.35),
                               ),
-                              const SizedBox(height: 4),
-                              if (hasData) ...[
-                                Text(
-                                  l10n.analyticsPerfWithReps(
-                                    _formatWeight(
-                                        (data['weight'] as num).toDouble()),
-                                    (data['reps'] as num).toInt(),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    entry.key.replaceAll(
+                                        'RM', l10n.analyticsRepRangeSuffix),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  data['exerciseName'] as String,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ] else
-                                Text(
-                                  l10n.analyticsNoRecordYet,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                            ],
-                          ),
+                                  const SizedBox(height: 4),
+                                  if (hasData) ...[
+                                    Text(
+                                      l10n.analyticsPerfWithReps(
+                                        _formatWeight(
+                                            (data['weight'] as num).toDouble()),
+                                        (data['reps'] as num).toInt(),
+                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      data['exerciseName'] as String,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ] else
+                                    Text(
+                                      l10n.analyticsNoRecordYet,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      },
                     ),
                   ),
                 ],
@@ -315,20 +332,32 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, {bool isPrimary = false}) {
+  double _calculateTileWidth(double availableWidth) {
+    return (availableWidth - DesignConstants.spacingS) / _twoColumnGridCount;
+  }
+
+  Widget _buildPrimarySectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 6, top: 2),
       child: Text(
         title,
-        style: isPrimary
-            ? Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                )
-            : Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.2,
-                  color: Colors.grey[600],
-                ),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 6, top: 2),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.2,
+              color: Colors.grey[600],
+            ),
       ),
     );
   }
