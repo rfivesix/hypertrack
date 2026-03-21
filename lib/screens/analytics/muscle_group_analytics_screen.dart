@@ -70,9 +70,8 @@ class _MuscleGroupAnalyticsScreenState
         .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
             m['muscleGroup'] as String?))
         .toList(growable: false)
-      ..sort((a, b) =>
-        ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
-            .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0));
+      ..sort((a, b) => ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
+          .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0));
 
     if (sorted.length <= _maxMuscleBars) {
       return sorted
@@ -157,37 +156,6 @@ class _MuscleGroupAnalyticsScreenState
                     }),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  _sectionLabel(
-                    l10n.analyticsWeeklySetsByMuscle,
-                    isPrimary: true,
-                  ),
-                  if (weekly.isNotEmpty) ...[
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: List.generate(weekly.length, (index) {
-                          final row = weekly[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: Text(row['weekLabel'] as String),
-                              selected: _selectedWeekIndex == index,
-                              onSelected: (selected) {
-                                if (!selected) return;
-                                setState(() => _selectedWeekIndex = index);
-                              },
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                    const SizedBox(height: DesignConstants.spacingS),
-                  ],
-                  _buildWeeklySetsCard(selectedWeek),
-                  const SizedBox(height: DesignConstants.spacingM),
-                  _sectionLabel(l10n.analyticsFrequencyByMuscle),
-                  _buildFrequencyCard(muscles),
-                  const SizedBox(height: DesignConstants.spacingM),
                   _sectionLabel(l10n.analyticsRadarOverviewTitle),
                   SummaryCard(
                     child: Padding(
@@ -224,6 +192,37 @@ class _MuscleGroupAnalyticsScreenState
                       ),
                     ),
                   ),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  _sectionLabel(
+                    l10n.analyticsWeeklySetsByMuscle,
+                    isPrimary: true,
+                  ),
+                  if (weekly.isNotEmpty) ...[
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: List.generate(weekly.length, (index) {
+                          final row = weekly[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text(row['weekLabel'] as String),
+                              selected: _selectedWeekIndex == index,
+                              onSelected: (selected) {
+                                if (!selected) return;
+                                setState(() => _selectedWeekIndex = index);
+                              },
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: DesignConstants.spacingS),
+                  ],
+                  _buildWeeklySetsCard(selectedWeek),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  _sectionLabel(l10n.analyticsFrequencyByMuscle),
+                  _buildFrequencyCard(muscles),
                   const SizedBox(height: DesignConstants.spacingM),
                   _sectionLabel(l10n.analyticsGuidanceTitle),
                   SummaryCard(
