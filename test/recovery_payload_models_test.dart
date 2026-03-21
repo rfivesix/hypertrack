@@ -52,5 +52,26 @@ void main() {
       expect(payload.totals.tracked, 0);
       expect(payload.muscles, isEmpty);
     });
+
+    test('ignores non-map entries in muscles list', () {
+      final payload = RecoveryAnalyticsPayload.fromMap({
+        'muscles': [
+          {
+            'muscleGroup': 'Legs',
+            'state': 'ready',
+            'hoursSinceLastSignificantLoad': 70,
+          },
+          'invalid',
+          123,
+          null,
+        ],
+      });
+
+      expect(payload.muscles, hasLength(1));
+      expect(payload.muscles.first.muscleGroup, 'Legs');
+      expect(payload.muscles.first.highSessionFatigue, isFalse);
+      expect(payload.muscles.first.recoveringUpperHours, 48);
+      expect(payload.muscles.first.readyUpperHours, 72);
+    });
   });
 }

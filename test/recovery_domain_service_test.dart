@@ -16,6 +16,10 @@ void main() {
         RecoveryDomainService.hasHighSessionFatigue(avgRir: 1, avgRpe: 8.5),
         isFalse,
       );
+      expect(
+        RecoveryDomainService.hasHighSessionFatigue(avgRir: null, avgRpe: 8.99),
+        isFalse,
+      );
     });
 
     test('computes fatigue-adjusted thresholds identically', () {
@@ -59,6 +63,27 @@ void main() {
         ),
         RecoveryDomainService.stateFresh,
       );
+      expect(
+        RecoveryDomainService.muscleState(
+          hoursSinceLastSignificantLoad: 71.9,
+          highSessionFatigue: true,
+        ),
+        RecoveryDomainService.stateRecovering,
+      );
+      expect(
+        RecoveryDomainService.muscleState(
+          hoursSinceLastSignificantLoad: 72,
+          highSessionFatigue: true,
+        ),
+        RecoveryDomainService.stateReady,
+      );
+      expect(
+        RecoveryDomainService.muscleState(
+          hoursSinceLastSignificantLoad: 96.1,
+          highSessionFatigue: true,
+        ),
+        RecoveryDomainService.stateFresh,
+      );
     });
 
     test('classifies overall state identically', () {
@@ -78,8 +103,8 @@ void main() {
       );
       expect(
         RecoveryDomainService.overallState(
-          totalTrackedMuscles: 5,
-          recoveringCount: 2,
+          totalTrackedMuscles: 10,
+          recoveringCount: 4,
         ),
         RecoveryDomainService.overallSeveralRecovering,
       );
@@ -106,6 +131,11 @@ void main() {
 
       expect(low, 0);
       expect(high, 100);
+    });
+
+    test('uses parity-safe defaults in recovery pressure score', () {
+      final score = RecoveryDomainService.recoveryPressureScore(const {});
+      expect(score, 0);
     });
 
     test('hides brachialis muscle only', () {

@@ -27,6 +27,19 @@ void main() {
       expect(result, 1.0); // 4 active days / 4 weeks
     });
 
+    test('returns zero training days when no active days in window', () {
+      final now = DateTime(2026, 3, 20);
+      final result = ConsistencyDomainService.computeTrainingDaysPerWeekLast4(
+        now: now,
+        workoutDayCounts: {
+          now.subtract(const Duration(days: 1)): 0,
+          now.subtract(const Duration(days: 29)): 2,
+        },
+      );
+
+      expect(result, 0);
+    });
+
     test('computes rhythm delta from recent 4 vs prior 4 weeks', () {
       final result = ConsistencyDomainService.computeRhythmDelta(
         weeklyMetrics: [
@@ -229,6 +242,43 @@ void main() {
       expect(result, 62.5); // last 8 weeks: 5/8 have count >= 2
     });
 
+    test('rolling consistency uses all weeks when <= 8 entries', () {
+      final result = ConsistencyDomainService.rollingConsistencyPercent(
+        weeklyMetrics: [
+          WeeklyConsistencyMetricPayload(
+            weekStart: DateTime(2026, 1, 6),
+            weekLabel: '6.1.',
+            count: 2,
+            durationMinutes: 0,
+            tonnage: 0,
+          ),
+          WeeklyConsistencyMetricPayload(
+            weekStart: DateTime(2026, 1, 13),
+            weekLabel: '13.1.',
+            count: 1,
+            durationMinutes: 0,
+            tonnage: 0,
+          ),
+          WeeklyConsistencyMetricPayload(
+            weekStart: DateTime(2026, 1, 20),
+            weekLabel: '20.1.',
+            count: 2,
+            durationMinutes: 0,
+            tonnage: 0,
+          ),
+          WeeklyConsistencyMetricPayload(
+            weekStart: DateTime(2026, 1, 27),
+            weekLabel: '27.1.',
+            count: 0,
+            durationMinutes: 0,
+            tonnage: 0,
+          ),
+        ],
+      );
+
+      expect(result, 50.0);
+    });
+
     test('returns zero rolling consistency for empty weekly metrics', () {
       final result = ConsistencyDomainService.rollingConsistencyPercent(
         weeklyMetrics: const [],
@@ -278,6 +328,36 @@ void main() {
       expect(fallback.count, 0);
       expect(fallback.durationMinutes, 0.0);
       expect(fallback.tonnage, 0.0);
+    });
+
+    test('training stats payload accepts num values from dynamic map', () {
+      final payload = TrainingStatsPayload.fromMap({
+        'totalWorkouts': 7.8,
+        'thisWeekCount': 2.0,
+        'avgPerWeek': 1,
+        'streakWeeks': 3.2,
+      });
+
+      expect(payload.totalWorkouts, 7);
+      expect(payload.thisWeekCount, 2);
+      expect(payload.avgPerWeek, 1.0);
+      expect(payload.streakWeeks, 3);
+    });
+
+    test('weekly consistency payload ignores invalid typed values', () {
+      final payload = WeeklyConsistencyMetricPayload.fromMap({
+        'weekStart': 'invalid',
+        'weekLabel': 123,
+        'count': '3',
+        'durationMinutes': '45',
+        'tonnage': null,
+      });
+
+      expect(payload.weekStart, DateTime.fromMillisecondsSinceEpoch(0));
+      expect(payload.weekLabel, '');
+      expect(payload.count, 0);
+      expect(payload.durationMinutes, 0.0);
+      expect(payload.tonnage, 0.0);
     });
   });
 }
