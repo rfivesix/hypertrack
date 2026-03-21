@@ -157,15 +157,36 @@ class _MuscleGroupAnalyticsScreenState
                     }),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  SummaryCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Text(
-                        l10n.analyticsEquivalentSetsExplainer,
-                        style: Theme.of(context).textTheme.bodySmall,
+                  _sectionLabel(
+                    l10n.analyticsWeeklySetsByMuscle,
+                    isPrimary: true,
+                  ),
+                  if (weekly.isNotEmpty) ...[
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: List.generate(weekly.length, (index) {
+                          final row = weekly[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text(row['weekLabel'] as String),
+                              selected: _selectedWeekIndex == index,
+                              onSelected: (selected) {
+                                if (!selected) return;
+                                setState(() => _selectedWeekIndex = index);
+                              },
+                            ),
+                          );
+                        }),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: DesignConstants.spacingS),
+                  ],
+                  _buildWeeklySetsCard(selectedWeek),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  _sectionLabel(l10n.analyticsFrequencyByMuscle),
+                  _buildFrequencyCard(muscles),
                   const SizedBox(height: DesignConstants.spacingM),
                   _sectionLabel(l10n.analyticsRadarOverviewTitle),
                   SummaryCard(
@@ -204,37 +225,6 @@ class _MuscleGroupAnalyticsScreenState
                     ),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  _sectionLabel(l10n.analyticsWeeklySetsByMuscle),
-                  if (weekly.isNotEmpty) ...[
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: List.generate(weekly.length, (index) {
-                          final row = weekly[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: Text(row['weekLabel'] as String),
-                              selected: _selectedWeekIndex == index,
-                              onSelected: (selected) {
-                                if (!selected) return;
-                                setState(() => _selectedWeekIndex = index);
-                              },
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                    const SizedBox(height: DesignConstants.spacingS),
-                  ],
-                  _buildWeeklySetsCard(selectedWeek),
-                  const SizedBox(height: DesignConstants.spacingM),
-                  _sectionLabel(l10n.analyticsFrequencyByMuscle),
-                  _buildFrequencyCard(muscles),
-                  const SizedBox(height: DesignConstants.spacingM),
-                  _sectionLabel(l10n.analyticsRecentDistributionHeatmap),
-                  _buildDistributionCard(muscles),
-                  const SizedBox(height: DesignConstants.spacingM),
                   _sectionLabel(l10n.analyticsGuidanceTitle),
                   SummaryCard(
                     child: Padding(
@@ -242,11 +232,6 @@ class _MuscleGroupAnalyticsScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _guidanceLabel(dataQualityOk, undertrained),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 8),
                           Text(
                             dataQualityOk
                                 ? l10n.analyticsGuidanceDirectionalDisclaimer
@@ -257,6 +242,11 @@ class _MuscleGroupAnalyticsScreenState
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _guidanceLabel(dataQualityOk, undertrained),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
                       ),
@@ -307,6 +297,8 @@ class _MuscleGroupAnalyticsScreenState
       footer: l10n.analyticsWeekTotalEquivalentSets(
         (selectedWeek['totalEquivalentSets'] as num).toStringAsFixed(1),
       ),
+      chartHeight: 260,
+      emphasize: true,
     );
   }
 
@@ -331,104 +323,26 @@ class _MuscleGroupAnalyticsScreenState
     );
   }
 
-  Widget _buildDistributionCard(List<Map<String, dynamic>> muscles) {
-    final l10n = AppLocalizations.of(context)!;
-    if (muscles.isEmpty) {
-      return SummaryCard(
-        child: SizedBox(
-          height: 180,
-          child: AnalyticsChartDefaults.stateView(
-            context: context,
-            l10n: l10n,
-            status: AnalyticsStatus.empty,
-            emptyLabel: l10n.noWorkoutDataLabel,
-            height: 180,
-          ),
-        ),
-      );
-    }
-
-    final top = muscles.take(10).toList();
-    final maxShare = top
-        .map((m) => (m['distributionShare'] as num).toDouble())
-        .fold<double>(0.0, (a, b) => a > b ? a : b)
-        .clamp(0.0001, 1.0);
-
-    return SummaryCard(
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: top.map((m) {
-            final share = (m['distributionShare'] as num).toDouble();
-            final ratio = (share / maxShare).clamp(0.08, 1.0);
-            final pct = (share * 100).toStringAsFixed(0);
-            final sets =
-                (m['equivalentSets'] as num).toDouble().toStringAsFixed(1);
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 90,
-                    child: Text(
-                      m['muscleGroup'] as String,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: ratio,
-                        minHeight: 14,
-                        backgroundColor:
-                            Theme.of(context).colorScheme.surfaceContainerLow,
-                        valueColor: AlwaysStoppedAnimation(
-                          Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.4 + (ratio * 0.5)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 66,
-                    child: Text(
-                      '$pct% | $sets',
-                      textAlign: TextAlign.right,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
   Widget _buildMuscleBarChart({
     required List<Map<String, dynamic>> items,
     required String unit,
     required String emptyLabel,
     required String footer,
     required String yAxisLabel,
+    double chartHeight = 220,
+    bool emphasize = false,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     if (items.isEmpty) {
       return SummaryCard(
         child: SizedBox(
-          height: 220,
+          height: chartHeight,
           child: AnalyticsChartDefaults.stateView(
             context: context,
-            l10n: AppLocalizations.of(context)!,
+            l10n: l10n,
             status: AnalyticsStatus.empty,
             emptyLabel: emptyLabel,
-            height: 220,
+            height: chartHeight,
           ),
         ),
       );
@@ -442,6 +356,26 @@ class _MuscleGroupAnalyticsScreenState
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
+            if (emphasize)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    l10n.analyticsEquivalentSetsExplainer,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
             Align(
               alignment: Alignment.centerLeft,
               child: AnalyticsChartDefaults.axisTitleLabel(
@@ -451,7 +385,7 @@ class _MuscleGroupAnalyticsScreenState
             ),
             const SizedBox(height: 4),
             SizedBox(
-              height: 220,
+              height: chartHeight,
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
@@ -522,7 +456,7 @@ class _MuscleGroupAnalyticsScreenState
                             barRods: [
                               BarChartRodData(
                                 toY: entry.value,
-                                width: 14,
+                                width: emphasize ? 16 : 14,
                                 borderRadius: BorderRadius.circular(4),
                                 color: Theme.of(context).colorScheme.primary,
                               ),
@@ -537,7 +471,7 @@ class _MuscleGroupAnalyticsScreenState
               alignment: Alignment.centerLeft,
               child: AnalyticsChartDefaults.axisTitleLabel(
                 context,
-                'X: ${AppLocalizations.of(context)!.analyticsViewByMuscle}',
+                'X: ${l10n.analyticsViewByMuscle}',
               ),
             ),
             const SizedBox(height: 6),
@@ -562,7 +496,13 @@ class _MuscleGroupAnalyticsScreenState
     );
   }
 
-  Widget _sectionLabel(String text) {
-    return AnalyticsSectionHeader(title: text);
+  Widget _sectionLabel(String text, {bool isPrimary = false}) {
+    if (!isPrimary) {
+      return AnalyticsSectionHeader(title: text);
+    }
+    return AnalyticsSectionHeader(
+      title: text,
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+    );
   }
 }
