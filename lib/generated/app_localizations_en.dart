@@ -2237,8 +2237,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get analyticsPerDayLabel => 'per day';
 
   @override
+  String get analyticsEffectiveRangeLabel => 'Effective range';
+
+  @override
+  String get analyticsAxisXLabel => 'X';
+
+  @override
+  String get analyticsAxisYLabel => 'Y';
+
+  @override
+  String get analyticsHighConfidenceLabel => 'Higher-confidence pattern';
+
+  @override
+  String get analyticsLowConfidenceLabel => 'Lower-confidence pattern';
+
+  @override
+  String get analyticsObservedPatternLabel => 'Observed pattern';
+
+  @override
   String get analyticsBodyNutritionTrendContext =>
       'Body weight and calorie trends';
+
+  @override
+  String get analyticsBodyNutritionTrendContextHint =>
+      'These lines show nearby trend movement over the same period for context.';
 
   @override
   String get analyticsWeightTrendLabel => 'Body weight (smoothed)';
@@ -2248,6 +2270,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';
+
+  @override
+  String get analyticsBodyNutritionConfidenceHighHint =>
+      'Data coverage in this range is strong enough for a more reliable pattern read.';
+
+  @override
+  String get analyticsBodyNutritionConfidenceLowHint =>
+      'Data coverage in this range is still limited, so treat this as early context.';
+
+  @override
+  String get analyticsBodyNutritionLowConfidenceNudge =>
+      'Keep logging weight and calories regularly to improve confidence.';
+
+  @override
+  String get analyticsBodyNutritionInterpretationConfidenceHigh =>
+      'Interpretation confidence: higher. Use this as trend context, not a direct cause statement.';
+
+  @override
+  String get analyticsBodyNutritionInterpretationConfidenceLow =>
+      'Interpretation confidence: lower. Use this as an early pattern signal and keep tracking.';
 
   @override
   String get analyticsCorrelationDisclaimer =>

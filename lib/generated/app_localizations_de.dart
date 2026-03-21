@@ -2249,8 +2249,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get analyticsPerDayLabel => 'pro Tag';
 
   @override
+  String get analyticsEffectiveRangeLabel => 'Effektiver Bereich';
+
+  @override
+  String get analyticsAxisXLabel => 'X';
+
+  @override
+  String get analyticsAxisYLabel => 'Y';
+
+  @override
+  String get analyticsHighConfidenceLabel =>
+      'Muster mit höherer Verlässlichkeit';
+
+  @override
+  String get analyticsLowConfidenceLabel =>
+      'Muster mit niedrigerer Verlässlichkeit';
+
+  @override
+  String get analyticsObservedPatternLabel => 'Beobachtetes Muster';
+
+  @override
   String get analyticsBodyNutritionTrendContext =>
       'Gewichts- und Kalorientrends';
+
+  @override
+  String get analyticsBodyNutritionTrendContextHint =>
+      'Diese Linien zeigen die Trendbewegung im gleichen Zeitraum als Kontext.';
 
   @override
   String get analyticsWeightTrendLabel => 'Körpergewicht (geglattet)';
@@ -2260,6 +2284,26 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';
+
+  @override
+  String get analyticsBodyNutritionConfidenceHighHint =>
+      'Die Datenabdeckung in diesem Bereich ist stark genug für eine verlässlichere Muster-Einordnung.';
+
+  @override
+  String get analyticsBodyNutritionConfidenceLowHint =>
+      'Die Datenabdeckung in diesem Bereich ist noch begrenzt, daher als frühen Kontext lesen.';
+
+  @override
+  String get analyticsBodyNutritionLowConfidenceNudge =>
+      'Regelmäßiges Logging von Gewicht und Kalorien verbessert die Verlässlichkeit.';
+
+  @override
+  String get analyticsBodyNutritionInterpretationConfidenceHigh =>
+      'Interpretations-Verlässlichkeit: höher. Als Trend-Kontext nutzen, nicht als direkten Ursache-Beleg.';
+
+  @override
+  String get analyticsBodyNutritionInterpretationConfidenceLow =>
+      'Interpretations-Verlässlichkeit: niedriger. Als frühes Muster-Signal nutzen und weiter tracken.';
 
   @override
   String get analyticsCorrelationDisclaimer =>
