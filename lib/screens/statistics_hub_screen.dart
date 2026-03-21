@@ -2,6 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../data/workout_database_helper.dart';
+import '../features/statistics/data/statistics_hub_data_adapter.dart';
+import '../features/statistics/domain/consistency_payload_models.dart';
+import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/recovery_domain_service.dart';
 import '../generated/app_localizations.dart';
 import '../util/body_nutrition_analytics_utils.dart';
@@ -27,6 +30,9 @@ class StatisticsHubScreen extends StatefulWidget {
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   late final l10n = AppLocalizations.of(context)!;
+  final _hubDataAdapter = StatisticsHubDataAdapter(
+    workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
+  );
 
   int _selectedTimeRangeIndex = 1;
 
@@ -34,11 +40,26 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   List<Map<String, dynamic>> _recentPRs = [];
   List<Map<String, dynamic>> _weeklyVolume = [];
   List<Map<String, dynamic>> _workoutsPerWeek = [];
-  List<Map<String, dynamic>> _weeklyConsistencyMetrics = [];
+  List<WeeklyConsistencyMetricPayload> _weeklyConsistencyMetrics = [];
   Map<String, dynamic> _muscleAnalytics = const {};
   List<Map<String, dynamic>> _notableImprovements = [];
-  Map<String, dynamic> _trainingStats = const {};
-  Map<String, dynamic> _recoveryAnalytics = const {};
+  TrainingStatsPayload _trainingStats = const TrainingStatsPayload(
+    totalWorkouts: 0,
+    thisWeekCount: 0,
+    avgPerWeek: 0.0,
+    streakWeeks: 0,
+  );
+  RecoveryAnalyticsPayload _recoveryAnalytics = const RecoveryAnalyticsPayload(
+    hasData: false,
+    overallState: '',
+    totals: RecoveryTotalsPayload(
+      recovering: 0,
+      ready: 0,
+      fresh: 0,
+      tracked: 0,
+    ),
+    muscles: [],
+  );
   BodyNutritionAnalyticsResult? _bodyNutrition;
   _HubConsistencyMetric _hubConsistencyMetric = _HubConsistencyMetric.volume;
 
@@ -67,53 +88,22 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
-
-    final prs = WorkoutDatabaseHelper.instance.getRecentGlobalPRs(limit: 3);
-    final weeklyVolume =
-        WorkoutDatabaseHelper.instance.getWeeklyVolumeData(weeksBack: 6);
-    final workoutsPerWeek =
-        WorkoutDatabaseHelper.instance.getWorkoutsPerWeek(weeksBack: 6);
-    final consistencyMetrics = WorkoutDatabaseHelper.instance
-        .getWeeklyConsistencyMetrics(weeksBack: 6);
-    final muscleAnalytics =
-        WorkoutDatabaseHelper.instance.getMuscleGroupAnalytics(
-      daysBack: _selectedDays,
-      weeksBack: 8,
+    final (hub, bodyNutrition) = await _hubDataAdapter.fetch(
+      selectedDays: _selectedDays,
+      selectedTimeRangeIndex: _selectedTimeRangeIndex,
     );
-    final trainingStats = WorkoutDatabaseHelper.instance.getTrainingStats();
-    final recoveryAnalytics =
-        WorkoutDatabaseHelper.instance.getRecoveryAnalytics();
-    final improvements =
-        WorkoutDatabaseHelper.instance.getNotablePrImprovements(
-      daysWindow: _selectedDays > 120 ? 90 : _selectedDays,
-      limit: 3,
-    );
-    final bodyNutrition =
-        BodyNutritionAnalyticsUtils.build(rangeIndex: _selectedTimeRangeIndex);
-
-    final results = await Future.wait([
-      prs,
-      weeklyVolume,
-      workoutsPerWeek,
-      consistencyMetrics,
-      muscleAnalytics,
-      trainingStats,
-      recoveryAnalytics,
-      improvements,
-      bodyNutrition,
-    ]);
 
     if (!mounted) return;
     setState(() {
-      _recentPRs = results[0] as List<Map<String, dynamic>>;
-      _weeklyVolume = results[1] as List<Map<String, dynamic>>;
-      _workoutsPerWeek = results[2] as List<Map<String, dynamic>>;
-      _weeklyConsistencyMetrics = results[3] as List<Map<String, dynamic>>;
-      _muscleAnalytics = results[4] as Map<String, dynamic>;
-      _trainingStats = results[5] as Map<String, dynamic>;
-      _recoveryAnalytics = results[6] as Map<String, dynamic>;
-      _notableImprovements = results[7] as List<Map<String, dynamic>>;
-      _bodyNutrition = results[8] as BodyNutritionAnalyticsResult;
+      _recentPRs = hub.recentPrs;
+      _weeklyVolume = hub.weeklyVolume;
+      _workoutsPerWeek = hub.workoutsPerWeek;
+      _weeklyConsistencyMetrics = hub.weeklyConsistencyMetrics;
+      _muscleAnalytics = hub.muscleAnalytics;
+      _trainingStats = hub.trainingStats;
+      _recoveryAnalytics = hub.recoveryAnalytics;
+      _notableImprovements = hub.notableImprovements;
+      _bodyNutrition = bodyNutrition;
       _isLoadingStats = false;
     });
   }
@@ -221,11 +211,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return _weeklyConsistencyMetrics.map((row) {
       return switch (_hubConsistencyMetric) {
         _HubConsistencyMetric.volume =>
-          (row['tonnage'] as num?)?.toDouble() ?? 0.0,
+          row.tonnage,
         _HubConsistencyMetric.duration =>
-          (row['durationMinutes'] as num?)?.toDouble() ?? 0.0,
+          row.durationMinutes,
         _HubConsistencyMetric.frequency =>
-          (row['count'] as num?)?.toDouble() ?? 0.0,
+          row.count.toDouble(),
       };
     }).toList();
   }
@@ -304,12 +294,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   children: [
                     _buildMetricCol(
                       l10n.metricsWorkoutsWeek,
-                      '${(_trainingStats['thisWeekCount'] as num?)?.toInt() ?? 0}',
+                      '${_trainingStats.thisWeekCount}',
                       l10n.thisWeekLabel,
                     ),
                     _buildMetricCol(
                       l10n.metricsCurrentStreak,
-                      '${(_trainingStats['streakWeeks'] as num?)?.toInt() ?? 0}',
+                      '${_trainingStats.streakWeeks}',
                       l10n.metricsActiveWeeks,
                     ),
                   ],
@@ -504,17 +494,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildRecoverySection() {
-    final totals =
-        (_recoveryAnalytics['totals'] as Map<String, dynamic>?) ?? const {};
-    final recovering =
-        (totals[RecoveryDomainService.stateRecovering] as num?)?.toInt() ?? 0;
-    final ready =
-        (totals[RecoveryDomainService.stateReady] as num?)?.toInt() ?? 0;
-    final fresh =
-        (totals[RecoveryDomainService.stateFresh] as num?)?.toInt() ?? 0;
-    final hasData = (_recoveryAnalytics['hasData'] as bool?) ?? false;
+    final recovering = _recoveryAnalytics.totals.recovering;
+    final ready = _recoveryAnalytics.totals.ready;
+    final fresh = _recoveryAnalytics.totals.fresh;
+    final hasData = _recoveryAnalytics.hasData;
 
-    final overallState = _recoveryAnalytics['overallState'] as String?;
+    final overallState = _recoveryAnalytics.overallState;
     final overallLabel = switch (overallState) {
       RecoveryDomainService.overallMostlyRecovered =>
         l10n.recoveryOverallMostlyRecovered,

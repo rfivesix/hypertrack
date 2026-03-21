@@ -114,16 +114,11 @@ class BodyNutritionAnalyticsDataAdapter {
     required List<FluidEntry> fluidEntries,
   }) async {
     final map = <DateTime, double>{};
-    final foodCaloriesPer100gCache = <String, int>{};
+    final foodCaloriesPer100gCache = await _hydrateCaloriesByBarcode(foodEntries);
 
     for (final entry in foodEntries) {
       final day = normalizeDay(entry.timestamp);
       final barcode = entry.barcode;
-      if (!foodCaloriesPer100gCache.containsKey(barcode)) {
-        final product =
-            await _productDatabaseHelper.getProductByBarcode(barcode);
-        foodCaloriesPer100gCache[barcode] = product?.calories ?? 0;
-      }
       final caloriesPer100g = foodCaloriesPer100gCache[barcode] ?? 0;
       final amountGrams = entry.quantityInGrams.toDouble();
       final added = caloriesPer100g * (amountGrams / 100.0);
@@ -137,5 +132,29 @@ class BodyNutritionAnalyticsDataAdapter {
     }
 
     return map;
+  }
+
+  Future<Map<String, int>> _hydrateCaloriesByBarcode(
+    List<FoodEntry> foodEntries,
+  ) async {
+    final uniqueBarcodes = foodEntries
+        .map((e) => e.barcode)
+        .where((barcode) => barcode.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (uniqueBarcodes.isEmpty) {
+      return const {};
+    }
+
+    final products =
+        await _productDatabaseHelper.getProductsByBarcodes(uniqueBarcodes);
+    final hydrated = <String, int>{
+      for (final product in products) product.barcode: product.calories,
+    };
+
+    for (final barcode in uniqueBarcodes) {
+      hydrated.putIfAbsent(barcode, () => 0);
+    }
+    return hydrated;
   }
 }

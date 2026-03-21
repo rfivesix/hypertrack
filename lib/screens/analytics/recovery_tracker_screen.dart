@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/workout_database_helper.dart';
 import '../../features/statistics/domain/recovery_domain_service.dart';
+import '../../features/statistics/domain/recovery_payload_models.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/analytics_section_header.dart';
@@ -18,7 +19,17 @@ class RecoveryTrackerScreen extends StatefulWidget {
 
 class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   bool _isLoading = true;
-  Map<String, dynamic> _recovery = const {};
+  RecoveryAnalyticsPayload _recovery = const RecoveryAnalyticsPayload(
+    hasData: false,
+    overallState: '',
+    totals: RecoveryTotalsPayload(
+      recovering: 0,
+      ready: 0,
+      fresh: 0,
+      tracked: 0,
+    ),
+    muscles: [],
+  );
 
   @override
   void initState() {
@@ -31,7 +42,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final data = await WorkoutDatabaseHelper.instance.getRecoveryAnalytics();
     if (!mounted) return;
     setState(() {
-      _recovery = data;
+      _recovery = RecoveryAnalyticsPayload.fromMap(data);
       _isLoading = false;
     });
   }
@@ -73,12 +84,11 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
 
   String _explanationForMuscle(
     AppLocalizations l10n,
-    Map<String, dynamic> muscle,
+    RecoveryMusclePayload muscle,
   ) {
-    final muscleName = muscle['muscleGroup'] as String;
-    final hours =
-        (muscle['hoursSinceLastSignificantLoad'] as num).toDouble().round();
-    final highFatigue = (muscle['highSessionFatigue'] as bool?) ?? false;
+    final muscleName = muscle.muscleGroup;
+    final hours = muscle.hoursSinceLastSignificantLoad.round();
+    final highFatigue = muscle.highSessionFatigue;
 
     if (highFatigue) {
       return l10n.recoveryExplanationWithHighFatigue(muscleName, hours);
@@ -90,11 +100,15 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     return RecoveryDomainService.shouldHideMuscle(name);
   }
 
-  double _recoveryPressureScore(Map<String, dynamic> muscle) {
-    return RecoveryDomainService.recoveryPressureScore(muscle);
+  double _recoveryPressureScore(RecoveryMusclePayload muscle) {
+    return RecoveryDomainService.recoveryPressureScore({
+      'lastEquivalentSets': muscle.lastEquivalentSets,
+      'hoursSinceLastSignificantLoad': muscle.hoursSinceLastSignificantLoad,
+      'highSessionFatigue': muscle.highSessionFatigue,
+    });
   }
 
-  List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
+  List<MuscleRadarDatum> _buildRadarData(List<RecoveryMusclePayload> muscles) {
     final sorted = [...muscles]
       ..sort((a, b) => _recoveryPressureScore(b).compareTo(
             _recoveryPressureScore(a),
@@ -104,7 +118,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final rest = sorted.skip(8).toList();
     final data = top
         .map((m) => MuscleRadarDatum(
-              label: m['muscleGroup'] as String,
+              label: m.muscleGroup,
               value: _recoveryPressureScore(m),
             ))
         .toList();
@@ -121,19 +135,14 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    final totals = (_recovery['totals'] as Map<String, dynamic>?) ?? const {};
-    final recovering =
-        (totals[RecoveryDomainService.stateRecovering] as num?)?.toInt() ?? 0;
-    final ready =
-        (totals[RecoveryDomainService.stateReady] as num?)?.toInt() ?? 0;
-    final fresh =
-        (totals[RecoveryDomainService.stateFresh] as num?)?.toInt() ?? 0;
-    final hasData = (_recovery['hasData'] as bool?) ?? false;
+    final recovering = _recovery.totals.recovering;
+    final ready = _recovery.totals.ready;
+    final fresh = _recovery.totals.fresh;
+    final hasData = _recovery.hasData;
 
-    final muscles = (_recovery['muscles'] as List<dynamic>? ?? const [])
-        .cast<Map<String, dynamic>>();
+    final muscles = _recovery.muscles;
     final visibleMuscles = muscles
-        .where((m) => !_shouldHideMuscle(m['muscleGroup'] as String? ?? ''))
+        .where((m) => !_shouldHideMuscle(m.muscleGroup))
         .toList(growable: false);
     final radarData = _buildRadarData(visibleMuscles);
 
@@ -160,7 +169,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                         children: [
                           Text(
                             _overallLabel(
-                                l10n, _recovery['overallState'] as String?),
+                                l10n, _recovery.overallState),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -240,22 +249,14 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                     )
                   else
                     ...visibleMuscles.map((muscle) {
-                      final state = muscle['state'] as String;
+                      final muscleName = muscle.muscleGroup;
+                      final state = muscle.state;
                       final stateColor = _stateColor(context, state);
-                      final hours =
-                          (muscle['hoursSinceLastSignificantLoad'] as num)
-                              .toDouble()
-                              .round();
-                      final highFatigue =
-                          (muscle['highSessionFatigue'] as bool?) ?? false;
-                      final eqSets =
-                          (muscle['lastEquivalentSets'] as num?)?.toDouble() ??
-                              0.0;
-                      final recoveringUpper =
-                          (muscle['recoveringUpperHours'] as num?)?.toInt() ??
-                              48;
-                      final readyUpper =
-                          (muscle['readyUpperHours'] as num?)?.toInt() ?? 72;
+                      final hours = muscle.hoursSinceLastSignificantLoad.round();
+                      final highFatigue = muscle.highSessionFatigue;
+                      final eqSets = muscle.lastEquivalentSets;
+                      final recoveringUpper = muscle.recoveringUpperHours;
+                      final readyUpper = muscle.readyUpperHours;
 
                       return Padding(
                         padding: const EdgeInsets.only(
@@ -270,7 +271,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        muscle['muscleGroup'] as String,
+                                        muscleName,
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleSmall
