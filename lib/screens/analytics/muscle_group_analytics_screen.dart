@@ -2,9 +2,12 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/workout_database_helper.dart';
+import '../../features/statistics/domain/analytics_state.dart';
 import '../../features/statistics/domain/statistics_range_policy.dart';
+import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
+import '../../widgets/analytics_chart_defaults.dart';
 import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/muscle_radar_chart.dart';
@@ -58,10 +61,7 @@ class _MuscleGroupAnalyticsScreenState
   }
 
   String _formatCompact(num value) {
-    if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(1)}k';
-    }
-    return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
+    return StatisticsPresentationFormatter.compactNumber(value);
   }
 
   List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
@@ -175,7 +175,12 @@ class _MuscleGroupAnalyticsScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (radarData.length < 3)
-                            Text(l10n.noWorkoutDataLabel)
+                            AnalyticsChartDefaults.stateView(
+                              context: context,
+                              l10n: l10n,
+                              status: AnalyticsStatus.empty,
+                              emptyLabel: l10n.noWorkoutDataLabel,
+                            )
                           else
                             Center(
                               child: MuscleRadarChart(
@@ -269,7 +274,13 @@ class _MuscleGroupAnalyticsScreenState
       return SummaryCard(
         child: SizedBox(
           height: 180,
-          child: Center(child: Text(l10n.noWorkoutDataLabel)),
+          child: AnalyticsChartDefaults.stateView(
+            context: context,
+            l10n: l10n,
+            status: AnalyticsStatus.empty,
+            emptyLabel: l10n.noWorkoutDataLabel,
+            height: 180,
+          ),
         ),
       );
     }
@@ -324,7 +335,13 @@ class _MuscleGroupAnalyticsScreenState
       return SummaryCard(
         child: SizedBox(
           height: 180,
-          child: Center(child: Text(l10n.noWorkoutDataLabel)),
+          child: AnalyticsChartDefaults.stateView(
+            context: context,
+            l10n: l10n,
+            status: AnalyticsStatus.empty,
+            emptyLabel: l10n.noWorkoutDataLabel,
+            height: 180,
+          ),
         ),
       );
     }
@@ -404,7 +421,13 @@ class _MuscleGroupAnalyticsScreenState
       return SummaryCard(
         child: SizedBox(
           height: 220,
-          child: Center(child: Text(emptyLabel)),
+          child: AnalyticsChartDefaults.stateView(
+            context: context,
+            l10n: AppLocalizations.of(context)!,
+            status: AnalyticsStatus.empty,
+            emptyLabel: emptyLabel,
+            height: 220,
+          ),
         ),
       );
     }
@@ -419,9 +442,9 @@ class _MuscleGroupAnalyticsScreenState
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(
+              child: AnalyticsChartDefaults.axisTitleLabel(
+                context,
                 'Y: $yAxisLabel',
-                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
             const SizedBox(height: 4),
@@ -430,9 +453,8 @@ class _MuscleGroupAnalyticsScreenState
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  gridData:
-                      const FlGridData(show: true, drawVerticalLine: false),
-                  borderData: FlBorderData(show: false),
+                  gridData: AnalyticsChartDefaults.compactGrid,
+                  borderData: AnalyticsChartDefaults.noBorder,
                   maxY: (values.reduce((a, b) => a > b ? a : b) * 1.2)
                       .clamp(1, 1e12),
                   barTouchData: BarTouchData(
@@ -454,18 +476,15 @@ class _MuscleGroupAnalyticsScreenState
                       },
                     ),
                   ),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                  titlesData: AnalyticsChartDefaults.standardTitles(
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 40,
-                        getTitlesWidget: (value, meta) => Text(
+                        getTitlesWidget: (value, meta) =>
+                            AnalyticsChartDefaults.tickLabel(
+                          context,
                           _formatCompact(value),
-                          style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
                     ),
@@ -484,9 +503,9 @@ class _MuscleGroupAnalyticsScreenState
                               : label;
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
+                            child: AnalyticsChartDefaults.tickLabel(
+                              context,
                               compact,
-                              style: Theme.of(context).textTheme.labelSmall,
                             ),
                           );
                         },
@@ -514,9 +533,9 @@ class _MuscleGroupAnalyticsScreenState
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(
+              child: AnalyticsChartDefaults.axisTitleLabel(
+                context,
                 'X: ${AppLocalizations.of(context)!.analyticsViewByMuscle}',
-                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
             const SizedBox(height: 6),
@@ -534,14 +553,11 @@ class _MuscleGroupAnalyticsScreenState
 
   String _guidanceLabel(bool dataQualityOk, List<String> undertrained) {
     final l10n = AppLocalizations.of(context)!;
-    if (!dataQualityOk) {
-      return l10n.analyticsKeepTrackingUnlockInsights;
-    }
-    if (undertrained.isEmpty) {
-      return l10n.analyticsGuidanceNoClearWeakPoint;
-    }
-
-    return l10n.analyticsGuidanceLowerEmphasis(undertrained.join(', '));
+    return StatisticsPresentationFormatter.muscleGuidanceLabel(
+      l10n,
+      dataQualityOk,
+      undertrained,
+    );
   }
 
   Widget _sectionLabel(String text) {

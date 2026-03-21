@@ -2,7 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../features/statistics/domain/analytics_state.dart';
 import '../../features/statistics/domain/statistics_range_policy.dart';
+import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../screens/measurements_screen.dart';
 import '../../util/body_nutrition_analytics_utils.dart';
@@ -238,17 +240,17 @@ class _BodyNutritionCorrelationScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildChartTitle(l10n.analyticsWeightTrendLabel),
-            Text(
+            AnalyticsChartDefaults.axisTitleLabel(
+              context,
               'Y: ${l10n.analyticsUnitKg}   X: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
-              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 4),
             SizedBox(height: 170, child: _buildWeightChart(data)),
             const SizedBox(height: 10),
             _buildChartTitle(l10n.analyticsCaloriesTrendLabel),
-            Text(
+            AnalyticsChartDefaults.axisTitleLabel(
+              context,
               'Y: kcal   X: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
-              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 4),
             SizedBox(height: 170, child: _buildCaloriesChart(data)),
@@ -273,8 +275,10 @@ class _BodyNutritionCorrelationScreenState
 
   Widget _buildWeightChart(BodyNutritionAnalyticsResult data) {
     if (data.weightDaily.isEmpty) {
-      return Center(
-        child: Text(AppLocalizations.of(context)!.chart_no_data_for_period),
+      return AnalyticsChartDefaults.stateView(
+        context: context,
+        l10n: AppLocalizations.of(context)!,
+        status: AnalyticsStatus.empty,
       );
     }
 
@@ -291,24 +295,20 @@ class _BodyNutritionCorrelationScreenState
       LineChartData(
         minX: 0,
         maxX: (data.totalDays - 1).toDouble().clamp(1, 100000),
-        gridData: const FlGridData(show: true, drawVerticalLine: false),
-        borderData: FlBorderData(show: false),
+        gridData: AnalyticsChartDefaults.compactGrid,
+        borderData: AnalyticsChartDefaults.noBorder,
         lineTouchData: const LineTouchData(enabled: false),
-        titlesData: FlTitlesData(
+        titlesData: AnalyticsChartDefaults.standardTitles(
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40,
-              getTitlesWidget: (value, meta) => Text(
+              getTitlesWidget: (value, meta) => AnalyticsChartDefaults.tickLabel(
+                context,
                 value.toStringAsFixed(1),
-                style: Theme.of(context).textTheme.labelSmall,
               ),
             ),
           ),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -317,9 +317,9 @@ class _BodyNutritionCorrelationScreenState
                 final rounded = value.round();
                 if (!labels.contains(rounded)) return const SizedBox.shrink();
                 final day = firstDay.add(Duration(days: rounded));
-                return Text(
+                return AnalyticsChartDefaults.tickLabel(
+                  context,
                   DateFormat('MMMd').format(day),
-                  style: Theme.of(context).textTheme.labelSmall,
                 );
               },
             ),
@@ -338,8 +338,10 @@ class _BodyNutritionCorrelationScreenState
 
   Widget _buildCaloriesChart(BodyNutritionAnalyticsResult data) {
     if (data.caloriesDaily.isEmpty) {
-      return Center(
-        child: Text(AppLocalizations.of(context)!.chart_no_data_for_period),
+      return AnalyticsChartDefaults.stateView(
+        context: context,
+        l10n: AppLocalizations.of(context)!,
+        status: AnalyticsStatus.empty,
       );
     }
 
@@ -357,24 +359,20 @@ class _BodyNutritionCorrelationScreenState
       LineChartData(
         minX: 0,
         maxX: (data.totalDays - 1).toDouble().clamp(1, 100000),
-        gridData: const FlGridData(show: true, drawVerticalLine: false),
-        borderData: FlBorderData(show: false),
+        gridData: AnalyticsChartDefaults.compactGrid,
+        borderData: AnalyticsChartDefaults.noBorder,
         lineTouchData: const LineTouchData(enabled: false),
-        titlesData: FlTitlesData(
+        titlesData: AnalyticsChartDefaults.standardTitles(
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 42,
-              getTitlesWidget: (value, meta) => Text(
+              getTitlesWidget: (value, meta) => AnalyticsChartDefaults.tickLabel(
+                context,
                 value.toStringAsFixed(0),
-                style: Theme.of(context).textTheme.labelSmall,
               ),
             ),
           ),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -383,9 +381,9 @@ class _BodyNutritionCorrelationScreenState
                 final rounded = value.round();
                 if (!labels.contains(rounded)) return const SizedBox.shrink();
                 final day = firstDay.add(Duration(days: rounded));
-                return Text(
+                return AnalyticsChartDefaults.tickLabel(
+                  context,
                   DateFormat('MMMd').format(day),
-                  style: Theme.of(context).textTheme.labelSmall,
                 );
               },
             ),
@@ -431,20 +429,10 @@ class _BodyNutritionCorrelationScreenState
 
   String _insightText(
       AppLocalizations l10n, BodyNutritionAnalyticsResult data) {
-    switch (data.insightType) {
-      case BodyNutritionInsightType.stableWeightCaloriesUp:
-        return l10n.analyticsInsightStableWeightCaloriesUp;
-      case BodyNutritionInsightType.weightUpCaloriesUp:
-        return l10n.analyticsInsightWeightUpCaloriesUp;
-      case BodyNutritionInsightType.caloriesDownWeightNotYetChanged:
-        return l10n.analyticsInsightCaloriesDownWeightStable;
-      case BodyNutritionInsightType.weightDownCaloriesDown:
-        return l10n.analyticsInsightWeightDownCaloriesDown;
-      case BodyNutritionInsightType.mixed:
-        return l10n.analyticsInsightMixedPattern;
-      case BodyNutritionInsightType.notEnoughData:
-        return l10n.analyticsInsightNotEnoughData;
-    }
+    return StatisticsPresentationFormatter.bodyNutritionInsightLabel(
+      l10n,
+      data.insightType,
+    );
   }
 
   double _xOf(DateTime day, DateTime firstDay) {
