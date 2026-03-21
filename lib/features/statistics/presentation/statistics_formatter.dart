@@ -78,7 +78,7 @@ class StatisticsPresentationFormatter implements StatisticsFormatter {
   static String muscleGuidanceLabel(
     AppLocalizations l10n,
     bool dataQualityOk,
-    List<String> undertrained,
+    Iterable<String> undertrained,
   ) {
     if (!dataQualityOk) {
       return l10n.analyticsKeepTrackingUnlockInsights;

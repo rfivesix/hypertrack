@@ -79,9 +79,8 @@ class AnalyticsChartDefaults {
     };
 
     if (status == AnalyticsStatus.loading) {
-      final spinner = const Center(child: CircularProgressIndicator());
-      if (height == null) return spinner;
-      return SizedBox(height: height, child: spinner);
+      final loading = const Center(child: CircularProgressIndicator());
+      return height == null ? loading : SizedBox(height: height, child: loading);
     }
 
     if (text == null) return const SizedBox.shrink();

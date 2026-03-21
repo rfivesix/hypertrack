@@ -915,11 +915,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   String _muscleGuidanceLabel(bool dataQualityOk, List<String> undertrained) {
-    final focus = undertrained.take(2).toList(growable: false);
     return StatisticsPresentationFormatter.muscleGuidanceLabel(
       l10n,
       dataQualityOk,
-      focus,
+      undertrained.take(2),
     );
   }
 }
