@@ -1,17 +1,12 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../data/workout_database_helper.dart';
 import '../features/statistics/data/statistics_hub_data_adapter.dart';
-import '../features/statistics/domain/consistency_payload_models.dart';
 import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
-import '../features/statistics/domain/analytics_state.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
 import '../generated/app_localizations.dart';
-import '../util/body_nutrition_analytics_utils.dart';
 import '../util/design_constants.dart';
-import '../widgets/analytics_chart_defaults.dart';
 import '../widgets/analytics_section_header.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
@@ -31,6 +26,12 @@ class StatisticsHubScreen extends StatefulWidget {
 }
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
+  static const _miniSignalPoints = 8;
+  static const _fixedConsistencyWeeks = 6;
+  static const _bodyTrendPoints = 10;
+  static const _chipBackgroundOpacity = 0.14;
+  static const _miniBarOpacity = 0.75;
+
   late final l10n = AppLocalizations.of(context)!;
   final _hubDataAdapter = StatisticsHubDataAdapter(
     workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
@@ -40,10 +41,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   int _selectedTimeRangeIndex = 1;
 
   bool _isLoadingStats = true;
-  List<Map<String, dynamic>> _recentPRs = [];
-  List<Map<String, dynamic>> _weeklyVolume = [];
   List<Map<String, dynamic>> _workoutsPerWeek = [];
-  List<WeeklyConsistencyMetricPayload> _weeklyConsistencyMetrics = [];
   Map<String, dynamic> _muscleAnalytics = const {};
   List<Map<String, dynamic>> _notableImprovements = [];
   TrainingStatsPayload _trainingStats = const TrainingStatsPayload(
@@ -64,8 +62,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     muscles: [],
   );
   BodyNutritionAnalyticsResult? _bodyNutrition;
-  _HubConsistencyMetric _hubConsistencyMetric = _HubConsistencyMetric.volume;
-
   @override
   void initState() {
     super.initState();
@@ -80,10 +76,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
     if (!mounted) return;
     setState(() {
-      _recentPRs = hub.recentPrs;
-      _weeklyVolume = hub.weeklyVolume;
       _workoutsPerWeek = hub.workoutsPerWeek;
-      _weeklyConsistencyMetrics = hub.weeklyConsistencyMetrics;
       _muscleAnalytics = hub.muscleAnalytics;
       _trainingStats = hub.trainingStats;
       _recoveryAnalytics = hub.recoveryAnalytics;
@@ -118,18 +111,18 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
+                _buildSectionTitle(context, l10n.sectionRecovery),
+                _buildRecoverySection(),
+                const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.sectionConsistency),
                 _buildConsistencySection(),
-                const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.analyticsSectionVolumeMuscles),
-                _buildMuscleVolumeSection(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(
                     context, l10n.analyticsSectionPerformanceRecords),
                 _buildPerformanceSection(),
                 const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.sectionRecovery),
-                _buildRecoverySection(),
+                _buildSectionTitle(context, l10n.analyticsSectionVolumeMuscles),
+                _buildMuscleVolumeSection(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.sectionBodyNutrition),
                 _buildBodyMetricsSection(),
@@ -171,148 +164,81 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return AnalyticsSectionHeader(title: title);
   }
 
-  String _hubMetricName() {
-    return switch (_hubConsistencyMetric) {
-      _HubConsistencyMetric.volume => l10n.metricsVolumeLifted,
-      _HubConsistencyMetric.duration => l10n.durationLabel,
-      _HubConsistencyMetric.frequency => l10n.workoutsPerWeekLabel,
-    };
-  }
-
-  String _hubMetricUnit() {
-    return switch (_hubConsistencyMetric) {
-      _HubConsistencyMetric.volume => l10n.analyticsUnitKg,
-      _HubConsistencyMetric.duration => 'min',
-      _HubConsistencyMetric.frequency => l10n.analyticsPerWeekAbbrev,
-    };
-  }
-
-  List<double> _hubMetricValues() {
-    if (_weeklyConsistencyMetrics.isEmpty) {
-      return _workoutsPerWeek
-          .map((e) => (e['count'] as num?)?.toDouble() ?? 0.0)
-          .toList();
-    }
-    return _weeklyConsistencyMetrics.map((row) {
-      return switch (_hubConsistencyMetric) {
-        _HubConsistencyMetric.volume =>
-          row.tonnage,
-        _HubConsistencyMetric.duration =>
-          row.durationMinutes,
-        _HubConsistencyMetric.frequency =>
-          row.count.toDouble(),
-      };
-    }).toList();
-  }
-
   Widget _buildConsistencySection() {
-    return Column(
-      children: [
-        SummaryCard(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => const ConsistencyTrackerScreen()),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 100,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: _isLoadingStats
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildMiniBars(_hubMetricValues()),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    ChoiceChip(
-                      label: Text(l10n.metricsVolumeLifted),
-                      selected:
-                          _hubConsistencyMetric == _HubConsistencyMetric.volume,
-                      onSelected: (_) {
-                        setState(() => _hubConsistencyMetric =
-                            _HubConsistencyMetric.volume);
-                      },
-                    ),
-                    ChoiceChip(
-                      label: Text(l10n.durationLabel),
-                      selected: _hubConsistencyMetric ==
-                          _HubConsistencyMetric.duration,
-                      onSelected: (_) {
-                        setState(() => _hubConsistencyMetric =
-                            _HubConsistencyMetric.duration);
-                      },
-                    ),
-                    ChoiceChip(
-                      label: Text(l10n.workoutsPerWeekLabel),
-                      selected: _hubConsistencyMetric ==
-                          _HubConsistencyMetric.frequency,
-                      onSelected: (_) {
-                        setState(() => _hubConsistencyMetric =
-                            _HubConsistencyMetric.frequency);
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_hubMetricName()} (${_hubMetricUnit()}) / ${l10n.analyticsViewWeek}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildMetricCol(
-                      l10n.metricsWorkoutsWeek,
-                      '${_trainingStats.thisWeekCount}',
-                      l10n.thisWeekLabel,
-                    ),
-                    _buildMetricCol(
-                      l10n.metricsCurrentStreak,
-                      '${_trainingStats.streakWeeks}',
-                      l10n.metricsActiveWeeks,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _buildDrillDownHint(),
-              ],
+    final counts = _workoutsPerWeek
+        .map((w) => ((w['count'] as num?) ?? 0).toDouble())
+        .toList(growable: false);
+    final avgWorkouts = counts.isEmpty
+        ? '-'
+        : (counts.reduce((a, b) => a + b) / counts.length).toStringAsFixed(1);
+    final weeklyTrend = counts
+        .toList(growable: false);
+    final streakText = _isLoadingStats
+        ? l10n.load_dots
+        : '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks}';
+    return SummaryCard(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ConsistencyTrackerScreen()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeaderWithChevron(
+              label: l10n.workoutsPerWeekLabel,
+              chipText: _fixedWeeksChipLabel(_fixedConsistencyWeeks),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              avgWorkouts == '-'
+                  ? '-'
+                  : _formatPerWeek(avgWorkouts),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              streakText,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            _buildMicroCaption(
+              '${l10n.analyticsRollingConsistency} • ${_fixedWeeksChipLabel(_fixedConsistencyWeeks)}',
+            ),
+            const SizedBox(height: 4),
+            _buildMiniBars(
+              values:
+                  weeklyTrend.take(_miniSignalPoints).toList(growable: false),
+              color: Theme.of(context).colorScheme.primary,
+              semanticsLabel: l10n.sectionConsistency,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildMuscleVolumeSection() {
     final muscles = (_muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
-        .cast<Map<String, dynamic>>();
-    final topMuscles = muscles.take(5).toList();
-    final weekly = (_muscleAnalytics['weekly'] as List<dynamic>? ?? const [])
-        .cast<Map<String, dynamic>>();
-    final latestWeek = weekly.isNotEmpty ? weekly.last : null;
-    final latestWeekSets =
-        (latestWeek?['totalEquivalentSets'] as num?)?.toDouble() ?? 0.0;
-    final topMuscle = topMuscles.isNotEmpty ? topMuscles.first : null;
-    final undertrained =
-        (_muscleAnalytics['undertrained'] as List<dynamic>? ?? const [])
-            .cast<String>();
-    final dataQualityOk = (_muscleAnalytics['dataQualityOk'] as bool?) ?? false;
+        .cast<Map<String, dynamic>>()
+        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?))
+        .toList(growable: false);
+    final topMuscle = muscles.isNotEmpty ? muscles.first : null;
+    final topMuscleShare =
+        (topMuscle?['distributionShare'] as num?)?.toDouble() ?? 0.0;
+    final topMuscleFrequency = topMuscle == null
+        ? l10n.exerciseAnalyticsNoData
+        : _formatPerWeek(
+            (topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1),
+          );
 
     return SummaryCard(
       onTap: () {
@@ -321,48 +247,49 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.all(14.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 140,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: _isLoadingStats
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildMuscleDistributionHeatmap(topMuscles),
+            _buildHeaderWithChevron(
+              label: l10n.analyticsMuscleTopFrequency,
+              trailingIcon: true,
+              chipText: topMuscle == null
+                  ? null
+                  : '${(topMuscleShare * 100).toStringAsFixed(0)}%',
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildMetricCol(
-                  l10n.analyticsMuscleWeeklySets,
-                  latestWeekSets.toStringAsFixed(1),
-                  latestWeek?['weekLabel'] as String? ?? l10n.thisWeekLabel,
-                ),
-                _buildMetricCol(
-                  l10n.analyticsMuscleTopFrequency,
-                  topMuscle?['muscleGroup'] as String? ?? '-',
-                  topMuscle != null
-                      ? '${(topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1)}/${l10n.analyticsPerWeekAbbrev}'
-                      : l10n.exerciseAnalyticsNoData,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Text(
-              _muscleGuidanceLabel(dataQualityOk, undertrained),
+              _formatMuscleLabel(topMuscle?['muscleGroup'] as String?),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              topMuscleFrequency,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
             ),
-            const SizedBox(height: 8),
-            _buildDrillDownHint(),
+            if (topMuscleShare > 0) ...[
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  minHeight: 6,
+                  value: topMuscleShare.clamp(0.0, 1.0),
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation(
+                    Theme.of(context).colorScheme.tertiary,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 6),
+            _buildMicroCaption(_timeRanges[_selectedTimeRangeIndex]),
           ],
         ),
       ),
@@ -370,6 +297,23 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildPerformanceSection() {
+    final topImprovement =
+        _notableImprovements.isNotEmpty ? _notableImprovements.first : null;
+    final momentumValue = topImprovement == null
+        ? '-'
+        : '+${((topImprovement['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%';
+    final topExerciseName = topImprovement == null
+        ? l10n.metricsMostImproved
+        : (topImprovement['exerciseName'] as String? ?? l10n.metricsMostImproved);
+    final performanceSummaryText = _notableImprovements.isEmpty
+        ? l10n.exerciseAnalyticsNoData
+        : '${l10n.analyticsRecentRecords}: ${_notableImprovements.length}';
+    final compactSignals = _notableImprovements
+        .map((row) => ((row['improvementPct'] as num?) ?? 0).toDouble())
+        .toList(growable: false);
+    final momentumColor = topImprovement == null
+        ? Theme.of(context).colorScheme.outline
+        : Theme.of(context).colorScheme.primary;
     return Column(
       children: [
         SummaryCard(
@@ -379,76 +323,42 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(14.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.analyticsRecentRecords,
-                    style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: 8),
-                if (_recentPRs.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      l10n.exerciseAnalyticsNoData,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                    ),
-                  )
-                else
-                  ...List.generate(_recentPRs.length * 2 - 1, (i) {
-                    if (i.isOdd) return const Divider(height: 12);
-                    final pr = _recentPRs[i ~/ 2];
-                    final name = pr['exerciseName'] as String;
-                    final weight = pr['weight'] as double;
-                    final reps = pr['reps'] as int;
-                    final weightStr = weight == weight.truncateToDouble()
-                        ? weight.toInt().toString()
-                        : weight.toStringAsFixed(1);
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            name,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          l10n.analyticsPerfWithReps(weightStr, reps),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    );
-                  }),
-                const Divider(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildMetricCol(
-                      l10n.metricsVolumeLifted,
-                      _weeklyVolume.isNotEmpty
-                          ? (_weeklyVolume.last['tonnage'] as num) >= 1000
-                              ? '${((_weeklyVolume.last['tonnage'] as num) / 1000).toStringAsFixed(1)}k'
-                              : (_weeklyVolume.last['tonnage'] as num)
-                                  .toStringAsFixed(0)
-                          : '0',
-                      l10n.analyticsKgThisWeek,
-                    ),
-                    _buildMetricCol(
-                      l10n.metricsMostImproved,
-                      _notableImprovements.isNotEmpty
-                          ? _notableImprovements.first['exerciseName'] as String
-                          : '-',
-                      _notableImprovements.isNotEmpty
-                          ? '+${((_notableImprovements.first['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%'
-                          : l10n.exerciseAnalyticsNoData,
-                    ),
-                  ],
+                _buildHeaderWithChevron(
+                  label: l10n.metricsMostImproved,
+                  chipText: _effectivePerformanceRangeLabel(),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  topExerciseName,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  momentumValue,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: momentumColor,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  performanceSummaryText,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                 ),
                 const SizedBox(height: 8),
-                _buildDrillDownHint(),
+                _buildMicroCaption(l10n.analyticsRecentRecords),
+                const SizedBox(height: 4),
+                _buildMiniBars(
+                  values: compactSignals,
+                  color: Theme.of(context).colorScheme.primary,
+                  semanticsLabel: l10n.analyticsSectionPerformanceRecords,
+                ),
               ],
             ),
           ),
@@ -485,10 +395,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final hasData = _recoveryAnalytics.hasData;
 
     final overallState = _recoveryAnalytics.overallState;
-    final overallLabel =
+    final recoveryHeadline =
         StatisticsPresentationFormatter.recoveryOverallLabel(l10n, overallState);
 
-    final subtitle = hasData
+    final recoveryStatusSummary = hasData
         ? l10n.recoveryHubCountsSummary(recovering, ready, fresh)
         : l10n.recoveryHubNoDataSummary;
 
@@ -505,47 +415,88 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       },
       child: Padding(
         padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCardHeading(
+                    label: l10n.metricsMuscleReadiness,
+                    chipText: hasData ? l10n.currentlyTracking : null,
+                  ),
+                ),
+                _buildDrillDownHint(),
+              ],
+            ),
+            if (_isLoadingStats)
+              const Padding(
+                padding: EdgeInsets.only(top: 4.0),
+                child: SizedBox(
+                  height: 14,
+                  width: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            else ...[
+              Text(
+                recoveryHeadline,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: iconColor,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                recoveryStatusSummary,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+              if (hasData) ...[
+                const SizedBox(height: 8),
+                _buildRecoveryDistributionBar(
+                  recovering: recovering,
+                  ready: ready,
+                  fresh: fresh,
+                ),
+                const SizedBox(height: 6),
+                _buildMicroCaption(l10n.currentlyTracking),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecoveryDistributionBar({
+    required int recovering,
+    required int ready,
+    required int fresh,
+  }) {
+    final total = recovering + ready + fresh;
+    if (total <= 0) return const SizedBox.shrink();
+    final colorScheme = Theme.of(context).colorScheme;
+    final segments = <MapEntry<int, Color>>[
+      MapEntry(recovering, colorScheme.error),
+      MapEntry(ready, colorScheme.primary),
+      MapEntry(fresh, colorScheme.tertiary),
+    ].where((segment) => segment.key > 0).toList(growable: false);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        height: 8,
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.18),
-                shape: BoxShape.circle,
+            for (final segment in segments)
+              Expanded(
+                flex: segment.key,
+                child: ColoredBox(color: segment.value),
               ),
-              child: Icon(Icons.self_improvement, color: iconColor),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.metricsMuscleReadiness,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  if (_isLoadingStats)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 4.0),
-                      child: SizedBox(
-                        height: 14,
-                        width: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  else ...[
-                    Text(subtitle),
-                    const SizedBox(height: 2),
-                    Text(
-                      overallLabel,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right,
-                color: Theme.of(context).colorScheme.outline),
+            if (segments.isEmpty)
+              Expanded(child: ColoredBox(color: colorScheme.outline)),
           ],
         ),
       ),
@@ -557,13 +508,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final currentWeight = body?.currentWeightKg;
     final weightChange = body?.weightChangeKg;
     final avgCalories = body?.avgDailyCalories;
+    final weightTrend = body?.smoothedWeight
+            .map((p) => p.value)
+            .toList(growable: false) ??
+        const <double>[];
 
     final weightValue = currentWeight == null
         ? '-'
         : '${currentWeight.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
-    final weightChangeValue = weightChange == null
-        ? '-'
-        : '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
     final caloriesValue =
         avgCalories == null ? '-' : avgCalories.round().toString();
 
@@ -582,58 +534,35 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 110,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: _isLoadingStats || body == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildBodyNutritionMiniChart(body),
+                _buildHeaderWithChevron(
+                  label: l10n.metricsCurrentWeight,
+                  chipText: _effectiveBodyRangeLabel(),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildMetricCol(
-                      l10n.metricsCurrentWeight,
-                      weightValue,
-                      body == null
-                          ? l10n.exerciseAnalyticsNoData
-                          : '${body.weightDays} ${l10n.analyticsDaysWithWeightData}',
-                      width: 104,
-                    ),
-                    _buildMetricCol(
-                      l10n.metricsWeightChange,
-                      weightChangeValue,
-                      _effectiveBodyRangeLabel(),
-                      width: 104,
-                    ),
-                    _buildMetricCol(
-                      l10n.metricsAvgCalories,
-                      caloriesValue,
-                      l10n.analyticsKcalPerDay,
-                      width: 104,
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  weightValue,
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    body == null
-                        ? l10n.analyticsInsightNotEnoughData
-                        : _bodyNutritionInsightLabel(body),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                  ),
+                const SizedBox(height: 6),
+                Text(
+                  _buildBodyMetricsSupportingText(body, caloriesValue, weightChange),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                 ),
                 const SizedBox(height: 8),
-                _buildDrillDownHint(),
+                _buildMicroCaption(_effectiveBodyRangeLabel()),
+                const SizedBox(height: 4),
+                _buildMiniBars(
+                  values: weightTrend.take(_bodyTrendPoints).toList(growable: false),
+                  color: Theme.of(context).colorScheme.secondary,
+                  semanticsLabel: l10n.sectionBodyNutrition,
+                ),
               ],
             ),
           ),
@@ -663,72 +592,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     );
   }
 
-  Widget _buildBodyNutritionMiniChart(BodyNutritionAnalyticsResult data) {
-    final normalizedWeight =
-        BodyNutritionAnalyticsUtils.normalizedSeries(data.smoothedWeight);
-    final normalizedCalories =
-        BodyNutritionAnalyticsUtils.normalizedSeries(data.smoothedCalories);
-
-    if (normalizedWeight.isEmpty && normalizedCalories.isEmpty) {
-      return AnalyticsChartDefaults.stateView(
-        context: context,
-        l10n: l10n,
-        status: AnalyticsStatus.empty,
-      );
-    }
-
-    final start = data.range.start;
-    final maxX =
-        (data.totalDays - 1).toDouble().clamp(1.0, 100000.0).toDouble();
-
-    List<FlSpot> toSpots(List<DailyValuePoint> points) {
-      return points.map((p) {
-        final x = DateTime(p.day.year, p.day.month, p.day.day)
-            .difference(DateTime(start.year, start.month, start.day))
-            .inDays
-            .toDouble();
-        return FlSpot(x, p.value);
-      }).toList(growable: false);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      child: LineChart(
-        LineChartData(
-          minX: 0,
-          maxX: maxX,
-          minY: 0,
-          maxY: 1,
-          gridData: AnalyticsChartDefaults.noGrid,
-          borderData: AnalyticsChartDefaults.noBorder,
-          lineTouchData: const LineTouchData(enabled: false),
-          titlesData: AnalyticsChartDefaults.hiddenTitles,
-          lineBarsData: [
-            if (normalizedCalories.isNotEmpty)
-              AnalyticsChartDefaults.straightLine(
-                spots: toSpots(normalizedCalories),
-                barWidth: 2,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-            if (normalizedWeight.isNotEmpty)
-              AnalyticsChartDefaults.straightLine(
-                spots: toSpots(normalizedWeight),
-                barWidth: 2.5,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _bodyNutritionInsightLabel(BodyNutritionAnalyticsResult data) {
-    return StatisticsPresentationFormatter.bodyNutritionInsightLabel(
-      l10n,
-      data.insightType,
-    );
-  }
-
   String _effectiveBodyRangeLabel() {
     final resolved = _rangePolicy.resolve(
       metricId: StatisticsMetricId.bodyNutritionTrend,
@@ -738,189 +601,180 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final days = resolved.effectiveDays;
     if (days == null || days <= 0) return _timeRanges[_selectedTimeRangeIndex];
     if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
-      return '${l10n.filterAll} (${days}d)';
+      return '${l10n.filterAll} (${_dayCountLabel(days)})';
     }
     return _timeRanges[_selectedTimeRangeIndex];
   }
 
-  Widget _buildMetricCol(String label, String value, String subLabel,
-      {double width = 132}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+  String _buildBodyMetricsSupportingText(
+    BodyNutritionAnalyticsResult? body,
+    String caloriesValue,
+    double? weightChange,
+  ) {
+    if (body == null) return l10n.analyticsInsightNotEnoughData;
+    final changeText = weightChange == null
+        ? null
+        : '${l10n.metricsWeightChange}: ${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+    if (changeText == null) {
+      return '${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay}';
+    }
+    return '$changeText • ${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay}';
+  }
+
+  String _formatPerWeek(String valueText) {
+    return '$valueText / ${l10n.analyticsPerWeekAbbrev}';
+  }
+
+  String _formatMuscleLabel(String? label) {
+    if (label == null || label.trim().isEmpty) {
+      return _noClearFocusLabel();
+    }
+    final normalized = label.trim();
+    if (StatisticsPresentationFormatter.isOtherCategoryLabel(normalized)) {
+      return _noClearFocusLabel();
+    }
+    return normalized;
+  }
+
+  String _noClearFocusLabel() {
+    final source = l10n.analyticsGuidanceNoClearWeakPoint;
+    final stripped = source.replaceFirst(RegExp(r'^[^:]+:\s*'), '');
+    return stripped.trim().isEmpty ? source : stripped.trim();
+  }
+
+  String _fixedWeeksChipLabel(int weeks) {
+    return '$weeks ${l10n.weeksLabel}';
+  }
+
+  String _effectivePerformanceRangeLabel() {
+    final resolved = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubNotablePrImprovements,
+      selectedRangeIndex: _selectedTimeRangeIndex,
+    );
+    final days = resolved.effectiveDays;
+    if (days == null) return _timeRanges[_selectedTimeRangeIndex];
+    if (days == _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex)) {
+      return _timeRanges[_selectedTimeRangeIndex];
+    }
+    return _dayCountLabel(days);
+  }
+
+  String _dayCountLabel(int days) {
+    return '$days ${l10n.analyticsDayUnitLabel}';
+  }
+
+  Widget _buildCardHeading({
+    required String label,
+    String? chipText,
+  }) {
+    final chipColor = Theme.of(context).colorScheme.primary;
+    return Row(
       children: [
-        SizedBox(
-          width: width,
+        Expanded(
           child: Text(
             label,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
           ),
         ),
-        const SizedBox(height: 4),
-        SizedBox(
-          width: width,
-          child: Text(value,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold)),
+        if (chipText != null && chipText.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: chipColor.withOpacity(_chipBackgroundOpacity),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              chipText,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: chipColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildHeaderWithChevron({
+    required String label,
+    String? chipText,
+    bool trailingIcon = true,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildCardHeading(
+            label: label,
+            chipText: chipText,
+          ),
         ),
-        SizedBox(
-          width: width,
-          child: Text(subLabel,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.grey)),
-        ),
+        if (trailingIcon) ...[
+          const SizedBox(width: 8),
+          _buildDrillDownHint(),
+        ],
       ],
     );
   }
 
   Widget _buildDrillDownHint() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(
-          l10n.analyticsViewDetails,
-          style: Theme.of(context)
-              .textTheme
-              .labelMedium
-              ?.copyWith(color: Theme.of(context).colorScheme.outline),
-        ),
-        const SizedBox(width: 2),
-        Icon(
-          Icons.chevron_right,
-          size: 18,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-      ],
+    return Icon(
+      Icons.chevron_right,
+      size: 18,
+      color: Theme.of(context).colorScheme.outline,
     );
   }
 
-  Widget _buildMiniBars(List<double> values) {
-    if (values.isEmpty || values.every((v) => v <= 0)) {
-      return Center(
-        child: Text(
-          l10n.exerciseAnalyticsNoData,
-          style: TextStyle(color: Theme.of(context).colorScheme.outline),
-        ),
-      );
-    }
-
-    final maxValue = values.reduce((a, b) => a > b ? a : b);
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: values.map((value) {
-          final ratio = maxValue <= 0 ? 0.0 : value / maxValue;
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2.0),
-              child: Container(
-                height: (ratio * 72).clamp(6, 72),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+  Widget _buildMicroCaption(String text) {
+    if (text.trim().isEmpty) return const SizedBox.shrink();
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
     );
   }
 
-  Widget _buildMuscleDistributionHeatmap(List<Map<String, dynamic>> muscles) {
-    if (muscles.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.noWorkoutDataLabel,
-          style: TextStyle(color: Theme.of(context).colorScheme.outline),
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
+  Widget _buildMiniBars({
+    required List<double> values,
+    required Color color,
+    required String semanticsLabel,
+  }) {
+    final clean = values.where((v) => v.isFinite).toList(growable: false);
+    if (clean.isEmpty) return const SizedBox.shrink();
+    final max = clean.fold<double>(0, (a, b) => a > b ? a : b);
+    final normalized = max <= 0
+        ? clean.map((_) => 0.2).toList(growable: false)
+        : clean.map((v) => (v / max).clamp(0.08, 1.0)).toList(growable: false);
 
-    final maxShare = muscles
-        .map((m) => (m['distributionShare'] as num).toDouble())
-        .fold<double>(0.0, (a, b) => a > b ? a : b)
-        .clamp(0.0001, 1.0);
-
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        children: muscles.map((m) {
-          final share = (m['distributionShare'] as num).toDouble();
-          final ratio = (share / maxShare).clamp(0.08, 1.0);
-          final label = m['muscleGroup'] as String;
-          final pct = (share * 100).toStringAsFixed(0);
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 3.0),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 78,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: ratio,
-                      minHeight: 12,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainerLow,
-                      valueColor: AlwaysStoppedAnimation(
-                        Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.45 + (ratio * 0.45)),
+    return Semantics(
+      label: semanticsLabel,
+      child: SizedBox(
+        height: 20,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            for (final ratio in normalized)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                  child: FractionallySizedBox(
+                    heightFactor: ratio,
+                    alignment: Alignment.bottomCenter,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(_miniBarOpacity),
+                        borderRadius: BorderRadius.circular(3),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 34,
-                  child: Text(
-                    '$pct%',
-                    textAlign: TextAlign.right,
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  String _muscleGuidanceLabel(bool dataQualityOk, List<String> undertrained) {
-    return StatisticsPresentationFormatter.muscleGuidanceLabel(
-      l10n,
-      dataQualityOk,
-      undertrained.take(2),
-    );
-  }
 }
-
-enum _HubConsistencyMetric { volume, duration, frequency }

@@ -7,6 +7,12 @@ import '../../../util/body_nutrition_analytics_utils.dart';
 abstract class StatisticsFormatter {}
 
 class StatisticsPresentationFormatter implements StatisticsFormatter {
+  static bool isOtherCategoryLabel(String? label) {
+    if (label == null) return false;
+    final normalized = label.trim().toLowerCase();
+    return normalized == 'other' || normalized == 'others';
+  }
+
   static String formatWeight(num weight) {
     final value = weight.toDouble();
     if (value == value.truncateToDouble()) return value.toInt().toString();

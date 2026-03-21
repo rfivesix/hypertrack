@@ -21,6 +21,7 @@ class RecoveryTrackerScreen extends StatefulWidget {
 }
 
 class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
+  static const _maxRadarMuscles = 8;
   bool _isLoading = true;
   RecoveryAnalyticsPayload _recovery = const RecoveryAnalyticsPayload(
     hasData: false,
@@ -83,7 +84,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   }
 
   bool _shouldHideMuscle(String name) {
-    return RecoveryDomainService.shouldHideMuscle(name);
+    return RecoveryDomainService.shouldHideMuscle(name) ||
+        StatisticsPresentationFormatter.isOtherCategoryLabel(name);
   }
 
   double _recoveryPressureScore(RecoveryMusclePayload muscle) {
@@ -100,21 +102,13 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
             _recoveryPressureScore(a),
           ));
 
-    final top = sorted.take(8).toList();
-    final rest = sorted.skip(8).toList();
-    final data = top
+    return sorted
+        .take(_maxRadarMuscles)
         .map((m) => MuscleRadarDatum(
               label: m.muscleGroup,
               value: _recoveryPressureScore(m),
             ))
         .toList();
-
-    if (rest.isNotEmpty) {
-      final avg = rest.map(_recoveryPressureScore).reduce((a, b) => a + b) /
-          rest.length;
-      data.add(MuscleRadarDatum(label: 'Other', value: avg));
-    }
-    return data;
   }
 
   @override
