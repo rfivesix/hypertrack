@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../features/statistics/domain/consistency_domain_service.dart';
 import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
@@ -58,47 +59,6 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
 
   int _dailyCount(DateTime day) => _workoutDayCounts[_normalize(day)] ?? 0;
 
-  String _formatTrend(double value) {
-    final sign = value >= 0 ? '+' : '';
-    return '$sign${value.toStringAsFixed(1)}';
-  }
-
-  double _computeTrainingDaysPerWeekLast4() {
-    final now = DateTime.now();
-    final since = now.subtract(const Duration(days: 28));
-    final activeDays = _workoutDayCounts.entries
-        .where((e) => e.key.isAfter(since) || e.key.isAtSameMomentAs(since))
-        .where((e) => e.value > 0)
-        .length;
-    return activeDays / 4.0;
-  }
-
-  double _computeRhythmDelta() {
-    if (_weeklyMetrics.length < 8) return 0;
-    final recent = _weeklyMetrics.sublist(_weeklyMetrics.length - 4);
-    final prior = _weeklyMetrics.sublist(
-        _weeklyMetrics.length - 8, _weeklyMetrics.length - 4);
-    final recentAvg = recent
-            .map((e) => (e['count'] as num?)?.toDouble() ?? 0.0)
-            .reduce((a, b) => a + b) /
-        4.0;
-    final priorAvg = prior
-            .map((e) => (e['count'] as num?)?.toDouble() ?? 0.0)
-            .reduce((a, b) => a + b) /
-        4.0;
-    return recentAvg - priorAvg;
-  }
-
-  double _rollingConsistencyPercent() {
-    if (_weeklyMetrics.isEmpty) return 0;
-    final recent = _weeklyMetrics.length > 8
-        ? _weeklyMetrics.sublist(_weeklyMetrics.length - 8)
-        : _weeklyMetrics;
-    final consistentWeeks =
-        recent.where((e) => (((e['count'] as num?)?.toInt() ?? 0) >= 2)).length;
-    return (consistentWeeks / recent.length) * 100.0;
-  }
-
   double _metricValue(Map<String, dynamic> row) {
     return switch (_selectedMetric) {
       _ConsistencyMetric.volume => (row['tonnage'] as num?)?.toDouble() ?? 0.0,
@@ -142,9 +102,16 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
     final avgPerWeek = (_trainingStats['avgPerWeek'] as num?)?.toDouble() ?? 0;
     final streak = (_trainingStats['streakWeeks'] as num?)?.toInt() ?? 0;
     final total = (_trainingStats['totalWorkouts'] as num?)?.toInt() ?? 0;
-    final trainingDaysPerWeek = _computeTrainingDaysPerWeekLast4();
-    final rhythmDelta = _computeRhythmDelta();
-    final rollingConsistency = _rollingConsistencyPercent();
+    final trainingDaysPerWeek =
+        ConsistencyDomainService.computeTrainingDaysPerWeekLast4(
+      workoutDayCounts: _workoutDayCounts,
+    );
+    final rhythmDelta = ConsistencyDomainService.computeRhythmDelta(
+      weeklyMetrics: _weeklyMetrics,
+    );
+    final rollingConsistency = ConsistencyDomainService.rollingConsistencyPercent(
+      weeklyMetrics: _weeklyMetrics,
+    );
 
     return Scaffold(
       appBar: GlobalAppBar(title: l10n.consistencyTrackerTitle),
@@ -175,7 +142,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                       _metricCard(l10n.streakLabel, '$streak', l10n.weeksLabel),
                       _metricCard(
                           l10n.analyticsRhythm,
-                          _formatTrend(rhythmDelta),
+                          ConsistencyDomainService.formatTrend(rhythmDelta),
                           l10n.analyticsVsPrior4Weeks),
                       _metricCard(
                           l10n.analyticsRollingConsistency,
