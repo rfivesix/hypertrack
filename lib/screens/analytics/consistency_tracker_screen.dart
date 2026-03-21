@@ -24,6 +24,7 @@ class ConsistencyTrackerScreen extends StatefulWidget {
 }
 
 class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
+  static const int _weeklyWindowWeeks = 12;
   final _rangePolicy = StatisticsRangePolicyService.instance;
   bool _isLoading = true;
   TrainingStatsPayload _trainingStats = const TrainingStatsPayload(
@@ -55,7 +56,8 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
 
     final stats = WorkoutDatabaseHelper.instance.getTrainingStats();
     final weekly = WorkoutDatabaseHelper.instance
-        .getWeeklyConsistencyMetrics(weeksBack: weeklyRange.effectiveWeeks ?? 12);
+        .getWeeklyConsistencyMetrics(
+            weeksBack: weeklyRange.effectiveWeeks ?? _weeklyWindowWeeks);
     final dayCounts =
         WorkoutDatabaseHelper.instance.getWorkoutDayCounts(
       daysBack: calendarRange.effectiveDays ?? 120,
@@ -257,7 +259,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              '12 ${l10n.weeksLabel}',
+                              '$_weeklyWindowWeeks ${l10n.weeksLabel}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -285,7 +287,11 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                         fitInsideVertically: true,
                                         getTooltipItem:
                                             (group, groupIndex, rod, rodIndex) {
-                                          final row = _weeklyMetrics[group.x.toInt()];
+                                          final i = group.x.toInt();
+                                          if (i < 0 || i >= _weeklyMetrics.length) {
+                                            return null;
+                                          }
+                                          final row = _weeklyMetrics[i];
                                           return BarTooltipItem(
                                             '${row.weekLabel}\n${rod.toY.toStringAsFixed(1)} ${_metricUnit(l10n)}',
                                             Theme.of(context)
@@ -354,12 +360,10 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                                 .colorScheme
                                                 .primary
                                                 .withValues(
-                                                  alpha: (0.35 +
-                                                          (((entry.key + 1) /
-                                                                  _weeklyMetrics
-                                                                      .length) *
-                                                              0.65))
-                                                      .clamp(0.35, 1.0),
+                                                  alpha: _weeklyBarAlpha(
+                                                    index: entry.key,
+                                                    total: _weeklyMetrics.length,
+                                                  ),
                                                 ),
                                           ),
                                         ],
@@ -370,7 +374,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'X: ${l10n.analyticsViewWeek.toLowerCase()} · 12 ${l10n.weeksLabel}',
+                          'X: ${l10n.analyticsViewWeek.toLowerCase()} · $_weeklyWindowWeeks ${l10n.weeksLabel}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -432,7 +436,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                 final count = _dailyCount(day);
                                 if (count <= 0) return null;
                                 final intensity =
-                                    (0.18 + (count * 0.14)).clamp(0.18, 0.65);
+                                    _calendarIntensityForCount(count);
                                 return Container(
                                   margin: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
@@ -593,10 +597,22 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
       spacing: 12,
       runSpacing: 8,
       children: [
-        item('1 ${l10n.workoutsLabel}', 0.32),
-        item('2 ${l10n.workoutsLabel}', 0.46),
-        item('3+ ${l10n.workoutsLabel}', 0.65),
+        item('1 ${l10n.workoutsLabel}', _calendarIntensityForCount(1)),
+        item('2 ${l10n.workoutsLabel}', _calendarIntensityForCount(2)),
+        item('3+ ${l10n.workoutsLabel}', _calendarIntensityForCount(3)),
       ],
     );
+  }
+
+  double _calendarIntensityForCount(int count) {
+    return (0.18 + (count * 0.14)).clamp(0.18, 0.65);
+  }
+
+  double _weeklyBarAlpha({required int index, required int total}) {
+    const minAlpha = 0.35;
+    const maxAlpha = 1.0;
+    if (total <= 0) return minAlpha;
+    final ratio = (index + 1) / total;
+    return (minAlpha + (ratio * (maxAlpha - minAlpha))).clamp(minAlpha, maxAlpha);
   }
 }
