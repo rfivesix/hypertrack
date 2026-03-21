@@ -158,6 +158,35 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     );
   }
 
+  Widget _buildContextChip(BuildContext context, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    );
+  }
+
+  Widget _buildScaleLabel(BuildContext context, String label) {
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
+    );
+  }
+
   List<MuscleRadarDatum> _buildRadarData(List<RecoveryMusclePayload> muscles) {
     final sorted = [...muscles]
       ..sort((a, b) => _recoveryPressureScore(b).compareTo(
@@ -435,64 +464,19 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(alpha: 0.35),
-                                        borderRadius: BorderRadius.circular(999),
-                                      ),
-                                      child: Text(
-                                        l10n.recoveryRecentLoad(
-                                          eqSets.toStringAsFixed(1),
-                                        ),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
+                                    _buildContextChip(
+                                      context,
+                                      l10n.recoveryRecentLoad(
+                                        eqSets.toStringAsFixed(1),
                                       ),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(alpha: 0.35),
-                                        borderRadius: BorderRadius.circular(999),
-                                      ),
-                                      child: Text(
-                                        l10n.recoveryLastLoadedHours(hours),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                      ),
+                                    _buildContextChip(
+                                      context,
+                                      l10n.recoveryLastLoadedHours(hours),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(alpha: 0.35),
-                                        borderRadius: BorderRadius.circular(999),
-                                      ),
-                                      child: Text(
-                                        _fatigueContextLabel(l10n, highFatigue),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                      ),
+                                    _buildContextChip(
+                                      context,
+                                      _fatigueContextLabel(l10n, highFatigue),
                                     ),
                                   ],
                                 ),
@@ -529,41 +513,11 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                   padding: const EdgeInsets.only(top: 4),
                                   child: Row(
                                     children: [
-                                      Text(
-                                        '0',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .outline,
-                                            ),
-                                      ),
+                                      _buildScaleLabel(context, '0'),
                                       const Spacer(),
-                                      Text(
-                                        '50',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .outline,
-                                            ),
-                                      ),
+                                      _buildScaleLabel(context, '50'),
                                       const Spacer(),
-                                      Text(
-                                        '100',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .outline,
-                                            ),
-                                      ),
+                                      _buildScaleLabel(context, '100'),
                                     ],
                                   ),
                                 ),
