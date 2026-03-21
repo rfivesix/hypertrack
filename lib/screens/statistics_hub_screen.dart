@@ -26,6 +26,8 @@ class StatisticsHubScreen extends StatefulWidget {
 }
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
+  static const _volumeKiloThreshold = 1000.0;
+
   late final l10n = AppLocalizations.of(context)!;
   final _hubDataAdapter = StatisticsHubDataAdapter(
     workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
@@ -164,7 +166,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final avgWorkouts = _trainingStats.avgPerWeek <= 0
         ? '-'
         : _trainingStats.avgPerWeek.toStringAsFixed(1);
-    final supportingSignal = _isLoadingStats
+    final streakText = _isLoadingStats
         ? l10n.load_dots
         : '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks.toLowerCase()}';
     return SummaryCard(
@@ -194,7 +196,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              supportingSignal,
+              streakText,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -211,10 +213,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final muscles = (_muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>();
     final topMuscle = muscles.isNotEmpty ? muscles.first : null;
-    final undertrained =
-        (_muscleAnalytics['undertrained'] as List<dynamic>? ?? const [])
-            .cast<String>();
-    final dataQualityOk = (_muscleAnalytics['dataQualityOk'] as bool?) ?? false;
+    final topMuscleFrequency = topMuscle == null
+        ? l10n.exerciseAnalyticsNoData
+        : '${(topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1)}/${l10n.analyticsPerWeekAbbrev}';
 
     return SummaryCard(
       onTap: () {
@@ -241,9 +242,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              topMuscle != null
-                  ? '${(topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1)}/${l10n.analyticsPerWeekAbbrev}'
-                  : _muscleGuidanceLabel(dataQualityOk, undertrained),
+              topMuscleFrequency,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -264,12 +263,15 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final momentumValue = topImprovement == null
         ? '-'
         : '+${((topImprovement['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%';
-    final momentumLabel = topImprovement == null
+    final topExerciseName = topImprovement == null
         ? l10n.metricsMostImproved
         : (topImprovement['exerciseName'] as String? ?? l10n.metricsMostImproved);
-    final supportSignal = _recentPRs.isEmpty
+    final recentRecordsText = _recentPRs.isEmpty
         ? l10n.exerciseAnalyticsNoData
-        : '${_recentPRs.length} ${l10n.analyticsRecentRecords.toLowerCase()} • ${l10n.metricsVolumeLifted}: ${_formatHubVolume(latestVolume)}';
+        : '${_recentPRs.length} ${l10n.analyticsRecentRecords.toLowerCase()}';
+    final performanceSummaryText = _recentPRs.isEmpty
+        ? recentRecordsText
+        : '$recentRecordsText • ${l10n.metricsVolumeLifted}: ${_formatVolume(latestVolume)}';
     return Column(
       children: [
         SummaryCard(
@@ -284,7 +286,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  momentumLabel,
+                  topExerciseName,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 4),
@@ -297,7 +299,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  supportSignal,
+                  performanceSummaryText,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
@@ -340,10 +342,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final hasData = _recoveryAnalytics.hasData;
 
     final overallState = _recoveryAnalytics.overallState;
-    final overallLabel =
+    final recoveryHeadline =
         StatisticsPresentationFormatter.recoveryOverallLabel(l10n, overallState);
 
-    final subtitle = hasData
+    final recoveryStatusSummary = hasData
         ? l10n.recoveryHubCountsSummary(recovering, ready, fresh)
         : l10n.recoveryHubNoDataSummary;
 
@@ -388,7 +390,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     )
                   else ...[
                     Text(
-                      overallLabel,
+                      recoveryHeadline,
                       style: Theme.of(context)
                           .textTheme
                           .headlineSmall
@@ -396,7 +398,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      subtitle,
+                      recoveryStatusSummary,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.outline,
                           ),
@@ -455,9 +457,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  body == null
-                      ? l10n.analyticsInsightNotEnoughData
-                      : '${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay} • ${_effectiveBodyRangeLabel()}',
+                  _buildBodyMetricsSupportingText(body, caloriesValue),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
@@ -507,10 +507,18 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return _timeRanges[_selectedTimeRangeIndex];
   }
 
-  String _formatHubVolume(num? volume) {
+  String _buildBodyMetricsSupportingText(
+    BodyNutritionAnalyticsResult? body,
+    String caloriesValue,
+  ) {
+    if (body == null) return l10n.analyticsInsightNotEnoughData;
+    return '${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay} • ${_effectiveBodyRangeLabel()}';
+  }
+
+  String _formatVolume(num? volume) {
     if (volume == null) return l10n.exerciseAnalyticsNoData;
-    if (volume >= 1000) {
-      return '${(volume / 1000).toStringAsFixed(1)}k${l10n.analyticsUnitKg}';
+    if (volume >= _volumeKiloThreshold) {
+      return '${(volume / _volumeKiloThreshold).toStringAsFixed(1)}k ${l10n.analyticsUnitKg}';
     }
     return '${volume.toStringAsFixed(0)} ${l10n.analyticsUnitKg}';
   }
@@ -536,11 +544,4 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     );
   }
 
-  String _muscleGuidanceLabel(bool dataQualityOk, List<String> undertrained) {
-    return StatisticsPresentationFormatter.muscleGuidanceLabel(
-      l10n,
-      dataQualityOk,
-      undertrained.take(2),
-    );
-  }
 }
