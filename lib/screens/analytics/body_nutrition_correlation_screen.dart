@@ -571,7 +571,7 @@ class _BodyNutritionCorrelationScreenState
       return _ranges(l10n)[_rangeIndex];
     }
     if (_rangePolicy.isAllTimeRangeIndex(_rangeIndex)) {
-      return '${l10n.filterAll} (${days}d)';
+      return '$days ${l10n.analyticsDayUnitLabel}';
     }
     return _ranges(l10n)[_rangeIndex];
   }

@@ -379,6 +379,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(l10n.exerciseAnalyticsSubtitle),
             trailing: Icon(Icons.chevron_right,
+                size: DesignConstants.iconSizeM,
                 color: Theme.of(context).colorScheme.outline),
             shape: RoundedRectangleBorder(
               borderRadius:
@@ -586,6 +587,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(l10n.measurements_description),
             trailing: Icon(Icons.chevron_right,
+                size: DesignConstants.iconSizeM,
                 color: Theme.of(context).colorScheme.outline),
             shape: RoundedRectangleBorder(
               borderRadius:
@@ -606,7 +608,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final days = resolved.effectiveDays;
     if (days == null || days <= 0) return _timeRanges[_selectedTimeRangeIndex];
     if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
-      return '${l10n.filterAll} (${_dayCountLabel(days)})';
+      return _dayCountLabel(days);
     }
     return _timeRanges[_selectedTimeRangeIndex];
   }
@@ -685,7 +687,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         ),
         if (chipText != null && chipText.isNotEmpty)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignConstants.spacingS,
+              vertical: 3,
+            ),
             decoration: BoxDecoration(
               color: chipColor.withOpacity(_chipBackgroundOpacity),
               borderRadius: BorderRadius.circular(999),
@@ -763,7 +768,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             for (final ratio in normalized)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: FractionallySizedBox(
                     heightFactor: ratio,
                     alignment: Alignment.bottomCenter,
