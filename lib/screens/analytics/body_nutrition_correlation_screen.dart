@@ -77,7 +77,7 @@ class _BodyNutritionCorrelationScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildRangeChips(l10n),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: DesignConstants.spacingXS),
                       Text(
                         _effectiveRangeDisclosure(),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -476,7 +476,7 @@ class _BodyNutritionCorrelationScreenState
     if (days == null || days <= 0) {
       return _ranges(l10n)[_rangeIndex];
     }
-    if (_rangePolicy.isAllRangeIndex(_rangeIndex)) {
+    if (_rangePolicy.isAllTimeRangeIndex(_rangeIndex)) {
       return '${l10n.filterAll} (${days}d)';
     }
     return _ranges(l10n)[_rangeIndex];

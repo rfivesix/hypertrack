@@ -755,7 +755,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     );
     final days = resolved.effectiveDays;
     if (days == null || days <= 0) return _timeRanges[_selectedTimeRangeIndex];
-    if (_rangePolicy.isAllRangeIndex(_selectedTimeRangeIndex)) {
+    if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
       return '${l10n.filterAll} (${days}d)';
     }
     return _timeRanges[_selectedTimeRangeIndex];

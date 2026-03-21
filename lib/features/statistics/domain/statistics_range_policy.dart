@@ -135,7 +135,8 @@ class StatisticsRangePolicyService {
     return selectableDayRanges[index];
   }
 
-  bool isAllRangeIndex(int index) => index == selectableDayRanges.length - 1;
+  bool isAllTimeRangeIndex(int index) =>
+      index == selectableDayRanges.length - 1;
 
   StatisticsResolvedRange resolve({
     required StatisticsMetricId metricId,
@@ -150,7 +151,7 @@ class StatisticsRangePolicyService {
     final resolvedSelectedDays =
         selectedDays ?? selectedDaysFromIndex(selectedRangeIndex ?? 1);
     final isAllSelection = selectedRangeIndex != null &&
-        isAllRangeIndex(selectedRangeIndex) &&
+        isAllTimeRangeIndex(selectedRangeIndex) &&
         selectedDays == null;
 
     int? days = policy.fixedDays;
