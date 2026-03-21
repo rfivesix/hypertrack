@@ -187,6 +187,21 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     );
   }
 
+  int _computeConsistentTrackedCount({
+    required int tracked,
+    required int recovering,
+    required int ready,
+    required int fresh,
+  }) {
+    // Keep distribution denominators consistent even if persisted tracked total
+    // is missing or temporarily lower than visible state buckets.
+    final trackedFromStates = recovering + ready + fresh;
+    if (tracked <= 0) {
+      return trackedFromStates;
+    }
+    return tracked < trackedFromStates ? trackedFromStates : tracked;
+  }
+
   List<MuscleRadarDatum> _buildRadarData(List<RecoveryMusclePayload> muscles) {
     final sorted = [...muscles]
       ..sort((a, b) => _recoveryPressureScore(b).compareTo(
@@ -209,12 +224,12 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final recovering = _recovery.totals.recovering;
     final ready = _recovery.totals.ready;
     final fresh = _recovery.totals.fresh;
-    final trackedFromStates = recovering + ready + fresh;
-    final tracked = _recovery.totals.tracked > 0
-        ? (_recovery.totals.tracked < trackedFromStates
-            ? trackedFromStates
-            : _recovery.totals.tracked)
-        : trackedFromStates;
+    final tracked = _computeConsistentTrackedCount(
+      tracked: _recovery.totals.tracked,
+      recovering: recovering,
+      ready: ready,
+      fresh: fresh,
+    );
     final hasData = _recovery.hasData;
 
     final muscles = _recovery.muscles;
