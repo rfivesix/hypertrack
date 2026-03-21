@@ -96,6 +96,68 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     });
   }
 
+  Color _overallStateColor(BuildContext context, String overallState) {
+    switch (overallState) {
+      case RecoveryDomainService.overallMostlyRecovered:
+        return _stateColor(context, RecoveryDomainService.stateFresh);
+      case RecoveryDomainService.overallMixedRecovery:
+        return _stateColor(context, RecoveryDomainService.stateReady);
+      case RecoveryDomainService.overallSeveralRecovering:
+        return _stateColor(context, RecoveryDomainService.stateRecovering);
+      default:
+        return Theme.of(context).colorScheme.outline;
+    }
+  }
+
+  Color _pressureColor(BuildContext context, double score) {
+    if (score < 34) {
+      return _stateColor(context, RecoveryDomainService.stateFresh);
+    }
+    if (score < 67) {
+      return _stateColor(context, RecoveryDomainService.stateReady);
+    }
+    return _stateColor(context, RecoveryDomainService.stateRecovering);
+  }
+
+  Widget _buildReadinessPill(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required String state,
+    required int count,
+    required int total,
+  }) {
+    final color = _stateColor(context, state);
+    final percent = total > 0 ? (count / total * 100).round() : 0;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _stateLabel(l10n, state),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '$count · $percent%',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<MuscleRadarDatum> _buildRadarData(List<RecoveryMusclePayload> muscles) {
     final sorted = [...muscles]
       ..sort((a, b) => _recoveryPressureScore(b).compareTo(
@@ -118,6 +180,9 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final recovering = _recovery.totals.recovering;
     final ready = _recovery.totals.ready;
     final fresh = _recovery.totals.fresh;
+    final tracked = _recovery.totals.tracked > 0
+        ? _recovery.totals.tracked
+        : (recovering + ready + fresh);
     final hasData = _recovery.hasData;
 
     final muscles = _recovery.muscles;
@@ -148,12 +213,17 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _overallLabel(
-                                l10n, _recovery.overallState),
+                            _overallLabel(l10n, _recovery.overallState),
                             style: Theme.of(context)
                                 .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
+                                .headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: _overallStateColor(
+                                    context,
+                                    _recovery.overallState,
+                                  ),
+                                ),
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -165,6 +235,77 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                   )
                                 : l10n.recoveryHubNoDataSummary,
                           ),
+                          if (hasData && tracked > 0) ...[
+                            const SizedBox(height: 12),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: SizedBox(
+                                height: 8,
+                                child: Row(
+                                  children: [
+                                    if (recovering > 0)
+                                      Expanded(
+                                        flex: recovering,
+                                        child: ColoredBox(
+                                          color: _stateColor(
+                                            context,
+                                            RecoveryDomainService.stateRecovering,
+                                          ),
+                                        ),
+                                      ),
+                                    if (ready > 0)
+                                      Expanded(
+                                        flex: ready,
+                                        child: ColoredBox(
+                                          color: _stateColor(
+                                            context,
+                                            RecoveryDomainService.stateReady,
+                                          ),
+                                        ),
+                                      ),
+                                    if (fresh > 0)
+                                      Expanded(
+                                        flex: fresh,
+                                        child: ColoredBox(
+                                          color: _stateColor(
+                                            context,
+                                            RecoveryDomainService.stateFresh,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                _buildReadinessPill(
+                                  context,
+                                  l10n,
+                                  state: RecoveryDomainService.stateRecovering,
+                                  count: recovering,
+                                  total: tracked,
+                                ),
+                                const SizedBox(width: 8),
+                                _buildReadinessPill(
+                                  context,
+                                  l10n,
+                                  state: RecoveryDomainService.stateReady,
+                                  count: ready,
+                                  total: tracked,
+                                ),
+                                const SizedBox(width: 8),
+                                _buildReadinessPill(
+                                  context,
+                                  l10n,
+                                  state: RecoveryDomainService.stateFresh,
+                                  count: fresh,
+                                  total: tracked,
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 8),
                           Text(
                             l10n.recoveryHeuristicDisclaimer,
@@ -242,6 +383,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       final eqSets = muscle.lastEquivalentSets;
                       final recoveringUpper = muscle.recoveringUpperHours;
                       final readyUpper = muscle.readyUpperHours;
+                      final pressureScore = _recoveryPressureScore(muscle);
+                      final pressureColor = _pressureColor(context, pressureScore);
 
                       return Padding(
                         padding: const EdgeInsets.only(
@@ -288,14 +431,142 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 6),
-                                Text(
-                                  l10n.recoveryRecentLoad(
-                                      eqSets.toStringAsFixed(1)),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest
+                                            .withValues(alpha: 0.35),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        l10n.recoveryRecentLoad(
+                                          eqSets.toStringAsFixed(1),
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest
+                                            .withValues(alpha: 0.35),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        l10n.recoveryLastLoadedHours(hours),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest
+                                            .withValues(alpha: 0.35),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        _fatigueContextLabel(l10n, highFatigue),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 2),
-                                Text(l10n.recoveryLastLoadedHours(hours)),
-                                const SizedBox(height: 2),
-                                Text(_fatigueContextLabel(l10n, highFatigue)),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Text(
+                                      pressureScore.toStringAsFixed(0),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            color: pressureColor,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(999),
+                                        child: LinearProgressIndicator(
+                                          value: pressureScore / 100,
+                                          minHeight: 8,
+                                          color: pressureColor,
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHighest,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        '0',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .outline,
+                                            ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        '50',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .outline,
+                                            ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        '100',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .outline,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 const SizedBox(height: 2),
                                 Text(
                                   l10n.recoveryWindowHeuristic(
