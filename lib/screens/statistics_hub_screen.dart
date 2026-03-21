@@ -174,8 +174,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         ? '-'
         : (counts.reduce((a, b) => a + b) / counts.length).toStringAsFixed(1);
     final weeklyTrend = counts.toList(growable: false);
-    final streakText =
-        '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks}';
+    final streakText = _isLoadingStats
+        ? l10n.load_dots
+        : '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks}';
     return SummaryCard(
       onTap: () {
         Navigator.of(context).push(
