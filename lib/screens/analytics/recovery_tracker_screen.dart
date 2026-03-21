@@ -252,8 +252,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       final muscleName = muscle.muscleGroup;
                       final state = muscle.state;
                       final stateColor = _stateColor(context, state);
-                      final hours =
-                          muscle.hoursSinceLastSignificantLoad.toDouble().round();
+                      final hours = muscle.hoursSinceLastSignificantLoad.round();
                       final highFatigue = muscle.highSessionFatigue;
                       final eqSets = muscle.lastEquivalentSets;
                       final recoveringUpper = muscle.recoveringUpperHours;
