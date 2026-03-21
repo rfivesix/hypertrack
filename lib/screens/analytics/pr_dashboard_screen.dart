@@ -109,8 +109,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                             child: Text(l10n.analyticsNoPrTrendInWindow),
                           )
                         : Column(
-                            children:
-                                _notableImprovements.asMap().entries.map((
+                            children: _notableImprovements.asMap().entries.map((
                               entry,
                             ) {
                               final row = entry.value;
@@ -125,6 +124,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                               return ListTile(
                                 dense: true,
                                 contentPadding: EdgeInsets.zero,
+                                /*
                                 leading: entry.key == _topMomentumIndex
                                     ? Icon(
                                         Icons.trending_up,
@@ -133,6 +133,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                             .primary,
                                       )
                                     : null,
+                                */
                                 title: Text(
                                   row['exerciseName'] as String,
                                   maxLines: 1,
