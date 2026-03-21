@@ -39,6 +39,15 @@ Build routines, track live sessions, and review performance history.
 
 *Data model details → [Data Models: Workouts & Exercises](data_models_and_storage.md#2-workouts--exercises)*
 
+### 📊 Statistics & Analytics
+Analyze training quality and trends through a hub + drill-down analytics system.
+
+- **Statistics Hub:** Compact overview cards for consistency, performance, muscle distribution, recovery, and body/nutrition trends.
+- **Performance Analytics:** PR-focused dashboard with recent/all-time records, rep-bracket bests, and notable e1RM improvements.
+- **Consistency Analytics:** Weekly KPI and trend views with fixed-window consistency charting and calendar density.
+- **Muscle & Recovery Analytics:** Equivalent-set distribution/frequency views and per-muscle recovery readiness interpretation.
+- **Body/Nutrition Correlation:** Weight and calorie trend comparison with data-quality-aware insight labels.
+
 ### 📐 Body Measurements
 Track your body composition and physical dimensions over time.
 
@@ -139,7 +148,12 @@ The application contains **41 screens** in `lib/screens/`. Here is a categorized
 ### Measurements & Statistics
 | Screen | File | Purpose |
 | :--- | :--- | :--- |
-| Statistics Hub | `statistics_hub_screen.dart` | Calendar consistency overview |
+| Statistics Hub | `statistics_hub_screen.dart` | Analytics hub with summary cards and drill-down navigation |
+| PR Dashboard | `analytics/pr_dashboard_screen.dart` | PR records, rep brackets, and notable e1RM improvements |
+| Consistency Tracker | `analytics/consistency_tracker_screen.dart` | Weekly consistency KPIs, trend bars, and calendar density |
+| Muscle Group Analytics | `analytics/muscle_group_analytics_screen.dart` | Equivalent-set distribution, frequency, and guidance |
+| Body/Nutrition Correlation | `analytics/body_nutrition_correlation_screen.dart` | Weight/calorie trend correlation with insight confidence |
+| Recovery Tracker | `analytics/recovery_tracker_screen.dart` | Per-muscle recovery readiness and pressure overview |
 | Measurements | `measurements_screen.dart` | Measurement history and charts |
 | Add Measurement | `add_measurement_screen.dart` | Log new body metrics |
 | Measurement Detail | `measurement_session_detail_screen.dart` | Single session detail |
@@ -164,3 +178,4 @@ The application contains **41 screens** in `lib/screens/`. Here is a categorized
 - **[System Architecture](architecture.md):** Layered design, directory structure, and technical stack.
 - **[Data Models & Storage](data_models_and_storage.md):** All database entities, helpers, and portability features.
 - **[UI & Widgets](ui_and_widgets.md):** Design philosophy, custom widget catalog, and layout patterns.
+- **[Statistics Module](statistics_module.md):** Current source-of-truth reference for Statistics architecture, range policy, payloads, and screen responsibilities.

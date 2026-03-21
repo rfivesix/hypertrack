@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.0-alpha.3+70003] - 2026-03-21
+
+### 📊 Statistics Module (Architecture)
+- Introduced a dedicated Statistics feature module under `lib/features/statistics/` with explicit domain/data/presentation boundaries.
+- Added centralized range-resolution semantics via `StatisticsRangePolicyService` for mixed selected/fixed/capped/dynamic-all behavior across hub and drill-down analytics.
+- Added centralized data-quality semantics via `StatisticsDataQualityPolicy` for body/nutrition insight confidence and muscle-distribution sufficiency checks.
+- Expanded typed analytics payload usage (`TrainingStatsPayload`, `WeeklyConsistencyMetricPayload`, `RecoveryAnalyticsPayload`, `BodyNutritionAnalyticsResult`, `StatisticsHubPayload`) to reduce reliance on untyped map access in core statistics flows.
+- Added hub/data composition adapters (`StatisticsHubDataAdapter`, `BodyNutritionAnalyticsDataAdapter`) to consolidate multi-source analytics loading.
+
+### 🧭 Statistics UX (User-visible)
+- Statistics Hub now acts as the primary analytics portal with compact summaries and drill-down routing for:
+  - Performance (PR and notable improvement context)
+  - Consistency (weekly trend signal)
+  - Muscle analytics (distribution emphasis)
+  - Recovery readiness
+  - Body/Nutrition correlation
+- Improved consistency of analytics labels, numeric formatting, and state display behavior through shared presentation formatter and chart defaults.
+- Preserved intentional fixed-window semantics where applicable (for example hub 6-week consistency context and tracker calendar windows), with UI chips still available for metrics that follow selected-range behavior.
+
+### 📝 Notes
+- This release continues to treat analytics as on-device, read-only derived views over existing workout, nutrition, fluid, and measurement logs.
+
 ## [0.7.0-alpha.2] - 2026-03-10
 
 ### 📊 Analytics Polish

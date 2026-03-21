@@ -11,6 +11,7 @@ Learn more about the project: **[Hypertrack Project Overview](documentation/over
 - [System Architecture](documentation/architecture.md)
 - [Data Models & Storage](documentation/data_models_and_storage.md)
 - [UI & Widgets](documentation/ui_and_widgets.md)
+- [Statistics Module (Source of Truth)](documentation/statistics_module.md)
 
 ---
 
@@ -51,6 +52,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 ### 📈 Body Metrics & Health
 * **Measurements:** Track weight, body fat percentage, and tape measurements (biceps, waist, etc.).
 * **Charts:** Visualize your progress over time.
+* **Statistics & Analytics Hub (v0.7):** Explore consistency, performance, muscle distribution, recovery, and body/nutrition correlations from a dedicated analytics module with drill-down screens.
 * **Supplements:** Manage your inventory and track daily intake of supplements (like Creatine or Vitamins) with full historical tracking of goals and limits.
 
 ### 🛡️ Privacy & Tech
@@ -76,6 +78,7 @@ We are building a platform that gives you the convenience of cloud-based apps wi
 
 ### 🚧 Current: v0.7 (Health & Connectivity)
 * **Apple HealthKit Integration:** Syncing workouts and weight with Apple Health — *planned*.
+* **Statistics Refactor:** Completed architecture and UX polish for the Statistics module (range-policy alignment, typed payload adoption in core analytics paths, and improved drill-down consistency).
 * **Core Tracking Stability:** Continued refinements and bug fixes across workout and nutrition logging.
 
 ### ☁️ Planned: v1.0 (MVP & Store Release)

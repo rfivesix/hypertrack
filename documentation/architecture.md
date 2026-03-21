@@ -17,19 +17,22 @@ This document describes the technical structure, design patterns, and directory 
 
 ## Layered Architecture
 
-Hypertrack follows a three-layer architecture to enforce separation of concerns:
+Hypertrack follows a layered architecture to enforce separation of concerns:
 
 ```
-┌─────────────────────────────────────────────────┐
-│               PRESENTATION LAYER                │
-│  lib/screens/  ·  lib/widgets/  ·  lib/dialogs/ │
-├─────────────────────────────────────────────────┤
-│            LOGIC & SERVICES LAYER               │
-│         lib/services/  ·  lib/util/             │
-├─────────────────────────────────────────────────┤
-│                 DATA LAYER                      │
-│          lib/models/  ·  lib/data/              │
-└─────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                      PRESENTATION LAYER                        │
+│          lib/screens/  ·  lib/widgets/  ·  lib/dialogs/       │
+├────────────────────────────────────────────────────────────────┤
+│                 FEATURE DOMAIN/PRESENTATION                    │
+│                    lib/features/<feature>/                     │
+├────────────────────────────────────────────────────────────────┤
+│                     LOGIC & SERVICES LAYER                     │
+│                    lib/services/  ·  lib/util/                │
+├────────────────────────────────────────────────────────────────┤
+│                           DATA LAYER                           │
+│                     lib/models/  ·  lib/data/                 │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ### 1. Presentation Layer
@@ -80,6 +83,20 @@ Handles persistence, serialization, and external data operations.
 | `data/drift_database.dart` | Drift ORM setup (future migration target). |
 
 *See [Data Models & Storage](data_models_and_storage.md) for entity details.*
+
+### 4. Feature Modules
+
+Feature modules are used where a domain has enough complexity to benefit from local domain/data/presentation contracts.
+
+| Module | Path | Responsibility |
+| :--- | :--- | :--- |
+| `statistics` | `lib/features/statistics/` | Statistics-specific range policy, data-quality policy, typed payload models, data adapters, and shared formatting contracts |
+
+The Statistics module currently includes:
+
+- `domain/` — `statistics_range_policy.dart`, `statistics_data_quality_policy.dart`, payload models, domain services
+- `data/` — `statistics_hub_data_adapter.dart`, `body_nutrition_analytics_data_adapter.dart`
+- `presentation/` — `statistics_formatter.dart`
 
 ---
 
