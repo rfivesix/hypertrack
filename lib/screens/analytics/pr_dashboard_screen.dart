@@ -91,6 +91,81 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildSectionHeader(
+                    l10n.analyticsNotableImprovements,
+                    isPrimary: true,
+                  ),
+                  Row(
+                    children: [
+                      _windowChip(7, l10n.filter7Days),
+                      _windowChip(30, l10n.filter30Days),
+                      _windowChip(90, l10n.filter3Months),
+                    ],
+                  ),
+                  const SizedBox(height: DesignConstants.spacingS),
+                  SummaryCard(
+                    child: _notableImprovements.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(l10n.analyticsNoPrTrendInWindow),
+                          )
+                        : Column(
+                            children:
+                                _notableImprovements.asMap().entries.map((
+                              entry,
+                            ) {
+                              final row = entry.value;
+                              final previous =
+                                  (row['previousBestE1rm'] as num).toDouble();
+                              final recent =
+                                  (row['recentBestE1rm'] as num).toDouble();
+                              final improvement =
+                                  (row['improvementPct'] as num).toDouble();
+                              final delta = recent - previous;
+
+                              return ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: entry.key == 0
+                                    ? Icon(
+                                        Icons.trending_up,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      )
+                                    : null,
+                                title: Text(
+                                  row['exerciseName'] as String,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(
+                                  '${l10n.analyticsE1rmProgress(_formatWeight(previous), _formatWeight(recent))} • Δ +${_formatWeight(delta)} kg',
+                                ),
+                                trailing: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '+${improvement.toStringAsFixed(1)}%',
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      '+${_formatWeight(delta)} kg',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelSmall,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                  const SizedBox(height: DesignConstants.spacingL),
                   _buildSectionHeader(l10n.analyticsRecentRecords),
                   SummaryCard(
                     child: _recentPrs.isEmpty
@@ -117,13 +192,57 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                             padding: const EdgeInsets.all(12.0),
                             child: Text(l10n.noWorkoutDataLabel),
                           )
-                        : Column(
+                        : Wrap(
+                            spacing: DesignConstants.spacingS,
+                            runSpacing: DesignConstants.spacingS,
                             children: _allTimePrs.asMap().entries.map((entry) {
-                              return _buildRankedRow(
-                                rank: entry.key + 1,
-                                exerciseName:
-                                    entry.value['exerciseName'] as String,
-                                valueLabel: _perfLabel(entry.value),
+                              return Container(
+                                width:
+                                    (MediaQuery.of(context).size.width - 56) /
+                                    2,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.35),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '#${entry.key + 1}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _perfLabel(entry.value),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    Text(
+                                      entry.value['exerciseName'] as String,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
                               );
                             }).toList(),
                           ),
@@ -190,71 +309,26 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                       }).toList(),
                     ),
                   ),
-                  const SizedBox(height: DesignConstants.spacingL),
-                  _buildSectionHeader(l10n.analyticsNotableImprovements),
-                  Row(
-                    children: [
-                      _windowChip(7, l10n.filter7Days),
-                      _windowChip(30, l10n.filter30Days),
-                      _windowChip(90, l10n.filter3Months),
-                    ],
-                  ),
-                  const SizedBox(height: DesignConstants.spacingS),
-                  SummaryCard(
-                    child: _notableImprovements.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(l10n.analyticsNoPrTrendInWindow),
-                          )
-                        : Column(
-                            children: _notableImprovements.map((row) {
-                              final previous =
-                                  (row['previousBestE1rm'] as num).toDouble();
-                              final recent =
-                                  (row['recentBestE1rm'] as num).toDouble();
-                              final improvement =
-                                  (row['improvementPct'] as num).toDouble();
-                              return ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  row['exerciseName'] as String,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  l10n.analyticsE1rmProgress(
-                                    _formatWeight(previous),
-                                    _formatWeight(recent),
-                                  ),
-                                ),
-                                trailing: Text(
-                                  '+${improvement.toStringAsFixed(1)}%',
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                  ),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, {bool isPrimary = false}) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 6, top: 2),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
-              color: Colors.grey[600],
-            ),
+        style: isPrimary
+            ? Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                )
+            : Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.2,
+                  color: Colors.grey[600],
+                ),
       ),
     );
   }
