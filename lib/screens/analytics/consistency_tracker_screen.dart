@@ -132,6 +132,10 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
     final rollingConsistency = ConsistencyDomainService.rollingConsistencyPercent(
       weeklyMetrics: _weeklyMetrics,
     );
+    final availableWidth =
+        MediaQuery.of(context).size.width - DesignConstants.screenPadding.horizontal;
+    final primaryCardWidth = (availableWidth - 16) / 3;
+    final secondaryCardWidth = (availableWidth - 8) / 2;
 
     return Scaffold(
       appBar: GlobalAppBar(title: l10n.consistencyTrackerTitle),
@@ -149,29 +153,61 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _metricCard(l10n.metricsWorkoutsWeek, '$thisWeek',
-                          l10n.thisWeekLabel),
                       _metricCard(
-                          l10n.analyticsTrainingDaysPerWeek,
-                          trainingDaysPerWeek.toStringAsFixed(1),
-                          l10n.analyticsLast4Weeks),
+                        l10n.metricsWorkoutsWeek,
+                        '$thisWeek',
+                        l10n.thisWeekLabel,
+                        width: primaryCardWidth,
+                        emphasized: true,
+                      ),
                       _metricCard(
-                          l10n.avgPerWeekLabel,
-                          avgPerWeek.toStringAsFixed(1),
-                          l10n.workoutsPerWeekLabel),
-                      _metricCard(l10n.streakLabel, '$streak', l10n.weeksLabel),
+                        l10n.streakLabel,
+                        '$streak',
+                        l10n.weeksLabel,
+                        width: primaryCardWidth,
+                        emphasized: true,
+                      ),
                       _metricCard(
-                          l10n.analyticsRhythm,
-                          ConsistencyDomainService.formatTrend(rhythmDelta),
-                          l10n.analyticsVsPrior4Weeks),
+                        l10n.analyticsRollingConsistency,
+                        '${rollingConsistency.toStringAsFixed(0)}%',
+                        l10n.analyticsWeeksAtLeast2Workouts,
+                        width: primaryCardWidth,
+                        emphasized: true,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
                       _metricCard(
-                          l10n.analyticsRollingConsistency,
-                          '${rollingConsistency.toStringAsFixed(0)}%',
-                          l10n.analyticsWeeksAtLeast2Workouts),
+                        l10n.analyticsTrainingDaysPerWeek,
+                        trainingDaysPerWeek.toStringAsFixed(1),
+                        l10n.analyticsLast4Weeks,
+                        width: secondaryCardWidth,
+                      ),
+                      _metricCard(
+                        l10n.avgPerWeekLabel,
+                        avgPerWeek.toStringAsFixed(1),
+                        l10n.workoutsPerWeekLabel,
+                        width: secondaryCardWidth,
+                      ),
+                      _metricCard(
+                        l10n.analyticsRhythm,
+                        ConsistencyDomainService.formatTrend(rhythmDelta),
+                        l10n.analyticsVsPrior4Weeks,
+                        width: availableWidth,
+                        valueColor: rhythmDelta > 0
+                            ? Theme.of(context).colorScheme.primary
+                            : rhythmDelta < 0
+                                ? Theme.of(context).colorScheme.error
+                                : null,
+                      ),
                     ],
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  _sectionHeader(_metricName(l10n)),
+                  _sectionHeader('${_metricName(l10n)} · ${l10n.analyticsViewWeek}'),
                   SummaryCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,9 +246,21 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Y: ${_metricName(l10n)} (${_metricUnit(l10n)})',
-                          style: Theme.of(context).textTheme.bodySmall,
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              '${_metricName(l10n)} (${_metricUnit(l10n)})',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              '12 ${l10n.weeksLabel}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         SizedBox(
@@ -230,6 +278,33 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                     alignment: BarChartAlignment.spaceAround,
                                     borderData: AnalyticsChartDefaults.noBorder,
                                     gridData: AnalyticsChartDefaults.compactGrid,
+                                    barTouchData: BarTouchData(
+                                      enabled: true,
+                                      touchTooltipData: BarTouchTooltipData(
+                                        fitInsideHorizontally: true,
+                                        fitInsideVertically: true,
+                                        getTooltipItem:
+                                            (group, groupIndex, rod, rodIndex) {
+                                          final row = _weeklyMetrics[group.x.toInt()];
+                                          return BarTooltipItem(
+                                            '${row.weekLabel}\n${rod.toY.toStringAsFixed(1)} ${_metricUnit(l10n)}',
+                                            Theme.of(context)
+                                                    .textTheme
+                                                    .labelSmall
+                                                    ?.copyWith(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onInverseSurface,
+                                                    ) ??
+                                                TextStyle(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onInverseSurface,
+                                                ),
+                                          );
+                                        },
+                                      ),
+                                    ),
                                     titlesData: AnalyticsChartDefaults.standardTitles(
                                       leftTitles: AxisTitles(
                                         sideTitles: SideTitles(
@@ -277,7 +352,15 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                                 BorderRadius.circular(4),
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .primary,
+                                                .primary
+                                                .withValues(
+                                                  alpha: (0.35 +
+                                                          (((entry.key + 1) /
+                                                                  _weeklyMetrics
+                                                                      .length) *
+                                                              0.65))
+                                                      .clamp(0.35, 1.0),
+                                                ),
                                           ),
                                         ],
                                       );
@@ -287,7 +370,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'X: ${l10n.analyticsViewWeek.toLowerCase()}',
+                          'X: ${l10n.analyticsViewWeek.toLowerCase()} · 12 ${l10n.weeksLabel}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -303,6 +386,8 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                           l10n.analyticsCalendarExplainer,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
+                        const SizedBox(height: 8),
+                        _calendarLegend(l10n),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.all(8),
@@ -426,9 +511,16 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
     return AnalyticsSectionHeader(title: text);
   }
 
-  Widget _metricCard(String label, String value, String subtitle) {
+  Widget _metricCard(
+    String label,
+    String value,
+    String subtitle, {
+    required double width,
+    bool emphasized = false,
+    Color? valueColor,
+  }) {
     return Container(
-      width: (MediaQuery.of(context).size.width - 48) / 2,
+      width: width,
       constraints: const BoxConstraints(minHeight: 104),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -436,19 +528,35 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
         color: Theme.of(context)
             .colorScheme
             .surfaceContainerHighest
-            .withValues(alpha: 0.35),
+            .withValues(alpha: emphasized ? 0.5 : 0.35),
+        border: emphasized
+            ? Border.all(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.18),
+              )
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.labelMedium),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
+                ),
+          ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+                ?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: valueColor,
+                ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -459,6 +567,36 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _calendarLegend(AppLocalizations l10n) {
+    Widget item(String label, double alpha) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: alpha),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+        ],
+      );
+    }
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        item('1 ${l10n.workoutsLabel}', 0.32),
+        item('2 ${l10n.workoutsLabel}', 0.46),
+        item('3+ ${l10n.workoutsLabel}', 0.65),
+      ],
     );
   }
 }
