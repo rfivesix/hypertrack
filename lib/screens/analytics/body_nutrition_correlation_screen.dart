@@ -303,8 +303,8 @@ class _BodyNutritionCorrelationScreenState
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -390,7 +390,8 @@ class _BodyNutritionCorrelationScreenState
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40,
-              getTitlesWidget: (value, meta) => AnalyticsChartDefaults.tickLabel(
+              getTitlesWidget: (value, meta) =>
+                  AnalyticsChartDefaults.tickLabel(
                 context,
                 value.toStringAsFixed(1),
               ),
@@ -454,7 +455,8 @@ class _BodyNutritionCorrelationScreenState
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 42,
-              getTitlesWidget: (value, meta) => AnalyticsChartDefaults.tickLabel(
+              getTitlesWidget: (value, meta) =>
+                  AnalyticsChartDefaults.tickLabel(
                 context,
                 value.toStringAsFixed(0),
               ),
