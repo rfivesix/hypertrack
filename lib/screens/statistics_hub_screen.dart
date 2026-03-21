@@ -168,7 +168,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         : _trainingStats.avgPerWeek.toStringAsFixed(1);
     final streakText = _isLoadingStats
         ? l10n.load_dots
-        : '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks.toLowerCase()}';
+        : '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks}';
     return SummaryCard(
       onTap: () {
         Navigator.of(context).push(
@@ -180,15 +180,17 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.workoutsPerWeekLabel,
-              style: Theme.of(context).textTheme.bodySmall,
+            _buildCardHeading(
+              icon: Icons.show_chart_rounded,
+              label: l10n.workoutsPerWeekLabel,
+              chipText: _timeRanges[_selectedTimeRangeIndex],
+              chipColor: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 4),
             Text(
               avgWorkouts == '-'
                   ? '-'
-                  : '$avgWorkouts ${l10n.analyticsPerWeekAbbrev}',
+                  : _formatPerWeek(avgWorkouts),
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall
@@ -213,9 +215,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final muscles = (_muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>();
     final topMuscle = muscles.isNotEmpty ? muscles.first : null;
+    final topMuscleShare =
+        (topMuscle?['distributionShare'] as num?)?.toDouble() ?? 0.0;
     final topMuscleFrequency = topMuscle == null
         ? l10n.exerciseAnalyticsNoData
-        : '${(topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1)}/${l10n.analyticsPerWeekAbbrev}';
+        : _formatPerWeek(
+            (topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1),
+          );
 
     return SummaryCard(
       onTap: () {
@@ -228,13 +234,15 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.analyticsMuscleTopFrequency,
-              style: Theme.of(context).textTheme.bodySmall,
+            _buildCardHeading(
+              icon: Icons.tune_rounded,
+              label: l10n.analyticsMuscleTopFrequency,
+              chipText: '${(topMuscleShare * 100).toStringAsFixed(0)}%',
+              chipColor: Theme.of(context).colorScheme.tertiary,
             ),
             const SizedBox(height: 4),
             Text(
-              topMuscle?['muscleGroup'] as String? ?? '-',
+              _formatMuscleLabel(topMuscle?['muscleGroup'] as String?),
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall
@@ -247,6 +255,21 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     color: Theme.of(context).colorScheme.outline,
                   ),
             ),
+            if (topMuscleShare > 0) ...[
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  minHeight: 6,
+                  value: topMuscleShare.clamp(0.0, 1.0),
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation(
+                    Theme.of(context).colorScheme.tertiary,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             _buildDrillDownHint(),
           ],
@@ -268,10 +291,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         : (topImprovement['exerciseName'] as String? ?? l10n.metricsMostImproved);
     final recentRecordsText = _recentPRs.isEmpty
         ? l10n.exerciseAnalyticsNoData
-        : '${_recentPRs.length} ${l10n.analyticsRecentRecords.toLowerCase()}';
+        : '${l10n.analyticsRecentRecords}: ${_recentPRs.length}';
     final performanceSummaryText = _recentPRs.isEmpty
         ? recentRecordsText
         : '$recentRecordsText • ${l10n.metricsVolumeLifted}: ${_formatVolume(latestVolume)}';
+    final momentumColor = topImprovement == null
+        ? Theme.of(context).colorScheme.outline
+        : Theme.of(context).colorScheme.primary;
     return Column(
       children: [
         SummaryCard(
@@ -285,17 +311,33 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildCardHeading(
+                  icon: Icons.bolt_rounded,
+                  label: l10n.metricsMostImproved,
+                  chipText: _timeRanges[_selectedTimeRangeIndex],
+                  chipColor: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 4),
                 Text(
                   topExerciseName,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  momentumValue,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    Icon(Icons.trending_up_rounded, size: 18, color: momentumColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      momentumValue,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: momentumColor,
+                          ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -377,8 +419,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.metricsMuscleReadiness,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  _buildCardHeading(
+                    icon: Icons.self_improvement_rounded,
+                    label: l10n.metricsMuscleReadiness,
+                    chipText: hasData ? l10n.sectionRecovery : l10n.load_dots,
+                    chipColor: iconColor,
+                  ),
                   if (_isLoadingStats)
                     const Padding(
                       padding: EdgeInsets.only(top: 4.0),
@@ -394,7 +440,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                       style: Theme.of(context)
                           .textTheme
                           .headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: iconColor,
+                          ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -418,6 +467,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   Widget _buildBodyMetricsSection() {
     final body = _bodyNutrition;
     final currentWeight = body?.currentWeightKg;
+    final weightChange = body?.weightChangeKg;
     final avgCalories = body?.avgDailyCalories;
 
     final weightValue = currentWeight == null
@@ -443,9 +493,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.metricsCurrentWeight,
-                  style: Theme.of(context).textTheme.bodySmall,
+                _buildCardHeading(
+                  icon: Icons.monitor_weight_outlined,
+                  label: l10n.metricsCurrentWeight,
+                  chipText: _effectiveBodyRangeLabel(),
+                  chipColor: Theme.of(context).colorScheme.secondary,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -457,7 +509,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _buildBodyMetricsSupportingText(body, caloriesValue),
+                  _buildBodyMetricsSupportingText(body, caloriesValue, weightChange),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
@@ -510,9 +562,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   String _buildBodyMetricsSupportingText(
     BodyNutritionAnalyticsResult? body,
     String caloriesValue,
+    double? weightChange,
   ) {
     if (body == null) return l10n.analyticsInsightNotEnoughData;
-    return '${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay} • ${_effectiveBodyRangeLabel()}';
+    final changeText = weightChange == null
+        ? null
+        : '${l10n.metricsWeightChange}: ${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+    if (changeText == null) {
+      return '${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay}';
+    }
+    return '$changeText • ${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay}';
   }
 
   String _formatVolume(num? volume) {
@@ -521,6 +580,57 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       return '${(volume / _volumeKiloThreshold).toStringAsFixed(1)}k ${l10n.analyticsUnitKg}';
     }
     return '${volume.toStringAsFixed(0)} ${l10n.analyticsUnitKg}';
+  }
+
+  String _formatPerWeek(String valueText) {
+    return '$valueText / ${l10n.analyticsPerWeekAbbrev}';
+  }
+
+  String _formatMuscleLabel(String? label) {
+    if (label == null || label.trim().isEmpty) return '-';
+    final normalized = label.trim();
+    final normalizedLower = normalized.toLowerCase();
+    if (normalizedLower == 'other' || normalizedLower == 'others') {
+      return l10n.unknown;
+    }
+    return normalized;
+  }
+
+  Widget _buildCardHeading({
+    required IconData icon,
+    required String label,
+    String? chipText,
+    required Color chipColor,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: chipColor),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+        if (chipText != null && chipText.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: chipColor.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              chipText,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: chipColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildDrillDownHint() {
