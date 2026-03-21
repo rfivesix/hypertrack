@@ -91,7 +91,7 @@ class BodyNutritionAnalyticsDataAdapter {
     required int rangeIndex,
     required DateTime now,
     required DateTime? earliestRelevantDate,
-  }) {
+  }) async {
     final resolved = _rangePolicy.resolve(
       metricId: StatisticsMetricId.bodyNutritionTrend,
       selectedRangeIndex: rangeIndex,
@@ -120,7 +120,8 @@ class BodyNutritionAnalyticsDataAdapter {
     required List<FluidEntry> fluidEntries,
   }) async {
     final map = <DateTime, double>{};
-    final foodCaloriesPer100gCache = await _hydrateCaloriesByBarcode(foodEntries);
+    final foodCaloriesPer100gCache =
+        await _hydrateCaloriesByBarcode(foodEntries);
 
     for (final entry in foodEntries) {
       final day = normalizeDay(entry.timestamp);
