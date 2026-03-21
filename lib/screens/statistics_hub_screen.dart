@@ -166,6 +166,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final avgWorkouts = _trainingStats.avgPerWeek <= 0
         ? '-'
         : _trainingStats.avgPerWeek.toStringAsFixed(1);
+    final weeklyTrend = _weeklyVolume
+        .map((w) => ((w['setCount'] as num?) ?? 0).toDouble())
+        .toList(growable: false);
     final streakText = _isLoadingStats
         ? l10n.load_dots
         : '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks}';
@@ -181,10 +184,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildCardHeading(
-              icon: Icons.show_chart_rounded,
               label: l10n.workoutsPerWeekLabel,
               chipText: _timeRanges[_selectedTimeRangeIndex],
-              chipColor: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 4),
             Text(
@@ -204,6 +205,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   ),
             ),
             const SizedBox(height: 8),
+            _buildMiniBars(
+              values: weeklyTrend.take(8).toList(growable: false),
+              color: Theme.of(context).colorScheme.primary,
+              semanticsLabel: l10n.sectionConsistency,
+            ),
+            const SizedBox(height: 8),
             _buildDrillDownHint(),
           ],
         ),
@@ -213,7 +220,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Widget _buildMuscleVolumeSection() {
     final muscles = (_muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
-        .cast<Map<String, dynamic>>();
+        .cast<Map<String, dynamic>>()
+        .where((m) => !_isOtherCategoryLabel(m['muscleGroup'] as String?))
+        .toList(growable: false);
     final topMuscle = muscles.isNotEmpty ? muscles.first : null;
     final topMuscleShare =
         (topMuscle?['distributionShare'] as num?)?.toDouble() ?? 0.0;
@@ -235,10 +244,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildCardHeading(
-              icon: Icons.tune_rounded,
               label: l10n.analyticsMuscleTopFrequency,
-              chipText: '${(topMuscleShare * 100).toStringAsFixed(0)}%',
-              chipColor: Theme.of(context).colorScheme.tertiary,
+              chipText: topMuscle == null
+                  ? null
+                  : '${(topMuscleShare * 100).toStringAsFixed(0)}%',
             ),
             const SizedBox(height: 4),
             Text(
@@ -295,6 +304,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final performanceSummaryText = _recentPRs.isEmpty
         ? recentRecordsText
         : '$recentRecordsText • ${l10n.metricsVolumeLifted}: ${_formatVolume(latestVolume)}';
+    final latestVolumeValue = (latestVolume ?? 0).toDouble();
+    final rollingMaxVolume = _weeklyVolume
+        .map((v) => ((v['tonnage'] as num?) ?? 0).toDouble())
+        .fold<double>(0, (a, b) => a > b ? a : b);
+    final compactSignals = <double>[
+      _recentPRs.isEmpty ? 0 : (_recentPRs.length.clamp(0, 6) / 6),
+      rollingMaxVolume <= 0 ? 0 : (latestVolumeValue / rollingMaxVolume),
+    ];
     final momentumColor = topImprovement == null
         ? Theme.of(context).colorScheme.outline
         : Theme.of(context).colorScheme.primary;
@@ -312,10 +329,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildCardHeading(
-                  icon: Icons.bolt_rounded,
                   label: l10n.metricsMostImproved,
                   chipText: _timeRanges[_selectedTimeRangeIndex],
-                  chipColor: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -323,21 +338,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.trending_up_rounded, size: 18, color: momentumColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      momentumValue,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: momentumColor,
-                          ),
-                    ),
-                  ],
+                Text(
+                  momentumValue,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: momentumColor,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -345,6 +351,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
+                ),
+                const SizedBox(height: 8),
+                _buildMiniBars(
+                  values: compactSignals,
+                  color: Theme.of(context).colorScheme.primary,
+                  semanticsLabel: l10n.analyticsSectionPerformanceRecords,
                 ),
                 const SizedBox(height: 8),
                 _buildDrillDownHint(),
@@ -404,60 +416,86 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       },
       child: Padding(
         padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCardHeading(
+                    label: l10n.metricsMuscleReadiness,
+                    chipText: hasData ? l10n.sectionRecovery : null,
+                  ),
+                ),
+                _buildDrillDownHint(),
+              ],
+            ),
+            if (_isLoadingStats)
+              const Padding(
+                padding: EdgeInsets.only(top: 4.0),
+                child: SizedBox(
+                  height: 14,
+                  width: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            else ...[
+              Text(
+                recoveryHeadline,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: iconColor,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                recoveryStatusSummary,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+              if (hasData) ...[
+                const SizedBox(height: 8),
+                _buildRecoveryDistributionBar(
+                  recovering: recovering,
+                  ready: ready,
+                  fresh: fresh,
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecoveryDistributionBar({
+    required int recovering,
+    required int ready,
+    required int fresh,
+  }) {
+    final total = recovering + ready + fresh;
+    if (total <= 0) return const SizedBox.shrink();
+    final colorScheme = Theme.of(context).colorScheme;
+    final segments = <({int value, Color color})>[
+      (value: recovering, color: Colors.orange),
+      (value: ready, color: Colors.blue),
+      (value: fresh, color: Colors.green),
+    ].where((segment) => segment.value > 0).toList(growable: false);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        height: 8,
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.18),
-                shape: BoxShape.circle,
+            for (final segment in segments)
+              Expanded(
+                flex: segment.value,
+                child: ColoredBox(color: segment.color),
               ),
-              child: Icon(Icons.self_improvement, color: iconColor),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCardHeading(
-                    icon: Icons.self_improvement_rounded,
-                    label: l10n.metricsMuscleReadiness,
-                    chipText: hasData ? l10n.sectionRecovery : l10n.load_dots,
-                    chipColor: iconColor,
-                  ),
-                  if (_isLoadingStats)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 4.0),
-                      child: SizedBox(
-                        height: 14,
-                        width: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  else ...[
-                    Text(
-                      recoveryHeadline,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: iconColor,
-                          ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      recoveryStatusSummary,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right,
-                color: Theme.of(context).colorScheme.outline),
+            if (segments.isEmpty)
+              Expanded(child: ColoredBox(color: colorScheme.outline)),
           ],
         ),
       ),
@@ -469,6 +507,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final currentWeight = body?.currentWeightKg;
     final weightChange = body?.weightChangeKg;
     final avgCalories = body?.avgDailyCalories;
+    final weightTrend = body?.smoothedWeight
+            .map((p) => p.value)
+            .toList(growable: false) ??
+        const <double>[];
 
     final weightValue = currentWeight == null
         ? '-'
@@ -494,10 +536,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildCardHeading(
-                  icon: Icons.monitor_weight_outlined,
                   label: l10n.metricsCurrentWeight,
                   chipText: _effectiveBodyRangeLabel(),
-                  chipColor: Theme.of(context).colorScheme.secondary,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -513,6 +553,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
+                ),
+                const SizedBox(height: 8),
+                _buildMiniBars(
+                  values: weightTrend.take(10).toList(growable: false),
+                  color: Theme.of(context).colorScheme.secondary,
+                  semanticsLabel: l10n.sectionBodyNutrition,
                 ),
                 const SizedBox(height: 8),
                 _buildDrillDownHint(),
@@ -587,25 +633,28 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   String _formatMuscleLabel(String? label) {
-    if (label == null || label.trim().isEmpty) return '-';
+    if (label == null || label.trim().isEmpty) {
+      return _noClearFocusLabel();
+    }
     final normalized = label.trim();
-    final normalizedLower = normalized.toLowerCase();
-    if (normalizedLower == 'other' || normalizedLower == 'others') {
-      return l10n.unknown;
+    if (_isOtherCategoryLabel(normalized)) {
+      return _noClearFocusLabel();
     }
     return normalized;
   }
 
+  String _noClearFocusLabel() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    return languageCode == 'de' ? 'Kein klarer Schwerpunkt' : 'No clear focus';
+  }
+
   Widget _buildCardHeading({
-    required IconData icon,
     required String label,
     String? chipText,
-    required Color chipColor,
   }) {
+    final chipColor = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
-        Icon(icon, size: 18, color: chipColor),
-        const SizedBox(width: 6),
         Expanded(
           child: Text(
             label,
@@ -634,23 +683,57 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildDrillDownHint() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(
-          l10n.analyticsViewDetails,
-          style: Theme.of(context)
-              .textTheme
-              .labelMedium
-              ?.copyWith(color: Theme.of(context).colorScheme.outline),
+    return Icon(
+      Icons.chevron_right,
+      size: 18,
+      color: Theme.of(context).colorScheme.outline,
+    );
+  }
+
+  bool _isOtherCategoryLabel(String? label) {
+    if (label == null) return false;
+    final normalized = label.trim().toLowerCase();
+    return normalized == 'other' || normalized == 'others';
+  }
+
+  Widget _buildMiniBars({
+    required List<double> values,
+    required Color color,
+    required String semanticsLabel,
+  }) {
+    final clean = values.where((v) => v.isFinite).toList(growable: false);
+    if (clean.isEmpty) return const SizedBox.shrink();
+    final max = clean.fold<double>(0, (a, b) => a > b ? a : b);
+    final normalized = max <= 0
+        ? clean.map((_) => 0.2).toList(growable: false)
+        : clean.map((v) => (v / max).clamp(0.08, 1.0)).toList(growable: false);
+
+    return Semantics(
+      label: semanticsLabel,
+      child: SizedBox(
+        height: 20,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            for (final ratio in normalized)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                  child: FractionallySizedBox(
+                    heightFactor: ratio,
+                    alignment: Alignment.bottomCenter,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
-        const SizedBox(width: 2),
-        Icon(
-          Icons.chevron_right,
-          size: 18,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-      ],
+      ),
     );
   }
 

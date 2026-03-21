@@ -83,7 +83,10 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   }
 
   bool _shouldHideMuscle(String name) {
-    return RecoveryDomainService.shouldHideMuscle(name);
+    final normalized = name.trim().toLowerCase();
+    return RecoveryDomainService.shouldHideMuscle(name) ||
+        normalized == 'other' ||
+        normalized == 'others';
   }
 
   double _recoveryPressureScore(RecoveryMusclePayload muscle) {
@@ -100,21 +103,13 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
             _recoveryPressureScore(a),
           ));
 
-    final top = sorted.take(8).toList();
-    final rest = sorted.skip(8).toList();
-    final data = top
+    return sorted
+        .take(8)
         .map((m) => MuscleRadarDatum(
               label: m.muscleGroup,
               value: _recoveryPressureScore(m),
             ))
         .toList();
-
-    if (rest.isNotEmpty) {
-      final avg = rest.map(_recoveryPressureScore).reduce((a, b) => a + b) /
-          rest.length;
-      data.add(MuscleRadarDatum(label: 'Other', value: avg));
-    }
-    return data;
   }
 
   @override
