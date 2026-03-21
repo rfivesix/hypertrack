@@ -3,31 +3,65 @@ import '../../../util/body_nutrition_analytics_utils.dart';
 import '../domain/consistency_payload_models.dart';
 import '../domain/hub_payload_models.dart';
 import '../domain/recovery_payload_models.dart';
+import '../domain/statistics_range_policy.dart';
 
 class StatisticsHubDataAdapter {
   final WorkoutDatabaseHelper _workoutDatabaseHelper;
+  final StatisticsRangePolicyService _rangePolicy;
 
   const StatisticsHubDataAdapter({
     required WorkoutDatabaseHelper workoutDatabaseHelper,
-  }) : _workoutDatabaseHelper = workoutDatabaseHelper;
+    StatisticsRangePolicyService rangePolicy =
+        StatisticsRangePolicyService.instance,
+  })  : _workoutDatabaseHelper = workoutDatabaseHelper,
+        _rangePolicy = rangePolicy;
 
   Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fetch({
-    required int selectedDays,
     required int selectedTimeRangeIndex,
   }) async {
+    final selectedDays =
+        _rangePolicy.selectedDaysFromIndex(selectedTimeRangeIndex);
+    final weeklyVolumeRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubWeeklyVolume,
+      selectedRangeIndex: selectedTimeRangeIndex,
+    );
+    final workoutsPerWeekRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubWorkoutsPerWeek,
+      selectedRangeIndex: selectedTimeRangeIndex,
+    );
+    final consistencyRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubConsistencyMetrics,
+      selectedRangeIndex: selectedTimeRangeIndex,
+    );
+    final muscleRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubMuscleAnalytics,
+      selectedRangeIndex: selectedTimeRangeIndex,
+    );
+    final improvementRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubNotablePrImprovements,
+      selectedRangeIndex: selectedTimeRangeIndex,
+      selectedDays: selectedDays,
+    );
+
     final prs = _workoutDatabaseHelper.getRecentGlobalPRs(limit: 3);
-    final weeklyVolume = _workoutDatabaseHelper.getWeeklyVolumeData(weeksBack: 6);
-    final workoutsPerWeek = _workoutDatabaseHelper.getWorkoutsPerWeek(weeksBack: 6);
+    final weeklyVolume = _workoutDatabaseHelper.getWeeklyVolumeData(
+      weeksBack: weeklyVolumeRange.effectiveWeeks ?? 6,
+    );
+    final workoutsPerWeek = _workoutDatabaseHelper.getWorkoutsPerWeek(
+      weeksBack: workoutsPerWeekRange.effectiveWeeks ?? 6,
+    );
     final consistencyMetrics =
-        _workoutDatabaseHelper.getWeeklyConsistencyMetrics(weeksBack: 6);
+        _workoutDatabaseHelper.getWeeklyConsistencyMetrics(
+      weeksBack: consistencyRange.effectiveWeeks ?? 6,
+    );
     final muscleAnalytics = _workoutDatabaseHelper.getMuscleGroupAnalytics(
       daysBack: selectedDays,
-      weeksBack: 8,
+      weeksBack: muscleRange.effectiveWeeks ?? 8,
     );
     final trainingStats = _workoutDatabaseHelper.getTrainingStats();
     final recoveryAnalytics = _workoutDatabaseHelper.getRecoveryAnalytics();
     final improvements = _workoutDatabaseHelper.getNotablePrImprovements(
-      daysWindow: selectedDays > 120 ? 90 : selectedDays,
+      daysWindow: improvementRange.effectiveDays ?? selectedDays,
       limit: 3,
     );
     final bodyNutrition =

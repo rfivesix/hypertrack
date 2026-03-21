@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/statistics/domain/body_nutrition_analytics_engine.dart';
 import 'package:hypertrack/features/statistics/domain/body_nutrition_analytics_models.dart';
+import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
 import 'package:hypertrack/models/chart_data_point.dart';
 
 void main() {
@@ -29,6 +30,7 @@ void main() {
       expect(result.avgDailyCalories, closeTo(2100.0, 0.0001));
       expect(result.currentWeightKg, closeTo(79.6, 0.0001));
       expect(result.caloriesDaily.map((e) => e.value), [2000, 2100, 2200]);
+      expect(result.insightDataQuality.hasSufficientData, isFalse);
     });
 
     test('deriveInsight returns stableWeightCaloriesUp for matching thresholds',
@@ -87,6 +89,16 @@ void main() {
       );
 
       expect(insight, BodyNutritionInsightType.notEnoughData);
+    });
+
+    test('data quality policy marks sufficient ranges correctly', () {
+      final assessment = StatisticsDataQualityPolicy.instance.bodyNutritionInsight(
+        spanDays: 30,
+        totalDays: 30,
+        weightDays: 10,
+        loggedCalorieDays: 10,
+      );
+      expect(assessment.hasSufficientData, isTrue);
     });
   });
 }

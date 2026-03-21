@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/workout_database_helper.dart';
+import '../../features/statistics/domain/statistics_range_policy.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/analytics_section_header.dart';
@@ -19,6 +20,7 @@ class MuscleGroupAnalyticsScreen extends StatefulWidget {
 
 class _MuscleGroupAnalyticsScreenState
     extends State<MuscleGroupAnalyticsScreen> {
+  final _rangePolicy = StatisticsRangePolicyService.instance;
   bool _isLoading = true;
   int _periodIndex = 1; // 30 days
   int _selectedWeekIndex = -1;
@@ -35,7 +37,10 @@ class _MuscleGroupAnalyticsScreenState
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final daysBack = _periodOptions[_periodIndex];
-    final weeksBack = (daysBack / 7).ceil().clamp(4, 16);
+    final weeksBack = _rangePolicy.resolveWeeksBack(
+      metricId: StatisticsMetricId.muscleAnalytics,
+      effectiveDays: daysBack,
+    );
 
     final data = await WorkoutDatabaseHelper.instance.getMuscleGroupAnalytics(
       daysBack: daysBack,

@@ -5,6 +5,7 @@ import '../../../data/product_database_helper.dart';
 import '../../../models/chart_data_point.dart';
 import '../../../models/food_entry.dart';
 import '../../../models/fluid_entry.dart';
+import '../domain/statistics_range_policy.dart';
 
 class BodyNutritionAnalyticsRawData {
   final DateTimeRange range;
@@ -21,12 +22,16 @@ class BodyNutritionAnalyticsRawData {
 class BodyNutritionAnalyticsDataAdapter {
   final DatabaseHelper _databaseHelper;
   final ProductDatabaseHelper _productDatabaseHelper;
+  final StatisticsRangePolicyService _rangePolicy;
 
   const BodyNutritionAnalyticsDataAdapter({
     required DatabaseHelper databaseHelper,
     required ProductDatabaseHelper productDatabaseHelper,
+    StatisticsRangePolicyService rangePolicy =
+        StatisticsRangePolicyService.instance,
   })  : _databaseHelper = databaseHelper,
-        _productDatabaseHelper = productDatabaseHelper;
+        _productDatabaseHelper = productDatabaseHelper,
+        _rangePolicy = rangePolicy;
 
   static DateTime normalizeDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);
@@ -54,9 +59,11 @@ class BodyNutritionAnalyticsDataAdapter {
     DateTime? now,
   }) async {
     final normalizedNow = normalizeDay(now ?? DateTime.now());
+    final earliest = await _earliestRelevantDate();
     final range = await _resolveRange(
       rangeIndex: rangeIndex,
       now: normalizedNow,
+      earliestRelevantDate: earliest,
     );
 
     final results = await Future.wait([
@@ -83,16 +90,15 @@ class BodyNutritionAnalyticsDataAdapter {
   Future<DateTimeRange> _resolveRange({
     required int rangeIndex,
     required DateTime now,
-  }) async {
-    if (rangeIndex == 4) {
-      final earliest = await _earliestRelevantDate();
-      final start = earliest ?? now;
-      return DateTimeRange(start: start, end: endOfDay(now));
-    }
-
-    final days = daysFromRangeIndex(rangeIndex);
-    final start = now.subtract(Duration(days: days - 1));
-    return DateTimeRange(start: start, end: endOfDay(now));
+    required DateTime? earliestRelevantDate,
+  }) {
+    final resolved = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.bodyNutritionTrend,
+      selectedRangeIndex: rangeIndex,
+      now: now,
+      earliestAvailableDay: earliestRelevantDate,
+    );
+    return resolved.dateRange ?? DateTimeRange(start: now, end: endOfDay(now));
   }
 
   Future<DateTime?> _earliestRelevantDate() async {

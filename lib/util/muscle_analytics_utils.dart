@@ -1,4 +1,7 @@
+import '../features/statistics/domain/statistics_data_quality_policy.dart';
+
 class MuscleAnalyticsUtils {
+  static const _dataQualityPolicy = StatisticsDataQualityPolicy.instance;
   static DateTime normalizeDay(DateTime date) {
     return DateTime(date.year, date.month, date.day);
   }
@@ -102,7 +105,11 @@ class MuscleAnalyticsUtils {
     final spanDays = trainedDates.isEmpty
         ? 0
         : trainedDates.last.difference(trainedDates.first).inDays + 1;
-    final dataQualityOk = dataPointDays >= 3 && spanDays >= 14;
+    final qualityAssessment = _dataQualityPolicy.muscleDistribution(
+      dataPointDays: dataPointDays,
+      spanDays: spanDays,
+    );
+    final dataQualityOk = qualityAssessment.hasSufficientData;
 
     final undertrained = _findUndertrainedMuscles(muscles, dataQualityOk);
 
@@ -112,6 +119,7 @@ class MuscleAnalyticsUtils {
       'dataPointDays': dataPointDays,
       'spanDays': spanDays,
       'dataQualityOk': dataQualityOk,
+      'dataQualityReasonHook': qualityAssessment.reasonHook,
       'totalEquivalentSets': totalEquivalentSets,
       'muscles': muscles,
       'weekly': weekRows,

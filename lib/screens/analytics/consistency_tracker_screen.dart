@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../features/statistics/domain/consistency_domain_service.dart';
 import '../../features/statistics/domain/consistency_payload_models.dart';
+import '../../features/statistics/domain/statistics_range_policy.dart';
 import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
@@ -21,6 +22,7 @@ class ConsistencyTrackerScreen extends StatefulWidget {
 }
 
 class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
+  final _rangePolicy = StatisticsRangePolicyService.instance;
   bool _isLoading = true;
   TrainingStatsPayload _trainingStats = const TrainingStatsPayload(
     totalWorkouts: 0,
@@ -42,12 +44,20 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+    final weeklyRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.consistencyWeeklyMetrics,
+    );
+    final calendarRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.consistencyCalendar,
+    );
 
     final stats = WorkoutDatabaseHelper.instance.getTrainingStats();
     final weekly = WorkoutDatabaseHelper.instance
-        .getWeeklyConsistencyMetrics(weeksBack: 12);
+        .getWeeklyConsistencyMetrics(weeksBack: weeklyRange.effectiveWeeks ?? 12);
     final dayCounts =
-        WorkoutDatabaseHelper.instance.getWorkoutDayCounts(daysBack: 120);
+        WorkoutDatabaseHelper.instance.getWorkoutDayCounts(
+      daysBack: calendarRange.effectiveDays ?? 120,
+    );
 
     final results = await Future.wait([stats, weekly, dayCounts]);
     if (!mounted) return;

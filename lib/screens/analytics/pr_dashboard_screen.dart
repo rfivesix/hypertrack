@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/workout_database_helper.dart';
+import '../../features/statistics/domain/statistics_range_policy.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/global_app_bar.dart';
@@ -13,6 +14,7 @@ class PRDashboardScreen extends StatefulWidget {
 }
 
 class _PRDashboardScreenState extends State<PRDashboardScreen> {
+  final _rangePolicy = StatisticsRangePolicyService.instance;
   bool _isLoading = true;
   int _selectedWindowDays = 30;
 
@@ -36,7 +38,13 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
     final repRange = WorkoutDatabaseHelper.instance.getAllTimePRsByRepBracket();
     final improvements =
         WorkoutDatabaseHelper.instance.getNotablePrImprovements(
-      daysWindow: _selectedWindowDays,
+      daysWindow: _rangePolicy
+              .resolve(
+                metricId: StatisticsMetricId.prNotableImprovements,
+                selectedDays: _selectedWindowDays,
+              )
+              .effectiveDays ??
+          _selectedWindowDays,
       limit: 6,
     );
 

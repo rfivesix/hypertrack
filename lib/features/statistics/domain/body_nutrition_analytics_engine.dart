@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../models/chart_data_point.dart';
 import 'body_nutrition_analytics_models.dart';
+import 'statistics_data_quality_policy.dart';
 
 class BodyNutritionAnalyticsEngine {
   const BodyNutritionAnalyticsEngine._();
+  static const _dataQualityPolicy = StatisticsDataQualityPolicy.instance;
 
   static DateTime normalizeDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);
@@ -52,6 +54,15 @@ class BodyNutritionAnalyticsEngine {
     final currentWeightKg = weightDaily.isEmpty ? null : weightDaily.last.value;
     final weightChangeKg = weightChange(smoothedWeight, weightDaily);
 
+    final insightDataQuality = _dataQualityPolicy.bodyNutritionInsight(
+      spanDays:
+          normalizeDay(range.end).difference(normalizeDay(range.start)).inDays +
+              1,
+      totalDays: totalDays,
+      weightDays: weightDaily.length,
+      loggedCalorieDays: loggedCalorieDays,
+    );
+
     final insightType = deriveInsight(
       range: range,
       totalDays: totalDays,
@@ -61,6 +72,7 @@ class BodyNutritionAnalyticsEngine {
       smoothedCalories: smoothedCalories,
       loggedCalorieDays: loggedCalorieDays,
       weightChangeKg: weightChangeKg,
+      qualityAssessment: insightDataQuality,
     );
 
     return BodyNutritionAnalyticsResult(
@@ -76,6 +88,7 @@ class BodyNutritionAnalyticsEngine {
       caloriesDaily: caloriesDaily,
       smoothedCalories: smoothedCalories,
       insightType: insightType,
+      insightDataQuality: insightDataQuality,
     );
   }
 
@@ -161,14 +174,19 @@ class BodyNutritionAnalyticsEngine {
     required List<DailyValuePoint> smoothedCalories,
     required int loggedCalorieDays,
     required double? weightChangeKg,
+    StatisticsDataQualityAssessment? qualityAssessment,
   }) {
-    final spanDays =
-        normalizeDay(range.end).difference(normalizeDay(range.start)).inDays + 1;
-
-    final hasDataQuality = spanDays >= 14 &&
-        totalDays >= 14 &&
-        weightDaily.length >= 5 &&
-        loggedCalorieDays >= 7;
+    final hasDataQuality = (qualityAssessment ??
+            _dataQualityPolicy.bodyNutritionInsight(
+              spanDays: normalizeDay(range.end)
+                      .difference(normalizeDay(range.start))
+                      .inDays +
+                  1,
+              totalDays: totalDays,
+              weightDays: weightDaily.length,
+              loggedCalorieDays: loggedCalorieDays,
+            ))
+        .hasSufficientData;
 
     if (!hasDataQuality || weightChangeKg == null) {
       return BodyNutritionInsightType.notEnoughData;
