@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../features/statistics/domain/consistency_domain_service.dart';
+import '../../features/statistics/domain/consistency_payload_models.dart';
 import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
@@ -21,8 +22,13 @@ class ConsistencyTrackerScreen extends StatefulWidget {
 
 class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
   bool _isLoading = true;
-  Map<String, dynamic> _trainingStats = const {};
-  List<Map<String, dynamic>> _weeklyMetrics = const [];
+  TrainingStatsPayload _trainingStats = const TrainingStatsPayload(
+    totalWorkouts: 0,
+    thisWeekCount: 0,
+    avgPerWeek: 0.0,
+    streakWeeks: 0,
+  );
+  List<WeeklyConsistencyMetricPayload> _weeklyMetrics = const [];
   Map<DateTime, int> _workoutDayCounts = const {};
   _ConsistencyMetric _selectedMetric = _ConsistencyMetric.volume;
   DateTime _focusedDay = DateTime.now();
@@ -47,8 +53,11 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
     if (!mounted) return;
 
     setState(() {
-      _trainingStats = results[0] as Map<String, dynamic>;
-      _weeklyMetrics = results[1] as List<Map<String, dynamic>>;
+      _trainingStats =
+          TrainingStatsPayload.fromMap(results[0] as Map<String, dynamic>);
+      _weeklyMetrics = (results[1] as List<Map<String, dynamic>>)
+          .map(WeeklyConsistencyMetricPayload.fromMap)
+          .toList();
       _workoutDayCounts = results[2] as Map<DateTime, int>;
       _isLoading = false;
     });
@@ -59,12 +68,11 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
 
   int _dailyCount(DateTime day) => _workoutDayCounts[_normalize(day)] ?? 0;
 
-  double _metricValue(Map<String, dynamic> row) {
+  double _metricValue(WeeklyConsistencyMetricPayload row) {
     return switch (_selectedMetric) {
-      _ConsistencyMetric.volume => (row['tonnage'] as num?)?.toDouble() ?? 0.0,
-      _ConsistencyMetric.duration =>
-        (row['durationMinutes'] as num?)?.toDouble() ?? 0.0,
-      _ConsistencyMetric.frequency => (row['count'] as num?)?.toDouble() ?? 0.0,
+      _ConsistencyMetric.volume => row.tonnage,
+      _ConsistencyMetric.duration => row.durationMinutes,
+      _ConsistencyMetric.frequency => row.count.toDouble(),
     };
   }
 
@@ -98,10 +106,10 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    final thisWeek = (_trainingStats['thisWeekCount'] as num?)?.toInt() ?? 0;
-    final avgPerWeek = (_trainingStats['avgPerWeek'] as num?)?.toDouble() ?? 0;
-    final streak = (_trainingStats['streakWeeks'] as num?)?.toInt() ?? 0;
-    final total = (_trainingStats['totalWorkouts'] as num?)?.toInt() ?? 0;
+    final thisWeek = _trainingStats.thisWeekCount;
+    final avgPerWeek = _trainingStats.avgPerWeek;
+    final streak = _trainingStats.streakWeeks;
+    final total = _trainingStats.totalWorkouts;
     final trainingDaysPerWeek =
         ConsistencyDomainService.computeTrainingDaysPerWeekLast4(
       workoutDayCounts: _workoutDayCounts,
@@ -235,8 +243,8 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                                 i >= _weeklyMetrics.length) {
                                               return const SizedBox.shrink();
                                             }
-                                            final label = _weeklyMetrics[i]
-                                                ['weekLabel'] as String;
+                                            final label =
+                                                _weeklyMetrics[i].weekLabel;
                                             return Text(label,
                                                 style: Theme.of(context)
                                                     .textTheme
