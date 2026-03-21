@@ -12,11 +12,16 @@ class TrainingStatsPayload {
   });
 
   factory TrainingStatsPayload.fromMap(Map<String, dynamic> data) {
+    final totalWorkouts = data['totalWorkouts'];
+    final thisWeekCount = data['thisWeekCount'];
+    final avgPerWeek = data['avgPerWeek'];
+    final streakWeeks = data['streakWeeks'];
+
     return TrainingStatsPayload(
-      totalWorkouts: (data['totalWorkouts'] as num?)?.toInt() ?? 0,
-      thisWeekCount: (data['thisWeekCount'] as num?)?.toInt() ?? 0,
-      avgPerWeek: (data['avgPerWeek'] as num?)?.toDouble() ?? 0.0,
-      streakWeeks: (data['streakWeeks'] as num?)?.toInt() ?? 0,
+      totalWorkouts: totalWorkouts is num ? totalWorkouts.toInt() : 0,
+      thisWeekCount: thisWeekCount is num ? thisWeekCount.toInt() : 0,
+      avgPerWeek: avgPerWeek is num ? avgPerWeek.toDouble() : 0.0,
+      streakWeeks: streakWeeks is num ? streakWeeks.toInt() : 0,
     );
   }
 }
@@ -37,12 +42,20 @@ class WeeklyConsistencyMetricPayload {
   });
 
   factory WeeklyConsistencyMetricPayload.fromMap(Map<String, dynamic> data) {
+    final weekStart = data['weekStart'];
+    final weekLabel = data['weekLabel'];
+    final count = data['count'];
+    final durationMinutes = data['durationMinutes'];
+    final tonnage = data['tonnage'];
+
     return WeeklyConsistencyMetricPayload(
-      weekStart: data['weekStart'] as DateTime? ?? DateTime.fromMillisecondsSinceEpoch(0),
-      weekLabel: data['weekLabel'] as String? ?? '',
-      count: (data['count'] as num?)?.toInt() ?? 0,
-      durationMinutes: (data['durationMinutes'] as num?)?.toDouble() ?? 0.0,
-      tonnage: (data['tonnage'] as num?)?.toDouble() ?? 0.0,
+      weekStart: weekStart is DateTime
+          ? weekStart
+          : DateTime.fromMillisecondsSinceEpoch(0),
+      weekLabel: weekLabel is String ? weekLabel : '',
+      count: count is num ? count.toInt() : 0,
+      durationMinutes: durationMinutes is num ? durationMinutes.toDouble() : 0.0,
+      tonnage: tonnage is num ? tonnage.toDouble() : 0.0,
     );
   }
 }
