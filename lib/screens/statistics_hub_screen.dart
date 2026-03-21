@@ -5,8 +5,9 @@ import '../data/workout_database_helper.dart';
 import '../features/statistics/data/statistics_hub_data_adapter.dart';
 import '../features/statistics/domain/consistency_payload_models.dart';
 import '../features/statistics/domain/recovery_payload_models.dart';
-import '../features/statistics/domain/recovery_domain_service.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
+import '../features/statistics/domain/analytics_state.dart';
+import '../features/statistics/presentation/statistics_formatter.dart';
 import '../generated/app_localizations.dart';
 import '../util/body_nutrition_analytics_utils.dart';
 import '../util/design_constants.dart';
@@ -484,25 +485,17 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final hasData = _recoveryAnalytics.hasData;
 
     final overallState = _recoveryAnalytics.overallState;
-    final overallLabel = switch (overallState) {
-      RecoveryDomainService.overallMostlyRecovered =>
-        l10n.recoveryOverallMostlyRecovered,
-      RecoveryDomainService.overallMixedRecovery => l10n.recoveryOverallMixed,
-      RecoveryDomainService.overallSeveralRecovering =>
-        l10n.recoveryOverallSeveralRecovering,
-      _ => l10n.recoveryOverallInsufficientData,
-    };
+    final overallLabel =
+        StatisticsPresentationFormatter.recoveryOverallLabel(l10n, overallState);
 
     final subtitle = hasData
         ? l10n.recoveryHubCountsSummary(recovering, ready, fresh)
         : l10n.recoveryHubNoDataSummary;
 
-    final iconColor = switch (overallState) {
-      RecoveryDomainService.overallSeveralRecovering => Colors.orange,
-      RecoveryDomainService.overallMixedRecovery => Colors.blue,
-      RecoveryDomainService.overallMostlyRecovered => Colors.green,
-      _ => Theme.of(context).colorScheme.outline,
-    };
+    final iconColor = StatisticsPresentationFormatter.recoveryOverallColor(
+      context,
+      overallState,
+    );
 
     return SummaryCard(
       onTap: () {
@@ -677,11 +670,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         BodyNutritionAnalyticsUtils.normalizedSeries(data.smoothedCalories);
 
     if (normalizedWeight.isEmpty && normalizedCalories.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.chart_no_data_for_period,
-          style: TextStyle(color: Theme.of(context).colorScheme.outline),
-        ),
+      return AnalyticsChartDefaults.stateView(
+        context: context,
+        l10n: l10n,
+        status: AnalyticsStatus.empty,
       );
     }
 
@@ -707,8 +699,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           maxX: maxX,
           minY: 0,
           maxY: 1,
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
+          gridData: AnalyticsChartDefaults.noGrid,
+          borderData: AnalyticsChartDefaults.noBorder,
           lineTouchData: const LineTouchData(enabled: false),
           titlesData: AnalyticsChartDefaults.hiddenTitles,
           lineBarsData: [
@@ -731,20 +723,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   String _bodyNutritionInsightLabel(BodyNutritionAnalyticsResult data) {
-    switch (data.insightType) {
-      case BodyNutritionInsightType.stableWeightCaloriesUp:
-        return l10n.analyticsInsightStableWeightCaloriesUp;
-      case BodyNutritionInsightType.weightUpCaloriesUp:
-        return l10n.analyticsInsightWeightUpCaloriesUp;
-      case BodyNutritionInsightType.caloriesDownWeightNotYetChanged:
-        return l10n.analyticsInsightCaloriesDownWeightStable;
-      case BodyNutritionInsightType.weightDownCaloriesDown:
-        return l10n.analyticsInsightWeightDownCaloriesDown;
-      case BodyNutritionInsightType.mixed:
-        return l10n.analyticsInsightMixedPattern;
-      case BodyNutritionInsightType.notEnoughData:
-        return l10n.analyticsInsightNotEnoughData;
-    }
+    return StatisticsPresentationFormatter.bodyNutritionInsightLabel(
+      l10n,
+      data.insightType,
+    );
   }
 
   String _effectiveBodyRangeLabel() {
@@ -933,15 +915,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   String _muscleGuidanceLabel(bool dataQualityOk, List<String> undertrained) {
-    if (!dataQualityOk) {
-      return l10n.analyticsKeepTrackingUnlockInsights;
-    }
-    if (undertrained.isEmpty) {
-      return l10n.analyticsGuidanceNoClearWeakPoint;
-    }
-
-    final focus = undertrained.take(2).join(', ');
-    return l10n.analyticsGuidanceLowerEmphasis(focus);
+    return StatisticsPresentationFormatter.muscleGuidanceLabel(
+      l10n,
+      dataQualityOk,
+      undertrained.take(2),
+    );
   }
 }
 

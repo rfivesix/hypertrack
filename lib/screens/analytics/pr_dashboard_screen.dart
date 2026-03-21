@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/workout_database_helper.dart';
 import '../../features/statistics/domain/statistics_range_policy.dart';
+import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/global_app_bar.dart';
@@ -66,8 +67,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
   }
 
   String _formatWeight(double weight) {
-    if (weight == weight.truncateToDouble()) return weight.toInt().toString();
-    return weight.toStringAsFixed(1);
+    return StatisticsPresentationFormatter.formatWeight(weight);
   }
 
   String _perfLabel(Map<String, dynamic> row) {

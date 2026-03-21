@@ -1,17 +1,91 @@
-// lib/features/statistics/presentation/statistics_formatter.dart
-//
-// Defines the presentation-formatter boundary for the statistics feature.
-// Formatters map typed analytics results to display-ready labels, units,
-// and status text consumed by widgets and screens.
-//
-// Phase: 1 — Foundations (structural stub; concrete implementations added
-// in Phase 4 during chart and presentation standardization).
+import 'package:flutter/material.dart';
+import '../../../generated/app_localizations.dart';
+import '../domain/recovery_domain_service.dart';
+import '../../../util/body_nutrition_analytics_utils.dart';
 
 /// Marker interface for statistics presentation formatters.
-///
-/// Each formatter takes a typed analytics result and produces
-/// display-ready strings, colors, or other presentation values.
-///
-/// Concrete implementations (e.g. [RecoveryFormatter],
-/// [ConsistencyFormatter]) are introduced in Phase 4.
 abstract class StatisticsFormatter {}
+
+class StatisticsPresentationFormatter implements StatisticsFormatter {
+  static String formatWeight(num weight) {
+    final value = weight.toDouble();
+    if (value == value.truncateToDouble()) return value.toInt().toString();
+    return value.toStringAsFixed(1);
+  }
+
+  static String compactNumber(num value) {
+    final n = value.toDouble();
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
+    return n.toStringAsFixed(n % 1 == 0 ? 0 : 1);
+  }
+
+  static String recoveryOverallLabel(AppLocalizations l10n, String? state) {
+    return switch (state) {
+      RecoveryDomainService.overallMostlyRecovered =>
+        l10n.recoveryOverallMostlyRecovered,
+      RecoveryDomainService.overallMixedRecovery => l10n.recoveryOverallMixed,
+      RecoveryDomainService.overallSeveralRecovering =>
+        l10n.recoveryOverallSeveralRecovering,
+      _ => l10n.recoveryOverallInsufficientData,
+    };
+  }
+
+  static Color recoveryOverallColor(BuildContext context, String? state) {
+    return switch (state) {
+      RecoveryDomainService.overallSeveralRecovering => Colors.orange,
+      RecoveryDomainService.overallMixedRecovery => Colors.blue,
+      RecoveryDomainService.overallMostlyRecovered => Colors.green,
+      _ => Theme.of(context).colorScheme.outline,
+    };
+  }
+
+  static String recoveryStateLabel(AppLocalizations l10n, String state) {
+    return switch (state) {
+      RecoveryDomainService.stateRecovering => l10n.recoveryStateRecovering,
+      RecoveryDomainService.stateReady => l10n.recoveryStateReady,
+      RecoveryDomainService.stateFresh => l10n.recoveryStateFresh,
+      _ => l10n.recoveryStateUnknown,
+    };
+  }
+
+  static Color recoveryStateColor(BuildContext context, String state) {
+    return switch (state) {
+      RecoveryDomainService.stateRecovering => Colors.orange,
+      RecoveryDomainService.stateReady => Colors.blue,
+      RecoveryDomainService.stateFresh => Colors.green,
+      _ => Theme.of(context).colorScheme.outline,
+    };
+  }
+
+  static String bodyNutritionInsightLabel(
+    AppLocalizations l10n,
+    BodyNutritionInsightType insightType,
+  ) {
+    return switch (insightType) {
+      BodyNutritionInsightType.stableWeightCaloriesUp =>
+        l10n.analyticsInsightStableWeightCaloriesUp,
+      BodyNutritionInsightType.weightUpCaloriesUp =>
+        l10n.analyticsInsightWeightUpCaloriesUp,
+      BodyNutritionInsightType.caloriesDownWeightNotYetChanged =>
+        l10n.analyticsInsightCaloriesDownWeightStable,
+      BodyNutritionInsightType.weightDownCaloriesDown =>
+        l10n.analyticsInsightWeightDownCaloriesDown,
+      BodyNutritionInsightType.mixed => l10n.analyticsInsightMixedPattern,
+      BodyNutritionInsightType.notEnoughData => l10n.analyticsInsightNotEnoughData,
+    };
+  }
+
+  static String muscleGuidanceLabel(
+    AppLocalizations l10n,
+    bool dataQualityOk,
+    Iterable<String> undertrained,
+  ) {
+    if (!dataQualityOk) {
+      return l10n.analyticsKeepTrackingUnlockInsights;
+    }
+    if (undertrained.isEmpty) {
+      return l10n.analyticsGuidanceNoClearWeakPoint;
+    }
+    return l10n.analyticsGuidanceLowerEmphasis(undertrained.join(', '));
+  }
+}

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../features/statistics/domain/analytics_state.dart';
 import '../../features/statistics/domain/consistency_domain_service.dart';
 import '../../features/statistics/domain/consistency_payload_models.dart';
 import '../../features/statistics/domain/statistics_range_policy.dart';
 import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
+import '../../widgets/analytics_chart_defaults.dart';
 import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
@@ -216,30 +218,27 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                         SizedBox(
                           height: 210,
                           child: _weeklyMetrics.isEmpty
-                              ? Center(child: Text(l10n.noWorkoutDataLabel))
+                              ? AnalyticsChartDefaults.stateView(
+                                  context: context,
+                                  l10n: l10n,
+                                  status: AnalyticsStatus.empty,
+                                  emptyLabel: l10n.noWorkoutDataLabel,
+                                  height: 210,
+                                )
                               : BarChart(
                                   BarChartData(
                                     alignment: BarChartAlignment.spaceAround,
-                                    borderData: FlBorderData(show: false),
-                                    gridData: const FlGridData(
-                                        show: true, drawVerticalLine: false),
-                                    titlesData: FlTitlesData(
-                                      topTitles: const AxisTitles(
-                                          sideTitles:
-                                              SideTitles(showTitles: false)),
-                                      rightTitles: const AxisTitles(
-                                          sideTitles:
-                                              SideTitles(showTitles: false)),
+                                    borderData: AnalyticsChartDefaults.noBorder,
+                                    gridData: AnalyticsChartDefaults.compactGrid,
+                                    titlesData: AnalyticsChartDefaults.standardTitles(
                                       leftTitles: AxisTitles(
                                         sideTitles: SideTitles(
                                           showTitles: true,
                                           reservedSize: 28,
                                           getTitlesWidget: (value, meta) =>
-                                              Text(
+                                              AnalyticsChartDefaults.tickLabel(
+                                            context,
                                             _formatAxisValue(value),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall,
                                           ),
                                         ),
                                       ),
@@ -255,10 +254,10 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                             }
                                             final label =
                                                 _weeklyMetrics[i].weekLabel;
-                                            return Text(label,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .labelSmall);
+                                            return AnalyticsChartDefaults.tickLabel(
+                                              context,
+                                              label,
+                                            );
                                           },
                                         ),
                                       ),

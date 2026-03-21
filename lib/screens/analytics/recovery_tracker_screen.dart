@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../data/workout_database_helper.dart';
+import '../../features/statistics/domain/analytics_state.dart';
 import '../../features/statistics/domain/recovery_domain_service.dart';
 import '../../features/statistics/domain/recovery_payload_models.dart';
+import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/analytics_section_header.dart';
+import '../../widgets/analytics_chart_defaults.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/muscle_radar_chart.dart';
 import '../../widgets/summary_card.dart';
@@ -48,32 +51,15 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   }
 
   String _overallLabel(AppLocalizations l10n, String? state) {
-    return switch (state) {
-      RecoveryDomainService.overallMostlyRecovered =>
-        l10n.recoveryOverallMostlyRecovered,
-      RecoveryDomainService.overallMixedRecovery => l10n.recoveryOverallMixed,
-      RecoveryDomainService.overallSeveralRecovering =>
-        l10n.recoveryOverallSeveralRecovering,
-      _ => l10n.recoveryOverallInsufficientData,
-    };
+    return StatisticsPresentationFormatter.recoveryOverallLabel(l10n, state);
   }
 
   String _stateLabel(AppLocalizations l10n, String state) {
-    return switch (state) {
-      RecoveryDomainService.stateRecovering => l10n.recoveryStateRecovering,
-      RecoveryDomainService.stateReady => l10n.recoveryStateReady,
-      RecoveryDomainService.stateFresh => l10n.recoveryStateFresh,
-      _ => l10n.recoveryStateUnknown,
-    };
+    return StatisticsPresentationFormatter.recoveryStateLabel(l10n, state);
   }
 
   Color _stateColor(BuildContext context, String state) {
-    return switch (state) {
-      RecoveryDomainService.stateRecovering => Colors.orange,
-      RecoveryDomainService.stateReady => Colors.blue,
-      RecoveryDomainService.stateFresh => Colors.green,
-      _ => Theme.of(context).colorScheme.outline,
-    };
+    return StatisticsPresentationFormatter.recoveryStateColor(context, state);
   }
 
   String _fatigueContextLabel(AppLocalizations l10n, bool highFatigue) {
@@ -211,7 +197,12 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (radarData.isEmpty)
-                            Text(l10n.recoveryNoDataBody)
+                            AnalyticsChartDefaults.stateView(
+                              context: context,
+                              l10n: l10n,
+                              status: AnalyticsStatus.empty,
+                              emptyLabel: l10n.recoveryNoDataBody,
+                            )
                           else
                             Center(
                               child: MuscleRadarChart(
