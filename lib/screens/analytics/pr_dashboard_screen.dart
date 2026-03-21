@@ -68,14 +68,13 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
     });
   }
 
-  String _formatWeight(double weight) {
-    return StatisticsPresentationFormatter.formatWeight(weight);
-  }
-
   String _perfLabel(Map<String, dynamic> row) {
     final weight = (row['weight'] as num).toDouble();
     final reps = (row['reps'] as num).toInt();
-    return l10n.analyticsPerfWithReps(_formatWeight(weight), reps);
+    return l10n.analyticsPerfWithReps(
+      StatisticsPresentationFormatter.formatWeight(weight),
+      reps,
+    );
   }
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
@@ -141,8 +140,12 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                 ),
                                 subtitle: Text(
                                   l10n.analyticsE1rmProgress(
-                                    _formatWeight(previous),
-                                    _formatWeight(recent),
+                                    StatisticsPresentationFormatter.formatWeight(
+                                      previous,
+                                    ),
+                                    StatisticsPresentationFormatter.formatWeight(
+                                      recent,
+                                    ),
                                   ),
                                 ),
                                 trailing: Column(
@@ -157,7 +160,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                       ),
                                     ),
                                     Text(
-                                      'Δ ${_formatWeight(delta)}',
+                                      'Δ ${StatisticsPresentationFormatter.formatWeight(delta)}',
                                       style: Theme.of(
                                         context,
                                       ).textTheme.labelSmall,
@@ -294,7 +297,8 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                   if (hasData) ...[
                                     Text(
                                       l10n.analyticsPerfWithReps(
-                                        _formatWeight(
+                                        StatisticsPresentationFormatter
+                                            .formatWeight(
                                             (data['weight'] as num).toDouble()),
                                         (data['reps'] as num).toInt(),
                                       ),

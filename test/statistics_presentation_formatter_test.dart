@@ -14,6 +14,20 @@ void main() {
       expect(StatisticsPresentationFormatter.compactNumber(12.5), '12.5');
     });
 
+    test('detects other-category labels robustly', () {
+      expect(StatisticsPresentationFormatter.isOtherCategoryLabel('other'), true);
+      expect(StatisticsPresentationFormatter.isOtherCategoryLabel('Others'), true);
+      expect(
+        StatisticsPresentationFormatter.isOtherCategoryLabel('  OTHER  '),
+        true,
+      );
+      expect(
+        StatisticsPresentationFormatter.isOtherCategoryLabel('Other Data'),
+        false,
+      );
+      expect(StatisticsPresentationFormatter.isOtherCategoryLabel(null), false);
+    });
+
     test('maps recovery overall labels and state labels', () {
       final l10n = AppLocalizationsEn();
 
