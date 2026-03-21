@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'statistics_data_quality_policy.dart';
 
 class DailyValuePoint {
   final DateTime day;
@@ -29,6 +30,7 @@ class BodyNutritionAnalyticsResult {
   final List<DailyValuePoint> caloriesDaily;
   final List<DailyValuePoint> smoothedCalories;
   final BodyNutritionInsightType insightType;
+  final StatisticsDataQualityAssessment insightDataQuality;
 
   const BodyNutritionAnalyticsResult({
     required this.range,
@@ -43,6 +45,7 @@ class BodyNutritionAnalyticsResult {
     required this.caloriesDaily,
     required this.smoothedCalories,
     required this.insightType,
+    required this.insightDataQuality,
   });
 
   bool get hasAnyData => weightDays > 0 || loggedCalorieDays > 0;

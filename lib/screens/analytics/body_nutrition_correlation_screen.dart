@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../features/statistics/domain/statistics_range_policy.dart';
 import '../../generated/app_localizations.dart';
 import '../../screens/measurements_screen.dart';
 import '../../util/body_nutrition_analytics_utils.dart';
@@ -26,6 +27,7 @@ class BodyNutritionCorrelationScreen extends StatefulWidget {
 
 class _BodyNutritionCorrelationScreenState
     extends State<BodyNutritionCorrelationScreen> {
+  final _rangePolicy = StatisticsRangePolicyService.instance;
   bool _isLoading = true;
   late int _rangeIndex;
   BodyNutritionAnalyticsResult? _analytics;
@@ -75,6 +77,13 @@ class _BodyNutritionCorrelationScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildRangeChips(l10n),
+                      const SizedBox(height: 6),
+                      Text(
+                        _effectiveRangeDisclosure(),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                      ),
                       const SizedBox(height: DesignConstants.spacingM),
                       _buildSummaryKpis(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
@@ -163,7 +172,7 @@ class _BodyNutritionCorrelationScreenState
                 _metricItem(l10n.metricsCurrentWeight, currentWeight,
                     '${data.weightDays} ${l10n.analyticsDaysWithWeightData}'),
                 _metricItem(l10n.metricsWeightChange, weightChange,
-                    '${data.totalDays} ${l10n.analyticsDayUnitLabel}'),
+                    _effectiveRangeDisclosure()),
                 _metricItem(l10n.metricsAvgCalories, avgCalories,
                     l10n.analyticsPerDayLabel),
               ],
@@ -454,5 +463,22 @@ class _BodyNutritionCorrelationScreenState
       positions.add(i);
     }
     return positions;
+  }
+
+  String _effectiveRangeDisclosure() {
+    final resolved = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.bodyNutritionInsightKpi,
+      selectedRangeIndex: _rangeIndex,
+      earliestAvailableDay: _analytics?.range.start,
+    );
+    final days = resolved.effectiveDays;
+    final l10n = AppLocalizations.of(context)!;
+    if (days == null || days <= 0) {
+      return _ranges(l10n)[_rangeIndex];
+    }
+    if (_rangePolicy.isAllRangeIndex(_rangeIndex)) {
+      return '${l10n.filterAll} (${days}d)';
+    }
+    return _ranges(l10n)[_rangeIndex];
   }
 }

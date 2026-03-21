@@ -6,6 +6,7 @@ import '../features/statistics/data/statistics_hub_data_adapter.dart';
 import '../features/statistics/domain/consistency_payload_models.dart';
 import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/recovery_domain_service.dart';
+import '../features/statistics/domain/statistics_range_policy.dart';
 import '../generated/app_localizations.dart';
 import '../util/body_nutrition_analytics_utils.dart';
 import '../util/design_constants.dart';
@@ -33,6 +34,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   final _hubDataAdapter = StatisticsHubDataAdapter(
     workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
   );
+  final _rangePolicy = StatisticsRangePolicyService.instance;
 
   int _selectedTimeRangeIndex = 1;
 
@@ -69,27 +71,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     _loadHubAnalytics();
   }
 
-  int get _selectedDays {
-    switch (_selectedTimeRangeIndex) {
-      case 0:
-        return 7;
-      case 1:
-        return 30;
-      case 2:
-        return 90;
-      case 3:
-        return 180;
-      case 4:
-        return 3650;
-      default:
-        return 30;
-    }
-  }
-
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
     final (hub, bodyNutrition) = await _hubDataAdapter.fetch(
-      selectedDays: _selectedDays,
       selectedTimeRangeIndex: _selectedTimeRangeIndex,
     );
 
@@ -632,7 +616,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     _buildMetricCol(
                       l10n.metricsWeightChange,
                       weightChangeValue,
-                      _timeRanges[_selectedTimeRangeIndex],
+                      _effectiveBodyRangeLabel(),
                       width: 104,
                     ),
                     _buildMetricCol(
@@ -761,6 +745,20 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       case BodyNutritionInsightType.notEnoughData:
         return l10n.analyticsInsightNotEnoughData;
     }
+  }
+
+  String _effectiveBodyRangeLabel() {
+    final resolved = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.bodyNutritionTrend,
+      selectedRangeIndex: _selectedTimeRangeIndex,
+      earliestAvailableDay: _bodyNutrition?.range.start,
+    );
+    final days = resolved.effectiveDays;
+    if (days == null || days <= 0) return _timeRanges[_selectedTimeRangeIndex];
+    if (_rangePolicy.isAllRangeIndex(_selectedTimeRangeIndex)) {
+      return '${l10n.filterAll} (${days}d)';
+    }
+    return _timeRanges[_selectedTimeRangeIndex];
   }
 
   Widget _buildMetricCol(String label, String value, String subLabel,
