@@ -1,3 +1,5 @@
+import 'consistency_payload_models.dart';
+
 class ConsistencyDomainService {
   const ConsistencyDomainService._();
 
@@ -20,32 +22,31 @@ class ConsistencyDomainService {
   }
 
   static double computeRhythmDelta({
-    required List<Map<String, dynamic>> weeklyMetrics,
+    required List<WeeklyConsistencyMetricPayload> weeklyMetrics,
   }) {
     if (weeklyMetrics.length < 8) return 0;
     final recent = weeklyMetrics.sublist(weeklyMetrics.length - 4);
     final prior =
         weeklyMetrics.sublist(weeklyMetrics.length - 8, weeklyMetrics.length - 4);
     final recentAvg = recent
-            .map((e) => (e['count'] as num?)?.toDouble() ?? 0.0)
+            .map((e) => e.count.toDouble())
             .reduce((a, b) => a + b) /
         4.0;
     final priorAvg = prior
-            .map((e) => (e['count'] as num?)?.toDouble() ?? 0.0)
+            .map((e) => e.count.toDouble())
             .reduce((a, b) => a + b) /
         4.0;
     return recentAvg - priorAvg;
   }
 
   static double rollingConsistencyPercent({
-    required List<Map<String, dynamic>> weeklyMetrics,
+    required List<WeeklyConsistencyMetricPayload> weeklyMetrics,
   }) {
     if (weeklyMetrics.isEmpty) return 0;
     final recent = weeklyMetrics.length > 8
         ? weeklyMetrics.sublist(weeklyMetrics.length - 8)
         : weeklyMetrics;
-    final consistentWeeks =
-        recent.where((e) => (((e['count'] as num?)?.toInt() ?? 0) >= 2)).length;
+    final consistentWeeks = recent.where((e) => e.count >= 2).length;
     return (consistentWeeks / recent.length) * 100.0;
   }
 }
