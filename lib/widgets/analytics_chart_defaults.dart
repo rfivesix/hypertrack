@@ -7,7 +7,7 @@ class AnalyticsChartDefaults {
   static const FlGridData compactGrid =
       FlGridData(show: true, drawVerticalLine: false);
   static const FlGridData noGrid = FlGridData(show: false);
-  static const FlBorderData noBorder = FlBorderData(show: false);
+  static final FlBorderData noBorder = FlBorderData(show: false);
 
   static const FlTitlesData hiddenTitles = FlTitlesData(
     leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -80,7 +80,9 @@ class AnalyticsChartDefaults {
 
     if (status == AnalyticsStatus.loading) {
       final loading = const Center(child: CircularProgressIndicator());
-      return height == null ? loading : SizedBox(height: height, child: loading);
+      return height == null
+          ? loading
+          : SizedBox(height: height, child: loading);
     }
 
     if (text == null) return const SizedBox.shrink();
