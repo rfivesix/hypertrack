@@ -209,9 +209,12 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final recovering = _recovery.totals.recovering;
     final ready = _recovery.totals.ready;
     final fresh = _recovery.totals.fresh;
+    final trackedFromStates = recovering + ready + fresh;
     final tracked = _recovery.totals.tracked > 0
-        ? _recovery.totals.tracked
-        : (recovering + ready + fresh);
+        ? (_recovery.totals.tracked < trackedFromStates
+            ? trackedFromStates
+            : _recovery.totals.tracked)
+        : trackedFromStates;
     final hasData = _recovery.hasData;
 
     final muscles = _recovery.muscles;
