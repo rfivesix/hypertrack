@@ -4232,11 +4232,53 @@ abstract class AppLocalizations {
   /// **'per day'**
   String get analyticsPerDayLabel;
 
+  /// No description provided for @analyticsEffectiveRangeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective range'**
+  String get analyticsEffectiveRangeLabel;
+
+  /// No description provided for @analyticsAxisXLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'X'**
+  String get analyticsAxisXLabel;
+
+  /// No description provided for @analyticsAxisYLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Y'**
+  String get analyticsAxisYLabel;
+
+  /// No description provided for @analyticsHighConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher-confidence pattern'**
+  String get analyticsHighConfidenceLabel;
+
+  /// No description provided for @analyticsLowConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower-confidence pattern'**
+  String get analyticsLowConfidenceLabel;
+
+  /// No description provided for @analyticsObservedPatternLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Observed pattern'**
+  String get analyticsObservedPatternLabel;
+
   /// No description provided for @analyticsBodyNutritionTrendContext.
   ///
   /// In en, this message translates to:
   /// **'Body weight and calorie trends'**
   String get analyticsBodyNutritionTrendContext;
+
+  /// No description provided for @analyticsBodyNutritionTrendContextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These lines show nearby trend movement over the same period for context.'**
+  String get analyticsBodyNutritionTrendContextHint;
 
   /// No description provided for @analyticsWeightTrendLabel.
   ///
@@ -4255,6 +4297,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interpretation'**
   String get analyticsInterpretationTitle;
+
+  /// No description provided for @analyticsBodyNutritionConfidenceHighHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Data coverage in this range is strong enough for a more reliable pattern read.'**
+  String get analyticsBodyNutritionConfidenceHighHint;
+
+  /// No description provided for @analyticsBodyNutritionConfidenceLowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Data coverage in this range is still limited, so treat this as early context.'**
+  String get analyticsBodyNutritionConfidenceLowHint;
+
+  /// No description provided for @analyticsBodyNutritionLowConfidenceNudge.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep logging weight and calories regularly to improve confidence.'**
+  String get analyticsBodyNutritionLowConfidenceNudge;
+
+  /// No description provided for @analyticsBodyNutritionInterpretationConfidenceHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Interpretation confidence: higher. Use this as trend context, not a direct cause statement.'**
+  String get analyticsBodyNutritionInterpretationConfidenceHigh;
+
+  /// No description provided for @analyticsBodyNutritionInterpretationConfidenceLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Interpretation confidence: lower. Use this as an early pattern signal and keep tracking.'**
+  String get analyticsBodyNutritionInterpretationConfidenceLow;
 
   /// No description provided for @analyticsCorrelationDisclaimer.
   ///

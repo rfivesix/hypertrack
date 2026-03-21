@@ -79,13 +79,6 @@ class _BodyNutritionCorrelationScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildRangeChips(l10n),
-                      const SizedBox(height: DesignConstants.spacingXS),
-                      Text(
-                        _effectiveRangeDisclosure(),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                      ),
                       const SizedBox(height: DesignConstants.spacingM),
                       _buildSummaryKpis(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
@@ -156,6 +149,7 @@ class _BodyNutritionCorrelationScreenState
     AppLocalizations l10n,
     BodyNutritionAnalyticsResult data,
   ) {
+    final confidenceHigh = data.insightDataQuality.hasSufficientData;
     final currentWeight = data.currentWeightKg == null
         ? '-'
         : '${data.currentWeightKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
@@ -168,63 +162,148 @@ class _BodyNutritionCorrelationScreenState
       child: Padding(
         padding: const EdgeInsets.all(14.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            _primaryMetricItem(
+              l10n.metricsCurrentWeight,
+              currentWeight,
+              '${data.weightDays} ${l10n.analyticsDaysWithWeightData}',
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                _metricItem(l10n.metricsCurrentWeight, currentWeight,
-                    '${data.weightDays} ${l10n.analyticsDaysWithWeightData}'),
-                _metricItem(l10n.metricsWeightChange, weightChange,
-                    _effectiveRangeDisclosure()),
-                _metricItem(l10n.metricsAvgCalories, avgCalories,
-                    l10n.analyticsPerDayLabel),
+                _kpiPill(l10n.metricsWeightChange, weightChange),
+                _kpiPill(l10n.metricsAvgCalories, avgCalories),
+                _kpiPill(
+                  l10n.analyticsEffectiveRangeLabel,
+                  _effectiveRangeDisclosure(),
+                ),
               ],
             ),
             const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                _insightText(l10n, data),
+            _confidenceIndicator(l10n, confidenceHigh),
+            const SizedBox(height: 6),
+            Text(
+              _insightText(l10n, data),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+            if (!confidenceHigh) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.analyticsBodyNutritionLowConfidenceNudge,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.outline,
                     ),
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _metricItem(String label, String value, String subLabel) {
-    return Expanded(
+  Widget _primaryMetricItem(String label, String value, String subLabel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        Text(
+          subLabel,
+          style: Theme.of(context)
+              .textTheme
+              .labelSmall
+              ?.copyWith(color: Theme.of(context).colorScheme.outline),
+        ),
+      ],
+    );
+  }
+
+  Widget _kpiPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.labelSmall,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: Theme.of(context)
                 .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          Text(
-            subLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(color: Theme.of(context).colorScheme.outline),
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _confidenceIndicator(AppLocalizations l10n, bool highConfidence) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = highConfidence ? Colors.green : Colors.orange;
+    final label = highConfidence
+        ? l10n.analyticsHighConfidenceLabel
+        : l10n.analyticsLowConfidenceLabel;
+    final subtitle = highConfidence
+        ? l10n.analyticsBodyNutritionConfidenceHighHint
+        : l10n.analyticsBodyNutritionConfidenceLowHint;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.verified_outlined, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -239,10 +318,17 @@ class _BodyNutritionCorrelationScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              l10n.analyticsBodyNutritionTrendContextHint,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+            const SizedBox(height: 8),
             _buildChartTitle(l10n.analyticsWeightTrendLabel),
             AnalyticsChartDefaults.axisTitleLabel(
               context,
-              'Y: ${l10n.analyticsUnitKg}   X: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
+              '${l10n.analyticsAxisYLabel}: ${l10n.analyticsUnitKg}   ${l10n.analyticsAxisXLabel}: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
             ),
             const SizedBox(height: 4),
             SizedBox(height: 170, child: _buildWeightChart(data)),
@@ -250,7 +336,7 @@ class _BodyNutritionCorrelationScreenState
             _buildChartTitle(l10n.analyticsCaloriesTrendLabel),
             AnalyticsChartDefaults.axisTitleLabel(
               context,
-              'Y: kcal   X: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
+              '${l10n.analyticsAxisYLabel}: kcal   ${l10n.analyticsAxisXLabel}: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
             ),
             const SizedBox(height: 4),
             SizedBox(height: 170, child: _buildCaloriesChart(data)),
@@ -411,8 +497,25 @@ class _BodyNutritionCorrelationScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
+              l10n.analyticsObservedPatternLabel,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            Text(
               _insightText(l10n, data),
               style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              data.insightDataQuality.hasSufficientData
+                  ? l10n.analyticsBodyNutritionInterpretationConfidenceHigh
+                  : l10n.analyticsBodyNutritionInterpretationConfidenceLow,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
