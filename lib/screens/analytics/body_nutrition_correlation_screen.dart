@@ -264,6 +264,7 @@ class _BodyNutritionCorrelationScreenState
   Widget _confidenceIndicator(AppLocalizations l10n, bool highConfidence) {
     final colorScheme = Theme.of(context).colorScheme;
     final color = highConfidence ? Colors.green : Colors.orange;
+    final icon = highConfidence ? Icons.check_circle : Icons.info_outline;
     final label = highConfidence
         ? l10n.analyticsHighConfidenceLabel
         : l10n.analyticsLowConfidenceLabel;
@@ -281,7 +282,7 @@ class _BodyNutritionCorrelationScreenState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.verified_outlined, color: color, size: 18),
+          Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Column(

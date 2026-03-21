@@ -2258,10 +2258,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get analyticsAxisYLabel => 'Y';
 
   @override
-  String get analyticsHighConfidenceLabel => 'Höher verlässliches Muster';
+  String get analyticsHighConfidenceLabel =>
+      'Muster mit höherer Verlässlichkeit';
 
   @override
-  String get analyticsLowConfidenceLabel => 'Niedriger verlässliches Muster';
+  String get analyticsLowConfidenceLabel =>
+      'Muster mit niedrigerer Verlässlichkeit';
 
   @override
   String get analyticsObservedPatternLabel => 'Beobachtetes Muster';
