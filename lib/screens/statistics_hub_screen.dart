@@ -27,6 +27,9 @@ class StatisticsHubScreen extends StatefulWidget {
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   static const _volumeKiloThreshold = 1000.0;
+  static const _miniSignalPoints = 8;
+  static const _chipBackgroundOpacity = 0.14;
+  static const _miniBarOpacity = 0.75;
 
   late final l10n = AppLocalizations.of(context)!;
   final _hubDataAdapter = StatisticsHubDataAdapter(
@@ -206,7 +209,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             ),
             const SizedBox(height: 8),
             _buildMiniBars(
-              values: weeklyTrend.take(8).toList(growable: false),
+              values:
+                  weeklyTrend.take(_miniSignalPoints).toList(growable: false),
               color: Theme.of(context).colorScheme.primary,
               semanticsLabel: l10n.sectionConsistency,
             ),
@@ -221,7 +225,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   Widget _buildMuscleVolumeSection() {
     final muscles = (_muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .where((m) => !_isOtherCategoryLabel(m['muscleGroup'] as String?))
+        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?))
         .toList(growable: false);
     final topMuscle = muscles.isNotEmpty ? muscles.first : null;
     final topMuscleShare =
@@ -477,11 +482,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final total = recovering + ready + fresh;
     if (total <= 0) return const SizedBox.shrink();
     final colorScheme = Theme.of(context).colorScheme;
-    final segments = <({int value, Color color})>[
-      (value: recovering, color: Colors.orange),
-      (value: ready, color: Colors.blue),
-      (value: fresh, color: Colors.green),
-    ].where((segment) => segment.value > 0).toList(growable: false);
+    final segments = <MapEntry<int, Color>>[
+      MapEntry(recovering, colorScheme.error),
+      MapEntry(ready, colorScheme.primary),
+      MapEntry(fresh, colorScheme.tertiary),
+    ].where((segment) => segment.key > 0).toList(growable: false);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(999),
@@ -491,8 +496,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           children: [
             for (final segment in segments)
               Expanded(
-                flex: segment.value,
-                child: ColoredBox(color: segment.color),
+                flex: segment.key,
+                child: ColoredBox(color: segment.value),
               ),
             if (segments.isEmpty)
               Expanded(child: ColoredBox(color: colorScheme.outline)),
@@ -637,15 +642,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       return _noClearFocusLabel();
     }
     final normalized = label.trim();
-    if (_isOtherCategoryLabel(normalized)) {
+    if (StatisticsPresentationFormatter.isOtherCategoryLabel(normalized)) {
       return _noClearFocusLabel();
     }
     return normalized;
   }
 
   String _noClearFocusLabel() {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    return languageCode == 'de' ? 'Kein klarer Schwerpunkt' : 'No clear focus';
+    return l10n.analyticsGuidanceNoClearWeakPoint;
   }
 
   Widget _buildCardHeading({
@@ -667,7 +671,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: chipColor.withOpacity(0.14),
+              color: chipColor.withOpacity(_chipBackgroundOpacity),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -688,12 +692,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       size: 18,
       color: Theme.of(context).colorScheme.outline,
     );
-  }
-
-  bool _isOtherCategoryLabel(String? label) {
-    if (label == null) return false;
-    final normalized = label.trim().toLowerCase();
-    return normalized == 'other' || normalized == 'others';
   }
 
   Widget _buildMiniBars({
@@ -724,7 +722,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     alignment: Alignment.bottomCenter,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.75),
+                        color: color.withOpacity(_miniBarOpacity),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),

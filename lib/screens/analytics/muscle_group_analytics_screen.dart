@@ -23,6 +23,7 @@ class MuscleGroupAnalyticsScreen extends StatefulWidget {
 
 class _MuscleGroupAnalyticsScreenState
     extends State<MuscleGroupAnalyticsScreen> {
+  static const _maxMuscleBars = 8;
   final _rangePolicy = StatisticsRangePolicyService.instance;
   bool _isLoading = true;
   int _periodIndex = 1; // 30 days
@@ -64,21 +65,16 @@ class _MuscleGroupAnalyticsScreenState
     return StatisticsPresentationFormatter.compactNumber(value);
   }
 
-  bool _isOtherCategoryLabel(String? label) {
-    if (label == null) return false;
-    final normalized = label.trim().toLowerCase();
-    return normalized == 'other' || normalized == 'others';
-  }
-
   List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
     final sorted = muscles
-        .where((m) => !_isOtherCategoryLabel(m['muscleGroup'] as String?))
+        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?))
         .toList(growable: false)
       ..sort((a, b) =>
         ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
             .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0));
 
-    if (sorted.length <= 8) {
+    if (sorted.length <= _maxMuscleBars) {
       return sorted
           .map((m) => MuscleRadarDatum(
                 label: m['muscleGroup'] as String,
@@ -88,7 +84,7 @@ class _MuscleGroupAnalyticsScreenState
     }
 
     return sorted
-        .take(8)
+        .take(_maxMuscleBars)
         .map((m) => MuscleRadarDatum(
               label: m['muscleGroup'] as String,
               value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
@@ -102,7 +98,8 @@ class _MuscleGroupAnalyticsScreenState
 
     final muscles = (_analytics['muscles'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .where((m) => !_isOtherCategoryLabel(m['muscleGroup'] as String?))
+        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?))
         .toList(growable: false);
     final weekly = (_analytics['weekly'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>();
@@ -295,13 +292,14 @@ class _MuscleGroupAnalyticsScreenState
               'muscleGroup': entry.key,
               'value': (entry.value as num).toDouble(),
             })
-        .where((m) => !_isOtherCategoryLabel(m['muscleGroup'] as String?))
+        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?))
         .where((m) => (m['value'] as double) > 0)
         .toList()
       ..sort((a, b) => (b['value'] as double).compareTo(a['value'] as double));
 
     return _buildMuscleBarChart(
-      items: items.take(8).toList(),
+      items: items.take(_maxMuscleBars).toList(),
       unit: l10n.analyticsUnitSets,
       emptyLabel: l10n.noWorkoutDataLabel,
       yAxisLabel:
@@ -324,7 +322,7 @@ class _MuscleGroupAnalyticsScreenState
       ..sort((a, b) => (b['value'] as double).compareTo(a['value'] as double));
 
     return _buildMuscleBarChart(
-      items: items.take(8).toList(),
+      items: items.take(_maxMuscleBars).toList(),
       unit: '/${l10n.analyticsPerWeekAbbrev}',
       emptyLabel: l10n.noWorkoutDataLabel,
       yAxisLabel:
