@@ -77,7 +77,8 @@ class StatisticsPresentationFormatter implements StatisticsFormatter {
       BodyNutritionInsightType.weightDownCaloriesDown =>
         l10n.analyticsInsightWeightDownCaloriesDown,
       BodyNutritionInsightType.mixed => l10n.analyticsInsightMixedPattern,
-      BodyNutritionInsightType.notEnoughData => l10n.analyticsInsightNotEnoughData,
+      BodyNutritionInsightType.notEnoughData =>
+        l10n.analyticsInsightNotEnoughData,
     };
   }
 

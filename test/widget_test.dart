@@ -6,7 +6,8 @@ import 'package:hypertrack/main.dart';
 import 'package:hypertrack/services/theme_service.dart';
 
 void main() {
-  testWidgets('MyApp smoke test builds MaterialApp', (WidgetTester tester) async {
+  testWidgets('MyApp smoke test builds MaterialApp',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => ThemeService(),

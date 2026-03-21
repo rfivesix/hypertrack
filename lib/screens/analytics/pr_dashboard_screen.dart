@@ -140,10 +140,12 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                 ),
                                 subtitle: Text(
                                   l10n.analyticsE1rmProgress(
-                                    StatisticsPresentationFormatter.formatWeight(
+                                    StatisticsPresentationFormatter
+                                        .formatWeight(
                                       previous,
                                     ),
-                                    StatisticsPresentationFormatter.formatWeight(
+                                    StatisticsPresentationFormatter
+                                        .formatWeight(
                                       recent,
                                     ),
                                   ),
@@ -299,7 +301,8 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                       l10n.analyticsPerfWithReps(
                                         StatisticsPresentationFormatter
                                             .formatWeight(
-                                            (data['weight'] as num).toDouble()),
+                                                (data['weight'] as num)
+                                                    .toDouble()),
                                         (data['reps'] as num).toInt(),
                                       ),
                                       style: Theme.of(context)

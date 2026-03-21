@@ -63,7 +63,8 @@ class StatisticsRangePolicyService {
 
   static const List<int> selectableDayRanges = [7, 30, 90, 180, 3650];
 
-  static const Map<StatisticsMetricId, StatisticsMetricRangeMetadata> metadata = {
+  static const Map<StatisticsMetricId, StatisticsMetricRangeMetadata> metadata =
+      {
     StatisticsMetricId.bodyNutritionTrend: StatisticsMetricRangeMetadata(
       metricId: StatisticsMetricId.bodyNutritionTrend,
       semantics: StatisticsRangeSemantics.dynamicAll,
@@ -184,7 +185,7 @@ class StatisticsRangePolicyService {
     final hasRange = days != null && days > 0;
     final range = hasRange
         ? DateTimeRange(
-            start: anchor.subtract(Duration(days: days! - 1)),
+            start: anchor.subtract(Duration(days: days - 1)),
             end: _endOfDay(anchor),
           )
         : null;
@@ -207,7 +208,8 @@ class StatisticsRangePolicyService {
       return policy.fixedWeeks!;
     }
 
-    if (metricId == StatisticsMetricId.muscleAnalytics && effectiveDays != null) {
+    if (metricId == StatisticsMetricId.muscleAnalytics &&
+        effectiveDays != null) {
       final derived = (effectiveDays / 7).ceil();
       return derived.clamp(4, 16);
     }

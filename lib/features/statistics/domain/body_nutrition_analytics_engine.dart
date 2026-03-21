@@ -113,7 +113,8 @@ class BodyNutritionAnalyticsEngine {
         .toList(growable: false);
   }
 
-  static Map<DateTime, double> _latestWeightPerDay(List<ChartDataPoint> points) {
+  static Map<DateTime, double> _latestWeightPerDay(
+      List<ChartDataPoint> points) {
     final sorted = points.toList()..sort((a, b) => a.date.compareTo(b.date));
 
     final map = <DateTime, double>{};

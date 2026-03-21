@@ -70,25 +70,21 @@ class AiKeyMissingException extends AiServiceException {
 
 class AiAuthException extends AiServiceException {
   const AiAuthException(
-      [String msg = 'Authentication failed. Please check your API key.'])
-      : super(msg);
+      [super.msg = 'Authentication failed. Please check your API key.']);
 }
 
 class AiNetworkException extends AiServiceException {
   const AiNetworkException(
-      [String msg = 'Network error. Please check your connection.'])
-      : super(msg);
+      [super.msg = 'Network error. Please check your connection.']);
 }
 
 class AiParseException extends AiServiceException {
-  const AiParseException([String msg = 'Could not parse the AI response.'])
-      : super(msg);
+  const AiParseException([super.msg = 'Could not parse the AI response.']);
 }
 
 class AiRateLimitException extends AiServiceException {
   const AiRateLimitException(
-      [String msg = 'Rate limit exceeded. Please wait a moment.'])
-      : super(msg);
+      [super.msg = 'Rate limit exceeded. Please wait a moment.']);
 }
 
 // ---------------------------------------------------------------------------
@@ -427,8 +423,9 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     try {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final candidates = json['candidates'] as List<dynamic>?;
-      if (candidates == null || candidates.isEmpty)
+      if (candidates == null || candidates.isEmpty) {
         throw const AiParseException();
+      }
 
       final content = candidates[0]['content'] as Map<String, dynamic>?;
       final parts = content?['parts'] as List<dynamic>?;

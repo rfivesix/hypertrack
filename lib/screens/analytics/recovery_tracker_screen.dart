@@ -296,7 +296,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                         child: ColoredBox(
                                           color: _stateColor(
                                             context,
-                                            RecoveryDomainService.stateRecovering,
+                                            RecoveryDomainService
+                                                .stateRecovering,
                                           ),
                                         ),
                                       ),
@@ -425,13 +426,15 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       final muscleName = muscle.muscleGroup;
                       final state = muscle.state;
                       final stateColor = _stateColor(context, state);
-                      final hours = muscle.hoursSinceLastSignificantLoad.round();
+                      final hours =
+                          muscle.hoursSinceLastSignificantLoad.round();
                       final highFatigue = muscle.highSessionFatigue;
                       final eqSets = muscle.lastEquivalentSets;
                       final recoveringUpper = muscle.recoveringUpperHours;
                       final readyUpper = muscle.readyUpperHours;
                       final pressureScore = _recoveryPressureScore(muscle);
-                      final pressureColor = _pressureColor(context, pressureScore);
+                      final pressureColor =
+                          _pressureColor(context, pressureScore);
 
                       return Padding(
                         padding: const EdgeInsets.only(
@@ -514,7 +517,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(999),
+                                        borderRadius:
+                                            BorderRadius.circular(999),
                                         child: LinearProgressIndicator(
                                           value: pressureScore / 100,
                                           minHeight: 8,

@@ -57,7 +57,8 @@ class RecoveryMusclePayload {
       avgRir: (data['avgRir'] as num?)?.toDouble(),
       avgRpe: (data['avgRpe'] as num?)?.toDouble(),
       highSessionFatigue: (data['highSessionFatigue'] as bool?) ?? false,
-      recoveringUpperHours: (data['recoveringUpperHours'] as num?)?.toInt() ?? 48,
+      recoveringUpperHours:
+          (data['recoveringUpperHours'] as num?)?.toInt() ?? 48,
       readyUpperHours: (data['readyUpperHours'] as num?)?.toInt() ?? 72,
     );
   }

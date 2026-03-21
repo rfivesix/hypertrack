@@ -79,7 +79,7 @@ class AnalyticsChartDefaults {
     };
 
     if (status == AnalyticsStatus.loading) {
-      final loading = const Center(child: CircularProgressIndicator());
+      const loading = Center(child: CircularProgressIndicator());
       return height == null
           ? loading
           : SizedBox(height: height, child: loading);

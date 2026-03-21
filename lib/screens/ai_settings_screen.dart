@@ -163,7 +163,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: DropdownButtonFormField<AiProvider>(
-                            value: _selectedProvider,
+                            initialValue: _selectedProvider,
                             decoration: InputDecoration(
                               labelText: l10n.aiProviderLabel,
                               border: const OutlineInputBorder(),
@@ -172,14 +172,14 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                                 vertical: 8,
                               ),
                             ),
-                            items: [
+                            items: const [
                               DropdownMenuItem(
                                 value: AiProvider.openai,
-                                child: const Text('OpenAI (GPT-4o)'),
+                                child: Text('OpenAI (GPT-4o)'),
                               ),
                               DropdownMenuItem(
                                 value: AiProvider.gemini,
-                                child: const Text('Google Gemini'),
+                                child: Text('Google Gemini'),
                               ),
                             ],
                             onChanged: _onProviderChanged,

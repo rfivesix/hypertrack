@@ -285,7 +285,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _selectedMealType,
+                            initialValue: _selectedMealType,
                             decoration: InputDecoration(
                               labelText: l10n.mealTypeLabel,
                               border: const OutlineInputBorder(),

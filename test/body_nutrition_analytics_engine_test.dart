@@ -66,7 +66,8 @@ void main() {
       expect(insight, BodyNutritionInsightType.stableWeightCaloriesUp);
     });
 
-    test('deriveInsight returns weightUpCaloriesUp at threshold boundaries', () {
+    test('deriveInsight returns weightUpCaloriesUp at threshold boundaries',
+        () {
       final start = DateTime(2026, 1, 1);
       final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
       final calories = List.generate(
@@ -251,7 +252,8 @@ void main() {
     });
 
     test('data quality policy marks sufficient ranges correctly', () {
-      final assessment = StatisticsDataQualityPolicy.instance.bodyNutritionInsight(
+      final assessment =
+          StatisticsDataQualityPolicy.instance.bodyNutritionInsight(
         spanDays: 30,
         totalDays: 30,
         weightDays: 10,

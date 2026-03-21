@@ -1661,12 +1661,15 @@ class WorkoutDatabaseHelper {
           .compareTo((b['hoursSinceLastSignificantLoad'] as num).toDouble());
     });
 
-    final recoveringCount =
-        muscles.where((m) => m['state'] == RecoveryDomainService.stateRecovering).length;
-    final readyCount =
-        muscles.where((m) => m['state'] == RecoveryDomainService.stateReady).length;
-    final freshCount =
-        muscles.where((m) => m['state'] == RecoveryDomainService.stateFresh).length;
+    final recoveringCount = muscles
+        .where((m) => m['state'] == RecoveryDomainService.stateRecovering)
+        .length;
+    final readyCount = muscles
+        .where((m) => m['state'] == RecoveryDomainService.stateReady)
+        .length;
+    final freshCount = muscles
+        .where((m) => m['state'] == RecoveryDomainService.stateFresh)
+        .length;
     final total = muscles.length;
 
     final overallState = RecoveryDomainService.overallState(

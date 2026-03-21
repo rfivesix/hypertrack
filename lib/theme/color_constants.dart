@@ -2,6 +2,7 @@
 ///
 /// Defines primary, secondary, and surface colors for both light and dark modes
 /// to ensure visual consistency across the UI.
+library;
 // lib/theme/color_constants.dart
 
 import 'package:flutter/material.dart';

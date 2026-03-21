@@ -56,7 +56,8 @@ void main() {
       expect(resolved.effectiveDays, 30);
     });
 
-    test('dynamic all falls back to 1 day when all selected without earliest', () {
+    test('dynamic all falls back to 1 day when all selected without earliest',
+        () {
       final resolved = service.resolve(
         metricId: StatisticsMetricId.bodyNutritionTrend,
         selectedRangeIndex: 4,

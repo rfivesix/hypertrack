@@ -176,7 +176,6 @@ class BasisDataManager {
         // Falls aktuell, kurz 100% anzeigen, damit es nicht hängt
         onProgress?.call("$taskLabel aktuell", "Bereit", 1.0);
       }
-    } catch (e) {
     } finally {
       await assetDb?.close();
       if (tempFile != null && await tempFile.exists()) await tempFile.delete();

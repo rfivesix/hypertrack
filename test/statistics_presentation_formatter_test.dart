@@ -15,8 +15,10 @@ void main() {
     });
 
     test('detects other-category labels robustly', () {
-      expect(StatisticsPresentationFormatter.isOtherCategoryLabel('other'), true);
-      expect(StatisticsPresentationFormatter.isOtherCategoryLabel('Others'), true);
+      expect(
+          StatisticsPresentationFormatter.isOtherCategoryLabel('other'), true);
+      expect(
+          StatisticsPresentationFormatter.isOtherCategoryLabel('Others'), true);
       expect(
         StatisticsPresentationFormatter.isOtherCategoryLabel('  OTHER  '),
         true,
