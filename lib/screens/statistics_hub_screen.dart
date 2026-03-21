@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/workout_database_helper.dart';
 import '../features/statistics/data/statistics_hub_data_adapter.dart';
+import '../features/statistics/domain/body_nutrition_analytics_models.dart';
+import '../features/statistics/domain/consistency_payload_models.dart';
 import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
@@ -171,8 +173,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final avgWorkouts = counts.isEmpty
         ? '-'
         : (counts.reduce((a, b) => a + b) / counts.length).toStringAsFixed(1);
-    final weeklyTrend = counts
-        .toList(growable: false);
+    final weeklyTrend = counts.toList(growable: false);
     final streakText = _isLoadingStats
         ? l10n.load_dots
         : '${l10n.metricsCurrentStreak}: ${_trainingStats.streakWeeks} ${l10n.metricsActiveWeeks}';
@@ -193,9 +194,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              avgWorkouts == '-'
-                  ? '-'
-                  : _formatPerWeek(avgWorkouts),
+              avgWorkouts == '-' ? '-' : _formatPerWeek(avgWorkouts),
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall
@@ -237,7 +236,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final topMuscleFrequency = topMuscle == null
         ? l10n.exerciseAnalyticsNoData
         : _formatPerWeek(
-            (topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(1),
+            (topMuscle['frequencyPerWeek'] as num)
+                .toDouble()
+                .toStringAsFixed(1),
           );
 
     return SummaryCard(
@@ -304,7 +305,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         : '+${((topImprovement['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%';
     final topExerciseName = topImprovement == null
         ? l10n.metricsMostImproved
-        : (topImprovement['exerciseName'] as String? ?? l10n.metricsMostImproved);
+        : (topImprovement['exerciseName'] as String? ??
+            l10n.metricsMostImproved);
     final performanceSummaryText = _notableImprovements.isEmpty
         ? l10n.exerciseAnalyticsNoData
         : '${l10n.analyticsRecentRecords}: ${_notableImprovements.length}';
@@ -396,7 +398,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
     final overallState = _recoveryAnalytics.overallState;
     final recoveryHeadline =
-        StatisticsPresentationFormatter.recoveryOverallLabel(l10n, overallState);
+        StatisticsPresentationFormatter.recoveryOverallLabel(
+            l10n, overallState);
 
     final recoveryStatusSummary = hasData
         ? l10n.recoveryHubCountsSummary(recovering, ready, fresh)
@@ -508,10 +511,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final currentWeight = body?.currentWeightKg;
     final weightChange = body?.weightChangeKg;
     final avgCalories = body?.avgDailyCalories;
-    final weightTrend = body?.smoothedWeight
-            .map((p) => p.value)
-            .toList(growable: false) ??
-        const <double>[];
+    final weightTrend =
+        body?.smoothedWeight.map((p) => p.value).toList(growable: false) ??
+            const <double>[];
 
     final weightValue = currentWeight == null
         ? '-'
@@ -550,7 +552,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _buildBodyMetricsSupportingText(body, caloriesValue, weightChange),
+                  _buildBodyMetricsSupportingText(
+                      body, caloriesValue, weightChange),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
@@ -559,7 +562,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 _buildMicroCaption(_effectiveBodyRangeLabel()),
                 const SizedBox(height: 4),
                 _buildMiniBars(
-                  values: weightTrend.take(_bodyTrendPoints).toList(growable: false),
+                  values: weightTrend
+                      .take(_bodyTrendPoints)
+                      .toList(growable: false),
                   color: Theme.of(context).colorScheme.secondary,
                   semanticsLabel: l10n.sectionBodyNutrition,
                 ),
@@ -776,5 +781,4 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       ),
     );
   }
-
 }
