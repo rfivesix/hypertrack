@@ -118,14 +118,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: (value) =>
                             themeService.setVisualStyle(value!),
                       ),
-                      RadioListTile<int>(
-                        title: Text(l10n.settingsVisualStyleNative),
-                        subtitle: Text(l10n.settingsVisualStyleNativeDesc),
-                        value: 2,
-                        groupValue: themeService.visualStyle,
-                        onChanged: (value) =>
-                            themeService.setVisualStyle(value!),
-                      ),
                     ],
                   ),
                 ),

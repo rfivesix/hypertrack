@@ -9,7 +9,7 @@ class ThemeService extends ChangeNotifier {
   static const _styleKey = 'visual_style';
   static const _aiEnabledKey = 'ai_enabled';
   ThemeMode _themeMode = ThemeMode.system;
-  int _visualStyle = 0; // 0 = Standard, 1 = Liquid, 2 = Native
+  int _visualStyle = 0; // 0 = Standard, 1 = Liquid
   bool _isAiEnabled = true;
 
   /// The current theme mode (light, dark, or system).
@@ -38,12 +38,14 @@ class ThemeService extends ChangeNotifier {
   // --- NEUE METHODE ---
   Future<void> _loadVisualStyle() async {
     final prefs = await SharedPreferences.getInstance();
-    _visualStyle = prefs.getInt(_styleKey) ?? 0;
+    final stored = prefs.getInt(_styleKey) ?? 0;
+    _visualStyle = stored == 2 ? 0 : stored;
     notifyListeners();
   }
 
   /// Sets the visual style and persists it to storage.
   Future<void> setVisualStyle(int style) async {
+    if (style == 2) style = 0;
     if (style == _visualStyle) return;
     _visualStyle = style;
     notifyListeners();

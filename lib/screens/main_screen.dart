@@ -31,7 +31,7 @@ import '../theme/color_constants.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_bottom_nav_bar.dart';
-import '../widgets/glass_fab.dart';
+import '../widgets/glass_pill_button.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/keep_alive_page.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
@@ -62,7 +62,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   bool get isLiquid => themeService.visualStyle == 1;
 
   double get kNavBarHeight => isLiquid ? 65 : 72;
-  double kBarFabGap = 12.0;
 
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
   DateTime get _currentActiveDate {
@@ -841,43 +840,31 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-        // Bottom Nav Bar & FAB
+        // Bottom Nav Bar (integrated + button)
         Positioned(
           bottom: 24,
           left: 16,
           right: 16,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: GlassBottomNavBar(
-                  currentIndex: _currentIndex,
-                  onTap: _onNavigationTapped,
-                  onFabTap: _toggleAddMenu,
-                  items: [
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.book_outlined),
-                      label: l10n.diary,
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.fitness_center_outlined),
-                      label: l10n.workout,
-                    ),
-                    const BottomNavigationBarItem(
-                      icon: Icon(Icons.bar_chart_outlined),
-                      label: 'Stats',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.restaurant_menu_rounded),
-                      label: l10n.nutrition,
-                    ),
-                  ],
-                ),
+          child: GlassBottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onNavigationTapped,
+            onFabTap: _toggleAddMenu,
+            items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.book_outlined),
+                label: l10n.diary,
               ),
-              SizedBox(width: kBarFabGap),
-              GlassFab(
-                onPressed: _toggleAddMenu,
-                icon: Icons.add,
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.fitness_center_outlined),
+                label: l10n.workout,
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.bar_chart_outlined),
+                label: 'Stats',
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.restaurant_menu_rounded),
+                label: l10n.nutrition,
               ),
             ],
           ),
@@ -890,16 +877,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             final themeService = context.watch<ThemeService>();
             final bool isDarkLocal =
                 Theme.of(context).brightness == Brightness.dark;
-            final Color bgLocal =
-                isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
-            final Color neutralTintLocal =
-                (isDarkLocal ? Colors.white : Colors.black)
-                    .withOpacity(isDarkLocal ? 0.10 : 0.10);
-            final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
-                bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
-
-            // Radius für Liquid Animation hier lokal definieren oder aus Konstante
-            const double rLiquid = 99;
 
             return Offstage(
               offstage: v == 0.0,
@@ -975,8 +952,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                         ),
                                       ),
                                       const SizedBox(width: 16),
-                                      GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
+                                      GlassPillButton(
                                         onTap: () {
                                           setState(() {
                                             _isAddMenuOpen = false;
@@ -986,156 +962,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                             action['action'],
                                           );
                                         },
-                                        child: themeService.visualStyle == 1
-                                            ? LiquidGlass.withOwnLayer(
-                                                settings: LiquidGlassSettings(
-                                                  thickness: 25,
-                                                  blur: 5,
-                                                  glassColor:
-                                                      effectiveGlassLocal,
-                                                  lightIntensity: 0.35,
-                                                  saturation: 1.10,
-                                                ),
-                                                shape:
-                                                    const LiquidRoundedSuperellipse(
-                                                        borderRadius: rLiquid),
-                                                child: Container(
-                                                  width: 65.0,
-                                                  height: 65.0,
-                                                  decoration: BoxDecoration(
-                                                    color: neutralTintLocal,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            rLiquid),
-                                                  ),
-                                                  foregroundDecoration:
-                                                      BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            rLiquid),
-                                                    border: Border.all(
-                                                      color: isDarkLocal
-                                                          ? Colors.white
-                                                              .withOpacity(0.20)
-                                                          : Colors.black
-                                                              .withOpacity(
-                                                                  0.08),
-                                                      width: 1.2,
-                                                    ),
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: action['gradient'] ==
-                                                          true
-                                                      ? ShaderMask(
-                                                          blendMode:
-                                                              BlendMode.srcIn,
-                                                          shaderCallback:
-                                                              (bounds) =>
-                                                                  const LinearGradient(
-                                                            colors: [
-                                                              Color(0xFFE88DCC),
-                                                              Color(0xFFF4A77A),
-                                                              Color(0xFFF7D06B),
-                                                              Color(0xFF7DDEAE),
-                                                              Color(0xFF6DC8D9),
-                                                            ],
-                                                            begin: Alignment
-                                                                .topLeft,
-                                                            end: Alignment
-                                                                .bottomRight,
-                                                          ).createShader(
-                                                                      bounds),
-                                                          child: Icon(
-                                                            action['icon'],
-                                                            size: 28,
-                                                          ),
-                                                        )
-                                                      : Icon(
-                                                          action['icon'],
-                                                          size: 28,
-                                                          color: isDarkLocal
-                                                              ? Colors.white
-                                                              : Colors.black,
-                                                        ),
+                                        height: 65,
+                                        child: action['gradient'] == true
+                                            ? ShaderMask(
+                                                blendMode: BlendMode.srcIn,
+                                                shaderCallback: (bounds) =>
+                                                    const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFFE88DCC),
+                                                    Color(0xFFF4A77A),
+                                                    Color(0xFFF7D06B),
+                                                    Color(0xFF7DDEAE),
+                                                    Color(0xFF6DC8D9),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ).createShader(bounds),
+                                                child: Icon(
+                                                  action['icon'],
+                                                  size: 28,
                                                 ),
                                               )
-                                            : ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(18),
-                                                child: BackdropFilter(
-                                                  filter: ImageFilter.blur(
-                                                      sigmaX: 12, sigmaY: 12),
-                                                  child: Container(
-                                                    width: 76,
-                                                    height: 76,
-                                                    decoration: BoxDecoration(
-                                                      color: bgLocal
-                                                          .withOpacity(0.80),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              18),
-                                                      border: Border.all(
-                                                        color: isDarkLocal
-                                                            ? Colors.white
-                                                                .withOpacity(
-                                                                    0.30)
-                                                            : Colors.black
-                                                                .withOpacity(
-                                                                    0.10),
-                                                        width: 1.5,
-                                                      ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black
-                                                              .withOpacity(
-                                                                  0.25),
-                                                          blurRadius: 10,
-                                                          offset: const Offset(
-                                                              0, 4),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    alignment: Alignment.center,
-                                                    child: action['gradient'] ==
-                                                            true
-                                                        ? ShaderMask(
-                                                            blendMode:
-                                                                BlendMode.srcIn,
-                                                            shaderCallback:
-                                                                (bounds) =>
-                                                                    const LinearGradient(
-                                                              colors: [
-                                                                Color(
-                                                                    0xFFE88DCC),
-                                                                Color(
-                                                                    0xFFF4A77A),
-                                                                Color(
-                                                                    0xFFF7D06B),
-                                                                Color(
-                                                                    0xFF7DDEAE),
-                                                                Color(
-                                                                    0xFF6DC8D9),
-                                                              ],
-                                                              begin: Alignment
-                                                                  .topLeft,
-                                                              end: Alignment
-                                                                  .bottomRight,
-                                                            ).createShader(
-                                                                        bounds),
-                                                            child: Icon(
-                                                              action['icon'],
-                                                              size: 28,
-                                                            ),
-                                                          )
-                                                        : Icon(
-                                                            action['icon'],
-                                                            size: 28,
-                                                            color: isDarkLocal
-                                                                ? Colors.white
-                                                                : Colors.black,
-                                                          ),
-                                                  ),
-                                                ),
+                                            : Icon(
+                                                action['icon'],
+                                                size: 28,
+                                                color: isDarkLocal
+                                                    ? Colors.white
+                                                    : Colors.black,
                                               ),
                                       ),
                                     ],

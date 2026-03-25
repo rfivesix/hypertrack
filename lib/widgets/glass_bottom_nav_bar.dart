@@ -1,10 +1,9 @@
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/theme_service.dart';
 import '../theme/color_constants.dart';
-import 'adaptive_bottom_nav_bar.dart';
+import 'glass_fab.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -116,6 +115,8 @@ class GlassBottomNavBar extends StatelessWidget {
 
     final double barHeight = themeService.visualStyle == 1 ? 65 : 76.0;
 
+    Widget navSurface;
+
     switch (themeService.visualStyle) {
       case 1:
         // neutrale Tönung ableiten (funktioniert auf Weiß & Schwarz)
@@ -127,7 +128,7 @@ class GlassBottomNavBar extends StatelessWidget {
             Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
 
         // Drag-to-select + Release-to-activate: über GestureDetector
-        return LayoutBuilder(
+        navSurface = LayoutBuilder(
           builder: (context, constraints) {
             double? lastDx;
             int? lastHoverIndex;
@@ -221,46 +222,11 @@ class GlassBottomNavBar extends StatelessWidget {
             );
           },
         );
-
-      case 2:
-        final platform = defaultTargetPlatform;
-        final isAdaptiveSupported = !kIsWeb &&
-            (platform == TargetPlatform.iOS ||
-                platform == TargetPlatform.android);
-
-        if (isAdaptiveSupported) {
-          return AdaptiveBottomNavBar(
-            currentIndex: currentIndex,
-            onTap: onTap,
-            items: items,
-          );
-        }
-
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              height: barHeight,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: bg.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.30)
-                      : Colors.black.withOpacity(0.10),
-                  width: 1.5,
-                ),
-              ),
-              child: navItemsRow,
-            ),
-          ),
-        );
+        break;
 
       default:
         // Standard: bisheriger Backdrop-Filter
-        return ClipRRect(
+        navSurface = ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -281,6 +247,19 @@ class GlassBottomNavBar extends StatelessWidget {
             ),
           ),
         );
+        break;
     }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(child: navSurface),
+        const SizedBox(width: 12),
+        GlassFab(
+          onPressed: onFabTap,
+          icon: Icons.add,
+        ),
+      ],
+    );
   }
 }
