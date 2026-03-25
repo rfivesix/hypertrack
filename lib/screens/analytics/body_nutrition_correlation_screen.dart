@@ -65,7 +65,11 @@ class _BodyNutritionCorrelationScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(title: l10n.bodyNutritionCorrelationTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -73,6 +77,7 @@ class _BodyNutritionCorrelationScreenState
               ? const SizedBox.shrink()
               : SingleChildScrollView(
                   padding: DesignConstants.screenPadding.copyWith(
+                    top: DesignConstants.screenPadding.top + topPadding,
                     bottom: DesignConstants.bottomContentSpacer,
                   ),
                   child: Column(

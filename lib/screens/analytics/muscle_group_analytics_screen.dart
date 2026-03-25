@@ -120,12 +120,17 @@ class _MuscleGroupAnalyticsScreenState
             ? weekly[_selectedWeekIndex]
             : null;
 
+    final double topPadding =
+        MediaQuery.of(context).padding.top + kToolbarHeight;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(title: l10n.muscleAnalyticsTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: DesignConstants.screenPadding.copyWith(
+                top: DesignConstants.screenPadding.top + topPadding,
                 bottom: DesignConstants.bottomContentSpacer,
               ),
               child: Column(
