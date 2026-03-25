@@ -22,7 +22,7 @@ import '../widgets/swipe_action_background.dart';
 /// to the daily diary from this screen.
 class MealScreen extends StatefulWidget {
   /// The meal data as a map containing 'id', 'name', and 'notes'.
-  final Map<String, dynamic> meal; // erwartet: {id, name, notes}
+  final Map<String, dynamic> meal; // expected: {id, name, notes}
   /// Whether to open the screen in edit mode initially.
   final bool startInEdit;
 
@@ -41,7 +41,7 @@ class _MealScreenState extends State<MealScreen> {
   List<Map<String, dynamic>> _items = [];
   bool _loadingItems = true;
 
-  // Totals (werden bei jedem Build aus _items berechnet)
+  // Totals (recomputed from `_items` whenever data changes).
   int _totalKcal = 0;
   double _totalC = 0, _totalF = 0, _totalP = 0;
 
@@ -70,11 +70,11 @@ class _MealScreenState extends State<MealScreen> {
     final id = widget.meal['id'] as int;
     final rows = await DatabaseHelper.instance.getMealItems(id);
     _items = List<Map<String, dynamic>>.from(rows);
-    await _recomputeTotals(); // initiale Totals
+    await _recomputeTotals(); // Initial totals.
     if (mounted) setState(() => _loadingItems = false);
   }
 
-  /// Rechnet die Summen für kcal / C / F / P einmal durch.
+  /// Recomputes aggregate kcal / carbs / fat / protein totals.
   Future<void> _recomputeTotals() async {
     int kcal = 0;
     double c = 0, f = 0, p = 0;
@@ -124,21 +124,21 @@ class _MealScreenState extends State<MealScreen> {
     final canSave =
         _nameCtrl.text.trim().isNotEmpty && _items.isNotEmpty && !_saving;
 
-// NEU: Top Padding berechnen für Content unter der GlobalAppBar
+    // Compute top padding for content shown beneath GlobalAppBar.
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-// Floating Action Button je Modus
+    // Floating action button configuration by mode.
     Widget? fab;
     if (_editMode) {
       fab = GlassFab(
-        label: l10n.mealAddIngredient, // „Zutat hinzufügen“
+        label: l10n.mealAddIngredient,
         onPressed: _addIngredientFlow,
       );
     } else {
       if (_items.isNotEmpty) {
         fab = GlassFab(
-          label: l10n.mealsAddToDiary, // „Zum Tagebuch hinzufügen“
+          label: l10n.mealsAddToDiary,
           onPressed: _addMealToDiaryFlow,
         );
       } else {
@@ -147,11 +147,11 @@ class _MealScreenState extends State<MealScreen> {
     }
 
     return Scaffold(
-      // NEU: Body hinter die AppBar erweitern für Glas-Effekt
+      // Extend body behind app bar to support the glass effect.
       extendBodyBehindAppBar: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: GlobalAppBar(
-        // NEU: GlobalAppBar statt AppBar
+        // Use GlobalAppBar for consistent app-wide behavior.
         title: _editMode
             ? l10n.mealsEdit
             : (_nameCtrl.text.isNotEmpty
@@ -195,10 +195,10 @@ class _MealScreenState extends State<MealScreen> {
       body: _loadingItems
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              // NEU: Padding oben angepasst (12 + topPadding)
+              // Apply top padding so list content clears the app bar.
               padding: EdgeInsets.fromLTRB(16, 12 + topPadding, 16, 96),
               children: [
-                // NAME & NOTIZEN
+                // Name and notes section.
                 SummaryCard(
                   child: Padding(
                     padding: const EdgeInsets.all(12),

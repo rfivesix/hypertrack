@@ -21,8 +21,8 @@ class AppInitializerScreen extends StatefulWidget {
 
 class _AppInitializerScreenState extends State<AppInitializerScreen> {
   // UI state displayed while initialization is running.
-  String _currentTask = "Starte App...";
-  String _currentDetail = "Initialisierung...";
+  String _currentTask = "Starting app...";
+  String _currentDetail = "Initializing...";
   double _progress = 0.0;
   bool _isDone = false;
 
@@ -52,8 +52,8 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
     // Show completion feedback before navigation.
     if (mounted) {
       setState(() {
-        _currentTask = "Abschluss";
-        _currentDetail = "Prüfe Backups...";
+        _currentTask = "Finalizing";
+        _currentDetail = "Checking backups...";
         _progress = 1.0;
       });
     }
