@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/product_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/food_item.dart';
+import 'food_detail_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -23,11 +24,15 @@ class _GeneralFoodSelectionScreenState extends State<GeneralFoodSelectionScreen>
   List<FoodItem> _results = [];
   bool _isLoading = false;
   String _searchInitialText = '';
+  List<Map<String, dynamic>> _baseCategories = [];
+  final Map<String, List<FoodItem>> _catItems = {};
+  final Set<String> _loadingCats = {};
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(() => setState(() {}));
+    _loadBaseCategories();
   }
 
   @override
@@ -71,6 +76,67 @@ class _GeneralFoodSelectionScreenState extends State<GeneralFoodSelectionScreen>
     });
   }
 
+  Future<void> _loadBaseCategories() async {
+    _baseCategories = await ProductDatabaseHelper.instance.getBaseCategories();
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  Future<void> _loadCategoryItems(String key) async {
+    if (_catItems.containsKey(key) || _loadingCats.contains(key)) return;
+    _loadingCats.add(key);
+    if (mounted) setState(() {});
+    final items = await ProductDatabaseHelper.instance.getBaseFoods(
+      categoryKey: key,
+      limit: 500,
+    );
+    _catItems[key] = items;
+    _loadingCats.remove(key);
+    if (mounted) setState(() {});
+  }
+
+  Widget _buildFoodListItem(FoodItem item, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final subtitle = l10n.foodItemSubtitle(
+      item.brand.isNotEmpty ? item.brand : l10n.noBrand,
+      item.calories,
+    );
+
+    return SummaryCard(
+      child: ListTile(
+        leading: Icon(
+          item.source == FoodItemSource.base ? Icons.star : Icons.inventory_2,
+          color: colorScheme.primary,
+        ),
+        title: Text(
+          item.getLocalizedName(context).isNotEmpty
+              ? item.getLocalizedName(context)
+              : l10n.unknown,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle),
+        trailing: IconButton(
+          icon: Icon(
+            Icons.add_circle_outline,
+            color: colorScheme.primary,
+          ),
+          onPressed: () => Navigator.of(context).pop(item),
+        ),
+        onTap: () async {
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => FoodDetailScreen(foodItem: item),
+            ),
+          );
+
+          if (result is FoodItem && mounted) {
+            Navigator.of(context).pop(result);
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -108,43 +174,88 @@ class _GeneralFoodSelectionScreenState extends State<GeneralFoodSelectionScreen>
             ),
             const SizedBox(height: DesignConstants.spacingM),
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _results.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchInitialText,
-                            style: textTheme.titleMedium,
-                          ),
-                        )
+              child: _searchController.text.trim().isEmpty
+                  ? (_baseCategories.isEmpty
+                      ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                          itemCount: _results.length,
-                          itemBuilder: (context, index) {
-                            final item = _results[index];
-                            final subtitle = item.brand.isNotEmpty
-                                ? '${item.brand} • ${item.calories} kcal/100g'
-                                : '${item.calories} kcal/100g';
-                            return SummaryCard(
-                              child: ListTile(
-                                leading: const Icon(Icons.restaurant),
-                                title: Text(
-                                  item.getLocalizedName(context),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                          itemCount: _baseCategories.length,
+                          itemBuilder: (context, idx) {
+                            final cat = _baseCategories[idx];
+                            final key = cat['key'] as String;
+                            final emoji = (cat['emoji'] as String?)?.trim();
+                            final locale =
+                                Localizations.localeOf(context).languageCode;
+                            final de = (cat['name_de'] as String?)?.trim();
+                            final en = (cat['name_en'] as String?)?.trim();
+                            final title = locale == 'de'
+                                ? (de?.isNotEmpty == true
+                                    ? de!
+                                    : (en?.isNotEmpty == true ? en! : key))
+                                : (en?.isNotEmpty == true
+                                    ? en!
+                                    : (de?.isNotEmpty == true ? de! : key));
+
+                            final loading = _loadingCats.contains(key);
+                            final items = _catItems[key];
+
+                            return Theme(
+                              data: Theme.of(context)
+                                  .copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                leading: Text(
+                                  emoji?.isNotEmpty == true ? emoji! : '🗂️',
+                                  style: const TextStyle(fontSize: 20),
                                 ),
-                                subtitle: Text(subtitle),
-                                trailing: IconButton(
-                                  icon: Icon(
-                                    Icons.add_circle_outline,
-                                    color: colorScheme.primary,
-                                  ),
-                                  onPressed: () => Navigator.of(context).pop(item),
-                                ),
-                                onTap: () => Navigator.of(context).pop(item),
+                                title: Text(title),
+                                onExpansionChanged: (expanded) {
+                                  if (expanded) _loadCategoryItems(key);
+                                },
+                                children: [
+                                  if (loading)
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 12),
+                                      child: Center(
+                                          child: CircularProgressIndicator()),
+                                    )
+                                  else if (items == null || items.isEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      child: Center(
+                                        child: Text(l10n.emptyCategory),
+                                      ),
+                                    )
+                                  else
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      padding: DesignConstants.cardPadding
+                                          .copyWith(top: 0),
+                                      itemCount: items.length,
+                                      itemBuilder: (_, i) =>
+                                          _buildFoodListItem(items[i], l10n),
+                                    ),
+                                ],
                               ),
                             );
                           },
-                        ),
+                        ))
+                  : (_isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _results.isEmpty
+                          ? Center(
+                              child: Text(
+                                _searchInitialText,
+                                style: textTheme.titleMedium,
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _results.length,
+                              itemBuilder: (context, index) =>
+                                  _buildFoodListItem(_results[index], l10n),
+                            )),
             ),
           ],
         ),
