@@ -1360,7 +1360,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mealsDelete => 'Mahlzeit löschen';
 
   @override
-  String get mealsAddToDiary => 'Zum Tagebuch hinzufügen';
+  String get mealsAddToDiary => 'Lebensmittel hinzufügen';
 
   @override
   String get mealNameLabel => 'Name der Mahlzeit';

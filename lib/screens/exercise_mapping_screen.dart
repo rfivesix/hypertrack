@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/exercise.dart';
-import 'exercise_catalog_screen.dart';
+import 'general_exercise_selection_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 
@@ -26,7 +26,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
   Future<void> _pickTarget(String sourceName) async {
     final Exercise? picked = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const ExerciseCatalogScreen(isSelectionMode: true),
+        builder: (_) => const GeneralExerciseSelectionScreen(),
       ),
     );
     if (picked != null && mounted) {

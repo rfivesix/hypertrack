@@ -1352,7 +1352,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mealsDelete => 'Delete meal';
 
   @override
-  String get mealsAddToDiary => 'Add to diary';
+  String get mealsAddToDiary => 'Add food';
 
   @override
   String get mealNameLabel => 'Meal name';

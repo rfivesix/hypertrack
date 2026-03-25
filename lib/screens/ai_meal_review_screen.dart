@@ -13,7 +13,7 @@ import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/glass_bottom_menu.dart';
-import 'add_food_screen.dart';
+import 'general_food_selection_screen.dart';
 
 /// Review screen for AI-suggested food items.
 ///
@@ -152,7 +152,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   Future<void> _replaceWithFood(int index) async {
     final selectedItem = await Navigator.of(context).push<FoodItem>(
       MaterialPageRoute(
-        builder: (_) => const AddFoodScreen(selectionMode: true),
+        builder: (_) => const GeneralFoodSelectionScreen(),
       ),
     );
     if (selectedItem != null && mounted) {
@@ -167,7 +167,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   Future<void> _addManualItem() async {
     final selectedItem = await Navigator.of(context).push<FoodItem>(
       MaterialPageRoute(
-        builder: (_) => const AddFoodScreen(selectionMode: true),
+        builder: (_) => const GeneralFoodSelectionScreen(),
       ),
     );
     if (selectedItem != null && mounted) {
