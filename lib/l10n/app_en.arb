@@ -975,4 +975,12 @@
   ,"analyticsInsightNotEnoughData": "Not enough data yet for meaningful correlation insight."
   ,"restTimerNotificationTitle": "Rest finished"
   ,"restTimerNotificationBody": "Your pause timer is over. Ready for the next set."
+  ,"onboardingContinueSetup": "Set Up Profile"
+  ,"onboardingRestoreFromBackup": "Restore from Backup"
+  ,"onboardingRestoreImporting": "Importing backup..."
+  ,"onboardingRestoreSuccess": "Backup restored successfully!"
+  ,"onboardingRestoreFailed": "Import failed. Please check the file and try again."
+  ,"finishWorkoutTitleLabel": "Workout Title"
+  ,"finishWorkoutNotesLabel": "Notes (optional)"
+  ,"finishWorkoutNotesHint": "How did the workout go?"
 }

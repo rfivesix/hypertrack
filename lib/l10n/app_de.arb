@@ -980,4 +980,12 @@
   ,"analyticsInsightNotEnoughData": "Noch nicht genug Daten für eine aussagekräftige Korrelations-Einschätzung."
   ,"restTimerNotificationTitle": "Pause beendet"
   ,"restTimerNotificationBody": "Dein Pausentimer ist abgelaufen. Bereit für den nächsten Satz."
+  ,"onboardingContinueSetup": "Profil einrichten"
+  ,"onboardingRestoreFromBackup": "Aus Backup wiederherstellen"
+  ,"onboardingRestoreImporting": "Backup wird importiert..."
+  ,"onboardingRestoreSuccess": "Backup erfolgreich wiederhergestellt!"
+  ,"onboardingRestoreFailed": "Import fehlgeschlagen. Bitte prüfe die Datei und versuche es erneut."
+  ,"finishWorkoutTitleLabel": "Workout-Titel"
+  ,"finishWorkoutNotesLabel": "Notizen (optional)"
+  ,"finishWorkoutNotesHint": "Wie lief das Workout?"
 }

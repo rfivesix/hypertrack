@@ -514,13 +514,17 @@ class WorkoutDatabaseHelper {
     );
   }
 
-  Future<void> finishWorkout(int workoutLogId) async {
+  Future<void> finishWorkout(int workoutLogId,
+      {String? title, String? notes}) async {
     final dbInstance = await database;
     await (dbInstance.update(dbInstance.workoutLogs)
           ..where((tbl) => tbl.localId.equals(workoutLogId)))
         .write(db.WorkoutLogsCompanion(
       endTime: drift.Value(DateTime.now()),
       status: const drift.Value('completed'),
+      routineNameSnapshot:
+          title != null ? drift.Value(title) : const drift.Value.absent(),
+      notes: notes != null ? drift.Value(notes) : const drift.Value.absent(),
     ));
   }
 

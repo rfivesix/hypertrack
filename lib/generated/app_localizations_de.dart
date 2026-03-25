@@ -2339,4 +2339,30 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get restTimerNotificationBody =>
       'Dein Pausentimer ist abgelaufen. Bereit für den nächsten Satz.';
+
+  @override
+  String get onboardingContinueSetup => 'Profil einrichten';
+
+  @override
+  String get onboardingRestoreFromBackup => 'Aus Backup wiederherstellen';
+
+  @override
+  String get onboardingRestoreImporting => 'Backup wird importiert...';
+
+  @override
+  String get onboardingRestoreSuccess =>
+      'Backup erfolgreich wiederhergestellt!';
+
+  @override
+  String get onboardingRestoreFailed =>
+      'Import fehlgeschlagen. Bitte prüfe die Datei und versuche es erneut.';
+
+  @override
+  String get finishWorkoutTitleLabel => 'Workout-Titel';
+
+  @override
+  String get finishWorkoutNotesLabel => 'Notizen (optional)';
+
+  @override
+  String get finishWorkoutNotesHint => 'Wie lief das Workout?';
 }

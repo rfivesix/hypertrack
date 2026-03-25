@@ -4381,6 +4381,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your pause timer is over. Ready for the next set.'**
   String get restTimerNotificationBody;
+
+  /// No description provided for @onboardingContinueSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Up Profile'**
+  String get onboardingContinueSetup;
+
+  /// No description provided for @onboardingRestoreFromBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Backup'**
+  String get onboardingRestoreFromBackup;
+
+  /// No description provided for @onboardingRestoreImporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing backup...'**
+  String get onboardingRestoreImporting;
+
+  /// No description provided for @onboardingRestoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored successfully!'**
+  String get onboardingRestoreSuccess;
+
+  /// No description provided for @onboardingRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed. Please check the file and try again.'**
+  String get onboardingRestoreFailed;
+
+  /// No description provided for @finishWorkoutTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Title'**
+  String get finishWorkoutTitleLabel;
+
+  /// No description provided for @finishWorkoutNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get finishWorkoutNotesLabel;
+
+  /// No description provided for @finishWorkoutNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How did the workout go?'**
+  String get finishWorkoutNotesHint;
 }
 
 class _AppLocalizationsDelegate

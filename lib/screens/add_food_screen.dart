@@ -618,7 +618,10 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               onPressed: () async {
                 final result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
-                    builder: (_) => const AiMealCaptureScreen(),
+                    builder: (_) => AiMealCaptureScreen(
+                      initialDate: widget.initialDate,
+                      initialMealType: widget.initialMealType,
+                    ),
                   ),
                 );
                 if (result == true && mounted) {

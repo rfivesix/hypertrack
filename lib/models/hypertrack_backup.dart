@@ -55,6 +55,18 @@ class HypertrackBackup {
   /// A list of exercises created or modified by the user.
   final List<Exercise> customExercises;
 
+  /// Historical daily goal snapshots (DailyGoalsHistory table).
+  final List<Map<String, dynamic>> dailyGoalsHistory;
+
+  /// Historical supplement settings snapshots (SupplementSettingsHistory table).
+  final List<Map<String, dynamic>> supplementSettingsHistory;
+
+  /// Current app settings row (AppSettings table), nullable for backward compat.
+  final Map<String, dynamic>? appSettings;
+
+  /// User profile row (Profiles table), nullable for backward compat.
+  final Map<String, dynamic>? profile;
+
   /// Creates a new [HypertrackBackup] instance.
   HypertrackBackup({
     required this.schemaVersion,
@@ -66,12 +78,15 @@ class HypertrackBackup {
     required this.routines,
     required this.workoutLogs,
     required this.userPreferences, // HINZUGEFÜGT
-    required this.supplements, // NEU
-    required this.supplementLogs, // NEU
+    required this.supplements,
+    required this.supplementLogs,
     required this.customExercises,
+    this.dailyGoalsHistory = const [],
+    this.supplementSettingsHistory = const [],
+    this.appSettings,
+    this.profile,
   });
 
-  // KORRIGIERTE VERSION
   /// Creates a [HypertrackBackup] instance from a JSON map.
   ///
   /// This factory method handles complex nested deserialization for all data types.
@@ -171,10 +186,24 @@ class HypertrackBackup {
               ?.map((e) => Exercise.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
+      dailyGoalsHistory: (json['dailyGoalsHistory'] as List<dynamic>?)
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
+              .toList() ??
+          [],
+      supplementSettingsHistory:
+          (json['supplementSettingsHistory'] as List<dynamic>?)
+                  ?.map((e) => Map<String, dynamic>.from(e as Map))
+                  .toList() ??
+              [],
+      appSettings: json['appSettings'] != null
+          ? Map<String, dynamic>.from(json['appSettings'] as Map)
+          : null,
+      profile: json['profile'] != null
+          ? Map<String, dynamic>.from(json['profile'] as Map)
+          : null,
     );
   }
 
-  // Diese Methode nutzt jetzt die .toMap() Methoden deiner Modelle
   /// Converts the [HypertrackBackup] instance to a JSON map for storage or export.
   Map<String, dynamic> toJson() {
     return {
@@ -207,6 +236,10 @@ class HypertrackBackup {
       'supplements': supplements.map((e) => e.toMap()).toList(),
       'supplementLogs': supplementLogs.map((e) => e.toMap()).toList(),
       'customExercises': customExercises.map((e) => e.toMap()).toList(),
+      'dailyGoalsHistory': dailyGoalsHistory,
+      'supplementSettingsHistory': supplementSettingsHistory,
+      'appSettings': appSettings,
+      'profile': profile,
     };
   }
 }

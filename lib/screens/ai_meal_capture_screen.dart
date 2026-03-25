@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../generated/app_localizations.dart';
@@ -17,7 +16,14 @@ import 'ai_settings_screen.dart';
 /// Minimalist design — AI gradient is concentrated only on the primary
 /// "Analyze" CTA button. All other UI elements use standard theme colours.
 class AiMealCaptureScreen extends StatefulWidget {
-  const AiMealCaptureScreen({super.key});
+  final DateTime? initialDate;
+  final String? initialMealType;
+
+  const AiMealCaptureScreen({
+    super.key,
+    this.initialDate,
+    this.initialMealType,
+  });
 
   @override
   State<AiMealCaptureScreen> createState() => _AiMealCaptureScreenState();
@@ -28,9 +34,6 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   final _textController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  // Input mode: 0 = photo, 1 = voice, 2 = text
-  int _selectedMode = 0;
-
   // Photo state
   final List<File> _images = [];
   static const int _maxImages = 4;
@@ -39,7 +42,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _speechAvailable = false;
   bool _isListening = false;
-  String _voiceText = '';
+  String _initialTextBeforeSpeech = '';
+  String? _speechLocaleId;
 
   // Analysis state
   bool _isAnalyzing = false;
@@ -58,16 +62,30 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   }
 
   Future<void> _initSpeech() async {
-    _speechAvailable = await _speech.initialize(
+    final available = await _speech.initialize(
       onError: (e) {
+        debugPrint('speech_to_text error: ${e.errorMsg}');
         if (mounted) setState(() => _isListening = false);
       },
       onStatus: (status) {
+        debugPrint('speech_to_text status: $status');
         if (status == 'done' || status == 'notListening') {
           if (mounted) setState(() => _isListening = false);
         }
       },
     );
+    if (available) {
+      // Cache the best matching locale for the app language
+      final appLang =
+          WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+      final locales = await _speech.locales();
+      final match =
+          locales.where((l) => l.localeId.startsWith(appLang)).firstOrNull;
+      _speechLocaleId = match?.localeId;
+      debugPrint(
+          'speech_to_text: available=true, localeId=$_speechLocaleId, all=${locales.map((l) => l.localeId).toList()}');
+    }
+    if (mounted) setState(() => _speechAvailable = available);
   }
 
   @override
@@ -119,25 +137,48 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   // Voice actions
   // ---------------------------------------------------------------------------
 
-  void _toggleListening() {
+  Future<void> _toggleListening() async {
     if (_isListening) {
-      _speech.stop();
-      setState(() => _isListening = false);
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
     } else {
-      // Detect locale for speech recognition (e.g. 'de_DE' for German)
-      final locale = Localizations.localeOf(context);
-      final localeId =
-          '${locale.languageCode}_${locale.countryCode ?? locale.languageCode.toUpperCase()}';
+      if (!_speechAvailable) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      _initialTextBeforeSpeech = _textController.text;
 
       _speech.listen(
         onResult: (result) {
+          debugPrint(
+              'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})');
           if (mounted) {
-            setState(() => _voiceText = result.recognizedWords);
+            setState(() {
+              final separator = _initialTextBeforeSpeech.endsWith(' ') ||
+                      _initialTextBeforeSpeech.isEmpty
+                  ? ''
+                  : ' ';
+              _textController.text =
+                  '$_initialTextBeforeSpeech$separator${result.recognizedWords}'
+                      .trimLeft();
+              _textController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textController.text.length));
+            });
           }
         },
         listenFor: const Duration(seconds: 60),
         pauseFor: const Duration(seconds: 10),
-        localeId: localeId,
+        localeId: _speechLocaleId,
         listenOptions: stt.SpeechListenOptions(
           partialResults: true,
           cancelOnError: false,
@@ -152,18 +193,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   // Analysis
   // ---------------------------------------------------------------------------
 
-  bool get _hasInput {
-    switch (_selectedMode) {
-      case 0:
-        return _images.isNotEmpty;
-      case 1:
-        return _voiceText.trim().isNotEmpty;
-      case 2:
-        return _textController.text.trim().isNotEmpty;
-      default:
-        return false;
-    }
-  }
+  bool get _hasInput =>
+      _images.isNotEmpty || _textController.text.trim().isNotEmpty;
 
   Future<void> _analyze() async {
     if (!_hasInput) return;
@@ -174,29 +205,19 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
     try {
       List<AiSuggestedItem> results;
+      final text = _textController.text.trim();
 
-      switch (_selectedMode) {
-        case 0: // Photo
-          results = await AiService.instance.analyzeImages(
-            _images,
-            textHint: _textController.text.trim().isNotEmpty
-                ? _textController.text.trim()
-                : null,
-            languageCode: languageCode,
-          );
-          break;
-        case 1: // Voice
-          results = await AiService.instance
-              .analyzeText(_voiceText, languageCode: languageCode);
-          break;
-        case 2: // Text
-          results = await AiService.instance.analyzeText(
-            _textController.text.trim(),
-            languageCode: languageCode,
-          );
-          break;
-        default:
-          return;
+      if (_images.isNotEmpty) {
+        results = await AiService.instance.analyzeImages(
+          _images,
+          textHint: text.isNotEmpty ? text : null,
+          languageCode: languageCode,
+        );
+      } else {
+        results = await AiService.instance.analyzeText(
+          text,
+          languageCode: languageCode,
+        );
       }
 
       if (!mounted) return;
@@ -206,6 +227,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           builder: (_) => AiMealReviewScreen(
             suggestions: results,
             originalImages: _images,
+            initialDate: widget.initialDate,
+            initialMealType: widget.initialMealType,
           ),
         ),
       );
@@ -269,49 +292,27 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       appBar: GlobalAppBar(title: l10n.aiCaptureTitle),
       body: Column(
         children: [
-          const SizedBox(height: 8),
-
-          // Segmented input toggle (standard themed)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: _ThemedSegmentedToggle(
-              selectedIndex: _selectedMode,
-              labels: [
-                l10n.aiCaptureTabPhoto,
-                l10n.aiCaptureTabVoice,
-                l10n.aiCaptureTabText,
-              ],
-              icons: const [
-                Icons.camera_alt_rounded,
-                Icons.mic_rounded,
-                Icons.edit_rounded,
-              ],
-              onChanged: (i) => setState(() => _selectedMode = i),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Tab content
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              child: KeyedSubtree(
-                key: ValueKey(_selectedMode),
-                child: _selectedMode == 0
-                    ? _buildPhotoContent(l10n, theme, isDark)
-                    : _selectedMode == 1
-                        ? _buildVoiceContent(l10n, theme, isDark)
-                        : _buildTextContent(l10n, theme, isDark),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_images.isNotEmpty) ...[
+                    _buildUnifiedPhotoList(theme),
+                    const SizedBox(height: 20),
+                  ],
+                ],
               ),
             ),
           ),
 
+          // Unified Input Area
+          _buildUnifiedInputArea(l10n, theme, isDark),
+
           // Analyze button — AI gradient CTA with inline loading
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
             child: _AiAnalyzeButton(
               onPressed: (_hasInput && !_isAnalyzing) ? _analyze : null,
               isAnalyzing: _isAnalyzing,
@@ -325,82 +326,30 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // Content: Photo
+  // Content: Unified View Widgets
   // ---------------------------------------------------------------------------
 
-  Widget _buildPhotoContent(
-      AppLocalizations l10n, ThemeData theme, bool isDark) {
-    // Show empty-state placeholder when no images are added
-    if (_images.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.restaurant_outlined,
-        text: l10n.aiCapturePhotoHint,
-        theme: theme,
-        actionRow: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            OutlinedButton.icon(
-              onPressed: _takePhoto,
-              icon: const Icon(Icons.camera_alt_rounded),
-              label: Text(l10n.aiCaptureTabPhoto),
-            ),
-            const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: _pickFromGallery,
-              icon: const Icon(Icons.photo_library_rounded),
-              label: Text(l10n.tabFavorites),
-            ),
-          ],
+  Widget _buildUnifiedPhotoList(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _images.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (ctx, i) => _buildPhotoThumbnail(i, theme),
+          ),
         ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          // Photo grid
-          SizedBox(
-            height: 140,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _images.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (ctx, i) => _buildPhotoThumbnail(i, theme),
-            ),
+        const SizedBox(height: 8),
+        Text(
+          '${_images.length} / $_maxImages',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
-          const SizedBox(height: 16),
-
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _images.length < _maxImages ? _takePhoto : null,
-                  icon: const Icon(Icons.camera_alt_rounded),
-                  label: Text(l10n.aiCaptureTabPhoto),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed:
-                      _images.length < _maxImages ? _pickFromGallery : null,
-                  icon: const Icon(Icons.photo_library_rounded),
-                  label: Text(l10n.tabFavorites),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '${_images.length} / $_maxImages',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -445,123 +394,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Content: Voice
-  // ---------------------------------------------------------------------------
-
-  Widget _buildVoiceContent(
-      AppLocalizations l10n, ThemeData theme, bool isDark) {
-    // Show empty-state when voice has not been used yet
-    if (_voiceText.isEmpty && !_isListening) {
-      return _buildEmptyState(
-        icon: Icons.mic_none_rounded,
-        text: l10n.aiCaptureVoiceHint,
-        theme: theme,
-        actionRow: ElevatedButton.icon(
-          onPressed: _speechAvailable ? _toggleListening : null,
-          icon: const Icon(Icons.mic_rounded),
-          label: Text(l10n.aiCaptureTabVoice),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-
-          // Standard microphone button
-          GestureDetector(
-            onTap: _speechAvailable ? _toggleListening : null,
-            child: AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final scale =
-                    _isListening ? 1.0 + (_pulseController.value * 0.08) : 1.0;
-                return Transform.scale(
-                  scale: scale,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isListening
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.primary,
-                      boxShadow: _isListening
-                          ? [
-                              BoxShadow(
-                                color: theme.colorScheme.error
-                                    .withValues(alpha: 0.35),
-                                blurRadius: 20,
-                                spreadRadius: 2,
-                              ),
-                            ]
-                          : [],
-                    ),
-                    child: Icon(
-                      _isListening ? Icons.stop_rounded : Icons.mic_rounded,
-                      size: 36,
-                      color: _isListening
-                          ? theme.colorScheme.onError
-                          : theme.colorScheme.onPrimary,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          if (!_speechAvailable)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                'Speech recognition not available',
-                style: theme.textTheme.bodySmall?.copyWith(color: Colors.red),
-              ),
-            ),
-
-          const SizedBox(height: 24),
-
-          // Transcription display
-          if (_voiceText.isNotEmpty)
-            Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant,
-                  width: 1,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.format_quote_rounded,
-                        color: theme.colorScheme.primary, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _voiceText,
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Content: Text
-  // ---------------------------------------------------------------------------
-
-  Widget _buildTextContent(
+  Widget _buildUnifiedInputArea(
       AppLocalizations l10n, ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -569,7 +402,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
         children: [
           TextField(
             controller: _textController,
-            maxLines: 6,
+            maxLines: 4,
+            minLines: 1,
             onChanged: (_) => setState(() {}),
             style: theme.textTheme.bodyLarge,
             decoration: InputDecoration(
@@ -579,7 +413,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
               ),
               filled: true,
               fillColor: theme.colorScheme.surfaceContainerLow,
-              contentPadding: const EdgeInsets.all(16),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
@@ -596,154 +431,50 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Shared widgets
-  // ---------------------------------------------------------------------------
-
-  /// Builds a centered empty-state placeholder with a faded icon, helper text,
-  /// and an optional action row (e.g. buttons to take photo / start recording).
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String text,
-    required ThemeData theme,
-    Widget? actionRow,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 72,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.18),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                height: 1.5,
-              ),
-            ),
-            if (actionRow != null) ...[
-              const SizedBox(height: 24),
-              actionRow,
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// Standard themed segmented toggle (no gradient)
-// =============================================================================
-
-class _ThemedSegmentedToggle extends StatelessWidget {
-  final int selectedIndex;
-  final List<String> labels;
-  final List<IconData> icons;
-  final ValueChanged<int> onChanged;
-
-  const _ThemedSegmentedToggle({
-    required this.selectedIndex,
-    required this.labels,
-    required this.icons,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final segmentWidth = constraints.maxWidth / labels.length;
-          return Stack(
+          const SizedBox(height: 12),
+          Row(
             children: [
-              // Animated selection indicator
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-                left: selectedIndex * segmentWidth,
-                top: 0,
-                bottom: 0,
-                width: segmentWidth,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: theme.colorScheme.primary,
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.25),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
+              IconButton(
+                onPressed: _images.length < _maxImages ? _takePhoto : null,
+                icon: const Icon(Icons.camera_alt_rounded),
+                color: theme.colorScheme.primary,
+                tooltip: l10n.aiCaptureTabPhoto,
               ),
-              // Tap targets
-              Row(
-                children: List.generate(labels.length, (i) {
-                  final isSelected = i == selectedIndex;
-                  return Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        onChanged(i);
-                      },
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            icons[i],
-                            size: 18,
-                            color: isSelected
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            labels[i],
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: isSelected
-                                  ? theme.colorScheme.onPrimary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+              IconButton(
+                onPressed:
+                    _images.length < _maxImages ? _pickFromGallery : null,
+                icon: const Icon(Icons.photo_library_rounded),
+                color: theme.colorScheme.primary,
+                tooltip: l10n.tabFavorites,
+              ),
+              const Spacer(),
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  final scale =
+                      _isListening ? 1.0 + (_pulseController.value * 0.1) : 1.0;
+                  return Transform.scale(
+                    scale: scale,
+                    child: IconButton(
+                      style: IconButton.styleFrom(
+                        backgroundColor: _isListening
+                            ? theme.colorScheme.errorContainer
+                            : theme.colorScheme.primaryContainer,
+                      ),
+                      onPressed: _toggleListening,
+                      icon: Icon(
+                        _isListening ? Icons.stop_rounded : Icons.mic_rounded,
+                        color: _isListening
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.primary,
                       ),
                     ),
                   );
-                }),
+                },
               ),
             ],
-          );
-        },
+          ),
+        ],
       ),
     );
   }

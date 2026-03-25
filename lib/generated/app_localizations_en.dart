@@ -2325,4 +2325,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restTimerNotificationBody =>
       'Your pause timer is over. Ready for the next set.';
+
+  @override
+  String get onboardingContinueSetup => 'Set Up Profile';
+
+  @override
+  String get onboardingRestoreFromBackup => 'Restore from Backup';
+
+  @override
+  String get onboardingRestoreImporting => 'Importing backup...';
+
+  @override
+  String get onboardingRestoreSuccess => 'Backup restored successfully!';
+
+  @override
+  String get onboardingRestoreFailed =>
+      'Import failed. Please check the file and try again.';
+
+  @override
+  String get finishWorkoutTitleLabel => 'Workout Title';
+
+  @override
+  String get finishWorkoutNotesLabel => 'Notes (optional)';
+
+  @override
+  String get finishWorkoutNotesHint => 'How did the workout go?';
 }

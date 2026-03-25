@@ -139,6 +139,26 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                       Expanded(
                         child: ListView(
                           children: [
+                            if (_log!.routineName != null &&
+                                _log!.routineName!.isNotEmpty) ...[
+                              Text(
+                                _log!.routineName!,
+                                style: textTheme.headlineSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: DesignConstants.spacingS),
+                            ],
+                            if (_log!.notes != null &&
+                                _log!.notes!.isNotEmpty) ...[
+                              Text(
+                                _log!.notes!,
+                                style: textTheme.bodyMedium
+                                    ?.copyWith(fontStyle: FontStyle.italic),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: DesignConstants.spacingL),
+                            ],
                             Text(
                               l10n.workoutSummaryExerciseOverview,
                               style: textTheme.titleMedium,

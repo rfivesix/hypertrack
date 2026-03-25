@@ -34,7 +34,7 @@ dependencies:
   google_fonts: ^6.3.1
   package_info_plus: ^9.0.0 # oder die neueste Version
   image_picker: ^1.2.0
-  mobile_scanner: ^5.1.0 # Füge diese Zeile hinzu
+  mobile_scanner: ^7.2.0 #^5.1.0 # Füge diese Zeile hinzu
   cryptography: ^2.7.0
   table_calendar: ^3.2.0
 

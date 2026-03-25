@@ -170,36 +170,92 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
 
     final savedSets = await db.getSetLogsForWorkout(log.id!);
 
-    if (log.routineName != null) {
-      final routine = await db.getRoutineByName(log.routineName!);
-      if (routine != null) {
-        _exercises = routine.exercises;
-        for (var re in _exercises) {
-          if (re.id != null) pauseTimes[re.id!] = re.pauseSeconds;
-        }
-      }
-    }
-
     _setLogs.clear();
+    _exercises.clear();
+    pauseTimes.clear();
     _totalVolume = 0;
     _totalSets = 0;
 
-    // Mapping wiederherstellen (Best Effort)
-    var setLogIndex = 0;
-    for (var re in _exercises) {
-      for (var t in re.setTemplates) {
-        if (setLogIndex < savedSets.length) {
-          final s = savedSets[setLogIndex];
-          // Check ob Exercise Name passt (grob)
-          if (s.exerciseName == re.exercise.nameEn ||
-              s.exerciseName == re.exercise.nameDe) {
-            _setLogs[t.id!] = s;
-            _totalVolume += (s.weightKg ?? 0) * (s.reps ?? 0);
-            _totalSets++;
-            setLogIndex++;
+    if (savedSets.isEmpty) {
+      if (log.routineName != null) {
+        final routine = await db.getRoutineByName(log.routineName!);
+        if (routine != null) {
+          _exercises = routine.exercises;
+          for (var re in _exercises) {
+            if (re.id != null) pauseTimes[re.id!] = re.pauseSeconds;
           }
         }
       }
+      _startWorkoutTimer();
+      notifyListeners();
+      return;
+    }
+
+    // Ensure sets are sorted by log_order
+    final sortedSets = List<SetLog>.from(savedSets)
+      ..sort((a, b) => (a.log_order ?? 0).compareTo(b.log_order ?? 0));
+
+    // Group SetLogs sequentially into blocks whenever the exercise name changes
+    String? currentExerciseName;
+    List<SetLog> currentBlock = [];
+    final List<List<SetLog>> blocks = [];
+
+    for (final s in sortedSets) {
+      if (s.exerciseName != currentExerciseName) {
+        if (currentBlock.isNotEmpty) {
+          blocks.add(currentBlock);
+        }
+        currentBlock = [s];
+        currentExerciseName = s.exerciseName;
+      } else {
+        currentBlock.add(s);
+      }
+    }
+    if (currentBlock.isNotEmpty) {
+      blocks.add(currentBlock);
+    }
+
+    // Reconstruct RoutineExercises from the blocks
+    for (int i = 0; i < blocks.length; i++) {
+      final block = blocks[i];
+      if (block.isEmpty) continue;
+
+      final exName = block.first.exerciseName;
+      final exercise = await db.getExerciseByName(exName);
+      if (exercise == null) continue; // Should not happen
+
+      final syntheticReId = DateTime.now().millisecondsSinceEpoch + i;
+      final pauseSec = block.first.restTimeSeconds ?? 90;
+
+      final List<SetTemplate> templates = [];
+      for (int j = 0; j < block.length; j++) {
+        final s = block[j];
+        // Ensure unique template IDs
+        final templateId =
+            DateTime.now().millisecondsSinceEpoch + j * 1000 + i * 10000;
+
+        templates.add(SetTemplate(
+          id: templateId,
+          setType: s.setType,
+          targetWeight: s.weightKg ?? 0.0,
+          targetReps: s.reps?.toString() ?? '0',
+          targetRir: s.rir,
+        ));
+
+        _setLogs[templateId] = s;
+        _totalVolume += (s.weightKg ?? 0) * (s.reps ?? 0);
+        _totalSets++;
+      }
+
+      final re = RoutineExercise(
+        id: syntheticReId,
+        exercise: exercise,
+        setTemplates: templates,
+        pauseSeconds: pauseSec,
+      );
+
+      _exercises.add(re);
+      pauseTimes[syntheticReId] = pauseSec;
     }
 
     _startWorkoutTimer();
@@ -496,7 +552,34 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     }
     final item = _exercises.removeAt(oldIndex);
     _exercises.insert(newIndex, item);
+
+    _updateLogOrdersInDatabase();
+
     notifyListeners();
+  }
+
+  /// Recalculates and persists the log_order for all current sets.
+  /// Called after reordering exercises to ensure the new order survives app restarts.
+  void _updateLogOrdersInDatabase() async {
+    int globalOrderCounter = 0;
+    final List<SetLog> setsToUpdate = [];
+    final db = WorkoutDatabaseHelper.instance;
+
+    for (final routineExercise in _exercises) {
+      for (final template in routineExercise.setTemplates) {
+        final setLog = _setLogs[template.id];
+        if (setLog != null) {
+          final updatedLog = setLog.copyWith(log_order: globalOrderCounter);
+          _setLogs[template.id!] = updatedLog;
+          setsToUpdate.add(updatedLog);
+          globalOrderCounter++;
+        }
+      }
+    }
+
+    if (setsToUpdate.isNotEmpty) {
+      db.updateSetLogs(setsToUpdate);
+    }
   }
 
   // ===========================================================================
@@ -592,7 +675,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   ///
   /// Deletes incomplete sets, reorders completed sets for chronological consistency,
   /// marks the workout as finished in the database, and clears the manager's state.
-  Future<void> finishWorkout() async {
+  /// Optionally updates the workout [title] and [notes] before completing.
+  Future<void> finishWorkout({String? title, String? notes}) async {
     _workoutDurationTimer?.cancel();
     _restTimer?.cancel();
     await LocalNotificationService.instance.cancelRestTimerNotification();
@@ -635,7 +719,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       }
 
       // 3. Workout abschließen
-      await db.finishWorkout(logId);
+      await db.finishWorkout(logId, title: title, notes: notes);
 
       // Cleanup
       _workoutLog = null;

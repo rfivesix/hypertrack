@@ -1,6 +1,8 @@
 // lib/screens/onboarding_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import '../data/backup_manager.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import 'main_screen.dart';
@@ -22,6 +24,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final int _totalPages = 6;
+  bool _isRestoring = false;
 
   // --- CONTROLLER ---
   final TextEditingController _nameController = TextEditingController();
@@ -118,6 +121,82 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  /// Lets the user pick a backup JSON file and import it, skipping onboarding.
+  Future<void> _restoreFromBackup() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+    if (result == null || result.files.single.path == null) return;
+
+    setState(() => _isRestoring = true);
+    final filePath = result.files.single.path!;
+
+    bool success = await BackupManager.instance.importFullBackupAuto(filePath);
+
+    // If plain import failed, the file might be encrypted — ask for password.
+    if (!success && mounted) {
+      final pw = await _askRestorePassword(l10n);
+      if (pw != null) {
+        success = await BackupManager.instance.importFullBackupAuto(
+          filePath,
+          passphrase: pw,
+        );
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _isRestoring = false);
+
+    if (success) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasSeenOnboarding', true);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.onboardingRestoreSuccess)),
+      );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.onboardingRestoreFailed),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<String?> _askRestorePassword(AppLocalizations l10n) async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.dialogEnterPasswordImport),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: InputDecoration(labelText: l10n.passwordLabel),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: Text(l10n.onboardingNext),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _nextPage() {
     if (_currentPage == 1) {
       if (_nameController.text.trim().isEmpty) return;
@@ -177,68 +256,104 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                children: [
-                  if (_currentPage > 0)
+            // Hide bottom nav on the welcome page (page 0) — it has its own buttons.
+            if (_currentPage > 0)
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
+                  children: [
                     IconButton.filledTonal(
                       onPressed: _prevPage,
                       icon: const Icon(Icons.arrow_back),
-                    )
-                  else
-                    const SizedBox(width: 48),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: _nextPage,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: Text(
-                      _currentPage == _totalPages
-                          ? l10n.onboardingFinish.toUpperCase()
-                          : l10n.onboardingNext.toUpperCase(),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    const Spacer(),
+                    ElevatedButton(
+                      onPressed: _nextPage,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(
+                        _currentPage == _totalPages
+                            ? l10n.onboardingFinish.toUpperCase()
+                            : l10n.onboardingNext.toUpperCase(),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  // ... _buildWelcomePage bleibt gleich ...
   Widget _buildWelcomePage(AppLocalizations l10n) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.waving_hand_rounded,
-              size: 80, color: Theme.of(context).colorScheme.primary),
+              size: 80, color: theme.colorScheme.primary),
           const SizedBox(height: 32),
           Text(
             l10n.onboardingWelcomeTitle,
-            style: Theme.of(context)
-                .textTheme
-                .headlineMedium
+            style: theme.textTheme.headlineMedium
                 ?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             l10n.onboardingWelcomeSubtitle,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: Colors.grey),
+            style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 48),
+          // Primary CTA — continue with profile setup
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isRestoring ? null : _nextPage,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Text(
+                l10n.onboardingContinueSetup.toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Secondary CTA — restore from backup
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isRestoring ? null : _restoreFromBackup,
+              icon: _isRestoring
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.restore),
+              label: Text(
+                _isRestoring
+                    ? l10n.onboardingRestoreImporting
+                    : l10n.onboardingRestoreFromBackup,
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
           ),
         ],
       ),

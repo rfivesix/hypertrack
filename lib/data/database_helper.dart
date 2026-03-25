@@ -70,19 +70,27 @@ class DatabaseHelper {
     await dbInstance.customStatement('PRAGMA foreign_keys = OFF');
 
     try {
-      // 1. Kind-Tabellen (Logs) zuerst
+      // 1. History tables
+      await dbInstance.delete(dbInstance.dailyGoalsHistory).go();
+      await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
+
+      // 2. Child tables (Logs) first
       await dbInstance.delete(dbInstance.supplementLogs).go();
       await dbInstance.delete(dbInstance.fluidLogs).go();
       await dbInstance.delete(dbInstance.nutritionLogs).go();
       await dbInstance.delete(dbInstance.measurements).go();
       await dbInstance.delete(dbInstance.mealItems).go();
 
-      // 2. Eltern-Tabellen (Definitionen) danach
+      // 3. Parent tables (Definitions)
       await dbInstance.delete(dbInstance.favorites).go();
       await dbInstance.delete(dbInstance.supplements).go();
       await dbInstance.delete(dbInstance.meals).go();
 
-      // 3. User-Produkte
+      // 4. Settings & Profile
+      await dbInstance.delete(dbInstance.appSettings).go();
+      await dbInstance.delete(dbInstance.profiles).go();
+
+      // 5. User products
       await (dbInstance.delete(dbInstance.products)
             ..where((t) => t.source.equals('user')))
           .go();

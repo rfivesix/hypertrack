@@ -267,7 +267,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final l10n = AppLocalizations.of(context)!;
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
 
-    final bool? confirmed = await showGlassBottomMenu<bool>(
+    // Pre-fill the title with the routine name or "Free Workout"
+    final defaultTitle =
+        manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle;
+    final titleController = TextEditingController(text: defaultTitle);
+    final notesController = TextEditingController();
+
+    final result = await showGlassBottomMenu<({String title, String notes})>(
       context: context,
       title: l10n.finishWorkoutButton,
       contentBuilder: (ctx, close) {
@@ -281,6 +287,26 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: l10n.finishWorkoutTitleLabel,
+                border: const OutlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesController,
+              decoration: InputDecoration(
+                labelText: l10n.finishWorkoutNotesLabel,
+                hintText: l10n.finishWorkoutNotesHint,
+                border: const OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              textCapitalization: TextCapitalization.sentences,
+            ),
             const SizedBox(height: 24),
             Row(
               children: [
@@ -288,7 +314,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                   child: OutlinedButton(
                     onPressed: () {
                       close();
-                      Navigator.of(ctx).pop(false);
+                      Navigator.of(ctx).pop(null);
                     },
                     child: Text(l10n.cancel),
                   ),
@@ -298,7 +324,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                   child: FilledButton(
                     onPressed: () {
                       close();
-                      Navigator.of(ctx).pop(true);
+                      Navigator.of(ctx).pop((
+                        title: titleController.text.trim(),
+                        notes: notesController.text.trim(),
+                      ));
                     },
                     child: Text(l10n.finishWorkoutButton),
                   ),
@@ -310,9 +339,15 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       },
     );
 
-    if (confirmed == true && mounted) {
+    titleController.dispose();
+    notesController.dispose();
+
+    if (result != null && mounted) {
       final logId = manager.workoutLog?.id;
-      await manager.finishWorkout();
+      await manager.finishWorkout(
+        title: result.title.isNotEmpty ? result.title : null,
+        notes: result.notes.isNotEmpty ? result.notes : null,
+      );
       if (mounted && logId != null) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -771,6 +806,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final manager = Provider.of<WorkoutSessionManager>(context);
+
+    // If the workout was just finished, the manager state is cleared.
+    // We return a blank scaffold to avoid any errors during the Navigator transition.
+    if (!manager.isActive && !_isLoading) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      );
+    }
 
     // Edit Pause Helper
     void editPauseTime(RoutineExercise routineExercise) async {

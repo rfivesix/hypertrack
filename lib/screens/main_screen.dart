@@ -144,7 +144,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         break;
       case 'ai_meal_capture':
         final result = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(builder: (_) => const AiMealCaptureScreen()),
+          MaterialPageRoute(
+              builder: (_) => AiMealCaptureScreen(
+                    initialDate: _currentActiveDate,
+                  )),
         );
         if (result == true) _refreshHomeScreen();
         break;

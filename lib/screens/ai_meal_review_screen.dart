@@ -24,11 +24,15 @@ import 'add_food_screen.dart';
 class AiMealReviewScreen extends StatefulWidget {
   final List<AiSuggestedItem> suggestions;
   final List<File> originalImages;
+  final DateTime? initialDate;
+  final String? initialMealType;
 
   const AiMealReviewScreen({
     super.key,
     required this.suggestions,
     required this.originalImages,
+    this.initialDate,
+    this.initialMealType,
   });
 
   @override
@@ -44,13 +48,14 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   bool _isMatching = true;
 
   // Meal type selection
-  String _selectedMealType = 'mealtypeSnack';
+  late String _selectedMealType;
   late DateTime _selectedTimestamp;
 
   @override
   void initState() {
     super.initState();
-    _selectedTimestamp = DateTime.now();
+    _selectedMealType = widget.initialMealType ?? 'mealtypeSnack';
+    _selectedTimestamp = widget.initialDate ?? DateTime.now();
     _items = widget.suggestions.map((s) => _ReviewItem(suggestion: s)).toList();
     _performFuzzyMatching();
   }
