@@ -20,7 +20,7 @@ class AdaptiveBottomNavBar extends StatelessWidget {
     required this.items,
   });
 
-  static const Map<IconData, String> _sfSymbolMap = {
+  static final Map<IconData, String> _sfSymbolMap = {
     Icons.book_outlined: 'book',
     Icons.book: 'book',
     Icons.fitness_center_outlined: 'figure.strengthtraining.traditional',
