@@ -28,7 +28,9 @@ class _GeneralExerciseSelectionScreenState
   void initState() {
     super.initState();
     _searchController.addListener(() => setState(() {}));
-    _runFilter('');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _runFilter('');
+    });
   }
 
   @override

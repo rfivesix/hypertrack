@@ -121,6 +121,9 @@ class _GeneralFoodSelectionScreenState extends State<GeneralFoodSelectionScreen>
                           itemCount: _results.length,
                           itemBuilder: (context, index) {
                             final item = _results[index];
+                            final subtitle = item.brand.isNotEmpty
+                                ? '${item.brand} • ${item.calories} kcal/100g'
+                                : '${item.calories} kcal/100g';
                             return SummaryCard(
                               child: ListTile(
                                 leading: const Icon(Icons.restaurant),
@@ -129,11 +132,7 @@ class _GeneralFoodSelectionScreenState extends State<GeneralFoodSelectionScreen>
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold),
                                 ),
-                                subtitle: Text(
-                                  item.brand.isNotEmpty
-                                      ? '${item.brand} • ${item.calories} kcal/100g'
-                                      : '${item.calories} kcal/100g',
-                                ),
+                                subtitle: Text(subtitle),
                                 trailing: IconButton(
                                   icon: Icon(
                                     Icons.add_circle_outline,
