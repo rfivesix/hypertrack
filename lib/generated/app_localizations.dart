@@ -2621,7 +2621,7 @@ abstract class AppLocalizations {
   /// No description provided for @mealsAddToDiary.
   ///
   /// In en, this message translates to:
-  /// **'Add to diary'**
+  /// **'Add food'**
   String get mealsAddToDiary;
 
   /// No description provided for @mealNameLabel.

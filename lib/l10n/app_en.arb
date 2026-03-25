@@ -586,7 +586,7 @@
   "mealsCreate": "Create meal",
   "mealsEdit": "Edit meal",
   "mealsDelete": "Delete meal",
-  "mealsAddToDiary": "Add to diary",
+  "mealsAddToDiary": "Add food",
   "mealNameLabel": "Meal name",
   "mealNotesLabel": "Notes",
   "mealIngredientsTitle": "Ingredients",
