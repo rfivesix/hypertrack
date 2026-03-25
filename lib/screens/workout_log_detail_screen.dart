@@ -8,7 +8,7 @@ import '../generated/app_localizations.dart';
 import '../models/exercise.dart';
 import '../models/set_log.dart';
 import '../models/workout_log.dart';
-import 'exercise_catalog_screen.dart';
+import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
@@ -443,9 +443,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                           .push<Exercise>(
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const ExerciseCatalogScreen(
-                                        isSelectionMode: true,
-                                      ),
+                                          const GeneralExerciseSelectionScreen(),
                                     ),
                                   );
                                   if (selectedExercise != null) {

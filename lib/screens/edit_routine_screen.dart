@@ -9,7 +9,7 @@ import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../models/routine_exercise.dart';
 import '../models/set_template.dart';
-import 'exercise_catalog_screen.dart';
+import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
@@ -129,8 +129,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (!mounted) return;
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
-        builder: (context) =>
-            const ExerciseCatalogScreen(isSelectionMode: true),
+        builder: (context) => const GeneralExerciseSelectionScreen(),
       ),
     );
 

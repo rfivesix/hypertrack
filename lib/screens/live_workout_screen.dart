@@ -18,7 +18,7 @@ import '../models/set_template.dart';
 import '../services/workout_session_manager.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
-import 'exercise_catalog_screen.dart';
+import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'workout_summary_screen.dart';
@@ -372,8 +372,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
-        builder: (context) =>
-            const ExerciseCatalogScreen(isSelectionMode: true),
+        builder: (context) => const GeneralExerciseSelectionScreen(),
       ),
     );
 
