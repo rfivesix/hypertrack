@@ -1450,6 +1450,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVisualStyleLiquidDesc => 'Rounded, floating UI elements';
 
   @override
+  String get settingsVisualStyleNative => 'Native';
+
+  @override
+  String get settingsVisualStyleNativeDesc =>
+      'Uses adaptive_platform_ui (iOS native; Android Material-adaptive). Falls back to Standard (Glass) on unsupported platforms.';
+
+  @override
   String get searchBaseFoodHint => 'Search base foods';
 
   @override

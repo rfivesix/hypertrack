@@ -9,7 +9,7 @@ class ThemeService extends ChangeNotifier {
   static const _styleKey = 'visual_style';
   static const _aiEnabledKey = 'ai_enabled';
   ThemeMode _themeMode = ThemeMode.system;
-  int _visualStyle = 0; // 0 = Standard, 1 = Liquid
+  int _visualStyle = 0; // 0 = Standard, 1 = Liquid, 2 = Native
   bool _isAiEnabled = true;
 
   /// The current theme mode (light, dark, or system).

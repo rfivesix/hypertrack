@@ -1,8 +1,10 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/theme_service.dart';
 import '../theme/color_constants.dart';
+import 'adaptive_bottom_nav_bar.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -218,6 +220,42 @@ class GlassBottomNavBar extends StatelessWidget {
               ),
             );
           },
+        );
+
+      case 2:
+        final platform = defaultTargetPlatform;
+        final isAdaptiveSupported = !kIsWeb &&
+            (platform == TargetPlatform.iOS ||
+                platform == TargetPlatform.android);
+
+        if (isAdaptiveSupported) {
+          return AdaptiveBottomNavBar(
+            currentIndex: currentIndex,
+            onTap: onTap,
+            items: items,
+          );
+        }
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              height: barHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: bg.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.30)
+                      : Colors.black.withOpacity(0.10),
+                  width: 1.5,
+                ),
+              ),
+              child: navItemsRow,
+            ),
+          ),
         );
 
       default:

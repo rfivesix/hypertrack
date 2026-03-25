@@ -1458,6 +1458,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsVisualStyleLiquidDesc => 'Runde, schwebende UI-Elemente';
 
   @override
+  String get settingsVisualStyleNative => 'Nativ';
+
+  @override
+  String get settingsVisualStyleNativeDesc =>
+      'Verwendet adaptive_platform_ui (iOS nativ; Android Material-adaptiv). Fällt auf Standard (Glas) zurück, wenn die Plattform nicht unterstützt wird.';
+
+  @override
   String get searchBaseFoodHint => 'Suche Grundnahrungsmittel';
 
   @override

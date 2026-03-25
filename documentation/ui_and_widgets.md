@@ -71,7 +71,8 @@ The application provides **26 reusable widgets** in `lib/widgets/`. Here is a ca
 | :--- | :--- | :--- |
 | `GlobalAppBar` | `global_app_bar.dart` | Unified top app bar with transparent background, consistent typography, and automatic back button. |
 | `GlassFab` | `glass_fab.dart` | Frosted floating action button with animated expand/collapse for multi-action menus. |
-| `GlassBottomNavBar` | `glass_bottom_nav_bar.dart` | Main tab bar with glassmorphism background and animated selection indicator. |
+| `GlassBottomNavBar` | `glass_bottom_nav_bar.dart` | Main tab bar with style switching: Standard (Glass), Liquid Glass, or Native (`adaptive_platform_ui`). |
+| `AdaptiveBottomNavBar` | `adaptive_bottom_nav_bar.dart` | Native/adaptive bottom bar used by the Native style. iOS uses native/Cupertino behavior, Android uses Material NavigationBar behavior from `adaptive_platform_ui`; unsupported platforms fall back to Standard (Glass). |
 | `GlassBottomMenu` | `glass_bottom_menu.dart` | Modal bottom sheet with frosted glass styling. Also exports `showDeleteConfirmation()` helper. |
 | `GlassMenu` | `glass_menu.dart` | Popup overlay menu with glass styling for contextual actions. |
 | `GlassPillButton` | `glass_pill_button.dart` | Rounded, frosted button used for inline actions and filters. |

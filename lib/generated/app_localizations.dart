@@ -2804,6 +2804,18 @@ abstract class AppLocalizations {
   /// **'Rounded, floating UI elements'**
   String get settingsVisualStyleLiquidDesc;
 
+  /// No description provided for @settingsVisualStyleNative.
+  ///
+  /// In en, this message translates to:
+  /// **'Native'**
+  String get settingsVisualStyleNative;
+
+  /// No description provided for @settingsVisualStyleNativeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses adaptive_platform_ui (iOS native; Android Material-adaptive). Falls back to Standard (Glass) on unsupported platforms.'**
+  String get settingsVisualStyleNativeDesc;
+
   /// No description provided for @searchBaseFoodHint.
   ///
   /// In en, this message translates to:
