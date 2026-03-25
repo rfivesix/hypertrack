@@ -625,7 +625,7 @@
   "settingsVisualStyleLiquid": "Flüssig (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Runde, schwebende UI-Elemente",
   "settingsVisualStyleNative": "Nativ",
-  "settingsVisualStyleNativeDesc": "Der native Stil ist aktuell deaktiviert und wird auf Standard (Glas) abgebildet.",
+  "settingsVisualStyleNativeDesc": "Verwendet auf unterstützten iOS-Versionen die native iOS-Tab-Bar.",
   "searchBaseFoodHint": "Suche Grundnahrungsmittel",
   "searchNoHits": "Keine Treffer.",
   "onbSubtitleWelcome": "Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.",

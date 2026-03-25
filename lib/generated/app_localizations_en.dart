@@ -1454,7 +1454,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsVisualStyleNativeDesc =>
-      'Native style is currently disabled and mapped to Standard (Glass).';
+      'Uses native iOS tab bar styling on supported iOS versions.';
 
   @override
   String get searchBaseFoodHint => 'Search base foods';

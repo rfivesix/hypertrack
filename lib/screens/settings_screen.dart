@@ -1,4 +1,5 @@
 // lib/screens/settings_screen.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
 import 'ai_settings_screen.dart';
@@ -118,6 +119,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: (value) =>
                             themeService.setVisualStyle(value!),
                       ),
+                      if (!kIsWeb &&
+                          defaultTargetPlatform == TargetPlatform.iOS)
+                        RadioListTile<int>(
+                          title: Text(l10n.settingsVisualStyleNative),
+                          subtitle: Text(l10n.settingsVisualStyleNativeDesc),
+                          value: 2,
+                          groupValue: themeService.visualStyle,
+                          onChanged: (value) =>
+                              themeService.setVisualStyle(value!),
+                        ),
                     ],
                   ),
                 ),

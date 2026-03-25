@@ -2813,7 +2813,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVisualStyleNativeDesc.
   ///
   /// In en, this message translates to:
-  /// **'Native style is currently disabled and mapped to Standard (Glass).'**
+  /// **'Uses native iOS tab bar styling on supported iOS versions.'**
   String get settingsVisualStyleNativeDesc;
 
   /// No description provided for @searchBaseFoodHint.
