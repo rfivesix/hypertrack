@@ -15,23 +15,23 @@ Learn more about the project: **[Hypertrack Project Overview](documentation/over
 
 ---
 
-> **Note:** This project is currently in **Active Beta**.
+> **Note:** Hypertrack has transitioned from alpha to the regular **v0.7.x minor release line**.
 
 ---
 
-## ⚠️ **Important Disclaimer: Active Beta**
+## ⚠️ **Important Disclaimer: v0.7 Stable Baseline**
 
 **Please read before using:**
 
-Hypertrack has completed its **v0.5 Architecture Update**. The database has been entirely rewritten using **Drift** (SQLite ORM) and all identifiers have been migrated to **UUIDs (v4)**. The core data foundation is now stable and cloud-ready.
+Hypertrack is now on **v0.7.0** as a regular minor release. The architecture transition (Drift + UUIDs + modular analytics) is complete, and the app is positioned as a stable, privacy-first training and nutrition companion.
 
 * **Stable Foundation:** The database structure is solidified and no further breaking schema changes are expected.
-* **Active Beta:** The app is under active development—new features and refinements are being added regularly. Minor bugs may still occur.
-* **Recommendation:** We still recommend using the built-in **Backup (JSON)** feature regularly, as best practice for any app in active development.
+* **Active Development:** New features and refinements continue to ship in minor updates.
+* **Recommendation:** Continue using the built-in **Backup (JSON)** feature regularly as a best-practice safeguard.
 
 ---
 
-## 🌟 Current Features (v0.4+)
+## 🌟 Current Features (v0.7+)
 
 Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 
@@ -52,7 +52,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 ### 📈 Body Metrics & Health
 * **Measurements:** Track weight, body fat percentage, and tape measurements (biceps, waist, etc.).
 * **Charts:** Visualize your progress over time.
-* **Statistics & Analytics Hub (v0.7):** Explore consistency, performance, muscle distribution, recovery, and body/nutrition correlations from a dedicated analytics module with drill-down screens.
+* **Statistics & Analytics Hub (v0.7):** ✅ Fully functional analytics workspace for consistency, performance, muscle distribution, recovery, and body/nutrition correlations, including dedicated drill-down screens.
 * **Supplements:** Manage your inventory and track daily intake of supplements (like Creatine or Vitamins) with full historical tracking of goals and limits.
 
 ### 🛡️ Privacy & Tech
@@ -60,6 +60,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 * **Data at Rest Security:** Hypertrack natively inherits your device's OS-level encryption (iOS Data Protection / Android FBE). We strongly advise enabling a secure screen lock on your device.
 * **No Ads, No Bloat:** Just the tools you need.
 * **Export:** Full JSON export and encrypted backup options.
+* **Universal Sharing (v0.7):** Export screenshots/photos and text context from anywhere in your workflow, then share instantly through native iOS/Android share sheets.
 
 ---
 
@@ -77,7 +78,8 @@ We are building a platform that gives you the convenience of cloud-based apps wi
 * **Privacy Controls:** Global AI Kill-Switch added. API keys natively encrypted at rest.
 
 ### 🚧 Current: v0.7 (Health & Connectivity)
-* **Apple HealthKit Integration:** Syncing workouts and weight with Apple Health — *planned*.
+* **Apple HealthKit Integration:** Syncing workouts and weight with Apple Health — **Work in Progress (actively in development)**.
+* **Statistics & Analytics Hub:** ✅ Completed and production-ready in v0.7.
 * **Statistics Refactor:** Completed architecture and UX polish for the Statistics module (range-policy alignment, typed payload adoption in core analytics paths, and improved drill-down consistency).
 * **Core Tracking Stability:** Continued refinements and bug fixes across workout and nutrition logging.
 

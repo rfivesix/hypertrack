@@ -11,9 +11,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as p;
 
-// Eigene Imports
+// Internal imports
 import 'database_helper.dart';
-import 'drift_database.dart'; // Zugriff auf Tabellen & Companions
+import 'drift_database.dart'; // Access to Drift tables and companions.
 import 'product_database_helper.dart';
 import 'workout_database_helper.dart';
 import '../models/food_item.dart';
@@ -25,7 +25,7 @@ import '../util/encryption_util.dart';
 /// Supports full JSON backups with optional encryption and CSV exports for
 /// nutrition, workouts, and measurements.
 class BackupManager {
-  // Singleton Pattern
+  // Singleton pattern
   /// Singleton instance of [BackupManager].
   static final BackupManager instance = BackupManager._init();
   BackupManager._init();
@@ -46,7 +46,7 @@ class BackupManager {
       final jsonString = await _generateBackupJson();
       return await _writeAndShareFile(jsonString, 'hypertrack_backup');
     } catch (e) {
-      debugPrint("Fehler beim Exportieren: $e");
+      debugPrint("Backup export failed: $e");
       return false;
     }
   }
@@ -58,27 +58,27 @@ class BackupManager {
     try {
       final jsonString = await _generateBackupJson();
 
-      // Verschlüsseln
+      // Encrypt payload before sharing.
       final wrapper =
           await EncryptionUtil.encryptString(jsonString, passphrase);
       final wrappedJson = jsonEncode(wrapper);
 
       return await _writeAndShareFile(wrappedJson, 'hypertrack_backup_enc');
     } catch (e) {
-      debugPrint("Fehler beim verschlüsselten Export: $e");
+      debugPrint("Encrypted backup export failed: $e");
       return false;
     }
   }
 
-  /// Hilfsmethode: Sammelt alle Daten und baut das JSON
+  /// Helper method that collects all persisted entities and builds backup JSON.
   Future<String> _generateBackupJson() async {
-    // 1. Daten aus den Helpern sammeln
+    // 1) Collect data from helper layers.
     final foodEntries = await _userDb.getAllFoodEntries();
     final fluidEntries = await _userDb.getAllFluidEntries();
     final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
     final measurementSessions = await _userDb.getMeasurementSessions();
 
-    // 2. Custom Products direkt aus Drift laden
+    // 2) Load custom products directly from Drift.
     final db = await _userDb.database;
     final customProductRows = await (db.select(db.products)
           ..where((t) => t.source.equals('user')))
@@ -109,7 +109,7 @@ class BackupManager {
     final supplementLogs = await _userDb.getAllSupplementLogs();
     final customExercises = await _workoutDb.getCustomExercises();
 
-    // 3. Historical goals and supplement settings
+    // 3) Collect historical goals and supplement settings.
     final goalsHistoryRows = await db.select(db.dailyGoalsHistory).get();
     final dailyGoalsHistory = goalsHistoryRows
         .map((r) => {
@@ -134,7 +134,7 @@ class BackupManager {
             })
         .toList();
 
-    // 4. AppSettings and Profile
+    // 4) Collect app settings and profile.
     final settingsRow = await db.select(db.appSettings).getSingleOrNull();
     final Map<String, dynamic>? appSettingsMap = settingsRow != null
         ? {
@@ -163,14 +163,14 @@ class BackupManager {
           }
         : null;
 
-    // 5. User Preferences
+    // 5) Collect shared preferences.
     final prefs = await SharedPreferences.getInstance();
     final userPrefs = <String, dynamic>{};
     for (String key in prefs.getKeys()) {
       userPrefs[key] = prefs.get(key);
     }
 
-    // 6. Backup Objekt erstellen
+    // 6) Build backup object.
     final backup = HypertrackBackup(
       schemaVersion: currentSchemaVersion,
       foodEntries: foodEntries,
@@ -200,7 +200,7 @@ class BackupManager {
         '${tempDir.path}/$baseName-v$currentSchemaVersion-[$timestamp].json');
     await tempFile.writeAsString(content);
 
-    // FIX: Neue API nutzen (Share.shareXFiles ist korrekt, aber wir müssen XFile korrekt importieren)
+    // Use the modern share_plus API (`shareXFiles`) for file sharing.
     final result = await Share.shareXFiles([
       XFile(tempFile.path, mimeType: 'application/json'),
     ], subject: 'Hypertrack Backup $timestamp');
@@ -239,7 +239,7 @@ class BackupManager {
               Map<String, dynamic>.from(jsonMapRaw), effectivePw);
           payload = jsonDecode(clearText) as Map<String, dynamic>;
         } catch (e) {
-          debugPrint('Entschlüsselung fehlgeschlagen: $e');
+          debugPrint('Backup decryption failed: $e');
           return false;
         }
       } else {
@@ -249,7 +249,7 @@ class BackupManager {
       final backup = HypertrackBackup.fromJson(payload);
 
       if (backup.schemaVersion > currentSchemaVersion) {
-        debugPrint("Backup-Version zu neu.");
+        debugPrint("Backup version is newer than supported schema.");
         return false;
       }
 
@@ -303,7 +303,7 @@ class BackupManager {
                 fiber: drift.Value(item.fiber),
                 salt: drift.Value(item.salt),
                 source: const drift.Value('user'),
-                // FIX: Fallback '?? false', falls der Wert null ist
+                // Guard against nullable legacy values in older backups.
                 isLiquid: drift.Value(item.isLiquid ?? false),
                 category: drift.Value(item.category),
                 id: drift.Value(item.barcode.startsWith('user_')
@@ -407,10 +407,10 @@ class BackupManager {
             );
       }
 
-      debugPrint("Import erfolgreich.");
+      debugPrint("Backup import succeeded.");
       return true;
     } catch (e) {
-      debugPrint("Fehler beim Importieren: $e");
+      debugPrint("Backup import failed: $e");
       return false;
     }
   }
@@ -442,7 +442,7 @@ class BackupManager {
       String content = await _generateBackupJson();
       String fileName = 'hypertrack_auto_v$currentSchemaVersion';
 
-      // FIX: Strenger bool check
+      // Only encrypt when explicitly requested.
       if (encrypted) {
         if (passphrase == null || passphrase.isEmpty) return false;
         final wrapper = await EncryptionUtil.encryptString(content, passphrase);
@@ -494,7 +494,7 @@ class BackupManager {
       await prefs.setInt('auto_backup_last_ms', nowMs);
       return true;
     } catch (e) {
-      debugPrint("Auto-Backup Fehler: $e");
+      debugPrint("Auto-backup failed: $e");
       return false;
     }
   }
@@ -549,7 +549,7 @@ class BackupManager {
       }
       return await _createAndShareCsv(rows, 'hypertrack_nutrition_export');
     } catch (e) {
-      debugPrint("CSV Export Fehler (Nutrition): $e");
+      debugPrint("CSV export failed (nutrition): $e");
       return false;
     }
   }
@@ -593,7 +593,7 @@ class BackupManager {
       }
       return await _createAndShareCsv(rows, 'hypertrack_workouts_export');
     } catch (e) {
-      debugPrint("CSV Export Fehler (Workout): $e");
+      debugPrint("CSV export failed (workout): $e");
       return false;
     }
   }
@@ -620,7 +620,7 @@ class BackupManager {
       }
       return await _createAndShareCsv(rows, 'hypertrack_measurements_export');
     } catch (e) {
-      debugPrint("CSV Export Fehler (Measure): $e");
+      debugPrint("CSV export failed (measurements): $e");
       return false;
     }
   }

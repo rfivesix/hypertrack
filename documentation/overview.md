@@ -2,7 +2,7 @@
 
 Hypertrack is a comprehensive, **offline-first** health and fitness tracking application built with [Flutter](https://flutter.dev). It centralizes nutrition logging, workout management, body measurements, and supplement tracking into a single, privacy-focused platform.
 
-> **Status:** Active Beta (v0.6 stable). The core architecture (Drift + UUIDs + AI integration) is solidified.
+> **Status:** v0.7 minor release line (post-alpha). Core architecture (Drift + UUIDs + modular analytics + AI integration) is solidified.
 
 ---
 
@@ -25,7 +25,7 @@ Manage daily food and fluid intake with a searchable product database powered by
 - **Meal Templates:** Create reusable meals from frequently eaten food combinations.
 - **Macro & Micro Targets:** Track daily goals for Calories, Protein, Carbs, Fat, Fiber, Sugar, Salt, and Water.
 - **Nutrition Analysis:** Time-range based reports (1 day, 7 days, 30 days, all time) with expandable/collapsible summaries.
-- **🤖 AI Meal Capture (v0.6):** Log meals instantly via photo, voice, or text description. AI detects individual foods with estimated quantities — review and edit before saving. Supports OpenAI GPT-4o and Google Gemini (BYOK — bring your own key).
+- **🤖 AI Meal Capture (v0.6+):** Log meals instantly via photo, voice, or text description. AI detects individual foods with estimated quantities — review and edit before saving. Supports OpenAI GPT-4o and Google Gemini (BYOK — bring your own key).
 
 *Data model details → [Data Models: Nutrition & Foods](data_models_and_storage.md#1-nutrition--foods)*
 
@@ -94,7 +94,7 @@ The `MainScreen` uses a `PageView` with a `BottomNavigationBar` to switch betwee
 
 ## Screens Reference
 
-The application contains **41 screens** in `lib/screens/`. Here is a categorized breakdown:
+The application contains **44 screens** in `lib/screens/`. Here is a categorized breakdown:
 
 ### App Shell & Navigation
 | Screen | File | Purpose |

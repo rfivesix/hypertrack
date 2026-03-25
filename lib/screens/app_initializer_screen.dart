@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../data/backup_manager.dart';
 import '../data/basis_data_manager.dart';
-// import '../generated/app_localizations.dart'; // Nicht zwingend nötig hier, da wir dynamische Texte anzeigen
+// import '../generated/app_localizations.dart'; // Not required here because status text is dynamic.
 import 'main_screen.dart';
 import 'onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +20,7 @@ class AppInitializerScreen extends StatefulWidget {
 }
 
 class _AppInitializerScreenState extends State<AppInitializerScreen> {
-  // Zustands-Variablen für die UI
+  // UI state displayed while initialization is running.
   String _currentTask = "Starte App...";
   String _currentDetail = "Initialisierung...";
   double _progress = 0.0;
@@ -29,15 +29,14 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
   @override
   void initState() {
     super.initState();
-    // Startet die Initialisierung direkt nach dem ersten Frame
+    // Start initialization right after the first frame is rendered.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initialize();
     });
   }
 
   Future<void> _initialize() async {
-    // 1. Datenbank-Updates mit Progress-Callback
-    // Wir nutzen hier den neuen Callback, um die UI zu aktualisieren.
+    // 1) Run basis-data update checks and stream progress to the UI.
     await BasisDataManager.instance.checkForBasisDataUpdate(
       force: false,
       onProgress: (task, detail, progress) {
@@ -50,7 +49,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
       },
     );
 
-    // Kurzes Feedback vor dem Abschluss
+    // Show completion feedback before navigation.
     if (mounted) {
       setState(() {
         _currentTask = "Abschluss";
@@ -59,20 +58,20 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
       });
     }
 
-    // 2. Backup Check
+    // 2) Trigger due auto-backup checks.
     try {
       await BackupManager.instance.runAutoBackupIfDue();
     } catch (e) {
-      debugPrint("Fehler beim Auto-Backup Start: $e");
+      debugPrint("Auto-backup startup failed: $e");
     }
 
-    // 3. Onboarding Status prüfen
+    // 3) Decide target route based on onboarding state.
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') == true;
 
     if (!mounted) return;
 
-    // Navigation
+    // Navigate to the next screen.
     setState(() => _isDone = true);
 
     Navigator.of(context).pushReplacement(
@@ -89,7 +88,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Falls wir fertig sind, leeren Container zeigen bis Navigation greift
+    // If initialization is done, render an empty container until navigation completes.
     if (_isDone) {
       return Container(color: Theme.of(context).scaffoldBackgroundColor);
     }
@@ -105,7 +104,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Logo oder Icon (optional)
+            // Icon shown during startup.
             Icon(
               Icons.system_update_alt_rounded,
               size: 64,
@@ -113,7 +112,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
             ),
             const SizedBox(height: 40),
 
-            // Haupt-Text (Normal groß)
+            // Main status text.
             Text(
               _currentTask,
               textAlign: TextAlign.center,
@@ -123,13 +122,13 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Fortschrittsbalken
+            // Progress bar.
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: _progress > 0
                     ? _progress
-                    : null, // null = Indeterminate wenn 0
+                    : null, // null renders an indeterminate spinner style.
                 minHeight: 8,
                 backgroundColor: isDark ? Colors.white10 : Colors.grey.shade200,
                 color: theme.colorScheme.primary,
@@ -137,7 +136,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Detail-Text (Klein und grau)
+            // Secondary detail text.
             Text(
               _currentDetail,
               textAlign: TextAlign.center,
