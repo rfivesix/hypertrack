@@ -625,7 +625,7 @@
   "settingsVisualStyleLiquid": "Flüssig (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Runde, schwebende UI-Elemente",
   "settingsVisualStyleNative": "Nativ",
-  "settingsVisualStyleNativeDesc": "Verwendet adaptive_platform_ui (iOS nativ; Android Material-adaptiv). Fällt auf Standard (Glas) zurück, wenn die Plattform nicht unterstützt wird.",
+  "settingsVisualStyleNativeDesc": "Der native Stil ist aktuell deaktiviert und wird auf Standard (Glas) abgebildet.",
   "searchBaseFoodHint": "Suche Grundnahrungsmittel",
   "searchNoHits": "Keine Treffer.",
   "onbSubtitleWelcome": "Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.",

@@ -1462,7 +1462,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsVisualStyleNativeDesc =>
-      'Verwendet adaptive_platform_ui (iOS nativ; Android Material-adaptiv). Fällt auf Standard (Glas) zurück, wenn die Plattform nicht unterstützt wird.';
+      'Der native Stil ist aktuell deaktiviert und wird auf Standard (Glas) abgebildet.';
 
   @override
   String get searchBaseFoodHint => 'Suche Grundnahrungsmittel';

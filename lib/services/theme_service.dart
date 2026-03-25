@@ -45,12 +45,12 @@ class ThemeService extends ChangeNotifier {
 
   /// Sets the visual style and persists it to storage.
   Future<void> setVisualStyle(int style) async {
-    if (style == 2) style = 0;
-    if (style == _visualStyle) return;
-    _visualStyle = style;
+    final normalizedStyle = style == 2 ? 0 : style;
+    if (normalizedStyle == _visualStyle) return;
+    _visualStyle = normalizedStyle;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_styleKey, style);
+    await prefs.setInt(_styleKey, normalizedStyle);
   }
 
   /// Sets the theme mode and persists it to storage.
