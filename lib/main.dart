@@ -1,12 +1,11 @@
 // lib/main.dart
-// VOLLSTÄNDIGER CODE (MIT APP INITIALIZER SCREEN)
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'data/database_helper.dart';
 import 'generated/app_localizations.dart';
-// FIX: Importiere den ausgelagerten Initializer-Screen
+// App startup routing is delegated to the dedicated initializer screen.
 import 'screens/app_initializer_screen.dart';
 import 'services/profile_service.dart';
 import 'services/local_notification_service.dart';
@@ -22,19 +21,19 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Das muss passieren, bevor irgendwas anderes lädt.
+  // Ensure baseline data and local notifications are ready before app startup.
   await DatabaseHelper.instance.ensureStandardSupplements();
   await LocalNotificationService.instance.initialize();
 
-  // 1. Erstelle die Manager-Instanz
+  // Create and warm up the workout session manager before injecting it.
   final workoutSessionManager = WorkoutSessionManager();
 
-  // 2. Rufe die neue, gekapselte Wiederherstellungsmethode auf
+  // Restore an unfinished workout session (if any) as part of cold start.
   await workoutSessionManager.tryRestoreSession();
 
   final themeService = ThemeService(); // Create an instance
 
-  // 3. Starte die App
+  // Start the app with all required providers.
   runApp(
     MultiProvider(
       providers: [
@@ -48,13 +47,13 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: themeService,
-        ), // Provide the ThemeService
+        ),
       ],
       child: const MyApp(),
     ),
   );
 
-  // FIX: Keine Hintergrund-Updates mehr hier! Das übernimmt jetzt der AppInitializerScreen.
+  // Background update checks are handled by AppInitializerScreen.
 }
 
 /// The entry point of the Hypertrack application.

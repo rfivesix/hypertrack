@@ -53,7 +53,7 @@ Hardcoded color tokens for light and dark modes:
 
 ## Widget Catalog
 
-The application provides **26 reusable widgets** in `lib/widgets/`. Here is a categorized reference:
+The application provides **29 reusable widgets** in `lib/widgets/`. Here is a categorized reference:
 
 ### Layout & Containers
 

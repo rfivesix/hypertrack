@@ -238,8 +238,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Future<void> _createMealAndOpenEditor(AppLocalizations l10n) async {
-    // Solider Default-Name (nicht leer wegen NOT NULL in DB)
-    final defaultName = l10n.mealTypeLabel; // z.B. "Mahlzeit" / "Meal"
+    // Keep a non-empty default name to satisfy the NOT NULL DB constraint.
+    final defaultName = l10n.mealTypeLabel; // e.g. "Meal"
     final newMealId = await DatabaseHelper.instance.insertMeal(
       name: defaultName,
       notes: '',
@@ -253,21 +253,21 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       ),
     );
 
-    // Nach Rückkehr Liste aktualisieren
+    // Refresh list state after returning from the editor.
     await _loadMeals();
 
-    // (Optionaler Feinschliff)
-    // Wenn Nutzer abbricht und nichts geändert hat: Platzhalter wieder entfernen.
+    // Optional cleanup:
+    // If the user exits without changes, remove the placeholder meal.
     try {
       final items = await DatabaseHelper.instance.getMealItems(newMealId);
-      // Falls noch mit Defaultnamen und ohne Zutaten → löschen
+      // Delete if it still has the default name and no ingredients.
       final created = _meals.firstWhere((m) => m['id'] == newMealId);
       if ((created['name'] as String) == defaultName && items.isEmpty) {
         await DatabaseHelper.instance.deleteMeal(newMealId);
         await _loadMeals();
       }
     } catch (_) {
-      /* egal, Cleanup ist optional */
+      /* ignore: cleanup is best-effort */
     }
   }
 
@@ -276,11 +276,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     final l10n = AppLocalizations.of(context)!;
     final isLightMode = Theme.of(context).brightness == Brightness.light;
 
-    // NEU: Top Padding berechnen, da wir extendBodyBehindAppBar nutzen
+    // Compute top padding because the body extends behind the app bar.
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    // FAB Logik (unverändert lassen, nur hier der Vollständigkeit halber angedeutet)
+    // Floating action button behavior by active tab.
     VoidCallback? fabOnPressed;
     String fabLabel;
     if (_suspendFab) {
@@ -295,15 +295,17 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
 
     return Scaffold(
-      extendBodyBehindAppBar: true, // WICHTIG: Damit das Glas der AppBar wirkt
+      extendBodyBehindAppBar: true, // Required for the glass app bar effect.
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
-      // WICHTIG: GlobalAppBar statt normaler AppBar
-      appBar: GlobalAppBar(title: l10n.nutritionExplorerTitle),
+      // Use GlobalAppBar for consistent top-level navigation styling.
+      appBar: GlobalAppBar(
+        title: l10n.nutritionExplorerTitle,
+      ),
 
       body: Column(
         children: [
-          // WICHTIG: Platzhalter oben, damit der Inhalt nicht hinter der AppBar verschwindet
+          // Spacer prevents content from rendering below the transparent app bar.
           SizedBox(height: topPadding),
 
           Padding(
