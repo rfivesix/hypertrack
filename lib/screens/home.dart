@@ -118,8 +118,8 @@ class HomeState extends State<Home> {
             (foodItem.protein / 100 * entry.quantityInGrams).round();
         newTodaysNutrition.carbs +=
             (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        newTodaysNutrition.fat +=
-            (foodItem.fat / 100 * entry.quantityInGrams).round();
+        newTodaysNutrition.fat += (foodItem.fat / 100 * entry.quantityInGrams)
+            .round();
       }
     }
 
@@ -171,8 +171,9 @@ class HomeState extends State<Home> {
     }
 
     // NEU: Lade Supplement-Daten
-    final supplementsForDate =
-        await dbHelper.getSupplementsForDate(DateTime.now());
+    final supplementsForDate = await dbHelper.getSupplementsForDate(
+      DateTime.now(),
+    );
     final allSupplements = await dbHelper.getAllSupplements();
     final todaysSupplementLogs = await dbHelper.getSupplementLogsForDate(
       DateTime.now(),
@@ -195,19 +196,23 @@ class HomeState extends State<Home> {
     for (final s in supplementsForDate) {
       final hasLog = todaysDoses.containsKey(s.id);
       if (s.isTracked || hasLog) {
-        trackedSupps.add(TrackedSupplement(
-          supplement: s,
-          totalDosedToday: todaysDoses[s.id] ?? 0.0,
-        ));
+        trackedSupps.add(
+          TrackedSupplement(
+            supplement: s,
+            totalDosedToday: todaysDoses[s.id] ?? 0.0,
+          ),
+        );
       }
     }
     for (final id in todaysDoses.keys) {
       if (!trackedSupps.any((ts) => ts.supplement.id == id)) {
         if (byId.containsKey(id)) {
-          trackedSupps.add(TrackedSupplement(
-            supplement: byId[id]!,
-            totalDosedToday: todaysDoses[id]!,
-          ));
+          trackedSupps.add(
+            TrackedSupplement(
+              supplement: byId[id]!,
+              totalDosedToday: todaysDoses[id]!,
+            ),
+          );
         }
       }
     }
@@ -237,8 +242,8 @@ class HomeState extends State<Home> {
         break;
       case 'All':
         // Für "Alle" holen wir das früheste Datum aus der Datenbank
-        final earliest =
-            await DatabaseHelper.instance.getEarliestMeasurementDate();
+        final earliest = await DatabaseHelper.instance
+            .getEarliestMeasurementDate();
         start = earliest ?? now;
         break;
       case '30D':
@@ -446,8 +451,8 @@ class HomeState extends State<Home> {
                 Text(
                   l10n.weightHistoryTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Expanded(
                   child: Align(

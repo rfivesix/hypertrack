@@ -152,8 +152,9 @@ class _LogSupplementDoseBodyState extends State<LogSupplementDoseBody> {
                 onPressed: () {
                   final st = _key.currentState;
                   if (st == null) return;
-                  final dose =
-                      double.tryParse(st.doseText.replaceAll(',', '.'));
+                  final dose = double.tryParse(
+                    st.doseText.replaceAll(',', '.'),
+                  );
                   if (dose == null || dose <= 0) return;
                   widget.onSubmit(dose, st.selectedDateTime);
                 },

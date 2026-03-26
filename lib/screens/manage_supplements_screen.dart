@@ -53,12 +53,13 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
     if (changed == true) _load();
   }
 
-// In lib/screens/manage_supplements_screen.dart
+  // In lib/screens/manage_supplements_screen.dart
 
   Future<void> _delete(Supplement s) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final ok = await showGlassBottomMenu<bool>(
+      final ok =
+          await showGlassBottomMenu<bool>(
             context: context,
             title: l10n.deleteConfirmTitle,
             contentBuilder: (ctx, close) {
@@ -88,7 +89,8 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
                       Expanded(
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                              backgroundColor: Colors.red),
+                            backgroundColor: Colors.red,
+                          ),
                           onPressed: () {
                             close();
                             Navigator.of(ctx).pop(true);
@@ -109,12 +111,13 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
       await DatabaseHelper.instance.deleteSupplement(s.id!);
       if (!mounted) return;
       _load();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.deleted)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.deleted)));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.operationNotAllowed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.operationNotAllowed)));
     }
   }
 
@@ -177,9 +180,7 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(
-        title: l10n.manageSupplementsTitle,
-      ),
+      appBar: GlobalAppBar(title: l10n.manageSupplementsTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

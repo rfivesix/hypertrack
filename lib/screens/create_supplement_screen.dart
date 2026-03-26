@@ -168,8 +168,9 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
                       decoration: InputDecoration(
                         labelText: l10n.unitLabel,
                         isDense: true, // optional, macht's kompakter
-                        helperText:
-                            isBuiltinCaffeine ? l10n.caffeineUnitLocked : null,
+                        helperText: isBuiltinCaffeine
+                            ? l10n.caffeineUnitLocked
+                            : null,
                       ),
                       validator: (val) {
                         if (val == null || val.isEmpty) {

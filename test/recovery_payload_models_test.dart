@@ -7,12 +7,7 @@ void main() {
       final payload = RecoveryAnalyticsPayload.fromMap({
         'hasData': true,
         'overallState': 'mixedRecovery',
-        'totals': {
-          'recovering': 2,
-          'ready': 3,
-          'fresh': 1,
-          'tracked': 6,
-        },
+        'totals': {'recovering': 2, 'ready': 3, 'fresh': 1, 'tracked': 6},
         'muscles': [
           {
             'muscleGroup': 'Chest',

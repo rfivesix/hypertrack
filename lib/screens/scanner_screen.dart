@@ -48,10 +48,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
         centerTitle: false,
         title: Text(
           l10n.scann_barcode_capslock,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
       body: Stack(

@@ -33,7 +33,8 @@ class Profiles extends Table with HybridId, MetaColumns {
   TextColumn get username => text().nullable()();
   BoolColumn get isCoach => boolean().withDefault(const Constant(false))();
   TextColumn get visibility => text().withDefault(
-      const Constant('private'))(); // 'public', 'private', 'friends'
+    const Constant('private'),
+  )(); // 'public', 'private', 'friends'
   DateTimeColumn get birthday => dateTime().nullable()();
   IntColumn get height => integer().nullable()(); // in cm
   TextColumn get gender => text().nullable()(); // 'male', 'female', 'diverse'
@@ -98,7 +99,8 @@ class RoutineSetTemplates extends Table with HybridId, MetaColumns {
   TextColumn get routineExerciseId =>
       text().references(RoutineExercises, #id, onDelete: KeyAction.cascade)();
   TextColumn get setType => text().withDefault(
-      const Constant('normal'))(); // normal, warmup, dropset, failure
+    const Constant('normal'),
+  )(); // normal, warmup, dropset, failure
   TextColumn get targetReps =>
       text().nullable()(); // String, da z.B. "8-12" möglich
   RealColumn get targetWeight => real().nullable()();
@@ -230,9 +232,11 @@ class SupplementLogs extends Table with HybridId, MetaColumns {
   RealColumn get amount => real()(); // Tatsächlich genommene Menge
 
   // Verknüpfungen (Aus altem Code übernommen für Auto-Logik bei Kaffee etc.)
-  TextColumn get sourceNutritionLogId => text()
-      .nullable()
-      .references(NutritionLogs, #id, onDelete: KeyAction.setNull)();
+  TextColumn get sourceNutritionLogId => text().nullable().references(
+    NutritionLogs,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
   // Referenz auf FluidLogs unten definiert
 }
 
@@ -247,9 +251,11 @@ class FluidLogs extends Table with HybridId, MetaColumns {
   RealColumn get sugarPer100ml => real().nullable()();
   RealColumn get caffeinePer100ml => real().nullable()();
   // Verknüpfung zu NutritionLogs falls es ein geloggtes Getränk war
-  TextColumn get linkedNutritionLogId => text()
-      .nullable()
-      .references(NutritionLogs, #id, onDelete: KeyAction.cascade)();
+  TextColumn get linkedNutritionLogId => text().nullable().references(
+    NutritionLogs,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 }
 
 // 15. Measurements
@@ -341,80 +347,80 @@ class SupplementSettingsHistory extends Table with HybridId, MetaColumns {
   // createdAt dient als "gültig ab" Zeitstempel
 }
 
-@DriftDatabase(tables: [
-  Profiles,
-  AppSettings,
-  Exercises,
-  Routines,
-  RoutineExercises,
-  RoutineSetTemplates,
-  WorkoutLogs,
-  SetLogs,
-  CardioActivities,
-  CardioSamples,
-  Products,
-  NutritionLogs,
-  Supplements,
-  SupplementLogs,
-  FluidLogs, // Hinzugefügt
-  Measurements,
-  Posts,
-  SocialInteractions,
-  Meals,
-  MealItems,
-  FoodCategories,
-  Favorites,
-  DailyGoalsHistory,
-  SupplementSettingsHistory
-])
-
+@DriftDatabase(
+  tables: [
+    Profiles,
+    AppSettings,
+    Exercises,
+    Routines,
+    RoutineExercises,
+    RoutineSetTemplates,
+    WorkoutLogs,
+    SetLogs,
+    CardioActivities,
+    CardioSamples,
+    Products,
+    NutritionLogs,
+    Supplements,
+    SupplementLogs,
+    FluidLogs, // Hinzugefügt
+    Measurements,
+    Posts,
+    SocialInteractions,
+    Meals,
+    MealItems,
+    FoodCategories,
+    Favorites,
+    DailyGoalsHistory,
+    SupplementSettingsHistory,
+  ],
+)
 /// The central Drift database class for the application.
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion =>
-      7; // Version auf 7 erhöhen für SupplementSettingsHistory und isTracked
+  int get schemaVersion => 7; // Version auf 7 erhöhen für SupplementSettingsHistory und isTracked
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (Migrator m) async {
-          await m.createAll();
-        },
-        onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 2) {
-            await m.createTable(favorites);
-            // WICHTIG: Füge die fehlende Spalte hinzu!
-            await m.addColumn(products, products.category);
-          }
-          // Migration V2 -> V3 (Sync-Spalten & RIR)
-          if (from < 3) {
-            // RIR zu SetLogs hinzufügen
-            await m.addColumn(setLogs, setLogs.rir);
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.createTable(favorites);
+        // WICHTIG: Füge die fehlende Spalte hinzu!
+        await m.addColumn(products, products.category);
+      }
+      // Migration V2 -> V3 (Sync-Spalten & RIR)
+      if (from < 3) {
+        // RIR zu SetLogs hinzufügen
+        await m.addColumn(setLogs, setLogs.rir);
 
-            // Favorites Sync-fähig machen (fehlende Spalten adden)
-            // MetaColumns adds: createdAt, updatedAt, deletedAt
-            // Favorites hatte vorher schon barcode und createdAt manuell.
-            // Wir müssen nur updatedAt und deletedAt hinzufügen.
-            await m.addColumn(favorites, favorites.updatedAt);
-            await m.addColumn(favorites, favorites.deletedAt);
-          }
-          if (from < 4) {
-            await m.addColumn(profiles, profiles.birthday);
-          }
-          if (from < 5) {
-            await m.addColumn(profiles, profiles.height);
-            await m.addColumn(profiles, profiles.gender);
-          }
-          if (from < 6) {
-            await m.createTable(dailyGoalsHistory);
-          }
-          if (from < 7) {
-            await m.addColumn(supplements, supplements.isTracked);
-            await m.createTable(supplementSettingsHistory);
-          }
-        },
-      );
+        // Favorites Sync-fähig machen (fehlende Spalten adden)
+        // MetaColumns adds: createdAt, updatedAt, deletedAt
+        // Favorites hatte vorher schon barcode und createdAt manuell.
+        // Wir müssen nur updatedAt und deletedAt hinzufügen.
+        await m.addColumn(favorites, favorites.updatedAt);
+        await m.addColumn(favorites, favorites.deletedAt);
+      }
+      if (from < 4) {
+        await m.addColumn(profiles, profiles.birthday);
+      }
+      if (from < 5) {
+        await m.addColumn(profiles, profiles.height);
+        await m.addColumn(profiles, profiles.gender);
+      }
+      if (from < 6) {
+        await m.createTable(dailyGoalsHistory);
+      }
+      if (from < 7) {
+        await m.addColumn(supplements, supplements.isTracked);
+        await m.createTable(supplementSettingsHistory);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {

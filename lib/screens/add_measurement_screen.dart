@@ -256,10 +256,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                 height: DesignConstants.spacingXL,
               ), // KORREKTUR 3: Abstand angepasst
               // Messwerte-Sektion
-              Text(
-                l10n.drawerMeasurements,
-                style: textTheme.titleMedium,
-              ),
+              Text(l10n.drawerMeasurements, style: textTheme.titleMedium),
               const SizedBox(height: DesignConstants.spacingS),
               ..._measurementTypes.keys.map((key) {
                 return Padding(

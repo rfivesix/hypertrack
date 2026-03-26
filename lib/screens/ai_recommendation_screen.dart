@@ -103,26 +103,40 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
       if (widget.mealType == 'mealtypeBreakfast') {
         // Breakfast: Target 1/3 of daily goals (clamped to remaining)
-        targetMacros['kcal'] =
-            ((dailyKcal / 3.0).round()).clamp(0, targetMacros['kcal']!);
-        targetMacros['protein'] =
-            ((dailyP / 3.0).round()).clamp(0, targetMacros['protein']!);
-        targetMacros['carbs'] =
-            ((dailyC / 3.0).round()).clamp(0, targetMacros['carbs']!);
-        targetMacros['fat'] =
-            ((dailyF / 3.0).round()).clamp(0, targetMacros['fat']!);
+        targetMacros['kcal'] = ((dailyKcal / 3.0).round()).clamp(
+          0,
+          targetMacros['kcal']!,
+        );
+        targetMacros['protein'] = ((dailyP / 3.0).round()).clamp(
+          0,
+          targetMacros['protein']!,
+        );
+        targetMacros['carbs'] = ((dailyC / 3.0).round()).clamp(
+          0,
+          targetMacros['carbs']!,
+        );
+        targetMacros['fat'] = ((dailyF / 3.0).round()).clamp(
+          0,
+          targetMacros['fat']!,
+        );
       } else if (widget.mealType == 'mealtypeLunch') {
         // Lunch: Fill up until 1/3 of daily goals is left for dinner
         // E.g., target = remaining - (daily / 3)
         targetMacros['kcal'] =
-            (targetMacros['kcal']! - (dailyKcal / 3.0).round())
-                .clamp(0, targetMacros['kcal']!);
+            (targetMacros['kcal']! - (dailyKcal / 3.0).round()).clamp(
+              0,
+              targetMacros['kcal']!,
+            );
         targetMacros['protein'] =
-            (targetMacros['protein']! - (dailyP / 3.0).round())
-                .clamp(0, targetMacros['protein']!);
+            (targetMacros['protein']! - (dailyP / 3.0).round()).clamp(
+              0,
+              targetMacros['protein']!,
+            );
         targetMacros['carbs'] =
-            (targetMacros['carbs']! - (dailyC / 3.0).round())
-                .clamp(0, targetMacros['carbs']!);
+            (targetMacros['carbs']! - (dailyC / 3.0).round()).clamp(
+              0,
+              targetMacros['carbs']!,
+            );
         targetMacros['fat'] = (targetMacros['fat']! - (dailyF / 3.0).round())
             .clamp(0, targetMacros['fat']!);
       } else if (widget.mealType == 'mealtypeDinner') {
@@ -130,14 +144,22 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         // Already assigned above. (targetMacros == macros)
       } else if (widget.mealType == 'mealtypeSnack') {
         // Snack: Target roughly 10% of daily goals (clamped to remaining)
-        targetMacros['kcal'] =
-            ((dailyKcal * 0.1).round()).clamp(0, targetMacros['kcal']!);
-        targetMacros['protein'] =
-            ((dailyP * 0.1).round()).clamp(0, targetMacros['protein']!);
-        targetMacros['carbs'] =
-            ((dailyC * 0.1).round()).clamp(0, targetMacros['carbs']!);
-        targetMacros['fat'] =
-            ((dailyF * 0.1).round()).clamp(0, targetMacros['fat']!);
+        targetMacros['kcal'] = ((dailyKcal * 0.1).round()).clamp(
+          0,
+          targetMacros['kcal']!,
+        );
+        targetMacros['protein'] = ((dailyP * 0.1).round()).clamp(
+          0,
+          targetMacros['protein']!,
+        );
+        targetMacros['carbs'] = ((dailyC * 0.1).round()).clamp(
+          0,
+          targetMacros['carbs']!,
+        );
+        targetMacros['fat'] = ((dailyF * 0.1).round()).clamp(
+          0,
+          targetMacros['fat']!,
+        );
       }
 
       // If user literally has 0 calories left, provide a tiny hardcoded floor
@@ -169,12 +191,15 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       // 4. Fuzzy-match ingredients
       final matched = <_MatchedIngredient>[];
       for (final ingredient in result.ingredients) {
-        final matches = await ProductDatabaseHelper.instance
-            .fuzzyMatchForAi(ingredient.name);
-        matched.add(_MatchedIngredient(
-          ingredient: ingredient,
-          matchedFood: matches.isNotEmpty ? matches.first : null,
-        ));
+        final matches = await ProductDatabaseHelper.instance.fuzzyMatchForAi(
+          ingredient.name,
+        );
+        matched.add(
+          _MatchedIngredient(
+            ingredient: ingredient,
+            matchedFood: matches.isNotEmpty ? matches.first : null,
+          ),
+        );
       }
 
       if (!mounted) return;
@@ -320,20 +345,30 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       spacing: 8,
                       runSpacing: 6,
                       children: [
-                        _buildFilterChip(l10n.aiRecommendVegan, 'Vegan',
-                            isSelected: _selectedDietary == 'Vegan',
-                            onSelected: (v) => setState(
-                                () => _selectedDietary = v ? 'Vegan' : null)),
                         _buildFilterChip(
-                            l10n.aiRecommendVegetarian, 'Vegetarian',
-                            isSelected: _selectedDietary == 'Vegetarian',
-                            onSelected: (v) => setState(() =>
-                                _selectedDietary = v ? 'Vegetarian' : null)),
+                          l10n.aiRecommendVegan,
+                          'Vegan',
+                          isSelected: _selectedDietary == 'Vegan',
+                          onSelected: (v) => setState(
+                            () => _selectedDietary = v ? 'Vegan' : null,
+                          ),
+                        ),
                         _buildFilterChip(
-                            l10n.aiRecommendPescetarian, 'Pescetarian',
-                            isSelected: _selectedDietary == 'Pescetarian',
-                            onSelected: (v) => setState(() =>
-                                _selectedDietary = v ? 'Pescetarian' : null)),
+                          l10n.aiRecommendVegetarian,
+                          'Vegetarian',
+                          isSelected: _selectedDietary == 'Vegetarian',
+                          onSelected: (v) => setState(
+                            () => _selectedDietary = v ? 'Vegetarian' : null,
+                          ),
+                        ),
+                        _buildFilterChip(
+                          l10n.aiRecommendPescetarian,
+                          'Pescetarian',
+                          isSelected: _selectedDietary == 'Pescetarian',
+                          onSelected: (v) => setState(
+                            () => _selectedDietary = v ? 'Pescetarian' : null,
+                          ),
+                        ),
                       ],
                     ),
 
@@ -351,21 +386,32 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       spacing: 8,
                       runSpacing: 6,
                       children: [
-                        _buildFilterChip(l10n.aiRecommendOnTheGo, 'On the go',
-                            isSelected: _selectedSituation == 'On the go',
-                            onSelected: (v) => setState(() =>
-                                _selectedSituation = v ? 'On the go' : null)),
                         _buildFilterChip(
-                            l10n.aiRecommendNoKitchen, 'No cooking',
-                            isSelected: _selectedSituation == 'No cooking',
-                            onSelected: (v) => setState(() =>
-                                _selectedSituation = v ? 'No cooking' : null)),
+                          l10n.aiRecommendOnTheGo,
+                          'On the go',
+                          isSelected: _selectedSituation == 'On the go',
+                          onSelected: (v) => setState(
+                            () => _selectedSituation = v ? 'On the go' : null,
+                          ),
+                        ),
                         _buildFilterChip(
-                            l10n.aiRecommendWithCooking, 'Cooking allowed',
-                            isSelected: _selectedSituation == 'Cooking allowed',
-                            onSelected: (v) => setState(() =>
-                                _selectedSituation =
-                                    v ? 'Cooking allowed' : null)),
+                          l10n.aiRecommendNoKitchen,
+                          'No cooking',
+                          isSelected: _selectedSituation == 'No cooking',
+                          onSelected: (v) => setState(
+                            () => _selectedSituation = v ? 'No cooking' : null,
+                          ),
+                        ),
+                        _buildFilterChip(
+                          l10n.aiRecommendWithCooking,
+                          'Cooking allowed',
+                          isSelected: _selectedSituation == 'Cooking allowed',
+                          onSelected: (v) => setState(
+                            () => _selectedSituation = v
+                                ? 'Cooking allowed'
+                                : null,
+                          ),
+                        ),
                       ],
                     ),
 
@@ -387,7 +433,9 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       decoration: InputDecoration(
                         hintText: l10n.aiRecommendCustomRequestHint,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
@@ -435,8 +483,11 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline,
-                                color: theme.colorScheme.error, size: 20),
+                            Icon(
+                              Icons.error_outline,
+                              color: theme.colorScheme.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -483,8 +534,11 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.restaurant_rounded,
-              size: 16, color: theme.colorScheme.onPrimaryContainer),
+          Icon(
+            Icons.restaurant_rounded,
+            size: 16,
+            color: theme.colorScheme.onPrimaryContainer,
+          ),
           const SizedBox(width: 6),
           Text(
             _getMealLabel(l10n, widget.mealType),
@@ -522,19 +576,29 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   Widget _macroColumn(String value, String label, ThemeData theme) {
     return Column(
       children: [
-        Text(value,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          value,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(label,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildFilterChip(String label, String value,
-      {required bool isSelected, required ValueChanged<bool> onSelected}) {
+  Widget _buildFilterChip(
+    String label,
+    String value, {
+    required bool isSelected,
+    required ValueChanged<bool> onSelected,
+  }) {
     final theme = Theme.of(context);
     return FilterChip(
       label: Text(
@@ -604,8 +668,9 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                   Expanded(
                     child: Text(
                       rec.mealName,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -683,11 +748,17 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                   ),
                 ),
                 if (food != null)
-                  Icon(Icons.check_circle_rounded,
-                      size: 18, color: Colors.green[600])
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: Colors.green[600],
+                  )
                 else
-                  Icon(Icons.warning_amber_rounded,
-                      size: 18, color: theme.colorScheme.error),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 18,
+                    color: theme.colorScheme.error,
+                  ),
               ],
             ),
           );
@@ -715,9 +786,11 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(
-                    onPressed: (_isSaving ||
-                            _matchedIngredients
-                                .every((m) => m.matchedFood == null))
+                    onPressed:
+                        (_isSaving ||
+                            _matchedIngredients.every(
+                              (m) => m.matchedFood == null,
+                            ))
                         ? null
                         : _saveToDiary,
                     icon: _isSaving
@@ -725,7 +798,9 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(Icons.save_rounded, size: 18),
                     label: Text(l10n.aiRecommendSaveToDiary),
@@ -783,13 +858,16 @@ class _AiGradientButton extends StatelessWidget {
             width: 22,
             height: 22,
             child: CircularProgressIndicator(
-                strokeWidth: 2.5, color: Colors.white),
+              strokeWidth: 2.5,
+              color: Colors.white,
+            ),
           )
         else
-          Icon(Icons.auto_awesome_rounded,
-              size: 24,
-              color:
-                  enabled ? Colors.white : theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 24,
+            color: enabled ? Colors.white : theme.colorScheme.onSurfaceVariant,
+          ),
         const SizedBox(width: 10),
         Text(
           label,
@@ -868,8 +946,5 @@ class _MatchedIngredient {
   final AiRecommendedIngredient ingredient;
   FoodItem? matchedFood;
 
-  _MatchedIngredient({
-    required this.ingredient,
-    this.matchedFood,
-  });
+  _MatchedIngredient({required this.ingredient, this.matchedFood});
 }

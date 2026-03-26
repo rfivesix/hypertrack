@@ -87,17 +87,18 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
   Future<void> _createNewRoutine() async {
     // Navigiert zum Editor für eine neue Routine und lädt danach die Daten neu.
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const EditRoutineScreen()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
     _loadData();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final double appBarHeight =
-        MediaQuery.of(context).padding.top; // + kToolbarHeight;
+    final double appBarHeight = MediaQuery.of(
+      context,
+    ).padding.top; // + kToolbarHeight;
 
     // 2. Get your base padding from your design constants
     const EdgeInsets basePadding =
@@ -217,8 +218,11 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_circle_outline,
-                      size: 40, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.add_circle_outline,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(height: 8),
                   Text(l10n.addRoutineButton, textAlign: TextAlign.center),
                 ],
@@ -332,9 +336,9 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -367,8 +371,8 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                   Text(
                     routine.name,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

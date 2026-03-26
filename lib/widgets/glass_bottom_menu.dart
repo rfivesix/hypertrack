@@ -28,8 +28,10 @@ class GlassMenuAction {
     required this.label,
     this.subtitle,
     required this.onTap,
-  }) : assert(icon != null || customIcon != null,
-            'Icon or customIcon must be provided');
+  }) : assert(
+         icon != null || customIcon != null,
+         'Icon or customIcon must be provided',
+       );
 }
 
 // ... (showGlassBottomMenu und _GlassBottomMenuSheet bleiben unverändert) ...
@@ -56,8 +58,8 @@ Future<T?> showGlassBottomMenu<T>({
 
   final Color barrierColor = isDark
       ? (!isLiquid
-          ? Colors.grey.withOpacity(0.187)
-          : Colors.black.withOpacity(0.5))
+            ? Colors.grey.withOpacity(0.187)
+            : Colors.black.withOpacity(0.5))
       : Colors.black.withOpacity(0.3);
 
   return showModalBottomSheet<T>(
@@ -108,7 +110,9 @@ class _GlassBottomMenuSheet extends StatelessWidget {
         : Colors.white.withOpacity(0.22));
 
     final Color effectiveGlass = Color.alphaBlend(
-        neutralTint, theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.5));
+      neutralTint,
+      theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.5),
+    );
 
     const double r = 24;
     const EdgeInsets outerMargin = EdgeInsets.fromLTRB(16, 0, 16, 16);
@@ -325,14 +329,17 @@ class _GlassTile extends StatelessWidget {
     final themeService = context.watch<ThemeService>();
 
     // Hintergrund-Tint etwas anpassen
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.05);
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withOpacity(0.05);
 
     final Color effectiveGlass = Color.alphaBlend(
-        neutralTint, Colors.white.withOpacity(isDark ? 0.10 : 0.12));
+      neutralTint,
+      Colors.white.withOpacity(isDark ? 0.10 : 0.12),
+    );
 
-    final Widget leadingWidget =
-        customIcon != null ? customIcon! : Icon(icon, size: 22);
+    final Widget leadingWidget = customIcon != null
+        ? customIcon!
+        : Icon(icon, size: 22);
 
     final tileContent = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -436,10 +443,7 @@ class _GlassTile extends StatelessWidget {
           : Colors.white.withOpacity(0.08),
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: tileContent,
-      ),
+      child: InkWell(onTap: onTap, child: tileContent),
     );
   }
 }

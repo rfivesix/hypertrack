@@ -112,7 +112,8 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
 
     // Punkt zur Anzeige (entweder getouched oder letzter)
     final int lastIdx = _dataPoints.length - 1;
-    final int shownIdx = (_touchedIndex != null &&
+    final int shownIdx =
+        (_touchedIndex != null &&
             _touchedIndex! >= 0 &&
             _touchedIndex! < _dataPoints.length)
         ? _touchedIndex!
@@ -163,17 +164,17 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
               Text(
                 displayValue,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 displayDate,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ],
           ),
@@ -184,18 +185,18 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
               LineChartData(
                 minX: 0,
                 maxX: lastX == 0 ? 1 : lastX, // bei nur einem Punkt min Breite
-                clipData: const FlClipData
-                    .none(), // vermeidet Clipping am rechten Rand
+                clipData:
+                    const FlClipData.none(), // vermeidet Clipping am rechten Rand
                 lineTouchData: LineTouchData(
                   handleBuiltInTouches: true,
                   touchTooltipData: LineTouchTooltipData(
                     //tooltipBgColor: Colors.transparent,
                     getTooltipItems: (touchedSpots) =>
                         List<LineTooltipItem?>.filled(
-                      touchedSpots.length,
-                      null,
-                      growable: false,
-                    ),
+                          touchedSpots.length,
+                          null,
+                          growable: false,
+                        ),
                   ),
                   touchCallback: _handleTouchCallback,
                 ),
@@ -284,13 +285,13 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                       },
                       getDotPainter: (spot, percent, bar, index) =>
                           FlDotCirclePainter(
-                        radius: 6,
-                        color: Theme.of(context).colorScheme.primary,
-                        strokeWidth: 2,
-                        strokeColor: Theme.of(
-                          context,
-                        ).scaffoldBackgroundColor,
-                      ),
+                            radius: 6,
+                            color: Theme.of(context).colorScheme.primary,
+                            strokeWidth: 2,
+                            strokeColor: Theme.of(
+                              context,
+                            ).scaffoldBackgroundColor,
+                          ),
                     ),
                     belowBarData: BarAreaData(
                       show: true,

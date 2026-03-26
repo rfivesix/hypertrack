@@ -69,8 +69,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     DateTime? selectedDate = _userProfile?.birthday;
     String? selectedGender = _userProfile?.gender ?? 'male';
     // Fallback für Height, falls wir das auch hier editieren wollen (optional)
-    final heightCtrl =
-        TextEditingController(text: _userProfile?.height?.toString() ?? '');
+    final heightCtrl = TextEditingController(
+      text: _userProfile?.height?.toString() ?? '',
+    );
 
     await showGlassBottomMenu(
       context: context,
@@ -80,8 +81,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context, setModalState) {
             final dateText = selectedDate == null
                 ? 'Geburtsdatum wählen'
-                : DateFormat.yMMMd(Localizations.localeOf(context).toString())
-                    .format(selectedDate!);
+                : DateFormat.yMMMd(
+                    Localizations.localeOf(context).toString(),
+                  ).format(selectedDate!);
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -93,7 +95,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     labelText: l10n.onboardingNameLabel,
                     prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -119,10 +122,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             labelText: l10n.onboardingDobLabel,
                             prefixIcon: const Icon(Icons.cake_outlined),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          child: Text(dateText,
-                              style: const TextStyle(fontSize: 14)),
+                          child: Text(
+                            dateText,
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
                       ),
                     ),
@@ -133,18 +139,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: InputDecoration(
                           labelText: l10n.onboardingGenderLabel,
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 16),
+                            horizontal: 10,
+                            vertical: 16,
+                          ),
                         ),
                         items: [
                           DropdownMenuItem(
-                              value: 'male', child: Text(l10n.genderMale)),
+                            value: 'male',
+                            child: Text(l10n.genderMale),
+                          ),
                           DropdownMenuItem(
-                              value: 'female', child: Text(l10n.genderFemale)),
+                            value: 'female',
+                            child: Text(l10n.genderFemale),
+                          ),
                           DropdownMenuItem(
-                              value: 'diverse',
-                              child: Text(l10n.genderDiverse)),
+                            value: 'diverse',
+                            child: Text(l10n.genderDiverse),
+                          ),
                         ],
                         onChanged: (val) =>
                             setModalState(() => selectedGender = val),
@@ -174,8 +188,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           await DatabaseHelper.instance.saveUserProfile(
                             name: nameCtrl.text.trim(),
                             birthday: selectedDate,
-                            height: int.tryParse(heightCtrl
-                                .text), // optional, sonst null lassen wenn nicht im UI
+                            height: int.tryParse(
+                              heightCtrl.text,
+                            ), // optional, sonst null lassen wenn nicht im UI
                             gender: selectedGender,
                           );
                           close();
@@ -220,14 +235,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       genderString = l10n.genderDiverse;
 
     // Kombinierter String: "25 Jahre • Männlich"
-    final String subline =
-        [ageString, genderString].where((s) => s.isNotEmpty).join(' • ');
+    final String subline = [
+      ageString,
+      genderString,
+    ].where((s) => s.isNotEmpty).join(' • ');
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(
-        title: l10n.profileScreenTitle,
-      ),
+      appBar: GlobalAppBar(title: l10n.profileScreenTitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -264,9 +279,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       .withOpacity(0.1),
                                   backgroundImage:
                                       profileService.profileImagePath != null
-                                          ? FileImage(File(
-                                              profileService.profileImagePath!))
-                                          : null,
+                                      ? FileImage(
+                                          File(
+                                            profileService.profileImagePath!,
+                                          ),
+                                        )
+                                      : null,
                                   child: profileService.profileImagePath == null
                                       ? Icon(
                                           Icons.person,
@@ -285,7 +303,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       color: theme.colorScheme.primary,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                          color: theme.cardColor, width: 2),
+                                        color: theme.cardColor,
+                                        width: 2,
+                                      ),
                                     ),
                                     child: const Icon(
                                       Icons.camera_alt,
@@ -306,10 +326,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Text(
                                   displayName,
-                                  style:
-                                      theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -325,8 +343,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Text(
                                     "Tippen zum Einrichten",
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.primary,
-                                        fontStyle: FontStyle.italic),
+                                      color: theme.colorScheme.primary,
+                                      fontStyle: FontStyle.italic,
+                                    ),
                                   ),
                               ],
                             ),
@@ -365,7 +384,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                          builder: (context) => const SettingsScreen()),
+                        builder: (context) => const SettingsScreen(),
+                      ),
                     );
                   },
                 ),
@@ -377,7 +397,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                          builder: (context) => const GoalsScreen()),
+                        builder: (context) => const GoalsScreen(),
+                      ),
                     );
                   },
                 ),

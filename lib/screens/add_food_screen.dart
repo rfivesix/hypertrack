@@ -131,8 +131,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   @override
   void initState() {
     super.initState();
-    _tabController =
-        TabController(length: 4, vsync: this, initialIndex: widget.initialTab);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: widget.initialTab,
+    );
     _currentTab = _tabController.index;
     _tabController.addListener(() {
       if (_currentTab != _tabController.index) {
@@ -201,11 +204,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => const CreateFoodScreen()))
         .then((_) {
-      _searchController.clear();
-      _runFilter('');
-      _loadFavorites();
-      _loadRecentItems();
-    });
+          _searchController.clear();
+          _runFilter('');
+          _loadFavorites();
+          _loadRecentItems();
+        });
   }
 
   Future<void> _loadFavorites() async {
@@ -296,9 +299,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       // WICHTIG: GlobalAppBar statt normaler AppBar
-      appBar: GlobalAppBar(
-        title: l10n.nutritionExplorerTitle,
-      ),
+      appBar: GlobalAppBar(title: l10n.nutritionExplorerTitle),
 
       body: Column(
         children: [
@@ -355,10 +356,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       ),
       floatingActionButton: _suspendFab
           ? null
-          : GlassFab(
-              label: fabLabel,
-              onPressed: fabOnPressed ?? () {},
-            ),
+          : GlassFab(label: fabLabel, onPressed: fabOnPressed ?? () {}),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -403,8 +401,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       children: [
         Expanded(
           child: ListView.builder(
-            padding:
-                DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
+            padding: DesignConstants.cardPadding.copyWith(
+              bottom: _bottomPadding,
+            ),
             itemCount: _favoriteFoodItems.length,
             itemBuilder: (context, index) =>
                 _buildFoodListItem(_favoriteFoodItems[index]),
@@ -453,8 +452,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       children: [
         Expanded(
           child: ListView.builder(
-            padding:
-                DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
+            padding: DesignConstants.cardPadding.copyWith(
+              bottom: _bottomPadding,
+            ),
             itemCount: _recentFoodItems.length,
             itemBuilder: (context, index) =>
                 _buildFoodListItem(_recentFoodItems[index]),
@@ -692,8 +692,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   final items = _catItems[key];
 
                   return Theme(
-                    data: Theme.of(context)
-                        .copyWith(dividerColor: Colors.transparent),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
                       leading: Text(
                         emoji?.isNotEmpty == true ? emoji! : '🗂️',
@@ -753,42 +754,42 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           child: _isLoadingSearch
               ? const Center(child: CircularProgressIndicator())
               : (baseHits.isEmpty && otherHits.isEmpty)
-                  ? Center(
-                      child: Text(
-                        l10n.searchNoResults,
+              ? Center(
+                  child: Text(
+                    l10n.searchNoResults,
+                    style: textTheme.titleMedium,
+                  ),
+                )
+              : ListView(
+                  padding: DesignConstants.cardPadding.copyWith(
+                    bottom: _bottomPadding,
+                  ),
+                  children: [
+                    if (baseHits.isNotEmpty) ...[
+                      Text(
+                        l10n.searchSectionBase,
                         style: textTheme.titleMedium,
                       ),
-                    )
-                  : ListView(
-                      padding: DesignConstants.cardPadding
-                          .copyWith(bottom: _bottomPadding),
-                      children: [
-                        if (baseHits.isNotEmpty) ...[
-                          Text(
-                            l10n.searchSectionBase,
-                            style: textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          ...baseHits.map(_buildFoodListItem),
-                          const SizedBox(height: DesignConstants.spacingL),
-                        ],
-                        if (otherHits.isNotEmpty) ...[
-                          Text(
-                            l10n.searchSectionOther,
-                            style: textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          ...otherHits.map(_buildFoodListItem),
-                        ],
-                        if (otherHits
-                            .any((i) => i.source == FoodItemSource.off))
-                          const Padding(
-                            padding: EdgeInsets.only(top: 12),
-                            child: OffAttributionWidget(),
-                          ),
-                        const BottomContentSpacer(),
-                      ],
-                    ),
+                      const SizedBox(height: 8),
+                      ...baseHits.map(_buildFoodListItem),
+                      const SizedBox(height: DesignConstants.spacingL),
+                    ],
+                    if (otherHits.isNotEmpty) ...[
+                      Text(
+                        l10n.searchSectionOther,
+                        style: textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      ...otherHits.map(_buildFoodListItem),
+                    ],
+                    if (otherHits.any((i) => i.source == FoodItemSource.off))
+                      const Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: OffAttributionWidget(),
+                      ),
+                    const BottomContentSpacer(),
+                  ],
+                ),
         ),
       ],
     );
@@ -1020,17 +1021,20 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok = await showGlassBottomMenu<bool>(
+    final ok =
+        await showGlassBottomMenu<bool>(
           context: context,
           title: l10n.mealsAddToDiary,
           contentBuilder: (ctx, close) {
             return StatefulBuilder(
               builder: (ctx, modalSetState) {
                 final locale = Localizations.localeOf(ctx).toString();
-                final formattedDate =
-                    DateFormat.yMd(locale).format(selectedDate);
-                final formattedTime =
-                    DateFormat.Hm(locale).format(selectedDate);
+                final formattedDate = DateFormat.yMd(
+                  locale,
+                ).format(selectedDate);
+                final formattedTime = DateFormat.Hm(
+                  locale,
+                ).format(selectedDate);
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1053,8 +1057,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                               context: ctx,
                               initialDate: selectedDate,
                               firstDate: DateTime(2020),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
                             );
                             if (picked != null) {
                               modalSetState(() {
@@ -1103,8 +1108,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                         filled: true,
                         fillColor:
                             Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.black.withOpacity(0.05),
                       ),
                       items: internalTypes
                           .map(
@@ -1133,8 +1138,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                           final it = rawItems[i];
                           final bc = it['barcode'] as String;
                           final fi = products[bc];
-                          final displayName =
-                              (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                          final displayName = (fi?.name.isNotEmpty ?? false)
+                              ? fi!.name
+                              : bc;
                           final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
 
                           return Row(
@@ -1150,13 +1156,14 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                   controller: qtyCtrls[bc],
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
+                                        decimal: true,
+                                      ),
                                   decoration: InputDecoration(
                                     labelText: displayName,
                                     suffixText: unit,
                                     filled: true,
-                                    fillColor: Theme.of(context).brightness ==
+                                    fillColor:
+                                        Theme.of(context).brightness ==
                                             Brightness.dark
                                         ? Colors.white.withOpacity(0.05)
                                         : Colors.black.withOpacity(0.05),
@@ -1165,7 +1172,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                       borderSide: BorderSide.none,
                                     ),
                                     contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 14),
+                                      horizontal: 12,
+                                      vertical: 14,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1231,7 +1240,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         final c100 = fi.caffeineMgPer100ml;
         if (fi.isLiquid == true && c100 != null && c100 > 0) {
           await _logCaffeineDose(
-              c100 * (qty / 100.0), selectedDate); // <--- VERWENDUNG
+            c100 * (qty / 100.0),
+            selectedDate,
+          ); // <--- VERWENDUNG
         }
       }
     }
@@ -1260,7 +1271,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       ),
     );
 
-    final caffeineId = caffeine.id ??
+    final caffeineId =
+        caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(

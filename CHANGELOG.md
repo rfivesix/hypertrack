@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.0] - 2026-03-25
+
+### Added
+- **Statistics & Analytics Hub:** Fully integrated central overview for consistency, PR progress, muscle distribution, recovery readiness, and body/nutrition trends.
+- **Deep-Dive Analytics Screens:** Dedicated dashboards accessible from the hub for PRs, consistency tracking, recovery analysis, muscle-group trends, and body/nutrition correlation.
+- **Universal Sharing Workflows:** Export and share app-generated content (including text summaries and exported files) through native OS share sheets for faster collaboration or coach feedback.
+
+### Changed
+- **Smarter Analytics Architecture:** Refactored statistics to use clearer feature boundaries (domain/data/presentation), making analytics behavior more consistent and maintainable.
+- **Reliable Range Logic:** Standardized time-range handling across the hub and drill-down views so metrics remain easier to interpret.
+- **Improved Analytics Readability:** Unified labels, chart defaults, and numeric formatting across statistics screens for cleaner trend reading.
+- **Data-Quality-Aware Insights:** Body/nutrition and muscle analytics now apply clearer confidence and sufficiency rules before presenting stronger guidance.
+
+### Fixed
+- **Refined Statistics Behavior:** Addressed several v0.7 alpha rough edges regarding analytics state handling and presentation consistency.
+- **Core Tracking Polish:** Targeted reliability and UX refinements for workout and nutrition logging during the v0.7 stabilization cycle.
+
+### Security (Privacy)
+- **Offline-First Analytics:** Ensured all insights are computed strictly on-device from existing logs, requiring no cloud dependency and maintaining the default privacy-first approach.
+
 ## [0.7.0-alpha.3+70003] - 2026-03-21
 
 ### 📊 Statistics Module (Architecture)

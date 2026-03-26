@@ -83,10 +83,14 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
       if (numberOfTrackedDays > 1) {
         if (difference > tolerance) {
           recommendation = l10n.recommendationOverTarget(
-              numberOfTrackedDays, difference.round());
+            numberOfTrackedDays,
+            difference.round(),
+          );
         } else if (difference < -tolerance) {
           recommendation = l10n.recommendationUnderTarget(
-              numberOfTrackedDays, (-difference).round());
+            numberOfTrackedDays,
+            (-difference).round(),
+          );
         } else {
           recommendation = l10n.recommendationOnTarget(numberOfTrackedDays);
         }
@@ -105,8 +109,10 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   Future<void> _createMealAndOpenEditor() async {
     final l10n = AppLocalizations.of(context)!;
     final defaultName = l10n.mealNameLabel;
-    final newMealId =
-        await DatabaseHelper.instance.insertMeal(name: defaultName, notes: '');
+    final newMealId = await DatabaseHelper.instance.insertMeal(
+      name: defaultName,
+      notes: '',
+    );
     final meal = {'id': newMealId, 'name': defaultName, 'notes': ''};
 
     if (!mounted) return;
@@ -118,8 +124,10 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
     final items = await DatabaseHelper.instance.getMealItems(newMealId);
     final createdMeals = await DatabaseHelper.instance.getMeals();
-    final createdMeal =
-        createdMeals.firstWhere((m) => m['id'] == newMealId, orElse: () => {});
+    final createdMeal = createdMeals.firstWhere(
+      (m) => m['id'] == newMealId,
+      orElse: () => {},
+    );
 
     if (createdMeal.isNotEmpty &&
         (createdMeal['name'] as String) == defaultName &&
@@ -134,8 +142,9 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final double appBarHeight =
-        MediaQuery.of(context).padding.top; // + kToolbarHeight;
+    final double appBarHeight = MediaQuery.of(
+      context,
+    ).padding.top; // + kToolbarHeight;
 
     // 2. Get your base padding from your design constants
     const EdgeInsets basePadding =
@@ -172,7 +181,12 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
               children: [
                 _buildSectionTitle(context, l10n.today_overview_text),
                 _buildGoalsAndRecommendationCard(
-                    context, recommendationText, targetCalories, theme, l10n),
+                  context,
+                  recommendationText,
+                  targetCalories,
+                  theme,
+                  l10n,
+                ),
                 const SizedBox(height: DesignConstants.spacingXL),
                 _buildSectionTitle(context, l10n.myMealsCL),
                 meals.isEmpty
@@ -196,14 +210,17 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                 _buildNavigationCard(
                   context: context,
                   icon: Icons.restaurant_menu_outlined,
-                  title:
-                      l10n.manage_all_plans.replaceAll('Pläne', 'Mahlzeiten'),
+                  title: l10n.manage_all_plans.replaceAll(
+                    'Pläne',
+                    'Mahlzeiten',
+                  ),
                   subtitle: l10n.mealsEmptyBody,
                   onTap: () {
                     Navigator.of(context)
                         .push(
                           MaterialPageRoute(
-                              builder: (_) => const AddFoodScreen()),
+                            builder: (_) => const AddFoodScreen(),
+                          ),
                         )
                         .then((_) => _refreshData());
                   },
@@ -215,9 +232,11 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                   title: l10n.supplementTrackerTitle,
                   subtitle: l10n.supplementTrackerDescription,
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const SupplementTrackScreen(),
-                    ));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SupplementTrackScreen(),
+                      ),
+                    );
                   },
                 ),
                 //const SizedBox(height: DesignConstants.spacingM),
@@ -242,11 +261,12 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   }
 
   Widget _buildGoalsAndRecommendationCard(
-      BuildContext context,
-      String recommendationText,
-      int targetCalories,
-      ThemeData theme,
-      AppLocalizations l10n) {
+    BuildContext context,
+    String recommendationText,
+    int targetCalories,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     return SummaryCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -269,8 +289,9 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const GoalsScreen()));
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const GoalsScreen()));
               },
               child: Text(l10n.my_goals),
             ),
@@ -286,9 +307,9 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -309,8 +330,11 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_circle_outline,
-                      size: 40, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.add_circle_outline,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(height: 8),
                   Text(l10n.mealsCreate, textAlign: TextAlign.center),
                 ],
@@ -345,15 +369,18 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                   Text(
                     meal['name'] as String,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.of(context)
-                        .push(MaterialPageRoute(
-                            builder: (_) => MealScreen(meal: meal)))
+                        .push(
+                          MaterialPageRoute(
+                            builder: (_) => MealScreen(meal: meal),
+                          ),
+                        )
                         .then((_) => _refreshData()),
                     child: Text(l10n.edit),
                   ),

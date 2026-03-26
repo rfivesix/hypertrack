@@ -34,9 +34,9 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.automaticallyImplyLeading = true,
     this.titleSpacing,
   }) : assert(
-          title == null || titleWidget == null,
-          'Cannot provide both a title and a titleWidget',
-        );
+         title == null || titleWidget == null,
+         'Cannot provide both a title and a titleWidget',
+       );
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -56,7 +56,8 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: leading,
       automaticallyImplyLeading: automaticallyImplyLeading,
       titleSpacing: titleSpacing,
-      title: titleWidget ??
+      title:
+          titleWidget ??
           Text(
             title ?? '',
             style: Theme.of(
@@ -67,16 +68,14 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
 
     // Farbe für das durchscheinende "Glas"
-    final Color glassColor =
-        isDark ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.3);
+    final Color glassColor = isDark
+        ? Colors.black.withOpacity(0.5)
+        : Colors.white.withOpacity(0.3);
 
     // Die finale Struktur mit statischem Blur
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 14,
-          sigmaY: 14,
-        ),
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
           // Die Decoration sorgt für die Farbe und die untere Kante
           decoration: BoxDecoration(
@@ -87,10 +86,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           child: SafeArea(
             bottom: false,
-            child: SizedBox(
-              height: kToolbarHeight,
-              child: appBarContent,
-            ),
+            child: SizedBox(height: kToolbarHeight, child: appBarContent),
           ),
         ),
       ),

@@ -33,71 +33,75 @@ void main() {
       expect(result.insightDataQuality.hasSufficientData, isFalse);
     });
 
-    test('deriveInsight returns stableWeightCaloriesUp for matching thresholds',
-        () {
-      final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-      final calories = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: i < 7 ? 1800 : 2000,
-        ),
-      );
-      final weights = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: 80 + (i * 0.01),
-        ),
-      );
+    test(
+      'deriveInsight returns stableWeightCaloriesUp for matching thresholds',
+      () {
+        final start = DateTime(2026, 1, 1);
+        final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
+        final calories = List.generate(
+          14,
+          (i) => DailyValuePoint(
+            day: start.add(Duration(days: i)),
+            value: i < 7 ? 1800 : 2000,
+          ),
+        );
+        final weights = List.generate(
+          14,
+          (i) => DailyValuePoint(
+            day: start.add(Duration(days: i)),
+            value: 80 + (i * 0.01),
+          ),
+        );
 
-      final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-        range: range,
-        totalDays: 14,
-        weightDaily: weights,
-        smoothedWeight: weights,
-        caloriesDaily: calories,
-        smoothedCalories: calories,
-        loggedCalorieDays: 14,
-        weightChangeKg: 0.12,
-      );
+        final insight = BodyNutritionAnalyticsEngine.deriveInsight(
+          range: range,
+          totalDays: 14,
+          weightDaily: weights,
+          smoothedWeight: weights,
+          caloriesDaily: calories,
+          smoothedCalories: calories,
+          loggedCalorieDays: 14,
+          weightChangeKg: 0.12,
+        );
 
-      expect(insight, BodyNutritionInsightType.stableWeightCaloriesUp);
-    });
+        expect(insight, BodyNutritionInsightType.stableWeightCaloriesUp);
+      },
+    );
 
-    test('deriveInsight returns weightUpCaloriesUp at threshold boundaries',
-        () {
-      final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-      final calories = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: i < 7 ? 1900 : 1980,
-        ),
-      );
-      final weights = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: 80 + (i * 0.04),
-        ),
-      );
+    test(
+      'deriveInsight returns weightUpCaloriesUp at threshold boundaries',
+      () {
+        final start = DateTime(2026, 1, 1);
+        final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
+        final calories = List.generate(
+          14,
+          (i) => DailyValuePoint(
+            day: start.add(Duration(days: i)),
+            value: i < 7 ? 1900 : 1980,
+          ),
+        );
+        final weights = List.generate(
+          14,
+          (i) => DailyValuePoint(
+            day: start.add(Duration(days: i)),
+            value: 80 + (i * 0.04),
+          ),
+        );
 
-      final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-        range: range,
-        totalDays: 14,
-        weightDaily: weights,
-        smoothedWeight: weights,
-        caloriesDaily: calories,
-        smoothedCalories: calories,
-        loggedCalorieDays: 14,
-        weightChangeKg: 0.45,
-      );
+        final insight = BodyNutritionAnalyticsEngine.deriveInsight(
+          range: range,
+          totalDays: 14,
+          weightDaily: weights,
+          smoothedWeight: weights,
+          caloriesDaily: calories,
+          smoothedCalories: calories,
+          loggedCalorieDays: 14,
+          weightChangeKg: 0.45,
+        );
 
-      expect(insight, BodyNutritionInsightType.weightUpCaloriesUp);
-    });
+        expect(insight, BodyNutritionInsightType.weightUpCaloriesUp);
+      },
+    );
 
     test('deriveInsight returns caloriesDownWeightNotYetChanged', () {
       final start = DateTime(2026, 1, 1);
@@ -188,44 +192,49 @@ void main() {
       expect(insight, BodyNutritionInsightType.notEnoughData);
     });
 
-    test('deriveInsight returns mixed for sufficient but non-matching pattern',
-        () {
-      final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-      final calories = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: i < 7 ? 2000 : 2040,
-        ),
-      );
-      final weights = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: 80 + (i * 0.02),
-        ),
-      );
+    test(
+      'deriveInsight returns mixed for sufficient but non-matching pattern',
+      () {
+        final start = DateTime(2026, 1, 1);
+        final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
+        final calories = List.generate(
+          14,
+          (i) => DailyValuePoint(
+            day: start.add(Duration(days: i)),
+            value: i < 7 ? 2000 : 2040,
+          ),
+        );
+        final weights = List.generate(
+          14,
+          (i) => DailyValuePoint(
+            day: start.add(Duration(days: i)),
+            value: 80 + (i * 0.02),
+          ),
+        );
 
-      final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-        range: range,
-        totalDays: 14,
-        weightDaily: weights,
-        smoothedWeight: weights,
-        caloriesDaily: calories,
-        smoothedCalories: calories,
-        loggedCalorieDays: 14,
-        weightChangeKg: 0.28,
-      );
+        final insight = BodyNutritionAnalyticsEngine.deriveInsight(
+          range: range,
+          totalDays: 14,
+          weightDaily: weights,
+          smoothedWeight: weights,
+          caloriesDaily: calories,
+          smoothedCalories: calories,
+          loggedCalorieDays: 14,
+          weightChangeKg: 0.28,
+        );
 
-      expect(insight, BodyNutritionInsightType.mixed);
-    });
+        expect(insight, BodyNutritionInsightType.mixed);
+      },
+    );
 
     test('seriesHalfDelta returns null for insufficient series length', () {
       final start = DateTime(2026, 1, 1);
       final series = List.generate(
         7,
-        (i) => DailyValuePoint(day: start.add(Duration(days: i)), value: i + 1),
+        (i) => DailyValuePoint(
+          day: start.add(Duration(days: i)),
+          value: i + 1,
+        ),
       );
       expect(BodyNutritionAnalyticsEngine.seriesHalfDelta(series), isNull);
     });
@@ -235,10 +244,7 @@ void main() {
         DailyValuePoint(day: DateTime(2026, 1, 1), value: 80),
         DailyValuePoint(day: DateTime(2026, 1, 2), value: 79.5),
       ];
-      final delta = BodyNutritionAnalyticsEngine.weightChange(
-        const [],
-        raw,
-      );
+      final delta = BodyNutritionAnalyticsEngine.weightChange(const [], raw);
       expect(delta, closeTo(-0.5, 0.0001));
     });
 
@@ -252,13 +258,13 @@ void main() {
     });
 
     test('data quality policy marks sufficient ranges correctly', () {
-      final assessment =
-          StatisticsDataQualityPolicy.instance.bodyNutritionInsight(
-        spanDays: 30,
-        totalDays: 30,
-        weightDays: 10,
-        loggedCalorieDays: 10,
-      );
+      final assessment = StatisticsDataQualityPolicy.instance
+          .bodyNutritionInsight(
+            spanDays: 30,
+            totalDays: 30,
+            weightDays: 10,
+            loggedCalorieDays: 10,
+          );
       expect(assessment.hasSufficientData, isTrue);
     });
 

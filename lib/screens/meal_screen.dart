@@ -109,9 +109,9 @@ class _MealScreenState extends State<MealScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -124,11 +124,11 @@ class _MealScreenState extends State<MealScreen> {
     final canSave =
         _nameCtrl.text.trim().isNotEmpty && _items.isNotEmpty && !_saving;
 
-// NEU: Top Padding berechnen für Content unter der GlobalAppBar
+    // NEU: Top Padding berechnen für Content unter der GlobalAppBar
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-// Floating Action Button je Modus
+    // Floating Action Button je Modus
     Widget? fab;
     if (_editMode) {
       fab = GlassFab(
@@ -155,8 +155,8 @@ class _MealScreenState extends State<MealScreen> {
         title: _editMode
             ? l10n.mealsEdit
             : (_nameCtrl.text.isNotEmpty
-                ? _nameCtrl.text
-                : l10n.mealsViewTitle),
+                  ? _nameCtrl.text
+                  : l10n.mealsViewTitle),
         actions: [
           if (_editMode)
             TextButton(
@@ -273,20 +273,23 @@ class _MealScreenState extends State<MealScreen> {
                               children: [
                                 _MacroChip(
                                   label: 'C',
-                                  value:
-                                      _items.isEmpty ? '–' : _format1(_totalC),
+                                  value: _items.isEmpty
+                                      ? '–'
+                                      : _format1(_totalC),
                                   unit: 'g',
                                 ),
                                 _MacroChip(
                                   label: 'F',
-                                  value:
-                                      _items.isEmpty ? '–' : _format1(_totalF),
+                                  value: _items.isEmpty
+                                      ? '–'
+                                      : _format1(_totalF),
                                   unit: 'g',
                                 ),
                                 _MacroChip(
                                   label: 'P',
-                                  value:
-                                      _items.isEmpty ? '–' : _format1(_totalP),
+                                  value: _items.isEmpty
+                                      ? '–'
+                                      : _format1(_totalP),
                                   unit: 'g',
                                 ),
                               ],
@@ -386,7 +389,7 @@ class _MealScreenState extends State<MealScreen> {
       if (mounted) setState(() => _saving = false);
     }
   }
-// In lib/screens/meal_screen.dart
+  // In lib/screens/meal_screen.dart
 
   Future<void> _addIngredientFlow() async {
     final l10n = AppLocalizations.of(context)!;
@@ -413,8 +416,9 @@ class _MealScreenState extends State<MealScreen> {
                 return;
               }
               setStateSB(() => loading = true);
-              final res =
-                  await ProductDatabaseHelper.instance.searchProducts(q.trim());
+              final res = await ProductDatabaseHelper.instance.searchProducts(
+                q.trim(),
+              );
               setStateSB(() {
                 results = res;
                 loading = false;
@@ -432,13 +436,16 @@ class _MealScreenState extends State<MealScreen> {
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                   onChanged: (val) {
                     debounce?.cancel();
-                    debounce = Timer(const Duration(milliseconds: 300),
-                        () => runSearch(val));
+                    debounce = Timer(
+                      const Duration(milliseconds: 300),
+                      () => runSearch(val),
+                    );
                   },
                 ),
                 const SizedBox(height: 8),
@@ -448,9 +455,11 @@ class _MealScreenState extends State<MealScreen> {
                   child: results.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Text(searchCtrl.text.isEmpty
-                              ? l10n.searchInitialHint
-                              : l10n.searchNoResults),
+                          child: Text(
+                            searchCtrl.text.isEmpty
+                                ? l10n.searchInitialHint
+                                : l10n.searchNoResults,
+                          ),
                         )
                       : ListView.separated(
                           shrinkWrap: true,
@@ -477,10 +486,9 @@ class _MealScreenState extends State<MealScreen> {
                                   // Strategie: Schließen und Ergebnis (Barcode) zurückgeben,
                                   // dann im Parent die Menge abfragen. Das ist am stabilsten.
                                   closeSearch();
-                                  Navigator.of(searchCtx).pop((
-                                    fi.barcode,
-                                    -1
-                                  )); // -1 signalisiert: "Barcode gewählt, Menge fragen"
+                                  Navigator.of(searchCtx).pop(
+                                    (fi.barcode, -1),
+                                  ); // -1 signalisiert: "Barcode gewählt, Menge fragen"
                                 },
                               ),
                             );
@@ -503,8 +511,9 @@ class _MealScreenState extends State<MealScreen> {
     // Wenn Menge noch nicht festgelegt (-1), dann jetzt abfragen
     if (quantity == -1) {
       // Produktnamen laden für den Titel
-      final fi =
-          await ProductDatabaseHelper.instance.getProductByBarcode(barcode);
+      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(
+        barcode,
+      );
       final displayName = fi?.name ?? barcode;
 
       if (!mounted) return;
@@ -533,23 +542,27 @@ class _MealScreenState extends State<MealScreen> {
               Row(
                 children: [
                   Expanded(
-                      child: OutlinedButton(
-                          onPressed: () {
-                            closeQty();
-                            Navigator.of(qtyCtx).pop(null);
-                          },
-                          child: Text(l10n.cancel))),
+                    child: OutlinedButton(
+                      onPressed: () {
+                        closeQty();
+                        Navigator.of(qtyCtx).pop(null);
+                      },
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
-                      child: FilledButton(
-                          onPressed: () {
-                            final val = int.tryParse(qtyCtrl.text);
-                            closeQty();
-                            Navigator.of(qtyCtx).pop(val);
-                          },
-                          child: Text(l10n.add_button))),
+                    child: FilledButton(
+                      onPressed: () {
+                        final val = int.tryParse(qtyCtrl.text);
+                        closeQty();
+                        Navigator.of(qtyCtx).pop(val);
+                      },
+                      child: Text(l10n.add_button),
+                    ),
+                  ),
                 ],
-              )
+              ),
             ],
           );
         },
@@ -580,8 +593,9 @@ class _MealScreenState extends State<MealScreen> {
     final Map<String, FoodItem?> products = {};
     for (final it in _items) {
       final bc = it['barcode'] as String;
-      products[bc] =
-          await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+      products[bc] = await ProductDatabaseHelper.instance.getProductByBarcode(
+        bc,
+      );
     }
 
     // Controllers for quantities
@@ -607,7 +621,8 @@ class _MealScreenState extends State<MealScreen> {
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok = await showGlassBottomMenu<bool>(
+    final ok =
+        await showGlassBottomMenu<bool>(
           context: context,
           title: l10n.mealsAddToDiary,
           contentBuilder: (ctx, close) {
@@ -616,8 +631,10 @@ class _MealScreenState extends State<MealScreen> {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_nameCtrl.text,
-                        style: Theme.of(ctx).textTheme.titleMedium),
+                    Text(
+                      _nameCtrl.text,
+                      style: Theme.of(ctx).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: selectedMealType,
@@ -627,10 +644,12 @@ class _MealScreenState extends State<MealScreen> {
                         isDense: true,
                       ),
                       items: internalTypes
-                          .map((key) => DropdownMenuItem(
-                                value: key,
-                                child: Text(mealTypeLabel[key] ?? key),
-                              ))
+                          .map(
+                            (key) => DropdownMenuItem(
+                              value: key,
+                              child: Text(mealTypeLabel[key] ?? key),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) {
                         if (v != null) {
@@ -649,8 +668,9 @@ class _MealScreenState extends State<MealScreen> {
                           final it = _items[i];
                           final bc = it['barcode'] as String;
                           final fi = products[bc];
-                          final displayName =
-                              (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                          final displayName = (fi?.name.isNotEmpty ?? false)
+                              ? fi!.name
+                              : bc;
                           final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
 
                           return Row(
@@ -666,8 +686,8 @@ class _MealScreenState extends State<MealScreen> {
                                   controller: qtyCtrls[bc],
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
+                                        decimal: true,
+                                      ),
                                   decoration: InputDecoration(
                                     labelText: displayName,
                                     helperText: l10n.amountLabel,
@@ -746,8 +766,9 @@ class _MealScreenState extends State<MealScreen> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
     }
   }
 
@@ -767,7 +788,8 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
 
-    final caffeineId = caffeine.id ??
+    final caffeineId =
+        caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(

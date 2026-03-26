@@ -144,10 +144,10 @@ class DiaryScreenState extends State<DiaryScreen> {
         entry.barcode,
       );
       if (foodItem != null) {
-        summary.calories +=
-            (foodItem.calories / 100 * entry.quantityInGrams).round();
-        summary.protein +=
-            (foodItem.protein / 100 * entry.quantityInGrams).round();
+        summary.calories += (foodItem.calories / 100 * entry.quantityInGrams)
+            .round();
+        summary.protein += (foodItem.protein / 100 * entry.quantityInGrams)
+            .round();
         summary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
         summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
 
@@ -160,11 +160,11 @@ class DiaryScreenState extends State<DiaryScreen> {
       meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
     }
 
-    final supplementsForDate =
-        await DatabaseHelper.instance.getSupplementsForDate(date);
+    final supplementsForDate = await DatabaseHelper.instance
+        .getSupplementsForDate(date);
     final allSupplements = await DatabaseHelper.instance.getAllSupplements();
-    final todaysSupplementLogs =
-        await DatabaseHelper.instance.getSupplementLogsForDate(date);
+    final todaysSupplementLogs = await DatabaseHelper.instance
+        .getSupplementLogsForDate(date);
 
     final Map<int, double> todaysDoses = {};
     for (final log in todaysSupplementLogs) {
@@ -197,27 +197,32 @@ class DiaryScreenState extends State<DiaryScreen> {
     for (final s in supplementsForDate) {
       final hasLog = todaysDoses.containsKey(s.id);
       if (s.isTracked || hasLog) {
-        trackedSupps.add(TrackedSupplement(
-          supplement: s,
-          totalDosedToday: todaysDoses[s.id] ?? 0.0,
-        ));
+        trackedSupps.add(
+          TrackedSupplement(
+            supplement: s,
+            totalDosedToday: todaysDoses[s.id] ?? 0.0,
+          ),
+        );
       }
     }
     for (final id in todaysDoses.keys) {
       if (!trackedSupps.any((ts) => ts.supplement.id == id)) {
         if (byId.containsKey(id)) {
-          trackedSupps.add(TrackedSupplement(
-            supplement: byId[id]!,
-            totalDosedToday: todaysDoses[id]!,
-          ));
+          trackedSupps.add(
+            TrackedSupplement(
+              supplement: byId[id]!,
+              totalDosedToday: todaysDoses[id]!,
+            ),
+          );
         }
       }
     }
 
     final workoutLogs = await WorkoutDatabaseHelper.instance
         .getWorkoutLogsForDateRange(date, date);
-    final completedLogs =
-        workoutLogs.where((log) => log.endTime != null).toList();
+    final completedLogs = workoutLogs
+        .where((log) => log.endTime != null)
+        .toList();
     Map<String, dynamic>? workoutSummary;
 
     if (completedLogs.isNotEmpty) {
@@ -227,8 +232,9 @@ class DiaryScreenState extends State<DiaryScreen> {
       int totalSets = 0;
 
       for (final log in completedLogs) {
-        totalDuration +=
-            log.endTime!.difference(log.startTime); // Addiert die volle Dauer
+        totalDuration += log.endTime!.difference(
+          log.startTime,
+        ); // Addiert die volle Dauer
         totalSets += log.sets.length;
         for (final set in log.sets) {
           totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
@@ -272,78 +278,80 @@ class DiaryScreenState extends State<DiaryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    final result = await showGlassBottomMenu<
-        ({
-          int quantity,
-          DateTime timestamp,
-          String mealType,
-          bool isLiquid,
-          double? sugarPer100ml,
-          double? caffeinePer100ml,
-        })?>(
-      context: context,
-      title: trackedItem.item.getLocalizedName(context),
-      contentBuilder: (ctx, close) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Der Inhalt des Dialogs (jetzt als Bottom-Sheet-Inhalt)
-            QuantityDialogContent(
-              key: dialogStateKey,
-              item: trackedItem.item,
-              initialQuantity: trackedItem.entry.quantityInGrams,
-              initialTimestamp: trackedItem.entry.timestamp,
-              initialMealType: trackedItem.entry.mealType,
-              // Die aktuellen Nährwerte des Eintrags als Initial-Werte
-              // Annahme: Wenn der Eintrag existiert, sind die Nährwerte fix.
-              // Wir setzen nur die Liquid-Status, falls nötig.
-            ),
-            const SizedBox(height: 12),
-            Row(
+    final result =
+        await showGlassBottomMenu<
+          ({
+            int quantity,
+            DateTime timestamp,
+            String mealType,
+            bool isLiquid,
+            double? sugarPer100ml,
+            double? caffeinePer100ml,
+          })?
+        >(
+          context: context,
+          title: trackedItem.item.getLocalizedName(context),
+          contentBuilder: (ctx, close) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: close,
-                    child: Text(l10n.cancel),
-                  ),
+                // Der Inhalt des Dialogs (jetzt als Bottom-Sheet-Inhalt)
+                QuantityDialogContent(
+                  key: dialogStateKey,
+                  item: trackedItem.item,
+                  initialQuantity: trackedItem.entry.quantityInGrams,
+                  initialTimestamp: trackedItem.entry.timestamp,
+                  initialMealType: trackedItem.entry.mealType,
+                  // Die aktuellen Nährwerte des Eintrags als Initial-Werte
+                  // Annahme: Wenn der Eintrag existiert, sind die Nährwerte fix.
+                  // Wir setzen nur die Liquid-Status, falls nötig.
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      final state = dialogStateKey.currentState;
-                      if (state != null) {
-                        final quantity = int.tryParse(state.quantityText);
-                        final caffeine = double.tryParse(
-                          state.caffeineText.replaceAll(',', '.'),
-                        );
-                        final sugar = double.tryParse(
-                          state.sugarText.replaceAll(',', '.'),
-                        );
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: close,
+                        child: Text(l10n.cancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          final state = dialogStateKey.currentState;
+                          if (state != null) {
+                            final quantity = int.tryParse(state.quantityText);
+                            final caffeine = double.tryParse(
+                              state.caffeineText.replaceAll(',', '.'),
+                            );
+                            final sugar = double.tryParse(
+                              state.sugarText.replaceAll(',', '.'),
+                            );
 
-                        if (quantity != null && quantity > 0) {
-                          close();
-                          // Hier geben wir das korrekte, anonyme Tupel zurück
-                          Navigator.of(ctx).pop((
-                            quantity: quantity,
-                            timestamp: state.selectedDateTime,
-                            mealType: state.selectedMealType,
-                            isLiquid: state.isLiquid,
-                            sugarPer100ml: sugar,
-                            caffeinePer100ml: caffeine,
-                          ));
-                        }
-                      }
-                    },
-                    child: Text(l10n.save),
-                  ),
+                            if (quantity != null && quantity > 0) {
+                              close();
+                              // Hier geben wir das korrekte, anonyme Tupel zurück
+                              Navigator.of(ctx).pop((
+                                quantity: quantity,
+                                timestamp: state.selectedDateTime,
+                                mealType: state.selectedMealType,
+                                isLiquid: state.isLiquid,
+                                sugarPer100ml: sugar,
+                                caffeinePer100ml: caffeine,
+                              ));
+                            }
+                          }
+                        },
+                        child: Text(l10n.save),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
+            );
+          },
         );
-      },
-    );
 
     // Weiterhin die Daten aus dem Ergebnis verarbeiten
     if (result != null) {
@@ -389,22 +397,24 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Future<void> _addFoodToMeal(String mealType) async {
-    final FoodItem? selectedFoodItem =
-        await Navigator.of(context).push<FoodItem>(
-      MaterialPageRoute(
-        builder: (context) => AddFoodScreen(
-          initialDate: _selectedDate, // <--- ÜBERGABE
-          initialMealType: mealType, // <--- ÜBERGABE
-        ),
-      ),
-    );
+    final FoodItem? selectedFoodItem = await Navigator.of(context)
+        .push<FoodItem>(
+          MaterialPageRoute(
+            builder: (context) => AddFoodScreen(
+              initialDate: _selectedDate, // <--- ÜBERGABE
+              initialMealType: mealType, // <--- ÜBERGABE
+            ),
+          ),
+        );
 
     if (selectedFoodItem == null || !mounted) return;
 
     // FIX: Datum an das Hilfs-Menü übergeben
-    final result = await _showQuantityMenu(selectedFoodItem, mealType,
-        initialDate: _selectedDate // <--- Parameter hinzufügen (siehe Punkt C)
-        );
+    final result = await _showQuantityMenu(
+      selectedFoodItem,
+      mealType,
+      initialDate: _selectedDate, // <--- Parameter hinzufügen (siehe Punkt C)
+    );
 
     if (result == null || !mounted) return;
 
@@ -421,8 +431,9 @@ class DiaryScreenState extends State<DiaryScreen> {
       quantityInGrams: quantity,
       mealType: resultMealType,
     );
-    final newFoodEntryId =
-        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+      newFoodEntry,
+    );
 
     if (isLiquid) {
       final newFluidEntry = FluidEntry(
@@ -440,8 +451,11 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(totalCaffeine, timestamp,
-          foodEntryId: newFoodEntryId);
+      await _logCaffeineDose(
+        totalCaffeine,
+        timestamp,
+        foodEntryId: newFoodEntryId,
+      );
     }
 
     loadDataForDate(_selectedDate);
@@ -451,17 +465,20 @@ class DiaryScreenState extends State<DiaryScreen> {
   // In lib/screens/diary_screen.dart
 
   Future<
-          ({
-            int quantity,
-            DateTime timestamp,
-            String mealType,
-            bool isLiquid,
-            double? sugarPer100ml,
-            double? caffeinePer100ml,
-          })?>
-      _showQuantityMenu(FoodItem item, String mealType,
-          {DateTime? initialDate} // <--- NEUER PARAMETER
-          ) async {
+    ({
+      int quantity,
+      DateTime timestamp,
+      String mealType,
+      bool isLiquid,
+      double? sugarPer100ml,
+      double? caffeinePer100ml,
+    })?
+  >
+  _showQuantityMenu(
+    FoodItem item,
+    String mealType, {
+    DateTime? initialDate, // <--- NEUER PARAMETER
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
@@ -476,7 +493,8 @@ class DiaryScreenState extends State<DiaryScreen> {
               key: dialogStateKey,
               item: item,
               initialMealType: mealType,
-              initialTimestamp: initialDate ??
+              initialTimestamp:
+                  initialDate ??
                   _selectedDate, // <--- FIX: Nutze Parameter oder Fallback
             ),
             // ... (Rest der Methode: Buttons etc. bleibt gleich) ...
@@ -501,9 +519,11 @@ class DiaryScreenState extends State<DiaryScreen> {
                         final quantity = int.tryParse(state.quantityText);
                         // ... parsing ...
                         final sugar = double.tryParse(
-                            state.sugarText.replaceAll(',', '.'));
+                          state.sugarText.replaceAll(',', '.'),
+                        );
                         final caffeine = double.tryParse(
-                            state.caffeineText.replaceAll(',', '.'));
+                          state.caffeineText.replaceAll(',', '.'),
+                        );
 
                         if (quantity != null && quantity > 0) {
                           close();
@@ -596,8 +616,8 @@ class DiaryScreenState extends State<DiaryScreen> {
                 Text(
                   l10n.weightHistoryTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Expanded(
                   child: Align(
@@ -680,8 +700,9 @@ class DiaryScreenState extends State<DiaryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final double appBarHeight =
-        MediaQuery.of(context).padding.top; // + kToolbarHeight;
+    final double appBarHeight = MediaQuery.of(
+      context,
+    ).padding.top; // + kToolbarHeight;
 
     // 2. Get your base padding from your design constants
     const EdgeInsets basePadding =
@@ -716,9 +737,8 @@ class DiaryScreenState extends State<DiaryScreen> {
                       .push(
                         MaterialPageRoute(
                           // FIX #65: Datum weiterreichen
-                          builder: (context) => SupplementTrackScreen(
-                            initialDate: _selectedDate,
-                          ),
+                          builder: (context) =>
+                              SupplementTrackScreen(initialDate: _selectedDate),
                         ),
                       )
                       .then((_) => loadDataForDate(_selectedDate)),
@@ -762,9 +782,9 @@ class DiaryScreenState extends State<DiaryScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -843,8 +863,9 @@ class DiaryScreenState extends State<DiaryScreen> {
 
           // Inhalt (animiert ein-/ausklappen)
           AnimatedCrossFade(
-            crossFadeState:
-                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            crossFadeState: isOpen
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
             duration: const Duration(milliseconds: 180),
             firstChild: Column(
               children: [
@@ -858,8 +879,8 @@ class DiaryScreenState extends State<DiaryScreen> {
       ),
     );
   }
-// lib/screens/diary_screen.dart
-// In lib/screens/diary_screen.dart
+  // lib/screens/diary_screen.dart
+  // In lib/screens/diary_screen.dart
 
   Future<void> _showAddFluidMenu() async {
     final l10n = AppLocalizations.of(context)!;
@@ -896,10 +917,12 @@ class DiaryScreenState extends State<DiaryScreen> {
                       if (quantity == null || quantity <= 0) return;
 
                       final name = state.nameText;
-                      final sugarPer100ml =
-                          double.tryParse(state.sugarText.replaceAll(',', '.'));
+                      final sugarPer100ml = double.tryParse(
+                        state.sugarText.replaceAll(',', '.'),
+                      );
                       final caffeinePer100ml = double.tryParse(
-                          state.caffeineText.replaceAll(',', '.'));
+                        state.caffeineText.replaceAll(',', '.'),
+                      );
                       final kcal = (sugarPer100ml != null)
                           ? ((sugarPer100ml / 100) * quantity * 4).round()
                           : null;
@@ -996,8 +1019,10 @@ class DiaryScreenState extends State<DiaryScreen> {
             }),
             child: Row(
               children: [
-                Icon(Icons.local_drink_outlined,
-                    color: theme.colorScheme.primary),
+                Icon(
+                  Icons.local_drink_outlined,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 12),
                 Expanded(child: Text(l10n.waterHeader, style: titleStyle)),
                 Icon(isOpen ? Icons.expand_less : Icons.expand_more),
@@ -1012,8 +1037,9 @@ class DiaryScreenState extends State<DiaryScreen> {
             ),
           ),
           AnimatedCrossFade(
-            crossFadeState:
-                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            crossFadeState: isOpen
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
             duration: const Duration(milliseconds: 180),
             firstChild: Column(
               children: [

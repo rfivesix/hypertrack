@@ -80,20 +80,24 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     for (final s in supplementsForDate) {
       final hasLog = todaysDoses.containsKey(s.id);
       if (s.isTracked || hasLog) {
-        tracked.add(TrackedSupplement(
-          supplement: s,
-          totalDosedToday: todaysDoses[s.id] ?? 0.0,
-        ));
+        tracked.add(
+          TrackedSupplement(
+            supplement: s,
+            totalDosedToday: todaysDoses[s.id] ?? 0.0,
+          ),
+        );
       }
     }
 
     for (final id in todaysDoses.keys) {
       if (!tracked.any((ts) => ts.supplement.id == id)) {
         if (byId.containsKey(id)) {
-          tracked.add(TrackedSupplement(
-            supplement: byId[id]!,
-            totalDosedToday: todaysDoses[id]!,
-          ));
+          tracked.add(
+            TrackedSupplement(
+              supplement: byId[id]!,
+              totalDosedToday: todaysDoses[id]!,
+            ),
+          );
         }
       }
     }
@@ -231,9 +235,9 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -246,8 +250,9 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     final hasTarget = target > 0;
     final rawProgress = hasTarget ? (ts.totalDosedToday / target) : 0.0;
     final progress = rawProgress.clamp(0.0, 1.0);
-    final progressColor =
-        overTarget ? Colors.red.shade400 : Colors.green.shade400;
+    final progressColor = overTarget
+        ? Colors.red.shade400
+        : Colors.green.shade400;
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
@@ -459,9 +464,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(
-        title: l10n.supplementTrackerTitle,
-      ),
+      appBar: GlobalAppBar(title: l10n.supplementTrackerTitle),
       body: Column(
         children: [
           Padding(

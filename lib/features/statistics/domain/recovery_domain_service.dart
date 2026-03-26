@@ -30,8 +30,9 @@ class RecoveryDomainService {
     required double hoursSinceLastSignificantLoad,
     required bool highSessionFatigue,
   }) {
-    final recoveringUpper =
-        recoveringUpperHours(highSessionFatigue: highSessionFatigue);
+    final recoveringUpper = recoveringUpperHours(
+      highSessionFatigue: highSessionFatigue,
+    );
     final readyUpper = readyUpperHours(highSessionFatigue: highSessionFatigue);
 
     if (hoursSinceLastSignificantLoad < recoveringUpper) {
@@ -73,7 +74,9 @@ class RecoveryDomainService {
     final loadComponent = (eqSets * 24).clamp(0, 45);
     final freshnessPenalty = ((96 - hours).clamp(0, 96) / 96) * 45;
     final fatiguePenalty = highFatigue ? 10.0 : 0.0;
-    return (loadComponent + freshnessPenalty + fatiguePenalty)
-        .clamp(0.0, 100.0);
+    return (loadComponent + freshnessPenalty + fatiguePenalty).clamp(
+      0.0,
+      100.0,
+    );
   }
 }

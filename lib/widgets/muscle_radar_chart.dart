@@ -6,10 +6,7 @@ class MuscleRadarDatum {
   final String label;
   final double value;
 
-  const MuscleRadarDatum({
-    required this.label,
-    required this.value,
-  });
+  const MuscleRadarDatum({required this.label, required this.value});
 }
 
 class MuscleRadarChart extends StatelessWidget {

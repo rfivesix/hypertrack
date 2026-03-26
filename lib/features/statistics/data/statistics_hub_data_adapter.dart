@@ -13,14 +13,15 @@ class StatisticsHubDataAdapter {
     required WorkoutDatabaseHelper workoutDatabaseHelper,
     StatisticsRangePolicyService rangePolicy =
         StatisticsRangePolicyService.instance,
-  })  : _workoutDatabaseHelper = workoutDatabaseHelper,
-        _rangePolicy = rangePolicy;
+  }) : _workoutDatabaseHelper = workoutDatabaseHelper,
+       _rangePolicy = rangePolicy;
 
   Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fetch({
     required int selectedTimeRangeIndex,
   }) async {
-    final selectedDays =
-        _rangePolicy.selectedDaysFromIndex(selectedTimeRangeIndex);
+    final selectedDays = _rangePolicy.selectedDaysFromIndex(
+      selectedTimeRangeIndex,
+    );
     final weeklyVolumeRange = _rangePolicy.resolve(
       metricId: StatisticsMetricId.hubWeeklyVolume,
       selectedRangeIndex: selectedTimeRangeIndex,
@@ -50,10 +51,10 @@ class StatisticsHubDataAdapter {
     final workoutsPerWeek = _workoutDatabaseHelper.getWorkoutsPerWeek(
       weeksBack: workoutsPerWeekRange.effectiveWeeks ?? 6,
     );
-    final consistencyMetrics =
-        _workoutDatabaseHelper.getWeeklyConsistencyMetrics(
-      weeksBack: consistencyRange.effectiveWeeks ?? 6,
-    );
+    final consistencyMetrics = _workoutDatabaseHelper
+        .getWeeklyConsistencyMetrics(
+          weeksBack: consistencyRange.effectiveWeeks ?? 6,
+        );
     final muscleAnalytics = _workoutDatabaseHelper.getMuscleGroupAnalytics(
       daysBack: selectedDays,
       weeksBack: muscleRange.effectiveWeeks ?? 8,
@@ -64,8 +65,9 @@ class StatisticsHubDataAdapter {
       daysWindow: improvementRange.effectiveDays ?? selectedDays,
       limit: 3,
     );
-    final bodyNutrition =
-        BodyNutritionAnalyticsUtils.build(rangeIndex: selectedTimeRangeIndex);
+    final bodyNutrition = BodyNutritionAnalyticsUtils.build(
+      rangeIndex: selectedTimeRangeIndex,
+    );
 
     final results = await Future.wait<dynamic>([
       prs,

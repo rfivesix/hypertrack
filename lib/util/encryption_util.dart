@@ -64,8 +64,11 @@ class EncryptionUtil {
     return utf8.decode(clear);
   }
 
-  static Future<SecretKey> _deriveKey(String passphrase, List<int> salt,
-      {int iterations = 150000}) async {
+  static Future<SecretKey> _deriveKey(
+    String passphrase,
+    List<int> salt, {
+    int iterations = 150000,
+  }) async {
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),
       iterations: iterations,

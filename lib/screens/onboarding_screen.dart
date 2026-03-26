@@ -35,16 +35,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final TextEditingController _weightController = TextEditingController();
 
-  final TextEditingController _calController =
-      TextEditingController(text: '2500');
-  final TextEditingController _protController =
-      TextEditingController(text: '180');
-  final TextEditingController _carbController =
-      TextEditingController(text: '250');
-  final TextEditingController _fatController =
-      TextEditingController(text: '80');
-  final TextEditingController _waterController =
-      TextEditingController(text: '3000');
+  final TextEditingController _calController = TextEditingController(
+    text: '2500',
+  );
+  final TextEditingController _protController = TextEditingController(
+    text: '180',
+  );
+  final TextEditingController _carbController = TextEditingController(
+    text: '250',
+  );
+  final TextEditingController _fatController = TextEditingController(
+    text: '80',
+  );
+  final TextEditingController _waterController = TextEditingController(
+    text: '3000',
+  );
 
   @override
   void dispose() {
@@ -62,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // --- LOGIC ---
 
-// lib/screens/onboarding_screen.dart
+  // lib/screens/onboarding_screen.dart
 
   Future<void> _finishOnboarding() async {
     final db = DatabaseHelper.instance;
@@ -87,8 +92,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (height != null) await prefs.setInt('userHeight', height);
 
     // 2. Startgewicht (DB)
-    final double? weight =
-        double.tryParse(_weightController.text.replaceAll(',', '.'));
+    final double? weight = double.tryParse(
+      _weightController.text.replaceAll(',', '.'),
+    );
     if (weight != null) {
       await db.saveInitialWeight(weight);
     }
@@ -155,9 +161,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await prefs.setBool('hasSeenOnboarding', true);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.onboardingRestoreSuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.onboardingRestoreSuccess)));
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MainScreen()),
         (route) => false,
@@ -236,8 +242,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             LinearProgressIndicator(
               value: (_currentPage + 1) / (_totalPages + 1),
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
+              ),
               minHeight: 4,
             ),
             Expanded(
@@ -271,9 +278,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       onPressed: _nextPage,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 16),
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       child: Text(
                         _currentPage == _totalPages
@@ -298,13 +308,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.waving_hand_rounded,
-              size: 80, color: theme.colorScheme.primary),
+          Icon(
+            Icons.waving_hand_rounded,
+            size: 80,
+            color: theme.colorScheme.primary,
+          ),
           const SizedBox(height: 32),
           Text(
             l10n.onboardingWelcomeTitle,
-            style: theme.textTheme.headlineMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -322,7 +336,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: Text(
                 l10n.onboardingContinueSetup.toUpperCase(),
@@ -351,7 +366,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ),
@@ -375,8 +391,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             decoration: InputDecoration(
               labelText: l10n.onboardingNameLabel,
               prefixIcon: const Icon(Icons.person_outline),
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             textCapitalization: TextCapitalization.words,
           ),
@@ -401,15 +418,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               decoration: InputDecoration(
                 labelText: l10n.onboardingDobLabel,
                 prefixIcon: const Icon(Icons.cake_outlined),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: Text(
                 _selectedDate == null
                     ? 'DD.MM.YYYY'
                     : DateFormat.yMMMd(
-                            Localizations.localeOf(context).toString())
-                        .format(_selectedDate!),
+                        Localizations.localeOf(context).toString(),
+                      ).format(_selectedDate!),
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -426,7 +444,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _StepTitle(
-                        title: "Größe"), // oder l10n.onboardingHeightLabel
+                      title: "Größe",
+                    ), // oder l10n.onboardingHeightLabel
                     const SizedBox(height: 8),
                     TextField(
                       controller: _heightController,
@@ -434,7 +453,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       decoration: InputDecoration(
                         labelText: "cm",
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ],
@@ -447,23 +467,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _StepTitle(
-                        title: "Geschlecht"), // oder l10n.onboardingGenderLabel
+                      title: "Geschlecht",
+                    ), // oder l10n.onboardingGenderLabel
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedGender,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 16),
+                          horizontal: 12,
+                          vertical: 16,
+                        ),
                       ),
                       items: [
                         DropdownMenuItem(
-                            value: 'male', child: Text(l10n.genderMale)),
+                          value: 'male',
+                          child: Text(l10n.genderMale),
+                        ),
                         DropdownMenuItem(
-                            value: 'female', child: Text(l10n.genderFemale)),
+                          value: 'female',
+                          child: Text(l10n.genderFemale),
+                        ),
                         DropdownMenuItem(
-                            value: 'diverse', child: Text(l10n.genderDiverse)),
+                          value: 'diverse',
+                          child: Text(l10n.genderDiverse),
+                        ),
                       ],
                       onChanged: (val) => setState(() => _selectedGender = val),
                     ),
@@ -486,7 +516,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _StepTitle(
-              title: l10n.onboardingWeightTitle, align: TextAlign.center),
+            title: l10n.onboardingWeightTitle,
+            align: TextAlign.center,
+          ),
           const SizedBox(height: 32),
           TextField(
             controller: _weightController,
@@ -496,8 +528,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             decoration: InputDecoration(
               hintText: '0.0',
               suffixText: 'kg',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               contentPadding: const EdgeInsets.symmetric(vertical: 24),
             ),
           ),
@@ -514,21 +547,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           _StepTitle(title: l10n.onboardingGoalsTitle, align: TextAlign.center),
           const SizedBox(height: 8),
-          Text(l10n.onboardingGoalCalories,
-              style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+          Text(
+            l10n.onboardingGoalCalories,
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+          ),
           const SizedBox(height: 32),
           TextField(
             controller: _calController,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange),
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+              color: Colors.orange,
+            ),
             decoration: InputDecoration(
               suffixText: 'kcal',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               contentPadding: const EdgeInsets.symmetric(vertical: 24),
             ),
           ),
@@ -551,19 +588,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 32),
           _MacroInput(
-              controller: _protController,
-              label: l10n.onboardingGoalProtein,
-              color: Colors.redAccent),
+            controller: _protController,
+            label: l10n.onboardingGoalProtein,
+            color: Colors.redAccent,
+          ),
           const SizedBox(height: 16),
           _MacroInput(
-              controller: _carbController,
-              label: l10n.onboardingGoalCarbs,
-              color: Colors.green),
+            controller: _carbController,
+            label: l10n.onboardingGoalCarbs,
+            color: Colors.green,
+          ),
           const SizedBox(height: 16),
           _MacroInput(
-              controller: _fatController,
-              label: l10n.onboardingGoalFat,
-              color: Colors.blueAccent),
+            controller: _fatController,
+            label: l10n.onboardingGoalFat,
+            color: Colors.blueAccent,
+          ),
         ],
       ),
     );
@@ -582,11 +622,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             style: const TextStyle(
-                fontSize: 48, fontWeight: FontWeight.bold, color: Colors.blue),
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
             decoration: InputDecoration(
               suffixText: 'ml',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               contentPadding: const EdgeInsets.symmetric(vertical: 24),
             ),
           ),
@@ -601,24 +645,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.check_circle_rounded,
-              size: 100, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            Icons.check_circle_rounded,
+            size: 100,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 32),
           Text(
             l10n.onboardingFinish,
-            style: Theme.of(context)
-                .textTheme
-                .headlineMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             l10n.onboardingGoalsSubtitle,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: Colors.grey),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
@@ -633,12 +678,13 @@ class _StepTitle extends StatelessWidget {
   const _StepTitle({required this.title, this.align = TextAlign.left});
   @override
   Widget build(BuildContext context) {
-    return Text(title,
-        textAlign: align,
-        style: Theme.of(context)
-            .textTheme
-            .headlineSmall
-            ?.copyWith(fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      textAlign: align,
+      style: Theme.of(
+        context,
+      ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+    );
   }
 }
 
@@ -646,30 +692,42 @@ class _MacroInput extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final Color color;
-  const _MacroInput(
-      {required this.controller, required this.label, required this.color});
+  const _MacroInput({
+    required this.controller,
+    required this.label,
+    required this.color,
+  });
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
-            flex: 2,
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold))),
+          flex: 2,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
         Expanded(
-            flex: 1,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                  fontSize: 20, fontWeight: FontWeight.bold, color: color),
-              decoration: const InputDecoration(
-                  suffixText: ' g',
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
-            )),
+          flex: 1,
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+            decoration: const InputDecoration(
+              suffixText: ' g',
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

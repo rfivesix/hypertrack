@@ -27,7 +27,9 @@ class ConsistencyDomainService {
     if (weeklyMetrics.length < 8) return 0;
     final recent = weeklyMetrics.sublist(weeklyMetrics.length - 4);
     final prior = weeklyMetrics.sublist(
-        weeklyMetrics.length - 8, weeklyMetrics.length - 4);
+      weeklyMetrics.length - 8,
+      weeklyMetrics.length - 4,
+    );
     final recentAvg =
         recent.map((e) => e.count.toDouble()).reduce((a, b) => a + b) / 4.0;
     final priorAvg =

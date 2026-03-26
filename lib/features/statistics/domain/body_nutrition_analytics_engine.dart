@@ -49,7 +49,7 @@ class BodyNutritionAnalyticsEngine {
     final avgDailyCalories = totalDays <= 0
         ? 0.0
         : caloriesDaily.fold<double>(0.0, (sum, p) => sum + p.value) /
-            totalDays;
+              totalDays;
 
     final currentWeightKg = weightDaily.isEmpty ? null : weightDaily.last.value;
     final weightChangeKg = weightChange(smoothedWeight, weightDaily);
@@ -57,7 +57,7 @@ class BodyNutritionAnalyticsEngine {
     final insightDataQuality = _dataQualityPolicy.bodyNutritionInsight(
       spanDays:
           normalizeDay(range.end).difference(normalizeDay(range.start)).inDays +
-              1,
+          1,
       totalDays: totalDays,
       weightDays: weightDaily.length,
       loggedCalorieDays: loggedCalorieDays,
@@ -105,16 +105,15 @@ class BodyNutritionAnalyticsEngine {
 
     return points
         .map(
-          (p) => DailyValuePoint(
-            day: p.day,
-            value: (p.value - minValue) / span,
-          ),
+          (p) =>
+              DailyValuePoint(day: p.day, value: (p.value - minValue) / span),
         )
         .toList(growable: false);
   }
 
   static Map<DateTime, double> _latestWeightPerDay(
-      List<ChartDataPoint> points) {
+    List<ChartDataPoint> points,
+  ) {
     final sorted = points.toList()..sort((a, b) => a.date.compareTo(b.date));
 
     final map = <DateTime, double>{};
@@ -177,17 +176,19 @@ class BodyNutritionAnalyticsEngine {
     required double? weightChangeKg,
     StatisticsDataQualityAssessment? qualityAssessment,
   }) {
-    final hasDataQuality = (qualityAssessment ??
-            _dataQualityPolicy.bodyNutritionInsight(
-              spanDays: normalizeDay(range.end)
-                      .difference(normalizeDay(range.start))
-                      .inDays +
-                  1,
-              totalDays: totalDays,
-              weightDays: weightDaily.length,
-              loggedCalorieDays: loggedCalorieDays,
-            ))
-        .hasSufficientData;
+    final hasDataQuality =
+        (qualityAssessment ??
+                _dataQualityPolicy.bodyNutritionInsight(
+                  spanDays:
+                      normalizeDay(
+                        range.end,
+                      ).difference(normalizeDay(range.start)).inDays +
+                      1,
+                  totalDays: totalDays,
+                  weightDays: weightDaily.length,
+                  loggedCalorieDays: loggedCalorieDays,
+                ))
+            .hasSufficientData;
 
     if (!hasDataQuality || weightChangeKg == null) {
       return BodyNutritionInsightType.notEnoughData;

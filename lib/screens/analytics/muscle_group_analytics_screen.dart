@@ -66,28 +66,38 @@ class _MuscleGroupAnalyticsScreenState
   }
 
   List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
-    final sorted = muscles
-        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
-            m['muscleGroup'] as String?))
-        .toList(growable: false)
-      ..sort((a, b) => ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
-          .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0));
+    final sorted =
+        muscles
+            .where(
+              (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+                m['muscleGroup'] as String?,
+              ),
+            )
+            .toList(growable: false)
+          ..sort(
+            (a, b) => ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
+                .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0),
+          );
 
     if (sorted.length <= _maxMuscleBars) {
       return sorted
-          .map((m) => MuscleRadarDatum(
-                label: m['muscleGroup'] as String,
-                value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
-              ))
+          .map(
+            (m) => MuscleRadarDatum(
+              label: m['muscleGroup'] as String,
+              value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
+            ),
+          )
           .toList();
     }
 
     return sorted
         .take(_maxMuscleBars)
-        .map((m) => MuscleRadarDatum(
-              label: m['muscleGroup'] as String,
-              value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
-            ))
+        .map(
+          (m) => MuscleRadarDatum(
+            label: m['muscleGroup'] as String,
+            value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
+          ),
+        )
         .toList();
   }
 
@@ -97,8 +107,11 @@ class _MuscleGroupAnalyticsScreenState
 
     final muscles = (_analytics['muscles'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
-            m['muscleGroup'] as String?))
+        .where(
+          (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?,
+          ),
+        )
         .toList(growable: false);
     final weekly = (_analytics['weekly'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>();
@@ -110,15 +123,15 @@ class _MuscleGroupAnalyticsScreenState
     final radarMax = radarData.isEmpty
         ? 0.0
         : radarData
-            .map((e) => e.value)
-            .reduce((a, b) => a > b ? a : b)
-            .clamp(1.0, 1000000.0)
-            .toDouble();
+              .map((e) => e.value)
+              .reduce((a, b) => a > b ? a : b)
+              .clamp(1.0, 1000000.0)
+              .toDouble();
 
     final selectedWeek =
         (_selectedWeekIndex >= 0 && _selectedWeekIndex < weekly.length)
-            ? weekly[_selectedWeekIndex]
-            : null;
+        ? weekly[_selectedWeekIndex]
+        : null;
 
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
@@ -145,10 +158,10 @@ class _MuscleGroupAnalyticsScreenState
                       final label = days == 7
                           ? l10n.filter7Days
                           : days == 30
-                              ? l10n.filter30Days
-                              : days == 90
-                                  ? l10n.filter3Months
-                                  : l10n.filter6Months;
+                          ? l10n.filter30Days
+                          : days == 90
+                          ? l10n.filter3Months
+                          : l10n.filter6Months;
                       return ChoiceChip(
                         label: Text(label),
                         selected: _periodIndex == index,
@@ -186,9 +199,7 @@ class _MuscleGroupAnalyticsScreenState
                           const SizedBox(height: 8),
                           Text(
                             l10n.analyticsRadarVolumeCaption,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
@@ -240,9 +251,7 @@ class _MuscleGroupAnalyticsScreenState
                             dataQualityOk
                                 ? l10n.analyticsGuidanceDirectionalDisclaimer
                                 : l10n.analyticsGuidanceSoftenedDisclaimer,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
@@ -281,16 +290,24 @@ class _MuscleGroupAnalyticsScreenState
 
     final rawMuscles =
         (selectedWeek['muscles'] as Map<String, dynamic>?) ?? const {};
-    final items = rawMuscles.entries
-        .map((entry) => {
-              'muscleGroup': entry.key,
-              'value': (entry.value as num).toDouble(),
-            })
-        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
-            m['muscleGroup'] as String?))
-        .where((m) => (m['value'] as double) > 0)
-        .toList()
-      ..sort((a, b) => (b['value'] as double).compareTo(a['value'] as double));
+    final items =
+        rawMuscles.entries
+            .map(
+              (entry) => {
+                'muscleGroup': entry.key,
+                'value': (entry.value as num).toDouble(),
+              },
+            )
+            .where(
+              (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+                m['muscleGroup'] as String?,
+              ),
+            )
+            .where((m) => (m['value'] as double) > 0)
+            .toList()
+          ..sort(
+            (a, b) => (b['value'] as double).compareTo(a['value'] as double),
+          );
 
     return _buildMuscleBarChart(
       items: items.take(_maxMuscleBars).toList(),
@@ -308,14 +325,19 @@ class _MuscleGroupAnalyticsScreenState
 
   Widget _buildFrequencyCard(List<Map<String, dynamic>> muscles) {
     final l10n = AppLocalizations.of(context)!;
-    final items = muscles
-        .map((m) => {
-              'muscleGroup': m['muscleGroup'] as String,
-              'value': (m['frequencyPerWeek'] as num).toDouble(),
-            })
-        .where((m) => (m['value'] as double) > 0)
-        .toList()
-      ..sort((a, b) => (b['value'] as double).compareTo(a['value'] as double));
+    final items =
+        muscles
+            .map(
+              (m) => {
+                'muscleGroup': m['muscleGroup'] as String,
+                'value': (m['frequencyPerWeek'] as num).toDouble(),
+              },
+            )
+            .where((m) => (m['value'] as double) > 0)
+            .toList()
+          ..sort(
+            (a, b) => (b['value'] as double).compareTo(a['value'] as double),
+          );
 
     return _buildMuscleBarChart(
       items: items.take(_maxMuscleBars).toList(),
@@ -365,13 +387,14 @@ class _MuscleGroupAnalyticsScreenState
                 alignment: Alignment.centerLeft,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer
-                        .withValues(alpha: 0.45),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.45),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -395,8 +418,10 @@ class _MuscleGroupAnalyticsScreenState
                   alignment: BarChartAlignment.spaceAround,
                   gridData: AnalyticsChartDefaults.compactGrid,
                   borderData: AnalyticsChartDefaults.noBorder,
-                  maxY: (values.reduce((a, b) => a > b ? a : b) * 1.2)
-                      .clamp(1, 1e12),
+                  maxY: (values.reduce((a, b) => a > b ? a : b) * 1.2).clamp(
+                    1,
+                    1e12,
+                  ),
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipColor: (_) =>
@@ -408,8 +433,9 @@ class _MuscleGroupAnalyticsScreenState
                         return BarTooltipItem(
                           '$label\n${_formatCompact(value)} $unit',
                           TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onInverseSurface,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onInverseSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         );
@@ -423,9 +449,9 @@ class _MuscleGroupAnalyticsScreenState
                         reservedSize: 40,
                         getTitlesWidget: (value, meta) =>
                             AnalyticsChartDefaults.tickLabel(
-                          context,
-                          _formatCompact(value),
-                        ),
+                              context,
+                              _formatCompact(value),
+                            ),
                       ),
                     ),
                     bottomTitles: AxisTitles(
@@ -455,17 +481,19 @@ class _MuscleGroupAnalyticsScreenState
                   barGroups: values
                       .asMap()
                       .entries
-                      .map((entry) => BarChartGroupData(
-                            x: entry.key,
-                            barRods: [
-                              BarChartRodData(
-                                toY: entry.value,
-                                width: emphasize ? 16 : 14,
-                                borderRadius: BorderRadius.circular(4),
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ],
-                          ))
+                      .map(
+                        (entry) => BarChartGroupData(
+                          x: entry.key,
+                          barRods: [
+                            BarChartRodData(
+                              toY: entry.value,
+                              width: emphasize ? 16 : 14,
+                              borderRadius: BorderRadius.circular(4),
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ],
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -482,8 +510,8 @@ class _MuscleGroupAnalyticsScreenState
             Text(
               footer,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
           ],
         ),

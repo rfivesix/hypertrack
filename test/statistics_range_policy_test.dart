@@ -16,10 +16,7 @@ void main() {
       expect(resolved.semantics, StatisticsRangeSemantics.selected);
       expect(resolved.effectiveDays, 90);
       expect(resolved.dateRange, isA<DateTimeRange>());
-      expect(
-        resolved.dateRange!.end,
-        DateTime(2026, 3, 21, 23, 59, 59),
-      );
+      expect(resolved.dateRange!.end, DateTime(2026, 3, 21, 23, 59, 59));
     });
 
     test('capped semantics clamps effective days', () {
@@ -56,18 +53,20 @@ void main() {
       expect(resolved.effectiveDays, 30);
     });
 
-    test('dynamic all falls back to 1 day when all selected without earliest',
-        () {
-      final resolved = service.resolve(
-        metricId: StatisticsMetricId.bodyNutritionTrend,
-        selectedRangeIndex: 4,
-        now: DateTime(2026, 3, 21),
-      );
+    test(
+      'dynamic all falls back to 1 day when all selected without earliest',
+      () {
+        final resolved = service.resolve(
+          metricId: StatisticsMetricId.bodyNutritionTrend,
+          selectedRangeIndex: 4,
+          now: DateTime(2026, 3, 21),
+        );
 
-      expect(resolved.semantics, StatisticsRangeSemantics.dynamicAll);
-      expect(resolved.effectiveDays, 1);
-      expect(resolved.dateRange!.start, DateTime(2026, 3, 21));
-    });
+        expect(resolved.semantics, StatisticsRangeSemantics.dynamicAll);
+        expect(resolved.effectiveDays, 1);
+        expect(resolved.dateRange!.start, DateTime(2026, 3, 21));
+      },
+    );
 
     test('dynamic all uses selected days when selection is not all', () {
       final resolved = service.resolve(

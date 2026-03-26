@@ -79,10 +79,8 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
       PageRouteBuilder(
         pageBuilder: (_, __, ___) =>
             hasSeenOnboarding ? const MainScreen() : const OnboardingScreen(),
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(
-          opacity: anim,
-          child: child,
-        ),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
       ),
     );
   }

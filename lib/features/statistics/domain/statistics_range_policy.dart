@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum StatisticsRangeSemantics {
-  selected,
-  fixed,
-  capped,
-  dynamicAll,
-}
+enum StatisticsRangeSemantics { selected, fixed, capped, dynamicAll }
 
 enum StatisticsMetricId {
   bodyNutritionTrend,
@@ -63,8 +58,8 @@ class StatisticsRangePolicyService {
 
   static const List<int> selectableDayRanges = [7, 30, 90, 180, 3650];
 
-  static const Map<StatisticsMetricId, StatisticsMetricRangeMetadata> metadata =
-      {
+  static const Map<StatisticsMetricId, StatisticsMetricRangeMetadata>
+  metadata = {
     StatisticsMetricId.bodyNutritionTrend: StatisticsMetricRangeMetadata(
       metricId: StatisticsMetricId.bodyNutritionTrend,
       semantics: StatisticsRangeSemantics.dynamicAll,
@@ -151,7 +146,8 @@ class StatisticsRangePolicyService {
     final anchor = _normalizeDay(now ?? DateTime.now());
     final resolvedSelectedDays =
         selectedDays ?? selectedDaysFromIndex(selectedRangeIndex ?? 1);
-    final isAllSelection = selectedRangeIndex != null &&
+    final isAllSelection =
+        selectedRangeIndex != null &&
         isAllTimeRangeIndex(selectedRangeIndex) &&
         selectedDays == null;
 

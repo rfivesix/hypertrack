@@ -16,9 +16,13 @@ void main() {
 
     test('detects other-category labels robustly', () {
       expect(
-          StatisticsPresentationFormatter.isOtherCategoryLabel('other'), true);
+        StatisticsPresentationFormatter.isOtherCategoryLabel('other'),
+        true,
+      );
       expect(
-          StatisticsPresentationFormatter.isOtherCategoryLabel('Others'), true);
+        StatisticsPresentationFormatter.isOtherCategoryLabel('Others'),
+        true,
+      );
       expect(
         StatisticsPresentationFormatter.isOtherCategoryLabel('  OTHER  '),
         true,
@@ -76,11 +80,9 @@ void main() {
       final l10n = AppLocalizationsEn();
 
       expect(
-        StatisticsPresentationFormatter.muscleGuidanceLabel(
-          l10n,
-          false,
-          const ['Legs'],
-        ),
+        StatisticsPresentationFormatter.muscleGuidanceLabel(l10n, false, const [
+          'Legs',
+        ]),
         l10n.analyticsKeepTrackingUnlockInsights,
       );
       expect(
@@ -92,11 +94,10 @@ void main() {
         l10n.analyticsGuidanceNoClearWeakPoint,
       );
       expect(
-        StatisticsPresentationFormatter.muscleGuidanceLabel(
-          l10n,
-          true,
-          const ['Legs', 'Back'],
-        ),
+        StatisticsPresentationFormatter.muscleGuidanceLabel(l10n, true, const [
+          'Legs',
+          'Back',
+        ]),
         l10n.analyticsGuidanceLowerEmphasis('Legs, Back'),
       );
     });

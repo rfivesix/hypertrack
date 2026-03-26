@@ -38,8 +38,9 @@ class GlassBottomNavBar extends StatelessWidget {
   ) {
     final cs = Theme.of(context).colorScheme;
     final isDarkLocal = Theme.of(context).brightness == Brightness.dark;
-    final color =
-        isSelected ? cs.primary : (isDarkLocal ? Colors.white : Colors.black);
+    final color = isSelected
+        ? cs.primary
+        : (isDarkLocal ? Colors.white : Colors.black);
     return Expanded(
       child: Material(
         type: MaterialType.transparency,
@@ -102,12 +103,7 @@ class GlassBottomNavBar extends StatelessWidget {
         ...List.generate(items.length, (index) {
           final item = items[index];
           final isSelected = index == currentIndex;
-          return _buildNavItem(
-            context,
-            item,
-            isSelected,
-            () => onTap(index),
-          );
+          return _buildNavItem(context, item, isSelected, () => onTap(index));
         }),
       ],
     );
@@ -121,8 +117,10 @@ class GlassBottomNavBar extends StatelessWidget {
             .withOpacity(isDark ? 0.1 : 0.1);
 
         // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
-        final Color effectiveGlass =
-            Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
+        final Color effectiveGlass = Color.alphaBlend(
+          neutralTint,
+          bg.withOpacity(isDark ? 0.8 : 0.5),
+        );
 
         // Drag-to-select + Release-to-activate: über GestureDetector
         return LayoutBuilder(
@@ -145,16 +143,14 @@ class GlassBottomNavBar extends StatelessWidget {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 lastHoverIndex = idx;
-                HapticFeedback
-                    .selectionClick(); // leichtes Feedback beim ersten Kontakt
+                HapticFeedback.selectionClick(); // leichtes Feedback beim ersten Kontakt
               },
               onPanUpdate: (details) {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 if (idx != lastHoverIndex) {
                   lastHoverIndex = idx;
-                  HapticFeedback
-                      .lightImpact(); // leichtes Feedback beim Wechseln der Zone
+                  HapticFeedback.lightImpact(); // leichtes Feedback beim Wechseln der Zone
                 }
               },
               onPanEnd: (_) {
@@ -190,8 +186,9 @@ class GlassBottomNavBar extends StatelessWidget {
                           ),
                           Positioned.fill(
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               child: navItemsRow,
                             ),
                           ),

@@ -45,7 +45,8 @@ class FluidDialogContentState extends State<FluidDialogContent> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(
-        text: widget.initialName ?? 'Water'); // <--- Initialisierung anpassen
+      text: widget.initialName ?? 'Water',
+    ); // <--- Initialisierung anpassen
     _quantityController = TextEditingController(
       text: widget.initialQuantity?.toString() ?? '',
     );

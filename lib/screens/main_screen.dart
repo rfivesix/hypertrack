@@ -145,9 +145,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       case 'ai_meal_capture':
         final result = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
-              builder: (_) => AiMealCaptureScreen(
-                    initialDate: _currentActiveDate,
-                  )),
+            builder: (_) =>
+                AiMealCaptureScreen(initialDate: _currentActiveDate),
+          ),
         );
         if (result == true) _refreshHomeScreen();
         break;
@@ -165,10 +165,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     final Supplement? selectedSupplement =
         await showGlassBottomMenu<Supplement>(
-      context: context,
-      title: l10n.logIntakeTitle,
-      contentBuilder: (ctx, close) => LogSupplementMenu(close: close),
-    );
+          context: context,
+          title: l10n.logIntakeTitle,
+          contentBuilder: (ctx, close) => LogSupplementMenu(close: close),
+        );
 
     if (selectedSupplement == null || !mounted) return;
 
@@ -211,8 +211,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     // Wir warten auf das Ergebnis des Menüs.
     // Das Menü schließt sich selbst und gibt die Daten zurück.
-    final result =
-        await showGlassBottomMenu<({WorkoutLog log, Routine? routine})>(
+    final result = await showGlassBottomMenu<({WorkoutLog log, Routine? routine})>(
       context: context,
       title: l10n.startWorkout,
       contentBuilder: (ctx, close) {
@@ -222,7 +221,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
             borderRadius: BorderRadius.circular(18),
             child: Padding(
-              padding: padding ??
+              padding:
+                  padding ??
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: child,
             ),
@@ -250,8 +250,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 Text(
                   l10n.startEmptyWorkoutButton,
                   style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -292,8 +292,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
                         if (fullRoutine != null && ctx.mounted) {
                           // Menü schließen und Daten zurückgeben
-                          Navigator.of(ctx)
-                              .pop((log: newWorkoutLog, routine: fullRoutine));
+                          Navigator.of(
+                            ctx,
+                          ).pop((log: newWorkoutLog, routine: fullRoutine));
                         }
                       },
                       child: Text(l10n.startButton),
@@ -323,9 +324,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               r.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(ctx)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(ctx).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 2),
@@ -384,21 +383,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     // FIX: Datum holen
     final targetDate = _currentActiveDate;
 
-    final FoodItem? selectedFoodItem =
-        await Navigator.of(context).push<FoodItem>(
-      MaterialPageRoute(
-        builder: (context) => AddFoodScreen(
-          initialDate: targetDate, // <--- ÜBERGABE
-          // initialMealType: null, // Default ist ok
-        ),
-      ),
-    );
+    final FoodItem? selectedFoodItem = await Navigator.of(context)
+        .push<FoodItem>(
+          MaterialPageRoute(
+            builder: (context) => AddFoodScreen(
+              initialDate: targetDate, // <--- ÜBERGABE
+              // initialMealType: null, // Default ist ok
+            ),
+          ),
+        );
 
     if (selectedFoodItem == null || !mounted) return;
 
     // FIX: Datum übergeben (Signatur unten anpassen!)
-    final result =
-        await _showQuantityMenu(selectedFoodItem, initialDate: targetDate);
+    final result = await _showQuantityMenu(
+      selectedFoodItem,
+      initialDate: targetDate,
+    );
 
     if (result == null || !mounted) return;
 
@@ -420,8 +421,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       mealType: mealType,
     );
 
-    final newFoodEntryId =
-        await DatabaseHelper.instance.insertFoodEntry(newFoodEntry);
+    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+      newFoodEntry,
+    );
 
     if (isLiquid) {
       // ... insertFluidEntry mit timestamp ...
@@ -441,8 +443,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       // ... logCaffeineDose ...
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(totalCaffeine, timestamp,
-          foodEntryId: newFoodEntryId);
+      await _logCaffeineDose(
+        totalCaffeine,
+        timestamp,
+        foodEntryId: newFoodEntryId,
+      );
     }
 
     _refreshHomeScreen();
@@ -561,17 +566,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<
-          ({
-            int quantity,
-            DateTime timestamp,
-            String mealType,
-            bool isLiquid,
-            double? sugarPer100ml,
-            double? caffeinePer100ml,
-          })?>
-      _showQuantityMenu(FoodItem item,
-          {DateTime? initialDate} // <--- NEUER PARAMETER
-          ) async {
+    ({
+      int quantity,
+      DateTime timestamp,
+      String mealType,
+      bool isLiquid,
+      double? sugarPer100ml,
+      double? caffeinePer100ml,
+    })?
+  >
+  _showQuantityMenu(
+    FoodItem item, {
+    DateTime? initialDate, // <--- NEUER PARAMETER
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
@@ -650,7 +657,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   // ERSETZE DIESE METHODE
   GlobalAppBar _buildAppBar(
-      BuildContext context, int index, AppLocalizations l10n) {
+    BuildContext context,
+    int index,
+    AppLocalizations l10n,
+  ) {
     switch (index) {
       case 1: // Workout
         return GlobalAppBar(
@@ -875,10 +885,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 ),
               ),
               SizedBox(width: kBarFabGap),
-              GlassFab(
-                onPressed: _toggleAddMenu,
-                icon: Icons.add,
-              ),
+              GlassFab(onPressed: _toggleAddMenu, icon: Icons.add),
             ],
           ),
         ),
@@ -890,13 +897,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             final themeService = context.watch<ThemeService>();
             final bool isDarkLocal =
                 Theme.of(context).brightness == Brightness.dark;
-            final Color bgLocal =
-                isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
+            final Color bgLocal = isDarkLocal
+                ? summary_card_dark_mode
+                : summary_card_white_mode;
             final Color neutralTintLocal =
-                (isDarkLocal ? Colors.white : Colors.black)
-                    .withOpacity(isDarkLocal ? 0.10 : 0.10);
-            final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
-                bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
+                (isDarkLocal ? Colors.white : Colors.black).withOpacity(
+                  isDarkLocal ? 0.10 : 0.10,
+                );
+            final Color effectiveGlassLocal = Color.alphaBlend(
+              neutralTintLocal,
+              bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16),
+            );
 
             // Radius für Liquid Animation hier lokal definieren oder aus Konstante
             const double rLiquid = 99;
@@ -934,10 +945,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                         color: Colors.transparent,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
-                          children: _getSpeedDialActions(l10n)
-                              .asMap()
-                              .entries
-                              .map((entry) {
+                          children: _getSpeedDialActions(l10n).asMap().entries.map((
+                            entry,
+                          ) {
                             final index = entry.key;
                             final action = entry.value;
                             final curved = CurvedAnimation(
@@ -964,9 +974,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                       Text(
                                         action['label'],
                                         style: TextStyle(
-                                          color: Theme.of(
-                                                    context,
-                                                  ).brightness ==
+                                          color:
+                                              Theme.of(context).brightness ==
                                                   Brightness.light
                                               ? Colors.black87
                                               : Colors.white,
@@ -998,7 +1007,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                 ),
                                                 shape:
                                                     const LiquidRoundedSuperellipse(
-                                                        borderRadius: rLiquid),
+                                                      borderRadius: rLiquid,
+                                                    ),
                                                 child: Container(
                                                   width: 65.0,
                                                   height: 65.0,
@@ -1006,45 +1016,60 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     color: neutralTintLocal,
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            rLiquid),
+                                                          rLiquid,
+                                                        ),
                                                   ),
                                                   foregroundDecoration:
                                                       BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            rLiquid),
-                                                    border: Border.all(
-                                                      color: isDarkLocal
-                                                          ? Colors.white
-                                                              .withOpacity(0.20)
-                                                          : Colors.black
-                                                              .withOpacity(
-                                                                  0.08),
-                                                      width: 1.2,
-                                                    ),
-                                                  ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              rLiquid,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: isDarkLocal
+                                                              ? Colors.white
+                                                                    .withOpacity(
+                                                                      0.20,
+                                                                    )
+                                                              : Colors.black
+                                                                    .withOpacity(
+                                                                      0.08,
+                                                                    ),
+                                                          width: 1.2,
+                                                        ),
+                                                      ),
                                                   alignment: Alignment.center,
-                                                  child: action['gradient'] ==
-                                                          true
+                                                  child:
+                                                      action['gradient'] == true
                                                       ? ShaderMask(
                                                           blendMode:
                                                               BlendMode.srcIn,
-                                                          shaderCallback:
-                                                              (bounds) =>
-                                                                  const LinearGradient(
-                                                            colors: [
-                                                              Color(0xFFE88DCC),
-                                                              Color(0xFFF4A77A),
-                                                              Color(0xFFF7D06B),
-                                                              Color(0xFF7DDEAE),
-                                                              Color(0xFF6DC8D9),
-                                                            ],
-                                                            begin: Alignment
-                                                                .topLeft,
-                                                            end: Alignment
-                                                                .bottomRight,
-                                                          ).createShader(
-                                                                      bounds),
+                                                          shaderCallback: (bounds) =>
+                                                              const LinearGradient(
+                                                                colors: [
+                                                                  Color(
+                                                                    0xFFE88DCC,
+                                                                  ),
+                                                                  Color(
+                                                                    0xFFF4A77A,
+                                                                  ),
+                                                                  Color(
+                                                                    0xFFF7D06B,
+                                                                  ),
+                                                                  Color(
+                                                                    0xFF7DDEAE,
+                                                                  ),
+                                                                  Color(
+                                                                    0xFF6DC8D9,
+                                                                  ),
+                                                                ],
+                                                                begin: Alignment
+                                                                    .topLeft,
+                                                                end: Alignment
+                                                                    .bottomRight,
+                                                              ).createShader(
+                                                                bounds,
+                                                              ),
                                                           child: Icon(
                                                             action['icon'],
                                                             size: 28,
@@ -1064,7 +1089,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     BorderRadius.circular(18),
                                                 child: BackdropFilter(
                                                   filter: ImageFilter.blur(
-                                                      sigmaX: 12, sigmaY: 12),
+                                                    sigmaX: 12,
+                                                    sigmaY: 12,
+                                                  ),
                                                   child: Container(
                                                     width: 76,
                                                     height: 76,
@@ -1073,55 +1100,67 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                           .withOpacity(0.80),
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              18),
+                                                            18,
+                                                          ),
                                                       border: Border.all(
                                                         color: isDarkLocal
                                                             ? Colors.white
-                                                                .withOpacity(
-                                                                    0.30)
+                                                                  .withOpacity(
+                                                                    0.30,
+                                                                  )
                                                             : Colors.black
-                                                                .withOpacity(
-                                                                    0.10),
+                                                                  .withOpacity(
+                                                                    0.10,
+                                                                  ),
                                                         width: 1.5,
                                                       ),
                                                       boxShadow: [
                                                         BoxShadow(
                                                           color: Colors.black
                                                               .withOpacity(
-                                                                  0.25),
+                                                                0.25,
+                                                              ),
                                                           blurRadius: 10,
                                                           offset: const Offset(
-                                                              0, 4),
+                                                            0,
+                                                            4,
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
                                                     alignment: Alignment.center,
-                                                    child: action['gradient'] ==
+                                                    child:
+                                                        action['gradient'] ==
                                                             true
                                                         ? ShaderMask(
                                                             blendMode:
                                                                 BlendMode.srcIn,
-                                                            shaderCallback:
-                                                                (bounds) =>
-                                                                    const LinearGradient(
-                                                              colors: [
-                                                                Color(
-                                                                    0xFFE88DCC),
-                                                                Color(
-                                                                    0xFFF4A77A),
-                                                                Color(
-                                                                    0xFFF7D06B),
-                                                                Color(
-                                                                    0xFF7DDEAE),
-                                                                Color(
-                                                                    0xFF6DC8D9),
-                                                              ],
-                                                              begin: Alignment
-                                                                  .topLeft,
-                                                              end: Alignment
-                                                                  .bottomRight,
-                                                            ).createShader(
-                                                                        bounds),
+                                                            shaderCallback: (bounds) =>
+                                                                const LinearGradient(
+                                                                  colors: [
+                                                                    Color(
+                                                                      0xFFE88DCC,
+                                                                    ),
+                                                                    Color(
+                                                                      0xFFF4A77A,
+                                                                    ),
+                                                                    Color(
+                                                                      0xFFF7D06B,
+                                                                    ),
+                                                                    Color(
+                                                                      0xFF7DDEAE,
+                                                                    ),
+                                                                    Color(
+                                                                      0xFF6DC8D9,
+                                                                    ),
+                                                                  ],
+                                                                  begin: Alignment
+                                                                      .topLeft,
+                                                                  end: Alignment
+                                                                      .bottomRight,
+                                                                ).createShader(
+                                                                  bounds,
+                                                                ),
                                                             child: Icon(
                                                               action['icon'],
                                                               size: 28,
@@ -1166,9 +1205,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
         },
         child: CircleAvatar(
           radius: 18,
@@ -1195,10 +1234,12 @@ class _FrostedBar extends StatelessWidget {
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     final themeService = context.watch<ThemeService>();
 
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
-    final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withOpacity(isDark ? 0.1 : 0.1);
+    final Color effectiveGlass = Color.alphaBlend(
+      neutralTint,
+      bg.withOpacity(isDark ? 0.8 : 0.5),
+    );
 
     if (themeService.visualStyle == 1) {
       double radius = 99;
@@ -1224,8 +1265,10 @@ class _FrostedBar extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(radius.toDouble()),
                     border: Border.all(
