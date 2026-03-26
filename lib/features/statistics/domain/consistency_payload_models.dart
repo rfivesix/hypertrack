@@ -54,9 +54,8 @@ class WeeklyConsistencyMetricPayload {
           : DateTime.fromMillisecondsSinceEpoch(0),
       weekLabel: weekLabel is String ? weekLabel : '',
       count: count is num ? count.toInt() : 0,
-      durationMinutes: durationMinutes is num
-          ? durationMinutes.toDouble()
-          : 0.0,
+      durationMinutes:
+          durationMinutes is num ? durationMinutes.toDouble() : 0.0,
       tonnage: tonnage is num ? tonnage.toDouble() : 0.0,
     );
   }

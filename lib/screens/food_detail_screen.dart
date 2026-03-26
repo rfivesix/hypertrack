@@ -29,7 +29,7 @@ class FoodDetailScreen extends StatefulWidget {
   final FoodItem? foodItem;
 
   const FoodDetailScreen({super.key, this.trackedItem, this.foodItem})
-    : assert(trackedItem != null || foodItem != null);
+      : assert(trackedItem != null || foodItem != null);
 
   @override
   State<FoodDetailScreen> createState() => _FoodDetailScreenState();
@@ -114,9 +114,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         'name_de': _deCtrl.text.trim(),
         'name_en': _enCtrl.text.trim().isEmpty ? null : _enCtrl.text.trim(),
         'name': _deCtrl.text.trim(),
-        'category_key': _catCtrl.text.trim().isEmpty
-            ? null
-            : _catCtrl.text.trim(),
+        'category_key':
+            _catCtrl.text.trim().isEmpty ? null : _catCtrl.text.trim(),
         // Nutrients
         'calories_100g': int.tryParse(_calCtrl.text.trim()),
         'protein_100g': double.tryParse(_proCtrl.text.trim()),
@@ -225,9 +224,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final displayQuantity = _showPer100g || !_hasPortionInfo
-        ? 100
-        : _trackedQuantity!;
+    final displayQuantity =
+        _showPer100g || !_hasPortionInfo ? 100 : _trackedQuantity!;
 
     // Explicit top spacing avoids content colliding with status bar/app bar.
     final double topInset = MediaQuery.of(context).padding.top;
@@ -249,9 +247,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           IconButton(
             icon: Icon(
               _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: _isFavorite
-                  ? Colors.redAccent
-                  : colorScheme.onSurfaceVariant,
+              color:
+                  _isFavorite ? Colors.redAccent : colorScheme.onSurfaceVariant,
             ),
             onPressed: _toggleFavorite,
           ),
@@ -494,27 +491,27 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   // ---------- DEV: small helper inputs ----------
 
   Widget _row(String label, TextEditingController c) => TextField(
-    controller: c,
-    decoration: InputDecoration(
-      labelText: label,
-      border: const OutlineInputBorder(),
-      isDense: true,
-    ),
-  );
+        controller: c,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+      );
 
   Widget _num(String label, TextEditingController c) => SizedBox(
-    width: 160,
-    child: TextField(
-      controller: c,
-      keyboardType: const TextInputType.numberWithOptions(
-        decimal: true,
-        signed: false,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        isDense: true,
-      ),
-    ),
-  );
+        width: 160,
+        child: TextField(
+          controller: c,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
+          decoration: InputDecoration(
+            labelText: label,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+        ),
+      );
 }

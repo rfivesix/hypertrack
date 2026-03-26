@@ -18,8 +18,7 @@ class OffAttributionWidget extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    final currentTextStyle =
-        textStyle ??
+    final currentTextStyle = textStyle ??
         theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]);
 
     return Center(

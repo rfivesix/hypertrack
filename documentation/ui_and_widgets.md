@@ -89,6 +89,7 @@ The application provides **29 reusable widgets** in `lib/widgets/`. Here is a ca
 | `SupplementSummaryWidget` | `supplement_summary_widget.dart` | Daily supplement completion overview with progress indicators. |
 | `TodaysWorkoutSummaryCard` | `todays_workout_summary_card.dart` | Home dashboard card showing today's workout summary. |
 | `WorkoutCard` | `workout_card.dart` | Compact card for workout list items. |
+| `StatisticsStepsCard` | `statistics_steps_card.dart` | Reusable steps trend card for diary/statistics contexts with target line, optional average line, and compact period bar rendering. |
 
 ### Workout-Specific
 

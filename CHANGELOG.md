@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1-alpha.2+70006] - 2026-03-26
+
+### Added
+- **Steps Module UX (Day/Week/Month):** Expanded the dedicated steps screen with clear Day/Week/Month views and period navigation for date/week/month switching.
+- **Richer Step Trend Context:** Added compact insight chips in trend cards (total, active hours, peak hour, average/day, goal-hit days) for faster interpretation.
+
+### Changed
+- **Weekly & Monthly Steps Visualization:** Reworked bars/labels to better match the intended visual style (clean baseline, target reference line, improved spacing and readability).
+- **Statistics Hub Steps Card:** Refined the reusable steps card rendering and alignment so it visually matches the redesigned steps module.
+
+### Fixed
+- **Bar Baseline Consistency:** Step bars now correctly grow from zero baseline in trend charts instead of appearing visually offset.
+- **Goal Label Alignment:** Goal labels (for example `8k`) are now positioned directly at line height instead of drifting above the dashed target line.
+- **Week Chart Scaling Accuracy:** Goal check markers no longer affect bar-height calculations, preventing subtly shortened bars.
+- **Day Histogram Scaling:** Hourly bars now scale against the actual drawable chart height, fixing incorrect visual heights in the daily timeline.
+
 ## [0.7.1-alpha.1] - 2026-03-26
 
 ### Added

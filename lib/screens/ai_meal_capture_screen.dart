@@ -79,9 +79,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       final appLang =
           WidgetsBinding.instance.platformDispatcher.locale.languageCode;
       final locales = await _speech.locales();
-      final match = locales
-          .where((l) => l.localeId.startsWith(appLang))
-          .firstOrNull;
+      final match =
+          locales.where((l) => l.localeId.startsWith(appLang)).firstOrNull;
       _speechLocaleId = match?.localeId;
       debugPrint(
         'speech_to_text: available=true, localeId=$_speechLocaleId, all=${locales.map((l) => l.localeId).toList()}',
@@ -166,8 +165,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           );
           if (mounted) {
             setState(() {
-              final separator =
-                  _initialTextBeforeSpeech.endsWith(' ') ||
+              final separator = _initialTextBeforeSpeech.endsWith(' ') ||
                       _initialTextBeforeSpeech.isEmpty
                   ? ''
                   : ' ';
@@ -450,9 +448,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                 tooltip: l10n.aiCaptureTabPhoto,
               ),
               IconButton(
-                onPressed: _images.length < _maxImages
-                    ? _pickFromGallery
-                    : null,
+                onPressed:
+                    _images.length < _maxImages ? _pickFromGallery : null,
                 icon: const Icon(Icons.photo_library_rounded),
                 color: theme.colorScheme.primary,
                 tooltip: l10n.tabFavorites,
@@ -461,9 +458,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
               AnimatedBuilder(
                 animation: _pulseController,
                 builder: (context, child) {
-                  final scale = _isListening
-                      ? 1.0 + (_pulseController.value * 0.1)
-                      : 1.0;
+                  final scale =
+                      _isListening ? 1.0 + (_pulseController.value * 0.1) : 1.0;
                   return Transform.scale(
                     scale: scale,
                     child: IconButton(

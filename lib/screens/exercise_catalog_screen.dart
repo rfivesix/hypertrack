@@ -224,59 +224,61 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _foundExercises.isEmpty
-                ? Center(
-                    child: Text(
-                      l10n.noExercisesFound,
-                      style: textTheme.titleMedium,
-                    ),
-                  )
-                : ListView.builder(
-                    padding: DesignConstants.cardPadding,
-                    itemCount: _foundExercises.length,
-                    itemBuilder: (context, index) {
-                      final exercise = _foundExercises[index];
-                      return SummaryCard(
-                        // KORREKTUR 3: Übungs-Card
-                        child: ListTile(
-                          leading: const Icon(Icons.fitness_center),
-                          title: Text(
-                            exercise.getLocalizedName(context),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(exercise.categoryName),
-                          trailing: widget.isSelectionMode
-                              ? IconButton(
-                                  // Auswahl-Modus: Hinzufügen-Icon
-                                  icon: Icon(
-                                    Icons.add_circle_outline,
-                                    color: colorScheme.primary,
-                                  ),
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(exercise),
-                                )
-                              : const Icon(
-                                  Icons.chevron_right,
-                                ), // Anzeige-Modus: Pfeil
-                          onTap: () {
-                            if (widget.onExerciseSelected != null) {
-                              widget.onExerciseSelected!(exercise);
-                            } else if (widget.isSelectionMode) {
-                              // Im Auswahl-Modus: Bei Klick auch auswählen
-                              Navigator.of(context).pop(exercise);
-                            } else {
-                              // Im Anzeige-Modus: Detail-Screen öffnen
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      ExerciseDetailScreen(exercise: exercise),
-                                ),
-                              );
-                            }
-                          },
+                    ? Center(
+                        child: Text(
+                          l10n.noExercisesFound,
+                          style: textTheme.titleMedium,
                         ),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.builder(
+                        padding: DesignConstants.cardPadding,
+                        itemCount: _foundExercises.length,
+                        itemBuilder: (context, index) {
+                          final exercise = _foundExercises[index];
+                          return SummaryCard(
+                            // KORREKTUR 3: Übungs-Card
+                            child: ListTile(
+                              leading: const Icon(Icons.fitness_center),
+                              title: Text(
+                                exercise.getLocalizedName(context),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(exercise.categoryName),
+                              trailing: widget.isSelectionMode
+                                  ? IconButton(
+                                      // Auswahl-Modus: Hinzufügen-Icon
+                                      icon: Icon(
+                                        Icons.add_circle_outline,
+                                        color: colorScheme.primary,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(exercise),
+                                    )
+                                  : const Icon(
+                                      Icons.chevron_right,
+                                    ), // Anzeige-Modus: Pfeil
+                              onTap: () {
+                                if (widget.onExerciseSelected != null) {
+                                  widget.onExerciseSelected!(exercise);
+                                } else if (widget.isSelectionMode) {
+                                  // Im Auswahl-Modus: Bei Klick auch auswählen
+                                  Navigator.of(context).pop(exercise);
+                                } else {
+                                  // Im Anzeige-Modus: Detail-Screen öffnen
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ExerciseDetailScreen(
+                                              exercise: exercise),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
           ),
           // KORREKTUR 4: WgerAttributionWidget am Ende
           Padding(
@@ -292,17 +294,17 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
         onPressed: () {
           Navigator.of(context)
               .push(
-                MaterialPageRoute(
-                  builder: (context) => const CreateExerciseScreen(),
-                ),
-              )
+            MaterialPageRoute(
+              builder: (context) => const CreateExerciseScreen(),
+            ),
+          )
               .then((wasCreated) {
-                // Wenn der Screen mit 'true' zurückkehrt, wurde eine Übung erstellt.
-                // Lade die Liste neu, um die neue Übung anzuzeigen.
-                if (wasCreated == true) {
-                  _runFilter(_searchController.text);
-                }
-              });
+            // Wenn der Screen mit 'true' zurückkehrt, wurde eine Übung erstellt.
+            // Lade die Liste neu, um die neue Übung anzuzeigen.
+            if (wasCreated == true) {
+              _runFilter(_searchController.text);
+            }
+          });
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

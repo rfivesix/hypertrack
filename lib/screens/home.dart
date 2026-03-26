@@ -118,8 +118,8 @@ class HomeState extends State<Home> {
             (foodItem.protein / 100 * entry.quantityInGrams).round();
         newTodaysNutrition.carbs +=
             (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        newTodaysNutrition.fat += (foodItem.fat / 100 * entry.quantityInGrams)
-            .round();
+        newTodaysNutrition.fat +=
+            (foodItem.fat / 100 * entry.quantityInGrams).round();
       }
     }
 
@@ -242,8 +242,8 @@ class HomeState extends State<Home> {
         break;
       case 'All':
         // Für "Alle" holen wir das früheste Datum aus der Datenbank
-        final earliest = await DatabaseHelper.instance
-            .getEarliestMeasurementDate();
+        final earliest =
+            await DatabaseHelper.instance.getEarliestMeasurementDate();
         start = earliest ?? now;
         break;
       case '30D':
@@ -451,8 +451,8 @@ class HomeState extends State<Home> {
                 Text(
                   l10n.weightHistoryTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 Expanded(
                   child: Align(

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../data/workout_database_helper.dart';
 import '../features/statistics/data/statistics_hub_data_adapter.dart';
 import '../features/statistics/domain/body_nutrition_analytics_models.dart';
 import '../features/statistics/domain/consistency_payload_models.dart';
 import '../features/statistics/domain/recovery_payload_models.dart';
+import '../features/statistics/domain/hub_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
+import '../features/steps/data/steps_aggregation_repository.dart';
+import '../features/steps/domain/steps_models.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 import '../widgets/analytics_section_header.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
+import '../features/steps/presentation/steps_module_screen.dart';
 import 'analytics/body_nutrition_correlation_screen.dart';
 import 'analytics/consistency_tracker_screen.dart';
 import 'analytics/muscle_group_analytics_screen.dart';
@@ -19,15 +24,34 @@ import 'analytics/pr_dashboard_screen.dart';
 import 'analytics/recovery_tracker_screen.dart';
 import 'exercise_catalog_screen.dart';
 import 'measurements_screen.dart';
+import '../widgets/statistics_steps_card.dart';
+import '../data/database_helper.dart';
+import '../services/health/steps_sync_service.dart';
 
 class StatisticsHubScreen extends StatefulWidget {
-  const StatisticsHubScreen({super.key});
+  const StatisticsHubScreen({
+    super.key,
+    StatisticsHubDataAdapter? hubDataAdapter,
+    StepsAggregationRepository? stepsRepository,
+    this.fetchHubAnalytics,
+  })  : _hubDataAdapter = hubDataAdapter,
+        _stepsRepository = stepsRepository;
+
+  final StatisticsHubDataAdapter? _hubDataAdapter;
+  final StepsAggregationRepository? _stepsRepository;
+  final Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(
+    int selectedTimeRangeIndex,
+  )? fetchHubAnalytics;
 
   @override
   State<StatisticsHubScreen> createState() => _StatisticsHubScreenState();
 }
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
+  static const int _days7 = 7;
+  static const int _days30 = 30;
+  static const int _days90 = 90;
+  static const int _days180 = 180;
   static const _miniSignalPoints = 8;
   static const _fixedConsistencyWeeks = 6;
   static const _bodyTrendPoints = 10;
@@ -35,10 +59,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   static const _miniBarOpacity = 0.75;
 
   late final l10n = AppLocalizations.of(context)!;
-  final _hubDataAdapter = StatisticsHubDataAdapter(
-    workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
-  );
+  late final StatisticsHubDataAdapter _hubDataAdapter;
   final _rangePolicy = StatisticsRangePolicyService.instance;
+  late final StepsAggregationRepository _stepsRepository;
 
   int _selectedTimeRangeIndex = 1;
 
@@ -64,17 +87,66 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     muscles: [],
   );
   BodyNutritionAnalyticsResult? _bodyNutrition;
+  RangeStepsAggregation? _stepsRange;
+  bool _stepsTrackingEnabled = true;
+  int _targetSteps = 8000;
+  String _stepsProviderName = '';
   @override
   void initState() {
     super.initState();
+    _hubDataAdapter = widget._hubDataAdapter ??
+        StatisticsHubDataAdapter(
+            workoutDatabaseHelper: WorkoutDatabaseHelper.instance);
+    _stepsRepository =
+        widget._stepsRepository ?? HealthStepsAggregationRepository();
     _loadHubAnalytics();
   }
 
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
-    final (hub, bodyNutrition) = await _hubDataAdapter.fetch(
+    final selectedDays =
+        _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex);
+    final earliest = await _stepsRepository.getEarliestAvailableDate();
+    final resolvedRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.bodyNutritionTrend,
+      selectedRangeIndex: _selectedTimeRangeIndex,
+      selectedDays: selectedDays,
+      earliestAvailableDay: earliest,
+    );
+    final daysBack = resolvedRange.effectiveDays ?? selectedDays;
+    final hubFuture = _fetchHubAnalytics(
       selectedTimeRangeIndex: _selectedTimeRangeIndex,
     );
+    final stepsRangeFuture = _stepsRepository.getRangeAggregation(
+      endDate: DateTime.now(),
+      daysBack: daysBack,
+    );
+    final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
+    final targetStepsFuture =
+        DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
+    final providerFuture = StepsSyncService().getProviderFilter();
+
+    final tuple = await hubFuture;
+    final stepsRange = await stepsRangeFuture;
+    final stepsTrackingEnabled = await stepsTrackingFuture;
+    final targetSteps = await targetStepsFuture;
+    final providerFilter = await providerFuture;
+    final providerRaw = StepsSyncService.providerFilterToRaw(providerFilter);
+    String providerName = 'Local';
+    if (providerRaw == 'appleHealth') {
+      providerName = 'Apple Health';
+    } else if (providerRaw == 'healthConnect') {
+      providerName = 'Health Connect';
+    } else if (providerRaw == 'withings') {
+      providerName = 'Withings';
+    } else if (providerRaw == 'garmin') {
+      providerName = 'Garmin';
+    } else if (providerRaw == 'fitbit') {
+      providerName = 'Fitbit';
+    }
+
+    final hub = tuple.$1;
+    final bodyNutrition = tuple.$2;
 
     if (!mounted) return;
     setState(() {
@@ -84,17 +156,33 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _recoveryAnalytics = hub.recoveryAnalytics;
       _notableImprovements = hub.notableImprovements;
       _bodyNutrition = bodyNutrition;
+      _stepsRange = stepsRange;
+      _stepsTrackingEnabled = stepsTrackingEnabled;
+      _targetSteps = targetSteps;
+      _stepsProviderName = providerName;
       _isLoadingStats = false;
     });
   }
 
+  Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)>
+      _fetchHubAnalytics({
+    required int selectedTimeRangeIndex,
+  }) {
+    final override = widget.fetchHubAnalytics;
+    if (override != null) {
+      return override(selectedTimeRangeIndex);
+    }
+    return _hubDataAdapter.fetch(
+        selectedTimeRangeIndex: selectedTimeRangeIndex);
+  }
+
   List<String> get _timeRanges => [
-    l10n.filter7Days,
-    l10n.filter30Days,
-    l10n.filter3Months,
-    l10n.filter6Months,
-    l10n.filterAll,
-  ];
+        l10n.filter7Days,
+        l10n.filter30Days,
+        l10n.filter3Months,
+        l10n.filter6Months,
+        l10n.filterAll,
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +200,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _buildTimeRangeFilter(),
+                const SizedBox(height: DesignConstants.spacingL),
+                _buildStepsCard(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
@@ -168,6 +258,110 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return AnalyticsSectionHeader(title: title);
   }
 
+  Widget _buildStepsCard() {
+    final range = _stepsRange;
+    final hasData =
+        (range?.dailyTotals.any((bucket) => bucket.steps > 0) ?? false);
+    final selectedDays =
+        _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex);
+    final subtitleRange = _rangeSubtitle(selectedDays, range);
+    final localeCode =
+        Localizations.localeOf(context).languageCode.toLowerCase();
+    final stepsTitle = localeCode == 'de' ? 'Schritte' : 'Steps';
+    final noDataText = !_stepsTrackingEnabled
+        ? (localeCode == 'de'
+            ? 'Schritt-Tracking in den Einstellungen aktivieren'
+            : 'Enable step tracking in Settings')
+        : (localeCode == 'de' ? 'Noch keine Schrittdaten' : 'No step data yet');
+
+    // Fallback info if tracking disabled or no data
+    if (!_stepsTrackingEnabled || !hasData) {
+      return SummaryCard(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const StepsModuleScreen()),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeaderWithChevron(
+                  label: stepsTitle, chipText: subtitleRange),
+              const SizedBox(height: 8),
+              Text(
+                noDataText,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // In Screenshot 4, if period is "Letzte 7 Tage", today steps are displayed.
+    // Otherwise, typically the total steps of the entire period.
+    final bool isSevenDays = _selectedTimeRangeIndex == 0;
+
+    int currentSteps = 0;
+    String stepsSubtitle = localeCode == 'de' ? 'Heute' : 'Today';
+
+    if (isSevenDays) {
+      final todayBucket = range!.dailyTotals.lastWhere(
+        (bucket) =>
+            bucket.start.isBefore(DateTime.now().add(const Duration(days: 1))),
+        orElse: () => range.dailyTotals.last, // fallback
+      );
+      currentSteps = todayBucket.steps;
+    } else {
+      currentSteps = range!.totalSteps;
+      stepsSubtitle = localeCode == 'de' ? 'Gesamtschrittzahl' : 'Total steps';
+    }
+
+    final subtitle = '$subtitleRange • $_stepsProviderName';
+
+    return StatisticsStepsCard(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const StepsModuleScreen()),
+        );
+      },
+      title: stepsTitle,
+      subtitle: subtitle,
+      currentSteps: currentSteps,
+      currentStepsSubtitle: stepsSubtitle,
+      dailyTotals: range.dailyTotals,
+      dailyGoal: _targetSteps,
+    );
+  }
+
+  String _rangeSubtitle(int selectedDays, RangeStepsAggregation? range) {
+    final localeCode =
+        Localizations.localeOf(context).languageCode.toLowerCase();
+    if (range == null) {
+      return localeCode == 'de' ? '$selectedDays Tage' : '$selectedDays days';
+    }
+    if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
+      return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
+    }
+    if (selectedDays == _days7) {
+      return localeCode == 'de' ? 'Letzte 7 Tage' : 'Last 7 days';
+    }
+    if (selectedDays == _days30) {
+      return localeCode == 'de' ? 'Letzte 30 Tage' : 'Last 30 days';
+    }
+    if (selectedDays == _days90) {
+      return localeCode == 'de' ? 'Letzte 3 Monate' : 'Last 3 months';
+    }
+    if (selectedDays == _days180) {
+      return localeCode == 'de' ? 'Letzte 6 Monate' : 'Last 6 months';
+    }
+    return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
+  }
+
   Widget _buildConsistencySection() {
     final counts = _workoutsPerWeek
         .map((w) => ((w['count'] as num?) ?? 0).toDouble())
@@ -205,8 +399,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             Text(
               streakText,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             ),
             const SizedBox(height: 8),
             _buildMicroCaption(
@@ -214,9 +408,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             ),
             const SizedBox(height: 4),
             _buildMiniBars(
-              values: weeklyTrend
-                  .take(_miniSignalPoints)
-                  .toList(growable: false),
+              values:
+                  weeklyTrend.take(_miniSignalPoints).toList(growable: false),
               color: Theme.of(context).colorScheme.primary,
               semanticsLabel: l10n.sectionConsistency,
             ),
@@ -242,8 +435,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         ? l10n.exerciseAnalyticsNoData
         : _formatPerWeek(
             (topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(
-              1,
-            ),
+                  1,
+                ),
           );
 
     return SummaryCard(
@@ -275,8 +468,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             Text(
               topMuscleFrequency,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             ),
             if (topMuscleShare > 0) ...[
               const SizedBox(height: 8),
@@ -303,16 +496,15 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildPerformanceSection() {
-    final topImprovement = _notableImprovements.isNotEmpty
-        ? _notableImprovements.first
-        : null;
+    final topImprovement =
+        _notableImprovements.isNotEmpty ? _notableImprovements.first : null;
     final momentumValue = topImprovement == null
         ? '-'
         : '+${((topImprovement['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%';
     final topExerciseName = topImprovement == null
         ? l10n.metricsMostImproved
         : (topImprovement['exerciseName'] as String? ??
-              l10n.metricsMostImproved);
+            l10n.metricsMostImproved);
     final performanceSummaryText = _notableImprovements.isEmpty
         ? l10n.exerciseAnalyticsNoData
         : '${l10n.analyticsRecentRecords}: ${_notableImprovements.length}';
@@ -348,16 +540,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 Text(
                   momentumValue,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: momentumColor,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: momentumColor,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   performanceSummaryText,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 _buildMicroCaption(l10n.analyticsRecentRecords),
@@ -413,9 +605,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final overallState = _recoveryAnalytics.overallState;
     final recoveryHeadline =
         StatisticsPresentationFormatter.recoveryOverallLabel(
-          l10n,
-          overallState,
-        );
+      l10n,
+      overallState,
+    );
 
     final recoveryStatusSummary = hasData
         ? l10n.recoveryHubCountsSummary(recovering, ready, fresh)
@@ -461,16 +653,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               Text(
                 recoveryHeadline,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: iconColor,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: iconColor,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
                 recoveryStatusSummary,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
               ),
               if (hasData) ...[
                 const SizedBox(height: 8),
@@ -529,14 +721,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final avgCalories = body?.avgDailyCalories;
     final weightTrend =
         body?.smoothedWeight.map((p) => p.value).toList(growable: false) ??
-        const <double>[];
+            const <double>[];
 
     final weightValue = currentWeight == null
         ? '-'
         : '${currentWeight.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
-    final caloriesValue = avgCalories == null
-        ? '-'
-        : avgCalories.round().toString();
+    final caloriesValue =
+        avgCalories == null ? '-' : avgCalories.round().toString();
 
     return Column(
       children: [
@@ -563,8 +754,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 Text(
                   weightValue,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -574,8 +765,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     weightChange,
                   ),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 _buildMicroCaption(_effectiveBodyRangeLabel()),
@@ -714,15 +905,15 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               vertical: 3,
             ),
             decoration: BoxDecoration(
-              color: chipColor.withOpacity(_chipBackgroundOpacity),
+              color: chipColor.withValues(alpha: _chipBackgroundOpacity),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
               chipText,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: chipColor,
-                fontWeight: FontWeight.w600,
-              ),
+                    color: chipColor,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ),
       ],
@@ -757,8 +948,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: Theme.of(context).colorScheme.outline,
-      ),
+            color: Theme.of(context).colorScheme.outline,
+          ),
     );
   }
 
@@ -790,7 +981,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     alignment: Alignment.bottomCenter,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: color.withOpacity(_miniBarOpacity),
+                        color: color.withValues(alpha: _miniBarOpacity),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),

@@ -22,8 +22,8 @@ class StepsSyncService {
   final DatabaseHelper _dbHelper;
 
   StepsSyncService({HealthPlatformSteps? platform, DatabaseHelper? dbHelper})
-    : _platform = platform ?? const HealthPlatformSteps(),
-      _dbHelper = dbHelper ?? DatabaseHelper.instance;
+      : _platform = platform ?? const HealthPlatformSteps(),
+        _dbHelper = dbHelper ?? DatabaseHelper.instance;
 
   Future<bool> isTrackingEnabled() async {
     final prefs = await SharedPreferences.getInstance();
@@ -78,11 +78,17 @@ class StepsSyncService {
     await prefs.setString(lastSyncAtIsoKey, valueUtc.toUtc().toIso8601String());
   }
 
+  Future<void> clearLastSyncAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(lastSyncAtIsoKey);
+  }
+
   Future<StepsAvailability> getAvailability() => _platform.getAvailability();
 
   Future<bool> requestPermissions() => _platform.requestPermissions();
 
-  Future<StepsSyncResult> sync({DateTime? now}) async {
+  Future<StepsSyncResult> sync(
+      {DateTime? now, bool forceRefresh = false}) async {
     final enabled = await isTrackingEnabled();
     if (!enabled) {
       return const StepsSyncResult(
@@ -107,9 +113,11 @@ class StepsSyncService {
 
     final nowUtc = (now ?? DateTime.now()).toUtc();
     final lastSync = await getLastSyncAt();
-    final fromUtc = (lastSync == null)
-        ? nowUtc.subtract(_initialLookback)
-        : lastSync.subtract(_overlap);
+    final fromUtc = _resolveSyncWindowStart(
+      forceRefresh: forceRefresh,
+      nowUtc: nowUtc,
+      lastSync: lastSync,
+    );
 
     final provider = HealthPlatformSteps.providerForPlatform();
 
@@ -147,8 +155,8 @@ class StepsSyncService {
           .toString();
       final externalKey =
           segment.nativeId != null && segment.nativeId!.isNotEmpty
-          ? '$provider:${segment.nativeId}'
-          : '$provider:$fallback';
+              ? '$provider:${segment.nativeId}'
+              : '$provider:$fallback';
       return <String, dynamic>{
         'provider': provider,
         'sourceId': segment.sourceId,
@@ -167,5 +175,16 @@ class StepsSyncService {
       fetchedCount: segments.length,
       upsertedCount: rows.length,
     );
+  }
+
+  DateTime _resolveSyncWindowStart({
+    required bool forceRefresh,
+    required DateTime nowUtc,
+    required DateTime? lastSync,
+  }) {
+    if (forceRefresh || lastSync == null) {
+      return nowUtc.subtract(_initialLookback);
+    }
+    return lastSync.subtract(_overlap);
   }
 }

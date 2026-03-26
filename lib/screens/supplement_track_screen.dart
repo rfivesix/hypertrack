@@ -231,15 +231,15 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   }
 
   Widget _sectionTitle(String title) => Padding(
-    padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-    child: Text(
-      title,
-      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: Colors.grey[600],
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
+        padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+        child: Text(
+          title,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+      );
 
   Widget _progressCard(TrackedSupplement ts) {
     final s = ts.supplement;
@@ -247,9 +247,8 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
     final target = (isLimit ? s.dailyLimit : s.dailyGoal) ?? 0.0;
     final overTarget = isLimit && ts.totalDosedToday > target;
     final hasTarget = target > 0;
-    final progress = hasTarget
-        ? (ts.totalDosedToday / target).clamp(0.0, 1.0)
-        : 0.0;
+    final progress =
+        hasTarget ? (ts.totalDosedToday / target).clamp(0.0, 1.0) : 0.0;
     final color = overTarget ? Colors.red.shade400 : Colors.green.shade400;
     final l10n = AppLocalizations.of(context)!;
 
@@ -421,7 +420,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                               DateFormat.yMMMMd(locale).format(_selectedDate),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),

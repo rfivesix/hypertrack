@@ -2,7 +2,7 @@
 
 Hypertrack is a comprehensive, **offline-first** health and fitness tracking application built with [Flutter](https://flutter.dev). It centralizes nutrition logging, workout management, body measurements, and supplement tracking into a single, privacy-focused platform.
 
-> **Status:** v0.7 minor release line (post-alpha). Core architecture (Drift + UUIDs + modular analytics + AI integration) is solidified.
+> **Status:** v0.7 foundation with active v0.7.1 alpha iterations. Core architecture (Drift + UUIDs + modular analytics + AI integration) is solidified; Health Steps UX is currently being refined.
 
 ---
 
@@ -72,6 +72,7 @@ Read-only step import from mobile health providers with provider filtering.
 - **Android:** Google Health Connect step records.
 - **Storage:** Raw UTC step segments with strong deduplication keys for safe repeated sync.
 - **Diary:** Steps card appears when data exists and tracking is enabled.
+- **Steps Detail Screen:** Dedicated `Steps` module screen with Day/Week/Month views and period navigation.
 - **Settings:** Global tracking toggle and provider filter (`All`, `Apple Health`, `Health Connect`).
 
 ### 🔒 Data Management & Privacy

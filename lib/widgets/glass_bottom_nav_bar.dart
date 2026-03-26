@@ -38,9 +38,8 @@ class GlassBottomNavBar extends StatelessWidget {
   ) {
     final cs = Theme.of(context).colorScheme;
     final isDarkLocal = Theme.of(context).brightness == Brightness.dark;
-    final color = isSelected
-        ? cs.primary
-        : (isDarkLocal ? Colors.white : Colors.black);
+    final color =
+        isSelected ? cs.primary : (isDarkLocal ? Colors.white : Colors.black);
     return Expanded(
       child: Material(
         type: MaterialType.transparency,
@@ -143,14 +142,16 @@ class GlassBottomNavBar extends StatelessWidget {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 lastHoverIndex = idx;
-                HapticFeedback.selectionClick(); // leichtes Feedback beim ersten Kontakt
+                HapticFeedback
+                    .selectionClick(); // leichtes Feedback beim ersten Kontakt
               },
               onPanUpdate: (details) {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 if (idx != lastHoverIndex) {
                   lastHoverIndex = idx;
-                  HapticFeedback.lightImpact(); // leichtes Feedback beim Wechseln der Zone
+                  HapticFeedback
+                      .lightImpact(); // leichtes Feedback beim Wechseln der Zone
                 }
               },
               onPanEnd: (_) {

@@ -151,9 +151,8 @@ class SetLog {
       log_order: log_order ?? this.log_order,
       notes: notes ?? this.notes,
       distanceKm: clearDistance ? null : (distanceKm ?? this.distanceKm),
-      durationSeconds: clearDuration
-          ? null
-          : (durationSeconds ?? this.durationSeconds),
+      durationSeconds:
+          clearDuration ? null : (durationSeconds ?? this.durationSeconds),
       rpe: rpe ?? this.rpe,
       rir: clearRir ? null : (rir ?? this.rir),
       supersetId: supersetId ?? this.supersetId,
