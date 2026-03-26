@@ -60,8 +60,10 @@ class BackupManager {
       final jsonString = await _generateBackupJson();
 
       // Encrypt payload before sharing.
-      final wrapper =
-          await EncryptionUtil.encryptString(jsonString, passphrase);
+      final wrapper = await EncryptionUtil.encryptString(
+        jsonString,
+        passphrase,
+      );
       final wrappedJson = jsonEncode(wrapper);
 
       return await _writeAndShareFile(wrappedJson, 'hypertrack_backup_enc');
@@ -111,12 +113,10 @@ class BackupManager {
     final customExercises = await _workoutDb.getCustomExercises();
 
     // 3) Collect historical goals and supplement settings.
-    final goalsHistoryRows = await db.customSelect(
-      '''
+    final goalsHistoryRows = await db.customSelect('''
       SELECT target_calories, target_protein, target_carbs, target_fat, target_water, target_steps, created_at
       FROM daily_goals_history
-      ''',
-    ).get();
+      ''').get();
     final dailyGoalsHistory = goalsHistoryRows
         .map(
           (r) => {
@@ -149,9 +149,9 @@ class BackupManager {
 
     // 4) Collect app settings and profile.
     final settingsRow = await db.select(db.appSettings).getSingleOrNull();
-    final appSettingsRawRows = await db.customSelect(
-      'SELECT target_steps FROM app_settings LIMIT 1',
-    ).get();
+    final appSettingsRawRows = await db
+        .customSelect('SELECT target_steps FROM app_settings LIMIT 1')
+        .get();
     final targetSteps = appSettingsRawRows.isNotEmpty
         ? appSettingsRawRows.first.read<int>('target_steps')
         : StepsSyncService.defaultStepsGoal;
@@ -169,12 +169,10 @@ class BackupManager {
           }
         : null;
 
-    final healthStepRows = await db.customSelect(
-      '''
+    final healthStepRows = await db.customSelect('''
       SELECT provider, source_id, start_at, end_at, step_count, external_key
       FROM health_step_segments
-      ''',
-    ).get();
+      ''').get();
     final healthStepSegments = healthStepRows
         .map(
           (r) => <String, dynamic>{
@@ -340,23 +338,24 @@ class BackupManager {
       await db.batch((batch) {
         for (final item in backup.customFoodItems) {
           batch.insert(
-              db.products,
-              ProductsCompanion(
-                barcode: drift.Value(item.barcode),
-                name: drift.Value(item.name),
-                brand: drift.Value(item.brand),
-                calories: drift.Value(item.calories),
-                protein: drift.Value(item.protein),
-                carbs: drift.Value(item.carbs),
-                fat: drift.Value(item.fat),
-                sugar: drift.Value(item.sugar),
-                fiber: drift.Value(item.fiber),
-                salt: drift.Value(item.salt),
-                source: const drift.Value('user'),
-                // Guard against nullable legacy values in older backups.
-                isLiquid: drift.Value(item.isLiquid ?? false),
-                category: drift.Value(item.category),
-                id: drift.Value(item.barcode.startsWith('user_')
+            db.products,
+            ProductsCompanion(
+              barcode: drift.Value(item.barcode),
+              name: drift.Value(item.name),
+              brand: drift.Value(item.brand),
+              calories: drift.Value(item.calories),
+              protein: drift.Value(item.protein),
+              carbs: drift.Value(item.carbs),
+              fat: drift.Value(item.fat),
+              sugar: drift.Value(item.sugar),
+              fiber: drift.Value(item.fiber),
+              salt: drift.Value(item.salt),
+              source: const drift.Value('user'),
+              // Guard against nullable legacy values in older backups.
+              isLiquid: drift.Value(item.isLiquid ?? false),
+              category: drift.Value(item.category),
+              id: drift.Value(
+                item.barcode.startsWith('user_')
                     ? item.barcode
                     : 'user_${item.barcode}',
               ),
@@ -394,8 +393,7 @@ class BackupManager {
           await db.customStatement(
             'UPDATE daily_goals_history SET target_steps = ? WHERE local_id = ?',
             [
-              (row['targetSteps'] as int?) ??
-                  StepsSyncService.defaultStepsGoal,
+              (row['targetSteps'] as int?) ?? StepsSyncService.defaultStepsGoal,
               inserted.localId,
             ],
           );

@@ -39,4 +39,3 @@ class StepsSyncResult {
     required this.upsertedCount,
   });
 }
-

@@ -306,7 +306,8 @@ class DiaryScreenState extends State<DiaryScreen> {
     final enabled = await _stepsSyncService.isTrackingEnabled();
     if (!enabled) return;
     final lastSync = await _stepsSyncService.getLastSyncAt();
-    final shouldSync = lastSync == null ||
+    final shouldSync =
+        lastSync == null ||
         DateTime.now().toUtc().difference(lastSync) > _stepsSyncInterval;
     if (!shouldSync) return;
     if (!mounted) return;
@@ -859,13 +860,18 @@ class DiaryScreenState extends State<DiaryScreen> {
       return const SizedBox.shrink();
     }
     final theme = Theme.of(context);
-    final stepsText = NumberFormat.decimalPattern().format(_stepsForSelectedDay);
+    final stepsText = NumberFormat.decimalPattern().format(
+      _stepsForSelectedDay,
+    );
     return SummaryCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.directions_walk_rounded, color: theme.colorScheme.primary),
+            Icon(
+              Icons.directions_walk_rounded,
+              color: theme.colorScheme.primary,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(

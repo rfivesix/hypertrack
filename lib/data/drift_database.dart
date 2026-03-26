@@ -54,6 +54,7 @@ class AppSettings extends Table with HybridId, MetaColumns {
   IntColumn get targetCarbs => integer().withDefault(const Constant(250))();
   IntColumn get targetFat => integer().withDefault(const Constant(80))();
   IntColumn get targetWater => integer().withDefault(const Constant(3000))();
+  IntColumn get targetSteps => integer().withDefault(const Constant(8000))();
 }
 
 // 3. Exercises
@@ -333,6 +334,7 @@ class DailyGoalsHistory extends Table with HybridId, MetaColumns {
   IntColumn get targetCarbs => integer()();
   IntColumn get targetFat => integer()();
   IntColumn get targetWater => integer()();
+  IntColumn get targetSteps => integer().withDefault(const Constant(8000))();
   // createdAt dient hier als "gültig ab" Zeitstempel
 }
 
@@ -430,13 +432,13 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(supplementSettingsHistory);
       }
       if (from < 8) {
-        await m.customStatement(
+        await customStatement(
           'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
         );
-        await m.customStatement(
+        await customStatement(
           'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
         );
-        await m.customStatement('''
+        await customStatement('''
           CREATE TABLE IF NOT EXISTS health_step_segments (
             local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             id TEXT NOT NULL UNIQUE,

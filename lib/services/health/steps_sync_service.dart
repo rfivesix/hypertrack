@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
+
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,11 +21,9 @@ class StepsSyncService {
   final HealthPlatformSteps _platform;
   final DatabaseHelper _dbHelper;
 
-  StepsSyncService({
-    HealthPlatformSteps? platform,
-    DatabaseHelper? dbHelper,
-  })  : _platform = platform ?? const HealthPlatformSteps(),
-        _dbHelper = dbHelper ?? DatabaseHelper.instance;
+  StepsSyncService({HealthPlatformSteps? platform, DatabaseHelper? dbHelper})
+    : _platform = platform ?? const HealthPlatformSteps(),
+      _dbHelper = dbHelper ?? DatabaseHelper.instance;
 
   Future<bool> isTrackingEnabled() async {
     final prefs = await SharedPreferences.getInstance();
@@ -85,18 +85,25 @@ class StepsSyncService {
   Future<StepsSyncResult> sync({DateTime? now}) async {
     final enabled = await isTrackingEnabled();
     if (!enabled) {
-      return const StepsSyncResult(skipped: true, fetchedCount: 0, upsertedCount: 0);
+      return const StepsSyncResult(
+        skipped: true,
+        fetchedCount: 0,
+        upsertedCount: 0,
+      );
     }
 
     final availability = await _platform.getAvailability();
     if (availability == StepsAvailability.notAvailable) {
-      return const StepsSyncResult(skipped: true, fetchedCount: 0, upsertedCount: 0);
+      return const StepsSyncResult(
+        skipped: true,
+        fetchedCount: 0,
+        upsertedCount: 0,
+      );
     }
 
-    final granted = await _platform.requestPermissions();
-    if (!granted) {
-      return const StepsSyncResult(skipped: true, fetchedCount: 0, upsertedCount: 0);
-    }
+    // Issue 3 Fix: Don't request permissions on every sync.
+    // Permissions are requested once when the user enables tracking (in SettingsScreen).
+    // If permissions are missing, readStepSegments will throw and we skip gracefully.
 
     final nowUtc = (now ?? DateTime.now()).toUtc();
     final lastSync = await getLastSyncAt();
@@ -105,7 +112,25 @@ class StepsSyncService {
         : lastSync.subtract(_overlap);
 
     final provider = HealthPlatformSteps.providerForPlatform();
-    final segments = await _platform.readStepSegments(fromUtc: fromUtc, toUtc: nowUtc);
+
+    // Gracefully handle missing permissions – don't crash, just skip.
+    final List<HealthStepSegmentDto> segments;
+    try {
+      segments = await _platform.readStepSegments(
+        fromUtc: fromUtc,
+        toUtc: nowUtc,
+      );
+    } on PlatformException catch (e) {
+      if (e.code == 'permission_denied' || e.code == 'not_available') {
+        return const StepsSyncResult(
+          skipped: true,
+          fetchedCount: 0,
+          upsertedCount: 0,
+        );
+      }
+      rethrow;
+    }
+
     final rows = segments.map((segment) {
       final source = segment.sourceId ?? '';
       final fallback = sha1
@@ -120,7 +145,8 @@ class StepsSyncService {
             ),
           )
           .toString();
-      final externalKey = segment.nativeId != null && segment.nativeId!.isNotEmpty
+      final externalKey =
+          segment.nativeId != null && segment.nativeId!.isNotEmpty
           ? '$provider:${segment.nativeId}'
           : '$provider:$fallback';
       return <String, dynamic>{

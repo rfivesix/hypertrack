@@ -381,12 +381,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.settings_outlined,
                   title: l10n.settingsTitle,
                   subtitle: l10n.settingsDescription,
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    final result = await Navigator.of(context).push<bool>(
                       MaterialPageRoute(
                         builder: (context) => const SettingsScreen(),
                       ),
                     );
+                    // If steps settings changed, reload profile screen data
+                    // and signal main screen to refresh diary
+                    if (result == true && mounted) {
+                      _loadProfileData();
+                    }
                   },
                 ),
                 // const SizedBox(height: DesignConstants.spacingM),

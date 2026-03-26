@@ -865,6 +865,18 @@ class $AppSettingsTable extends AppSettings
     requiredDuringInsert: false,
     defaultValue: const Constant(3000),
   );
+  static const VerificationMeta _targetStepsMeta = const VerificationMeta(
+    'targetSteps',
+  );
+  @override
+  late final GeneratedColumn<int> targetSteps = GeneratedColumn<int>(
+    'target_steps',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(8000),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     localId,
@@ -880,6 +892,7 @@ class $AppSettingsTable extends AppSettings
     targetCarbs,
     targetFat,
     targetWater,
+    targetSteps,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -982,6 +995,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('target_steps')) {
+      context.handle(
+        _targetStepsMeta,
+        targetSteps.isAcceptableOrUnknown(
+          data['target_steps']!,
+          _targetStepsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1043,6 +1065,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.int,
         data['${effectivePrefix}target_water'],
       )!,
+      targetSteps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_steps'],
+      )!,
     );
   }
 
@@ -1066,6 +1092,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final int targetCarbs;
   final int targetFat;
   final int targetWater;
+  final int targetSteps;
   const AppSetting({
     required this.localId,
     required this.id,
@@ -1080,6 +1107,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.targetCarbs,
     required this.targetFat,
     required this.targetWater,
+    required this.targetSteps,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1099,6 +1127,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['target_carbs'] = Variable<int>(targetCarbs);
     map['target_fat'] = Variable<int>(targetFat);
     map['target_water'] = Variable<int>(targetWater);
+    map['target_steps'] = Variable<int>(targetSteps);
     return map;
   }
 
@@ -1119,6 +1148,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       targetCarbs: Value(targetCarbs),
       targetFat: Value(targetFat),
       targetWater: Value(targetWater),
+      targetSteps: Value(targetSteps),
     );
   }
 
@@ -1141,6 +1171,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       targetCarbs: serializer.fromJson<int>(json['targetCarbs']),
       targetFat: serializer.fromJson<int>(json['targetFat']),
       targetWater: serializer.fromJson<int>(json['targetWater']),
+      targetSteps: serializer.fromJson<int>(json['targetSteps']),
     );
   }
   @override
@@ -1160,6 +1191,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'targetCarbs': serializer.toJson<int>(targetCarbs),
       'targetFat': serializer.toJson<int>(targetFat),
       'targetWater': serializer.toJson<int>(targetWater),
+      'targetSteps': serializer.toJson<int>(targetSteps),
     };
   }
 
@@ -1177,6 +1209,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     int? targetCarbs,
     int? targetFat,
     int? targetWater,
+    int? targetSteps,
   }) => AppSetting(
     localId: localId ?? this.localId,
     id: id ?? this.id,
@@ -1191,6 +1224,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     targetCarbs: targetCarbs ?? this.targetCarbs,
     targetFat: targetFat ?? this.targetFat,
     targetWater: targetWater ?? this.targetWater,
+    targetSteps: targetSteps ?? this.targetSteps,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -1217,6 +1251,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       targetWater: data.targetWater.present
           ? data.targetWater.value
           : this.targetWater,
+      targetSteps: data.targetSteps.present
+          ? data.targetSteps.value
+          : this.targetSteps,
     );
   }
 
@@ -1235,7 +1272,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('targetProtein: $targetProtein, ')
           ..write('targetCarbs: $targetCarbs, ')
           ..write('targetFat: $targetFat, ')
-          ..write('targetWater: $targetWater')
+          ..write('targetWater: $targetWater, ')
+          ..write('targetSteps: $targetSteps')
           ..write(')'))
         .toString();
   }
@@ -1255,6 +1293,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     targetCarbs,
     targetFat,
     targetWater,
+    targetSteps,
   );
   @override
   bool operator ==(Object other) =>
@@ -1272,7 +1311,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.targetProtein == this.targetProtein &&
           other.targetCarbs == this.targetCarbs &&
           other.targetFat == this.targetFat &&
-          other.targetWater == this.targetWater);
+          other.targetWater == this.targetWater &&
+          other.targetSteps == this.targetSteps);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -1289,6 +1329,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<int> targetCarbs;
   final Value<int> targetFat;
   final Value<int> targetWater;
+  final Value<int> targetSteps;
   const AppSettingsCompanion({
     this.localId = const Value.absent(),
     this.id = const Value.absent(),
@@ -1303,6 +1344,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.targetCarbs = const Value.absent(),
     this.targetFat = const Value.absent(),
     this.targetWater = const Value.absent(),
+    this.targetSteps = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.localId = const Value.absent(),
@@ -1318,6 +1360,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.targetCarbs = const Value.absent(),
     this.targetFat = const Value.absent(),
     this.targetWater = const Value.absent(),
+    this.targetSteps = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<AppSetting> custom({
     Expression<int>? localId,
@@ -1333,6 +1376,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<int>? targetCarbs,
     Expression<int>? targetFat,
     Expression<int>? targetWater,
+    Expression<int>? targetSteps,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -1348,6 +1392,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (targetCarbs != null) 'target_carbs': targetCarbs,
       if (targetFat != null) 'target_fat': targetFat,
       if (targetWater != null) 'target_water': targetWater,
+      if (targetSteps != null) 'target_steps': targetSteps,
     });
   }
 
@@ -1365,6 +1410,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<int>? targetCarbs,
     Value<int>? targetFat,
     Value<int>? targetWater,
+    Value<int>? targetSteps,
   }) {
     return AppSettingsCompanion(
       localId: localId ?? this.localId,
@@ -1380,6 +1426,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       targetCarbs: targetCarbs ?? this.targetCarbs,
       targetFat: targetFat ?? this.targetFat,
       targetWater: targetWater ?? this.targetWater,
+      targetSteps: targetSteps ?? this.targetSteps,
     );
   }
 
@@ -1425,6 +1472,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (targetWater.present) {
       map['target_water'] = Variable<int>(targetWater.value);
     }
+    if (targetSteps.present) {
+      map['target_steps'] = Variable<int>(targetSteps.value);
+    }
     return map;
   }
 
@@ -1443,7 +1493,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('targetProtein: $targetProtein, ')
           ..write('targetCarbs: $targetCarbs, ')
           ..write('targetFat: $targetFat, ')
-          ..write('targetWater: $targetWater')
+          ..write('targetWater: $targetWater, ')
+          ..write('targetSteps: $targetSteps')
           ..write(')'))
         .toString();
   }
@@ -14320,6 +14371,18 @@ class $DailyGoalsHistoryTable extends DailyGoalsHistory
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _targetStepsMeta = const VerificationMeta(
+    'targetSteps',
+  );
+  @override
+  late final GeneratedColumn<int> targetSteps = GeneratedColumn<int>(
+    'target_steps',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(8000),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     localId,
@@ -14332,6 +14395,7 @@ class $DailyGoalsHistoryTable extends DailyGoalsHistory
     targetCarbs,
     targetFat,
     targetWater,
+    targetSteps,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -14424,6 +14488,15 @@ class $DailyGoalsHistoryTable extends DailyGoalsHistory
     } else if (isInserting) {
       context.missing(_targetWaterMeta);
     }
+    if (data.containsKey('target_steps')) {
+      context.handle(
+        _targetStepsMeta,
+        targetSteps.isAcceptableOrUnknown(
+          data['target_steps']!,
+          _targetStepsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14473,6 +14546,10 @@ class $DailyGoalsHistoryTable extends DailyGoalsHistory
         DriftSqlType.int,
         data['${effectivePrefix}target_water'],
       )!,
+      targetSteps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_steps'],
+      )!,
     );
   }
 
@@ -14494,6 +14571,7 @@ class DailyGoalsHistoryData extends DataClass
   final int targetCarbs;
   final int targetFat;
   final int targetWater;
+  final int targetSteps;
   const DailyGoalsHistoryData({
     required this.localId,
     required this.id,
@@ -14505,6 +14583,7 @@ class DailyGoalsHistoryData extends DataClass
     required this.targetCarbs,
     required this.targetFat,
     required this.targetWater,
+    required this.targetSteps,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14521,6 +14600,7 @@ class DailyGoalsHistoryData extends DataClass
     map['target_carbs'] = Variable<int>(targetCarbs);
     map['target_fat'] = Variable<int>(targetFat);
     map['target_water'] = Variable<int>(targetWater);
+    map['target_steps'] = Variable<int>(targetSteps);
     return map;
   }
 
@@ -14538,6 +14618,7 @@ class DailyGoalsHistoryData extends DataClass
       targetCarbs: Value(targetCarbs),
       targetFat: Value(targetFat),
       targetWater: Value(targetWater),
+      targetSteps: Value(targetSteps),
     );
   }
 
@@ -14557,6 +14638,7 @@ class DailyGoalsHistoryData extends DataClass
       targetCarbs: serializer.fromJson<int>(json['targetCarbs']),
       targetFat: serializer.fromJson<int>(json['targetFat']),
       targetWater: serializer.fromJson<int>(json['targetWater']),
+      targetSteps: serializer.fromJson<int>(json['targetSteps']),
     );
   }
   @override
@@ -14573,6 +14655,7 @@ class DailyGoalsHistoryData extends DataClass
       'targetCarbs': serializer.toJson<int>(targetCarbs),
       'targetFat': serializer.toJson<int>(targetFat),
       'targetWater': serializer.toJson<int>(targetWater),
+      'targetSteps': serializer.toJson<int>(targetSteps),
     };
   }
 
@@ -14587,6 +14670,7 @@ class DailyGoalsHistoryData extends DataClass
     int? targetCarbs,
     int? targetFat,
     int? targetWater,
+    int? targetSteps,
   }) => DailyGoalsHistoryData(
     localId: localId ?? this.localId,
     id: id ?? this.id,
@@ -14598,6 +14682,7 @@ class DailyGoalsHistoryData extends DataClass
     targetCarbs: targetCarbs ?? this.targetCarbs,
     targetFat: targetFat ?? this.targetFat,
     targetWater: targetWater ?? this.targetWater,
+    targetSteps: targetSteps ?? this.targetSteps,
   );
   DailyGoalsHistoryData copyWithCompanion(DailyGoalsHistoryCompanion data) {
     return DailyGoalsHistoryData(
@@ -14619,6 +14704,9 @@ class DailyGoalsHistoryData extends DataClass
       targetWater: data.targetWater.present
           ? data.targetWater.value
           : this.targetWater,
+      targetSteps: data.targetSteps.present
+          ? data.targetSteps.value
+          : this.targetSteps,
     );
   }
 
@@ -14634,7 +14722,8 @@ class DailyGoalsHistoryData extends DataClass
           ..write('targetProtein: $targetProtein, ')
           ..write('targetCarbs: $targetCarbs, ')
           ..write('targetFat: $targetFat, ')
-          ..write('targetWater: $targetWater')
+          ..write('targetWater: $targetWater, ')
+          ..write('targetSteps: $targetSteps')
           ..write(')'))
         .toString();
   }
@@ -14651,6 +14740,7 @@ class DailyGoalsHistoryData extends DataClass
     targetCarbs,
     targetFat,
     targetWater,
+    targetSteps,
   );
   @override
   bool operator ==(Object other) =>
@@ -14665,7 +14755,8 @@ class DailyGoalsHistoryData extends DataClass
           other.targetProtein == this.targetProtein &&
           other.targetCarbs == this.targetCarbs &&
           other.targetFat == this.targetFat &&
-          other.targetWater == this.targetWater);
+          other.targetWater == this.targetWater &&
+          other.targetSteps == this.targetSteps);
 }
 
 class DailyGoalsHistoryCompanion
@@ -14680,6 +14771,7 @@ class DailyGoalsHistoryCompanion
   final Value<int> targetCarbs;
   final Value<int> targetFat;
   final Value<int> targetWater;
+  final Value<int> targetSteps;
   const DailyGoalsHistoryCompanion({
     this.localId = const Value.absent(),
     this.id = const Value.absent(),
@@ -14691,6 +14783,7 @@ class DailyGoalsHistoryCompanion
     this.targetCarbs = const Value.absent(),
     this.targetFat = const Value.absent(),
     this.targetWater = const Value.absent(),
+    this.targetSteps = const Value.absent(),
   });
   DailyGoalsHistoryCompanion.insert({
     this.localId = const Value.absent(),
@@ -14703,6 +14796,7 @@ class DailyGoalsHistoryCompanion
     required int targetCarbs,
     required int targetFat,
     required int targetWater,
+    this.targetSteps = const Value.absent(),
   }) : targetCalories = Value(targetCalories),
        targetProtein = Value(targetProtein),
        targetCarbs = Value(targetCarbs),
@@ -14719,6 +14813,7 @@ class DailyGoalsHistoryCompanion
     Expression<int>? targetCarbs,
     Expression<int>? targetFat,
     Expression<int>? targetWater,
+    Expression<int>? targetSteps,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -14731,6 +14826,7 @@ class DailyGoalsHistoryCompanion
       if (targetCarbs != null) 'target_carbs': targetCarbs,
       if (targetFat != null) 'target_fat': targetFat,
       if (targetWater != null) 'target_water': targetWater,
+      if (targetSteps != null) 'target_steps': targetSteps,
     });
   }
 
@@ -14745,6 +14841,7 @@ class DailyGoalsHistoryCompanion
     Value<int>? targetCarbs,
     Value<int>? targetFat,
     Value<int>? targetWater,
+    Value<int>? targetSteps,
   }) {
     return DailyGoalsHistoryCompanion(
       localId: localId ?? this.localId,
@@ -14757,6 +14854,7 @@ class DailyGoalsHistoryCompanion
       targetCarbs: targetCarbs ?? this.targetCarbs,
       targetFat: targetFat ?? this.targetFat,
       targetWater: targetWater ?? this.targetWater,
+      targetSteps: targetSteps ?? this.targetSteps,
     );
   }
 
@@ -14793,6 +14891,9 @@ class DailyGoalsHistoryCompanion
     if (targetWater.present) {
       map['target_water'] = Variable<int>(targetWater.value);
     }
+    if (targetSteps.present) {
+      map['target_steps'] = Variable<int>(targetSteps.value);
+    }
     return map;
   }
 
@@ -14808,7 +14909,8 @@ class DailyGoalsHistoryCompanion
           ..write('targetProtein: $targetProtein, ')
           ..write('targetCarbs: $targetCarbs, ')
           ..write('targetFat: $targetFat, ')
-          ..write('targetWater: $targetWater')
+          ..write('targetWater: $targetWater, ')
+          ..write('targetSteps: $targetSteps')
           ..write(')'))
         .toString();
   }
@@ -15430,6 +15532,654 @@ class SupplementSettingsHistoryCompanion
   }
 }
 
+class $HealthStepSegmentsTable extends HealthStepSegments
+    with TableInfo<$HealthStepSegmentsTable, HealthStepSegment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HealthStepSegmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localIdMeta = const VerificationMeta(
+    'localId',
+  );
+  @override
+  late final GeneratedColumn<int> localId = GeneratedColumn<int>(
+    'local_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+    clientDefault: () => const Uuid().v4(),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _providerMeta = const VerificationMeta(
+    'provider',
+  );
+  @override
+  late final GeneratedColumn<String> provider = GeneratedColumn<String>(
+    'provider',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+    'source_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startAtMeta = const VerificationMeta(
+    'startAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startAt = GeneratedColumn<DateTime>(
+    'start_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endAtMeta = const VerificationMeta('endAt');
+  @override
+  late final GeneratedColumn<DateTime> endAt = GeneratedColumn<DateTime>(
+    'end_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stepCountMeta = const VerificationMeta(
+    'stepCount',
+  );
+  @override
+  late final GeneratedColumn<int> stepCount = GeneratedColumn<int>(
+    'step_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _externalKeyMeta = const VerificationMeta(
+    'externalKey',
+  );
+  @override
+  late final GeneratedColumn<String> externalKey = GeneratedColumn<String>(
+    'external_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    localId,
+    id,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    provider,
+    sourceId,
+    startAt,
+    endAt,
+    stepCount,
+    externalKey,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'health_step_segments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HealthStepSegment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_id')) {
+      context.handle(
+        _localIdMeta,
+        localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('provider')) {
+      context.handle(
+        _providerMeta,
+        provider.isAcceptableOrUnknown(data['provider']!, _providerMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_providerMeta);
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    }
+    if (data.containsKey('start_at')) {
+      context.handle(
+        _startAtMeta,
+        startAt.isAcceptableOrUnknown(data['start_at']!, _startAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startAtMeta);
+    }
+    if (data.containsKey('end_at')) {
+      context.handle(
+        _endAtMeta,
+        endAt.isAcceptableOrUnknown(data['end_at']!, _endAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endAtMeta);
+    }
+    if (data.containsKey('step_count')) {
+      context.handle(
+        _stepCountMeta,
+        stepCount.isAcceptableOrUnknown(data['step_count']!, _stepCountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stepCountMeta);
+    }
+    if (data.containsKey('external_key')) {
+      context.handle(
+        _externalKeyMeta,
+        externalKey.isAcceptableOrUnknown(
+          data['external_key']!,
+          _externalKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_externalKeyMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localId};
+  @override
+  HealthStepSegment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HealthStepSegment(
+      localId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}local_id'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      provider: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider'],
+      )!,
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_id'],
+      ),
+      startAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_at'],
+      )!,
+      endAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}end_at'],
+      )!,
+      stepCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}step_count'],
+      )!,
+      externalKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}external_key'],
+      )!,
+    );
+  }
+
+  @override
+  $HealthStepSegmentsTable createAlias(String alias) {
+    return $HealthStepSegmentsTable(attachedDatabase, alias);
+  }
+}
+
+class HealthStepSegment extends DataClass
+    implements Insertable<HealthStepSegment> {
+  final int localId;
+  final String id;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String provider;
+  final String? sourceId;
+  final DateTime startAt;
+  final DateTime endAt;
+  final int stepCount;
+  final String externalKey;
+  const HealthStepSegment({
+    required this.localId,
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.provider,
+    this.sourceId,
+    required this.startAt,
+    required this.endAt,
+    required this.stepCount,
+    required this.externalKey,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_id'] = Variable<int>(localId);
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['provider'] = Variable<String>(provider);
+    if (!nullToAbsent || sourceId != null) {
+      map['source_id'] = Variable<String>(sourceId);
+    }
+    map['start_at'] = Variable<DateTime>(startAt);
+    map['end_at'] = Variable<DateTime>(endAt);
+    map['step_count'] = Variable<int>(stepCount);
+    map['external_key'] = Variable<String>(externalKey);
+    return map;
+  }
+
+  HealthStepSegmentsCompanion toCompanion(bool nullToAbsent) {
+    return HealthStepSegmentsCompanion(
+      localId: Value(localId),
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      provider: Value(provider),
+      sourceId: sourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceId),
+      startAt: Value(startAt),
+      endAt: Value(endAt),
+      stepCount: Value(stepCount),
+      externalKey: Value(externalKey),
+    );
+  }
+
+  factory HealthStepSegment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HealthStepSegment(
+      localId: serializer.fromJson<int>(json['localId']),
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      provider: serializer.fromJson<String>(json['provider']),
+      sourceId: serializer.fromJson<String?>(json['sourceId']),
+      startAt: serializer.fromJson<DateTime>(json['startAt']),
+      endAt: serializer.fromJson<DateTime>(json['endAt']),
+      stepCount: serializer.fromJson<int>(json['stepCount']),
+      externalKey: serializer.fromJson<String>(json['externalKey']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localId': serializer.toJson<int>(localId),
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'provider': serializer.toJson<String>(provider),
+      'sourceId': serializer.toJson<String?>(sourceId),
+      'startAt': serializer.toJson<DateTime>(startAt),
+      'endAt': serializer.toJson<DateTime>(endAt),
+      'stepCount': serializer.toJson<int>(stepCount),
+      'externalKey': serializer.toJson<String>(externalKey),
+    };
+  }
+
+  HealthStepSegment copyWith({
+    int? localId,
+    String? id,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? provider,
+    Value<String?> sourceId = const Value.absent(),
+    DateTime? startAt,
+    DateTime? endAt,
+    int? stepCount,
+    String? externalKey,
+  }) => HealthStepSegment(
+    localId: localId ?? this.localId,
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    provider: provider ?? this.provider,
+    sourceId: sourceId.present ? sourceId.value : this.sourceId,
+    startAt: startAt ?? this.startAt,
+    endAt: endAt ?? this.endAt,
+    stepCount: stepCount ?? this.stepCount,
+    externalKey: externalKey ?? this.externalKey,
+  );
+  HealthStepSegment copyWithCompanion(HealthStepSegmentsCompanion data) {
+    return HealthStepSegment(
+      localId: data.localId.present ? data.localId.value : this.localId,
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      provider: data.provider.present ? data.provider.value : this.provider,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      startAt: data.startAt.present ? data.startAt.value : this.startAt,
+      endAt: data.endAt.present ? data.endAt.value : this.endAt,
+      stepCount: data.stepCount.present ? data.stepCount.value : this.stepCount,
+      externalKey: data.externalKey.present
+          ? data.externalKey.value
+          : this.externalKey,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HealthStepSegment(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('provider: $provider, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('startAt: $startAt, ')
+          ..write('endAt: $endAt, ')
+          ..write('stepCount: $stepCount, ')
+          ..write('externalKey: $externalKey')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    localId,
+    id,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    provider,
+    sourceId,
+    startAt,
+    endAt,
+    stepCount,
+    externalKey,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HealthStepSegment &&
+          other.localId == this.localId &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.provider == this.provider &&
+          other.sourceId == this.sourceId &&
+          other.startAt == this.startAt &&
+          other.endAt == this.endAt &&
+          other.stepCount == this.stepCount &&
+          other.externalKey == this.externalKey);
+}
+
+class HealthStepSegmentsCompanion extends UpdateCompanion<HealthStepSegment> {
+  final Value<int> localId;
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> provider;
+  final Value<String?> sourceId;
+  final Value<DateTime> startAt;
+  final Value<DateTime> endAt;
+  final Value<int> stepCount;
+  final Value<String> externalKey;
+  const HealthStepSegmentsCompanion({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.provider = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.startAt = const Value.absent(),
+    this.endAt = const Value.absent(),
+    this.stepCount = const Value.absent(),
+    this.externalKey = const Value.absent(),
+  });
+  HealthStepSegmentsCompanion.insert({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String provider,
+    this.sourceId = const Value.absent(),
+    required DateTime startAt,
+    required DateTime endAt,
+    required int stepCount,
+    required String externalKey,
+  }) : provider = Value(provider),
+       startAt = Value(startAt),
+       endAt = Value(endAt),
+       stepCount = Value(stepCount),
+       externalKey = Value(externalKey);
+  static Insertable<HealthStepSegment> custom({
+    Expression<int>? localId,
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? provider,
+    Expression<String>? sourceId,
+    Expression<DateTime>? startAt,
+    Expression<DateTime>? endAt,
+    Expression<int>? stepCount,
+    Expression<String>? externalKey,
+  }) {
+    return RawValuesInsertable({
+      if (localId != null) 'local_id': localId,
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (provider != null) 'provider': provider,
+      if (sourceId != null) 'source_id': sourceId,
+      if (startAt != null) 'start_at': startAt,
+      if (endAt != null) 'end_at': endAt,
+      if (stepCount != null) 'step_count': stepCount,
+      if (externalKey != null) 'external_key': externalKey,
+    });
+  }
+
+  HealthStepSegmentsCompanion copyWith({
+    Value<int>? localId,
+    Value<String>? id,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? provider,
+    Value<String?>? sourceId,
+    Value<DateTime>? startAt,
+    Value<DateTime>? endAt,
+    Value<int>? stepCount,
+    Value<String>? externalKey,
+  }) {
+    return HealthStepSegmentsCompanion(
+      localId: localId ?? this.localId,
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      provider: provider ?? this.provider,
+      sourceId: sourceId ?? this.sourceId,
+      startAt: startAt ?? this.startAt,
+      endAt: endAt ?? this.endAt,
+      stepCount: stepCount ?? this.stepCount,
+      externalKey: externalKey ?? this.externalKey,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localId.present) {
+      map['local_id'] = Variable<int>(localId.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (provider.present) {
+      map['provider'] = Variable<String>(provider.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
+    if (startAt.present) {
+      map['start_at'] = Variable<DateTime>(startAt.value);
+    }
+    if (endAt.present) {
+      map['end_at'] = Variable<DateTime>(endAt.value);
+    }
+    if (stepCount.present) {
+      map['step_count'] = Variable<int>(stepCount.value);
+    }
+    if (externalKey.present) {
+      map['external_key'] = Variable<String>(externalKey.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HealthStepSegmentsCompanion(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('provider: $provider, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('startAt: $startAt, ')
+          ..write('endAt: $endAt, ')
+          ..write('stepCount: $stepCount, ')
+          ..write('externalKey: $externalKey')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -15465,6 +16215,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $DailyGoalsHistoryTable(this);
   late final $SupplementSettingsHistoryTable supplementSettingsHistory =
       $SupplementSettingsHistoryTable(this);
+  late final $HealthStepSegmentsTable healthStepSegments =
+      $HealthStepSegmentsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -15494,6 +16246,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     favorites,
     dailyGoalsHistory,
     supplementSettingsHistory,
+    healthStepSegments,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -16025,6 +16778,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<int> targetCarbs,
       Value<int> targetFat,
       Value<int> targetWater,
+      Value<int> targetSteps,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -16041,6 +16795,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<int> targetCarbs,
       Value<int> targetFat,
       Value<int> targetWater,
+      Value<int> targetSteps,
     });
 
 final class $$AppSettingsTableReferences
@@ -16131,6 +16886,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<int> get targetWater => $composableBuilder(
     column: $table.targetWater,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetSteps => $composableBuilder(
+    column: $table.targetSteps,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16227,6 +16987,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get targetSteps => $composableBuilder(
+    column: $table.targetSteps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ProfilesTableOrderingComposer get userId {
     final $$ProfilesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -16306,6 +17071,11 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get targetSteps => $composableBuilder(
+    column: $table.targetSteps,
+    builder: (column) => column,
+  );
+
   $$ProfilesTableAnnotationComposer get userId {
     final $$ProfilesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -16371,6 +17141,7 @@ class $$AppSettingsTableTableManager
                 Value<int> targetCarbs = const Value.absent(),
                 Value<int> targetFat = const Value.absent(),
                 Value<int> targetWater = const Value.absent(),
+                Value<int> targetSteps = const Value.absent(),
               }) => AppSettingsCompanion(
                 localId: localId,
                 id: id,
@@ -16385,6 +17156,7 @@ class $$AppSettingsTableTableManager
                 targetCarbs: targetCarbs,
                 targetFat: targetFat,
                 targetWater: targetWater,
+                targetSteps: targetSteps,
               ),
           createCompanionCallback:
               ({
@@ -16401,6 +17173,7 @@ class $$AppSettingsTableTableManager
                 Value<int> targetCarbs = const Value.absent(),
                 Value<int> targetFat = const Value.absent(),
                 Value<int> targetWater = const Value.absent(),
+                Value<int> targetSteps = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 localId: localId,
                 id: id,
@@ -16415,6 +17188,7 @@ class $$AppSettingsTableTableManager
                 targetCarbs: targetCarbs,
                 targetFat: targetFat,
                 targetWater: targetWater,
+                targetSteps: targetSteps,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -25994,6 +26768,7 @@ typedef $$DailyGoalsHistoryTableCreateCompanionBuilder =
       required int targetCarbs,
       required int targetFat,
       required int targetWater,
+      Value<int> targetSteps,
     });
 typedef $$DailyGoalsHistoryTableUpdateCompanionBuilder =
     DailyGoalsHistoryCompanion Function({
@@ -26007,6 +26782,7 @@ typedef $$DailyGoalsHistoryTableUpdateCompanionBuilder =
       Value<int> targetCarbs,
       Value<int> targetFat,
       Value<int> targetWater,
+      Value<int> targetSteps,
     });
 
 class $$DailyGoalsHistoryTableFilterComposer
@@ -26065,6 +26841,11 @@ class $$DailyGoalsHistoryTableFilterComposer
 
   ColumnFilters<int> get targetWater => $composableBuilder(
     column: $table.targetWater,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetSteps => $composableBuilder(
+    column: $table.targetSteps,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -26127,6 +26908,11 @@ class $$DailyGoalsHistoryTableOrderingComposer
     column: $table.targetWater,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get targetSteps => $composableBuilder(
+    column: $table.targetSteps,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DailyGoalsHistoryTableAnnotationComposer
@@ -26173,6 +26959,11 @@ class $$DailyGoalsHistoryTableAnnotationComposer
 
   GeneratedColumn<int> get targetWater => $composableBuilder(
     column: $table.targetWater,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get targetSteps => $composableBuilder(
+    column: $table.targetSteps,
     builder: (column) => column,
   );
 }
@@ -26227,6 +27018,7 @@ class $$DailyGoalsHistoryTableTableManager
                 Value<int> targetCarbs = const Value.absent(),
                 Value<int> targetFat = const Value.absent(),
                 Value<int> targetWater = const Value.absent(),
+                Value<int> targetSteps = const Value.absent(),
               }) => DailyGoalsHistoryCompanion(
                 localId: localId,
                 id: id,
@@ -26238,6 +27030,7 @@ class $$DailyGoalsHistoryTableTableManager
                 targetCarbs: targetCarbs,
                 targetFat: targetFat,
                 targetWater: targetWater,
+                targetSteps: targetSteps,
               ),
           createCompanionCallback:
               ({
@@ -26251,6 +27044,7 @@ class $$DailyGoalsHistoryTableTableManager
                 required int targetCarbs,
                 required int targetFat,
                 required int targetWater,
+                Value<int> targetSteps = const Value.absent(),
               }) => DailyGoalsHistoryCompanion.insert(
                 localId: localId,
                 id: id,
@@ -26262,6 +27056,7 @@ class $$DailyGoalsHistoryTableTableManager
                 targetCarbs: targetCarbs,
                 targetFat: targetFat,
                 targetWater: targetWater,
+                targetSteps: targetSteps,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -26733,6 +27528,329 @@ typedef $$SupplementSettingsHistoryTableProcessedTableManager =
       SupplementSettingsHistoryData,
       PrefetchHooks Function({bool supplementId})
     >;
+typedef $$HealthStepSegmentsTableCreateCompanionBuilder =
+    HealthStepSegmentsCompanion Function({
+      Value<int> localId,
+      Value<String> id,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      required String provider,
+      Value<String?> sourceId,
+      required DateTime startAt,
+      required DateTime endAt,
+      required int stepCount,
+      required String externalKey,
+    });
+typedef $$HealthStepSegmentsTableUpdateCompanionBuilder =
+    HealthStepSegmentsCompanion Function({
+      Value<int> localId,
+      Value<String> id,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> provider,
+      Value<String?> sourceId,
+      Value<DateTime> startAt,
+      Value<DateTime> endAt,
+      Value<int> stepCount,
+      Value<String> externalKey,
+    });
+
+class $$HealthStepSegmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $HealthStepSegmentsTable> {
+  $$HealthStepSegmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startAt => $composableBuilder(
+    column: $table.startAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endAt => $composableBuilder(
+    column: $table.endAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepCount => $composableBuilder(
+    column: $table.stepCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get externalKey => $composableBuilder(
+    column: $table.externalKey,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HealthStepSegmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HealthStepSegmentsTable> {
+  $$HealthStepSegmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startAt => $composableBuilder(
+    column: $table.startAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endAt => $composableBuilder(
+    column: $table.endAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepCount => $composableBuilder(
+    column: $table.stepCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get externalKey => $composableBuilder(
+    column: $table.externalKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HealthStepSegmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HealthStepSegmentsTable> {
+  $$HealthStepSegmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get provider =>
+      $composableBuilder(column: $table.provider, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startAt =>
+      $composableBuilder(column: $table.startAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endAt =>
+      $composableBuilder(column: $table.endAt, builder: (column) => column);
+
+  GeneratedColumn<int> get stepCount =>
+      $composableBuilder(column: $table.stepCount, builder: (column) => column);
+
+  GeneratedColumn<String> get externalKey => $composableBuilder(
+    column: $table.externalKey,
+    builder: (column) => column,
+  );
+}
+
+class $$HealthStepSegmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HealthStepSegmentsTable,
+          HealthStepSegment,
+          $$HealthStepSegmentsTableFilterComposer,
+          $$HealthStepSegmentsTableOrderingComposer,
+          $$HealthStepSegmentsTableAnnotationComposer,
+          $$HealthStepSegmentsTableCreateCompanionBuilder,
+          $$HealthStepSegmentsTableUpdateCompanionBuilder,
+          (
+            HealthStepSegment,
+            BaseReferences<
+              _$AppDatabase,
+              $HealthStepSegmentsTable,
+              HealthStepSegment
+            >,
+          ),
+          HealthStepSegment,
+          PrefetchHooks Function()
+        > {
+  $$HealthStepSegmentsTableTableManager(
+    _$AppDatabase db,
+    $HealthStepSegmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HealthStepSegmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HealthStepSegmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HealthStepSegmentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> localId = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> provider = const Value.absent(),
+                Value<String?> sourceId = const Value.absent(),
+                Value<DateTime> startAt = const Value.absent(),
+                Value<DateTime> endAt = const Value.absent(),
+                Value<int> stepCount = const Value.absent(),
+                Value<String> externalKey = const Value.absent(),
+              }) => HealthStepSegmentsCompanion(
+                localId: localId,
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                provider: provider,
+                sourceId: sourceId,
+                startAt: startAt,
+                endAt: endAt,
+                stepCount: stepCount,
+                externalKey: externalKey,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> localId = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String provider,
+                Value<String?> sourceId = const Value.absent(),
+                required DateTime startAt,
+                required DateTime endAt,
+                required int stepCount,
+                required String externalKey,
+              }) => HealthStepSegmentsCompanion.insert(
+                localId: localId,
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                provider: provider,
+                sourceId: sourceId,
+                startAt: startAt,
+                endAt: endAt,
+                stepCount: stepCount,
+                externalKey: externalKey,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HealthStepSegmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HealthStepSegmentsTable,
+      HealthStepSegment,
+      $$HealthStepSegmentsTableFilterComposer,
+      $$HealthStepSegmentsTableOrderingComposer,
+      $$HealthStepSegmentsTableAnnotationComposer,
+      $$HealthStepSegmentsTableCreateCompanionBuilder,
+      $$HealthStepSegmentsTableUpdateCompanionBuilder,
+      (
+        HealthStepSegment,
+        BaseReferences<
+          _$AppDatabase,
+          $HealthStepSegmentsTable,
+          HealthStepSegment
+        >,
+      ),
+      HealthStepSegment,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -26788,4 +27906,6 @@ class $AppDatabaseManager {
         _db,
         _db.supplementSettingsHistory,
       );
+  $$HealthStepSegmentsTableTableManager get healthStepSegments =>
+      $$HealthStepSegmentsTableTableManager(_db, _db.healthStepSegments);
 }

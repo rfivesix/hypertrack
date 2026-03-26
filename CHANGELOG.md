@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1-alpha.1] - 2026-03-26
+
+### Added
+- **Health Steps Integration (Alpha):** Read and sync daily step data from native health providers directly into the diary.
+  - **Android – Health Connect:** Full integration with Health Connect on Android 14+ (API 34+). Includes all required manifest declarations (`READ_STEPS` permission, `ACTION_SHOW_PERMISSIONS_RATIONALE` intent-filter, `VIEW_PERMISSION_USAGE` activity-alias, and `health_permissions` resource).
+  - **iOS – HealthKit:** Native Swift implementation using `HKSampleQuery` to read `stepCount` data. Configured with `NSHealthShareUsageDescription` and HealthKit entitlement.
+  - **Platform Bridge:** New `MethodChannel` (`hypertrack.health/steps`) with three methods: `getAvailability`, `requestPermissions`, `readStepSegments`.
+  - **Sync Service:** Automatic background sync with 48h overlap window, SHA1-based deduplication, and configurable provider filter (All / Apple / Google).
+  - **Steps Goal:** Users can set a daily steps goal during onboarding and in the goals screen, with historical goal tracking via `daily_goals_history`.
+- **Settings – Health Steps Section:** New settings section to enable/disable step tracking and select the preferred health data provider.
+- **Database:** Added `health_step_segments` table with `ON CONFLICT` upsert logic and `target_steps` column in `app_settings` and `daily_goals_history`.
+
+### Changed
+- **Smarter Permission Flow:** Permissions are now requested only once when the user enables step tracking in Settings (not on every sync cycle), reducing permission dialog fatigue.
+- **Diary Refresh on Return:** The diary screen now automatically refreshes its data when returning from Settings or Profile, ensuring step tracking changes are immediately visible.
+
+### Fixed
+- **"App Update Required" on Android 14+:** Added the missing `<activity-alias>` for `VIEW_PERMISSION_USAGE` with `HEALTH_PERMISSIONS` category, which Android 14+ requires to recognize the app as Health Connect-compatible.
+- **Sync Error Handling:** `StepsSyncService.sync()` now gracefully catches `PlatformException` when permissions are missing, instead of crashing or repeatedly prompting the user.
+
 ## [0.7.0] - 2026-03-25
 
 ### Added

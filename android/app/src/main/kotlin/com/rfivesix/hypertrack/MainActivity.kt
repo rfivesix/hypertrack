@@ -8,7 +8,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterFragmentActivity() {
     private val channelName = "hypertrack.health/steps"
     private var pendingPermissionResult: MethodChannel.Result? = null
     private val requiredPermissions = setOf(

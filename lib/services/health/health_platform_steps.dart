@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'health_models.dart';
 
 class HealthPlatformSteps {
-  static const MethodChannel _channel = MethodChannel('hypertrack.health/steps');
+  static const MethodChannel _channel = MethodChannel(
+    'hypertrack.health/steps',
+  );
 
   const HealthPlatformSteps();
 
@@ -37,16 +39,16 @@ class HealthPlatformSteps {
     required DateTime fromUtc,
     required DateTime toUtc,
   }) async {
-    final response = await _channel.invokeMethod<List<dynamic>>(
-      'readStepSegments',
-      <String, dynamic>{
-        'fromUtcIso': fromUtc.toUtc().toIso8601String(),
-        'toUtcIso': toUtc.toUtc().toIso8601String(),
-      },
-    );
+    final response = await _channel
+        .invokeMethod<List<dynamic>>('readStepSegments', <String, dynamic>{
+          'fromUtcIso': fromUtc.toUtc().toIso8601String(),
+          'toUtcIso': toUtc.toUtc().toIso8601String(),
+        });
     final rows = response ?? const <dynamic>[];
     return rows
-        .map((row) => HealthStepSegmentDto.fromMap(row as Map<dynamic, dynamic>))
+        .map(
+          (row) => HealthStepSegmentDto.fromMap(row as Map<dynamic, dynamic>),
+        )
         .where((segment) => segment.stepCount > 0)
         .toList();
   }
@@ -58,4 +60,3 @@ class HealthPlatformSteps {
     return 'google_health_connect';
   }
 }
-
