@@ -34,7 +34,7 @@ class BackupManager {
   final _productDb = ProductDatabaseHelper.instance;
   final _workoutDb = WorkoutDatabaseHelper.instance;
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
 
   // ---------------------------------------------------------------------------
   // EXPORT (JSON / FULL BACKUP)
@@ -110,16 +110,24 @@ class BackupManager {
     final customExercises = await _workoutDb.getCustomExercises();
 
     // 3) Collect historical goals and supplement settings.
-    final goalsHistoryRows = await db.select(db.dailyGoalsHistory).get();
+    final goalsHistoryRows = await db.customSelect(
+      '''
+      SELECT target_calories, target_protein, target_carbs, target_fat, target_water, target_steps, created_at
+      FROM daily_goals_history
+      ''',
+    ).get();
     final dailyGoalsHistory = goalsHistoryRows
         .map(
           (r) => {
-            'targetCalories': r.targetCalories,
-            'targetProtein': r.targetProtein,
-            'targetCarbs': r.targetCarbs,
-            'targetFat': r.targetFat,
-            'targetWater': r.targetWater,
-            'createdAt': r.createdAt.toIso8601String(),
+            'targetCalories': r.read<int>('target_calories'),
+            'targetProtein': r.read<int>('target_protein'),
+            'targetCarbs': r.read<int>('target_carbs'),
+            'targetFat': r.read<int>('target_fat'),
+            'targetWater': r.read<int>('target_water'),
+            'targetSteps': r.read<int>('target_steps'),
+            'createdAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('created_at') * 1000,
+            ).toIso8601String(),
           },
         )
         .toList();
@@ -140,6 +148,12 @@ class BackupManager {
 
     // 4) Collect app settings and profile.
     final settingsRow = await db.select(db.appSettings).getSingleOrNull();
+    final appSettingsRawRows = await db.customSelect(
+      'SELECT target_steps FROM app_settings LIMIT 1',
+    ).get();
+    final targetSteps = appSettingsRawRows.isNotEmpty
+        ? appSettingsRawRows.first.read<int>('target_steps')
+        : 8000;
     final Map<String, dynamic>? appSettingsMap = settingsRow != null
         ? {
             'userId': settingsRow.userId,
@@ -150,8 +164,32 @@ class BackupManager {
             'targetCarbs': settingsRow.targetCarbs,
             'targetFat': settingsRow.targetFat,
             'targetWater': settingsRow.targetWater,
+            'targetSteps': targetSteps,
           }
         : null;
+
+    final healthStepRows = await db.customSelect(
+      '''
+      SELECT provider, source_id, start_at, end_at, step_count, external_key
+      FROM health_step_segments
+      ''',
+    ).get();
+    final healthStepSegments = healthStepRows
+        .map(
+          (r) => <String, dynamic>{
+            'provider': r.read<String>('provider'),
+            'sourceId': r.read<String?>('source_id'),
+            'startAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('start_at') * 1000,
+            ).toUtc().toIso8601String(),
+            'endAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('end_at') * 1000,
+            ).toUtc().toIso8601String(),
+            'stepCount': r.read<int>('step_count'),
+            'externalKey': r.read<String>('external_key'),
+          },
+        )
+        .toList();
 
     final profileRow = await db.select(db.profiles).getSingleOrNull();
     final Map<String, dynamic>? profileMap = profileRow != null
@@ -192,6 +230,7 @@ class BackupManager {
       supplementSettingsHistory: supplementSettingsHistory,
       appSettings: appSettingsMap,
       profile: profileMap,
+      healthStepSegments: healthStepSegments,
     );
 
     return jsonEncode(backup.toJson());
@@ -353,6 +392,21 @@ class BackupManager {
             );
           }
         });
+        for (final row in backup.dailyGoalsHistory) {
+          final createdAt = DateTime.parse(row['createdAt'] as String);
+          await db.customStatement(
+            'UPDATE daily_goals_history SET target_steps = ? WHERE target_calories = ? AND target_protein = ? AND target_carbs = ? AND target_fat = ? AND target_water = ? AND created_at = ?',
+            [
+              (row['targetSteps'] as int?) ?? 8000,
+              row['targetCalories'] as int,
+              row['targetProtein'] as int,
+              row['targetCarbs'] as int,
+              row['targetFat'] as int,
+              row['targetWater'] as int,
+              createdAt.millisecondsSinceEpoch ~/ 1000,
+            ],
+          );
+        }
       }
 
       // Import SupplementSettingsHistory
@@ -431,6 +485,14 @@ class BackupManager {
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
+        await db.customStatement(
+          'UPDATE app_settings SET target_steps = ? WHERE user_id = ?',
+          [s['targetSteps'] as int? ?? 8000, backup.profile!['id'] as String],
+        );
+      }
+
+      if (backup.healthStepSegments.isNotEmpty) {
+        await _userDb.upsertHealthStepSegments(backup.healthStepSegments);
       }
 
       debugPrint("Backup import succeeded.");

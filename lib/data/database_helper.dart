@@ -75,6 +75,7 @@ class DatabaseHelper {
       // 1. History tables
       await dbInstance.delete(dbInstance.dailyGoalsHistory).go();
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
+      await dbInstance.customStatement('DELETE FROM health_step_segments');
 
       // 2. Child tables (Logs) first
       await dbInstance.delete(dbInstance.supplementLogs).go();
@@ -1223,8 +1224,16 @@ class DatabaseHelper {
     required int carbs,
     required int fat,
     required int water,
+    required int steps,
   }) async {
     final dbInstance = await database;
+    final existingStepsRows = await dbInstance.customSelect(
+      'SELECT target_steps FROM app_settings LIMIT 1',
+      readsFrom: {},
+    ).get();
+    final existingSteps = existingStepsRows.isNotEmpty
+        ? existingStepsRows.first.read<int>('target_steps')
+        : 8000;
 
     // 1. Check if settings already exist
     final existingSettings = await dbInstance
@@ -1243,9 +1252,9 @@ class DatabaseHelper {
               .getSingleOrNull();
 
       if (baseline == null) {
-        await dbInstance
+        final baselineRow = await dbInstance
             .into(dbInstance.dailyGoalsHistory)
-            .insert(
+            .insertReturning(
               db.DailyGoalsHistoryCompanion(
                 targetCalories: drift.Value(existingSettings.targetCalories),
                 targetProtein: drift.Value(existingSettings.targetProtein),
@@ -1257,6 +1266,10 @@ class DatabaseHelper {
                 ), // Covers all older data
               ),
             );
+        await dbInstance.customStatement(
+          'UPDATE daily_goals_history SET target_steps = ? WHERE local_id = ?',
+          [existingSteps, baselineRow.localId],
+        );
       }
     }
 
@@ -1272,6 +1285,10 @@ class DatabaseHelper {
           targetFat: drift.Value(fat),
           targetWater: drift.Value(water),
         ),
+      );
+      await dbInstance.customStatement(
+        'UPDATE app_settings SET target_steps = ? WHERE id = ?',
+        [steps, existingSettings.id],
       );
     } else {
       // INSERT (In case saveUserProfile hasn't created settings yet)
@@ -1295,12 +1312,16 @@ class DatabaseHelper {
               unitSystem: const drift.Value('metric'),
             ),
           );
+      await dbInstance.customStatement(
+        'UPDATE app_settings SET target_steps = ? WHERE user_id = ?',
+        [steps, profile.id],
+      );
     }
 
     // 2. Add historical entry
-    await dbInstance
+    final historyRow = await dbInstance
         .into(dbInstance.dailyGoalsHistory)
-        .insert(
+        .insertReturning(
           db.DailyGoalsHistoryCompanion(
             targetCalories: drift.Value(calories),
             targetProtein: drift.Value(protein),
@@ -1310,6 +1331,10 @@ class DatabaseHelper {
             createdAt: drift.Value(DateTime.now()), // as valid-from timestamp
           ),
         );
+    await dbInstance.customStatement(
+      'UPDATE daily_goals_history SET target_steps = ? WHERE local_id = ?',
+      [steps, historyRow.localId],
+    );
   }
 
   /// Returns the active goals for a given date.
@@ -1366,6 +1391,77 @@ class DatabaseHelper {
       );
     }
     return null;
+  }
+
+  Future<void> upsertHealthStepSegments(
+    List<Map<String, dynamic>> segments,
+  ) async {
+    if (segments.isEmpty) {
+      return;
+    }
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final segment in segments) {
+        final rawStart = segment['startAt'];
+        final rawEnd = segment['endAt'];
+        final startSeconds = rawStart is int
+            ? rawStart
+            : DateTime.parse(rawStart as String).toUtc().millisecondsSinceEpoch ~/
+                1000;
+        final endSeconds = rawEnd is int
+            ? rawEnd
+            : DateTime.parse(rawEnd as String).toUtc().millisecondsSinceEpoch ~/ 1000;
+        batch.customStatement(
+          'INSERT OR REPLACE INTO health_step_segments (id, provider, source_id, start_at, end_at, step_count, external_key) VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, ?, ?)',
+          [
+            segment['provider'],
+            segment['sourceId'],
+            startSeconds,
+            endSeconds,
+            segment['stepCount'],
+            segment['externalKey'],
+          ],
+        );
+      }
+    });
+  }
+
+  Future<int?> getDailyStepsTotal({
+    required DateTime dayLocal,
+    String providerFilter = 'all',
+  }) async {
+    final dbInstance = await database;
+    final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
+    final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
+    final dayStartUtcMs = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final dayEndUtcMs = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    var sql = '''
+      SELECT SUM(step_count) AS total_steps
+      FROM health_step_segments
+      WHERE start_at < ? AND end_at >= ?
+    ''';
+    final vars = <int>[dayEndUtcMs, dayStartUtcMs];
+    if (providerFilter == 'apple') {
+      sql += " AND provider = 'apple_healthkit'";
+    } else if (providerFilter == 'google') {
+      sql += " AND provider = 'google_health_connect'";
+    }
+
+    final rows = await dbInstance.customSelect(sql, variables: [
+      for (final variable in vars) drift.Variable.withInt(variable),
+    ]).get();
+    if (rows.isEmpty) return null;
+    return rows.first.read<int?>('total_steps');
+  }
+
+  Future<int> getCurrentTargetStepsOrDefault() async {
+    final dbInstance = await database;
+    final rows = await dbInstance.customSelect(
+      'SELECT target_steps FROM app_settings LIMIT 1',
+      readsFrom: {},
+    ).get();
+    if (rows.isEmpty) return 8000;
+    return rows.first.read<int>('target_steps');
   }
 
   /// Speichert das Startgewicht als Messung

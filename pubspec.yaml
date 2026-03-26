@@ -51,6 +51,7 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   flutter_ringtone_player: ^4.0.0+4
   timezone: ^0.9.4
+  crypto: ^3.0.5
 
   drift: ^2.20.0
   sqlite3_flutter_libs: ^0.5.20

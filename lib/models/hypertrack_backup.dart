@@ -67,6 +67,9 @@ class HypertrackBackup {
   /// User profile row (Profiles table), nullable for backward compat.
   final Map<String, dynamic>? profile;
 
+  /// Raw imported health step segments for deduplicated restoration.
+  final List<Map<String, dynamic>> healthStepSegments;
+
   /// Creates a new [HypertrackBackup] instance.
   HypertrackBackup({
     required this.schemaVersion,
@@ -85,6 +88,7 @@ class HypertrackBackup {
     this.supplementSettingsHistory = const [],
     this.appSettings,
     this.profile,
+    this.healthStepSegments = const [],
   });
 
   /// Creates a [HypertrackBackup] instance from a JSON map.
@@ -214,6 +218,11 @@ class HypertrackBackup {
       profile: json['profile'] != null
           ? Map<String, dynamic>.from(json['profile'] as Map)
           : null,
+      healthStepSegments:
+          (json['healthStepSegments'] as List<dynamic>?)
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
+              .toList() ??
+          [],
     );
   }
 
@@ -254,6 +263,7 @@ class HypertrackBackup {
       'supplementSettingsHistory': supplementSettingsHistory,
       'appSettings': appSettings,
       'profile': profile,
+      'healthStepSegments': healthStepSegments,
     };
   }
 }

@@ -347,6 +347,15 @@ class SupplementSettingsHistory extends Table with HybridId, MetaColumns {
   // createdAt dient als "gültig ab" Zeitstempel
 }
 
+class HealthStepSegments extends Table with HybridId, MetaColumns {
+  TextColumn get provider => text()();
+  TextColumn get sourceId => text().nullable()();
+  DateTimeColumn get startAt => dateTime()();
+  DateTimeColumn get endAt => dateTime()();
+  IntColumn get stepCount => integer()();
+  TextColumn get externalKey => text().unique()();
+}
+
 @DriftDatabase(
   tables: [
     Profiles,
@@ -373,6 +382,7 @@ class SupplementSettingsHistory extends Table with HybridId, MetaColumns {
     Favorites,
     DailyGoalsHistory,
     SupplementSettingsHistory,
+    HealthStepSegments,
   ],
 )
 /// The central Drift database class for the application.
@@ -380,12 +390,33 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7; // Version auf 7 erhöhen für SupplementSettingsHistory und isTracked
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+      await m.customStatement(
+        'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+      );
+      await m.customStatement(
+        'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+      );
+      await m.customStatement('''
+        CREATE TABLE IF NOT EXISTS health_step_segments (
+          local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          id TEXT NOT NULL UNIQUE,
+          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+          updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+          deleted_at INTEGER NULL,
+          provider TEXT NOT NULL,
+          source_id TEXT NULL,
+          start_at INTEGER NOT NULL,
+          end_at INTEGER NOT NULL,
+          step_count INTEGER NOT NULL,
+          external_key TEXT NOT NULL UNIQUE
+        )
+      ''');
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
@@ -418,6 +449,29 @@ class AppDatabase extends _$AppDatabase {
       if (from < 7) {
         await m.addColumn(supplements, supplements.isTracked);
         await m.createTable(supplementSettingsHistory);
+      }
+      if (from < 8) {
+        await m.customStatement(
+          'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+        );
+        await m.customStatement(
+          'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+        );
+        await m.customStatement('''
+          CREATE TABLE IF NOT EXISTS health_step_segments (
+            local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            id TEXT NOT NULL UNIQUE,
+            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            deleted_at INTEGER NULL,
+            provider TEXT NOT NULL,
+            source_id TEXT NULL,
+            start_at INTEGER NOT NULL,
+            end_at INTEGER NOT NULL,
+            step_count INTEGER NOT NULL,
+            external_key TEXT NOT NULL UNIQUE
+          )
+        ''');
       }
     },
   );

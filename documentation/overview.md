@@ -65,6 +65,15 @@ Log supplement intake and monitor consistency.
 
 *Data model details → [Data Models: Supplements](data_models_and_storage.md#5-supplements)*
 
+### 👣 Health Steps (Alpha)
+Read-only step import from mobile health providers with provider filtering.
+
+- **iOS:** Apple HealthKit step samples.
+- **Android:** Google Health Connect step records.
+- **Storage:** Raw UTC step segments with strong deduplication keys for safe repeated sync.
+- **Diary:** Steps card appears when data exists and tracking is enabled.
+- **Settings:** Global tracking toggle and provider filter (`All`, `Apple Health`, `Health Connect`).
+
 ### 🔒 Data Management & Privacy
 Full control over your data with comprehensive import/export tools.
 

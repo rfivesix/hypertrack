@@ -9,6 +9,8 @@ import '../widgets/summary_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../widgets/global_app_bar.dart';
+import '../services/health/health_models.dart';
+import '../services/health/steps_sync_service.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -23,11 +25,15 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _appVersion = '';
+  final StepsSyncService _stepsSyncService = StepsSyncService();
+  bool _stepsTrackingEnabled = true;
+  StepsProviderFilter _stepsProviderFilter = StepsProviderFilter.all;
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
+    _loadStepsSettings();
   }
 
   Future<void> _loadAppVersion() async {
@@ -37,6 +43,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _appVersion = "${packageInfo.version} (${packageInfo.buildNumber})";
       });
     }
+  }
+
+  Future<void> _loadStepsSettings() async {
+    final enabled = await _stepsSyncService.isTrackingEnabled();
+    final providerFilter = await _stepsSyncService.getProviderFilter();
+    if (!mounted) return;
+    setState(() {
+      _stepsTrackingEnabled = enabled;
+      _stepsProviderFilter = providerFilter;
+    });
   }
 
   @override
@@ -139,6 +155,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               );
             },
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, 'Health Steps (Alpha)'),
+          SummaryCard(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.directions_walk_rounded),
+                  title: const Text(
+                    'Enable steps tracking',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text(
+                    'Read step data from Apple Health / Health Connect',
+                  ),
+                  value: _stepsTrackingEnabled,
+                  onChanged: (value) async {
+                    await _stepsSyncService.setTrackingEnabled(value);
+                    if (!mounted) return;
+                    setState(() => _stepsTrackingEnabled = value);
+                  },
+                ),
+                const Divider(height: 1),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Provider filter',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                RadioListTile<StepsProviderFilter>(
+                  title: const Text('All'),
+                  value: StepsProviderFilter.all,
+                  groupValue: _stepsProviderFilter,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setProviderFilter(value);
+                    if (!mounted) return;
+                    setState(() => _stepsProviderFilter = value);
+                  },
+                ),
+                RadioListTile<StepsProviderFilter>(
+                  title: const Text('Apple Health'),
+                  value: StepsProviderFilter.apple,
+                  groupValue: _stepsProviderFilter,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setProviderFilter(value);
+                    if (!mounted) return;
+                    setState(() => _stepsProviderFilter = value);
+                  },
+                ),
+                RadioListTile<StepsProviderFilter>(
+                  title: const Text('Health Connect'),
+                  value: StepsProviderFilter.google,
+                  groupValue: _stepsProviderFilter,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setProviderFilter(value);
+                    if (!mounted) return;
+                    setState(() => _stepsProviderFilter = value);
+                  },
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.aiSettingsTitle),
