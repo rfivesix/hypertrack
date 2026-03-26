@@ -92,39 +92,40 @@ class _GeneralExerciseSelectionScreenState
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _results.isEmpty
-                  ? Center(
-                      child: Text(
-                        l10n.noExercisesFound,
-                        style: textTheme.titleMedium,
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _results.length,
-                      itemBuilder: (context, index) {
-                        final exercise = _results[index];
-                        return SummaryCard(
-                          child: ListTile(
-                            leading: const Icon(Icons.fitness_center),
-                            title: Text(
-                              exercise.getLocalizedName(context),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(exercise.categoryName),
-                            trailing: IconButton(
-                              icon: Icon(
-                                Icons.add_circle_outline,
-                                color: colorScheme.primary,
-                              ),
-                              onPressed: () =>
-                                  Navigator.of(context).pop(exercise),
-                            ),
-                            onTap: () => Navigator.of(context).pop(exercise),
+                      ? Center(
+                          child: Text(
+                            l10n.noExercisesFound,
+                            style: textTheme.titleMedium,
                           ),
-                        );
-                      },
-                    ),
+                        )
+                      : ListView.builder(
+                          itemCount: _results.length,
+                          itemBuilder: (context, index) {
+                            final exercise = _results[index];
+                            return SummaryCard(
+                              child: ListTile(
+                                leading: const Icon(Icons.fitness_center),
+                                title: Text(
+                                  exercise.getLocalizedName(context),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(exercise.categoryName),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    Icons.add_circle_outline,
+                                    color: colorScheme.primary,
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(exercise),
+                                ),
+                                onTap: () =>
+                                    Navigator.of(context).pop(exercise),
+                              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),

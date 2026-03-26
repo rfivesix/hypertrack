@@ -25,7 +25,8 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
   @override
   Future<DayStepsAggregation> getDayAggregation(DateTime date) async {
     final targetDate = _atStartOfDay(date);
-    final seed = targetDate.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
+    final seed =
+        targetDate.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
     final rng = Random(seed);
 
     final hourly = List.generate(24, (index) {
@@ -49,7 +50,8 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
   @override
   Future<WeekStepsAggregation> getWeekAggregation(DateTime dateInWeek) async {
     final weekStart = _startOfWeek(dateInWeek);
-    final seed = weekStart.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
+    final seed =
+        weekStart.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
     final rng = Random(seed);
 
     final daily = List.generate(7, (index) {
@@ -69,11 +71,13 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
   }
 
   @override
-  Future<MonthStepsAggregation> getMonthAggregation(DateTime dateInMonth) async {
+  Future<MonthStepsAggregation> getMonthAggregation(
+      DateTime dateInMonth) async {
     final monthStart = DateTime(dateInMonth.year, dateInMonth.month, 1);
     final nextMonth = DateTime(dateInMonth.year, dateInMonth.month + 1, 1);
     final daysInMonth = nextMonth.difference(monthStart).inDays;
-    final seed = monthStart.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
+    final seed =
+        monthStart.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
     final rng = Random(seed);
 
     final daily = List.generate(daysInMonth, (index) {
@@ -102,8 +106,8 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
     final normalizedStart = normalizedEnd.subtract(
       Duration(days: safeDays - 1),
     );
-    final seed = normalizedStart.millisecondsSinceEpoch ~/
-        Duration.millisecondsPerDay;
+    final seed =
+        normalizedStart.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
     final rng = Random(seed);
     final buckets = List.generate(safeDays, (index) {
       final day = normalizedStart.add(Duration(days: index));
@@ -124,7 +128,8 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
       DateTime.now().subtract(const Duration(days: 29));
 
   @override
-  Future<StepsRefreshResult> refresh({bool force = false, DateTime? now}) async {
+  Future<StepsRefreshResult> refresh(
+      {bool force = false, DateTime? now}) async {
     return StepsRefreshResult(
       didRun: true,
       permissionGranted: true,
@@ -141,7 +146,8 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
   @override
   Future<bool> isTrackingEnabled() async => true;
 
-  DateTime _atStartOfDay(DateTime date) => DateTime(date.year, date.month, date.day);
+  DateTime _atStartOfDay(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   DateTime _startOfWeek(DateTime date) {
     final day = _atStartOfDay(date);
@@ -154,8 +160,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   HealthStepsAggregationRepository({
     DatabaseHelper? dbHelper,
     StepsSyncService? stepsSyncService,
-  }) : dbHelper = dbHelper ?? DatabaseHelper.instance,
-       stepsSyncService = stepsSyncService ?? StepsSyncService();
+  })  : dbHelper = dbHelper ?? DatabaseHelper.instance,
+        stepsSyncService = stepsSyncService ?? StepsSyncService();
 
   final DatabaseHelper dbHelper;
   final StepsSyncService stepsSyncService;
@@ -168,7 +174,9 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
       dayLocal: targetDay,
       providerFilter: provider,
     );
-    final byHour = <int, int>{for (final row in rows) row['hour'] as int: row['totalSteps'] as int};
+    final byHour = <int, int>{
+      for (final row in rows) row['hour'] as int: row['totalSteps'] as int
+    };
     final hourly = List.generate(24, (hour) {
       return StepsBucket(
         start: targetDay.add(Duration(hours: hour)),
@@ -176,7 +184,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
       );
     });
     final total = hourly.fold<int>(0, (sum, bucket) => sum + bucket.steps);
-    return DayStepsAggregation(date: targetDay, hourlyBuckets: hourly, totalSteps: total);
+    return DayStepsAggregation(
+        date: targetDay, hourlyBuckets: hourly, totalSteps: total);
   }
 
   @override
@@ -195,7 +204,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   }
 
   @override
-  Future<MonthStepsAggregation> getMonthAggregation(DateTime dateInMonth) async {
+  Future<MonthStepsAggregation> getMonthAggregation(
+      DateTime dateInMonth) async {
     final monthStart = DateTime(dateInMonth.year, dateInMonth.month, 1);
     final nextMonth = DateTime(dateInMonth.year, dateInMonth.month + 1, 1);
     final days = nextMonth.difference(monthStart).inDays;
@@ -217,7 +227,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   }) async {
     final safeDays = daysBack < 1 ? 1 : daysBack;
     final normalizedEnd = _atStartOfDay(endDate);
-    final normalizedStart = normalizedEnd.subtract(Duration(days: safeDays - 1));
+    final normalizedStart =
+        normalizedEnd.subtract(Duration(days: safeDays - 1));
     final provider = await _providerFilterRaw();
     final rows = await dbHelper.getDailyStepsTotalsForRange(
       startLocal: normalizedStart,
@@ -225,7 +236,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
       providerFilter: provider,
     );
     final byDay = <String, int>{
-      for (final row in rows) row['dayLocal'] as String: row['totalSteps'] as int,
+      for (final row in rows)
+        row['dayLocal'] as String: row['totalSteps'] as int,
     };
     final buckets = List.generate(safeDays, (index) {
       final day = normalizedStart.add(Duration(days: index));
@@ -243,7 +255,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   }
 
   @override
-  Future<StepsRefreshResult> refresh({bool force = false, DateTime? now}) async {
+  Future<StepsRefreshResult> refresh(
+      {bool force = false, DateTime? now}) async {
     final enabled = await stepsSyncService.isTrackingEnabled();
     if (!enabled) {
       return const StepsRefreshResult(
@@ -303,7 +316,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   @override
   Future<bool> isTrackingEnabled() => stepsSyncService.isTrackingEnabled();
 
-  DateTime _atStartOfDay(DateTime date) => DateTime(date.year, date.month, date.day);
+  DateTime _atStartOfDay(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   DateTime _startOfWeek(DateTime date) {
     final day = _atStartOfDay(date);

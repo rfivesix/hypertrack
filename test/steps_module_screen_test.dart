@@ -12,7 +12,8 @@ void main() {
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: StepsModuleScreen(repository: InMemoryStepsAggregationRepository()),
+        home:
+            StepsModuleScreen(repository: InMemoryStepsAggregationRepository()),
       ),
     );
 

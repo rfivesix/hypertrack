@@ -58,8 +58,7 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
         ),
         title: Text(
           workoutCount > 1
-              ? l10n
-                    .workoutsLabel // "Workouts"
+              ? l10n.workoutsLabel // "Workouts"
               : l10n.workout, // "Workout"
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,

@@ -84,9 +84,8 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
       if (mounted) {
         setState(() {
           // Nutze DB-Werte oder Fallback, falls leer
-          _allCategories = categories.isNotEmpty
-              ? categories
-              : _defaultCategories;
+          _allCategories =
+              categories.isNotEmpty ? categories : _defaultCategories;
           _allMuscleGroups = muscles.isNotEmpty ? muscles : _defaultMuscles;
 
           // Sortieren für bessere UX
@@ -268,9 +267,9 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        color: Colors.grey[700],
-        fontWeight: FontWeight.bold,
-      ),
+            color: Colors.grey[700],
+            fontWeight: FontWeight.bold,
+          ),
     );
   }
 

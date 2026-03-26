@@ -22,8 +22,7 @@ class BottomContentSpacer extends StatelessWidget {
       (m) => m.isActive,
     );
     final double safe = MediaQuery.of(context).padding.bottom;
-    final double h =
-        kOverlayBaseHeight +
+    final double h = kOverlayBaseHeight +
         (isRunning ? kOverlayRunningExtra : 0) +
         safe +
         extra;

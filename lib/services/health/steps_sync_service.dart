@@ -22,8 +22,8 @@ class StepsSyncService {
   final DatabaseHelper _dbHelper;
 
   StepsSyncService({HealthPlatformSteps? platform, DatabaseHelper? dbHelper})
-    : _platform = platform ?? const HealthPlatformSteps(),
-      _dbHelper = dbHelper ?? DatabaseHelper.instance;
+      : _platform = platform ?? const HealthPlatformSteps(),
+        _dbHelper = dbHelper ?? DatabaseHelper.instance;
 
   Future<bool> isTrackingEnabled() async {
     final prefs = await SharedPreferences.getInstance();
@@ -87,7 +87,8 @@ class StepsSyncService {
 
   Future<bool> requestPermissions() => _platform.requestPermissions();
 
-  Future<StepsSyncResult> sync({DateTime? now, bool forceRefresh = false}) async {
+  Future<StepsSyncResult> sync(
+      {DateTime? now, bool forceRefresh = false}) async {
     final enabled = await isTrackingEnabled();
     if (!enabled) {
       return const StepsSyncResult(
@@ -154,8 +155,8 @@ class StepsSyncService {
           .toString();
       final externalKey =
           segment.nativeId != null && segment.nativeId!.isNotEmpty
-          ? '$provider:${segment.nativeId}'
-          : '$provider:$fallback';
+              ? '$provider:${segment.nativeId}'
+              : '$provider:$fallback';
       return <String, dynamic>{
         'provider': provider,
         'sourceId': segment.sourceId,

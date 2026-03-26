@@ -60,8 +60,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
       text: widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
     );
     _caffeineController = TextEditingController(
-      text:
-          widget.item.caffeineMgPer100ml
+      text: widget.item.caffeineMgPer100ml
               ?.toStringAsFixed(1)
               .replaceAll('.0', '') ??
           '',
@@ -150,9 +149,8 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
           controller: _quantityController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            labelText: _isLiquid
-                ? l10n.amount_in_milliliters
-                : l10n.amount_in_grams,
+            labelText:
+                _isLiquid ? l10n.amount_in_milliliters : l10n.amount_in_grams,
             suffixText: unit,
           ),
           autofocus: true,

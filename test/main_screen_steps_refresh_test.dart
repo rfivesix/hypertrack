@@ -7,7 +7,8 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   bool lastForce = false;
 
   @override
-  Future<StepsRefreshResult> refresh({bool force = false, DateTime? now}) async {
+  Future<StepsRefreshResult> refresh(
+      {bool force = false, DateTime? now}) async {
     refreshCalls += 1;
     lastForce = force;
     return const StepsRefreshResult(
@@ -28,14 +29,16 @@ class _FakeStepsRepository implements StepsAggregationRepository {
       throw UnimplementedError();
 
   @override
-  Future<MonthStepsAggregation> getMonthAggregation(DateTime dateInMonth) async =>
+  Future<MonthStepsAggregation> getMonthAggregation(
+          DateTime dateInMonth) async =>
       throw UnimplementedError();
 
   @override
   Future<RangeStepsAggregation> getRangeAggregation({
     required DateTime endDate,
     required int daysBack,
-  }) async => throw UnimplementedError();
+  }) async =>
+      throw UnimplementedError();
 
   @override
   Future<DateTime?> getEarliestAvailableDate() async => null;

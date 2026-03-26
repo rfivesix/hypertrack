@@ -340,9 +340,9 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                   )
                 else
                   ..._items.asMap().entries.map(
-                    (entry) =>
-                        _buildItemCard(entry.key, entry.value, l10n, theme),
-                  ),
+                        (entry) =>
+                            _buildItemCard(entry.key, entry.value, l10n, theme),
+                      ),
 
                 // Add item button
                 Padding(

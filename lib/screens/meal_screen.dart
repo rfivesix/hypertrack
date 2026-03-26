@@ -109,9 +109,9 @@ class _MealScreenState extends State<MealScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }
@@ -155,8 +155,8 @@ class _MealScreenState extends State<MealScreen> {
         title: _editMode
             ? l10n.mealsEdit
             : (_nameCtrl.text.isNotEmpty
-                  ? _nameCtrl.text
-                  : l10n.mealsViewTitle),
+                ? _nameCtrl.text
+                : l10n.mealsViewTitle),
         actions: [
           if (_editMode)
             TextButton(
@@ -273,23 +273,20 @@ class _MealScreenState extends State<MealScreen> {
                               children: [
                                 _MacroChip(
                                   label: 'C',
-                                  value: _items.isEmpty
-                                      ? '–'
-                                      : _format1(_totalC),
+                                  value:
+                                      _items.isEmpty ? '–' : _format1(_totalC),
                                   unit: 'g',
                                 ),
                                 _MacroChip(
                                   label: 'F',
-                                  value: _items.isEmpty
-                                      ? '–'
-                                      : _format1(_totalF),
+                                  value:
+                                      _items.isEmpty ? '–' : _format1(_totalF),
                                   unit: 'g',
                                 ),
                                 _MacroChip(
                                   label: 'P',
-                                  value: _items.isEmpty
-                                      ? '–'
-                                      : _format1(_totalP),
+                                  value:
+                                      _items.isEmpty ? '–' : _format1(_totalP),
                                   unit: 'g',
                                 ),
                               ],
@@ -621,8 +618,7 @@ class _MealScreenState extends State<MealScreen> {
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok =
-        await showGlassBottomMenu<bool>(
+    final ok = await showGlassBottomMenu<bool>(
           context: context,
           title: l10n.mealsAddToDiary,
           contentBuilder: (ctx, close) {
@@ -668,9 +664,8 @@ class _MealScreenState extends State<MealScreen> {
                           final it = _items[i];
                           final bc = it['barcode'] as String;
                           final fi = products[bc];
-                          final displayName = (fi?.name.isNotEmpty ?? false)
-                              ? fi!.name
-                              : bc;
+                          final displayName =
+                              (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
                           final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
 
                           return Row(
@@ -686,8 +681,8 @@ class _MealScreenState extends State<MealScreen> {
                                   controller: qtyCtrls[bc],
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
+                                    decimal: true,
+                                  ),
                                   decoration: InputDecoration(
                                     labelText: displayName,
                                     helperText: l10n.amountLabel,
@@ -788,8 +783,7 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
 
-    final caffeineId =
-        caffeine.id ??
+    final caffeineId = caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(

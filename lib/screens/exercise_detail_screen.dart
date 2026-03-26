@@ -57,8 +57,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           )
         : null;
 
-    final altName =
-        widget.exercise.nameEn.isNotEmpty &&
+    final altName = widget.exercise.nameEn.isNotEmpty &&
             widget.exercise.nameEn != widget.exercise.nameDe
         ? widget.exercise.nameEn
         : null;
@@ -69,12 +68,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       exerciseUuid: exerciseUuid,
     );
 
-    final timeSeries = await WorkoutDatabaseHelper.instance
-        .getExerciseTimeSeriesData(
-          widget.exercise.nameDe,
-          altName: altName,
-          exerciseUuid: exerciseUuid,
-        );
+    final timeSeries =
+        await WorkoutDatabaseHelper.instance.getExerciseTimeSeriesData(
+      widget.exercise.nameDe,
+      altName: altName,
+      exerciseUuid: exerciseUuid,
+    );
 
     if (mounted) {
       setState(() {
@@ -291,8 +290,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     Text(
                       '${prSet.weightKg?.toStringAsFixed(1).replaceAll('.0', '')} kg',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     Text(
                       '${prSet.reps} Reps',
@@ -417,8 +416,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                       final int index = touchedSpot.x.toInt();
                       final DateTime? date =
                           (index >= 0 && index < dataPoints.length)
-                          ? dataPoints[index]['date'] as DateTime?
-                          : null;
+                              ? dataPoints[index]['date'] as DateTime?
+                              : null;
                       final String dateStr = date != null
                           ? '${date.day}.${date.month}.${date.year}'
                           : '';
@@ -429,10 +428,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                       return LineTooltipItem(
                         '$dateStr\n',
                         Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: Theme.of(context).colorScheme.onInverseSurface,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onInverseSurface,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
                         children: [
                           TextSpan(
                             text: valueStr,
@@ -479,7 +480,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
                           dateStr,
-                          style: Theme.of(context).textTheme.bodySmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
                               ?.copyWith(color: Colors.grey[600], fontSize: 10),
                         ),
                       );
@@ -495,7 +498,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         padding: const EdgeInsets.only(right: 4.0),
                         child: Text(
                           value.toInt().toString(),
-                          style: Theme.of(context).textTheme.bodySmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
                               ?.copyWith(color: Colors.grey[600], fontSize: 10),
                           textAlign: TextAlign.right,
                         ),
@@ -535,9 +540,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }

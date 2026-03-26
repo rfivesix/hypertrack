@@ -92,7 +92,8 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   // Data-loading entry point for the currently selected date.
-  Future<void> loadDataForDate(DateTime date, {bool forceStepsRefresh = false}) async {
+  Future<void> loadDataForDate(DateTime date,
+      {bool forceStepsRefresh = false}) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
@@ -156,10 +157,10 @@ class DiaryScreenState extends State<DiaryScreen> {
         entry.barcode,
       );
       if (foodItem != null) {
-        summary.calories += (foodItem.calories / 100 * entry.quantityInGrams)
-            .round();
-        summary.protein += (foodItem.protein / 100 * entry.quantityInGrams)
-            .round();
+        summary.calories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
+        summary.protein +=
+            (foodItem.protein / 100 * entry.quantityInGrams).round();
         summary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
         summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
 
@@ -172,11 +173,11 @@ class DiaryScreenState extends State<DiaryScreen> {
       meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
     }
 
-    final supplementsForDate = await DatabaseHelper.instance
-        .getSupplementsForDate(date);
+    final supplementsForDate =
+        await DatabaseHelper.instance.getSupplementsForDate(date);
     final allSupplements = await DatabaseHelper.instance.getAllSupplements();
-    final todaysSupplementLogs = await DatabaseHelper.instance
-        .getSupplementLogsForDate(date);
+    final todaysSupplementLogs =
+        await DatabaseHelper.instance.getSupplementLogsForDate(date);
 
     final Map<int, double> todaysDoses = {};
     for (final log in todaysSupplementLogs) {
@@ -232,9 +233,8 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     final workoutLogs = await WorkoutDatabaseHelper.instance
         .getWorkoutLogsForDateRange(date, date);
-    final completedLogs = workoutLogs
-        .where((log) => log.endTime != null)
-        .toList();
+    final completedLogs =
+        workoutLogs.where((log) => log.endTime != null).toList();
     Map<String, dynamic>? workoutSummary;
 
     if (completedLogs.isNotEmpty) {
@@ -311,8 +311,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final enabled = await _stepsSyncService.isTrackingEnabled();
     if (!enabled) return;
     final lastSync = await _stepsSyncService.getLastSyncAt();
-    final shouldSync =
-        force ||
+    final shouldSync = force ||
         lastSync == null ||
         DateTime.now().toUtc().difference(lastSync) > _stepsSyncInterval;
     if (!shouldSync) return;
@@ -341,80 +340,78 @@ class DiaryScreenState extends State<DiaryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    final result =
-        await showGlassBottomMenu<
-          ({
-            int quantity,
-            DateTime timestamp,
-            String mealType,
-            bool isLiquid,
-            double? sugarPer100ml,
-            double? caffeinePer100ml,
-          })?
-        >(
-          context: context,
-          title: trackedItem.item.getLocalizedName(context),
-          contentBuilder: (ctx, close) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
+    final result = await showGlassBottomMenu<
+        ({
+          int quantity,
+          DateTime timestamp,
+          String mealType,
+          bool isLiquid,
+          double? sugarPer100ml,
+          double? caffeinePer100ml,
+        })?>(
+      context: context,
+      title: trackedItem.item.getLocalizedName(context),
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Der Inhalt des Dialogs (jetzt als Bottom-Sheet-Inhalt)
+            QuantityDialogContent(
+              key: dialogStateKey,
+              item: trackedItem.item,
+              initialQuantity: trackedItem.entry.quantityInGrams,
+              initialTimestamp: trackedItem.entry.timestamp,
+              initialMealType: trackedItem.entry.mealType,
+              // Die aktuellen Nährwerte des Eintrags als Initial-Werte
+              // Annahme: Wenn der Eintrag existiert, sind die Nährwerte fix.
+              // Wir setzen nur die Liquid-Status, falls nötig.
+            ),
+            const SizedBox(height: 12),
+            Row(
               children: [
-                // Der Inhalt des Dialogs (jetzt als Bottom-Sheet-Inhalt)
-                QuantityDialogContent(
-                  key: dialogStateKey,
-                  item: trackedItem.item,
-                  initialQuantity: trackedItem.entry.quantityInGrams,
-                  initialTimestamp: trackedItem.entry.timestamp,
-                  initialMealType: trackedItem.entry.mealType,
-                  // Die aktuellen Nährwerte des Eintrags als Initial-Werte
-                  // Annahme: Wenn der Eintrag existiert, sind die Nährwerte fix.
-                  // Wir setzen nur die Liquid-Status, falls nötig.
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: close,
+                    child: Text(l10n.cancel),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: close,
-                        child: Text(l10n.cancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          final state = dialogStateKey.currentState;
-                          if (state != null) {
-                            final quantity = int.tryParse(state.quantityText);
-                            final caffeine = double.tryParse(
-                              state.caffeineText.replaceAll(',', '.'),
-                            );
-                            final sugar = double.tryParse(
-                              state.sugarText.replaceAll(',', '.'),
-                            );
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final state = dialogStateKey.currentState;
+                      if (state != null) {
+                        final quantity = int.tryParse(state.quantityText);
+                        final caffeine = double.tryParse(
+                          state.caffeineText.replaceAll(',', '.'),
+                        );
+                        final sugar = double.tryParse(
+                          state.sugarText.replaceAll(',', '.'),
+                        );
 
-                            if (quantity != null && quantity > 0) {
-                              close();
-                              // Hier geben wir das korrekte, anonyme Tupel zurück
-                              Navigator.of(ctx).pop((
-                                quantity: quantity,
-                                timestamp: state.selectedDateTime,
-                                mealType: state.selectedMealType,
-                                isLiquid: state.isLiquid,
-                                sugarPer100ml: sugar,
-                                caffeinePer100ml: caffeine,
-                              ));
-                            }
-                          }
-                        },
-                        child: Text(l10n.save),
-                      ),
-                    ),
-                  ],
+                        if (quantity != null && quantity > 0) {
+                          close();
+                          // Hier geben wir das korrekte, anonyme Tupel zurück
+                          Navigator.of(ctx).pop((
+                            quantity: quantity,
+                            timestamp: state.selectedDateTime,
+                            mealType: state.selectedMealType,
+                            isLiquid: state.isLiquid,
+                            sugarPer100ml: sugar,
+                            caffeinePer100ml: caffeine,
+                          ));
+                        }
+                      }
+                    },
+                    child: Text(l10n.save),
+                  ),
                 ),
               ],
-            );
-          },
+            ),
+          ],
         );
+      },
+    );
 
     // Weiterhin die Daten aus dem Ergebnis verarbeiten
     if (result != null) {
@@ -460,15 +457,15 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Future<void> _addFoodToMeal(String mealType) async {
-    final FoodItem? selectedFoodItem = await Navigator.of(context)
-        .push<FoodItem>(
-          MaterialPageRoute(
-            builder: (context) => AddFoodScreen(
-              initialDate: _selectedDate, // <--- ÜBERGABE
-              initialMealType: mealType, // <--- ÜBERGABE
-            ),
-          ),
-        );
+    final FoodItem? selectedFoodItem =
+        await Navigator.of(context).push<FoodItem>(
+      MaterialPageRoute(
+        builder: (context) => AddFoodScreen(
+          initialDate: _selectedDate, // <--- ÜBERGABE
+          initialMealType: mealType, // <--- ÜBERGABE
+        ),
+      ),
+    );
 
     if (selectedFoodItem == null || !mounted) return;
 
@@ -528,16 +525,14 @@ class DiaryScreenState extends State<DiaryScreen> {
   // In lib/screens/diary_screen.dart
 
   Future<
-    ({
-      int quantity,
-      DateTime timestamp,
-      String mealType,
-      bool isLiquid,
-      double? sugarPer100ml,
-      double? caffeinePer100ml,
-    })?
-  >
-  _showQuantityMenu(
+      ({
+        int quantity,
+        DateTime timestamp,
+        String mealType,
+        bool isLiquid,
+        double? sugarPer100ml,
+        double? caffeinePer100ml,
+      })?> _showQuantityMenu(
     FoodItem item,
     String mealType, {
     DateTime? initialDate, // <--- NEUER PARAMETER
@@ -556,8 +551,7 @@ class DiaryScreenState extends State<DiaryScreen> {
               key: dialogStateKey,
               item: item,
               initialMealType: mealType,
-              initialTimestamp:
-                  initialDate ??
+              initialTimestamp: initialDate ??
                   _selectedDate, // <--- FIX: Nutze Parameter oder Fallback
             ),
             // ... (Rest der Methode: Buttons etc. bleibt gleich) ...
@@ -679,8 +673,8 @@ class DiaryScreenState extends State<DiaryScreen> {
                 Text(
                   l10n.weightHistoryTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 Expanded(
                   child: Align(
@@ -725,7 +719,8 @@ class DiaryScreenState extends State<DiaryScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              : theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
@@ -810,7 +805,6 @@ class DiaryScreenState extends State<DiaryScreen> {
                       .then((_) => loadDataForDate(_selectedDate)),
                 ),
                 if (_stepsTrackingEnabled) ...[
-                  const SizedBox(height: DesignConstants.spacingXS),
                   _buildStepsSummaryCard(),
                 ],
                 // NEUER TEIL: Workout-Zusammenfassung hier einfügen
@@ -848,19 +842,22 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   Widget _buildStepsSummaryCard() {
     if (_isStepsWidgetLoading) {
-      return const SummaryCard(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              SizedBox(
-                height: 16,
-                width: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              SizedBox(width: 12),
-              Text('Syncing steps...'),
-            ],
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 4),
+        child: SummaryCard(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text('Syncing steps...'),
+              ],
+            ),
           ),
         ),
       );
@@ -869,15 +866,20 @@ class DiaryScreenState extends State<DiaryScreen> {
       return const SizedBox.shrink();
     }
     final theme = Theme.of(context);
-    final stepsText = NumberFormat.decimalPattern().format(
-      _stepsForSelectedDay,
-    );
-    return DiaryStepsSummaryCard(
-      stepsLabel: 'Steps',
-      stepsText: stepsText,
-      value: (_stepsForSelectedDay ?? 0).toDouble(),
-      target: (_targetSteps > 0 ? _targetSteps : StepsSyncService.defaultStepsGoal)
-          .toDouble(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: GlassProgressBar(
+        label: 'Steps',
+        unit: 'steps',
+        value: (_stepsForSelectedDay ?? 0).toDouble(),
+        target: (_targetSteps > 0
+                ? _targetSteps
+                : StepsSyncService.defaultStepsGoal)
+            .toDouble(),
+        color: theme.colorScheme.primary,
+        height: 50,
+        borderRadius: 16,
+      ),
     );
   }
 
@@ -887,9 +889,9 @@ class DiaryScreenState extends State<DiaryScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }
@@ -968,9 +970,8 @@ class DiaryScreenState extends State<DiaryScreen> {
 
           // Inhalt (animiert ein-/ausklappen)
           AnimatedCrossFade(
-            crossFadeState: isOpen
-                ? CrossFadeState.showFirst
-                : CrossFadeState.showSecond,
+            crossFadeState:
+                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
             duration: const Duration(milliseconds: 180),
             firstChild: Column(
               children: [
@@ -1142,9 +1143,8 @@ class DiaryScreenState extends State<DiaryScreen> {
             ),
           ),
           AnimatedCrossFade(
-            crossFadeState: isOpen
-                ? CrossFadeState.showFirst
-                : CrossFadeState.showSecond,
+            crossFadeState:
+                isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
             duration: const Duration(milliseconds: 180),
             firstChild: Column(
               children: [
@@ -1261,67 +1261,6 @@ class DiaryScreenState extends State<DiaryScreen> {
       default:
         return key;
     }
-  }
-}
-
-class DiaryStepsSummaryCard extends StatelessWidget {
-  const DiaryStepsSummaryCard({
-    super.key,
-    required this.stepsLabel,
-    required this.stepsText,
-    required this.value,
-    required this.target,
-  });
-
-  final String stepsLabel;
-  final String stepsText;
-  final double value;
-  final double target;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SummaryCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.directions_walk_rounded,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    stepsLabel,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Text(
-                  stepsText,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: DesignConstants.spacingS),
-            GlassProgressBar(
-              label: stepsLabel,
-              unit: 'steps',
-              value: value,
-              target: target,
-              color: theme.colorScheme.primary,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

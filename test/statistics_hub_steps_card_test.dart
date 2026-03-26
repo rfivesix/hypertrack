@@ -40,7 +40,8 @@ class _FakeStepsRepository implements StepsAggregationRepository {
       throw UnimplementedError();
 
   @override
-  Future<MonthStepsAggregation> getMonthAggregation(DateTime dateInMonth) async =>
+  Future<MonthStepsAggregation> getMonthAggregation(
+          DateTime dateInMonth) async =>
       throw UnimplementedError();
 
   @override
@@ -58,7 +59,8 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   Future<bool> isTrackingEnabled() async => true;
 
   @override
-  Future<StepsRefreshResult> refresh({bool force = false, DateTime? now}) async =>
+  Future<StepsRefreshResult> refresh(
+          {bool force = false, DateTime? now}) async =>
       const StepsRefreshResult(
         didRun: true,
         permissionGranted: true,
@@ -99,7 +101,8 @@ void main() {
         notableImprovements: [],
       ),
       BodyNutritionAnalyticsResult(
-        range: DateTimeRange(start: DateTime(2026, 1, 1), end: DateTime(2026, 1, 30)),
+        range: DateTimeRange(
+            start: DateTime(2026, 1, 1), end: DateTime(2026, 1, 30)),
         totalDays: 30,
         currentWeightKg: null,
         weightChangeKg: null,

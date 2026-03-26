@@ -117,7 +117,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           child: Text(
                             l10n.settingsVisualStyleTitle,
-                            style: Theme.of(context).textTheme.labelLarge
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
                                 ?.copyWith(
                                   color: Colors.grey,
                                   fontWeight: FontWeight.bold,
@@ -334,9 +336,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }

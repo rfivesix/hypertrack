@@ -45,8 +45,7 @@ class _EditableSetRowState extends State<EditableSetRow> {
   void initState() {
     super.initState();
     _weightController = TextEditingController(
-      text:
-          widget.setLog.weightKg?.toStringAsFixed(2).replaceAll('.00', '') ??
+      text: widget.setLog.weightKg?.toStringAsFixed(2).replaceAll('.00', '') ??
           '',
     );
     _repsController = TextEditingController(
@@ -92,8 +91,7 @@ class _EditableSetRowState extends State<EditableSetRow> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              validator: (value) =>
-                  (value == null ||
+              validator: (value) => (value == null ||
                       value.trim().isEmpty ||
                       double.tryParse(value.replaceAll(',', '.')) == null)
                   ? "!"
@@ -111,8 +109,7 @@ class _EditableSetRowState extends State<EditableSetRow> {
                 isDense: true,
               ),
               keyboardType: TextInputType.number,
-              validator: (value) =>
-                  (value == null ||
+              validator: (value) => (value == null ||
                       value.trim().isEmpty ||
                       int.tryParse(value) == null)
                   ? "!"

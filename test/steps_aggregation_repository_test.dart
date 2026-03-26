@@ -5,7 +5,8 @@ void main() {
   group('InMemoryStepsAggregationRepository', () {
     const repository = InMemoryStepsAggregationRepository();
 
-    test('day aggregation returns 24 hourly buckets and correct total', () async {
+    test('day aggregation returns 24 hourly buckets and correct total',
+        () async {
       final targetDate = DateTime(2026, 3, 26, 14, 30);
       final day = await repository.getDayAggregation(targetDate);
 
