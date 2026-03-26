@@ -107,14 +107,21 @@ class MainActivity: FlutterFragmentActivity() {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val from = Instant.parse(fromIso)
                 val to = Instant.parse(toIso)
-                val response = client.readRecords(
-                    ReadRecordsRequest(
-                        recordType = StepsRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(from, to)
+                val allRecords = mutableListOf<StepsRecord>()
+                var pageToken: String? = null
+                do {
+                    val response = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = StepsRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(from, to),
+                            pageToken = pageToken
+                        )
                     )
-                )
+                    allRecords.addAll(response.records)
+                    pageToken = response.pageToken
+                } while (pageToken != null)
 
-                val payload = response.records.map { record ->
+                val payload = allRecords.map { record ->
                     mapOf(
                         "startAtUtcIso" to record.startTime.toString(),
                         "endAtUtcIso" to record.endTime.toString(),

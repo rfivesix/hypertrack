@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.7.1-alpha.4 — 2026-03-26
+
+### Fixed
+- **Android Health Connect paging:** Fixed `readRecords` ingestion to read all pages instead of only the first result page.
+- **Missing steps on Android:** Resolved undercounted daily totals caused by incomplete Health Connect imports (especially visible when comparing Hypertrack vs Google Fit / Withings).
+
 ## 0.7.1-alpha.3 — 2026-03-26
 
 ### Fixed
