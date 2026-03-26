@@ -25,9 +25,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
 
   Future<void> _pickTarget(String sourceName) async {
     final Exercise? picked = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const GeneralExerciseSelectionScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const GeneralExerciseSelectionScreen()),
     );
     if (picked != null && mounted) {
       setState(() => _selection[sourceName] = picked);
@@ -59,9 +57,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(
-        title: l10n.mapExercisesTitle,
-      ),
+      appBar: GlobalAppBar(title: l10n.mapExercisesTitle),
       body: Padding(
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top + topPadding,
@@ -91,8 +87,9 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
             ),
             SafeArea(
               child: Padding(
-                padding:
-                    const EdgeInsets.only(bottom: DesignConstants.spacingM),
+                padding: const EdgeInsets.only(
+                  bottom: DesignConstants.spacingM,
+                ),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(

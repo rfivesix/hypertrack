@@ -17,10 +17,7 @@ import '../../widgets/summary_card.dart';
 class BodyNutritionCorrelationScreen extends StatefulWidget {
   final int initialRangeIndex;
 
-  const BodyNutritionCorrelationScreen({
-    super.key,
-    this.initialRangeIndex = 1,
-  });
+  const BodyNutritionCorrelationScreen({super.key, this.initialRangeIndex = 1});
 
   @override
   State<BodyNutritionCorrelationScreen> createState() =>
@@ -54,12 +51,12 @@ class _BodyNutritionCorrelationScreenState
   }
 
   List<String> _ranges(AppLocalizations l10n) => [
-        l10n.filter7Days,
-        l10n.filter30Days,
-        l10n.filter3Months,
-        l10n.filter6Months,
-        l10n.filterAll,
-      ];
+    l10n.filter7Days,
+    l10n.filter30Days,
+    l10n.filter3Months,
+    l10n.filter6Months,
+    l10n.filterAll,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -74,56 +71,56 @@ class _BodyNutritionCorrelationScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _analytics == null
-              ? const SizedBox.shrink()
-              : SingleChildScrollView(
-                  padding: DesignConstants.screenPadding.copyWith(
-                    top: DesignConstants.screenPadding.top + topPadding,
-                    bottom: DesignConstants.bottomContentSpacer,
+          ? const SizedBox.shrink()
+          : SingleChildScrollView(
+              padding: DesignConstants.screenPadding.copyWith(
+                top: DesignConstants.screenPadding.top + topPadding,
+                bottom: DesignConstants.bottomContentSpacer,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildRangeChips(l10n),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  _buildSummaryKpis(l10n, _analytics!),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  AnalyticsSectionHeader(
+                    title: l10n.analyticsBodyNutritionTrendContext,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildRangeChips(l10n),
-                      const SizedBox(height: DesignConstants.spacingM),
-                      _buildSummaryKpis(l10n, _analytics!),
-                      const SizedBox(height: DesignConstants.spacingM),
-                      AnalyticsSectionHeader(
-                        title: l10n.analyticsBodyNutritionTrendContext,
-                      ),
-                      _buildStackedCharts(l10n, _analytics!),
-                      const SizedBox(height: DesignConstants.spacingM),
-                      AnalyticsSectionHeader(
-                        title: l10n.analyticsInterpretationTitle,
-                      ),
-                      _buildInterpretationCard(l10n, _analytics!),
-                      const SizedBox(height: 8),
-                      SummaryCard(
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.straighten,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          title: Text(
-                            l10n.body_measurements,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.measurements_description),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const MeasurementsScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                  _buildStackedCharts(l10n, _analytics!),
+                  const SizedBox(height: DesignConstants.spacingM),
+                  AnalyticsSectionHeader(
+                    title: l10n.analyticsInterpretationTitle,
                   ),
-                ),
+                  _buildInterpretationCard(l10n, _analytics!),
+                  const SizedBox(height: 8),
+                  SummaryCard(
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.straighten,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      title: Text(
+                        l10n.body_measurements,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(l10n.measurements_description),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const MeasurementsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -193,16 +190,16 @@ class _BodyNutritionCorrelationScreenState
             Text(
               _insightText(l10n, data),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             if (!confidenceHigh) ...[
               const SizedBox(height: 4),
               Text(
                 l10n.analyticsBodyNutritionLowConfidenceNudge,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
             ],
           ],
@@ -215,24 +212,19 @@ class _BodyNutritionCorrelationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 4),
         Text(
           value,
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         Text(
           subLabel,
-          style: Theme.of(context)
-              .textTheme
-              .labelSmall
-              ?.copyWith(color: Theme.of(context).colorScheme.outline),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
         ),
       ],
     );
@@ -249,17 +241,13 @@ class _BodyNutritionCorrelationScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
           const SizedBox(height: 2),
           Text(
             value,
-            style: Theme.of(context)
-                .textTheme
-                .titleSmall
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -296,15 +284,15 @@ class _BodyNutritionCorrelationScreenState
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -327,8 +315,8 @@ class _BodyNutritionCorrelationScreenState
             Text(
               l10n.analyticsBodyNutritionTrendContextHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             const SizedBox(height: 8),
             _buildChartTitle(l10n.analyticsWeightTrendLabel),
@@ -357,10 +345,9 @@ class _BodyNutritionCorrelationScreenState
       padding: const EdgeInsets.only(bottom: 6.0),
       child: Text(
         title,
-        style: Theme.of(context)
-            .textTheme
-            .labelMedium
-            ?.copyWith(fontWeight: FontWeight.w600),
+        style: Theme.of(
+          context,
+        ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -375,11 +362,12 @@ class _BodyNutritionCorrelationScreenState
     }
 
     final firstDay = data.range.start;
-    final points = (data.smoothedWeight.isNotEmpty
-            ? data.smoothedWeight
-            : data.weightDaily)
-        .map((p) => FlSpot(_xOf(p.day, firstDay), p.value))
-        .toList(growable: false);
+    final points =
+        (data.smoothedWeight.isNotEmpty
+                ? data.smoothedWeight
+                : data.weightDaily)
+            .map((p) => FlSpot(_xOf(p.day, firstDay), p.value))
+            .toList(growable: false);
 
     final labels = _xLabelPositions(data.range);
 
@@ -397,9 +385,9 @@ class _BodyNutritionCorrelationScreenState
               reservedSize: 40,
               getTitlesWidget: (value, meta) =>
                   AnalyticsChartDefaults.tickLabel(
-                context,
-                value.toStringAsFixed(1),
-              ),
+                    context,
+                    value.toStringAsFixed(1),
+                  ),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -462,9 +450,9 @@ class _BodyNutritionCorrelationScreenState
               reservedSize: 42,
               getTitlesWidget: (value, meta) =>
                   AnalyticsChartDefaults.tickLabel(
-                context,
-                value.toStringAsFixed(0),
-              ),
+                    context,
+                    value.toStringAsFixed(0),
+                  ),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -506,10 +494,9 @@ class _BodyNutritionCorrelationScreenState
           children: [
             Text(
               l10n.analyticsObservedPatternLabel,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(
@@ -522,15 +509,15 @@ class _BodyNutritionCorrelationScreenState
                   ? l10n.analyticsBodyNutritionInterpretationConfidenceHigh
                   : l10n.analyticsBodyNutritionInterpretationConfidenceLow,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               l10n.analyticsCorrelationDisclaimer,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
           ],
         ),
@@ -539,7 +526,9 @@ class _BodyNutritionCorrelationScreenState
   }
 
   String _insightText(
-      AppLocalizations l10n, BodyNutritionAnalyticsResult data) {
+    AppLocalizations l10n,
+    BodyNutritionAnalyticsResult data,
+  ) {
     return StatisticsPresentationFormatter.bodyNutritionInsightLabel(
       l10n,
       data.insightType,

@@ -79,8 +79,9 @@ class ImportManager {
         final notes = firstRow['description'];
 
         // A. Workout anlegen (Initial als 'ongoing' mit current time)
-        final newLog =
-            await workoutHelper.startWorkout(routineName: routineName);
+        final newLog = await workoutHelper.startWorkout(
+          routineName: routineName,
+        );
 
         if (newLog.id == null) continue;
 
@@ -120,8 +121,9 @@ class ImportManager {
             weightKg: double.tryParse(row['weight_kg']?.toString() ?? ''),
             reps: int.tryParse(row['reps']?.toString() ?? ''),
             distanceKm: double.tryParse(row['distance_km']?.toString() ?? ''),
-            durationSeconds:
-                int.tryParse(row['duration_seconds']?.toString() ?? ''),
+            durationSeconds: int.tryParse(
+              row['duration_seconds']?.toString() ?? '',
+            ),
             rpe: int.tryParse(row['rpe']?.toString() ?? ''),
 
             log_order: setOrder++,
@@ -174,7 +176,8 @@ class ImportManager {
     }
 
     debugPrint(
-        "WARNUNG: Konnte Datum nicht parsen: '$dateString'. Nutze JETZT.");
+      "WARNUNG: Konnte Datum nicht parsen: '$dateString'. Nutze JETZT.",
+    );
     return DateTime.now();
   }
 }

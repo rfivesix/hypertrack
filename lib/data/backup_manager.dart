@@ -80,9 +80,9 @@ class BackupManager {
 
     // 2) Load custom products directly from Drift.
     final db = await _userDb.database;
-    final customProductRows = await (db.select(db.products)
-          ..where((t) => t.source.equals('user')))
-        .get();
+    final customProductRows = await (db.select(
+      db.products,
+    )..where((t) => t.source.equals('user'))).get();
 
     final customFoodItems = customProductRows.map((row) {
       return FoodItem(
@@ -112,26 +112,30 @@ class BackupManager {
     // 3) Collect historical goals and supplement settings.
     final goalsHistoryRows = await db.select(db.dailyGoalsHistory).get();
     final dailyGoalsHistory = goalsHistoryRows
-        .map((r) => {
-              'targetCalories': r.targetCalories,
-              'targetProtein': r.targetProtein,
-              'targetCarbs': r.targetCarbs,
-              'targetFat': r.targetFat,
-              'targetWater': r.targetWater,
-              'createdAt': r.createdAt.toIso8601String(),
-            })
+        .map(
+          (r) => {
+            'targetCalories': r.targetCalories,
+            'targetProtein': r.targetProtein,
+            'targetCarbs': r.targetCarbs,
+            'targetFat': r.targetFat,
+            'targetWater': r.targetWater,
+            'createdAt': r.createdAt.toIso8601String(),
+          },
+        )
         .toList();
 
     final suppHistoryRows = await db.select(db.supplementSettingsHistory).get();
     final supplementSettingsHistory = suppHistoryRows
-        .map((r) => {
-              'supplementId': r.supplementId,
-              'isTracked': r.isTracked,
-              'dose': r.dose,
-              'dailyGoal': r.dailyGoal,
-              'dailyLimit': r.dailyLimit,
-              'createdAt': r.createdAt.toIso8601String(),
-            })
+        .map(
+          (r) => {
+            'supplementId': r.supplementId,
+            'isTracked': r.isTracked,
+            'dose': r.dose,
+            'dailyGoal': r.dailyGoal,
+            'dailyLimit': r.dailyLimit,
+            'createdAt': r.createdAt.toIso8601String(),
+          },
+        )
         .toList();
 
     // 4) Collect app settings and profile.
@@ -197,7 +201,8 @@ class BackupManager {
     final tempDir = await getTemporaryDirectory();
     final timestamp = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
     final tempFile = File(
-        '${tempDir.path}/$baseName-v$currentSchemaVersion-[$timestamp].json');
+      '${tempDir.path}/$baseName-v$currentSchemaVersion-[$timestamp].json',
+    );
     await tempFile.writeAsString(content);
 
     // Use the modern share_plus API (`shareXFiles`) for file sharing.
@@ -221,8 +226,10 @@ class BackupManager {
   /// Imports a full application backup from [filePath], auto-detecting encryption.
   ///
   /// If the backup is encrypted, [passphrase] must be provided.
-  Future<bool> importFullBackupAuto(String filePath,
-      {String? passphrase}) async {
+  Future<bool> importFullBackupAuto(
+    String filePath, {
+    String? passphrase,
+  }) async {
     try {
       final file = File(filePath);
       final rawString = await file.readAsString();
@@ -236,7 +243,9 @@ class BackupManager {
         final effectivePw = passphrase ?? "";
         try {
           final clearText = await EncryptionUtil.decryptToString(
-              Map<String, dynamic>.from(jsonMapRaw), effectivePw);
+            Map<String, dynamic>.from(jsonMapRaw),
+            effectivePw,
+          );
           payload = jsonDecode(clearText) as Map<String, dynamic>;
         } catch (e) {
           debugPrint('Backup decryption failed: $e');
@@ -259,8 +268,9 @@ class BackupManager {
       await _workoutDb.clearAllWorkoutData();
 
       final db = await _userDb.database;
-      await (db.delete(db.products)..where((t) => t.source.equals('user')))
-          .go();
+      await (db.delete(
+        db.products,
+      )..where((t) => t.source.equals('user'))).go();
 
       for (final entry in backup.userPreferences.entries) {
         final key = entry.key;
@@ -308,9 +318,11 @@ class BackupManager {
                 category: drift.Value(item.category),
                 id: drift.Value(item.barcode.startsWith('user_')
                     ? item.barcode
-                    : 'user_${item.barcode}'),
+                    : 'user_${item.barcode}',
               ),
-              mode: drift.InsertMode.insertOrReplace);
+            ),
+            mode: drift.InsertMode.insertOrReplace,
+          );
         }
       });
 
@@ -333,8 +345,9 @@ class BackupManager {
                 targetCarbs: drift.Value(row['targetCarbs'] as int),
                 targetFat: drift.Value(row['targetFat'] as int),
                 targetWater: drift.Value(row['targetWater'] as int),
-                createdAt:
-                    drift.Value(DateTime.parse(row['createdAt'] as String)),
+                createdAt: drift.Value(
+                  DateTime.parse(row['createdAt'] as String),
+                ),
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
@@ -352,14 +365,19 @@ class BackupManager {
                 supplementId: drift.Value(row['supplementId'] as String),
                 isTracked: drift.Value(row['isTracked'] as bool),
                 dose: drift.Value((row['dose'] as num).toDouble()),
-                dailyGoal: drift.Value(row['dailyGoal'] != null
-                    ? (row['dailyGoal'] as num).toDouble()
-                    : null),
-                dailyLimit: drift.Value(row['dailyLimit'] != null
-                    ? (row['dailyLimit'] as num).toDouble()
-                    : null),
-                createdAt:
-                    drift.Value(DateTime.parse(row['createdAt'] as String)),
+                dailyGoal: drift.Value(
+                  row['dailyGoal'] != null
+                      ? (row['dailyGoal'] as num).toDouble()
+                      : null,
+                ),
+                dailyLimit: drift.Value(
+                  row['dailyLimit'] != null
+                      ? (row['dailyLimit'] as num).toDouble()
+                      : null,
+                ),
+                createdAt: drift.Value(
+                  DateTime.parse(row['createdAt'] as String),
+                ),
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
@@ -370,16 +388,21 @@ class BackupManager {
       // Import Profile
       if (backup.profile != null) {
         final p = backup.profile!;
-        await db.into(db.profiles).insert(
+        await db
+            .into(db.profiles)
+            .insert(
               ProfilesCompanion(
                 id: drift.Value(p['id'] as String),
                 username: drift.Value(p['username'] as String?),
                 isCoach: drift.Value(p['isCoach'] as bool? ?? false),
-                visibility:
-                    drift.Value(p['visibility'] as String? ?? 'private'),
-                birthday: drift.Value(p['birthday'] != null
-                    ? DateTime.parse(p['birthday'] as String)
-                    : null),
+                visibility: drift.Value(
+                  p['visibility'] as String? ?? 'private',
+                ),
+                birthday: drift.Value(
+                  p['birthday'] != null
+                      ? DateTime.parse(p['birthday'] as String)
+                      : null,
+                ),
                 height: drift.Value(p['height'] as int?),
                 gender: drift.Value(p['gender'] as String?),
                 profileImagePath: drift.Value(p['profileImagePath'] as String?),
@@ -391,13 +414,16 @@ class BackupManager {
       // Import AppSettings
       if (backup.appSettings != null && backup.profile != null) {
         final s = backup.appSettings!;
-        await db.into(db.appSettings).insert(
+        await db
+            .into(db.appSettings)
+            .insert(
               AppSettingsCompanion(
                 userId: drift.Value(backup.profile!['id'] as String),
                 themeMode: drift.Value(s['themeMode'] as String? ?? 'system'),
                 unitSystem: drift.Value(s['unitSystem'] as String? ?? 'metric'),
-                targetCalories:
-                    drift.Value(s['targetCalories'] as int? ?? 2500),
+                targetCalories: drift.Value(
+                  s['targetCalories'] as int? ?? 2500,
+                ),
                 targetProtein: drift.Value(s['targetProtein'] as int? ?? 180),
                 targetCarbs: drift.Value(s['targetCarbs'] as int? ?? 250),
                 targetFat: drift.Value(s['targetFat'] as int? ?? 80),
@@ -476,13 +502,15 @@ class BackupManager {
       await file.writeAsString(content);
 
       try {
-        final files = baseDir
-            .listSync()
-            .whereType<File>()
-            .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
-            .toList()
-          ..sort(
-              (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+        final files =
+            baseDir
+                .listSync()
+                .whereType<File>()
+                .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
+                .toList()
+              ..sort(
+                (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
+              );
 
         if (files.length > retention) {
           for (var i = retention; i < files.length; i++) {
@@ -525,7 +553,7 @@ class BackupManager {
         'protein_g',
         'carbs_g',
         'fat_g',
-        'barcode'
+        'barcode',
       ]);
 
       for (final entry in entries) {
@@ -571,7 +599,7 @@ class BackupManager {
         'weight_kg',
         'reps',
         'rest_sec',
-        'notes'
+        'notes',
       ]);
 
       for (final log in logs) {
@@ -614,7 +642,7 @@ class BackupManager {
             DateFormat('HH:mm').format(session.timestamp),
             m.type,
             m.value,
-            m.unit
+            m.unit,
           ]);
         }
       }
@@ -626,7 +654,9 @@ class BackupManager {
   }
 
   Future<bool> _createAndShareCsv(
-      List<List<dynamic>> rows, String baseName) async {
+    List<List<dynamic>> rows,
+    String baseName,
+  ) async {
     final String csvData = const ListToCsvConverter().convert(rows);
     final tempDir = await getTemporaryDirectory();
     final timestamp = DateFormat('yyyy-MM-dd').format(DateTime.now());

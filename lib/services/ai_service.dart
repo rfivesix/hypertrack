@@ -45,10 +45,10 @@ class AiSuggestedItem {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'estimatedGrams': estimatedGrams,
-        'confidence': confidence,
-      };
+    'name': name,
+    'estimatedGrams': estimatedGrams,
+    'confidence': confidence,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -65,17 +65,19 @@ sealed class AiServiceException implements Exception {
 
 class AiKeyMissingException extends AiServiceException {
   const AiKeyMissingException()
-      : super('No API key configured for the selected provider.');
+    : super('No API key configured for the selected provider.');
 }
 
 class AiAuthException extends AiServiceException {
-  const AiAuthException(
-      [super.msg = 'Authentication failed. Please check your API key.']);
+  const AiAuthException([
+    super.msg = 'Authentication failed. Please check your API key.',
+  ]);
 }
 
 class AiNetworkException extends AiServiceException {
-  const AiNetworkException(
-      [super.msg = 'Network error. Please check your connection.']);
+  const AiNetworkException([
+    super.msg = 'Network error. Please check your connection.',
+  ]);
 }
 
 class AiParseException extends AiServiceException {
@@ -83,8 +85,9 @@ class AiParseException extends AiServiceException {
 }
 
 class AiRateLimitException extends AiServiceException {
-  const AiRateLimitException(
-      [super.msg = 'Rate limit exceeded. Please wait a moment.']);
+  const AiRateLimitException([
+    super.msg = 'Rate limit exceeded. Please wait a moment.',
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -109,8 +112,8 @@ class AiService {
   static String _buildSystemPrompt({String? languageCode}) {
     final langRule = (languageCode != null && languageCode.isNotEmpty)
         ? '\n5. IMPORTANT: All food "name" values MUST be in the "$languageCode" language '
-            '(e.g. use "Apfel" instead of "Apple" when language is "de"). '
-            'Never mix languages.'
+              '(e.g. use "Apfel" instead of "Apple" when language is "de"). '
+              'Never mix languages.'
         : '';
 
     return '''
@@ -198,19 +201,29 @@ Example response:
 
     switch (provider) {
       case AiProvider.openai:
-        return _callOpenAi(apiKey, userContent, imageDataList,
-            systemPrompt: prompt);
+        return _callOpenAi(
+          apiKey,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
       case AiProvider.gemini:
-        return _callGemini(apiKey, userContent, imageDataList,
-            systemPrompt: prompt);
+        return _callGemini(
+          apiKey,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
     }
   }
 
   /// Analyzes a text-only meal description and returns suggested food items.
   ///
   /// Pass [languageCode] (e.g. 'de') to get food names in that language.
-  Future<List<AiSuggestedItem>> analyzeText(String description,
-      {String? languageCode}) async {
+  Future<List<AiSuggestedItem>> analyzeText(
+    String description, {
+    String? languageCode,
+  }) async {
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
@@ -237,9 +250,11 @@ Example response:
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
 
-    final previousJson =
-        jsonEncode(previousResults.map((e) => e.toJson()).toList());
-    final userContent = '''
+    final previousJson = jsonEncode(
+      previousResults.map((e) => e.toJson()).toList(),
+    );
+    final userContent =
+        '''
 Previous analysis result:
 $previousJson
 
@@ -259,11 +274,19 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
     switch (provider) {
       case AiProvider.openai:
-        return _callOpenAi(apiKey, userContent, imageDataList,
-            systemPrompt: prompt);
+        return _callOpenAi(
+          apiKey,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
       case AiProvider.gemini:
-        return _callGemini(apiKey, userContent, imageDataList,
-            systemPrompt: prompt);
+        return _callGemini(
+          apiKey,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
     }
   }
 
@@ -271,7 +294,8 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   Future<bool> testConnection() async {
     try {
       await analyzeText(
-          'Test: reply with [{"name":"Test","estimatedGrams":1,"confidence":1.0}]');
+        'Test: reply with [{"name":"Test","estimatedGrams":1,"confidence":1.0}]',
+      );
       return true;
     } on AiServiceException {
       rethrow;
@@ -296,18 +320,12 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     for (final img64 in imagesBase64) {
       contentParts.add({
         'type': 'image_url',
-        'image_url': {
-          'url': 'data:image/jpeg;base64,$img64',
-          'detail': 'low',
-        },
+        'image_url': {'url': 'data:image/jpeg;base64,$img64', 'detail': 'low'},
       });
     }
 
     // Add text part
-    contentParts.add({
-      'type': 'text',
-      'text': userContent,
-    });
+    contentParts.add({'type': 'text', 'text': userContent});
 
     final body = jsonEncode({
       'model': 'gpt-4o',
@@ -371,10 +389,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     // Add image parts
     for (final img64 in imagesBase64) {
       parts.add({
-        'inlineData': {
-          'mimeType': 'image/jpeg',
-          'data': img64,
-        },
+        'inlineData': {'mimeType': 'image/jpeg', 'data': img64},
       });
     }
 
@@ -383,12 +398,9 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
     final body = jsonEncode({
       'contents': [
-        {'parts': parts}
+        {'parts': parts},
       ],
-      'generationConfig': {
-        'temperature': 0.3,
-        'maxOutputTokens': 8192,
-      },
+      'generationConfig': {'temperature': 0.3, 'maxOutputTokens': 8192},
     });
 
     try {
@@ -509,7 +521,8 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       return p;
     }).toList();
 
-    final userContent = '''
+    final userContent =
+        '''
 Target Meal: $mealTypeLabel
 
 Target macros for THIS meal:
@@ -529,12 +542,20 @@ Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the
     String rawContent;
     switch (provider) {
       case AiProvider.openai:
-        rawContent = await _callOpenAiRaw(apiKey, userContent, [],
-            systemPrompt: systemPrompt);
+        rawContent = await _callOpenAiRaw(
+          apiKey,
+          userContent,
+          [],
+          systemPrompt: systemPrompt,
+        );
         break;
       case AiProvider.gemini:
-        rawContent = await _callGeminiRaw(apiKey, userContent, [],
-            systemPrompt: systemPrompt);
+        rawContent = await _callGeminiRaw(
+          apiKey,
+          userContent,
+          [],
+          systemPrompt: systemPrompt,
+        );
         break;
     }
 
@@ -644,12 +665,9 @@ Example:
 
     final body = jsonEncode({
       'contents': [
-        {'parts': parts}
+        {'parts': parts},
       ],
-      'generationConfig': {
-        'temperature': 0.3,
-        'maxOutputTokens': 8192,
-      },
+      'generationConfig': {'temperature': 0.3, 'maxOutputTokens': 8192},
     });
 
     try {
@@ -760,10 +778,12 @@ Example:
     final ingredientsRaw = json['ingredients'] as List<dynamic>? ?? [];
 
     final ingredients = ingredientsRaw
-        .map((e) => AiRecommendedIngredient(
-              name: (e as Map<String, dynamic>)['name'] as String? ?? '',
-              amountInGrams: (e['amount_in_grams'] as num?)?.toInt() ?? 100,
-            ))
+        .map(
+          (e) => AiRecommendedIngredient(
+            name: (e as Map<String, dynamic>)['name'] as String? ?? '',
+            amountInGrams: (e['amount_in_grams'] as num?)?.toInt() ?? 100,
+          ),
+        )
         .toList();
 
     if (ingredients.isEmpty) {

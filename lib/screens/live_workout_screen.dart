@@ -57,8 +57,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     super.initState();
     _onManagerUpdateCallback = () {
       if (mounted) {
-        final manager =
-            Provider.of<WorkoutSessionManager>(context, listen: false);
+        final manager = Provider.of<WorkoutSessionManager>(
+          context,
+          listen: false,
+        );
         _syncControllersWithManager(manager);
         setState(() {});
       }
@@ -66,8 +68,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeScreen();
-      Provider.of<WorkoutSessionManager>(context, listen: false)
-          .addListener(_onManagerUpdateCallback);
+      Provider.of<WorkoutSessionManager>(
+        context,
+        listen: false,
+      ).addListener(_onManagerUpdateCallback);
     });
   }
 
@@ -142,14 +146,20 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           if (isCardio) {
             // Update Distance
             if (val != manager.setLogs[templateId]?.distanceKm || clearValue) {
-              manager.updateSet(templateId,
-                  distance: val, clearDistance: clearValue);
+              manager.updateSet(
+                templateId,
+                distance: val,
+                clearDistance: clearValue,
+              );
             }
           } else {
             // Update Weight
             if (val != manager.setLogs[templateId]?.weightKg || clearValue) {
-              manager.updateSet(templateId,
-                  weight: val, clearWeight: clearValue);
+              manager.updateSet(
+                templateId,
+                weight: val,
+                clearWeight: clearValue,
+              );
             }
           }
         });
@@ -178,8 +188,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             final clearDuration = seconds == null && text.isEmpty;
             if (seconds != manager.setLogs[templateId]?.durationSeconds ||
                 clearDuration) {
-              manager.updateSet(templateId,
-                  duration: seconds, clearDuration: clearDuration);
+              manager.updateSet(
+                templateId,
+                duration: seconds,
+                clearDuration: clearDuration,
+              );
             }
           } else {
             final val = int.tryParse(text);
@@ -193,8 +206,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
       // --- RIR CONTROLLER ---
       if (!_rirControllers.containsKey(templateId)) {
-        _rirControllers[templateId] =
-            TextEditingController(text: setLog.rir?.toString() ?? '');
+        _rirControllers[templateId] = TextEditingController(
+          text: setLog.rir?.toString() ?? '',
+        );
 
         _rirControllers[templateId]!.addListener(() {
           final text = _rirControllers[templateId]!.text;
@@ -211,14 +225,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       // update the UI text fields to show the accepted fallback number.
       if (setLog.weightKg != null &&
           _weightControllers[templateId]?.text.isEmpty == true) {
-        _weightControllers[templateId]!.text =
-            setLog.weightKg!.toStringAsFixed(1).replaceAll('.0', '');
+        _weightControllers[templateId]!.text = setLog.weightKg!
+            .toStringAsFixed(1)
+            .replaceAll('.0', '');
       }
       if (setLog.distanceKm != null &&
           _weightControllers[templateId]?.text.isEmpty == true &&
           isCardio) {
-        _weightControllers[templateId]!.text =
-            setLog.distanceKm!.toStringAsFixed(1).replaceAll('.0', '');
+        _weightControllers[templateId]!.text = setLog.distanceKm!
+            .toStringAsFixed(1)
+            .replaceAll('.0', '');
       }
       if (setLog.reps != null &&
           _repsControllers[templateId]?.text.isEmpty == true &&
@@ -228,8 +244,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       if (setLog.durationSeconds != null &&
           _repsControllers[templateId]?.text.isEmpty == true &&
           isCardio) {
-        _repsControllers[templateId]!.text =
-            (setLog.durationSeconds! / 60).toStringAsFixed(0);
+        _repsControllers[templateId]!.text = (setLog.durationSeconds! / 60)
+            .toStringAsFixed(0);
       }
       if (setLog.rir != null &&
           _rirControllers[templateId]?.text.isEmpty == true) {
@@ -359,13 +375,17 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   void _onReorder(int oldIndex, int newIndex) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .reorderExercise(oldIndex, newIndex);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).reorderExercise(oldIndex, newIndex);
   }
 
   void _removeExercise(RoutineExercise exerciseToRemove) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .removeExercise(exerciseToRemove.id!);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).removeExercise(exerciseToRemove.id!);
   }
 
   void _addExercise() async {
@@ -389,18 +409,24 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   void _addSet(RoutineExercise re) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .addSetToExercise(re.id!);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).addSetToExercise(re.id!);
   }
 
   void _removeSet(int templateId) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .removeSet(templateId);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).removeSet(templateId);
   }
 
   void _changeSetType(int templateId, String newType) {
-    Provider.of<WorkoutSessionManager>(context, listen: false)
-        .updateSet(templateId, setType: newType);
+    Provider.of<WorkoutSessionManager>(
+      context,
+      listen: false,
+    ).updateSet(templateId, setType: newType);
   }
 
   void _showSetTypePicker(int templateId) {
@@ -421,22 +447,22 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       {
         'type': 'normal',
         'label': l10n.set_type_normal,
-        'symbol': buildSymbol('N', Colors.grey)
+        'symbol': buildSymbol('N', Colors.grey),
       },
       {
         'type': 'warmup',
         'label': l10n.set_type_warmup,
-        'symbol': buildSymbol('W', Colors.orange)
+        'symbol': buildSymbol('W', Colors.orange),
       },
       {
         'type': 'failure',
         'label': l10n.set_type_failure,
-        'symbol': buildSymbol('F', Colors.red)
+        'symbol': buildSymbol('F', Colors.red),
       },
       {
         'type': 'dropset',
         'label': l10n.set_type_dropset,
-        'symbol': buildSymbol('D', Colors.blue)
+        'symbol': buildSymbol('D', Colors.blue),
       },
     ];
 
@@ -527,23 +553,25 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
+              ? Colors.grey.withOpacity(0.1)
+              : Colors.white.withOpacity(0.1))
         : Colors.transparent;
 
     // Hint Logic
     String weightHint = '0';
     String repHint = '0';
-    String rirHint =
-        template.targetRir != null ? template.targetRir.toString() : '-';
+    String rirHint = template.targetRir != null
+        ? template.targetRir.toString()
+        : '-';
 
     if (isCardio) {
       weightHint = "-"; // Distance Hint
       repHint = "-"; // Time Hint
     } else {
       final double tWeight = template.targetWeight ?? 0.0;
-      weightHint =
-          tWeight > 0 ? tWeight.toStringAsFixed(1).replaceAll('.0', '') : '0';
+      weightHint = tWeight > 0
+          ? tWeight.toStringAsFixed(1).replaceAll('.0', '')
+          : '0';
       repHint = (template.targetReps?.isNotEmpty == true)
           ? template.targetReps!
           : '0';
@@ -573,8 +601,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         Expanded(
           flex: 3,
           child: isCardio
-              ? const SizedBox
-                  .shrink() // Bei Cardio zeigen wir (noch) keine History an
+              ? const SizedBox.shrink() // Bei Cardio zeigen wir (noch) keine History an
               : Text(
                   (rowIndex < lastPerfSets.length)
                       ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
@@ -615,8 +642,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               isDense: true,
               fillColor: Colors.transparent,
               hintText: repHint,
-              hintStyle:
-                  TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 14),
+              hintStyle: TextStyle(
+                color: Colors.grey.withOpacity(0.5),
+                fontSize: 14,
+              ),
             ),
             enabled: !isCompleted,
           ),
@@ -676,9 +705,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             child: Align(
               alignment: Alignment.centerRight,
               child: Text(
-                l10n.liveWorkoutE1rmCurrentSet(
-                  _formatKg(currentSetE1rm),
-                ),
+                l10n.liveWorkoutE1rmCurrentSet(_formatKg(currentSetE1rm)),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontSize: 11,
@@ -692,8 +719,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     return Dismissible(
       key: ValueKey('set_$templateId'),
-      direction:
-          isCompleted ? DismissDirection.none : DismissDirection.endToStart,
+      direction: isCompleted
+          ? DismissDirection.none
+          : DismissDirection.endToStart,
       onDismissed: (_) => _removeSet(templateId),
       background: Container(
         color: Colors.redAccent,
@@ -722,8 +750,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final sessionBest = _getSessionBestE1rm(routineExercise, manager);
     if (sessionBest == null) return const SizedBox.shrink();
 
-    final lastSessionBest =
-        _getLastSessionBestE1rm(routineExercise.exercise.nameEn);
+    final lastSessionBest = _getLastSessionBestE1rm(
+      routineExercise.exercise.nameEn,
+    );
     final hasDelta = lastSessionBest != null;
     final delta = hasDelta ? sessionBest - lastSessionBest : null;
 
@@ -782,10 +811,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             Text(
               "Füge eine Übung hinzu, um mit dem Protokollieren zu beginnen.",
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: Colors.grey.shade600),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
             ),
             const SizedBox(height: DesignConstants.spacingXL),
             ElevatedButton.icon(
@@ -817,8 +845,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     // Edit Pause Helper
     void editPauseTime(RoutineExercise routineExercise) async {
       final currentPause = manager.pauseTimes[routineExercise.id!];
-      final controller =
-          TextEditingController(text: currentPause?.toString() ?? '');
+      final controller = TextEditingController(
+        text: currentPause?.toString() ?? '',
+      );
 
       final result = await showGlassBottomMenu<int?>(
         context: context,
@@ -874,8 +903,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     final mgr = manager;
     final int planned = mgr.setLogs.length;
-    final int completed =
-        mgr.setLogs.values.where((s) => s.isCompleted == true).length;
+    final int completed = mgr.setLogs.values
+        .where((s) => s.isCompleted == true)
+        .length;
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
     if (!_isLoading) {
@@ -893,10 +923,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         centerTitle: false,
         title: Text(
           manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w900),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         actions: [
           TextButton(
@@ -924,17 +953,17 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant
-                      .withOpacity(0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withOpacity(0.1),
                 ),
                 Expanded(
                   child: manager.exercises.isEmpty
                       ? _buildEmptyState(l10n)
                       : ReorderableListView.builder(
                           padding: const EdgeInsets.only(
-                              bottom: DesignConstants.bottomContentSpacer),
+                            bottom: DesignConstants.bottomContentSpacer,
+                          ),
                           onReorder: _onReorder,
                           itemCount: manager.exercises.length,
                           itemBuilder: (context, index) {
@@ -959,8 +988,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               ExerciseDetailScreen(
-                                            exercise: routineExercise.exercise,
-                                          ),
+                                                exercise:
+                                                    routineExercise.exercise,
+                                              ),
                                         ),
                                       ),
                                       child: Padding(
@@ -979,11 +1009,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        if (manager.pauseTimes[
-                                                    routineExercise.id!] !=
+                                        if (manager.pauseTimes[routineExercise
+                                                    .id!] !=
                                                 null &&
-                                            manager.pauseTimes[
-                                                    routineExercise.id!]! >
+                                            manager.pauseTimes[routineExercise
+                                                    .id!]! >
                                                 0)
                                           Padding(
                                             padding: const EdgeInsets.only(
@@ -993,9 +1023,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                               "${manager.pauseTimes[routineExercise.id!]}s",
                                               style: textTheme.bodyMedium
                                                   ?.copyWith(
-                                                color: colorScheme.primary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                                    color: colorScheme.primary,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                             ),
                                           ),
                                         IconButton(
@@ -1040,41 +1070,46 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             .asMap()
                                             .entries
                                             .map((setEntry) {
-                                          final templateId = setEntry.value.id!;
-                                          final template =
-                                              setEntry.value; // <--- Template
-                                          final setLog =
-                                              manager.setLogs[templateId];
+                                              final templateId =
+                                                  setEntry.value.id!;
+                                              final template = setEntry
+                                                  .value; // <--- Template
+                                              final setLog =
+                                                  manager.setLogs[templateId];
 
-                                          if (setLog == null) {
-                                            return const SizedBox.shrink();
-                                          }
-                                          int workingSetIndex = 0;
-                                          for (int i = 0;
-                                              i <= setEntry.key;
-                                              i++) {
-                                            final currentTemplateId =
-                                                routineExercise
-                                                    .setTemplates[i].id!;
-                                            if (manager
-                                                    .setLogs[currentTemplateId]
-                                                    ?.setType !=
-                                                'warmup') {
-                                              workingSetIndex++;
-                                            }
-                                          }
+                                              if (setLog == null) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              int workingSetIndex = 0;
+                                              for (
+                                                int i = 0;
+                                                i <= setEntry.key;
+                                                i++
+                                              ) {
+                                                final currentTemplateId =
+                                                    routineExercise
+                                                        .setTemplates[i]
+                                                        .id!;
+                                                if (manager
+                                                        .setLogs[currentTemplateId]
+                                                        ?.setType !=
+                                                    'warmup') {
+                                                  workingSetIndex++;
+                                                }
+                                              }
 
-                                          return _buildSetRow(
-                                            workingSetIndex,
-                                            setEntry.key,
-                                            templateId,
-                                            setLog,
-                                            _lastPerformances[routineExercise
-                                                    .exercise.nameEn] ??
-                                                [],
-                                            template, // <--- Template übergeben
-                                          );
-                                        }),
+                                              return _buildSetRow(
+                                                workingSetIndex,
+                                                setEntry.key,
+                                                templateId,
+                                                setLog,
+                                                _lastPerformances[routineExercise
+                                                        .exercise
+                                                        .nameEn] ??
+                                                    [],
+                                                template, // <--- Template übergeben
+                                              );
+                                            }),
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 16.0,
@@ -1117,8 +1152,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: WgerAttributionWidget(
-                textStyle:
-                    textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                textStyle: textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
               ),
             ),
         ],
@@ -1226,8 +1262,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     }
   }
 
-  bool _isQualifyingSetForE1rm(SetLog setLog,
-      {required bool requireCompleted}) {
+  bool _isQualifyingSetForE1rm(
+    SetLog setLog, {
+    required bool requireCompleted,
+  }) {
     final reps = setLog.reps;
     final weight = setLog.weightKg;
     final isWarmup = setLog.setType == 'warmup';
@@ -1264,10 +1302,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       final setLog = manager.setLogs[template.id];
       if (setLog == null) continue;
 
-      final value = _calculateBrzyckiE1rm(
-        setLog,
-        requireCompleted: true,
-      );
+      final value = _calculateBrzyckiE1rm(setLog, requireCompleted: true);
       if (value == null) continue;
 
       if (best == null || value > best) {
@@ -1283,10 +1318,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     double? best;
 
     for (final setLog in lastSets) {
-      final value = _calculateBrzyckiE1rm(
-        setLog,
-        requireCompleted: true,
-      );
+      final value = _calculateBrzyckiE1rm(setLog, requireCompleted: true);
       if (value == null) continue;
 
       if (best == null || value > best) {

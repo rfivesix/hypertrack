@@ -56,7 +56,8 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
 
     final stats = WorkoutDatabaseHelper.instance.getTrainingStats();
     final weekly = WorkoutDatabaseHelper.instance.getWeeklyConsistencyMetrics(
-        weeksBack: weeklyRange.effectiveWeeks ?? _weeklyWindowWeeks);
+      weeksBack: weeklyRange.effectiveWeeks ?? _weeklyWindowWeeks,
+    );
     final dayCounts = WorkoutDatabaseHelper.instance.getWorkoutDayCounts(
       daysBack: calendarRange.effectiveDays ?? 120,
     );
@@ -65,8 +66,9 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
     if (!mounted) return;
 
     setState(() {
-      _trainingStats =
-          TrainingStatsPayload.fromMap(results[0] as Map<String, dynamic>);
+      _trainingStats = TrainingStatsPayload.fromMap(
+        results[0] as Map<String, dynamic>,
+      );
       _weeklyMetrics = (results[1] as List<Map<String, dynamic>>)
           .map(WeeklyConsistencyMetricPayload.fromMap)
           .toList();
@@ -124,16 +126,17 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
     final total = _trainingStats.totalWorkouts;
     final trainingDaysPerWeek =
         ConsistencyDomainService.computeTrainingDaysPerWeekLast4(
-      workoutDayCounts: _workoutDayCounts,
-    );
+          workoutDayCounts: _workoutDayCounts,
+        );
     final rhythmDelta = ConsistencyDomainService.computeRhythmDelta(
       weeklyMetrics: _weeklyMetrics,
     );
     final rollingConsistency =
         ConsistencyDomainService.rollingConsistencyPercent(
-      weeklyMetrics: _weeklyMetrics,
-    );
-    final availableWidth = MediaQuery.of(context).size.width -
+          weeklyMetrics: _weeklyMetrics,
+        );
+    final availableWidth =
+        MediaQuery.of(context).size.width -
         DesignConstants.screenPadding.horizontal;
     final primaryCardWidth = (availableWidth - 16) / 3;
     final secondaryCardWidth = (availableWidth - 8) / 2;
@@ -210,14 +213,15 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                         valueColor: rhythmDelta > 0
                             ? Theme.of(context).colorScheme.primary
                             : rhythmDelta < 0
-                                ? Theme.of(context).colorScheme.error
-                                : null,
+                            ? Theme.of(context).colorScheme.error
+                            : null,
                       ),
                     ],
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
                   _sectionHeader(
-                      '${_metricName(l10n)} · ${l10n.analyticsViewWeek}'),
+                    '${_metricName(l10n)} · ${l10n.analyticsViewWeek}',
+                  ),
                   SummaryCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,26 +235,34 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                               selected:
                                   _selectedMetric == _ConsistencyMetric.volume,
                               onSelected: (_) {
-                                setState(() => _selectedMetric =
-                                    _ConsistencyMetric.volume);
+                                setState(
+                                  () => _selectedMetric =
+                                      _ConsistencyMetric.volume,
+                                );
                               },
                             ),
                             ChoiceChip(
                               label: Text(l10n.durationLabel),
-                              selected: _selectedMetric ==
+                              selected:
+                                  _selectedMetric ==
                                   _ConsistencyMetric.duration,
                               onSelected: (_) {
-                                setState(() => _selectedMetric =
-                                    _ConsistencyMetric.duration);
+                                setState(
+                                  () => _selectedMetric =
+                                      _ConsistencyMetric.duration,
+                                );
                               },
                             ),
                             ChoiceChip(
                               label: Text(l10n.workoutsPerWeekLabel),
-                              selected: _selectedMetric ==
+                              selected:
+                                  _selectedMetric ==
                                   _ConsistencyMetric.frequency,
                               onSelected: (_) {
-                                setState(() => _selectedMetric =
-                                    _ConsistencyMetric.frequency);
+                                setState(
+                                  () => _selectedMetric =
+                                      _ConsistencyMetric.frequency,
+                                );
                               },
                             ),
                           ],
@@ -263,9 +275,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                           children: [
                             Text(
                               '${_metricName(l10n)} (${_metricUnit(l10n)})',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             Text(
@@ -298,42 +308,41 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                         fitInsideVertically: true,
                                         getTooltipItem:
                                             (group, groupIndex, rod, rodIndex) {
-                                          final i = group.x.toInt();
-                                          if (i < 0 ||
-                                              i >= _weeklyMetrics.length) {
-                                            return null;
-                                          }
-                                          final row = _weeklyMetrics[i];
-                                          return BarTooltipItem(
-                                            '${row.weekLabel}\n${rod.toY.toStringAsFixed(1)} ${_metricUnit(l10n)}',
-                                            Theme.of(context)
-                                                    .textTheme
-                                                    .labelSmall
-                                                    ?.copyWith(
+                                              final i = group.x.toInt();
+                                              if (i < 0 ||
+                                                  i >= _weeklyMetrics.length) {
+                                                return null;
+                                              }
+                                              final row = _weeklyMetrics[i];
+                                              return BarTooltipItem(
+                                                '${row.weekLabel}\n${rod.toY.toStringAsFixed(1)} ${_metricUnit(l10n)}',
+                                                Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .onInverseSurface,
+                                                        ) ??
+                                                    TextStyle(
                                                       color: Theme.of(context)
                                                           .colorScheme
                                                           .onInverseSurface,
-                                                    ) ??
-                                                TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onInverseSurface,
-                                                ),
-                                          );
-                                        },
+                                                    ),
+                                              );
+                                            },
                                       ),
                                     ),
-                                    titlesData:
-                                        AnalyticsChartDefaults.standardTitles(
+                                    titlesData: AnalyticsChartDefaults.standardTitles(
                                       leftTitles: AxisTitles(
                                         sideTitles: SideTitles(
                                           showTitles: true,
                                           reservedSize: 28,
                                           getTitlesWidget: (value, meta) =>
                                               AnalyticsChartDefaults.tickLabel(
-                                            context,
-                                            _formatAxisValue(value),
-                                          ),
+                                                context,
+                                                _formatAxisValue(value),
+                                              ),
                                         ),
                                       ),
                                       bottomTitles: AxisTitles(
@@ -348,8 +357,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                             }
                                             final label =
                                                 _weeklyMetrics[i].weekLabel;
-                                            return AnalyticsChartDefaults
-                                                .tickLabel(
+                                            return AnalyticsChartDefaults.tickLabel(
                                               context,
                                               label,
                                             );
@@ -361,29 +369,32 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                         .asMap()
                                         .entries
                                         .map((entry) {
-                                      final value = _metricValue(entry.value);
-                                      return BarChartGroupData(
-                                        x: entry.key,
-                                        barRods: [
-                                          BarChartRodData(
-                                            toY: value,
-                                            width: 12,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withValues(
-                                                  alpha: _weeklyBarAlpha(
-                                                    index: entry.key,
-                                                    total:
-                                                        _weeklyMetrics.length,
-                                                  ),
-                                                ),
-                                          ),
-                                        ],
-                                      );
-                                    }).toList(),
+                                          final value = _metricValue(
+                                            entry.value,
+                                          );
+                                          return BarChartGroupData(
+                                            x: entry.key,
+                                            barRods: [
+                                              BarChartRodData(
+                                                toY: value,
+                                                width: 12,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withValues(
+                                                      alpha: _weeklyBarAlpha(
+                                                        index: entry.key,
+                                                        total: _weeklyMetrics
+                                                            .length,
+                                                      ),
+                                                    ),
+                                              ),
+                                            ],
+                                          );
+                                        })
+                                        .toList(),
                                   ),
                                 ),
                         ),
@@ -418,10 +429,12 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                 .withValues(alpha: 0.25),
                           ),
                           child: TableCalendar<int>(
-                            firstDay: DateTime.now()
-                                .subtract(const Duration(days: 365)),
-                            lastDay:
-                                DateTime.now().add(const Duration(days: 30)),
+                            firstDay: DateTime.now().subtract(
+                              const Duration(days: 365),
+                            ),
+                            lastDay: DateTime.now().add(
+                              const Duration(days: 30),
+                            ),
                             focusedDay: _focusedDay,
                             selectedDayPredicate: (day) =>
                                 _selectedDay != null &&
@@ -434,9 +447,8 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                             headerStyle: HeaderStyle(
                               titleCentered: true,
                               formatButtonVisible: false,
-                              titleTextStyle: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
+                              titleTextStyle:
+                                  Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(fontWeight: FontWeight.bold) ??
                                   const TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -444,28 +456,28 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                               outsideDaysVisible: false,
                               defaultTextStyle:
                                   Theme.of(context).textTheme.bodySmall ??
-                                      const TextStyle(),
+                                  const TextStyle(),
                             ),
                             calendarBuilders: CalendarBuilders<int>(
                               defaultBuilder: (context, day, _) {
                                 final count = _dailyCount(day);
                                 if (count <= 0) return null;
-                                final intensity =
-                                    _calendarIntensityForCount(count);
+                                final intensity = _calendarIntensityForCount(
+                                  count,
+                                );
                                 return Container(
                                   margin: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
+                                    color: Theme.of(context).colorScheme.primary
                                         .withValues(alpha: intensity),
                                     shape: BoxShape.circle,
                                   ),
                                   alignment: Alignment.center,
                                   child: Text(
                                     '${day.day}',
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 );
                               },
@@ -476,8 +488,9 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                   bottom: 3,
                                   child: Text(
                                     count.toString(),
-                                    style:
-                                        Theme.of(context).textTheme.labelSmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
                                   ),
                                 );
                               },
@@ -513,9 +526,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                       title: Text(l10n.analyticsTotalSessions),
                       trailing: Text(
                         '$total',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
+                        style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -544,16 +555,14 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: emphasized ? 0.5 : 0.35),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+          alpha: emphasized ? 0.5 : 0.35,
+        ),
         border: emphasized
             ? Border.all(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.18),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.18),
               )
             : null,
       ),
@@ -563,16 +572,16 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
-                ),
+              fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: valueColor,
-                ),
+              fontWeight: FontWeight.bold,
+              color: valueColor,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -595,10 +604,9 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
             width: 12,
             height: 12,
             decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .primary
-                  .withValues(alpha: alpha),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: alpha),
               shape: BoxShape.circle,
             ),
           ),
@@ -628,7 +636,9 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
     const maxAlpha = 1.0;
     if (total <= 0) return minAlpha;
     final ratio = (index + 1) / total;
-    return (minAlpha + (ratio * (maxAlpha - minAlpha)))
-        .clamp(minAlpha, maxAlpha);
+    return (minAlpha + (ratio * (maxAlpha - minAlpha))).clamp(
+      minAlpha,
+      maxAlpha,
+    );
   }
 }

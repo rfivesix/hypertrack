@@ -82,10 +82,12 @@ class Exercise {
   ///
   /// The [m] parameter must contain keys like 'id', 'name_de', 'name_en', etc.
   factory Exercise.fromMap(Map<String, Object?> m) {
-    final primRaw = m['primaryMuscles_json_de'] ??
+    final primRaw =
+        m['primaryMuscles_json_de'] ??
         m['primaryMuscles_json_en'] ??
         m['primaryMuscles'];
-    final secRaw = m['secondaryMuscles_json_de'] ??
+    final secRaw =
+        m['secondaryMuscles_json_de'] ??
         m['secondaryMuscles_json_en'] ??
         m['secondaryMuscles'];
 

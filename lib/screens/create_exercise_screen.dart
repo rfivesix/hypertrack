@@ -33,7 +33,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     'Chest',
     'Legs',
     'Shoulders',
-    'Cardio'
+    'Cardio',
   ];
   final List<String> _defaultMuscles = [
     'Biceps',
@@ -47,7 +47,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     'Abs',
     'Glutes',
     'Forearms',
-    'Traps'
+    'Traps',
   ];
 
   List<String> _allCategories = [];
@@ -84,8 +84,9 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
       if (mounted) {
         setState(() {
           // Nutze DB-Werte oder Fallback, falls leer
-          _allCategories =
-              categories.isNotEmpty ? categories : _defaultCategories;
+          _allCategories = categories.isNotEmpty
+              ? categories
+              : _defaultCategories;
           _allMuscleGroups = muscles.isNotEmpty ? muscles : _defaultMuscles;
 
           // Sortieren für bessere UX
@@ -137,9 +138,9 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     } catch (e) {
       debugPrint("Fehler beim Speichern: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.error}: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -162,7 +163,8 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2))
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : Text(
                     l10n.save,
                     style: TextStyle(
@@ -207,10 +209,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedCategory,
                       items: _allCategories.map((cat) {
-                        return DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat),
-                        );
+                        return DropdownMenuItem(value: cat, child: Text(cat));
                       }).toList(),
                       onChanged: (val) {
                         setState(() => _selectedCategory = val);
@@ -269,9 +268,9 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Colors.grey[700],
-            fontWeight: FontWeight.bold,
-          ),
+        color: Colors.grey[700],
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 

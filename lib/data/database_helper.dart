@@ -40,21 +40,23 @@ class DatabaseHelper {
     final dbInstance = await database;
 
     // Prüfen, ob Koffein (Code 'caffeine') schon existiert
-    final exists = await (dbInstance.select(dbInstance.supplements)
-          ..where((t) => t.code.equals('caffeine')))
-        .getSingleOrNull();
+    final exists = await (dbInstance.select(
+      dbInstance.supplements,
+    )..where((t) => t.code.equals('caffeine'))).getSingleOrNull();
 
     if (exists == null) {
       // Koffein anlegen
-      await insertSupplement(Supplement(
-        code: 'caffeine', // WICHTIG: Code muss exakt stimmen für die Logik
-        name: 'Koffein',
-        defaultDose: 0, // Hängt vom Getränk ab
-        unit: 'mg',
-        dailyGoal: null,
-        dailyLimit: 400,
-        isBuiltin: true,
-      ));
+      await insertSupplement(
+        Supplement(
+          code: 'caffeine', // WICHTIG: Code muss exakt stimmen für die Logik
+          name: 'Koffein',
+          defaultDose: 0, // Hängt vom Getränk ab
+          unit: 'mg',
+          dailyGoal: null,
+          dailyLimit: 400,
+          isBuiltin: true,
+        ),
+      );
     }
   }
 
@@ -91,9 +93,9 @@ class DatabaseHelper {
       await dbInstance.delete(dbInstance.profiles).go();
 
       // 5. User products
-      await (dbInstance.delete(dbInstance.products)
-            ..where((t) => t.source.equals('user')))
-          .go();
+      await (dbInstance.delete(
+        dbInstance.products,
+      )..where((t) => t.source.equals('user'))).go();
     } finally {
       // Foreign Keys wieder aktivieren
       await dbInstance.customStatement('PRAGMA foreign_keys = ON');
@@ -174,8 +176,9 @@ class DatabaseHelper {
       // E. SUPPLEMENTS (Mit ID-Fix)
       for (final s in supplements) {
         // Konvertiere int-ID zu String, falls nötig, oder erstelle neue UUID
-        final String fixedId =
-            s.id != null ? s.id.toString() : const Uuid().v4();
+        final String fixedId = s.id != null
+            ? s.id.toString()
+            : const Uuid().v4();
 
         batch.insert(
           dbInstance.supplements,
@@ -245,9 +248,9 @@ class DatabaseHelper {
       mealType: drift.Value(entry.mealType),
     );
 
-    await (dbInstance.update(dbInstance.nutritionLogs)
-          ..where((tbl) => tbl.localId.equals(entry.id!)))
-        .write(companion);
+    await (dbInstance.update(
+      dbInstance.nutritionLogs,
+    )..where((tbl) => tbl.localId.equals(entry.id!))).write(companion);
   }
 
   Future<List<FoodEntry>> getEntriesForDate(DateTime date) async {
@@ -273,15 +276,18 @@ class DatabaseHelper {
   }
 
   Future<List<FoodEntry>> getEntriesForDateRange(
-      DateTime start, DateTime end) async {
+    DateTime start,
+    DateTime end,
+  ) async {
     final dbInstance = await database;
 
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
     final query = dbInstance.select(dbInstance.nutritionLogs)
-      ..where((tbl) =>
-          tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd));
+      ..where(
+        (tbl) => tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
+      );
 
     final rows = await query.get();
 
@@ -298,22 +304,24 @@ class DatabaseHelper {
 
   Future<void> deleteFoodEntry(int id) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.nutritionLogs)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.nutritionLogs,
+    )..where((tbl) => tbl.localId.equals(id))).go();
   }
 
   Future<List<FoodEntry>> getAllFoodEntries() async {
     final dbInstance = await database;
     final rows = await dbInstance.select(dbInstance.nutritionLogs).get();
     return rows
-        .map((row) => FoodEntry(
-              id: row.localId,
-              barcode: row.legacyBarcode ?? 'UNKNOWN',
-              timestamp: row.consumedAt,
-              quantityInGrams: row.amount.toInt(),
-              mealType: row.mealType,
-            ))
+        .map(
+          (row) => FoodEntry(
+            id: row.localId,
+            barcode: row.legacyBarcode ?? 'UNKNOWN',
+            timestamp: row.consumedAt,
+            quantityInGrams: row.amount.toInt(),
+            mealType: row.mealType,
+          ),
+        )
         .toList();
   }
 
@@ -335,16 +343,17 @@ class DatabaseHelper {
       caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
     );
 
-    final row =
-        await dbInstance.into(dbInstance.fluidLogs).insertReturning(companion);
+    final row = await dbInstance
+        .into(dbInstance.fluidLogs)
+        .insertReturning(companion);
 
     // 2. AUTOMATIK: Koffein-Log erstellen
     if (entry.caffeinePer100ml != null && entry.caffeinePer100ml! > 0) {
       try {
         // Suche das Supplement mit dem Code 'caffeine'
-        final caffeineSupp = await (dbInstance.select(dbInstance.supplements)
-              ..where((t) => t.code.equals('caffeine')))
-            .getSingleOrNull();
+        final caffeineSupp = await (dbInstance.select(
+          dbInstance.supplements,
+        )..where((t) => t.code.equals('caffeine'))).getSingleOrNull();
 
         if (caffeineSupp != null) {
           // Berechne Dosis: (Menge / 100) * mg_pro_100ml
@@ -358,11 +367,13 @@ class DatabaseHelper {
 
             await dbInstance
                 .into(dbInstance.supplementLogs)
-                .insert(db.SupplementLogsCompanion(
-                  supplementId: drift.Value(supplementIdString),
-                  amount: drift.Value(totalCaffeine),
-                  takenAt: drift.Value(entry.timestamp),
-                ));
+                .insert(
+                  db.SupplementLogsCompanion(
+                    supplementId: drift.Value(supplementIdString),
+                    amount: drift.Value(totalCaffeine),
+                    takenAt: drift.Value(entry.timestamp),
+                  ),
+                );
           }
         }
       } catch (e) {
@@ -378,48 +389,56 @@ class DatabaseHelper {
     final start = DateTime(date.year, date.month, date.day);
     final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
-    final rows = await (dbInstance.select(dbInstance.fluidLogs)
-          ..where((tbl) => tbl.consumedAt.isBetweenValues(start, end)))
-        .get();
+    final rows = await (dbInstance.select(
+      dbInstance.fluidLogs,
+    )..where((tbl) => tbl.consumedAt.isBetweenValues(start, end))).get();
 
     return rows
-        .map((row) => FluidEntry(
-              id: row.localId,
-              timestamp: row.consumedAt,
-              quantityInMl: row.amountMl,
-              name: row.name,
-              kcal: row.kcal,
-              sugarPer100ml: row.sugarPer100ml,
-              caffeinePer100ml: row.caffeinePer100ml,
-              carbsPer100ml: row.sugarPer100ml,
-              linked_food_entry_id: null,
-            ))
+        .map(
+          (row) => FluidEntry(
+            id: row.localId,
+            timestamp: row.consumedAt,
+            quantityInMl: row.amountMl,
+            name: row.name,
+            kcal: row.kcal,
+            sugarPer100ml: row.sugarPer100ml,
+            caffeinePer100ml: row.caffeinePer100ml,
+            carbsPer100ml: row.sugarPer100ml,
+            linked_food_entry_id: null,
+          ),
+        )
         .toList();
   }
 
   Future<List<FluidEntry>> getFluidEntriesForDateRange(
-      DateTime start, DateTime end) async {
+    DateTime start,
+    DateTime end,
+  ) async {
     final dbInstance = await database;
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-    final rows = await (dbInstance.select(dbInstance.fluidLogs)
-          ..where((tbl) =>
-              tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd)))
-        .get();
+    final rows =
+        await (dbInstance.select(dbInstance.fluidLogs)..where(
+              (tbl) =>
+                  tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
+            ))
+            .get();
 
     return rows
-        .map((row) => FluidEntry(
-              id: row.localId,
-              timestamp: row.consumedAt,
-              quantityInMl: row.amountMl,
-              name: row.name,
-              kcal: row.kcal,
-              sugarPer100ml: row.sugarPer100ml,
-              caffeinePer100ml: row.caffeinePer100ml,
-              carbsPer100ml: row.sugarPer100ml,
-              linked_food_entry_id: null,
-            ))
+        .map(
+          (row) => FluidEntry(
+            id: row.localId,
+            timestamp: row.consumedAt,
+            quantityInMl: row.amountMl,
+            name: row.name,
+            kcal: row.kcal,
+            sugarPer100ml: row.sugarPer100ml,
+            caffeinePer100ml: row.caffeinePer100ml,
+            carbsPer100ml: row.sugarPer100ml,
+            linked_food_entry_id: null,
+          ),
+        )
         .toList();
   }
 
@@ -427,35 +446,37 @@ class DatabaseHelper {
     if (entry.id == null) return;
     final dbInstance = await database;
 
-    await (dbInstance.update(dbInstance.fluidLogs)
-          ..where((tbl) => tbl.localId.equals(entry.id!)))
-        .write(db.FluidLogsCompanion(
-      consumedAt: drift.Value(entry.timestamp),
-      amountMl: drift.Value(entry.quantityInMl),
-      name: drift.Value(entry.name),
-      kcal: drift.Value(entry.kcal),
-      sugarPer100ml: drift.Value(entry.sugarPer100ml),
-      caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
-    ));
+    await (dbInstance.update(
+      dbInstance.fluidLogs,
+    )..where((tbl) => tbl.localId.equals(entry.id!))).write(
+      db.FluidLogsCompanion(
+        consumedAt: drift.Value(entry.timestamp),
+        amountMl: drift.Value(entry.quantityInMl),
+        name: drift.Value(entry.name),
+        kcal: drift.Value(entry.kcal),
+        sugarPer100ml: drift.Value(entry.sugarPer100ml),
+        caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
+      ),
+    );
   }
 
   Future<void> deleteFluidEntry(int id) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.fluidLogs)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.fluidLogs,
+    )..where((tbl) => tbl.localId.equals(id))).go();
   }
 
   Future<void> deleteFluidEntryByLinkedFoodId(int foodEntryId) async {
     final dbInstance = await database;
-    final nutritionLog = await (dbInstance.select(dbInstance.nutritionLogs)
-          ..where((tbl) => tbl.localId.equals(foodEntryId)))
-        .getSingleOrNull();
+    final nutritionLog = await (dbInstance.select(
+      dbInstance.nutritionLogs,
+    )..where((tbl) => tbl.localId.equals(foodEntryId))).getSingleOrNull();
 
     if (nutritionLog != null) {
-      await (dbInstance.delete(dbInstance.fluidLogs)
-            ..where((tbl) => tbl.linkedNutritionLogId.equals(nutritionLog.id)))
-          .go();
+      await (dbInstance.delete(
+        dbInstance.fluidLogs,
+      )..where((tbl) => tbl.linkedNutritionLogId.equals(nutritionLog.id))).go();
     }
   }
 
@@ -463,17 +484,19 @@ class DatabaseHelper {
     final dbInstance = await database;
     final rows = await dbInstance.select(dbInstance.fluidLogs).get();
     return rows
-        .map((row) => FluidEntry(
-              id: row.localId,
-              timestamp: row.consumedAt,
-              quantityInMl: row.amountMl,
-              name: row.name,
-              kcal: row.kcal,
-              sugarPer100ml: row.sugarPer100ml,
-              caffeinePer100ml: row.caffeinePer100ml,
-              carbsPer100ml: row.sugarPer100ml,
-              linked_food_entry_id: null,
-            ))
+        .map(
+          (row) => FluidEntry(
+            id: row.localId,
+            timestamp: row.consumedAt,
+            quantityInMl: row.amountMl,
+            name: row.name,
+            kcal: row.kcal,
+            sugarPer100ml: row.sugarPer100ml,
+            caffeinePer100ml: row.caffeinePer100ml,
+            carbsPer100ml: row.sugarPer100ml,
+            linked_food_entry_id: null,
+          ),
+        )
         .toList();
   }
 
@@ -488,14 +511,15 @@ class DatabaseHelper {
     await dbInstance.batch((batch) {
       for (final m in session.measurements) {
         batch.insert(
-            dbInstance.measurements,
-            db.MeasurementsCompanion(
-              date: drift.Value(session.timestamp),
-              type: drift.Value(m.type),
-              value: drift.Value(m.value),
-              unit: drift.Value(m.unit),
-              legacySessionId: drift.Value(legacySessionId),
-            ));
+          dbInstance.measurements,
+          db.MeasurementsCompanion(
+            date: drift.Value(session.timestamp),
+            type: drift.Value(m.type),
+            value: drift.Value(m.value),
+            unit: drift.Value(m.unit),
+            legacySessionId: drift.Value(legacySessionId),
+          ),
+        );
       }
     });
   }
@@ -503,12 +527,14 @@ class DatabaseHelper {
   Future<List<MeasurementSession>> getMeasurementSessions() async {
     final dbInstance = await database;
 
-    final rows = await (dbInstance.select(dbInstance.measurements)
-          ..orderBy([
-            (t) => drift.OrderingTerm(
-                expression: t.date, mode: drift.OrderingMode.desc)
-          ]))
-        .get();
+    final rows =
+        await (dbInstance.select(dbInstance.measurements)..orderBy([
+              (t) => drift.OrderingTerm(
+                expression: t.date,
+                mode: drift.OrderingMode.desc,
+              ),
+            ]))
+            .get();
 
     final Map<String, List<Measurement>> grouped = {};
     final Map<String, DateTime> timestamps = {};
@@ -523,13 +549,15 @@ class DatabaseHelper {
         ids[key] = row.legacySessionId ?? row.localId;
       }
 
-      grouped[key]!.add(Measurement(
-        id: row.localId,
-        sessionId: ids[key]!,
-        type: row.type,
-        value: row.value,
-        unit: row.unit,
-      ));
+      grouped[key]!.add(
+        Measurement(
+          id: row.localId,
+          sessionId: ids[key]!,
+          type: row.type,
+          value: row.value,
+          unit: row.unit,
+        ),
+      );
     }
 
     return grouped.entries.map((entry) {
@@ -543,17 +571,19 @@ class DatabaseHelper {
 
   Future<void> deleteMeasurementSession(int id) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.measurements)
-          ..where((tbl) => tbl.legacySessionId.equals(id)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.measurements,
+    )..where((tbl) => tbl.legacySessionId.equals(id))).go();
   }
 
   Future<DateTime?> getEarliestMeasurementDate() async {
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.measurements)
       ..orderBy([
-        (t) =>
-            drift.OrderingTerm(expression: t.date, mode: drift.OrderingMode.asc)
+        (t) => drift.OrderingTerm(
+          expression: t.date,
+          mode: drift.OrderingMode.asc,
+        ),
       ])
       ..limit(1);
     final row = await query.getSingleOrNull();
@@ -565,8 +595,10 @@ class DatabaseHelper {
     final query = dbInstance.select(dbInstance.measurements)
       ..where((tbl) => tbl.type.equals(type))
       ..orderBy([
-        (t) =>
-            drift.OrderingTerm(expression: t.date, mode: drift.OrderingMode.asc)
+        (t) => drift.OrderingTerm(
+          expression: t.date,
+          mode: drift.OrderingMode.asc,
+        ),
       ]);
 
     final rows = await query.get();
@@ -576,14 +608,18 @@ class DatabaseHelper {
   }
 
   Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
-      String type, DateTimeRange range) async {
+    String type,
+    DateTimeRange range,
+  ) async {
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.measurements)
       ..where((tbl) => tbl.type.equals(type))
       ..where((tbl) => tbl.date.isBetweenValues(range.start, range.end))
       ..orderBy([
-        (t) =>
-            drift.OrderingTerm(expression: t.date, mode: drift.OrderingMode.asc)
+        (t) => drift.OrderingTerm(
+          expression: t.date,
+          mode: drift.OrderingMode.asc,
+        ),
       ]);
 
     final rows = await query.get();
@@ -632,23 +668,25 @@ class DatabaseHelper {
 
   Future<List<Supplement>> getAllSupplements() async {
     final dbInstance = await database;
-    final rows = await (dbInstance.select(dbInstance.supplements)
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.name)]))
-        .get();
+    final rows = await (dbInstance.select(
+      dbInstance.supplements,
+    )..orderBy([(t) => drift.OrderingTerm(expression: t.name)])).get();
 
     return rows
-        .map((row) => Supplement(
-              id: row.localId,
-              code: row.code,
-              name: row.name,
-              defaultDose: row.dose,
-              unit: row.unit,
-              dailyGoal: row.dailyGoal,
-              dailyLimit: row.dailyLimit,
-              notes: row.notes,
-              isBuiltin: row.isBuiltin,
-              isTracked: row.isTracked,
-            ))
+        .map(
+          (row) => Supplement(
+            id: row.localId,
+            code: row.code,
+            name: row.name,
+            defaultDose: row.dose,
+            unit: row.unit,
+            dailyGoal: row.dailyGoal,
+            dailyLimit: row.dailyLimit,
+            notes: row.notes,
+            isBuiltin: row.isBuiltin,
+            isTracked: row.isTracked,
+          ),
+        )
         .toList();
   }
 
@@ -656,9 +694,9 @@ class DatabaseHelper {
     if (s.id == null) return;
     final dbInstance = await database;
 
-    final original = await (dbInstance.select(dbInstance.supplements)
-          ..where((tbl) => tbl.localId.equals(s.id!)))
-        .getSingleOrNull();
+    final original = await (dbInstance.select(
+      dbInstance.supplements,
+    )..where((tbl) => tbl.localId.equals(s.id!))).getSingleOrNull();
 
     final companion = db.SupplementsCompanion(
       code: drift.Value(s.code),
@@ -672,9 +710,9 @@ class DatabaseHelper {
       isTracked: drift.Value(s.isTracked),
     );
 
-    await (dbInstance.update(dbInstance.supplements)
-          ..where((tbl) => tbl.localId.equals(s.id!)))
-        .write(companion);
+    await (dbInstance.update(
+      dbInstance.supplements,
+    )..where((tbl) => tbl.localId.equals(s.id!))).write(companion);
 
     if (original != null &&
         (original.isTracked != s.isTracked ||
@@ -686,24 +724,28 @@ class DatabaseHelper {
   }
 
   Future<void> insertSupplementSettingsHistory(
-      String supplementUuid, Supplement s) async {
+    String supplementUuid,
+    Supplement s,
+  ) async {
     final dbInstance = await database;
     await dbInstance
         .into(dbInstance.supplementSettingsHistory)
-        .insert(db.SupplementSettingsHistoryCompanion(
-          supplementId: drift.Value(supplementUuid),
-          isTracked: drift.Value(s.isTracked),
-          dose: drift.Value(s.defaultDose),
-          dailyGoal: drift.Value(s.dailyGoal),
-          dailyLimit: drift.Value(s.dailyLimit),
-        ));
+        .insert(
+          db.SupplementSettingsHistoryCompanion(
+            supplementId: drift.Value(supplementUuid),
+            isTracked: drift.Value(s.isTracked),
+            dose: drift.Value(s.defaultDose),
+            dailyGoal: drift.Value(s.dailyGoal),
+            dailyLimit: drift.Value(s.dailyLimit),
+          ),
+        );
   }
 
   Future<List<Supplement>> getSupplementsForDate(DateTime date) async {
     final dbInstance = await database;
-    final allSupplements = await (dbInstance.select(dbInstance.supplements)
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.name)]))
-        .get();
+    final allSupplements = await (dbInstance.select(
+      dbInstance.supplements,
+    )..orderBy([(t) => drift.OrderingTerm(expression: t.name)])).get();
 
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
     final List<Supplement> result = [];
@@ -715,38 +757,44 @@ class DatabaseHelper {
                 ..where((tbl) => tbl.createdAt.isSmallerOrEqualValue(endOfDay))
                 ..orderBy([
                   (t) => drift.OrderingTerm(
-                      expression: t.createdAt, mode: drift.OrderingMode.desc)
+                    expression: t.createdAt,
+                    mode: drift.OrderingMode.desc,
+                  ),
                 ])
                 ..limit(1))
               .getSingleOrNull();
 
       if (historyRow != null) {
-        result.add(Supplement(
-          id: row.localId,
-          code: row.code,
-          name: row.name,
-          defaultDose: historyRow.dose,
-          unit: row.unit,
-          dailyGoal: historyRow.dailyGoal,
-          dailyLimit: historyRow.dailyLimit,
-          notes: row.notes,
-          isBuiltin: row.isBuiltin,
-          isTracked: historyRow.isTracked,
-        ));
+        result.add(
+          Supplement(
+            id: row.localId,
+            code: row.code,
+            name: row.name,
+            defaultDose: historyRow.dose,
+            unit: row.unit,
+            dailyGoal: historyRow.dailyGoal,
+            dailyLimit: historyRow.dailyLimit,
+            notes: row.notes,
+            isBuiltin: row.isBuiltin,
+            isTracked: historyRow.isTracked,
+          ),
+        );
       } else if (row.createdAt.isBefore(endOfDay) ||
           row.createdAt.isAtSameMomentAs(endOfDay)) {
-        result.add(Supplement(
-          id: row.localId,
-          code: row.code,
-          name: row.name,
-          defaultDose: row.dose,
-          unit: row.unit,
-          dailyGoal: row.dailyGoal,
-          dailyLimit: row.dailyLimit,
-          notes: row.notes,
-          isBuiltin: row.isBuiltin,
-          isTracked: row.isTracked,
-        ));
+        result.add(
+          Supplement(
+            id: row.localId,
+            code: row.code,
+            name: row.name,
+            defaultDose: row.dose,
+            unit: row.unit,
+            dailyGoal: row.dailyGoal,
+            dailyLimit: row.dailyLimit,
+            notes: row.notes,
+            isBuiltin: row.isBuiltin,
+            isTracked: row.isTracked,
+          ),
+        );
       }
     }
 
@@ -755,9 +803,9 @@ class DatabaseHelper {
 
   Future<void> deleteSupplement(int id) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.supplements)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.supplements,
+    )..where((tbl) => tbl.localId.equals(id))).go();
   }
 
   // ===========================================================================
@@ -767,9 +815,9 @@ class DatabaseHelper {
   Future<SupplementLog> insertSupplementLog(SupplementLog log) async {
     final dbInstance = await database;
 
-    final supplementRow = await (dbInstance.select(dbInstance.supplements)
-          ..where((tbl) => tbl.localId.equals(log.supplementId)))
-        .getSingle();
+    final supplementRow = await (dbInstance.select(
+      dbInstance.supplements,
+    )..where((tbl) => tbl.localId.equals(log.supplementId))).getSingle();
 
     final companion = db.SupplementLogsCompanion(
       supplementId: drift.Value(supplementRow.id),
@@ -795,18 +843,22 @@ class DatabaseHelper {
     final start = DateTime(date.year, date.month, date.day);
     final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
-    final query = dbInstance.select(dbInstance.supplementLogs).join([
-      drift.innerJoin(
-          dbInstance.supplements,
-          dbInstance.supplements.id
-              .equalsExp(dbInstance.supplementLogs.supplementId))
-    ])
-      ..where(dbInstance.supplementLogs.takenAt.isBetweenValues(start, end))
-      ..orderBy([
-        drift.OrderingTerm(
-            expression: dbInstance.supplementLogs.takenAt,
-            mode: drift.OrderingMode.desc)
-      ]);
+    final query =
+        dbInstance.select(dbInstance.supplementLogs).join([
+            drift.innerJoin(
+              dbInstance.supplements,
+              dbInstance.supplements.id.equalsExp(
+                dbInstance.supplementLogs.supplementId,
+              ),
+            ),
+          ])
+          ..where(dbInstance.supplementLogs.takenAt.isBetweenValues(start, end))
+          ..orderBy([
+            drift.OrderingTerm(
+              expression: dbInstance.supplementLogs.takenAt,
+              mode: drift.OrderingMode.desc,
+            ),
+          ]);
 
     final rows = await query.get();
 
@@ -827,28 +879,32 @@ class DatabaseHelper {
     if (log.id == null) return;
     final dbInstance = await database;
 
-    await (dbInstance.update(dbInstance.supplementLogs)
-          ..where((tbl) => tbl.localId.equals(log.id!)))
-        .write(db.SupplementLogsCompanion(
-      amount: drift.Value(log.dose),
-      takenAt: drift.Value(log.timestamp),
-    ));
+    await (dbInstance.update(
+      dbInstance.supplementLogs,
+    )..where((tbl) => tbl.localId.equals(log.id!))).write(
+      db.SupplementLogsCompanion(
+        amount: drift.Value(log.dose),
+        takenAt: drift.Value(log.timestamp),
+      ),
+    );
   }
 
   Future<void> deleteSupplementLog(int id) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.supplementLogs)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.supplementLogs,
+    )..where((tbl) => tbl.localId.equals(id))).go();
   }
 
   Future<List<SupplementLog>> getAllSupplementLogs() async {
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.supplementLogs).join([
       drift.innerJoin(
-          dbInstance.supplements,
-          dbInstance.supplements.id
-              .equalsExp(dbInstance.supplementLogs.supplementId))
+        dbInstance.supplements,
+        dbInstance.supplements.id.equalsExp(
+          dbInstance.supplementLogs.supplementId,
+        ),
+      ),
     ]);
     final rows = await query.get();
 
@@ -873,28 +929,26 @@ class DatabaseHelper {
     final dbInstance = await database;
     final row = await dbInstance
         .into(dbInstance.meals)
-        .insertReturning(db.MealsCompanion(
-          name: drift.Value(name),
-          notes: drift.Value(notes),
-        ));
+        .insertReturning(
+          db.MealsCompanion(name: drift.Value(name), notes: drift.Value(notes)),
+        );
     return row.localId;
   }
 
   Future<void> updateMeal(int id, {required String name, String? notes}) async {
     final dbInstance = await database;
-    await (dbInstance.update(dbInstance.meals)
-          ..where((t) => t.localId.equals(id)))
-        .write(db.MealsCompanion(
-      name: drift.Value(name),
-      notes: drift.Value(notes),
-    ));
+    await (dbInstance.update(
+      dbInstance.meals,
+    )..where((t) => t.localId.equals(id))).write(
+      db.MealsCompanion(name: drift.Value(name), notes: drift.Value(notes)),
+    );
   }
 
   Future<void> deleteMeal(int id) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.meals)
-          ..where((t) => t.localId.equals(id)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.meals,
+    )..where((t) => t.localId.equals(id))).go();
   }
 
   Future<List<Map<String, dynamic>>> getMeals() async {
@@ -902,70 +956,73 @@ class DatabaseHelper {
     final rows = await dbInstance.select(dbInstance.meals).get();
 
     return rows
-        .map((r) => {
-              'id': r.localId,
-              'name': r.name,
-              'notes': r.notes,
-            })
+        .map((r) => {'id': r.localId, 'name': r.name, 'notes': r.notes})
         .toList();
   }
 
-  Future<int> addMealItem(int mealLocalId,
-      {required String barcode, required int grams}) async {
+  Future<int> addMealItem(
+    int mealLocalId, {
+    required String barcode,
+    required int grams,
+  }) async {
     final dbInstance = await database;
 
-    final mealRow = await (dbInstance.select(dbInstance.meals)
-          ..where((t) => t.localId.equals(mealLocalId)))
-        .getSingle();
+    final mealRow = await (dbInstance.select(
+      dbInstance.meals,
+    )..where((t) => t.localId.equals(mealLocalId))).getSingle();
 
     final row = await dbInstance
         .into(dbInstance.mealItems)
-        .insertReturning(db.MealItemsCompanion(
-          mealId: drift.Value(mealRow.id),
-          productBarcode: drift.Value(barcode),
-          quantityInGrams: drift.Value(grams),
-        ));
+        .insertReturning(
+          db.MealItemsCompanion(
+            mealId: drift.Value(mealRow.id),
+            productBarcode: drift.Value(barcode),
+            quantityInGrams: drift.Value(grams),
+          ),
+        );
     return row.localId;
   }
 
   Future<List<Map<String, dynamic>>> getMealItems(int mealLocalId) async {
     final dbInstance = await database;
 
-    final mealRow = await (dbInstance.select(dbInstance.meals)
-          ..where((t) => t.localId.equals(mealLocalId)))
-        .getSingleOrNull();
+    final mealRow = await (dbInstance.select(
+      dbInstance.meals,
+    )..where((t) => t.localId.equals(mealLocalId))).getSingleOrNull();
     if (mealRow == null) return [];
 
-    final rows = await (dbInstance.select(dbInstance.mealItems)
-          ..where((t) => t.mealId.equals(mealRow.id)))
-        .get();
+    final rows = await (dbInstance.select(
+      dbInstance.mealItems,
+    )..where((t) => t.mealId.equals(mealRow.id))).get();
 
     return rows
-        .map((r) => {
-              'id': r.localId,
-              'meal_id': mealLocalId,
-              'barcode': r.productBarcode,
-              'quantity_in_grams': r.quantityInGrams,
-            })
+        .map(
+          (r) => {
+            'id': r.localId,
+            'meal_id': mealLocalId,
+            'barcode': r.productBarcode,
+            'quantity_in_grams': r.quantityInGrams,
+          },
+        )
         .toList();
   }
 
   Future<void> removeMealItem(int itemLocalId) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.mealItems)
-          ..where((t) => t.localId.equals(itemLocalId)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.mealItems,
+    )..where((t) => t.localId.equals(itemLocalId))).go();
   }
 
   Future<void> clearMealItems(int mealLocalId) async {
     final dbInstance = await database;
-    final mealRow = await (dbInstance.select(dbInstance.meals)
-          ..where((t) => t.localId.equals(mealLocalId)))
-        .getSingleOrNull();
+    final mealRow = await (dbInstance.select(
+      dbInstance.meals,
+    )..where((t) => t.localId.equals(mealLocalId))).getSingleOrNull();
     if (mealRow != null) {
-      await (dbInstance.delete(dbInstance.mealItems)
-            ..where((t) => t.mealId.equals(mealRow.id)))
-          .go();
+      await (dbInstance.delete(
+        dbInstance.mealItems,
+      )..where((t) => t.mealId.equals(mealRow.id))).go();
     }
   }
 
@@ -978,7 +1035,9 @@ class DatabaseHelper {
     final query = dbInstance.select(dbInstance.nutritionLogs)
       ..orderBy([
         (t) => drift.OrderingTerm(
-            expression: t.consumedAt, mode: drift.OrderingMode.asc)
+          expression: t.consumedAt,
+          mode: drift.OrderingMode.asc,
+        ),
       ])
       ..limit(1);
     final row = await query.getSingleOrNull();
@@ -990,7 +1049,9 @@ class DatabaseHelper {
     final query = dbInstance.select(dbInstance.fluidLogs)
       ..orderBy([
         (t) => drift.OrderingTerm(
-            expression: t.consumedAt, mode: drift.OrderingMode.asc)
+          expression: t.consumedAt,
+          mode: drift.OrderingMode.asc,
+        ),
       ])
       ..limit(1);
     final row = await query.getSingleOrNull();
@@ -1002,11 +1063,13 @@ class DatabaseHelper {
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
-    final rows = await (dbInstance.selectOnly(dbInstance.nutritionLogs)
-          ..addColumns([dbInstance.nutritionLogs.consumedAt])
-          ..where(
-              dbInstance.nutritionLogs.consumedAt.isBetweenValues(start, end)))
-        .get();
+    final rows =
+        await (dbInstance.selectOnly(dbInstance.nutritionLogs)
+              ..addColumns([dbInstance.nutritionLogs.consumedAt])
+              ..where(
+                dbInstance.nutritionLogs.consumedAt.isBetweenValues(start, end),
+              ))
+            .get();
 
     return rows
         .map((r) => r.read(dbInstance.nutritionLogs.consumedAt)!.day)
@@ -1018,11 +1081,13 @@ class DatabaseHelper {
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
-    final rows = await (dbInstance.selectOnly(dbInstance.supplementLogs)
-          ..addColumns([dbInstance.supplementLogs.takenAt])
-          ..where(
-              dbInstance.supplementLogs.takenAt.isBetweenValues(start, end)))
-        .get();
+    final rows =
+        await (dbInstance.selectOnly(dbInstance.supplementLogs)
+              ..addColumns([dbInstance.supplementLogs.takenAt])
+              ..where(
+                dbInstance.supplementLogs.takenAt.isBetweenValues(start, end),
+              ))
+            .get();
 
     return rows
         .map((r) => r.read(dbInstance.supplementLogs.takenAt)!.day)
@@ -1046,7 +1111,9 @@ class DatabaseHelper {
 
   Future<void> addFavorite(String barcode) async {
     final dbInstance = await database;
-    await dbInstance.into(dbInstance.favorites).insert(
+    await dbInstance
+        .into(dbInstance.favorites)
+        .insert(
           FavoritesCompanion(barcode: drift.Value(barcode)),
           mode: drift.InsertMode.insertOrReplace,
         );
@@ -1054,16 +1121,16 @@ class DatabaseHelper {
 
   Future<void> removeFavorite(String barcode) async {
     final dbInstance = await database;
-    await (dbInstance.delete(dbInstance.favorites)
-          ..where((t) => t.barcode.equals(barcode)))
-        .go();
+    await (dbInstance.delete(
+      dbInstance.favorites,
+    )..where((t) => t.barcode.equals(barcode))).go();
   }
 
   Future<bool> isFavorite(String barcode) async {
     final dbInstance = await database;
-    final count = await (dbInstance.select(dbInstance.favorites)
-          ..where((t) => t.barcode.equals(barcode)))
-        .get();
+    final count = await (dbInstance.select(
+      dbInstance.favorites,
+    )..where((t) => t.barcode.equals(barcode))).get();
     return count.isNotEmpty;
   }
 
@@ -1081,7 +1148,7 @@ class DatabaseHelper {
       ..addColumns([dbInstance.nutritionLogs.legacyBarcode, maxDate])
       ..groupBy([dbInstance.nutritionLogs.legacyBarcode])
       ..orderBy([
-        drift.OrderingTerm(expression: maxDate, mode: drift.OrderingMode.desc)
+        drift.OrderingTerm(expression: maxDate, mode: drift.OrderingMode.desc),
       ])
       ..limit(20);
 
@@ -1116,29 +1183,36 @@ class DatabaseHelper {
   }) async {
     final dbInstance = await database;
 
-    final existing =
-        await dbInstance.select(dbInstance.profiles).getSingleOrNull();
+    final existing = await dbInstance
+        .select(dbInstance.profiles)
+        .getSingleOrNull();
 
     if (existing == null) {
       // NEU anlegen
-      await dbInstance.into(dbInstance.profiles).insert(db.ProfilesCompanion(
-            username: drift.Value(name),
-            birthday: drift.Value(birthday),
-            height: drift.Value(height),
-            gender: drift.Value(gender),
-            isCoach: const drift.Value(false),
-            visibility: const drift.Value('private'),
-          ));
+      await dbInstance
+          .into(dbInstance.profiles)
+          .insert(
+            db.ProfilesCompanion(
+              username: drift.Value(name),
+              birthday: drift.Value(birthday),
+              height: drift.Value(height),
+              gender: drift.Value(gender),
+              isCoach: const drift.Value(false),
+              visibility: const drift.Value('private'),
+            ),
+          );
     } else {
       // UPDATE
-      await (dbInstance.update(dbInstance.profiles)
-            ..where((t) => t.id.equals(existing.id)))
-          .write(db.ProfilesCompanion(
-        username: drift.Value(name),
-        birthday: drift.Value(birthday),
-        height: drift.Value(height),
-        gender: drift.Value(gender),
-      ));
+      await (dbInstance.update(
+        dbInstance.profiles,
+      )..where((t) => t.id.equals(existing.id))).write(
+        db.ProfilesCompanion(
+          username: drift.Value(name),
+          birthday: drift.Value(birthday),
+          height: drift.Value(height),
+          gender: drift.Value(gender),
+        ),
+      );
     }
   }
 
@@ -1153,27 +1227,34 @@ class DatabaseHelper {
     final dbInstance = await database;
 
     // 1. Check if settings already exist
-    final existingSettings =
-        await dbInstance.select(dbInstance.appSettings).getSingleOrNull();
+    final existingSettings = await dbInstance
+        .select(dbInstance.appSettings)
+        .getSingleOrNull();
 
     // IMPORTANT: Ensure a historical baseline exists before the old goals are overwritten.
     if (existingSettings != null) {
-      final baseline = await (dbInstance.select(dbInstance.dailyGoalsHistory)
-            ..where(
-                (t) => t.createdAt.isSmallerOrEqualValue(DateTime(2010, 1, 1)))
-            ..limit(1))
-          .getSingleOrNull();
+      final baseline =
+          await (dbInstance.select(dbInstance.dailyGoalsHistory)
+                ..where(
+                  (t) =>
+                      t.createdAt.isSmallerOrEqualValue(DateTime(2010, 1, 1)),
+                )
+                ..limit(1))
+              .getSingleOrNull();
 
       if (baseline == null) {
-        await dbInstance.into(dbInstance.dailyGoalsHistory).insert(
+        await dbInstance
+            .into(dbInstance.dailyGoalsHistory)
+            .insert(
               db.DailyGoalsHistoryCompanion(
                 targetCalories: drift.Value(existingSettings.targetCalories),
                 targetProtein: drift.Value(existingSettings.targetProtein),
                 targetCarbs: drift.Value(existingSettings.targetCarbs),
                 targetFat: drift.Value(existingSettings.targetFat),
                 targetWater: drift.Value(existingSettings.targetWater),
-                createdAt:
-                    drift.Value(DateTime(2000, 1, 1)), // Covers all older data
+                createdAt: drift.Value(
+                  DateTime(2000, 1, 1),
+                ), // Covers all older data
               ),
             );
       }
@@ -1181,38 +1262,45 @@ class DatabaseHelper {
 
     if (existingSettings != null) {
       // UPDATE
-      await (dbInstance.update(dbInstance.appSettings)
-            ..where((t) => t.id.equals(existingSettings.id)))
-          .write(db.AppSettingsCompanion(
-        targetCalories: drift.Value(calories),
-        targetProtein: drift.Value(protein),
-        targetCarbs: drift.Value(carbs),
-        targetFat: drift.Value(fat),
-        targetWater: drift.Value(water),
-      ));
+      await (dbInstance.update(
+        dbInstance.appSettings,
+      )..where((t) => t.id.equals(existingSettings.id))).write(
+        db.AppSettingsCompanion(
+          targetCalories: drift.Value(calories),
+          targetProtein: drift.Value(protein),
+          targetCarbs: drift.Value(carbs),
+          targetFat: drift.Value(fat),
+          targetWater: drift.Value(water),
+        ),
+      );
     } else {
       // INSERT (In case saveUserProfile hasn't created settings yet)
       // We need the user ID
-      final profile =
-          await dbInstance.select(dbInstance.profiles).getSingleOrNull();
+      final profile = await dbInstance
+          .select(dbInstance.profiles)
+          .getSingleOrNull();
       if (profile == null) return;
 
       await dbInstance
           .into(dbInstance.appSettings)
-          .insert(db.AppSettingsCompanion(
-            userId: drift.Value(profile.id),
-            targetCalories: drift.Value(calories),
-            targetProtein: drift.Value(protein),
-            targetCarbs: drift.Value(carbs),
-            targetFat: drift.Value(fat),
-            targetWater: drift.Value(water),
-            themeMode: const drift.Value('system'), // Defaults
-            unitSystem: const drift.Value('metric'),
-          ));
+          .insert(
+            db.AppSettingsCompanion(
+              userId: drift.Value(profile.id),
+              targetCalories: drift.Value(calories),
+              targetProtein: drift.Value(protein),
+              targetCarbs: drift.Value(carbs),
+              targetFat: drift.Value(fat),
+              targetWater: drift.Value(water),
+              themeMode: const drift.Value('system'), // Defaults
+              unitSystem: const drift.Value('metric'),
+            ),
+          );
     }
 
     // 2. Add historical entry
-    await dbInstance.into(dbInstance.dailyGoalsHistory).insert(
+    await dbInstance
+        .into(dbInstance.dailyGoalsHistory)
+        .insert(
           db.DailyGoalsHistoryCompanion(
             targetCalories: drift.Value(calories),
             targetProtein: drift.Value(protein),
@@ -1237,7 +1325,9 @@ class DatabaseHelper {
       ..where((t) => t.createdAt.isSmallerOrEqualValue(endOfDay))
       ..orderBy([
         (t) => drift.OrderingTerm(
-            expression: t.createdAt, mode: drift.OrderingMode.desc)
+          expression: t.createdAt,
+          mode: drift.OrderingMode.desc,
+        ),
       ])
       ..limit(1);
 
@@ -1246,13 +1336,16 @@ class DatabaseHelper {
 
     // If no history entry exists *before* or *on* this date,
     // meaning the date is BEFORE the first record, we take the oldest known history entry.
-    final oldestHistory = await (dbInstance.select(dbInstance.dailyGoalsHistory)
-          ..orderBy([
-            (t) => drift.OrderingTerm(
-                expression: t.createdAt, mode: drift.OrderingMode.asc)
-          ])
-          ..limit(1))
-        .getSingleOrNull();
+    final oldestHistory =
+        await (dbInstance.select(dbInstance.dailyGoalsHistory)
+              ..orderBy([
+                (t) => drift.OrderingTerm(
+                  expression: t.createdAt,
+                  mode: drift.OrderingMode.asc,
+                ),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
 
     if (oldestHistory != null) return oldestHistory;
 
@@ -1282,13 +1375,15 @@ class DatabaseHelper {
 
     await dbInstance
         .into(dbInstance.measurements)
-        .insert(db.MeasurementsCompanion(
-          date: drift.Value(now),
-          type: const drift.Value('weight'),
-          value: drift.Value(weightKg),
-          unit: const drift.Value('kg'),
-          legacySessionId: drift.Value(now.millisecondsSinceEpoch),
-        ));
+        .insert(
+          db.MeasurementsCompanion(
+            date: drift.Value(now),
+            type: const drift.Value('weight'),
+            value: drift.Value(weightKg),
+            unit: const drift.Value('kg'),
+            legacySessionId: drift.Value(now.millisecondsSinceEpoch),
+          ),
+        );
   }
 
   // ===========================================================================
@@ -1338,8 +1433,11 @@ class DatabaseHelper {
   /// Keeps token count low for the AI prompt.
   Future<String> getMealHistorySummary({int days = 7}) async {
     final now = DateTime.now();
-    final start =
-        DateTime(now.year, now.month, now.day).subtract(Duration(days: days));
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: days));
     final entries = await getEntriesForDateRange(start, now);
 
     if (entries.isEmpty) return '';

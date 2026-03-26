@@ -27,20 +27,20 @@ void main() {
 
       final payload = StatisticsHubPayload(
         recentPrs: const [
-          {'exercise': 'Squat'}
+          {'exercise': 'Squat'},
         ],
         weeklyVolume: const [
-          {'week': 'W1', 'volume': 1000}
+          {'week': 'W1', 'volume': 1000},
         ],
         workoutsPerWeek: const [
-          {'week': 'W1', 'count': 3}
+          {'week': 'W1', 'count': 3},
         ],
         weeklyConsistencyMetrics: [consistency],
         muscleAnalytics: const {'score': 78},
         trainingStats: training,
         recoveryAnalytics: recovery,
         notableImprovements: const [
-          {'exercise': 'Bench Press', 'delta': 5}
+          {'exercise': 'Bench Press', 'delta': 5},
         ],
       );
 

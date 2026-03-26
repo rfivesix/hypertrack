@@ -95,10 +95,9 @@ class ProductDatabaseHelper {
   /// Inserts a new product into the database or replaces an existing one with the same barcode.
   Future<void> insertProduct(FoodItem item) async {
     final dbInstance = await database;
-    await dbInstance.into(dbInstance.products).insert(
-          _mapModelToCompanion(item),
-          mode: InsertMode.insertOrReplace,
-        );
+    await dbInstance
+        .into(dbInstance.products)
+        .insert(_mapModelToCompanion(item), mode: InsertMode.insertOrReplace);
   }
 
   /// Updates an existing product's information in the database.
@@ -116,17 +115,17 @@ class ProductDatabaseHelper {
     if (barcodes.isEmpty) return [];
     final dbInstance = await database;
 
-    final rows = await (dbInstance.select(dbInstance.products)
-          ..where((tbl) => tbl.barcode.isIn(barcodes)))
-        .get();
+    final rows = await (dbInstance.select(
+      dbInstance.products,
+    )..where((tbl) => tbl.barcode.isIn(barcodes))).get();
 
     return rows.map(_mapRowToModel).toList();
   }
 
   /// Retrieves recently used products based on the user's consumption history.
   Future<List<FoodItem>> getRecentProducts() async {
-    final recentBarcodes =
-        await DatabaseHelper.instance.getRecentlyUsedBarcodes();
+    final recentBarcodes = await DatabaseHelper.instance
+        .getRecentlyUsedBarcodes();
     return await getProductsByBarcodes(recentBarcodes);
   }
 
@@ -137,9 +136,9 @@ class ProductDatabaseHelper {
 
     // Wir fragen jetzt die echte 'food_categories' Tabelle ab
     // Sortiert nach 'key' (oder wie du magst)
-    final rows = await (db.select(db.foodCategories)
-          ..orderBy([(t) => OrderingTerm(expression: t.key)]))
-        .get();
+    final rows = await (db.select(
+      db.foodCategories,
+    )..orderBy([(t) => OrderingTerm(expression: t.key)])).get();
 
     return rows.map((row) {
       return {
@@ -178,7 +177,7 @@ class ProductDatabaseHelper {
     return rows.map((row) => _mapRowToFoodItem(row)).toList();
   }
 
-// --- 3. GLOBALE SUCHE (Base + OFF + User) ---
+  // --- 3. GLOBALE SUCHE (Base + OFF + User) ---
   /// Performs a global search across user-created, base, and Open Food Facts products.
   Future<List<FoodItem>> searchProducts(String keyword) async {
     final term = keyword.trim();
@@ -188,33 +187,43 @@ class ProductDatabaseHelper {
 
     // 1. Priorisierte Suche: Eigene Lebensmittel (user) & Grundnahrungsmittel (base)
     // Diese sind am wichtigsten und sollen immer oben stehen.
-    final priorityRows = await (db.select(db.products)
-          ..where((t) =>
-              (t.name.like('%$term%') | t.brand.like('%$term%')) &
-              t.source.isIn(['user', 'base']))
-          ..orderBy([
-            // Kürzere Namen zuerst (Exakte Treffer nach oben)
-            (t) =>
-                OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
-          ])
-          ..limit(limit))
-        .get();
+    final priorityRows =
+        await (db.select(db.products)
+              ..where(
+                (t) =>
+                    (t.name.like('%$term%') | t.brand.like('%$term%')) &
+                    t.source.isIn(['user', 'base']),
+              )
+              ..orderBy([
+                // Kürzere Namen zuerst (Exakte Treffer nach oben)
+                (t) => OrderingTerm(
+                  expression: t.name.length,
+                  mode: OrderingMode.asc,
+                ),
+              ])
+              ..limit(limit))
+            .get();
 
     final List<FoodItem> results = priorityRows.map(_mapRowToFoodItem).toList();
 
     // 2. Auffüllen mit Open Food Facts (off), falls noch Platz in der Liste ist
     if (results.length < limit) {
       final int remaining = limit - results.length;
-      final offRows = await (db.select(db.products)
-            ..where((t) =>
-                (t.name.like('%$term%') | t.brand.like('%$term%')) &
-                t.source.equals('off'))
-            ..orderBy([
-              (t) => OrderingTerm(
-                  expression: t.name.length, mode: OrderingMode.asc),
-            ])
-            ..limit(remaining))
-          .get();
+      final offRows =
+          await (db.select(db.products)
+                ..where(
+                  (t) =>
+                      (t.name.like('%$term%') | t.brand.like('%$term%')) &
+                      t.source.equals('off'),
+                )
+                ..orderBy([
+                  (t) => OrderingTerm(
+                    expression: t.name.length,
+                    mode: OrderingMode.asc,
+                  ),
+                ])
+                ..limit(remaining))
+              .get();
 
       results.addAll(offRows.map(_mapRowToFoodItem));
     }
@@ -226,10 +235,11 @@ class ProductDatabaseHelper {
   /// Retrieves a single product by its [barcode].
   Future<FoodItem?> getProductByBarcode(String barcode) async {
     final db = await database;
-    final row = await (db.select(db.products)
-          ..where((t) => t.barcode.equals(barcode))
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (db.select(db.products)
+              ..where((t) => t.barcode.equals(barcode))
+              ..limit(1))
+            .getSingleOrNull();
 
     if (row == null) return null;
     return _mapRowToFoodItem(row);
@@ -243,7 +253,9 @@ class ProductDatabaseHelper {
     // Join Products mit Favorites
     final query = db.select(db.products).join([
       innerJoin(
-          db.favorites, db.favorites.barcode.equalsExp(db.products.barcode))
+        db.favorites,
+        db.favorites.barcode.equalsExp(db.products.barcode),
+      ),
     ]);
 
     final result = await query.get();
@@ -257,19 +269,20 @@ class ProductDatabaseHelper {
   // --- HELPER ---
   FoodItem _mapRowToFoodItem(Product row) {
     return FoodItem(
-        barcode: row.barcode,
-        name: row.name,
-        brand: row.brand ?? '',
-        calories: row.calories,
-        protein: row.protein,
-        carbs: row.carbs,
-        fat: row.fat,
-        sugar: row.sugar,
-        fiber: row.fiber,
-        salt: row.salt,
-        isLiquid: row.isLiquid,
-        source: _mapSource(row.source),
-        category: row.category);
+      barcode: row.barcode,
+      name: row.name,
+      brand: row.brand ?? '',
+      calories: row.calories,
+      protein: row.protein,
+      carbs: row.carbs,
+      fat: row.fat,
+      sugar: row.sugar,
+      fiber: row.fiber,
+      salt: row.salt,
+      isLiquid: row.isLiquid,
+      source: _mapSource(row.source),
+      category: row.category,
+    );
   }
 
   FoodItemSource _mapSource(String sourceString) {
@@ -310,10 +323,13 @@ class ProductDatabaseHelper {
 
     // Source priority expression: base=0 (highest), user=1, off=2
     Expression<int> sourcePriority(GeneratedColumn<String> source) {
-      return CaseWhenExpression<int>(cases: [
-        CaseWhen(source.equals('base'), then: const Constant(0)),
-        CaseWhen(source.equals('user'), then: const Constant(1)),
-      ], orElse: const Constant(2));
+      return CaseWhenExpression<int>(
+        cases: [
+          CaseWhen(source.equals('base'), then: const Constant(0)),
+          CaseWhen(source.equals('user'), then: const Constant(1)),
+        ],
+        orElse: const Constant(2),
+      );
     }
 
     List<Product> rows = [];
@@ -324,7 +340,9 @@ class ProductDatabaseHelper {
         ..limit(fetchLimit)
         ..orderBy([
           (t) => OrderingTerm(
-              expression: sourcePriority(t.source), mode: OrderingMode.asc),
+            expression: sourcePriority(t.source),
+            mode: OrderingMode.asc,
+          ),
           (t) =>
               OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
         ]);
@@ -338,16 +356,21 @@ class ProductDatabaseHelper {
     if (rows.isEmpty) {
       tokens.sort((a, b) => b.length.compareTo(a.length));
       final bestToken = tokens.first;
-      rows = await (dbInstance.select(dbInstance.products)
-            ..where((t) => t.name.like('%$bestToken%'))
-            ..orderBy([
-              (t) => OrderingTerm(
-                  expression: sourcePriority(t.source), mode: OrderingMode.asc),
-              (t) => OrderingTerm(
-                  expression: t.name.length, mode: OrderingMode.asc),
-            ])
-            ..limit(fetchLimit))
-          .get();
+      rows =
+          await (dbInstance.select(dbInstance.products)
+                ..where((t) => t.name.like('%$bestToken%'))
+                ..orderBy([
+                  (t) => OrderingTerm(
+                    expression: sourcePriority(t.source),
+                    mode: OrderingMode.asc,
+                  ),
+                  (t) => OrderingTerm(
+                    expression: t.name.length,
+                    mode: OrderingMode.asc,
+                  ),
+                ])
+                ..limit(fetchLimit))
+              .get();
     }
 
     if (rows.isEmpty) return [];

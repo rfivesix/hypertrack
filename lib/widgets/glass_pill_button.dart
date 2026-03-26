@@ -87,15 +87,18 @@ class _GlassPillButtonState extends State<GlassPillButton>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
 
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.10);
-    final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withOpacity(0.10);
+    final Color effectiveGlass = Color.alphaBlend(
+      neutralTint,
+      bg.withOpacity(isDark ? 0.8 : 0.5),
+    );
 
     // Adaptive border radius: round if not Row, pill if Row
     final bool isCircle = widget.child is! Row;
-    final double effectiveRadius =
-        isCircle ? widget.height / 2 : widget.borderRadius;
+    final double effectiveRadius = isCircle
+        ? widget.height / 2
+        : widget.borderRadius;
 
     Widget surface;
 

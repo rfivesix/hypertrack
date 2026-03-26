@@ -29,9 +29,9 @@ class BodyNutritionAnalyticsDataAdapter {
     required ProductDatabaseHelper productDatabaseHelper,
     StatisticsRangePolicyService rangePolicy =
         StatisticsRangePolicyService.instance,
-  })  : _databaseHelper = databaseHelper,
-        _productDatabaseHelper = productDatabaseHelper,
-        _rangePolicy = rangePolicy;
+  }) : _databaseHelper = databaseHelper,
+       _productDatabaseHelper = productDatabaseHelper,
+       _rangePolicy = rangePolicy;
 
   static DateTime normalizeDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);
@@ -120,8 +120,9 @@ class BodyNutritionAnalyticsDataAdapter {
     required List<FluidEntry> fluidEntries,
   }) async {
     final map = <DateTime, double>{};
-    final foodCaloriesPer100gCache =
-        await _hydrateCaloriesByBarcode(foodEntries);
+    final foodCaloriesPer100gCache = await _hydrateCaloriesByBarcode(
+      foodEntries,
+    );
 
     for (final entry in foodEntries) {
       final day = normalizeDay(entry.timestamp);
@@ -153,8 +154,9 @@ class BodyNutritionAnalyticsDataAdapter {
       return const {};
     }
 
-    final products =
-        await _productDatabaseHelper.getProductsByBarcodes(uniqueBarcodes);
+    final products = await _productDatabaseHelper.getProductsByBarcodes(
+      uniqueBarcodes,
+    );
     final hydrated = <String, int>{
       for (final product in products) product.barcode: product.calories,
     };

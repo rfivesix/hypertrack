@@ -25,10 +25,7 @@ Future<T?> showAppBottomSheet<T>(
     isDismissible: isDismissible,
     enableDrag: enableDrag,
     backgroundColor: Colors.transparent, // let our scaffold draw the background
-    builder: (ctx) => AppSheetScaffold(
-      style: style,
-      child: child,
-    ),
+    builder: (ctx) => AppSheetScaffold(style: style, child: child),
   );
 }
 
@@ -61,13 +58,10 @@ class AppSheetScaffold extends StatelessWidget {
             color: Colors.black.withOpacity(0.08),
             blurRadius: 16,
             offset: const Offset(0, 8),
-          )
+          ),
         ],
         border: style == AppSheetStyle.glass
-            ? Border.all(
-                color: Colors.white.withOpacity(0.25),
-                width: 1,
-              )
+            ? Border.all(color: Colors.white.withOpacity(0.25), width: 1)
             : null,
       ),
       padding: const EdgeInsets.fromLTRB(
@@ -92,10 +86,7 @@ class AppSheetScaffold extends StatelessWidget {
       );
     }
 
-    return SafeArea(
-      top: false,
-      child: surface,
-    );
+    return SafeArea(top: false, child: surface);
   }
 }
 
@@ -235,10 +226,12 @@ class WaterDialogContentState extends State<WaterDialogContent> {
 }
 
 // Example launcher for this dialog using the unified sheet
-Future<void> openWaterDialog(BuildContext context,
-    {int? initialQuantity,
-    DateTime? initialTimestamp,
-    AppSheetStyle style = AppSheetStyle.plain}) {
+Future<void> openWaterDialog(
+  BuildContext context, {
+  int? initialQuantity,
+  DateTime? initialTimestamp,
+  AppSheetStyle style = AppSheetStyle.plain,
+}) {
   return showAppBottomSheet(
     context,
     style: style,

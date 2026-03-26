@@ -33,8 +33,8 @@ void main() {
         ],
       );
 
-      final muscles =
-          (data['muscles'] as List<dynamic>).cast<Map<String, dynamic>>();
+      final muscles = (data['muscles'] as List<dynamic>)
+          .cast<Map<String, dynamic>>();
       final chest = muscles.firstWhere((m) => m['muscleGroup'] == 'Chest');
       final triceps = muscles.firstWhere((m) => m['muscleGroup'] == 'Triceps');
 
@@ -79,39 +79,39 @@ void main() {
           {
             'day': DateTime(2026, 3, 1),
             'muscleGroup': 'Chest',
-            'equivalentSets': 3.0
+            'equivalentSets': 3.0,
           },
           {
             'day': DateTime(2026, 3, 8),
             'muscleGroup': 'Chest',
-            'equivalentSets': 3.0
+            'equivalentSets': 3.0,
           },
           {
             'day': DateTime(2026, 3, 15),
             'muscleGroup': 'Chest',
-            'equivalentSets': 3.0
+            'equivalentSets': 3.0,
           },
           {
             'day': DateTime(2026, 3, 22),
             'muscleGroup': 'Back',
-            'equivalentSets': 2.0
+            'equivalentSets': 2.0,
           },
           {
             'day': DateTime(2026, 3, 22),
             'muscleGroup': 'Legs',
-            'equivalentSets': 0.8
+            'equivalentSets': 0.8,
           },
           {
             'day': DateTime(2026, 3, 24),
             'muscleGroup': 'Legs',
-            'equivalentSets': 0.8
+            'equivalentSets': 0.8,
           },
         ],
       );
 
       expect(data['dataQualityOk'], isTrue);
-      final undertrained =
-          (data['undertrained'] as List<dynamic>).cast<String>();
+      final undertrained = (data['undertrained'] as List<dynamic>)
+          .cast<String>();
       expect(undertrained, contains('Legs'));
     });
   });

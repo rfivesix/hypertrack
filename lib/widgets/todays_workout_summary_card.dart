@@ -47,8 +47,10 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: ListTile(
         onTap: onTap,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 16.0,
+        ),
         leading: Icon(
           Icons.fitness_center,
           color: theme.colorScheme.primary,
@@ -56,7 +58,8 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
         ),
         title: Text(
           workoutCount > 1
-              ? l10n.workoutsLabel // "Workouts"
+              ? l10n
+                    .workoutsLabel // "Workouts"
               : l10n.workout, // "Workout"
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,

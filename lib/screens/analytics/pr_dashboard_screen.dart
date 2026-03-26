@@ -36,20 +36,22 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
     setState(() => _isLoading = true);
 
     final recent = WorkoutDatabaseHelper.instance.getRecentGlobalPRs(limit: 8);
-    final allTime =
-        WorkoutDatabaseHelper.instance.getAllTimeGlobalPRs(limit: 10);
-    final repRange = WorkoutDatabaseHelper.instance.getAllTimePRsByRepBracket();
-    final improvements =
-        WorkoutDatabaseHelper.instance.getNotablePrImprovements(
-      daysWindow: _rangePolicy
-              .resolve(
-                metricId: StatisticsMetricId.prNotableImprovements,
-                selectedDays: _selectedWindowDays,
-              )
-              .effectiveDays ??
-          _selectedWindowDays,
-      limit: 6,
+    final allTime = WorkoutDatabaseHelper.instance.getAllTimeGlobalPRs(
+      limit: 10,
     );
+    final repRange = WorkoutDatabaseHelper.instance.getAllTimePRsByRepBracket();
+    final improvements = WorkoutDatabaseHelper.instance
+        .getNotablePrImprovements(
+          daysWindow:
+              _rangePolicy
+                  .resolve(
+                    metricId: StatisticsMetricId.prNotableImprovements,
+                    selectedDays: _selectedWindowDays,
+                  )
+                  .effectiveDays ??
+              _selectedWindowDays,
+          limit: 6,
+        );
 
     final results = await Future.wait([
       recent,
@@ -117,12 +119,12 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                               entry,
                             ) {
                               final row = entry.value;
-                              final previous =
-                                  (row['previousBestE1rm'] as num).toDouble();
-                              final recent =
-                                  (row['recentBestE1rm'] as num).toDouble();
-                              final improvement =
-                                  (row['improvementPct'] as num).toDouble();
+                              final previous = (row['previousBestE1rm'] as num)
+                                  .toDouble();
+                              final recent = (row['recentBestE1rm'] as num)
+                                  .toDouble();
+                              final improvement = (row['improvementPct'] as num)
+                                  .toDouble();
                               final delta = recent - previous;
 
                               return ListTile(
@@ -145,12 +147,10 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                 ),
                                 subtitle: Text(
                                   l10n.analyticsE1rmProgress(
-                                    StatisticsPresentationFormatter
-                                        .formatWeight(
+                                    StatisticsPresentationFormatter.formatWeight(
                                       previous,
                                     ),
-                                    StatisticsPresentationFormatter
-                                        .formatWeight(
+                                    StatisticsPresentationFormatter.formatWeight(
                                       recent,
                                     ),
                                   ),
@@ -207,13 +207,15 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                           )
                         : LayoutBuilder(
                             builder: (context, constraints) {
-                              final tileWidth =
-                                  _calculateTileWidth(constraints.maxWidth);
+                              final tileWidth = _calculateTileWidth(
+                                constraints.maxWidth,
+                              );
                               return Wrap(
                                 spacing: DesignConstants.spacingS,
                                 runSpacing: DesignConstants.spacingS,
-                                children:
-                                    _allTimePrs.asMap().entries.map((entry) {
+                                children: _allTimePrs.asMap().entries.map((
+                                  entry,
+                                ) {
                                   return Container(
                                     width: tileWidth,
                                     padding: const EdgeInsets.all(10),
@@ -271,8 +273,9 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                   SummaryCard(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final tileWidth =
-                            _calculateTileWidth(constraints.maxWidth);
+                        final tileWidth = _calculateTileWidth(
+                          constraints.maxWidth,
+                        );
                         return Wrap(
                           spacing: DesignConstants.spacingS,
                           runSpacing: DesignConstants.spacingS,
@@ -294,7 +297,9 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                 children: [
                                   Text(
                                     entry.key.replaceAll(
-                                        'RM', l10n.analyticsRepRangeSuffix),
+                                      'RM',
+                                      l10n.analyticsRepRangeSuffix,
+                                    ),
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelMedium
@@ -304,32 +309,34 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                   if (hasData) ...[
                                     Text(
                                       l10n.analyticsPerfWithReps(
-                                        StatisticsPresentationFormatter
-                                            .formatWeight(
-                                                (data['weight'] as num)
-                                                    .toDouble()),
+                                        StatisticsPresentationFormatter.formatWeight(
+                                          (data['weight'] as num).toDouble(),
+                                        ),
                                         (data['reps'] as num).toInt(),
                                       ),
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleSmall
                                           ?.copyWith(
-                                              fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     Text(
                                       data['exerciseName'] as String,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   ] else
                                     Text(
                                       l10n.analyticsNoRecordYet,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                 ],
                               ),
@@ -354,9 +361,9 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 6, top: 2),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -367,10 +374,10 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
-              color: Colors.grey[600],
-            ),
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.2,
+          color: Colors.grey[600],
+        ),
       ),
     );
   }
@@ -389,9 +396,9 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
             child: Text(
               '$rank.',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
           Expanded(
@@ -404,10 +411,9 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
           const SizedBox(width: 12),
           Text(
             valueLabel,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),

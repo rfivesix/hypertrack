@@ -100,7 +100,9 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   ///
   /// Initializes the session state, creates initial [SetLog]s, and starts the timer.
   Future<void> startWorkout(
-      WorkoutLog log, List<RoutineExercise> routineExercises) async {
+    WorkoutLog log,
+    List<RoutineExercise> routineExercises,
+  ) async {
     _workoutLog = log;
     _exercises = List.from(routineExercises);
     _setLogs.clear();
@@ -130,7 +132,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     if (ongoingWorkout != null) {
       // ignore: avoid_print
       print(
-          "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...");
+        "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...",
+      );
       await restoreWorkoutSession(ongoingWorkout);
     }
   }
@@ -234,13 +237,15 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         final templateId =
             DateTime.now().millisecondsSinceEpoch + j * 1000 + i * 10000;
 
-        templates.add(SetTemplate(
-          id: templateId,
-          setType: s.setType,
-          targetWeight: s.weightKg ?? 0.0,
-          targetReps: s.reps?.toString() ?? '0',
-          targetRir: s.rir,
-        ));
+        templates.add(
+          SetTemplate(
+            id: templateId,
+            setType: s.setType,
+            targetWeight: s.weightKg ?? 0.0,
+            targetReps: s.reps?.toString() ?? '0',
+            targetRir: s.rir,
+          ),
+        );
 
         _setLogs[templateId] = s;
         _totalVolume += (s.weightKg ?? 0) * (s.reps ?? 0);
@@ -336,8 +341,9 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     // Volumens-Berechnung update (Nur für Krafttraining relevant)
     if (finalWeight != null || finalReps != null || clearWeight || clearReps) {
       final oldVol = (oldLog.weightKg ?? 0) * (oldLog.reps ?? 0);
-      final newWeight =
-          clearWeight ? 0.0 : (finalWeight ?? oldLog.weightKg ?? 0.0);
+      final newWeight = clearWeight
+          ? 0.0
+          : (finalWeight ?? oldLog.weightKg ?? 0.0);
       final newReps = clearReps ? 0 : (finalReps ?? oldLog.reps ?? 0);
       _totalVolume = _totalVolume - oldVol + (newWeight * newReps);
     }
@@ -476,17 +482,19 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     // FIX: Cardio Check für Anzahl der Sets
     final isCardio = exercise.categoryName.toLowerCase() == 'cardio';
     final initialSetCount = isCardio ? 1 : 3;
-    final initialReps =
-        isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
+    final initialReps = isCardio
+        ? ''
+        : '10'; // Auch hier: Cardio leer, Kraft 10
 
     final templates = List.generate(
-        initialSetCount,
-        (index) => SetTemplate(
-              id: tempReId + index + 1,
-              setType: 'normal',
-              targetReps: initialReps,
-              targetWeight: 0,
-            ));
+      initialSetCount,
+      (index) => SetTemplate(
+        id: tempReId + index + 1,
+        setType: 'normal',
+        targetReps: initialReps,
+        targetWeight: 0,
+      ),
+    );
 
     final re = RoutineExercise(
       id: tempReId,

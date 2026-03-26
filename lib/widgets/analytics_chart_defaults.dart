@@ -4,8 +4,10 @@ import '../features/statistics/domain/analytics_state.dart';
 import '../generated/app_localizations.dart';
 
 class AnalyticsChartDefaults {
-  static const FlGridData compactGrid =
-      FlGridData(show: true, drawVerticalLine: false);
+  static const FlGridData compactGrid = FlGridData(
+    show: true,
+    drawVerticalLine: false,
+  );
   static const FlGridData noGrid = FlGridData(show: false);
   static final FlBorderData noBorder = FlBorderData(show: false);
 
@@ -46,17 +48,11 @@ class AnalyticsChartDefaults {
   }
 
   static Widget axisTitleLabel(BuildContext context, String text) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(text, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static Widget tickLabel(BuildContext context, String text) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.labelSmall,
-    );
+    return Text(text, style: Theme.of(context).textTheme.labelSmall);
   }
 
   static Widget stateView({

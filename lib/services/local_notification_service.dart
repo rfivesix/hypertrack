@@ -20,8 +20,9 @@ class LocalNotificationService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const darwinSettings = DarwinInitializationSettings();
     const settings = InitializationSettings(
       android: androidSettings,
@@ -38,17 +39,20 @@ class LocalNotificationService {
   Future<void> _requestPermissions() async {
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
+          IOSFlutterLocalNotificationsPlugin
+        >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            MacOSFlutterLocalNotificationsPlugin>()
+          MacOSFlutterLocalNotificationsPlugin
+        >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
@@ -69,7 +73,10 @@ class LocalNotificationService {
 
   ({String title, String body}) _localizedRestTexts() {
     final languageCode = WidgetsBinding
-        .instance.platformDispatcher.locale.languageCode
+        .instance
+        .platformDispatcher
+        .locale
+        .languageCode
         .toLowerCase();
 
     if (languageCode == 'de') {
@@ -92,8 +99,9 @@ class LocalNotificationService {
     if (!_isInitialized) await initialize();
     final texts = _localizedRestTexts();
 
-    final when = tz.TZDateTime.now(tz.local)
-        .add(Duration(seconds: secondsFromNow.clamp(0, 24 * 60 * 60)));
+    final when = tz.TZDateTime.now(
+      tz.local,
+    ).add(Duration(seconds: secondsFromNow.clamp(0, 24 * 60 * 60)));
 
     try {
       await _plugin.zonedSchedule(

@@ -72,8 +72,9 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   Future<void> _performFuzzyMatching() async {
     for (final item in _items) {
-      final matches = await ProductDatabaseHelper.instance
-          .fuzzyMatchForAi(item.suggestion.name);
+      final matches = await ProductDatabaseHelper.instance.fuzzyMatchForAi(
+        item.suggestion.name,
+      );
       if (matches.isNotEmpty) {
         item.matchedFood = matches.first;
         item.suggestion.matchedBarcode = matches.first.barcode;
@@ -151,9 +152,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   Future<void> _replaceWithFood(int index) async {
     final selectedItem = await Navigator.of(context).push<FoodItem>(
-      MaterialPageRoute(
-        builder: (_) => const GeneralFoodSelectionScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const GeneralFoodSelectionScreen()),
     );
     if (selectedItem != null && mounted) {
       setState(() {
@@ -166,21 +165,21 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   Future<void> _addManualItem() async {
     final selectedItem = await Navigator.of(context).push<FoodItem>(
-      MaterialPageRoute(
-        builder: (_) => const GeneralFoodSelectionScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const GeneralFoodSelectionScreen()),
     );
     if (selectedItem != null && mounted) {
       setState(() {
-        _items.add(_ReviewItem(
-          suggestion: AiSuggestedItem(
-            name: selectedItem.getLocalizedName(context),
-            estimatedGrams: 100,
-            confidence: 1.0,
-            matchedBarcode: selectedItem.barcode,
+        _items.add(
+          _ReviewItem(
+            suggestion: AiSuggestedItem(
+              name: selectedItem.getLocalizedName(context),
+              estimatedGrams: 100,
+              confidence: 1.0,
+              matchedBarcode: selectedItem.barcode,
+            ),
+            matchedFood: selectedItem,
           ),
-          matchedFood: selectedItem,
-        ));
+        );
       });
     }
   }
@@ -341,13 +340,9 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                   )
                 else
                   ..._items.asMap().entries.map(
-                        (entry) => _buildItemCard(
-                          entry.key,
-                          entry.value,
-                          l10n,
-                          theme,
-                        ),
-                      ),
+                    (entry) =>
+                        _buildItemCard(entry.key, entry.value, l10n, theme),
+                  ),
 
                 // Add item button
                 Padding(

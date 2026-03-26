@@ -79,11 +79,13 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       final appLang =
           WidgetsBinding.instance.platformDispatcher.locale.languageCode;
       final locales = await _speech.locales();
-      final match =
-          locales.where((l) => l.localeId.startsWith(appLang)).firstOrNull;
+      final match = locales
+          .where((l) => l.localeId.startsWith(appLang))
+          .firstOrNull;
       _speechLocaleId = match?.localeId;
       debugPrint(
-          'speech_to_text: available=true, localeId=$_speechLocaleId, all=${locales.map((l) => l.localeId).toList()}');
+        'speech_to_text: available=true, localeId=$_speechLocaleId, all=${locales.map((l) => l.localeId).toList()}',
+      );
     }
     if (mounted) setState(() => _speechAvailable = available);
   }
@@ -122,9 +124,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     );
     if (picked.isNotEmpty && mounted) {
       setState(() {
-        _images.addAll(
-          picked.take(remaining).map((x) => File(x.path)),
-        );
+        _images.addAll(picked.take(remaining).map((x) => File(x.path)));
       });
     }
   }
@@ -147,7 +147,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                  'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.'),
+                'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.',
+              ),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.red,
             ),
@@ -161,10 +162,12 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       _speech.listen(
         onResult: (result) {
           debugPrint(
-              'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})');
+            'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})',
+          );
           if (mounted) {
             setState(() {
-              final separator = _initialTextBeforeSpeech.endsWith(' ') ||
+              final separator =
+                  _initialTextBeforeSpeech.endsWith(' ') ||
                       _initialTextBeforeSpeech.isEmpty
                   ? ''
                   : ' ';
@@ -172,7 +175,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                   '$_initialTextBeforeSpeech$separator${result.recognizedWords}'
                       .trimLeft();
               _textController.selection = TextSelection.fromPosition(
-                  TextPosition(offset: _textController.text.length));
+                TextPosition(offset: _textController.text.length),
+              );
             });
           }
         },
@@ -395,7 +399,10 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   }
 
   Widget _buildUnifiedInputArea(
-      AppLocalizations l10n, ThemeData theme, bool isDark) {
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -413,8 +420,10 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
               ),
               filled: true,
               fillColor: theme.colorScheme.surfaceContainerLow,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
@@ -441,8 +450,9 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                 tooltip: l10n.aiCaptureTabPhoto,
               ),
               IconButton(
-                onPressed:
-                    _images.length < _maxImages ? _pickFromGallery : null,
+                onPressed: _images.length < _maxImages
+                    ? _pickFromGallery
+                    : null,
                 icon: const Icon(Icons.photo_library_rounded),
                 color: theme.colorScheme.primary,
                 tooltip: l10n.tabFavorites,
@@ -451,8 +461,9 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
               AnimatedBuilder(
                 animation: _pulseController,
                 builder: (context, child) {
-                  final scale =
-                      _isListening ? 1.0 + (_pulseController.value * 0.1) : 1.0;
+                  final scale = _isListening
+                      ? 1.0 + (_pulseController.value * 0.1)
+                      : 1.0;
                   return Transform.scale(
                     scale: scale,
                     child: IconButton(

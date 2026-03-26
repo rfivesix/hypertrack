@@ -20,12 +20,13 @@ class SetTemplate {
   final int? targetRir;
 
   /// Creates a new [SetTemplate] instance.
-  SetTemplate(
-      {this.id,
-      required this.setType,
-      this.targetReps,
-      this.targetWeight,
-      this.targetRir});
+  SetTemplate({
+    this.id,
+    required this.setType,
+    this.targetReps,
+    this.targetWeight,
+    this.targetRir,
+  });
 
   /// Creates a [SetTemplate] instance from a Map, typically from a database row.
   factory SetTemplate.fromMap(Map<String, dynamic> map) {

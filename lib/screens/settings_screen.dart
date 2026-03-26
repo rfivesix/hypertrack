@@ -50,9 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(
-        title: l10n.settingsTitle,
-      ),
+      appBar: GlobalAppBar(title: l10n.settingsTitle),
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top + topPadding,
@@ -93,26 +91,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         child: Text(
                           l10n.settingsVisualStyleTitle,
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ),
                       RadioListTile<int>(
                         title: Text(
-                            l10n.settingsVisualStyleStandard), // LOKALISIERT
+                          l10n.settingsVisualStyleStandard,
+                        ), // LOKALISIERT
                         value: 0,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>
                             themeService.setVisualStyle(value!),
                       ),
                       RadioListTile<int>(
-                        title:
-                            Text(l10n.settingsVisualStyleLiquid), // LOKALISIERT
+                        title: Text(
+                          l10n.settingsVisualStyleLiquid,
+                        ), // LOKALISIERT
                         subtitle: Text(
-                            l10n.settingsVisualStyleLiquidDesc), // LOKALISIERT
+                          l10n.settingsVisualStyleLiquidDesc,
+                        ), // LOKALISIERT
                         value: 1,
                         groupValue: themeService.visualStyle,
                         onChanged: (value) =>
@@ -225,9 +226,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

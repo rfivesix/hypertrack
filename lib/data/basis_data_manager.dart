@@ -12,8 +12,8 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:drift/drift.dart' as drift;
 
 // Typ-Definition für den Callback
-typedef ProgressCallback = void Function(
-    String task, String detail, double progress);
+typedef ProgressCallback =
+    void Function(String task, String detail, double progress);
 
 /// Manager responsible for initializing and updating the application's base data.
 ///
@@ -72,16 +72,22 @@ class BasisDataManager {
     }
 
     // 1. Übungen
-    await process('Übungen', 'assets/db/hypertrack_training.db',
-        _keyVersionTraining, 'exercises', _mapExerciseRow);
+    await process(
+      'Übungen',
+      'assets/db/hypertrack_training.db',
+      _keyVersionTraining,
+      'exercises',
+      _mapExerciseRow,
+    );
 
     // 2a. Base Foods
     await process(
-        'Basis-Produkte',
-        'assets/db/hypertrack_base_foods.db',
-        _keyVersionFood,
-        'products',
-        (row) => _mapProductRow(row, sourceLabel: 'base'));
+      'Basis-Produkte',
+      'assets/db/hypertrack_base_foods.db',
+      _keyVersionFood,
+      'products',
+      (row) => _mapProductRow(row, sourceLabel: 'base'),
+    );
 
     // 2b. Kategorien
     await process(
@@ -126,8 +132,12 @@ class BasisDataManager {
       try {
         final byteData = await rootBundle.load(assetPath);
         tempFile = File(tempPath);
-        await tempFile.writeAsBytes(byteData.buffer
-            .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+        await tempFile.writeAsBytes(
+          byteData.buffer.asUint8List(
+            byteData.offsetInBytes,
+            byteData.lengthInBytes,
+          ),
+        );
       } catch (e) {
         return;
       }
@@ -137,11 +147,13 @@ class BasisDataManager {
       var checkTable = tableName;
       if (tableName == 'exercises') {
         final tables = await assetDb.rawQuery(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='exercises'");
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='exercises'",
+        );
         if (tables.isEmpty) checkTable = 'exercise';
       } else {
         final tables = await assetDb.rawQuery(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'");
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'",
+        );
         if (tables.isEmpty) {
           return;
         }
@@ -149,8 +161,11 @@ class BasisDataManager {
 
       String assetVersion = '0';
       try {
-        final metaRows = await assetDb
-            .query('metadata', where: 'key = ?', whereArgs: ['version']);
+        final metaRows = await assetDb.query(
+          'metadata',
+          where: 'key = ?',
+          whereArgs: ['version'],
+        );
         if (metaRows.isNotEmpty) {
           assetVersion = metaRows.first['value'] as String;
         }
@@ -196,8 +211,9 @@ class BasisDataManager {
     // 1. Gesamtanzahl ermitteln für Progress Bar
     int totalCount = 0;
     try {
-      final countResult =
-          await assetDb.rawQuery('SELECT COUNT(*) as c FROM $tableName');
+      final countResult = await assetDb.rawQuery(
+        'SELECT COUNT(*) as c FROM $tableName',
+      );
       totalCount = sqflite.Sqflite.firstIntValue(countResult) ?? 0;
     } catch (_) {
       totalCount = 0;
@@ -208,8 +224,11 @@ class BasisDataManager {
     int processed = 0;
 
     while (true) {
-      final rows =
-          await assetDb.query(tableName, limit: batchSize, offset: offset);
+      final rows = await assetDb.query(
+        tableName,
+        limit: batchSize,
+        offset: offset,
+      );
       if (rows.isEmpty) break;
 
       await mainDb.batch((batch) {
@@ -217,14 +236,23 @@ class BasisDataManager {
           try {
             final companion = mapRowToCompanion(row);
             if (companion is ProductsCompanion) {
-              batch.insert(mainDb.products, companion,
-                  mode: drift.InsertMode.insertOrReplace);
+              batch.insert(
+                mainDb.products,
+                companion,
+                mode: drift.InsertMode.insertOrReplace,
+              );
             } else if (companion is ExercisesCompanion) {
-              batch.insert(mainDb.exercises, companion,
-                  mode: drift.InsertMode.insertOrReplace);
+              batch.insert(
+                mainDb.exercises,
+                companion,
+                mode: drift.InsertMode.insertOrReplace,
+              );
             } else if (companion is FoodCategoriesCompanion) {
-              batch.insert(mainDb.foodCategories, companion,
-                  mode: drift.InsertMode.insertOrReplace);
+              batch.insert(
+                mainDb.foodCategories,
+                companion,
+                mode: drift.InsertMode.insertOrReplace,
+              );
             }
           } catch (e) {}
         }
@@ -250,8 +278,10 @@ class BasisDataManager {
 
   // --- MAPPING FUNKTIONEN (Unverändert) ---
 
-  dynamic _mapProductRow(Map<String, dynamic> row,
-      {required String sourceLabel}) {
+  dynamic _mapProductRow(
+    Map<String, dynamic> row, {
+    required String sourceLabel,
+  }) {
     var barcode = _parseString(row['barcode']);
     String id;
     if (row['id'] != null) {

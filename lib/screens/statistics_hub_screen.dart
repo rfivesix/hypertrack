@@ -89,12 +89,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   List<String> get _timeRanges => [
-        l10n.filter7Days,
-        l10n.filter30Days,
-        l10n.filter3Months,
-        l10n.filter6Months,
-        l10n.filterAll,
-      ];
+    l10n.filter7Days,
+    l10n.filter30Days,
+    l10n.filter3Months,
+    l10n.filter6Months,
+    l10n.filterAll,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +120,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 _buildConsistencySection(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(
-                    context, l10n.analyticsSectionPerformanceRecords),
+                  context,
+                  l10n.analyticsSectionPerformanceRecords,
+                ),
                 _buildPerformanceSection(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.analyticsSectionVolumeMuscles),
@@ -195,17 +197,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             const SizedBox(height: 4),
             Text(
               avgWorkouts == '-' ? '-' : _formatPerWeek(avgWorkouts),
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
               streakText,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             const SizedBox(height: 8),
             _buildMicroCaption(
@@ -213,8 +214,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             ),
             const SizedBox(height: 4),
             _buildMiniBars(
-              values:
-                  weeklyTrend.take(_miniSignalPoints).toList(growable: false),
+              values: weeklyTrend
+                  .take(_miniSignalPoints)
+                  .toList(growable: false),
               color: Theme.of(context).colorScheme.primary,
               semanticsLabel: l10n.sectionConsistency,
             ),
@@ -227,8 +229,11 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   Widget _buildMuscleVolumeSection() {
     final muscles = (_muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .where((m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
-            m['muscleGroup'] as String?))
+        .where(
+          (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?,
+          ),
+        )
         .toList(growable: false);
     final topMuscle = muscles.isNotEmpty ? muscles.first : null;
     final topMuscleShare =
@@ -236,9 +241,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final topMuscleFrequency = topMuscle == null
         ? l10n.exerciseAnalyticsNoData
         : _formatPerWeek(
-            (topMuscle['frequencyPerWeek'] as num)
-                .toDouble()
-                .toStringAsFixed(1),
+            (topMuscle['frequencyPerWeek'] as num).toDouble().toStringAsFixed(
+              1,
+            ),
           );
 
     return SummaryCard(
@@ -262,17 +267,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             const SizedBox(height: 4),
             Text(
               _formatMuscleLabel(topMuscle?['muscleGroup'] as String?),
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
               topMuscleFrequency,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             if (topMuscleShare > 0) ...[
               const SizedBox(height: 8),
@@ -281,8 +285,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 child: LinearProgressIndicator(
                   minHeight: 6,
                   value: topMuscleShare.clamp(0.0, 1.0),
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation(
                     Theme.of(context).colorScheme.tertiary,
                   ),
@@ -298,15 +303,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildPerformanceSection() {
-    final topImprovement =
-        _notableImprovements.isNotEmpty ? _notableImprovements.first : null;
+    final topImprovement = _notableImprovements.isNotEmpty
+        ? _notableImprovements.first
+        : null;
     final momentumValue = topImprovement == null
         ? '-'
         : '+${((topImprovement['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%';
     final topExerciseName = topImprovement == null
         ? l10n.metricsMostImproved
         : (topImprovement['exerciseName'] as String? ??
-            l10n.metricsMostImproved);
+              l10n.metricsMostImproved);
     final performanceSummaryText = _notableImprovements.isEmpty
         ? l10n.exerciseAnalyticsNoData
         : '${l10n.analyticsRecentRecords}: ${_notableImprovements.length}';
@@ -342,16 +348,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 Text(
                   momentumValue,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: momentumColor,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: momentumColor,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   performanceSummaryText,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _buildMicroCaption(l10n.analyticsRecentRecords),
@@ -373,17 +379,24 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             );
           },
           child: ListTile(
-            leading: Icon(Icons.search,
-                color: Theme.of(context).colorScheme.primary),
-            title: Text(l10n.exerciseAnalyticsTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            leading: Icon(
+              Icons.search,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: Text(
+              l10n.exerciseAnalyticsTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Text(l10n.exerciseAnalyticsSubtitle),
-            trailing: Icon(Icons.chevron_right,
-                size: DesignConstants.iconSizeM,
-                color: Theme.of(context).colorScheme.outline),
+            trailing: Icon(
+              Icons.chevron_right,
+              size: DesignConstants.iconSizeM,
+              color: Theme.of(context).colorScheme.outline,
+            ),
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(DesignConstants.borderRadiusM),
+              borderRadius: BorderRadius.circular(
+                DesignConstants.borderRadiusM,
+              ),
             ),
           ),
         ),
@@ -400,7 +413,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final overallState = _recoveryAnalytics.overallState;
     final recoveryHeadline =
         StatisticsPresentationFormatter.recoveryOverallLabel(
-            l10n, overallState);
+          l10n,
+          overallState,
+        );
 
     final recoveryStatusSummary = hasData
         ? l10n.recoveryHubCountsSummary(recovering, ready, fresh)
@@ -446,16 +461,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               Text(
                 recoveryHeadline,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: iconColor,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: iconColor,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 recoveryStatusSummary,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
               if (hasData) ...[
                 const SizedBox(height: 8),
@@ -514,13 +529,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final avgCalories = body?.avgDailyCalories;
     final weightTrend =
         body?.smoothedWeight.map((p) => p.value).toList(growable: false) ??
-            const <double>[];
+        const <double>[];
 
     final weightValue = currentWeight == null
         ? '-'
         : '${currentWeight.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
-    final caloriesValue =
-        avgCalories == null ? '-' : avgCalories.round().toString();
+    final caloriesValue = avgCalories == null
+        ? '-'
+        : avgCalories.round().toString();
 
     return Column(
       children: [
@@ -546,18 +562,20 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 const SizedBox(height: 4),
                 Text(
                   weightValue,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   _buildBodyMetricsSupportingText(
-                      body, caloriesValue, weightChange),
+                    body,
+                    caloriesValue,
+                    weightChange,
+                  ),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _buildMicroCaption(_effectiveBodyRangeLabel()),
@@ -581,17 +599,24 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             );
           },
           child: ListTile(
-            leading: Icon(Icons.straighten,
-                color: Theme.of(context).colorScheme.primary),
-            title: Text(l10n.body_measurements,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            leading: Icon(
+              Icons.straighten,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: Text(
+              l10n.body_measurements,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Text(l10n.measurements_description),
-            trailing: Icon(Icons.chevron_right,
-                size: DesignConstants.iconSizeM,
-                color: Theme.of(context).colorScheme.outline),
+            trailing: Icon(
+              Icons.chevron_right,
+              size: DesignConstants.iconSizeM,
+              color: Theme.of(context).colorScheme.outline,
+            ),
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(DesignConstants.borderRadiusM),
+              borderRadius: BorderRadius.circular(
+                DesignConstants.borderRadiusM,
+              ),
             ),
           ),
         ),
@@ -670,19 +695,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return '$days ${l10n.analyticsDayUnitLabel}';
   }
 
-  Widget _buildCardHeading({
-    required String label,
-    String? chipText,
-  }) {
+  Widget _buildCardHeading({required String label, String? chipText}) {
     final chipColor = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
         Expanded(
           child: Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
         if (chipText != null && chipText.isNotEmpty)
@@ -698,9 +720,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: Text(
               chipText,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: chipColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: chipColor,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
       ],
@@ -715,15 +737,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return Row(
       children: [
         Expanded(
-          child: _buildCardHeading(
-            label: label,
-            chipText: chipText,
-          ),
+          child: _buildCardHeading(label: label, chipText: chipText),
         ),
-        if (trailingIcon) ...[
-          const SizedBox(width: 8),
-          _buildDrillDownHint(),
-        ],
+        if (trailingIcon) ...[const SizedBox(width: 8), _buildDrillDownHint()],
       ],
     );
   }
@@ -741,8 +757,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+        color: Theme.of(context).colorScheme.outline,
+      ),
     );
   }
 
