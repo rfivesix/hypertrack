@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../data/workout_database_helper.dart';
 import '../features/statistics/data/statistics_hub_data_adapter.dart';
 import '../features/statistics/domain/body_nutrition_analytics_models.dart';
 import '../features/statistics/domain/consistency_payload_models.dart';
 import '../features/statistics/domain/recovery_payload_models.dart';
+import '../features/statistics/domain/hub_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
+import '../features/steps/data/steps_aggregation_repository.dart';
+import '../features/steps/domain/steps_models.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 import '../widgets/analytics_section_header.dart';
@@ -22,7 +26,20 @@ import 'exercise_catalog_screen.dart';
 import 'measurements_screen.dart';
 
 class StatisticsHubScreen extends StatefulWidget {
-  const StatisticsHubScreen({super.key});
+  const StatisticsHubScreen({
+    super.key,
+    StatisticsHubDataAdapter? hubDataAdapter,
+    StepsAggregationRepository? stepsRepository,
+    this.fetchHubAnalytics,
+  }) : _hubDataAdapter = hubDataAdapter,
+       _stepsRepository = stepsRepository;
+
+  final StatisticsHubDataAdapter? _hubDataAdapter;
+  final StepsAggregationRepository? _stepsRepository;
+  final Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(
+    int selectedTimeRangeIndex,
+  )?
+  fetchHubAnalytics;
 
   @override
   State<StatisticsHubScreen> createState() => _StatisticsHubScreenState();
@@ -36,10 +53,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   static const _miniBarOpacity = 0.75;
 
   late final l10n = AppLocalizations.of(context)!;
-  final _hubDataAdapter = StatisticsHubDataAdapter(
-    workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
-  );
+  late final StatisticsHubDataAdapter _hubDataAdapter;
   final _rangePolicy = StatisticsRangePolicyService.instance;
+  late final StepsAggregationRepository _stepsRepository;
 
   int _selectedTimeRangeIndex = 1;
 
@@ -65,17 +81,42 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     muscles: [],
   );
   BodyNutritionAnalyticsResult? _bodyNutrition;
+  RangeStepsAggregation? _stepsRange;
+  DateTime? _stepsLastUpdatedAtUtc;
+  bool _stepsTrackingEnabled = true;
   @override
   void initState() {
     super.initState();
+    _hubDataAdapter =
+        widget._hubDataAdapter ??
+        StatisticsHubDataAdapter(workoutDatabaseHelper: WorkoutDatabaseHelper.instance);
+    _stepsRepository = widget._stepsRepository ?? HealthStepsAggregationRepository();
     _loadHubAnalytics();
   }
 
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
-    final (hub, bodyNutrition) = await _hubDataAdapter.fetch(
-      selectedTimeRangeIndex: _selectedTimeRangeIndex,
+    final selectedDays = _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex);
+    final earliest = await _stepsRepository.getEarliestAvailableDate();
+    final resolvedRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.bodyNutritionTrend,
+      selectedRangeIndex: _selectedTimeRangeIndex,
+      selectedDays: selectedDays,
+      earliestAvailableDay: earliest,
     );
+    final daysBack = resolvedRange.effectiveDays ?? selectedDays;
+    final results = await Future.wait<dynamic>([
+      _fetchHubAnalytics(selectedTimeRangeIndex: _selectedTimeRangeIndex),
+      _stepsRepository.getRangeAggregation(endDate: DateTime.now(), daysBack: daysBack),
+      _stepsRepository.getLastUpdatedAt(),
+      _stepsRepository.isTrackingEnabled(),
+    ]);
+    final tuple = results[0] as (StatisticsHubPayload, BodyNutritionAnalyticsResult);
+    final hub = tuple.$1;
+    final bodyNutrition = tuple.$2;
+    final stepsRange = results[1] as RangeStepsAggregation;
+    final stepsLastUpdatedAt = results[2] as DateTime?;
+    final stepsTrackingEnabled = results[3] as bool;
 
     if (!mounted) return;
     setState(() {
@@ -85,8 +126,21 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _recoveryAnalytics = hub.recoveryAnalytics;
       _notableImprovements = hub.notableImprovements;
       _bodyNutrition = bodyNutrition;
+      _stepsRange = stepsRange;
+      _stepsLastUpdatedAtUtc = stepsLastUpdatedAt;
+      _stepsTrackingEnabled = stepsTrackingEnabled;
       _isLoadingStats = false;
     });
+  }
+
+  Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> _fetchHubAnalytics({
+    required int selectedTimeRangeIndex,
+  }) {
+    final override = widget.fetchHubAnalytics;
+    if (override != null) {
+      return override(selectedTimeRangeIndex);
+    }
+    return _hubDataAdapter.fetch(selectedTimeRangeIndex: selectedTimeRangeIndex);
   }
 
   List<String> get _timeRanges => [
@@ -114,7 +168,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
-                _buildStepsEntryCard(),
+                _buildStepsCard(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
@@ -171,31 +225,76 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return AnalyticsSectionHeader(title: title);
   }
 
-  Widget _buildStepsEntryCard() {
+  Widget _buildStepsCard() {
+    final range = _stepsRange;
+    final hasData = (range?.dailyTotals.any((bucket) => bucket.steps > 0) ?? false);
+    final selectedDays = _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex);
+    final subtitle = _rangeSubtitle(selectedDays, range);
+    final primaryValue = hasData ? NumberFormat.decimalPattern().format(range!.totalSteps) : '-';
+    final trend = range?.dailyTotals.map((e) => e.steps.toDouble()).toList(growable: false) ?? const <double>[];
+
     return SummaryCard(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const StepsModuleScreen()),
         );
       },
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: Icon(
-          Icons.directions_walk,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        title: const Text(
-          'Steps',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: const Text('Daily, weekly, and monthly activity'),
-        trailing: Icon(
-          Icons.chevron_right,
-          size: DesignConstants.iconSizeM,
-          color: Theme.of(context).colorScheme.outline,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeaderWithChevron(label: 'Steps', chipText: subtitle),
+            const SizedBox(height: 4),
+            if (!_stepsTrackingEnabled)
+              Text(
+                'Enable step tracking in Settings',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              )
+            else if (!hasData)
+              Text(
+                'No step data yet',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              )
+            else ...[
+              Text(
+                primaryValue,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              if (_stepsLastUpdatedAtUtc != null)
+                _buildMicroCaption(
+                  'Updated ${DateFormat.Hm().format(_stepsLastUpdatedAtUtc!.toLocal())}',
+                ),
+              const SizedBox(height: 4),
+              _buildMiniBars(
+                values: trend,
+                color: Theme.of(context).colorScheme.primary,
+                semanticsLabel: 'Steps trend $subtitle',
+              ),
+            ],
+          ],
         ),
       ),
     );
+  }
+
+  String _rangeSubtitle(int selectedDays, RangeStepsAggregation? range) {
+    if (range == null) return '$selectedDays days';
+    if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
+      return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
+    }
+    if (selectedDays == 7) return 'Last 7 days';
+    if (selectedDays == 30) return 'Last 30 days';
+    if (selectedDays == 90) return 'Last 3 months';
+    if (selectedDays == 180) return 'Last 6 months';
+    return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
   }
 
   Widget _buildConsistencySection() {

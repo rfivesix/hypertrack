@@ -47,3 +47,37 @@ class MonthStepsAggregation {
   final List<StepsBucket> dailyTotals;
   final int totalSteps;
 }
+
+class RangeStepsAggregation {
+  const RangeStepsAggregation({
+    required this.start,
+    required this.end,
+    required this.dailyTotals,
+    required this.totalSteps,
+    required this.averageDailySteps,
+  });
+
+  final DateTime start;
+  final DateTime end;
+  final List<StepsBucket> dailyTotals;
+  final int totalSteps;
+  final double averageDailySteps;
+}
+
+class StepsRefreshResult {
+  const StepsRefreshResult({
+    required this.didRun,
+    required this.permissionGranted,
+    required this.skipped,
+    required this.fetchedCount,
+    required this.upsertedCount,
+    this.lastUpdatedAtUtc,
+  });
+
+  final bool didRun;
+  final bool permissionGranted;
+  final bool skipped;
+  final int fetchedCount;
+  final int upsertedCount;
+  final DateTime? lastUpdatedAtUtc;
+}

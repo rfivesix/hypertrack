@@ -9,27 +9,27 @@ import '../data/steps_aggregation_repository.dart';
 import '../domain/steps_models.dart';
 
 class StepsModuleScreen extends StatefulWidget {
-  const StepsModuleScreen({
-    super.key,
-    this.repository = const InMemoryStepsAggregationRepository(),
-  });
+  const StepsModuleScreen({super.key, this.repository});
 
-  final StepsAggregationRepository repository;
+  final StepsAggregationRepository? repository;
 
   @override
   State<StepsModuleScreen> createState() => _StepsModuleScreenState();
 }
 
 class _StepsModuleScreenState extends State<StepsModuleScreen> {
+  late final StepsAggregationRepository _repository;
   StepsScope _scope = StepsScope.day;
   bool _isLoading = true;
   DayStepsAggregation? _dayData;
   WeekStepsAggregation? _weekData;
   MonthStepsAggregation? _monthData;
+  DateTime? _lastUpdatedAtUtc;
 
   @override
   void initState() {
     super.initState();
+    _repository = widget.repository ?? HealthStepsAggregationRepository();
     _loadScopeData();
   }
 
@@ -38,15 +38,16 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
     final now = DateTime.now();
     switch (_scope) {
       case StepsScope.day:
-        _dayData = await widget.repository.getDayAggregation(now);
+        _dayData = await _repository.getDayAggregation(now);
         break;
       case StepsScope.week:
-        _weekData = await widget.repository.getWeekAggregation(now);
+        _weekData = await _repository.getWeekAggregation(now);
         break;
       case StepsScope.month:
-        _monthData = await widget.repository.getMonthAggregation(now);
+        _monthData = await _repository.getMonthAggregation(now);
         break;
     }
+    _lastUpdatedAtUtc = await _repository.getLastUpdatedAt();
     if (!mounted) return;
     setState(() => _isLoading = false);
   }
@@ -92,6 +93,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
                             dayData: _dayData,
                             weekData: _weekData,
                             monthData: _monthData,
+                            lastUpdatedAtUtc: _lastUpdatedAtUtc,
                           ),
                           const BottomContentSpacer(),
                         ],
@@ -156,14 +158,17 @@ class _TrendCanvas extends StatelessWidget {
           child: switch (scope) {
             StepsScope.day => _DayHistogram(
                 key: const ValueKey('day-canvas'),
+                date: dayData?.date,
                 buckets: dayData?.hourlyBuckets ?? const [],
               ),
             StepsScope.week => _WeekBars(
                 key: const ValueKey('week-canvas'),
+                weekStart: weekData?.weekStart,
                 buckets: weekData?.dailyTotals ?? const [],
               ),
             StepsScope.month => _MonthGrid(
                 key: const ValueKey('month-canvas'),
+                monthStart: monthData?.monthStart,
                 buckets: monthData?.dailyTotals ?? const [],
               ),
           },
@@ -174,8 +179,9 @@ class _TrendCanvas extends StatelessWidget {
 }
 
 class _DayHistogram extends StatelessWidget {
-  const _DayHistogram({super.key, required this.buckets});
+  const _DayHistogram({super.key, required this.buckets, this.date});
   final List<StepsBucket> buckets;
+  final DateTime? date;
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +193,13 @@ class _DayHistogram extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Today by hour', style: Theme.of(context).textTheme.titleMedium),
+        if (date != null)
+          Text(
+            DateFormat.MMMd().format(date!),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+          ),
         const SizedBox(height: 12),
         SizedBox(
           height: 110,
@@ -216,8 +229,9 @@ class _DayHistogram extends StatelessWidget {
 }
 
 class _WeekBars extends StatelessWidget {
-  const _WeekBars({super.key, required this.buckets});
+  const _WeekBars({super.key, required this.buckets, this.weekStart});
   final List<StepsBucket> buckets;
+  final DateTime? weekStart;
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +243,12 @@ class _WeekBars extends StatelessWidget {
       key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Last 7 days', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          weekStart == null
+              ? 'Last 7 days'
+              : '${DateFormat.MMMd().format(weekStart!)} – ${DateFormat.MMMd().format(weekStart!.add(const Duration(days: 6)))}',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -260,8 +279,9 @@ class _WeekBars extends StatelessWidget {
 }
 
 class _MonthGrid extends StatelessWidget {
-  const _MonthGrid({super.key, required this.buckets});
+  const _MonthGrid({super.key, required this.buckets, this.monthStart});
   final List<StepsBucket> buckets;
+  final DateTime? monthStart;
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +292,12 @@ class _MonthGrid extends StatelessWidget {
       key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('This month', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          monthStart == null
+              ? 'This month'
+              : DateFormat.yMMMM().format(monthStart!),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 4,
@@ -303,31 +328,39 @@ class _StepsSummaryCard extends StatelessWidget {
     required this.dayData,
     required this.weekData,
     required this.monthData,
+    required this.lastUpdatedAtUtc,
   });
 
   final StepsScope scope;
   final DayStepsAggregation? dayData;
   final WeekStepsAggregation? weekData;
   final MonthStepsAggregation? monthData;
+  final DateTime? lastUpdatedAtUtc;
 
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.decimalPattern();
     final (scopeLabel, value, miniTrend) = switch (scope) {
       StepsScope.day => (
-          'Today',
+          dayData == null
+              ? 'Today'
+              : 'Today (${DateFormat.MMMd().format(dayData!.date)})',
           dayData?.totalSteps ?? 0,
           dayData?.hourlyBuckets.map((b) => b.steps.toDouble()).toList(growable: false) ??
               const <double>[]
         ),
       StepsScope.week => (
-          'Last 7 days',
+          weekData == null
+              ? 'This week'
+              : '${DateFormat.MMMd().format(weekData!.weekStart)} – ${DateFormat.MMMd().format(weekData!.weekStart.add(const Duration(days: 6)))}',
           weekData?.totalSteps ?? 0,
           weekData?.dailyTotals.map((b) => b.steps.toDouble()).toList(growable: false) ??
               const <double>[]
         ),
       StepsScope.month => (
-          'This month',
+          monthData == null
+              ? 'This month'
+              : DateFormat.yMMMM().format(monthData!.monthStart),
           monthData?.totalSteps ?? 0,
           monthData?.dailyTotals.map((b) => b.steps.toDouble()).toList(growable: false) ??
               const <double>[]
@@ -354,6 +387,15 @@ class _StepsSummaryCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
             ),
+            if (lastUpdatedAtUtc != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Updated ${DateFormat.Hm().format(lastUpdatedAtUtc!.toLocal())}',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            ],
             const SizedBox(height: 12),
             SizedBox(
               height: 28,

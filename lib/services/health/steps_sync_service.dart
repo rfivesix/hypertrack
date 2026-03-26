@@ -78,11 +78,16 @@ class StepsSyncService {
     await prefs.setString(lastSyncAtIsoKey, valueUtc.toUtc().toIso8601String());
   }
 
+  Future<void> clearLastSyncAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(lastSyncAtIsoKey);
+  }
+
   Future<StepsAvailability> getAvailability() => _platform.getAvailability();
 
   Future<bool> requestPermissions() => _platform.requestPermissions();
 
-  Future<StepsSyncResult> sync({DateTime? now}) async {
+  Future<StepsSyncResult> sync({DateTime? now, bool forceRefresh = false}) async {
     final enabled = await isTrackingEnabled();
     if (!enabled) {
       return const StepsSyncResult(
@@ -107,7 +112,9 @@ class StepsSyncService {
 
     final nowUtc = (now ?? DateTime.now()).toUtc();
     final lastSync = await getLastSyncAt();
-    final fromUtc = (lastSync == null)
+    final fromUtc = forceRefresh
+        ? nowUtc.subtract(_initialLookback)
+        : (lastSync == null)
         ? nowUtc.subtract(_initialLookback)
         : lastSync.subtract(_overlap);
 

@@ -25,12 +25,13 @@ import '../widgets/nutrition_summary_widget.dart';
 import '../widgets/supplement_summary_widget.dart';
 import '../widgets/swipe_action_background.dart';
 import '../widgets/summary_card.dart';
+import '../widgets/glass_progress_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/tracked_supplement.dart';
 import '../data/workout_database_helper.dart';
 import '../services/theme_service.dart';
-import '../services/health/health_models.dart';
 import '../services/health/steps_sync_service.dart';
+import '../features/steps/data/steps_aggregation_repository.dart';
 import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
@@ -59,9 +60,12 @@ class DiaryScreenState extends State<DiaryScreen> {
   List<FluidEntry> _fluidEntries = [];
   List<TrackedSupplement> _trackedSupplements = [];
   final StepsSyncService _stepsSyncService = StepsSyncService();
+  final StepsAggregationRepository _stepsRepository =
+      HealthStepsAggregationRepository();
   int? _stepsForSelectedDay;
   bool _isStepsWidgetLoading = false;
   bool _stepsTrackingEnabled = true;
+  int _targetSteps = StepsSyncService.defaultStepsGoal;
 
   // Workout summary state used by the daily overview card.
   Map<String, dynamic>? _workoutSummary;
@@ -88,7 +92,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   // Data-loading entry point for the currently selected date.
-  Future<void> loadDataForDate(DateTime date) async {
+  Future<void> loadDataForDate(DateTime date, {bool forceStepsRefresh = false}) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
@@ -267,11 +271,12 @@ class DiaryScreenState extends State<DiaryScreen> {
         _trackedSupplements = trackedSupps;
         _workoutSummary = workoutSummary;
         _stepsTrackingEnabled = stepsEnabled;
+        _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
         _isLoading = false;
       });
     }
     await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
-    await _syncStepsIfDue(date);
+    await _syncStepsIfDue(date, force: forceStepsRefresh);
   }
 
   Future<void> _loadStepsForDate(
@@ -302,17 +307,18 @@ class DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  Future<void> _syncStepsIfDue(DateTime date) async {
+  Future<void> _syncStepsIfDue(DateTime date, {bool force = false}) async {
     final enabled = await _stepsSyncService.isTrackingEnabled();
     if (!enabled) return;
     final lastSync = await _stepsSyncService.getLastSyncAt();
     final shouldSync =
+        force ||
         lastSync == null ||
         DateTime.now().toUtc().difference(lastSync) > _stepsSyncInterval;
     if (!shouldSync) return;
     if (!mounted) return;
     setState(() => _isStepsWidgetLoading = true);
-    await _stepsSyncService.sync();
+    await _stepsRepository.refresh(force: force);
     final providerFilter = await _stepsSyncService.getProviderFilter();
     final providerFilterRaw = StepsSyncService.providerFilterToRaw(
       providerFilter,
@@ -774,7 +780,10 @@ class DiaryScreenState extends State<DiaryScreen> {
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
-            onRefresh: () => loadDataForDate(_selectedDate),
+            onRefresh: () => loadDataForDate(
+              _selectedDate,
+              forceStepsRefresh: true,
+            ),
             child: ListView(
               padding: finalPadding,
               children: [
@@ -863,33 +872,11 @@ class DiaryScreenState extends State<DiaryScreen> {
     final stepsText = NumberFormat.decimalPattern().format(
       _stepsForSelectedDay,
     );
-    return SummaryCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(
-              Icons.directions_walk_rounded,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Steps', // TODO(alpha): localize steps label
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text(
-              stepsText,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return DiaryStepsSummaryCard(
+      stepsLabel: 'Steps',
+      stepsText: stepsText,
+      value: (_stepsForSelectedDay ?? 0).toDouble(),
+      target: (_targetSteps > 0 ? _targetSteps : 10000).toDouble(),
     );
   }
 
@@ -1273,6 +1260,67 @@ class DiaryScreenState extends State<DiaryScreen> {
       default:
         return key;
     }
+  }
+}
+
+class DiaryStepsSummaryCard extends StatelessWidget {
+  const DiaryStepsSummaryCard({
+    super.key,
+    required this.stepsLabel,
+    required this.stepsText,
+    required this.value,
+    required this.target,
+  });
+
+  final String stepsLabel;
+  final String stepsText;
+  final double value;
+  final double target;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.directions_walk_rounded,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    stepsLabel,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$stepsText steps',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DesignConstants.spacingS),
+            GlassProgressBar(
+              label: stepsLabel,
+              unit: 'steps',
+              value: value,
+              target: target,
+              color: theme.colorScheme.primary,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

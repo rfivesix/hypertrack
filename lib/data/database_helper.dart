@@ -1455,6 +1455,106 @@ class DatabaseHelper {
     return rows.first.read<int?>('total_steps');
   }
 
+  Future<List<Map<String, dynamic>>> getHourlyStepsTotalsForDay({
+    required DateTime dayLocal,
+    String providerFilter = 'all',
+  }) async {
+    final dbInstance = await database;
+    final startLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
+    final endLocal = startLocal.add(const Duration(days: 1));
+    final startUtc = startLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final endUtc = endLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+
+    var sql = '''
+      SELECT
+        CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
+        SUM(step_count) AS total_steps
+      FROM health_step_segments
+      WHERE start_at < ? AND end_at >= ?
+    ''';
+    final vars = <int>[endUtc, startUtc];
+    if (providerFilter == 'apple') {
+      sql += " AND provider = 'apple_healthkit'";
+    } else if (providerFilter == 'google') {
+      sql += " AND provider = 'google_health_connect'";
+    }
+    sql += ' GROUP BY hour_local ORDER BY hour_local ASC';
+
+    final rows = await dbInstance
+        .customSelect(
+          sql,
+          variables: [
+            for (final variable in vars) drift.Variable.withInt(variable),
+          ],
+        )
+        .get();
+    return rows
+        .map(
+          (row) => <String, dynamic>{
+            'hour': row.read<int>('hour_local'),
+            'totalSteps': row.read<int?>('total_steps') ?? 0,
+          },
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<Map<String, dynamic>>> getDailyStepsTotalsForRange({
+    required DateTime startLocal,
+    required DateTime endLocal,
+    String providerFilter = 'all',
+  }) async {
+    final dbInstance = await database;
+    final normalizedStart = DateTime(
+      startLocal.year,
+      startLocal.month,
+      startLocal.day,
+    );
+    final normalizedEnd = DateTime(endLocal.year, endLocal.month, endLocal.day);
+    if (normalizedEnd.isBefore(normalizedStart)) return const [];
+
+    var sql = '''
+      SELECT
+        date(datetime(start_at, 'unixepoch', 'localtime')) AS day_local,
+        SUM(step_count) AS total_steps
+      FROM health_step_segments
+      WHERE start_at < ? AND end_at >= ?
+    ''';
+    final endExclusiveUtc =
+        normalizedEnd
+            .add(const Duration(days: 1))
+            .toUtc()
+            .millisecondsSinceEpoch ~/
+        1000;
+    final startUtc = normalizedStart.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final vars = <int>[endExclusiveUtc, startUtc];
+
+    if (providerFilter == 'apple') {
+      sql += " AND provider = 'apple_healthkit'";
+    } else if (providerFilter == 'google') {
+      sql += " AND provider = 'google_health_connect'";
+    }
+
+    sql += ' GROUP BY day_local ORDER BY day_local ASC';
+
+    final rows = await dbInstance
+        .customSelect(
+          sql,
+          variables: [
+            for (final variable in vars) drift.Variable.withInt(variable),
+          ],
+        )
+        .get();
+
+    return rows
+        .map(
+          (row) => <String, dynamic>{
+            'dayLocal': row.read<String>('day_local'),
+            'totalSteps': row.read<int?>('total_steps') ?? 0,
+          },
+        )
+        .toList(growable: false);
+  }
+
   Future<int> getCurrentTargetStepsOrDefault() async {
     final dbInstance = await database;
     final rows = await (dbInstance.select(
@@ -1462,6 +1562,29 @@ class DatabaseHelper {
     )..limit(1)).get();
     if (rows.isEmpty) return StepsSyncService.defaultStepsGoal;
     return rows.first.targetSteps;
+  }
+
+  Future<DateTime?> getEarliestHealthStepsDateLocal({
+    String providerFilter = 'all',
+  }) async {
+    final dbInstance = await database;
+    var sql = '''
+      SELECT MIN(start_at) AS min_start_at
+      FROM health_step_segments
+    ''';
+    if (providerFilter == 'apple') {
+      sql += " WHERE provider = 'apple_healthkit'";
+    } else if (providerFilter == 'google') {
+      sql += " WHERE provider = 'google_health_connect'";
+    }
+    final rows = await dbInstance.customSelect(sql).get();
+    if (rows.isEmpty) return null;
+    final minEpoch = rows.first.read<int?>('min_start_at');
+    if (minEpoch == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(
+      minEpoch * 1000,
+      isUtc: true,
+    ).toLocal();
   }
 
   /// Speichert das Startgewicht als Messung

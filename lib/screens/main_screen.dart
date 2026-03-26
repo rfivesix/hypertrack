@@ -25,6 +25,7 @@ import 'profile_screen.dart';
 import 'statistics_hub_screen.dart';
 import 'workout_hub_screen.dart';
 import '../services/profile_service.dart';
+import '../features/steps/data/steps_aggregation_repository.dart';
 import '../services/theme_service.dart';
 import '../services/workout_session_manager.dart';
 import '../theme/color_constants.dart';
@@ -56,6 +57,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       GlobalKey<DiaryScreenState>();
   bool _isAddMenuOpen = false;
   late final AnimationController _menuController;
+  final StepsAggregationRepository _stepsRepository =
+      HealthStepsAggregationRepository();
 
   ThemeService get themeService =>
       Provider.of<ThemeService>(context, listen: false);
@@ -155,8 +158,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _refreshHomeScreen() async {
+    await _stepsRepository.refresh(force: true);
     if (_currentIndex == 0) {
-      _tagebuchKey.currentState?.loadDataForDate(DateTime.now());
+      await _tagebuchKey.currentState?.loadDataForDate(
+        DateTime.now(),
+        forceStepsRefresh: true,
+      );
     }
   }
 
