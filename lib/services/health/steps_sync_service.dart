@@ -16,6 +16,8 @@ class StepsSyncService {
   static const String providerFilterKey = 'steps_provider_filter';
   static const String sourcePolicyKey = 'steps_source_policy';
   static const String lastSyncAtIsoKey = 'steps_last_sync_at_iso';
+  static final ValueNotifier<bool?> trackingEnabledListenable =
+      ValueNotifier<bool?>(null);
 
   static const Duration _overlap = Duration(hours: 48);
   static const Duration _initialLookback = Duration(days: 30);
@@ -29,12 +31,19 @@ class StepsSyncService {
 
   Future<bool> isTrackingEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(trackingEnabledKey) ?? true;
+    final enabled = prefs.getBool(trackingEnabledKey) ?? true;
+    if (trackingEnabledListenable.value != enabled) {
+      trackingEnabledListenable.value = enabled;
+    }
+    return enabled;
   }
 
   Future<void> setTrackingEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(trackingEnabledKey, enabled);
+    if (trackingEnabledListenable.value != enabled) {
+      trackingEnabledListenable.value = enabled;
+    }
   }
 
   Future<StepsProviderFilter> getProviderFilter() async {

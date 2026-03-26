@@ -19,6 +19,7 @@ import 'workout_database_helper.dart';
 import '../models/food_item.dart';
 import '../models/hypertrack_backup.dart';
 import '../services/health/steps_sync_service.dart';
+import '../services/storage/saf_storage_service.dart';
 import '../util/encryption_util.dart';
 
 /// Manager responsible for application backup, restoration, and data export.
@@ -36,6 +37,44 @@ class BackupManager {
   final _workoutDb = WorkoutDatabaseHelper.instance;
 
   static const int currentSchemaVersion = 3;
+
+  @visibleForTesting
+  static Future<Directory> resolveWritableBackupDirectory({
+    required Directory docsDir,
+    String? dirPath,
+    String? savedDir,
+    String? externalFallbackDir,
+  }) async {
+    final defaultDir = Directory(p.join(docsDir.path, 'Backups'));
+    final candidates = <String>[
+      if (dirPath != null && dirPath.trim().isNotEmpty) dirPath.trim(),
+      if (savedDir != null && savedDir.trim().isNotEmpty) savedDir.trim(),
+      if (externalFallbackDir != null && externalFallbackDir.trim().isNotEmpty)
+        externalFallbackDir.trim(),
+      defaultDir.path,
+    ];
+
+    for (final candidate in candidates) {
+      final directory = Directory(candidate);
+      try {
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        final probe = File(p.join(directory.path, '.hypertrack_write_probe'));
+        await probe.writeAsString('ok', flush: true);
+        if (await probe.exists()) {
+          await probe.delete();
+        }
+        return directory;
+      } catch (e) {
+        debugPrint(
+          'Auto-backup directory not writable ($candidate): $e',
+        );
+      }
+    }
+
+    throw FileSystemException('No writable auto-backup directory found');
+  }
 
   // ---------------------------------------------------------------------------
   // EXPORT (JSON / FULL BACKUP)
@@ -528,29 +567,66 @@ class BackupManager {
         fileName = 'hypertrack_auto_enc_v$currentSchemaVersion';
       }
 
-      final docs = await getApplicationDocumentsDirectory();
-      final savedDir = prefs.getString('auto_backup_dir');
+      final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
+      final targetFileName = '$fileName-[$ts].json';
+      final configuredDirPath = dirPath?.trim();
+      final savedDir = prefs.getString('auto_backup_dir')?.trim();
 
-      Directory baseDir;
-      if (dirPath != null && dirPath.isNotEmpty) {
-        baseDir = Directory(dirPath);
-      } else if (savedDir != null && savedDir.isNotEmpty) {
-        baseDir = Directory(savedDir);
-      } else {
-        baseDir = Directory(p.join(docs.path, 'Backups'));
-      }
-
-      if (!await baseDir.exists()) {
-        try {
-          await baseDir.create(recursive: true);
-        } catch (e) {
-          baseDir = Directory(p.join(docs.path, 'Backups'));
-          await baseDir.create(recursive: true);
+      if (Platform.isAndroid) {
+        final treeUri = prefs.getString('auto_backup_tree_uri');
+        if (treeUri != null && treeUri.trim().isNotEmpty) {
+          final displayPath =
+              await SafStorageService.instance.writeTextFileToTree(
+            treeUri: treeUri.trim(),
+            fileName: targetFileName,
+            content: content,
+          );
+          await SafStorageService.instance.pruneAutoBackupsInTree(
+            treeUri: treeUri.trim(),
+            filePrefix: 'hypertrack_auto',
+            retention: retention,
+          );
+          await prefs.setInt('auto_backup_last_ms', nowMs);
+          await prefs.setString(
+            'auto_backup_last_file_path',
+            displayPath ?? targetFileName,
+          );
+          await prefs.setString(
+            'auto_backup_last_dir_used',
+            savedDir ?? configuredDirPath ?? '',
+          );
+          await prefs.setBool('auto_backup_last_used_fallback', false);
+          await prefs.remove('auto_backup_last_error');
+          return true;
+        }
+        final hasConfiguredFolder =
+            configuredDirPath != null && configuredDirPath.isNotEmpty;
+        final hasSavedFolder = savedDir != null && savedDir.isNotEmpty;
+        if (hasConfiguredFolder || hasSavedFolder) {
+          await prefs.setString(
+            'auto_backup_last_error',
+            'Please re-select your auto-backup folder to grant Android folder access.',
+          );
+          return false;
         }
       }
 
-      final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
-      final file = File(p.join(baseDir.path, '$fileName-[$ts].json'));
+      final docs = await getApplicationDocumentsDirectory();
+      final external = await getExternalStorageDirectory();
+      final externalFallbackDir =
+          external != null ? p.join(external.path, 'Backups') : null;
+      final baseDir = await resolveWritableBackupDirectory(
+        docsDir: docs,
+        dirPath: configuredDirPath,
+        savedDir: savedDir,
+        externalFallbackDir: externalFallbackDir,
+      );
+      final requestedDir = configuredDirPath;
+      final usedFallback = requestedDir != null &&
+          requestedDir.isNotEmpty &&
+          p.normalize(requestedDir) != p.normalize(baseDir.path);
+
+      final file = File(p.join(baseDir.path, targetFileName));
       await file.writeAsString(content);
 
       try {
@@ -571,9 +647,16 @@ class BackupManager {
       } catch (_) {}
 
       await prefs.setInt('auto_backup_last_ms', nowMs);
+      await prefs.setString('auto_backup_last_file_path', file.path);
+      await prefs.setString('auto_backup_last_dir_used', baseDir.path);
+      await prefs.setBool('auto_backup_last_used_fallback', usedFallback);
+      await prefs.remove('auto_backup_last_error');
       return true;
-    } catch (e) {
+    } catch (e, st) {
       debugPrint("Auto-backup failed: $e");
+      debugPrint('$st');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auto_backup_last_error', e.toString());
       return false;
     }
   }

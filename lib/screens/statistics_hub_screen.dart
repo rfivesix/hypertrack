@@ -62,6 +62,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   late final StatisticsHubDataAdapter _hubDataAdapter;
   final _rangePolicy = StatisticsRangePolicyService.instance;
   late final StepsAggregationRepository _stepsRepository;
+  final StepsSyncService _stepsSyncService = StepsSyncService();
 
   int _selectedTimeRangeIndex = 1;
 
@@ -88,7 +89,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   );
   BodyNutritionAnalyticsResult? _bodyNutrition;
   RangeStepsAggregation? _stepsRange;
-  bool _stepsTrackingEnabled = true;
+  bool _stepsTrackingEnabled = false;
   int _targetSteps = 8000;
   String _stepsProviderName = '';
   @override
@@ -99,7 +100,38 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             workoutDatabaseHelper: WorkoutDatabaseHelper.instance);
     _stepsRepository =
         widget._stepsRepository ?? HealthStepsAggregationRepository();
+    StepsSyncService.trackingEnabledListenable
+        .addListener(_onTrackingEnabledChanged);
+    _syncTrackingEnabledFromSettings();
     _loadHubAnalytics();
+  }
+
+  @override
+  void dispose() {
+    StepsSyncService.trackingEnabledListenable
+        .removeListener(_onTrackingEnabledChanged);
+    super.dispose();
+  }
+
+  void _onTrackingEnabledChanged() {
+    final enabled = StepsSyncService.trackingEnabledListenable.value;
+    if (enabled == null || !mounted) return;
+    if (!enabled) {
+      if (_stepsTrackingEnabled) {
+        setState(() => _stepsTrackingEnabled = false);
+      }
+      return;
+    }
+    if (!_stepsTrackingEnabled && mounted) {
+      setState(() => _stepsTrackingEnabled = true);
+    }
+    _loadHubAnalytics();
+  }
+
+  Future<void> _syncTrackingEnabledFromSettings() async {
+    final enabled = await _stepsSyncService.isTrackingEnabled();
+    if (!mounted || enabled == _stepsTrackingEnabled) return;
+    setState(() => _stepsTrackingEnabled = enabled);
   }
 
   Future<void> _loadHubAnalytics() async {
@@ -124,7 +156,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
     final targetStepsFuture =
         DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
-    final providerFuture = StepsSyncService().getProviderFilter();
+    final providerFuture = _stepsSyncService.getProviderFilter();
 
     final tuple = await hubFuture;
     final stepsRange = await stepsRangeFuture;
@@ -147,6 +179,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
     final hub = tuple.$1;
     final bodyNutrition = tuple.$2;
+    final effectiveStepsTrackingEnabled =
+        StepsSyncService.trackingEnabledListenable.value ??
+            stepsTrackingEnabled;
 
     if (!mounted) return;
     setState(() {
@@ -157,7 +192,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _notableImprovements = hub.notableImprovements;
       _bodyNutrition = bodyNutrition;
       _stepsRange = stepsRange;
-      _stepsTrackingEnabled = stepsTrackingEnabled;
+      _stepsTrackingEnabled = effectiveStepsTrackingEnabled;
       _targetSteps = targetSteps;
       _stepsProviderName = providerName;
       _isLoadingStats = false;
@@ -201,8 +236,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
-                _buildStepsCard(),
-                const SizedBox(height: DesignConstants.spacingL),
+                if (_stepsTrackingEnabled) ...[
+                  _buildStepsCard(),
+                  const SizedBox(height: DesignConstants.spacingL),
+                ],
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
                 const SizedBox(height: DesignConstants.spacingL),

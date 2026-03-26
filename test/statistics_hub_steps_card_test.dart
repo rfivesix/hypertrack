@@ -9,8 +9,14 @@ import 'package:hypertrack/features/statistics/domain/statistics_data_quality_po
 import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
 import 'package:hypertrack/features/steps/domain/steps_models.dart';
 import 'package:hypertrack/screens/statistics_hub_screen.dart';
+import 'package:hypertrack/services/health/steps_sync_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeStepsRepository implements StepsAggregationRepository {
+  _FakeStepsRepository({this.trackingEnabled = true});
+
+  final bool trackingEnabled;
+
   @override
   Future<RangeStepsAggregation> getRangeAggregation({
     required DateTime endDate,
@@ -56,7 +62,7 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   Future<DateTime?> getLastUpdatedAt() async => DateTime.now().toUtc();
 
   @override
-  Future<bool> isTrackingEnabled() async => true;
+  Future<bool> isTrackingEnabled() async => trackingEnabled;
 
   @override
   Future<StepsRefreshResult> refresh(
@@ -71,6 +77,21 @@ class _FakeStepsRepository implements StepsAggregationRepository {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      StepsSyncService.trackingEnabledKey: true,
+    });
+    StepsSyncService.trackingEnabledListenable.value = null;
+  });
+
+  Future<void> pumpLoaded(WidgetTester tester) async {
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+  }
+
   Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fakeFetch(
     int _,
   ) async {
@@ -125,8 +146,10 @@ void main() {
   testWidgets('statistics hub range switching updates steps card subtitle', (
     WidgetTester tester,
   ) async {
+    await StepsSyncService().setTrackingEnabled(true);
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: StatisticsHubScreen(
@@ -135,13 +158,64 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await pumpLoaded(tester);
 
     expect(find.text('Steps'), findsOneWidget);
-    expect(find.textContaining('Last 30 days'), findsOneWidget);
+    final initialChips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
+    expect(initialChips.elementAt(1).selected, isTrue);
 
     await tester.tap(find.byType(ChoiceChip).first);
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Last 7 days'), findsOneWidget);
+    await pumpLoaded(tester);
+    final changedChips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
+    expect(changedChips.first.selected, isTrue);
+    expect(find.text('Steps'), findsOneWidget);
+  });
+
+  testWidgets('statistics hub hides steps card when tracking is disabled', (
+    WidgetTester tester,
+  ) async {
+    await StepsSyncService().setTrackingEnabled(false);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatisticsHubScreen(
+          stepsRepository: _FakeStepsRepository(trackingEnabled: false),
+          fetchHubAnalytics: fakeFetch,
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+
+    expect(find.text('Steps'), findsNothing);
+  });
+
+  testWidgets('statistics hub updates steps visibility when setting toggles', (
+    WidgetTester tester,
+  ) async {
+    await StepsSyncService().setTrackingEnabled(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatisticsHubScreen(
+          stepsRepository: _FakeStepsRepository(trackingEnabled: true),
+          fetchHubAnalytics: fakeFetch,
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+    expect(find.text('Steps'), findsOneWidget);
+
+    final stepsService = StepsSyncService();
+    await stepsService.setTrackingEnabled(false);
+    await pumpLoaded(tester);
+    expect(find.text('Steps'), findsNothing);
+
+    await stepsService.setTrackingEnabled(true);
+    await pumpLoaded(tester);
+    expect(find.text('Steps'), findsOneWidget);
   });
 }

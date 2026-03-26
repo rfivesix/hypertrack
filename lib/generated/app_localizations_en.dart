@@ -419,6 +419,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get repsLabel => 'Reps';
 
   @override
+  String get cardioDistanceLabel => 'Distance (km)';
+
+  @override
+  String get cardioTimeLabel => 'Time (min)';
+
+  @override
+  String get cardioIntensityLabel => 'Intens.';
+
+  @override
+  String get cardioIntensityShortLabel => 'Int.';
+
+  @override
   String get restTimerLabel => 'Rest';
 
   @override

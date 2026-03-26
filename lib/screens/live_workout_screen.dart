@@ -487,11 +487,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         children: [
           _buildHeader(l10n.setLabel, flex: 2), // Set Nr.
           _buildHeader(l10n.lastTimeLabel, flex: 3), // History/Last
-          _buildHeader("Distance (km)", flex: 4), // Mehr Platz
+          _buildHeader(l10n.cardioDistanceLabel, flex: 4), // Mehr Platz
           const SizedBox(width: 8),
-          _buildHeader("Time (min)", flex: 4), // Mehr Platz
+          _buildHeader(l10n.cardioTimeLabel, flex: 4), // Mehr Platz
           const SizedBox(width: 8),
-          _buildHeader("Intens.", flex: 2),
+          _buildHeader(l10n.cardioIntensityLabel, flex: 2),
           const SizedBox(width: 48), // Platz für Checkbox
         ],
       );

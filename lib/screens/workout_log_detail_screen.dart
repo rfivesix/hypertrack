@@ -650,11 +650,11 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   Row(
                     children: [
                       _buildHeader(l10n.setLabel, flex: 2),
-                      _buildHeader("Distance (km)", flex: 4),
+                      _buildHeader(l10n.cardioDistanceLabel, flex: 4),
                       const SizedBox(width: 8),
-                      _buildHeader("Time (min)", flex: 4),
+                      _buildHeader(l10n.cardioTimeLabel, flex: 4),
                       const SizedBox(width: 8),
-                      _buildHeader("Int.", flex: 2),
+                      _buildHeader(l10n.cardioIntensityShortLabel, flex: 2),
                       const SizedBox(width: 48), // Platz für Check/Del
                     ],
                   )

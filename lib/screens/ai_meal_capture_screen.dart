@@ -73,6 +73,9 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           if (mounted) setState(() => _isListening = false);
         }
       },
+      options: Platform.isAndroid
+          ? <stt.SpeechConfigOption>[stt.SpeechToText.androidNoBluetooth]
+          : null,
     );
     if (available) {
       // Cache the best matching locale for the app language
@@ -87,6 +90,12 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       );
     }
     if (mounted) setState(() => _speechAvailable = available);
+  }
+
+  Future<bool> _ensureSpeechAvailable() async {
+    if (_speechAvailable) return true;
+    await _initSpeech();
+    return _speechAvailable;
   }
 
   @override
@@ -141,13 +150,18 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       await _speech.stop();
       if (mounted) setState(() => _isListening = false);
     } else {
-      if (!_speechAvailable) {
+      final available = await _ensureSpeechAvailable();
+      if (!available) {
+        final hasPermission = await _speech.hasPermission;
+        final message = Platform.isAndroid
+            ? (hasPermission
+                ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
+                : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den Android-Einstellungen erlauben.')
+            : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.';
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.',
-              ),
+            SnackBar(
+              content: Text(message),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.red,
             ),

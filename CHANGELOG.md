@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## 0.7.1-beta.1 - 2026-03-27
 
+### Fixed
+- **Cardio set-row header localization (#75):** Localized cardio header labels (`Distance`, `Time`, `Intensity`) in workout set rows.
+- **Statistics steps visibility (#150):** Steps metric is now shown on the statistics screen only when step tracking is enabled in settings, with live UI updates when toggled.
+- **Auto backup reliability (#151):** Fixed auto-backup failures for invalid/unwritable selected folders by validating writability and falling back to a safe app backup directory.
+- **Android auto-backup folder targeting (#151):** Added SAF-based folder access so backups can be written to the exact user-selected external folder path on Android.
+- **AI meal voice capture on Android (#143):** Improved speech recognition initialization/retry flow and Android-specific availability handling; fixed platform guidance text (no more incorrect iOS-only prompt on Android).
 ## 0.7.1-alpha.4 — 2026-03-26
 
 ### Fixed

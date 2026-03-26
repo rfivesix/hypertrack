@@ -53,7 +53,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 * **Measurements:** Track weight, body fat percentage, and tape measurements (biceps, waist, etc.).
 * **Charts:** Visualize your progress over time.
 * **Statistics & Analytics Hub (v0.7):** ✅ Fully functional analytics workspace for consistency, performance, muscle distribution, recovery, and body/nutrition correlations, including dedicated drill-down screens.
-* **Health Steps Module (v0.7.1 alpha):** Dedicated steps detail screen with Day/Week/Month navigation, period switching, and improved trend visualizations with target/average guidance.
+* **Health Steps Module (v0.7.1 beta):** Dedicated steps detail screen with Day/Week/Month navigation, period switching, and improved trend visualizations with target/average guidance.
 * **Supplements:** Manage your inventory and track daily intake of supplements (like Creatine or Vitamins) with full historical tracking of goals and limits.
 
 ### 🛡️ Privacy & Tech
