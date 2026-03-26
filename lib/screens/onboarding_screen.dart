@@ -106,6 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       carbs: carbs,
       fat: fat,
       water: water,
+      steps: 8000,
     );
 
     // 4. Extra Werte (Sugar/Fiber/Salt) Defaults in Prefs setzen (da noch nicht in DB Schema)

@@ -14,6 +14,7 @@ import '../models/measurement.dart';
 import '../models/measurement_session.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
+import '../services/health/steps_sync_service.dart';
 import 'product_database_helper.dart';
 
 /// Main helper for general application data persistence using the Drift database.
@@ -75,6 +76,7 @@ class DatabaseHelper {
       // 1. History tables
       await dbInstance.delete(dbInstance.dailyGoalsHistory).go();
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
+      await dbInstance.customStatement('DELETE FROM health_step_segments');
 
       // 2. Child tables (Logs) first
       await dbInstance.delete(dbInstance.supplementLogs).go();
@@ -1223,6 +1225,7 @@ class DatabaseHelper {
     required int carbs,
     required int fat,
     required int water,
+    required int steps,
   }) async {
     final dbInstance = await database;
 
@@ -1243,15 +1246,17 @@ class DatabaseHelper {
               .getSingleOrNull();
 
       if (baseline == null) {
+        final existingSteps = existingSettings.targetSteps;
         await dbInstance
             .into(dbInstance.dailyGoalsHistory)
-            .insert(
+            .insertReturning(
               db.DailyGoalsHistoryCompanion(
                 targetCalories: drift.Value(existingSettings.targetCalories),
                 targetProtein: drift.Value(existingSettings.targetProtein),
                 targetCarbs: drift.Value(existingSettings.targetCarbs),
                 targetFat: drift.Value(existingSettings.targetFat),
                 targetWater: drift.Value(existingSettings.targetWater),
+                targetSteps: drift.Value(existingSteps),
                 createdAt: drift.Value(
                   DateTime(2000, 1, 1),
                 ), // Covers all older data
@@ -1271,6 +1276,7 @@ class DatabaseHelper {
           targetCarbs: drift.Value(carbs),
           targetFat: drift.Value(fat),
           targetWater: drift.Value(water),
+          targetSteps: drift.Value(steps),
         ),
       );
     } else {
@@ -1291,6 +1297,7 @@ class DatabaseHelper {
               targetCarbs: drift.Value(carbs),
               targetFat: drift.Value(fat),
               targetWater: drift.Value(water),
+              targetSteps: drift.Value(steps),
               themeMode: const drift.Value('system'), // Defaults
               unitSystem: const drift.Value('metric'),
             ),
@@ -1300,13 +1307,14 @@ class DatabaseHelper {
     // 2. Add historical entry
     await dbInstance
         .into(dbInstance.dailyGoalsHistory)
-        .insert(
+        .insertReturning(
           db.DailyGoalsHistoryCompanion(
             targetCalories: drift.Value(calories),
             targetProtein: drift.Value(protein),
             targetCarbs: drift.Value(carbs),
             targetFat: drift.Value(fat),
             targetWater: drift.Value(water),
+            targetSteps: drift.Value(steps),
             createdAt: drift.Value(DateTime.now()), // as valid-from timestamp
           ),
         );
@@ -1363,9 +1371,97 @@ class DatabaseHelper {
         targetCarbs: settings.targetCarbs,
         targetFat: settings.targetFat,
         targetWater: settings.targetWater,
+        targetSteps: settings.targetSteps,
       );
     }
     return null;
+  }
+
+  Future<void> upsertHealthStepSegments(
+    List<Map<String, dynamic>> segments,
+  ) async {
+    if (segments.isEmpty) {
+      return;
+    }
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final segment in segments) {
+        final startSeconds =
+            DateTime.parse(
+              segment['startAt'] as String,
+            ).toUtc().millisecondsSinceEpoch ~/
+            1000;
+        final endSeconds =
+            DateTime.parse(
+              segment['endAt'] as String,
+            ).toUtc().millisecondsSinceEpoch ~/
+            1000;
+        final externalKey = segment['externalKey'] as String;
+        batch.customStatement(
+          '''
+          INSERT INTO health_step_segments
+          (id, provider, source_id, start_at, end_at, step_count, external_key)
+          VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(external_key) DO UPDATE SET
+            provider = excluded.provider,
+            source_id = excluded.source_id,
+            start_at = excluded.start_at,
+            end_at = excluded.end_at,
+            step_count = excluded.step_count
+          ''',
+          [
+            segment['provider'],
+            segment['sourceId'],
+            startSeconds,
+            endSeconds,
+            segment['stepCount'],
+            externalKey,
+          ],
+        );
+      }
+    });
+  }
+
+  Future<int?> getDailyStepsTotal({
+    required DateTime dayLocal,
+    String providerFilter = 'all',
+  }) async {
+    final dbInstance = await database;
+    final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
+    final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
+    final dayStartUtcMs = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final dayEndUtcMs = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    var sql = '''
+      SELECT SUM(step_count) AS total_steps
+      FROM health_step_segments
+      WHERE start_at < ? AND end_at >= ?
+    ''';
+    final vars = <int>[dayEndUtcMs, dayStartUtcMs];
+    if (providerFilter == 'apple') {
+      sql += " AND provider = 'apple_healthkit'";
+    } else if (providerFilter == 'google') {
+      sql += " AND provider = 'google_health_connect'";
+    }
+
+    final rows = await dbInstance
+        .customSelect(
+          sql,
+          variables: [
+            for (final variable in vars) drift.Variable.withInt(variable),
+          ],
+        )
+        .get();
+    if (rows.isEmpty) return null;
+    return rows.first.read<int?>('total_steps');
+  }
+
+  Future<int> getCurrentTargetStepsOrDefault() async {
+    final dbInstance = await database;
+    final rows = await (dbInstance.select(
+      dbInstance.appSettings,
+    )..limit(1)).get();
+    if (rows.isEmpty) return StepsSyncService.defaultStepsGoal;
+    return rows.first.targetSteps;
   }
 
   /// Speichert das Startgewicht als Messung

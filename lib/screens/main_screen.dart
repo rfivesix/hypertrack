@@ -1204,10 +1204,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ),
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () {
-          Navigator.of(
+        onTap: () async {
+          await Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+          // Refresh diary data when returning from profile/settings
+          _refreshHomeScreen();
         },
         child: CircleAvatar(
           radius: 18,

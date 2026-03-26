@@ -299,9 +299,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       // Use GlobalAppBar for consistent top-level navigation styling.
-      appBar: GlobalAppBar(
-        title: l10n.nutritionExplorerTitle,
-      ),
+      appBar: GlobalAppBar(title: l10n.nutritionExplorerTitle),
 
       body: Column(
         children: [

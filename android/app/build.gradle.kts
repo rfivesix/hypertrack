@@ -23,7 +23,7 @@ android {
         versionName = flutterVersionName
         versionCode = flutterVersionCode
 
-        minSdk = flutter.minSdkVersion            // ← add this
+        minSdk = 26
         targetSdk = 36      // optional; you can set it or let Flutter handle it
     }
 
@@ -48,4 +48,6 @@ flutter { source = "../.." }
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation("androidx.health.connect:connect-client:1.1.0-rc02")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 }

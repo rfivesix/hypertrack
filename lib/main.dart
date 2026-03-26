@@ -12,9 +12,13 @@ import 'services/local_notification_service.dart';
 import 'services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
+import 'package:intl/date_symbol_data_local.dart'; // FIX: Initialize intl formatting
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // FIX: Ensures DateFormat does not throw LocaleDataException on non-en_US locales.
+  await initializeDateFormatting();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -45,9 +49,7 @@ void main() async {
             return profileService;
           },
         ),
-        ChangeNotifierProvider.value(
-          value: themeService,
-        ),
+        ChangeNotifierProvider.value(value: themeService),
       ],
       child: const MyApp(),
     ),

@@ -114,8 +114,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         'name_de': _deCtrl.text.trim(),
         'name_en': _enCtrl.text.trim().isEmpty ? null : _enCtrl.text.trim(),
         'name': _deCtrl.text.trim(),
-        'category_key':
-            _catCtrl.text.trim().isEmpty ? null : _catCtrl.text.trim(),
+        'category_key': _catCtrl.text.trim().isEmpty
+            ? null
+            : _catCtrl.text.trim(),
         // Nutrients
         'calories_100g': int.tryParse(_calCtrl.text.trim()),
         'protein_100g': double.tryParse(_proCtrl.text.trim()),

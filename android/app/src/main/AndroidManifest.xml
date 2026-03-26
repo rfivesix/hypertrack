@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+    <!-- BENÖTIGT FÜR HEALTH CONNECT -->
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+
     <!-- HIER DIE ÄNDERUNG: android:enableOnBackInvokedCallback="true" hinzugefügt -->
     <application
         android:label="Hypertrack"
@@ -35,13 +38,38 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- BENÖTIGT FÜR HEALTH CONNECT PERMISSIONS RATIONALE -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            
+            <!-- BENÖTIGT FÜR ANDROID 14+ HEALTH CONNECT: Vorab-Deklaration der genutzten Berechtigungen -->
+            <meta-data
+                android:name="health_permissions"
+                android:resource="@array/health_permissions" />
         </activity>
+
+        <!-- KRITISCH FÜR ANDROID 14+ (API 34+): activity-alias für VIEW_PERMISSION_USAGE -->
+        <!-- Ohne diesen Alias zeigt Health Connect "App-Update erforderlich" an -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE"/>
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS"/>
+            </intent-filter>
+        </activity-alias>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
 
     <queries>
+        <package android:name="com.google.android.apps.healthdata" />
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

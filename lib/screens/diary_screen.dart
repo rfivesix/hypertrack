@@ -29,6 +29,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/tracked_supplement.dart';
 import '../data/workout_database_helper.dart';
 import '../services/theme_service.dart';
+import '../services/health/health_models.dart';
+import '../services/health/steps_sync_service.dart';
 import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
@@ -46,6 +48,7 @@ class DiaryScreen extends StatefulWidget {
 }
 
 class DiaryScreenState extends State<DiaryScreen> {
+  static const Duration _stepsSyncInterval = Duration(hours: 6);
   bool _isLoading = true;
   final ValueNotifier<DateTime> selectedDateNotifier = ValueNotifier(
     DateTime.now(),
@@ -55,6 +58,10 @@ class DiaryScreenState extends State<DiaryScreen> {
   Map<String, List<TrackedFoodItem>> _entriesByMeal = {};
   List<FluidEntry> _fluidEntries = [];
   List<TrackedSupplement> _trackedSupplements = [];
+  final StepsSyncService _stepsSyncService = StepsSyncService();
+  int? _stepsForSelectedDay;
+  bool _isStepsWidgetLoading = false;
+  bool _stepsTrackingEnabled = true;
 
   // Workout summary state used by the daily overview card.
   Map<String, dynamic>? _workoutSummary;
@@ -92,6 +99,11 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     // 2. Prefs only for "Extra" values not in the DB schema
     final prefs = await SharedPreferences.getInstance();
+    final stepsEnabled = await _stepsSyncService.isTrackingEnabled();
+    final providerFilter = await _stepsSyncService.getProviderFilter();
+    final providerFilterRaw = StepsSyncService.providerFilterToRaw(
+      providerFilter,
+    );
 
     // 3. Use values from DB or fallbacks
     final targetCalories = goals?.targetCalories ?? 2500;
@@ -254,9 +266,58 @@ class DiaryScreenState extends State<DiaryScreen> {
         _fluidEntries = fluidEntries;
         _trackedSupplements = trackedSupps;
         _workoutSummary = workoutSummary;
+        _stepsTrackingEnabled = stepsEnabled;
         _isLoading = false;
       });
     }
+    await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
+    await _syncStepsIfDue(date);
+  }
+
+  Future<void> _loadStepsForDate(
+    DateTime date, {
+    required String providerFilterRaw,
+  }) async {
+    final enabled = await _stepsSyncService.isTrackingEnabled();
+    if (!enabled) {
+      if (!mounted) return;
+      setState(() {
+        _stepsForSelectedDay = null;
+        _stepsTrackingEnabled = false;
+        _isStepsWidgetLoading = false;
+      });
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _isStepsWidgetLoading = true);
+    final total = await DatabaseHelper.instance.getDailyStepsTotal(
+      dayLocal: date,
+      providerFilter: providerFilterRaw,
+    );
+    if (!mounted) return;
+    setState(() {
+      _stepsForSelectedDay = total;
+      _stepsTrackingEnabled = true;
+      _isStepsWidgetLoading = false;
+    });
+  }
+
+  Future<void> _syncStepsIfDue(DateTime date) async {
+    final enabled = await _stepsSyncService.isTrackingEnabled();
+    if (!enabled) return;
+    final lastSync = await _stepsSyncService.getLastSyncAt();
+    final shouldSync =
+        lastSync == null ||
+        DateTime.now().toUtc().difference(lastSync) > _stepsSyncInterval;
+    if (!shouldSync) return;
+    if (!mounted) return;
+    setState(() => _isStepsWidgetLoading = true);
+    await _stepsSyncService.sync();
+    final providerFilter = await _stepsSyncService.getProviderFilter();
+    final providerFilterRaw = StepsSyncService.providerFilterToRaw(
+      providerFilter,
+    );
+    await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
   }
 
   Future<void> _deleteFoodEntry(int id) async {
@@ -739,6 +800,10 @@ class DiaryScreenState extends State<DiaryScreen> {
                       )
                       .then((_) => loadDataForDate(_selectedDate)),
                 ),
+                if (_stepsTrackingEnabled) ...[
+                  const SizedBox(height: DesignConstants.spacingXS),
+                  _buildStepsSummaryCard(),
+                ],
                 // NEUER TEIL: Workout-Zusammenfassung hier einfügen
                 if (_workoutSummary != null) ...[
                   //const SizedBox(height: DesignConstants.spacingXS),
@@ -770,6 +835,62 @@ class DiaryScreenState extends State<DiaryScreen> {
               ],
             ),
           );
+  }
+
+  Widget _buildStepsSummaryCard() {
+    if (_isStepsWidgetLoading) {
+      return const SummaryCard(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              SizedBox(
+                height: 16,
+                width: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 12),
+              Text('Syncing steps...'),
+            ],
+          ),
+        ),
+      );
+    }
+    if ((_stepsForSelectedDay ?? 0) <= 0) {
+      return const SizedBox.shrink();
+    }
+    final theme = Theme.of(context);
+    final stepsText = NumberFormat.decimalPattern().format(
+      _stepsForSelectedDay,
+    );
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.directions_walk_rounded,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Steps', // TODO(alpha): localize steps label
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Text(
+              stepsText,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {

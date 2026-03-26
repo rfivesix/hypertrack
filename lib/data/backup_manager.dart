@@ -18,6 +18,7 @@ import 'product_database_helper.dart';
 import 'workout_database_helper.dart';
 import '../models/food_item.dart';
 import '../models/hypertrack_backup.dart';
+import '../services/health/steps_sync_service.dart';
 import '../util/encryption_util.dart';
 
 /// Manager responsible for application backup, restoration, and data export.
@@ -34,7 +35,7 @@ class BackupManager {
   final _productDb = ProductDatabaseHelper.instance;
   final _workoutDb = WorkoutDatabaseHelper.instance;
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
 
   // ---------------------------------------------------------------------------
   // EXPORT (JSON / FULL BACKUP)
@@ -59,8 +60,10 @@ class BackupManager {
       final jsonString = await _generateBackupJson();
 
       // Encrypt payload before sharing.
-      final wrapper =
-          await EncryptionUtil.encryptString(jsonString, passphrase);
+      final wrapper = await EncryptionUtil.encryptString(
+        jsonString,
+        passphrase,
+      );
       final wrappedJson = jsonEncode(wrapper);
 
       return await _writeAndShareFile(wrappedJson, 'hypertrack_backup_enc');
@@ -110,16 +113,22 @@ class BackupManager {
     final customExercises = await _workoutDb.getCustomExercises();
 
     // 3) Collect historical goals and supplement settings.
-    final goalsHistoryRows = await db.select(db.dailyGoalsHistory).get();
+    final goalsHistoryRows = await db.customSelect('''
+      SELECT target_calories, target_protein, target_carbs, target_fat, target_water, target_steps, created_at
+      FROM daily_goals_history
+      ''').get();
     final dailyGoalsHistory = goalsHistoryRows
         .map(
           (r) => {
-            'targetCalories': r.targetCalories,
-            'targetProtein': r.targetProtein,
-            'targetCarbs': r.targetCarbs,
-            'targetFat': r.targetFat,
-            'targetWater': r.targetWater,
-            'createdAt': r.createdAt.toIso8601String(),
+            'targetCalories': r.read<int>('target_calories'),
+            'targetProtein': r.read<int>('target_protein'),
+            'targetCarbs': r.read<int>('target_carbs'),
+            'targetFat': r.read<int>('target_fat'),
+            'targetWater': r.read<int>('target_water'),
+            'targetSteps': r.read<int>('target_steps'),
+            'createdAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('created_at') * 1000,
+            ).toIso8601String(),
           },
         )
         .toList();
@@ -140,6 +149,12 @@ class BackupManager {
 
     // 4) Collect app settings and profile.
     final settingsRow = await db.select(db.appSettings).getSingleOrNull();
+    final appSettingsRawRows = await db
+        .customSelect('SELECT target_steps FROM app_settings LIMIT 1')
+        .get();
+    final targetSteps = appSettingsRawRows.isNotEmpty
+        ? appSettingsRawRows.first.read<int>('target_steps')
+        : StepsSyncService.defaultStepsGoal;
     final Map<String, dynamic>? appSettingsMap = settingsRow != null
         ? {
             'userId': settingsRow.userId,
@@ -150,8 +165,30 @@ class BackupManager {
             'targetCarbs': settingsRow.targetCarbs,
             'targetFat': settingsRow.targetFat,
             'targetWater': settingsRow.targetWater,
+            'targetSteps': targetSteps,
           }
         : null;
+
+    final healthStepRows = await db.customSelect('''
+      SELECT provider, source_id, start_at, end_at, step_count, external_key
+      FROM health_step_segments
+      ''').get();
+    final healthStepSegments = healthStepRows
+        .map(
+          (r) => <String, dynamic>{
+            'provider': r.read<String>('provider'),
+            'sourceId': r.read<String?>('source_id'),
+            'startAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('start_at') * 1000,
+            ).toUtc().toIso8601String(),
+            'endAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('end_at') * 1000,
+            ).toUtc().toIso8601String(),
+            'stepCount': r.read<int>('step_count'),
+            'externalKey': r.read<String>('external_key'),
+          },
+        )
+        .toList();
 
     final profileRow = await db.select(db.profiles).getSingleOrNull();
     final Map<String, dynamic>? profileMap = profileRow != null
@@ -192,6 +229,7 @@ class BackupManager {
       supplementSettingsHistory: supplementSettingsHistory,
       appSettings: appSettingsMap,
       profile: profileMap,
+      healthStepSegments: healthStepSegments,
     );
 
     return jsonEncode(backup.toJson());
@@ -300,23 +338,24 @@ class BackupManager {
       await db.batch((batch) {
         for (final item in backup.customFoodItems) {
           batch.insert(
-              db.products,
-              ProductsCompanion(
-                barcode: drift.Value(item.barcode),
-                name: drift.Value(item.name),
-                brand: drift.Value(item.brand),
-                calories: drift.Value(item.calories),
-                protein: drift.Value(item.protein),
-                carbs: drift.Value(item.carbs),
-                fat: drift.Value(item.fat),
-                sugar: drift.Value(item.sugar),
-                fiber: drift.Value(item.fiber),
-                salt: drift.Value(item.salt),
-                source: const drift.Value('user'),
-                // Guard against nullable legacy values in older backups.
-                isLiquid: drift.Value(item.isLiquid ?? false),
-                category: drift.Value(item.category),
-                id: drift.Value(item.barcode.startsWith('user_')
+            db.products,
+            ProductsCompanion(
+              barcode: drift.Value(item.barcode),
+              name: drift.Value(item.name),
+              brand: drift.Value(item.brand),
+              calories: drift.Value(item.calories),
+              protein: drift.Value(item.protein),
+              carbs: drift.Value(item.carbs),
+              fat: drift.Value(item.fat),
+              sugar: drift.Value(item.sugar),
+              fiber: drift.Value(item.fiber),
+              salt: drift.Value(item.salt),
+              source: const drift.Value('user'),
+              // Guard against nullable legacy values in older backups.
+              isLiquid: drift.Value(item.isLiquid ?? false),
+              category: drift.Value(item.category),
+              id: drift.Value(
+                item.barcode.startsWith('user_')
                     ? item.barcode
                     : 'user_${item.barcode}',
               ),
@@ -335,24 +374,30 @@ class BackupManager {
 
       // Import DailyGoalsHistory
       if (backup.dailyGoalsHistory.isNotEmpty) {
-        await db.batch((batch) {
-          for (final row in backup.dailyGoalsHistory) {
-            batch.insert(
-              db.dailyGoalsHistory,
-              DailyGoalsHistoryCompanion(
-                targetCalories: drift.Value(row['targetCalories'] as int),
-                targetProtein: drift.Value(row['targetProtein'] as int),
-                targetCarbs: drift.Value(row['targetCarbs'] as int),
-                targetFat: drift.Value(row['targetFat'] as int),
-                targetWater: drift.Value(row['targetWater'] as int),
-                createdAt: drift.Value(
-                  DateTime.parse(row['createdAt'] as String),
+        for (final row in backup.dailyGoalsHistory) {
+          final inserted = await db
+              .into(db.dailyGoalsHistory)
+              .insertReturning(
+                DailyGoalsHistoryCompanion(
+                  targetCalories: drift.Value(row['targetCalories'] as int),
+                  targetProtein: drift.Value(row['targetProtein'] as int),
+                  targetCarbs: drift.Value(row['targetCarbs'] as int),
+                  targetFat: drift.Value(row['targetFat'] as int),
+                  targetWater: drift.Value(row['targetWater'] as int),
+                  createdAt: drift.Value(
+                    DateTime.parse(row['createdAt'] as String),
+                  ),
                 ),
-              ),
-              mode: drift.InsertMode.insertOrReplace,
-            );
-          }
-        });
+                mode: drift.InsertMode.insertOrReplace,
+              );
+          await db.customStatement(
+            'UPDATE daily_goals_history SET target_steps = ? WHERE local_id = ?',
+            [
+              (row['targetSteps'] as int?) ?? StepsSyncService.defaultStepsGoal,
+              inserted.localId,
+            ],
+          );
+        }
       }
 
       // Import SupplementSettingsHistory
@@ -431,6 +476,17 @@ class BackupManager {
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
+        await db.customStatement(
+          'UPDATE app_settings SET target_steps = ? WHERE user_id = ?',
+          [
+            s['targetSteps'] as int? ?? StepsSyncService.defaultStepsGoal,
+            backup.profile!['id'] as String,
+          ],
+        );
+      }
+
+      if (backup.healthStepSegments.isNotEmpty) {
+        await _userDb.upsertHealthStepSegments(backup.healthStepSegments);
       }
 
       debugPrint("Backup import succeeded.");
