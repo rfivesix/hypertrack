@@ -170,9 +170,11 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   Future<DayStepsAggregation> getDayAggregation(DateTime date) async {
     final targetDay = _atStartOfDay(date);
     final provider = await _providerFilterRaw();
+    final sourcePolicy = await _sourcePolicyRaw();
     final rows = await dbHelper.getHourlyStepsTotalsForDay(
       dayLocal: targetDay,
       providerFilter: provider,
+      sourcePolicy: sourcePolicy,
     );
     final byHour = <int, int>{
       for (final row in rows) row['hour'] as int: row['totalSteps'] as int
@@ -230,10 +232,12 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
     final normalizedStart =
         normalizedEnd.subtract(Duration(days: safeDays - 1));
     final provider = await _providerFilterRaw();
+    final sourcePolicy = await _sourcePolicyRaw();
     final rows = await dbHelper.getDailyStepsTotalsForRange(
       startLocal: normalizedStart,
       endLocal: normalizedEnd,
       providerFilter: provider,
+      sourcePolicy: sourcePolicy,
     );
     final byDay = <String, int>{
       for (final row in rows)
@@ -328,6 +332,11 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   Future<String> _providerFilterRaw() async {
     final filter = await stepsSyncService.getProviderFilter();
     return StepsSyncService.providerFilterToRaw(filter);
+  }
+
+  Future<String> _sourcePolicyRaw() async {
+    final policy = await stepsSyncService.getSourcePolicy();
+    return StepsSyncService.sourcePolicyToRaw(policy);
   }
 
   String _dayKey(DateTime date) {

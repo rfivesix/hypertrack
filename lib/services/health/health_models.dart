@@ -2,6 +2,8 @@ enum StepsAvailability { available, notAvailable }
 
 enum StepsProviderFilter { all, apple, google }
 
+enum StepsSourcePolicy { autoDominant, maxPerHour }
+
 class HealthStepSegmentDto {
   final DateTime startAtUtc;
   final DateTime endAtUtc;

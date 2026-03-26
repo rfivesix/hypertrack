@@ -295,9 +295,12 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
     if (!mounted) return;
     setState(() => _isStepsWidgetLoading = true);
+    final sourcePolicy = await _stepsSyncService.getSourcePolicy();
+    final sourcePolicyRaw = StepsSyncService.sourcePolicyToRaw(sourcePolicy);
     final total = await DatabaseHelper.instance.getDailyStepsTotal(
       dayLocal: date,
       providerFilter: providerFilterRaw,
+      sourcePolicy: sourcePolicyRaw,
     );
     if (!mounted) return;
     setState(() {

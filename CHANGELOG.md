@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.7.1-alpha.3 — 2026-03-26
+
+### Fixed
+- **Steps inflation after re-enabling tracking:** Resolved an issue where daily totals could jump too high after disabling and re-enabling step tracking.
+- **Idempotent refresh pipeline:** Force refresh and incremental refresh now safely replace overlapping sync windows to prevent duplicate counting.
+- **Safer multi-source aggregation:** Improved handling for overlapping sources (e.g. smartwatch + phone / Withings + system) to avoid double counting.
+
+### Added
+- **Steps source policy (Settings):**
+  - `Auto (dominant source)` (default, recommended)
+  - `Merge (max per hour)`
+- **Debug diagnostics for sync:** Added debug logging of sync window/fetch stats plus per-source daily totals to speed up troubleshooting.
+
+### Tests
+- Added coverage for:
+  - disable -> re-enable -> overlapping sync window (no inflation),
+  - multi-source overlap behavior for both source policies.
 ## [0.7.1-alpha.2+70006] - 2026-03-26
 
 ### Added

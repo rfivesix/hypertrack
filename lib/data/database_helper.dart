@@ -26,11 +26,14 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
 
   static db.AppDatabase? _driftDb;
+  final db.AppDatabase? _injectedDb;
 
-  DatabaseHelper._init();
+  DatabaseHelper._init() : _injectedDb = null;
+  DatabaseHelper.forTesting(db.AppDatabase database) : _injectedDb = database;
 
   /// Returns the underlying [db.AppDatabase] instance.
   Future<db.AppDatabase> get database async {
+    if (_injectedDb != null) return _injectedDb!;
     if (_driftDb != null) return _driftDb!;
     _driftDb = db.AppDatabase();
     return _driftDb!;
@@ -1422,19 +1425,50 @@ class DatabaseHelper {
     });
   }
 
+  Future<void> deleteHealthStepSegmentsInRange({
+    required String provider,
+    required DateTime fromUtc,
+    required DateTime toUtc,
+  }) async {
+    final dbInstance = await database;
+    final fromSeconds = fromUtc.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final toSeconds = toUtc.toUtc().millisecondsSinceEpoch ~/ 1000;
+    await dbInstance.customStatement(
+      '''
+      DELETE FROM health_step_segments
+      WHERE provider = ? AND start_at < ? AND end_at >= ?
+      ''',
+      [provider, toSeconds, fromSeconds],
+    );
+  }
+
   Future<int?> getDailyStepsTotal({
     required DateTime dayLocal,
     String providerFilter = 'all',
+    String sourcePolicy = 'auto_dominant',
   }) async {
     final dbInstance = await database;
     final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
     final dayStartUtcMs = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
     final dayEndUtcMs = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
-    var sql = '''
-      SELECT SUM(step_count) AS total_steps
-      FROM health_step_segments
-      WHERE start_at < ? AND end_at >= ?
+    var sql = sourcePolicy == 'max_per_hour'
+        ? '''
+      WITH source_hour AS (
+        SELECT
+          CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
+          COALESCE(source_id, '') AS source_key,
+          SUM(step_count) AS source_steps
+        FROM health_step_segments
+        WHERE start_at < ? AND end_at >= ?
+    '''
+        : '''
+      WITH source_totals AS (
+        SELECT
+          COALESCE(source_id, '') AS source_key,
+          SUM(step_count) AS source_total
+        FROM health_step_segments
+        WHERE start_at < ? AND end_at >= ?
     ''';
     final vars = <int>[dayEndUtcMs, dayStartUtcMs];
     if (providerFilter == 'apple') {
@@ -1442,11 +1476,41 @@ class DatabaseHelper {
     } else if (providerFilter == 'google') {
       sql += " AND provider = 'google_health_connect'";
     }
+    sql += sourcePolicy == 'max_per_hour'
+        ? '''
+        GROUP BY hour_local, source_key
+      ),
+      dedup_hour AS (
+        SELECT hour_local, MAX(source_steps) AS hour_steps
+        FROM source_hour
+        GROUP BY hour_local
+      )
+      SELECT COALESCE(SUM(hour_steps), 0) AS total_steps
+      FROM dedup_hour
+    '''
+        : '''
+        GROUP BY source_key
+      ),
+      dominant_source AS (
+        SELECT source_key
+        FROM source_totals
+        ORDER BY source_total DESC, source_key ASC
+        LIMIT 1
+      )
+      SELECT COALESCE(SUM(step_count), 0) AS total_steps
+      FROM health_step_segments
+      WHERE start_at < ? AND end_at >= ?
+        AND COALESCE(source_id, '') = (SELECT source_key FROM dominant_source)
+    ''';
+
+    final allVars = sourcePolicy == 'max_per_hour'
+        ? vars
+        : <int>[...vars, dayEndUtcMs, dayStartUtcMs];
 
     final rows = await dbInstance.customSelect(
       sql,
       variables: [
-        for (final variable in vars) drift.Variable.withInt(variable),
+        for (final variable in allVars) drift.Variable.withInt(variable),
       ],
     ).get();
     if (rows.isEmpty) return null;
@@ -1456,6 +1520,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getHourlyStepsTotalsForDay({
     required DateTime dayLocal,
     String providerFilter = 'all',
+    String sourcePolicy = 'auto_dominant',
   }) async {
     final dbInstance = await database;
     final startLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
@@ -1463,12 +1528,23 @@ class DatabaseHelper {
     final startUtc = startLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
     final endUtc = endLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
 
-    var sql = '''
-      SELECT
-        CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
-        SUM(step_count) AS total_steps
-      FROM health_step_segments
-      WHERE start_at < ? AND end_at >= ?
+    var sql = sourcePolicy == 'max_per_hour'
+        ? '''
+      WITH source_hour AS (
+        SELECT
+          CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
+          COALESCE(source_id, '') AS source_key,
+          SUM(step_count) AS source_steps
+        FROM health_step_segments
+        WHERE start_at < ? AND end_at >= ?
+    '''
+        : '''
+      WITH source_totals AS (
+        SELECT
+          COALESCE(source_id, '') AS source_key,
+          SUM(step_count) AS source_total
+        FROM health_step_segments
+        WHERE start_at < ? AND end_at >= ?
     ''';
     final vars = <int>[endUtc, startUtc];
     if (providerFilter == 'apple') {
@@ -1476,12 +1552,42 @@ class DatabaseHelper {
     } else if (providerFilter == 'google') {
       sql += " AND provider = 'google_health_connect'";
     }
-    sql += ' GROUP BY hour_local ORDER BY hour_local ASC';
+    sql += sourcePolicy == 'max_per_hour'
+        ? '''
+        GROUP BY hour_local, source_key
+      )
+      SELECT hour_local, MAX(source_steps) AS total_steps
+      FROM source_hour
+      GROUP BY hour_local
+      ORDER BY hour_local ASC
+    '''
+        : '''
+        GROUP BY source_key
+      ),
+      dominant_source AS (
+        SELECT source_key
+        FROM source_totals
+        ORDER BY source_total DESC, source_key ASC
+        LIMIT 1
+      )
+      SELECT
+        CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
+        SUM(step_count) AS total_steps
+      FROM health_step_segments
+      WHERE start_at < ? AND end_at >= ?
+        AND COALESCE(source_id, '') = (SELECT source_key FROM dominant_source)
+      GROUP BY hour_local
+      ORDER BY hour_local ASC
+    ''';
+
+    final allVars = sourcePolicy == 'max_per_hour'
+        ? vars
+        : <int>[...vars, endUtc, startUtc];
 
     final rows = await dbInstance.customSelect(
       sql,
       variables: [
-        for (final variable in vars) drift.Variable.withInt(variable),
+        for (final variable in allVars) drift.Variable.withInt(variable),
       ],
     ).get();
     return rows
@@ -1498,6 +1604,7 @@ class DatabaseHelper {
     required DateTime startLocal,
     required DateTime endLocal,
     String providerFilter = 'all',
+    String sourcePolicy = 'auto_dominant',
   }) async {
     final dbInstance = await database;
     final normalizedStart = DateTime(
@@ -1508,12 +1615,25 @@ class DatabaseHelper {
     final normalizedEnd = DateTime(endLocal.year, endLocal.month, endLocal.day);
     if (normalizedEnd.isBefore(normalizedStart)) return const [];
 
-    var sql = '''
-      SELECT
-        date(datetime(start_at, 'unixepoch', 'localtime')) AS day_local,
-        SUM(step_count) AS total_steps
-      FROM health_step_segments
-      WHERE start_at < ? AND end_at >= ?
+    var sql = sourcePolicy == 'max_per_hour'
+        ? '''
+      WITH source_hour AS (
+        SELECT
+          date(datetime(start_at, 'unixepoch', 'localtime')) AS day_local,
+          CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
+          COALESCE(source_id, '') AS source_key,
+          SUM(step_count) AS source_steps
+        FROM health_step_segments
+        WHERE start_at < ? AND end_at >= ?
+    '''
+        : '''
+      WITH source_day AS (
+        SELECT
+          date(datetime(start_at, 'unixepoch', 'localtime')) AS day_local,
+          COALESCE(source_id, '') AS source_key,
+          SUM(step_count) AS source_steps
+        FROM health_step_segments
+        WHERE start_at < ? AND end_at >= ?
     ''';
     final endExclusiveUtc = normalizedEnd
             .add(const Duration(days: 1))
@@ -1529,7 +1649,46 @@ class DatabaseHelper {
       sql += " AND provider = 'google_health_connect'";
     }
 
-    sql += ' GROUP BY day_local ORDER BY day_local ASC';
+    sql += sourcePolicy == 'max_per_hour'
+        ? '''
+        GROUP BY day_local, hour_local, source_key
+      ),
+      dedup_hour AS (
+        SELECT day_local, hour_local, MAX(source_steps) AS hour_steps
+        FROM source_hour
+        GROUP BY day_local, hour_local
+      )
+      SELECT day_local, SUM(hour_steps) AS total_steps
+      FROM dedup_hour
+      GROUP BY day_local
+      ORDER BY day_local ASC
+    '''
+        : '''
+        GROUP BY day_local, source_key
+      ),
+      dominant_source_per_day AS (
+        SELECT
+          day_local,
+          source_key
+        FROM source_day s
+        WHERE source_steps = (
+          SELECT MAX(source_steps)
+          FROM source_day s2
+          WHERE s2.day_local = s.day_local
+        )
+      ),
+      chosen_source_per_day AS (
+        SELECT day_local, MIN(source_key) AS source_key
+        FROM dominant_source_per_day
+        GROUP BY day_local
+      )
+      SELECT s.day_local, s.source_steps AS total_steps
+      FROM source_day s
+      INNER JOIN chosen_source_per_day c
+        ON c.day_local = s.day_local
+       AND c.source_key = s.source_key
+      ORDER BY s.day_local ASC
+    ''';
 
     final rows = await dbInstance.customSelect(
       sql,
@@ -1542,6 +1701,51 @@ class DatabaseHelper {
         .map(
           (row) => <String, dynamic>{
             'dayLocal': row.read<String>('day_local'),
+            'totalSteps': row.read<int?>('total_steps') ?? 0,
+          },
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<Map<String, dynamic>>> getDailyStepsTotalsBySource({
+    required DateTime dayLocal,
+    String providerFilter = 'all',
+  }) async {
+    final dbInstance = await database;
+    final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
+    final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
+    final dayStartUtc = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final dayEndUtc = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+
+    var sql = '''
+      SELECT
+        COALESCE(source_id, '') AS source_key,
+        SUM(step_count) AS total_steps
+      FROM health_step_segments
+      WHERE start_at < ? AND end_at >= ?
+    ''';
+    final vars = <int>[dayEndUtc, dayStartUtc];
+    if (providerFilter == 'apple') {
+      sql += " AND provider = 'apple_healthkit'";
+    } else if (providerFilter == 'google') {
+      sql += " AND provider = 'google_health_connect'";
+    }
+    sql += '''
+      GROUP BY source_key
+      ORDER BY total_steps DESC, source_key ASC
+    ''';
+
+    final rows = await dbInstance.customSelect(
+      sql,
+      variables: [
+        for (final variable in vars) drift.Variable.withInt(variable),
+      ],
+    ).get();
+
+    return rows
+        .map(
+          (row) => <String, dynamic>{
+            'sourceId': row.read<String>('source_key'),
             'totalSteps': row.read<int?>('total_steps') ?? 0,
           },
         )

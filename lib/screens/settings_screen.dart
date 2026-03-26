@@ -29,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final StepsSyncService _stepsSyncService = StepsSyncService();
   bool _stepsTrackingEnabled = true;
   StepsProviderFilter _stepsProviderFilter = StepsProviderFilter.all;
+  StepsSourcePolicy _stepsSourcePolicy = StepsSourcePolicy.autoDominant;
 
   /// Flag for parent screens to know steps settings changed and data should be refreshed.
   bool hasStepsSettingsChanged = false;
@@ -52,10 +53,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadStepsSettings() async {
     final enabled = await _stepsSyncService.isTrackingEnabled();
     final providerFilter = await _stepsSyncService.getProviderFilter();
+    final sourcePolicy = await _stepsSyncService.getSourcePolicy();
     if (!mounted) return;
     setState(() {
       _stepsTrackingEnabled = enabled;
       _stepsProviderFilter = providerFilter;
+      _stepsSourcePolicy = sourcePolicy;
     });
   }
 
@@ -199,6 +202,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _stepsSyncService.sync();
                         }
                       }
+                    },
+                  ),
+                  const Divider(height: 1),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Source policy',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  RadioListTile<StepsSourcePolicy>(
+                    title: const Text('Auto (dominant source)'),
+                    subtitle: const Text(
+                      'Recommended: use one source per day to avoid overlap inflation.',
+                    ),
+                    value: StepsSourcePolicy.autoDominant,
+                    groupValue: _stepsSourcePolicy,
+                    onChanged: (value) async {
+                      if (value == null) return;
+                      await _stepsSyncService.setSourcePolicy(value);
+                      hasStepsSettingsChanged = true;
+                      if (!mounted) return;
+                      setState(() => _stepsSourcePolicy = value);
+                    },
+                  ),
+                  RadioListTile<StepsSourcePolicy>(
+                    title: const Text('Merge (max per hour)'),
+                    subtitle: const Text(
+                      'Combine sources by taking the highest hourly bucket.',
+                    ),
+                    value: StepsSourcePolicy.maxPerHour,
+                    groupValue: _stepsSourcePolicy,
+                    onChanged: (value) async {
+                      if (value == null) return;
+                      await _stepsSyncService.setSourcePolicy(value);
+                      hasStepsSettingsChanged = true;
+                      if (!mounted) return;
+                      setState(() => _stepsSourcePolicy = value);
                     },
                   ),
                   const Divider(height: 1),

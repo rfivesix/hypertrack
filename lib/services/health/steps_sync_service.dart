@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:crypto/crypto.dart';
@@ -13,6 +14,7 @@ class StepsSyncService {
   static const int defaultStepsGoal = 8000;
   static const String trackingEnabledKey = 'steps_tracking_enabled';
   static const String providerFilterKey = 'steps_provider_filter';
+  static const String sourcePolicyKey = 'steps_source_policy';
   static const String lastSyncAtIsoKey = 'steps_last_sync_at_iso';
 
   static const Duration _overlap = Duration(hours: 48);
@@ -47,6 +49,17 @@ class StepsSyncService {
     await prefs.setString(providerFilterKey, raw);
   }
 
+  Future<StepsSourcePolicy> getSourcePolicy() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(sourcePolicyKey) ?? 'auto_dominant';
+    return sourcePolicyFromRaw(raw);
+  }
+
+  Future<void> setSourcePolicy(StepsSourcePolicy policy) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(sourcePolicyKey, sourcePolicyToRaw(policy));
+  }
+
   static StepsProviderFilter providerFilterFromRaw(String raw) {
     switch (raw) {
       case 'apple':
@@ -63,6 +76,22 @@ class StepsSyncService {
       StepsProviderFilter.all => 'all',
       StepsProviderFilter.apple => 'apple',
       StepsProviderFilter.google => 'google',
+    };
+  }
+
+  static StepsSourcePolicy sourcePolicyFromRaw(String raw) {
+    switch (raw) {
+      case 'max_per_hour':
+        return StepsSourcePolicy.maxPerHour;
+      default:
+        return StepsSourcePolicy.autoDominant;
+    }
+  }
+
+  static String sourcePolicyToRaw(StepsSourcePolicy policy) {
+    return switch (policy) {
+      StepsSourcePolicy.autoDominant => 'auto_dominant',
+      StepsSourcePolicy.maxPerHour => 'max_per_hour',
     };
   }
 
@@ -118,6 +147,11 @@ class StepsSyncService {
       nowUtc: nowUtc,
       lastSync: lastSync,
     );
+    if (kDebugMode) {
+      debugPrint(
+        '[StepsSync] sync start force=$forceRefresh from=${fromUtc.toIso8601String()} to=${nowUtc.toIso8601String()} lastSync=${lastSync?.toIso8601String()}',
+      );
+    }
 
     final provider = HealthPlatformSteps.providerForPlatform();
 
@@ -167,8 +201,24 @@ class StepsSyncService {
       };
     }).toList();
 
+    await _dbHelper.deleteHealthStepSegmentsInRange(
+      provider: provider,
+      fromUtc: fromUtc,
+      toUtc: nowUtc,
+    );
     await _dbHelper.upsertHealthStepSegments(rows);
     await _setLastSyncAt(nowUtc);
+    if (kDebugMode) {
+      final sourceTotals = await _dbHelper.getDailyStepsTotalsBySource(
+        dayLocal: nowUtc.toLocal(),
+      );
+      final sourceDebug = sourceTotals
+          .map((row) => '${row['sourceId']}:${row['totalSteps']}')
+          .join(', ');
+      debugPrint(
+        '[StepsSync] sync done fetched=${segments.length} upserted=${rows.length} todaySources=[$sourceDebug]',
+      );
+    }
 
     return StepsSyncResult(
       skipped: false,
