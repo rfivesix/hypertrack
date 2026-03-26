@@ -14,6 +14,7 @@ import '../models/measurement.dart';
 import '../models/measurement_session.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
+import '../services/health/steps_sync_service.dart';
 import 'product_database_helper.dart';
 
 /// Main helper for general application data persistence using the Drift database.
@@ -1227,13 +1228,6 @@ class DatabaseHelper {
     required int steps,
   }) async {
     final dbInstance = await database;
-    final existingStepsRows = await dbInstance.customSelect(
-      'SELECT target_steps FROM app_settings LIMIT 1',
-      readsFrom: {},
-    ).get();
-    final existingSteps = existingStepsRows.isNotEmpty
-        ? existingStepsRows.first.read<int>('target_steps')
-        : 8000;
 
     // 1. Check if settings already exist
     final existingSettings = await dbInstance
@@ -1252,6 +1246,13 @@ class DatabaseHelper {
               .getSingleOrNull();
 
       if (baseline == null) {
+        final existingStepsRows = await dbInstance.customSelect(
+          'SELECT target_steps FROM app_settings LIMIT 1',
+          readsFrom: {},
+        ).get();
+        final existingSteps = existingStepsRows.isNotEmpty
+            ? existingStepsRows.first.read<int>('target_steps')
+            : StepsSyncService.defaultStepsGoal;
         final baselineRow = await dbInstance
             .into(dbInstance.dailyGoalsHistory)
             .insertReturning(
@@ -1402,24 +1403,36 @@ class DatabaseHelper {
     final dbInstance = await database;
     await dbInstance.batch((batch) {
       for (final segment in segments) {
-        final rawStart = segment['startAt'];
-        final rawEnd = segment['endAt'];
-        final startSeconds = rawStart is int
-            ? rawStart
-            : DateTime.parse(rawStart as String).toUtc().millisecondsSinceEpoch ~/
+        final startSeconds =
+            DateTime.parse(segment['startAt'] as String)
+                    .toUtc()
+                    .millisecondsSinceEpoch ~/
                 1000;
-        final endSeconds = rawEnd is int
-            ? rawEnd
-            : DateTime.parse(rawEnd as String).toUtc().millisecondsSinceEpoch ~/ 1000;
+        final endSeconds =
+            DateTime.parse(segment['endAt'] as String)
+                    .toUtc()
+                    .millisecondsSinceEpoch ~/
+                1000;
+        final externalKey = segment['externalKey'] as String;
         batch.customStatement(
-          'INSERT OR REPLACE INTO health_step_segments (id, provider, source_id, start_at, end_at, step_count, external_key) VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, ?, ?)',
+          '''
+          INSERT INTO health_step_segments
+          (id, provider, source_id, start_at, end_at, step_count, external_key)
+          VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(external_key) DO UPDATE SET
+            provider = excluded.provider,
+            source_id = excluded.source_id,
+            start_at = excluded.start_at,
+            end_at = excluded.end_at,
+            step_count = excluded.step_count
+          ''',
           [
             segment['provider'],
             segment['sourceId'],
             startSeconds,
             endSeconds,
             segment['stepCount'],
-            segment['externalKey'],
+            externalKey,
           ],
         );
       }
@@ -1460,7 +1473,7 @@ class DatabaseHelper {
       'SELECT target_steps FROM app_settings LIMIT 1',
       readsFrom: {},
     ).get();
-    if (rows.isEmpty) return 8000;
+    if (rows.isEmpty) return StepsSyncService.defaultStepsGoal;
     return rows.first.read<int>('target_steps');
   }
 

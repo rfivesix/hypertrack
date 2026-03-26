@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../generated/app_localizations.dart';
 import '../widgets/global_app_bar.dart';
 import '../data/database_helper.dart';
+import '../services/health/steps_sync_service.dart';
 
 /// A screen for defining daily health and nutrition targets.
 ///
@@ -198,7 +199,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     ),
                     _buildSettingsField(
                       controller: _stepsController,
-                      label: 'Steps',
+                      label: 'Steps', // TODO(alpha): localize steps label
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
                     _buildSectionTitle(context, l10n.detailedNutrientGoalsCL),

@@ -18,6 +18,7 @@ import 'product_database_helper.dart';
 import 'workout_database_helper.dart';
 import '../models/food_item.dart';
 import '../models/hypertrack_backup.dart';
+import '../services/health/steps_sync_service.dart';
 import '../util/encryption_util.dart';
 
 /// Manager responsible for application backup, restoration, and data export.
@@ -153,7 +154,7 @@ class BackupManager {
     ).get();
     final targetSteps = appSettingsRawRows.isNotEmpty
         ? appSettingsRawRows.first.read<int>('target_steps')
-        : 8000;
+        : StepsSyncService.defaultStepsGoal;
     final Map<String, dynamic>? appSettingsMap = settingsRow != null
         ? {
             'userId': settingsRow.userId,
@@ -374,36 +375,28 @@ class BackupManager {
 
       // Import DailyGoalsHistory
       if (backup.dailyGoalsHistory.isNotEmpty) {
-        await db.batch((batch) {
-          for (final row in backup.dailyGoalsHistory) {
-            batch.insert(
-              db.dailyGoalsHistory,
-              DailyGoalsHistoryCompanion(
-                targetCalories: drift.Value(row['targetCalories'] as int),
-                targetProtein: drift.Value(row['targetProtein'] as int),
-                targetCarbs: drift.Value(row['targetCarbs'] as int),
-                targetFat: drift.Value(row['targetFat'] as int),
-                targetWater: drift.Value(row['targetWater'] as int),
-                createdAt: drift.Value(
-                  DateTime.parse(row['createdAt'] as String),
-                ),
-              ),
-              mode: drift.InsertMode.insertOrReplace,
-            );
-          }
-        });
         for (final row in backup.dailyGoalsHistory) {
-          final createdAt = DateTime.parse(row['createdAt'] as String);
+          final inserted = await db
+              .into(db.dailyGoalsHistory)
+              .insertReturning(
+                DailyGoalsHistoryCompanion(
+                  targetCalories: drift.Value(row['targetCalories'] as int),
+                  targetProtein: drift.Value(row['targetProtein'] as int),
+                  targetCarbs: drift.Value(row['targetCarbs'] as int),
+                  targetFat: drift.Value(row['targetFat'] as int),
+                  targetWater: drift.Value(row['targetWater'] as int),
+                  createdAt: drift.Value(
+                    DateTime.parse(row['createdAt'] as String),
+                  ),
+                ),
+                mode: drift.InsertMode.insertOrReplace,
+              );
           await db.customStatement(
-            'UPDATE daily_goals_history SET target_steps = ? WHERE target_calories = ? AND target_protein = ? AND target_carbs = ? AND target_fat = ? AND target_water = ? AND created_at = ?',
+            'UPDATE daily_goals_history SET target_steps = ? WHERE local_id = ?',
             [
-              (row['targetSteps'] as int?) ?? 8000,
-              row['targetCalories'] as int,
-              row['targetProtein'] as int,
-              row['targetCarbs'] as int,
-              row['targetFat'] as int,
-              row['targetWater'] as int,
-              createdAt.millisecondsSinceEpoch ~/ 1000,
+              (row['targetSteps'] as int?) ??
+                  StepsSyncService.defaultStepsGoal,
+              inserted.localId,
             ],
           );
         }
@@ -487,7 +480,10 @@ class BackupManager {
             );
         await db.customStatement(
           'UPDATE app_settings SET target_steps = ? WHERE user_id = ?',
-          [s['targetSteps'] as int? ?? 8000, backup.profile!['id'] as String],
+          [
+            s['targetSteps'] as int? ?? StepsSyncService.defaultStepsGoal,
+            backup.profile!['id'] as String,
+          ],
         );
       }
 

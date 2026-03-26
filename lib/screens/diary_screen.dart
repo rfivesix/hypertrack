@@ -48,6 +48,7 @@ class DiaryScreen extends StatefulWidget {
 }
 
 class DiaryScreenState extends State<DiaryScreen> {
+  static const Duration _stepsSyncInterval = Duration(hours: 6);
   bool _isLoading = true;
   final ValueNotifier<DateTime> selectedDateNotifier = ValueNotifier(
     DateTime.now(),
@@ -100,11 +101,9 @@ class DiaryScreenState extends State<DiaryScreen> {
     final prefs = await SharedPreferences.getInstance();
     final stepsEnabled = await _stepsSyncService.isTrackingEnabled();
     final providerFilter = await _stepsSyncService.getProviderFilter();
-    final providerFilterRaw = switch (providerFilter) {
-      StepsProviderFilter.all => 'all',
-      StepsProviderFilter.apple => 'apple',
-      StepsProviderFilter.google => 'google',
-    };
+    final providerFilterRaw = StepsSyncService.providerFilterToRaw(
+      providerFilter,
+    );
 
     // 3. Use values from DB or fallbacks
     final targetCalories = goals?.targetCalories ?? 2500;
@@ -308,17 +307,15 @@ class DiaryScreenState extends State<DiaryScreen> {
     if (!enabled) return;
     final lastSync = await _stepsSyncService.getLastSyncAt();
     final shouldSync = lastSync == null ||
-        DateTime.now().toUtc().difference(lastSync) > const Duration(hours: 6);
+        DateTime.now().toUtc().difference(lastSync) > _stepsSyncInterval;
     if (!shouldSync) return;
     if (!mounted) return;
     setState(() => _isStepsWidgetLoading = true);
     await _stepsSyncService.sync();
     final providerFilter = await _stepsSyncService.getProviderFilter();
-    final providerFilterRaw = switch (providerFilter) {
-      StepsProviderFilter.all => 'all',
-      StepsProviderFilter.apple => 'apple',
-      StepsProviderFilter.google => 'google',
-    };
+    final providerFilterRaw = StepsSyncService.providerFilterToRaw(
+      providerFilter,
+    );
     await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
   }
 
@@ -872,7 +869,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Steps',
+                'Steps', // TODO(alpha): localize steps label
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

@@ -8,6 +8,7 @@ import 'health_models.dart';
 import 'health_platform_steps.dart';
 
 class StepsSyncService {
+  static const int defaultStepsGoal = 8000;
   static const String trackingEnabledKey = 'steps_tracking_enabled';
   static const String providerFilterKey = 'steps_provider_filter';
   static const String lastSyncAtIsoKey = 'steps_last_sync_at_iso';
@@ -37,7 +38,17 @@ class StepsSyncService {
   Future<StepsProviderFilter> getProviderFilter() async {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getString(providerFilterKey) ?? 'all';
-    switch (value) {
+    return providerFilterFromRaw(value);
+  }
+
+  Future<void> setProviderFilter(StepsProviderFilter filter) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = providerFilterToRaw(filter);
+    await prefs.setString(providerFilterKey, raw);
+  }
+
+  static StepsProviderFilter providerFilterFromRaw(String raw) {
+    switch (raw) {
       case 'apple':
         return StepsProviderFilter.apple;
       case 'google':
@@ -47,14 +58,12 @@ class StepsSyncService {
     }
   }
 
-  Future<void> setProviderFilter(StepsProviderFilter filter) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = switch (filter) {
+  static String providerFilterToRaw(StepsProviderFilter filter) {
+    return switch (filter) {
       StepsProviderFilter.all => 'all',
       StepsProviderFilter.apple => 'apple',
       StepsProviderFilter.google => 'google',
     };
-    await prefs.setString(providerFilterKey, raw);
   }
 
   Future<DateTime?> getLastSyncAt() async {
@@ -102,7 +111,12 @@ class StepsSyncService {
       final fallback = sha1
           .convert(
             utf8.encode(
-              '$source|${segment.startAtUtc.toIso8601String()}|${segment.endAtUtc.toIso8601String()}|${segment.stepCount}',
+              [
+                source,
+                segment.startAtUtc.toIso8601String(),
+                segment.endAtUtc.toIso8601String(),
+                segment.stepCount.toString(),
+              ].join('\u0000'),
             ),
           )
           .toString();

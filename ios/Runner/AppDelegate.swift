@@ -74,8 +74,8 @@ import UIKit
 
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    guard let fromDate = formatter.date(from: fromIso) ?? ISO8601DateFormatter().date(from: fromIso),
-          let toDate = formatter.date(from: toIso) ?? ISO8601DateFormatter().date(from: toIso),
+    guard let fromDate = formatter.date(from: fromIso),
+          let toDate = formatter.date(from: toIso),
           let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)
     else {
       result([])

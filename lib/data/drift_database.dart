@@ -396,27 +396,6 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
-      await m.customStatement(
-        'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
-      );
-      await m.customStatement(
-        'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
-      );
-      await m.customStatement('''
-        CREATE TABLE IF NOT EXISTS health_step_segments (
-          local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-          id TEXT NOT NULL UNIQUE,
-          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-          updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-          deleted_at INTEGER NULL,
-          provider TEXT NOT NULL,
-          source_id TEXT NULL,
-          start_at INTEGER NOT NULL,
-          end_at INTEGER NOT NULL,
-          step_count INTEGER NOT NULL,
-          external_key TEXT NOT NULL UNIQUE
-        )
-      ''');
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
