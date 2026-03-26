@@ -112,11 +112,11 @@ class StepsSyncService {
 
     final nowUtc = (now ?? DateTime.now()).toUtc();
     final lastSync = await getLastSyncAt();
-    final fromUtc = forceRefresh
-        ? nowUtc.subtract(_initialLookback)
-        : (lastSync == null)
-        ? nowUtc.subtract(_initialLookback)
-        : lastSync.subtract(_overlap);
+    final fromUtc = _resolveSyncWindowStart(
+      forceRefresh: forceRefresh,
+      nowUtc: nowUtc,
+      lastSync: lastSync,
+    );
 
     final provider = HealthPlatformSteps.providerForPlatform();
 
@@ -174,5 +174,16 @@ class StepsSyncService {
       fetchedCount: segments.length,
       upsertedCount: rows.length,
     );
+  }
+
+  DateTime _resolveSyncWindowStart({
+    required bool forceRefresh,
+    required DateTime nowUtc,
+    required DateTime? lastSync,
+  }) {
+    if (forceRefresh || lastSync == null) {
+      return nowUtc.subtract(_initialLookback);
+    }
+    return lastSync.subtract(_overlap);
   }
 }

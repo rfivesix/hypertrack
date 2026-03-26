@@ -876,7 +876,8 @@ class DiaryScreenState extends State<DiaryScreen> {
       stepsLabel: 'Steps',
       stepsText: stepsText,
       value: (_stepsForSelectedDay ?? 0).toDouble(),
-      target: (_targetSteps > 0 ? _targetSteps : 10000).toDouble(),
+      target: (_targetSteps > 0 ? _targetSteps : StepsSyncService.defaultStepsGoal)
+          .toDouble(),
     );
   }
 
@@ -1302,7 +1303,7 @@ class DiaryStepsSummaryCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '$stepsText steps',
+                  stepsText,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

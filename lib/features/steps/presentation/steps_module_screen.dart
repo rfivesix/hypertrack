@@ -340,11 +340,13 @@ class _StepsSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.decimalPattern();
+    final shortDate = DateFormat.MMMd();
+    final monthDate = DateFormat.yMMMM();
     final (scopeLabel, value, miniTrend) = switch (scope) {
       StepsScope.day => (
           dayData == null
-              ? 'Today'
-              : 'Today (${DateFormat.MMMd().format(dayData!.date)})',
+              ? 'Day'
+              : shortDate.format(dayData!.date),
           dayData?.totalSteps ?? 0,
           dayData?.hourlyBuckets.map((b) => b.steps.toDouble()).toList(growable: false) ??
               const <double>[]
@@ -352,7 +354,7 @@ class _StepsSummaryCard extends StatelessWidget {
       StepsScope.week => (
           weekData == null
               ? 'This week'
-              : '${DateFormat.MMMd().format(weekData!.weekStart)} – ${DateFormat.MMMd().format(weekData!.weekStart.add(const Duration(days: 6)))}',
+              : '${shortDate.format(weekData!.weekStart)} – ${shortDate.format(weekData!.weekStart.add(const Duration(days: 6)))}',
           weekData?.totalSteps ?? 0,
           weekData?.dailyTotals.map((b) => b.steps.toDouble()).toList(growable: false) ??
               const <double>[]
@@ -360,7 +362,7 @@ class _StepsSummaryCard extends StatelessWidget {
       StepsScope.month => (
           monthData == null
               ? 'This month'
-              : DateFormat.yMMMM().format(monthData!.monthStart),
+              : monthDate.format(monthData!.monthStart),
           monthData?.totalSteps ?? 0,
           monthData?.dailyTotals.map((b) => b.steps.toDouble()).toList(growable: false) ??
               const <double>[]

@@ -46,6 +46,10 @@ class StatisticsHubScreen extends StatefulWidget {
 }
 
 class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
+  static const int _days7 = 7;
+  static const int _days30 = 30;
+  static const int _days90 = 90;
+  static const int _days180 = 180;
   static const _miniSignalPoints = 8;
   static const _fixedConsistencyWeeks = 6;
   static const _bodyTrendPoints = 10;
@@ -105,18 +109,23 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       earliestAvailableDay: earliest,
     );
     final daysBack = resolvedRange.effectiveDays ?? selectedDays;
-    final results = await Future.wait<dynamic>([
-      _fetchHubAnalytics(selectedTimeRangeIndex: _selectedTimeRangeIndex),
-      _stepsRepository.getRangeAggregation(endDate: DateTime.now(), daysBack: daysBack),
-      _stepsRepository.getLastUpdatedAt(),
-      _stepsRepository.isTrackingEnabled(),
-    ]);
-    final tuple = results[0] as (StatisticsHubPayload, BodyNutritionAnalyticsResult);
+    final hubFuture = _fetchHubAnalytics(
+      selectedTimeRangeIndex: _selectedTimeRangeIndex,
+    );
+    final stepsRangeFuture = _stepsRepository.getRangeAggregation(
+      endDate: DateTime.now(),
+      daysBack: daysBack,
+    );
+    final stepsUpdatedFuture = _stepsRepository.getLastUpdatedAt();
+    final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
+
+    final tuple = await hubFuture;
+    final stepsRange = await stepsRangeFuture;
+    final stepsLastUpdatedAt = await stepsUpdatedFuture;
+    final stepsTrackingEnabled = await stepsTrackingFuture;
+
     final hub = tuple.$1;
     final bodyNutrition = tuple.$2;
-    final stepsRange = results[1] as RangeStepsAggregation;
-    final stepsLastUpdatedAt = results[2] as DateTime?;
-    final stepsTrackingEnabled = results[3] as bool;
 
     if (!mounted) return;
     setState(() {
@@ -290,10 +299,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
       return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
     }
-    if (selectedDays == 7) return 'Last 7 days';
-    if (selectedDays == 30) return 'Last 30 days';
-    if (selectedDays == 90) return 'Last 3 months';
-    if (selectedDays == 180) return 'Last 6 months';
+    if (selectedDays == _days7) return 'Last 7 days';
+    if (selectedDays == _days30) return 'Last 30 days';
+    if (selectedDays == _days90) return 'Last 3 months';
+    if (selectedDays == _days180) return 'Last 6 months';
     return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
   }
 

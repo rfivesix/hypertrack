@@ -21,7 +21,7 @@ void main() {
     );
 
     expect(find.byType(GlassProgressBar), findsOneWidget);
-    expect(find.text('Steps'), findsWidgets);
+    expect(find.text('Steps'), findsOneWidget);
     expect(find.textContaining('steps'), findsOneWidget);
   });
 }
