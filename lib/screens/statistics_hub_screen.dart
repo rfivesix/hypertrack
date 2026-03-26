@@ -12,6 +12,7 @@ import '../util/design_constants.dart';
 import '../widgets/analytics_section_header.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
+import '../features/steps/presentation/steps_module_screen.dart';
 import 'analytics/body_nutrition_correlation_screen.dart';
 import 'analytics/consistency_tracker_screen.dart';
 import 'analytics/muscle_group_analytics_screen.dart';
@@ -113,6 +114,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
+                _buildStepsEntryCard(),
+                const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
                 const SizedBox(height: DesignConstants.spacingL),
@@ -166,6 +169,33 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return AnalyticsSectionHeader(title: title);
+  }
+
+  Widget _buildStepsEntryCard() {
+    return SummaryCard(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const StepsModuleScreen()),
+        );
+      },
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        leading: Icon(
+          Icons.directions_walk,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: const Text(
+          'Steps',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Daily, weekly, and monthly activity'),
+        trailing: Icon(
+          Icons.chevron_right,
+          size: DesignConstants.iconSizeM,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+      ),
+    );
   }
 
   Widget _buildConsistencySection() {
