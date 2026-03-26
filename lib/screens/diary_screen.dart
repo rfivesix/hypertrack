@@ -56,7 +56,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   List<FluidEntry> _fluidEntries = [];
   List<TrackedSupplement> _trackedSupplements = [];
 
-  // NEUE STATE-VARIABLE
+  // Workout summary state used by the daily overview card.
   Map<String, dynamic>? _workoutSummary;
 
   String _selectedChartRangeKey = '30D';
@@ -80,11 +80,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     super.dispose();
   }
 
-  // lib/screens/diary_screen.dart
-
-  // ... (Rest der Datei bleibt unverändert)
-
-  // ERSETZEN SIE DIESE METHODE
+  // Data-loading entry point for the currently selected date.
   Future<void> loadDataForDate(DateTime date) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -104,7 +100,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final targetFat = goals?.targetFat ?? 80;
     final targetWater = goals?.targetWater ?? 3000;
 
-    // Koffein, Zucker etc. bleiben vorerst in Prefs (da nicht in AppSettings Tabelle)
+    // Caffeine and related targets still come from prefs (not in AppSettings yet).
     final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
     final foodEntries = await DatabaseHelper.instance.getEntriesForDate(date);
     final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(

@@ -41,8 +41,8 @@ Responsible for all user-facing elements.
 
 | Directory | Contents | Examples |
 | :--- | :--- | :--- |
-| `lib/screens/` | Full-page route widgets (42 files) | `home.dart`, `live_workout_screen.dart` |
-| `lib/widgets/` | Reusable atomic components (26 files) | `SummaryCard`, `GlassFab`, `GlobalAppBar` |
+| `lib/screens/` | Full-page route widgets (44 files) | `home.dart`, `live_workout_screen.dart` |
+| `lib/widgets/` | Reusable atomic components (29 files) | `SummaryCard`, `GlassFab`, `GlobalAppBar` |
 | `lib/dialogs/` | Modal/bottom-sheet content (5 files) | `FluidDialogContent`, `QuantityDialogContent` |
 
 *See [UI & Widgets](ui_and_widgets.md) for a complete widget catalog.*
@@ -126,14 +126,14 @@ lib/
 │   ├── app_de.arb           # German translations
 │   └── app_en.arb           # English translations
 ├── models/                  # Data entity definitions (20 files)
-├── screens/                 # Full-page route widgets (42 files)
-├── services/                # Application services (6 files)
+├── screens/                 # Full-page route widgets (44 files)
+├── services/                # Application services (7 files)
 │   └── ai_service.dart      # Multi-provider AI service (OpenAI + Gemini)
 ├── theme/                   # Custom theme extensions
 │   ├── app_colors.dart      # AppSurfaces ThemeExtension
 │   └── color_constants.dart # Light/dark mode color tokens
-├── util/                    # Utility functions and constants (8 files)
-├── widgets/                 # Reusable UI components (26 files)
+├── util/                    # Utility functions and constants (10 files)
+├── widgets/                 # Reusable UI components (29 files)
 └── main.dart                # Application entry point
 ```
 

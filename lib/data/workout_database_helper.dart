@@ -22,27 +22,27 @@ class WorkoutDatabaseHelper {
 
   WorkoutDatabaseHelper._init();
 
-  // Zugriff auf die zentrale Drift-Instanz aus DatabaseHelper
+  // Access the central Drift instance from DatabaseHelper.
   Future<db.AppDatabase> get database async => DatabaseHelper.instance.database;
 
   // ===========================================================================
-  // HILFSMETHODEN (Mapping & IDs)
+  // HELPER METHODS (Mapping & IDs)
   // ===========================================================================
 
-  /// Wandelt eine lokale ID (int) in die UUID (String) um, die für Relationen benötigt wird.
+  /// Converts a local integer ID into the UUID used in relational references.
   Future<String?> _getUuidFromLocalId<T extends drift.Table, D>(
     drift.TableInfo<T, D> table,
     int localId,
   ) async {
     final dbInstance = await database;
-    // Annahme: Alle unsere Tabellen haben 'localId' und 'id' (UUID) via HybridId Mixin
+    // Assumption: all relevant tables expose `localId` and `id` via HybridId.
     final query = dbInstance.select(table)
       ..where((tbl) => (tbl as dynamic).localId.equals(localId));
     final row = await query.getSingleOrNull();
     return (row as dynamic)?.id;
   }
 
-  /// Wandelt eine UUID in die lokale ID um (falls nötig)
+  /// Converts a UUID back to its local integer ID when needed.
   Future<int?> _getLocalIdFromUuid<T extends drift.Table, D>(
     drift.TableInfo<T, D> table,
     String uuid,
@@ -61,7 +61,7 @@ class WorkoutDatabaseHelper {
       if (decoded is List) {
         return decoded.map((e) => e.toString()).toList();
       }
-      // Fallback für CSV (Legacy Daten)
+      // Fallback for legacy CSV-style muscle lists.
       if (jsonStr.contains(',')) {
         return jsonStr.split(',').map((e) => e.trim()).toList();
       }
@@ -69,7 +69,7 @@ class WorkoutDatabaseHelper {
     return [];
   }
 
-  /// Mappt eine Drift Exercise Row auf das App Model
+  /// Maps a Drift exercise row to the app-level [Exercise] model.
   Exercise _mapExerciseToModel(db.Exercise row) {
     return Exercise(
       id: row.localId,

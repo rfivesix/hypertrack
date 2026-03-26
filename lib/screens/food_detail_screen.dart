@@ -1,4 +1,4 @@
-// lib/screens/food_detail_screen.dart (Final & De-Materialisiert - OLED Ready)
+// lib/screens/food_detail_screen.dart
 
 import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
@@ -14,7 +14,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
-// Dev-Flag: später einfach auf false setzen oder die Dev-Blöcke entfernen.
+// Dev flag: keep disabled for production or remove dev-only sections entirely.
 const bool kDevEditEnabled = false;
 
 /// A detailed view for a [FoodItem], showing its full nutritional profile.
@@ -43,8 +43,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int? _trackedQuantity;
   bool get _hasPortionInfo => _trackedQuantity != null;
 
-  // ---------- DEV: Inline-Editing ----------
-  bool _devEditing = false; // via Secret-Tap toggeln
+  // ---------- DEV: Inline editing ----------
+  bool _devEditing = false; // toggled via secret tap
 
   final _deCtrl = TextEditingController();
   final _enCtrl = TextEditingController();
@@ -93,10 +93,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     super.dispose();
   }
 
-  // ---------- DEV: Basis-DB Hilfen ----------
+  // ---------- DEV: Base DB helpers ----------
 
   Future<String> _getBaseDbPath() async {
-    // Versuche erst den bekannten Namen der Base-DB im App-DB-Verzeichnis
+    // First try the known base DB file name in the app DB directory.
     final dbDir = await getDatabasesPath();
     return p.join(dbDir, 'hypertrack_base_foods.db');
   }
@@ -110,14 +110,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     try {
       final barcode = _displayItem.barcode;
       final Map<String, Object?> fields = {
-        // Spiegel beachten: name = name_de
+        // Keep name fields mirrored: `name` follows `name_de`.
         'name_de': _deCtrl.text.trim(),
         'name_en': _enCtrl.text.trim().isEmpty ? null : _enCtrl.text.trim(),
         'name': _deCtrl.text.trim(),
-        'category_key': _catCtrl.text.trim().isEmpty
-            ? null
-            : _catCtrl.text.trim(),
-        // Nährwerte
+        'category_key':
+            _catCtrl.text.trim().isEmpty ? null : _catCtrl.text.trim(),
+        // Nutrients
         'calories_100g': int.tryParse(_calCtrl.text.trim()),
         'protein_100g': double.tryParse(_proCtrl.text.trim()),
         'carbs_100g': double.tryParse(_carbCtrl.text.trim()),
@@ -130,7 +129,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         'calcium_100g': double.tryParse(_calciumCtrl.text.trim()),
       };
 
-      // leere Strings zu null; 'barcode' niemals überschreiben
+      // Normalize empty values to null; never overwrite the barcode.
       fields.removeWhere((k, v) => v == null);
 
       final db = await _openBaseDb();
@@ -147,7 +146,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       }
       // await ProductDatabaseHelper.instance.reloadBaseDb();
 
-      // Für sichtbares Refresh: Eintrag neu aus Base-DB laden
+      // Reload the updated entry from the base DB so changes are visible immediately.
       final baseDb = await _openBaseDb(readOnly: true);
       Map<String, dynamic>? row;
       try {
@@ -194,7 +193,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     }
   }
 
-  // ---------- Favoriten / Anzeige ----------
+  // ---------- Favorites / display ----------
 
   Future<void> _checkIfFavorite() async {
     final isFav = await DatabaseHelper.instance.isFavorite(
@@ -229,10 +228,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         ? 100
         : _trackedQuantity!;
 
-    // KORREKTUR: Explizite Berechnung des oberen Abstands
-    // MediaQuery.padding.top = Statusleiste
-    // kToolbarHeight = Höhe der AppBar (56.0)
-    // + Extra Abstand (DesignConstants.cardPaddingInternal), damit es nicht klebt
+    // Explicit top spacing avoids content colliding with status bar/app bar.
     final double topInset = MediaQuery.of(context).padding.top;
     final double totalTopPadding =
         topInset + kToolbarHeight + DesignConstants.cardPaddingInternal;
@@ -261,7 +257,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        // KORREKTUR: Padding direkt setzen statt copyWith, um Fehler zu vermeiden
+        // Use explicit padding instead of copyWith to avoid inherited edge bugs.
         padding: EdgeInsets.fromLTRB(
           DesignConstants.cardPaddingInternal,
           totalTopPadding,
@@ -276,8 +272,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 _displayItem.brand,
                 style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
               ),
-            // Falls Brand leer ist, sorgt dieser Divider für Abstand,
-            // aber das Padding oben ist jetzt das Wichtigste.
+            // Keep vertical rhythm even when brand text is absent.
             Divider(
               height: 32,
               thickness: 1,
@@ -363,7 +358,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               ),
             ],
 
-            // ---------- DEV: Inline-Edit Panel ----------
+            // ---------- DEV: Inline edit panel ----------
             if (kDevEditEnabled && _devEditing) ...[
               const SizedBox(height: DesignConstants.spacingM),
               SummaryCard(
@@ -495,7 +490,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     );
   }
 
-  // ---------- DEV: kleine Helfer-Inputs ----------
+  // ---------- DEV: small helper inputs ----------
 
   Widget _row(String label, TextEditingController c) => TextField(
     controller: c,
