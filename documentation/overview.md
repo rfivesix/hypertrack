@@ -189,3 +189,4 @@ The application contains **44 screens** in `lib/screens/`. Here is a categorized
 - **[Data Models & Storage](data_models_and_storage.md):** All database entities, helpers, and portability features.
 - **[UI & Widgets](ui_and_widgets.md):** Design philosophy, custom widget catalog, and layout patterns.
 - **[Statistics Module](statistics_module.md):** Current source-of-truth reference for Statistics architecture, range policy, payloads, and screen responsibilities.
+- **[Sleep Module Roadmap Tracker](sleep_module_roadmap_tracker.md):** Parent/tracker checklist for Sleep Module child issues 1–31, sequencing, and milestone grouping.
