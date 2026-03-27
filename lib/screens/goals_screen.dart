@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../generated/app_localizations.dart';
 import '../widgets/global_app_bar.dart';
 import '../data/database_helper.dart';
-import '../services/health/steps_sync_service.dart';
 
 /// A screen for defining daily health and nutrition targets.
 ///

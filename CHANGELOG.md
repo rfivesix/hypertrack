@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.7.1] - 2026-03-27
+
+### Added
+- **Native health steps tracking across iOS and Android:** Added Apple HealthKit and Google Health Connect integration for reading and syncing step data into Hypertrack, including the platform bridge, persisted segment storage, and daily step goal support.
+- **Dedicated Steps experience:** Added a dedicated steps detail screen with Day/Week/Month views, period navigation, richer trend context, and tighter integration into Diary, Statistics Hub, Settings, Goals, and onboarding.
+- **Steps source controls:** Added provider selection and source-policy controls, including `Auto (dominant source)` and `Merge (max per hour)` to better handle overlapping multi-source health data.
+- **Regression coverage for the new steps flow:** Added tests for sync idempotency, source aggregation behavior, steps hub visibility, backup fallback handling, onboarding flow, and steps module behavior.
+
+### Changed
+- **Smarter steps sync behavior:** Permissions are now requested when tracking is enabled instead of on every sync, refresh behavior is more resilient, and step-related UI updates propagate more reliably across diary and statistics surfaces.
+- **Steps charts and summaries:** Refined weekly/monthly trend rendering, baseline behavior, goal labeling, and statistics-card presentation for clearer interpretation of step progress.
+
+### Fixed
+- **Android Health Connect completeness:** Fixed paginated `readRecords` ingestion so all result pages are processed, resolving missing or undercounted daily totals on Android.
+- **Duplicate and inflated step totals:** Fixed overlap handling after disabling and re-enabling tracking, and improved multi-source aggregation to avoid double counting.
+- **Statistics steps visibility:** Steps are now shown on the statistics screen only when tracking is enabled, with live updates after settings changes.
+- **Backup destination reliability:** Fixed auto-backup failures for invalid or unwritable folders and added SAF-backed writing to the exact user-selected external folder on Android.
+- **Workout and AI polish:** Localized cardio set-row headers and improved Android speech-recognition availability and retry handling in AI meal capture.
+
 ## 0.7.1-beta.1 - 2026-03-27
 
 ### Fixed

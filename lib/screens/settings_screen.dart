@@ -194,7 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                       // Issue 2 Fix: When enabling, immediately request permissions & sync
                       if (value) {
-                        final platform = const HealthPlatformSteps();
+                        const platform = HealthPlatformSteps();
                         final availability = await platform.getAvailability();
                         if (availability == StepsAvailability.available) {
                           await platform.requestPermissions();

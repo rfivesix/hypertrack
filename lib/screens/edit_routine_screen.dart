@@ -689,7 +689,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       return Row(
         children: [
           _buildHeader(l10n.setLabel, flex: 2), // FIX: Kleiner
-          _buildHeader(l10n.cardioDistanceLabel, flex: 4), // FIX: Sehr viel Platz
+          _buildHeader(l10n.cardioDistanceLabel,
+              flex: 4), // FIX: Sehr viel Platz
           const SizedBox(width: 8),
           _buildHeader(l10n.cardioTimeLabel, flex: 4), // FIX: Sehr viel Platz
           const SizedBox(width: 8),

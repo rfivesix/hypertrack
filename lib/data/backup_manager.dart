@@ -73,7 +73,7 @@ class BackupManager {
       }
     }
 
-    throw FileSystemException('No writable auto-backup directory found');
+    throw const FileSystemException('No writable auto-backup directory found');
   }
 
   // ---------------------------------------------------------------------------
