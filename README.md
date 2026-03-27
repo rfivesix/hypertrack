@@ -15,18 +15,18 @@ Learn more about the project: **[Hypertrack Project Overview](documentation/over
 
 ---
 
-> **Note:** Hypertrack has transitioned from alpha to the regular **v0.7.x minor release line**.
+> **Note:** Hypertrack is currently shipping iterative **v0.7.1 alpha** builds focused on Health Steps UX and integration polish.
 
 ---
 
-## ⚠️ **Important Disclaimer: v0.7 Stable Baseline**
+## ⚠️ **Important Disclaimer: v0.7 Foundation + Active Alpha Iterations**
 
 **Please read before using:**
 
-Hypertrack is now on **v0.7.0** as a regular minor release. The architecture transition (Drift + UUIDs + modular analytics) is complete, and the app is positioned as a stable, privacy-first training and nutrition companion.
+Hypertrack is on the **v0.7.x foundation** with active **v0.7.1 alpha** iterations. The architecture transition (Drift + UUIDs + modular analytics) is complete, while Health Steps and related UX continue to be refined in alpha releases.
 
 * **Stable Foundation:** The database structure is solidified and no further breaking schema changes are expected.
-* **Active Development:** New features and refinements continue to ship in minor updates.
+* **Active Development:** New features and refinements continue to ship in minor and alpha updates.
 * **Recommendation:** Continue using the built-in **Backup (JSON)** feature regularly as a best-practice safeguard.
 
 ---
@@ -53,6 +53,7 @@ Hypertrack is already a fully functional daily driver for fitness enthusiasts.
 * **Measurements:** Track weight, body fat percentage, and tape measurements (biceps, waist, etc.).
 * **Charts:** Visualize your progress over time.
 * **Statistics & Analytics Hub (v0.7):** ✅ Fully functional analytics workspace for consistency, performance, muscle distribution, recovery, and body/nutrition correlations, including dedicated drill-down screens.
+* **Health Steps Module (v0.7.1 beta):** Dedicated steps detail screen with Day/Week/Month navigation, period switching, and improved trend visualizations with target/average guidance.
 * **Supplements:** Manage your inventory and track daily intake of supplements (like Creatine or Vitamins) with full historical tracking of goals and limits.
 
 ### 🛡️ Privacy & Tech

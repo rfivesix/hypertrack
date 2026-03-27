@@ -66,18 +66,17 @@ class _MuscleGroupAnalyticsScreenState
   }
 
   List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
-    final sorted =
-        muscles
-            .where(
-              (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
-                m['muscleGroup'] as String?,
-              ),
-            )
-            .toList(growable: false)
-          ..sort(
-            (a, b) => ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
-                .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0),
-          );
+    final sorted = muscles
+        .where(
+          (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?,
+          ),
+        )
+        .toList(growable: false)
+      ..sort(
+        (a, b) => ((b['equivalentSets'] as num?)?.toDouble() ?? 0.0)
+            .compareTo((a['equivalentSets'] as num?)?.toDouble() ?? 0.0),
+      );
 
     if (sorted.length <= _maxMuscleBars) {
       return sorted
@@ -123,15 +122,15 @@ class _MuscleGroupAnalyticsScreenState
     final radarMax = radarData.isEmpty
         ? 0.0
         : radarData
-              .map((e) => e.value)
-              .reduce((a, b) => a > b ? a : b)
-              .clamp(1.0, 1000000.0)
-              .toDouble();
+            .map((e) => e.value)
+            .reduce((a, b) => a > b ? a : b)
+            .clamp(1.0, 1000000.0)
+            .toDouble();
 
     final selectedWeek =
         (_selectedWeekIndex >= 0 && _selectedWeekIndex < weekly.length)
-        ? weekly[_selectedWeekIndex]
-        : null;
+            ? weekly[_selectedWeekIndex]
+            : null;
 
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
@@ -158,10 +157,10 @@ class _MuscleGroupAnalyticsScreenState
                       final label = days == 7
                           ? l10n.filter7Days
                           : days == 30
-                          ? l10n.filter30Days
-                          : days == 90
-                          ? l10n.filter3Months
-                          : l10n.filter6Months;
+                              ? l10n.filter30Days
+                              : days == 90
+                                  ? l10n.filter3Months
+                                  : l10n.filter6Months;
                       return ChoiceChip(
                         label: Text(label),
                         selected: _periodIndex == index,
@@ -199,7 +198,9 @@ class _MuscleGroupAnalyticsScreenState
                           const SizedBox(height: 8),
                           Text(
                             l10n.analyticsRadarVolumeCaption,
-                            style: Theme.of(context).textTheme.bodySmall
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
@@ -251,7 +252,9 @@ class _MuscleGroupAnalyticsScreenState
                             dataQualityOk
                                 ? l10n.analyticsGuidanceDirectionalDisclaimer
                                 : l10n.analyticsGuidanceSoftenedDisclaimer,
-                            style: Theme.of(context).textTheme.bodySmall
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
@@ -290,24 +293,23 @@ class _MuscleGroupAnalyticsScreenState
 
     final rawMuscles =
         (selectedWeek['muscles'] as Map<String, dynamic>?) ?? const {};
-    final items =
-        rawMuscles.entries
-            .map(
-              (entry) => {
-                'muscleGroup': entry.key,
-                'value': (entry.value as num).toDouble(),
-              },
-            )
-            .where(
-              (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
-                m['muscleGroup'] as String?,
-              ),
-            )
-            .where((m) => (m['value'] as double) > 0)
-            .toList()
-          ..sort(
-            (a, b) => (b['value'] as double).compareTo(a['value'] as double),
-          );
+    final items = rawMuscles.entries
+        .map(
+          (entry) => {
+            'muscleGroup': entry.key,
+            'value': (entry.value as num).toDouble(),
+          },
+        )
+        .where(
+          (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+            m['muscleGroup'] as String?,
+          ),
+        )
+        .where((m) => (m['value'] as double) > 0)
+        .toList()
+      ..sort(
+        (a, b) => (b['value'] as double).compareTo(a['value'] as double),
+      );
 
     return _buildMuscleBarChart(
       items: items.take(_maxMuscleBars).toList(),
@@ -325,19 +327,18 @@ class _MuscleGroupAnalyticsScreenState
 
   Widget _buildFrequencyCard(List<Map<String, dynamic>> muscles) {
     final l10n = AppLocalizations.of(context)!;
-    final items =
-        muscles
-            .map(
-              (m) => {
-                'muscleGroup': m['muscleGroup'] as String,
-                'value': (m['frequencyPerWeek'] as num).toDouble(),
-              },
-            )
-            .where((m) => (m['value'] as double) > 0)
-            .toList()
-          ..sort(
-            (a, b) => (b['value'] as double).compareTo(a['value'] as double),
-          );
+    final items = muscles
+        .map(
+          (m) => {
+            'muscleGroup': m['muscleGroup'] as String,
+            'value': (m['frequencyPerWeek'] as num).toDouble(),
+          },
+        )
+        .where((m) => (m['value'] as double) > 0)
+        .toList()
+      ..sort(
+        (a, b) => (b['value'] as double).compareTo(a['value'] as double),
+      );
 
     return _buildMuscleBarChart(
       items: items.take(_maxMuscleBars).toList(),
@@ -449,9 +450,9 @@ class _MuscleGroupAnalyticsScreenState
                         reservedSize: 40,
                         getTitlesWidget: (value, meta) =>
                             AnalyticsChartDefaults.tickLabel(
-                              context,
-                              _formatCompact(value),
-                            ),
+                          context,
+                          _formatCompact(value),
+                        ),
                       ),
                     ),
                     bottomTitles: AxisTitles(
@@ -510,8 +511,8 @@ class _MuscleGroupAnalyticsScreenState
             Text(
               footer,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             ),
           ],
         ),

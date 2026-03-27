@@ -225,16 +225,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       // update the UI text fields to show the accepted fallback number.
       if (setLog.weightKg != null &&
           _weightControllers[templateId]?.text.isEmpty == true) {
-        _weightControllers[templateId]!.text = setLog.weightKg!
-            .toStringAsFixed(1)
-            .replaceAll('.0', '');
+        _weightControllers[templateId]!.text =
+            setLog.weightKg!.toStringAsFixed(1).replaceAll('.0', '');
       }
       if (setLog.distanceKm != null &&
           _weightControllers[templateId]?.text.isEmpty == true &&
           isCardio) {
-        _weightControllers[templateId]!.text = setLog.distanceKm!
-            .toStringAsFixed(1)
-            .replaceAll('.0', '');
+        _weightControllers[templateId]!.text =
+            setLog.distanceKm!.toStringAsFixed(1).replaceAll('.0', '');
       }
       if (setLog.reps != null &&
           _repsControllers[templateId]?.text.isEmpty == true &&
@@ -244,8 +242,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       if (setLog.durationSeconds != null &&
           _repsControllers[templateId]?.text.isEmpty == true &&
           isCardio) {
-        _repsControllers[templateId]!.text = (setLog.durationSeconds! / 60)
-            .toStringAsFixed(0);
+        _repsControllers[templateId]!.text =
+            (setLog.durationSeconds! / 60).toStringAsFixed(0);
       }
       if (setLog.rir != null &&
           _rirControllers[templateId]?.text.isEmpty == true) {
@@ -489,11 +487,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         children: [
           _buildHeader(l10n.setLabel, flex: 2), // Set Nr.
           _buildHeader(l10n.lastTimeLabel, flex: 3), // History/Last
-          _buildHeader("Distance (km)", flex: 4), // Mehr Platz
+          _buildHeader(l10n.cardioDistanceLabel, flex: 4), // Mehr Platz
           const SizedBox(width: 8),
-          _buildHeader("Time (min)", flex: 4), // Mehr Platz
+          _buildHeader(l10n.cardioTimeLabel, flex: 4), // Mehr Platz
           const SizedBox(width: 8),
-          _buildHeader("Intens.", flex: 2),
+          _buildHeader(l10n.cardioIntensityLabel, flex: 2),
           const SizedBox(width: 48), // Platz für Checkbox
         ],
       );
@@ -553,25 +551,23 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-              ? Colors.grey.withOpacity(0.1)
-              : Colors.white.withOpacity(0.1))
+            ? Colors.grey.withOpacity(0.1)
+            : Colors.white.withOpacity(0.1))
         : Colors.transparent;
 
     // Hint Logic
     String weightHint = '0';
     String repHint = '0';
-    String rirHint = template.targetRir != null
-        ? template.targetRir.toString()
-        : '-';
+    String rirHint =
+        template.targetRir != null ? template.targetRir.toString() : '-';
 
     if (isCardio) {
       weightHint = "-"; // Distance Hint
       repHint = "-"; // Time Hint
     } else {
       final double tWeight = template.targetWeight ?? 0.0;
-      weightHint = tWeight > 0
-          ? tWeight.toStringAsFixed(1).replaceAll('.0', '')
-          : '0';
+      weightHint =
+          tWeight > 0 ? tWeight.toStringAsFixed(1).replaceAll('.0', '') : '0';
       repHint = (template.targetReps?.isNotEmpty == true)
           ? template.targetReps!
           : '0';
@@ -601,7 +597,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         Expanded(
           flex: 3,
           child: isCardio
-              ? const SizedBox.shrink() // Bei Cardio zeigen wir (noch) keine History an
+              ? const SizedBox
+                  .shrink() // Bei Cardio zeigen wir (noch) keine History an
               : Text(
                   (rowIndex < lastPerfSets.length)
                       ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
@@ -719,9 +716,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     return Dismissible(
       key: ValueKey('set_$templateId'),
-      direction: isCompleted
-          ? DismissDirection.none
-          : DismissDirection.endToStart,
+      direction:
+          isCompleted ? DismissDirection.none : DismissDirection.endToStart,
       onDismissed: (_) => _removeSet(templateId),
       background: Container(
         color: Colors.redAccent,
@@ -903,9 +899,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
     final mgr = manager;
     final int planned = mgr.setLogs.length;
-    final int completed = mgr.setLogs.values
-        .where((s) => s.isCompleted == true)
-        .length;
+    final int completed =
+        mgr.setLogs.values.where((s) => s.isCompleted == true).length;
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
     if (!_isLoading) {
@@ -988,9 +983,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               ExerciseDetailScreen(
-                                                exercise:
-                                                    routineExercise.exercise,
-                                              ),
+                                            exercise: routineExercise.exercise,
+                                          ),
                                         ),
                                       ),
                                       child: Padding(
@@ -1009,11 +1003,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        if (manager.pauseTimes[routineExercise
-                                                    .id!] !=
+                                        if (manager.pauseTimes[
+                                                    routineExercise.id!] !=
                                                 null &&
-                                            manager.pauseTimes[routineExercise
-                                                    .id!]! >
+                                            manager.pauseTimes[
+                                                    routineExercise.id!]! >
                                                 0)
                                           Padding(
                                             padding: const EdgeInsets.only(
@@ -1023,9 +1017,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                               "${manager.pauseTimes[routineExercise.id!]}s",
                                               style: textTheme.bodyMedium
                                                   ?.copyWith(
-                                                    color: colorScheme.primary,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                                                color: colorScheme.primary,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
                                         IconButton(
@@ -1070,46 +1064,41 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             .asMap()
                                             .entries
                                             .map((setEntry) {
-                                              final templateId =
-                                                  setEntry.value.id!;
-                                              final template = setEntry
-                                                  .value; // <--- Template
-                                              final setLog =
-                                                  manager.setLogs[templateId];
+                                          final templateId = setEntry.value.id!;
+                                          final template =
+                                              setEntry.value; // <--- Template
+                                          final setLog =
+                                              manager.setLogs[templateId];
 
-                                              if (setLog == null) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              int workingSetIndex = 0;
-                                              for (
-                                                int i = 0;
-                                                i <= setEntry.key;
-                                                i++
-                                              ) {
-                                                final currentTemplateId =
-                                                    routineExercise
-                                                        .setTemplates[i]
-                                                        .id!;
-                                                if (manager
-                                                        .setLogs[currentTemplateId]
-                                                        ?.setType !=
-                                                    'warmup') {
-                                                  workingSetIndex++;
-                                                }
-                                              }
+                                          if (setLog == null) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          int workingSetIndex = 0;
+                                          for (int i = 0;
+                                              i <= setEntry.key;
+                                              i++) {
+                                            final currentTemplateId =
+                                                routineExercise
+                                                    .setTemplates[i].id!;
+                                            if (manager
+                                                    .setLogs[currentTemplateId]
+                                                    ?.setType !=
+                                                'warmup') {
+                                              workingSetIndex++;
+                                            }
+                                          }
 
-                                              return _buildSetRow(
-                                                workingSetIndex,
-                                                setEntry.key,
-                                                templateId,
-                                                setLog,
-                                                _lastPerformances[routineExercise
-                                                        .exercise
-                                                        .nameEn] ??
-                                                    [],
-                                                template, // <--- Template übergeben
-                                              );
-                                            }),
+                                          return _buildSetRow(
+                                            workingSetIndex,
+                                            setEntry.key,
+                                            templateId,
+                                            setLog,
+                                            _lastPerformances[routineExercise
+                                                    .exercise.nameEn] ??
+                                                [],
+                                            template, // <--- Template übergeben
+                                          );
+                                        }),
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 16.0,

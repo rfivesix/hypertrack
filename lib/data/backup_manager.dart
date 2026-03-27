@@ -18,6 +18,8 @@ import 'product_database_helper.dart';
 import 'workout_database_helper.dart';
 import '../models/food_item.dart';
 import '../models/hypertrack_backup.dart';
+import '../services/health/steps_sync_service.dart';
+import '../services/storage/saf_storage_service.dart';
 import '../util/encryption_util.dart';
 
 /// Manager responsible for application backup, restoration, and data export.
@@ -34,7 +36,45 @@ class BackupManager {
   final _productDb = ProductDatabaseHelper.instance;
   final _workoutDb = WorkoutDatabaseHelper.instance;
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
+
+  @visibleForTesting
+  static Future<Directory> resolveWritableBackupDirectory({
+    required Directory docsDir,
+    String? dirPath,
+    String? savedDir,
+    String? externalFallbackDir,
+  }) async {
+    final defaultDir = Directory(p.join(docsDir.path, 'Backups'));
+    final candidates = <String>[
+      if (dirPath != null && dirPath.trim().isNotEmpty) dirPath.trim(),
+      if (savedDir != null && savedDir.trim().isNotEmpty) savedDir.trim(),
+      if (externalFallbackDir != null && externalFallbackDir.trim().isNotEmpty)
+        externalFallbackDir.trim(),
+      defaultDir.path,
+    ];
+
+    for (final candidate in candidates) {
+      final directory = Directory(candidate);
+      try {
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        final probe = File(p.join(directory.path, '.hypertrack_write_probe'));
+        await probe.writeAsString('ok', flush: true);
+        if (await probe.exists()) {
+          await probe.delete();
+        }
+        return directory;
+      } catch (e) {
+        debugPrint(
+          'Auto-backup directory not writable ($candidate): $e',
+        );
+      }
+    }
+
+    throw const FileSystemException('No writable auto-backup directory found');
+  }
 
   // ---------------------------------------------------------------------------
   // EXPORT (JSON / FULL BACKUP)
@@ -59,8 +99,10 @@ class BackupManager {
       final jsonString = await _generateBackupJson();
 
       // Encrypt payload before sharing.
-      final wrapper =
-          await EncryptionUtil.encryptString(jsonString, passphrase);
+      final wrapper = await EncryptionUtil.encryptString(
+        jsonString,
+        passphrase,
+      );
       final wrappedJson = jsonEncode(wrapper);
 
       return await _writeAndShareFile(wrappedJson, 'hypertrack_backup_enc');
@@ -82,7 +124,8 @@ class BackupManager {
     final db = await _userDb.database;
     final customProductRows = await (db.select(
       db.products,
-    )..where((t) => t.source.equals('user'))).get();
+    )..where((t) => t.source.equals('user')))
+        .get();
 
     final customFoodItems = customProductRows.map((row) {
       return FoodItem(
@@ -110,16 +153,22 @@ class BackupManager {
     final customExercises = await _workoutDb.getCustomExercises();
 
     // 3) Collect historical goals and supplement settings.
-    final goalsHistoryRows = await db.select(db.dailyGoalsHistory).get();
+    final goalsHistoryRows = await db.customSelect('''
+      SELECT target_calories, target_protein, target_carbs, target_fat, target_water, target_steps, created_at
+      FROM daily_goals_history
+      ''').get();
     final dailyGoalsHistory = goalsHistoryRows
         .map(
           (r) => {
-            'targetCalories': r.targetCalories,
-            'targetProtein': r.targetProtein,
-            'targetCarbs': r.targetCarbs,
-            'targetFat': r.targetFat,
-            'targetWater': r.targetWater,
-            'createdAt': r.createdAt.toIso8601String(),
+            'targetCalories': r.read<int>('target_calories'),
+            'targetProtein': r.read<int>('target_protein'),
+            'targetCarbs': r.read<int>('target_carbs'),
+            'targetFat': r.read<int>('target_fat'),
+            'targetWater': r.read<int>('target_water'),
+            'targetSteps': r.read<int>('target_steps'),
+            'createdAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('created_at') * 1000,
+            ).toIso8601String(),
           },
         )
         .toList();
@@ -140,6 +189,12 @@ class BackupManager {
 
     // 4) Collect app settings and profile.
     final settingsRow = await db.select(db.appSettings).getSingleOrNull();
+    final appSettingsRawRows = await db
+        .customSelect('SELECT target_steps FROM app_settings LIMIT 1')
+        .get();
+    final targetSteps = appSettingsRawRows.isNotEmpty
+        ? appSettingsRawRows.first.read<int>('target_steps')
+        : StepsSyncService.defaultStepsGoal;
     final Map<String, dynamic>? appSettingsMap = settingsRow != null
         ? {
             'userId': settingsRow.userId,
@@ -150,8 +205,30 @@ class BackupManager {
             'targetCarbs': settingsRow.targetCarbs,
             'targetFat': settingsRow.targetFat,
             'targetWater': settingsRow.targetWater,
+            'targetSteps': targetSteps,
           }
         : null;
+
+    final healthStepRows = await db.customSelect('''
+      SELECT provider, source_id, start_at, end_at, step_count, external_key
+      FROM health_step_segments
+      ''').get();
+    final healthStepSegments = healthStepRows
+        .map(
+          (r) => <String, dynamic>{
+            'provider': r.read<String>('provider'),
+            'sourceId': r.read<String?>('source_id'),
+            'startAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('start_at') * 1000,
+            ).toUtc().toIso8601String(),
+            'endAt': DateTime.fromMillisecondsSinceEpoch(
+              r.read<int>('end_at') * 1000,
+            ).toUtc().toIso8601String(),
+            'stepCount': r.read<int>('step_count'),
+            'externalKey': r.read<String>('external_key'),
+          },
+        )
+        .toList();
 
     final profileRow = await db.select(db.profiles).getSingleOrNull();
     final Map<String, dynamic>? profileMap = profileRow != null
@@ -192,6 +269,7 @@ class BackupManager {
       supplementSettingsHistory: supplementSettingsHistory,
       appSettings: appSettingsMap,
       profile: profileMap,
+      healthStepSegments: healthStepSegments,
     );
 
     return jsonEncode(backup.toJson());
@@ -270,7 +348,8 @@ class BackupManager {
       final db = await _userDb.database;
       await (db.delete(
         db.products,
-      )..where((t) => t.source.equals('user'))).go();
+      )..where((t) => t.source.equals('user')))
+          .go();
 
       for (final entry in backup.userPreferences.entries) {
         final key = entry.key;
@@ -300,23 +379,24 @@ class BackupManager {
       await db.batch((batch) {
         for (final item in backup.customFoodItems) {
           batch.insert(
-              db.products,
-              ProductsCompanion(
-                barcode: drift.Value(item.barcode),
-                name: drift.Value(item.name),
-                brand: drift.Value(item.brand),
-                calories: drift.Value(item.calories),
-                protein: drift.Value(item.protein),
-                carbs: drift.Value(item.carbs),
-                fat: drift.Value(item.fat),
-                sugar: drift.Value(item.sugar),
-                fiber: drift.Value(item.fiber),
-                salt: drift.Value(item.salt),
-                source: const drift.Value('user'),
-                // Guard against nullable legacy values in older backups.
-                isLiquid: drift.Value(item.isLiquid ?? false),
-                category: drift.Value(item.category),
-                id: drift.Value(item.barcode.startsWith('user_')
+            db.products,
+            ProductsCompanion(
+              barcode: drift.Value(item.barcode),
+              name: drift.Value(item.name),
+              brand: drift.Value(item.brand),
+              calories: drift.Value(item.calories),
+              protein: drift.Value(item.protein),
+              carbs: drift.Value(item.carbs),
+              fat: drift.Value(item.fat),
+              sugar: drift.Value(item.sugar),
+              fiber: drift.Value(item.fiber),
+              salt: drift.Value(item.salt),
+              source: const drift.Value('user'),
+              // Guard against nullable legacy values in older backups.
+              isLiquid: drift.Value(item.isLiquid ?? false),
+              category: drift.Value(item.category),
+              id: drift.Value(
+                item.barcode.startsWith('user_')
                     ? item.barcode
                     : 'user_${item.barcode}',
               ),
@@ -335,24 +415,28 @@ class BackupManager {
 
       // Import DailyGoalsHistory
       if (backup.dailyGoalsHistory.isNotEmpty) {
-        await db.batch((batch) {
-          for (final row in backup.dailyGoalsHistory) {
-            batch.insert(
-              db.dailyGoalsHistory,
-              DailyGoalsHistoryCompanion(
-                targetCalories: drift.Value(row['targetCalories'] as int),
-                targetProtein: drift.Value(row['targetProtein'] as int),
-                targetCarbs: drift.Value(row['targetCarbs'] as int),
-                targetFat: drift.Value(row['targetFat'] as int),
-                targetWater: drift.Value(row['targetWater'] as int),
-                createdAt: drift.Value(
-                  DateTime.parse(row['createdAt'] as String),
+        for (final row in backup.dailyGoalsHistory) {
+          final inserted = await db.into(db.dailyGoalsHistory).insertReturning(
+                DailyGoalsHistoryCompanion(
+                  targetCalories: drift.Value(row['targetCalories'] as int),
+                  targetProtein: drift.Value(row['targetProtein'] as int),
+                  targetCarbs: drift.Value(row['targetCarbs'] as int),
+                  targetFat: drift.Value(row['targetFat'] as int),
+                  targetWater: drift.Value(row['targetWater'] as int),
+                  createdAt: drift.Value(
+                    DateTime.parse(row['createdAt'] as String),
+                  ),
                 ),
-              ),
-              mode: drift.InsertMode.insertOrReplace,
-            );
-          }
-        });
+                mode: drift.InsertMode.insertOrReplace,
+              );
+          await db.customStatement(
+            'UPDATE daily_goals_history SET target_steps = ? WHERE local_id = ?',
+            [
+              (row['targetSteps'] as int?) ?? StepsSyncService.defaultStepsGoal,
+              inserted.localId,
+            ],
+          );
+        }
       }
 
       // Import SupplementSettingsHistory
@@ -388,9 +472,7 @@ class BackupManager {
       // Import Profile
       if (backup.profile != null) {
         final p = backup.profile!;
-        await db
-            .into(db.profiles)
-            .insert(
+        await db.into(db.profiles).insert(
               ProfilesCompanion(
                 id: drift.Value(p['id'] as String),
                 username: drift.Value(p['username'] as String?),
@@ -414,9 +496,7 @@ class BackupManager {
       // Import AppSettings
       if (backup.appSettings != null && backup.profile != null) {
         final s = backup.appSettings!;
-        await db
-            .into(db.appSettings)
-            .insert(
+        await db.into(db.appSettings).insert(
               AppSettingsCompanion(
                 userId: drift.Value(backup.profile!['id'] as String),
                 themeMode: drift.Value(s['themeMode'] as String? ?? 'system'),
@@ -431,6 +511,17 @@ class BackupManager {
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
+        await db.customStatement(
+          'UPDATE app_settings SET target_steps = ? WHERE user_id = ?',
+          [
+            s['targetSteps'] as int? ?? StepsSyncService.defaultStepsGoal,
+            backup.profile!['id'] as String,
+          ],
+        );
+      }
+
+      if (backup.healthStepSegments.isNotEmpty) {
+        await _userDb.upsertHealthStepSegments(backup.healthStepSegments);
       }
 
       debugPrint("Backup import succeeded.");
@@ -476,41 +567,77 @@ class BackupManager {
         fileName = 'hypertrack_auto_enc_v$currentSchemaVersion';
       }
 
-      final docs = await getApplicationDocumentsDirectory();
-      final savedDir = prefs.getString('auto_backup_dir');
+      final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
+      final targetFileName = '$fileName-[$ts].json';
+      final configuredDirPath = dirPath?.trim();
+      final savedDir = prefs.getString('auto_backup_dir')?.trim();
 
-      Directory baseDir;
-      if (dirPath != null && dirPath.isNotEmpty) {
-        baseDir = Directory(dirPath);
-      } else if (savedDir != null && savedDir.isNotEmpty) {
-        baseDir = Directory(savedDir);
-      } else {
-        baseDir = Directory(p.join(docs.path, 'Backups'));
-      }
-
-      if (!await baseDir.exists()) {
-        try {
-          await baseDir.create(recursive: true);
-        } catch (e) {
-          baseDir = Directory(p.join(docs.path, 'Backups'));
-          await baseDir.create(recursive: true);
+      if (Platform.isAndroid) {
+        final treeUri = prefs.getString('auto_backup_tree_uri');
+        if (treeUri != null && treeUri.trim().isNotEmpty) {
+          final displayPath =
+              await SafStorageService.instance.writeTextFileToTree(
+            treeUri: treeUri.trim(),
+            fileName: targetFileName,
+            content: content,
+          );
+          await SafStorageService.instance.pruneAutoBackupsInTree(
+            treeUri: treeUri.trim(),
+            filePrefix: 'hypertrack_auto',
+            retention: retention,
+          );
+          await prefs.setInt('auto_backup_last_ms', nowMs);
+          await prefs.setString(
+            'auto_backup_last_file_path',
+            displayPath ?? targetFileName,
+          );
+          await prefs.setString(
+            'auto_backup_last_dir_used',
+            savedDir ?? configuredDirPath ?? '',
+          );
+          await prefs.setBool('auto_backup_last_used_fallback', false);
+          await prefs.remove('auto_backup_last_error');
+          return true;
+        }
+        final hasConfiguredFolder =
+            configuredDirPath != null && configuredDirPath.isNotEmpty;
+        final hasSavedFolder = savedDir != null && savedDir.isNotEmpty;
+        if (hasConfiguredFolder || hasSavedFolder) {
+          await prefs.setString(
+            'auto_backup_last_error',
+            'Please re-select your auto-backup folder to grant Android folder access.',
+          );
+          return false;
         }
       }
 
-      final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
-      final file = File(p.join(baseDir.path, '$fileName-[$ts].json'));
+      final docs = await getApplicationDocumentsDirectory();
+      final external = await getExternalStorageDirectory();
+      final externalFallbackDir =
+          external != null ? p.join(external.path, 'Backups') : null;
+      final baseDir = await resolveWritableBackupDirectory(
+        docsDir: docs,
+        dirPath: configuredDirPath,
+        savedDir: savedDir,
+        externalFallbackDir: externalFallbackDir,
+      );
+      final requestedDir = configuredDirPath;
+      final usedFallback = requestedDir != null &&
+          requestedDir.isNotEmpty &&
+          p.normalize(requestedDir) != p.normalize(baseDir.path);
+
+      final file = File(p.join(baseDir.path, targetFileName));
       await file.writeAsString(content);
 
       try {
-        final files =
-            baseDir
-                .listSync()
-                .whereType<File>()
-                .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
-                .toList()
-              ..sort(
-                (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
-              );
+        final files = baseDir
+            .listSync()
+            .whereType<File>()
+            .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
+            .toList()
+          ..sort(
+            (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
+          );
 
         if (files.length > retention) {
           for (var i = retention; i < files.length; i++) {
@@ -520,9 +647,16 @@ class BackupManager {
       } catch (_) {}
 
       await prefs.setInt('auto_backup_last_ms', nowMs);
+      await prefs.setString('auto_backup_last_file_path', file.path);
+      await prefs.setString('auto_backup_last_dir_used', baseDir.path);
+      await prefs.setBool('auto_backup_last_used_fallback', usedFallback);
+      await prefs.remove('auto_backup_last_error');
       return true;
-    } catch (e) {
+    } catch (e, st) {
       debugPrint("Auto-backup failed: $e");
+      debugPrint('$st');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auto_backup_last_error', e.toString());
       return false;
     }
   }

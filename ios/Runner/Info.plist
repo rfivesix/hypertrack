@@ -30,6 +30,8 @@
 	<string>Diese App benötigt Zugriff auf die Kamera, um Barcodes von Lebensmitteln zu scannen.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Hypertrack benötigt Zugriff auf das Mikrofon für die Spracheingabe bei der KI-Mahlzeitenerkennung.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Hypertrack benötigt Lesezugriff auf Schrittzahlen aus Apple Health, um deine täglichen Schritte im Tagebuch anzuzeigen.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Diese App benötigt Zugriff auf deine Galerie, damit du ein Profilbild auswählen kannst.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

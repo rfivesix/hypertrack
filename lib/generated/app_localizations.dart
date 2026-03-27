@@ -878,6 +878,30 @@ abstract class AppLocalizations {
   /// **'Reps'**
   String get repsLabel;
 
+  /// No description provided for @cardioDistanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance (km)'**
+  String get cardioDistanceLabel;
+
+  /// No description provided for @cardioTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time (min)'**
+  String get cardioTimeLabel;
+
+  /// No description provided for @cardioIntensityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Intens.'**
+  String get cardioIntensityLabel;
+
+  /// No description provided for @cardioIntensityShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Int.'**
+  String get cardioIntensityShortLabel;
+
   /// No description provided for @restTimerLabel.
   ///
   /// In en, this message translates to:

@@ -250,6 +250,29 @@ A record of taking a supplement.
 
 ---
 
+## 7. Health Steps (Alpha)
+
+### `health_step_segments`
+Raw step records imported from Apple HealthKit (iOS) and Google Health Connect (Android).
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `provider` | `TEXT` | `apple_healthkit` or `google_health_connect` |
+| `source_id` | `TEXT?` | Source bundle id / package name (nullable) |
+| `start_at` | `DATETIME (UTC)` | Segment start timestamp in UTC |
+| `end_at` | `DATETIME (UTC)` | Segment end timestamp in UTC |
+| `step_count` | `INTEGER` | Step count for the segment |
+| `external_key` | `TEXT (UNIQUE)` | Cross-sync deduplication key |
+| `id` + `local_id` + meta columns | mixed | Follows repository HybridId + MetaColumns pattern |
+
+Deduplication strategy:
+- Preferred: `external_key = "<provider>:<nativeId>"` when native record IDs are available.
+- Fallback: `external_key = "<provider>:sha1(sourceId|startAtUtcIso|endAtUtcIso|stepCount)"`.
+
+The app supports repeated sync runs safely via `INSERT OR REPLACE` on `external_key`.
+
+---
+
 ## Database Architecture
 
 All data is stored in a local SQLite database.

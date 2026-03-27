@@ -4,6 +4,92 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1] - 2026-03-27
+
+### Added
+- **Native health steps tracking across iOS and Android:** Added Apple HealthKit and Google Health Connect integration for reading and syncing step data into Hypertrack, including the platform bridge, persisted segment storage, and daily step goal support.
+- **Dedicated Steps experience:** Added a dedicated steps detail screen with Day/Week/Month views, period navigation, richer trend context, and tighter integration into Diary, Statistics Hub, Settings, Goals, and onboarding.
+- **Steps source controls:** Added provider selection and source-policy controls, including `Auto (dominant source)` and `Merge (max per hour)` to better handle overlapping multi-source health data.
+- **Regression coverage for the new steps flow:** Added tests for sync idempotency, source aggregation behavior, steps hub visibility, backup fallback handling, onboarding flow, and steps module behavior.
+
+### Changed
+- **Smarter steps sync behavior:** Permissions are now requested when tracking is enabled instead of on every sync, refresh behavior is more resilient, and step-related UI updates propagate more reliably across diary and statistics surfaces.
+- **Steps charts and summaries:** Refined weekly/monthly trend rendering, baseline behavior, goal labeling, and statistics-card presentation for clearer interpretation of step progress.
+
+### Fixed
+- **Android Health Connect completeness:** Fixed paginated `readRecords` ingestion so all result pages are processed, resolving missing or undercounted daily totals on Android.
+- **Duplicate and inflated step totals:** Fixed overlap handling after disabling and re-enabling tracking, and improved multi-source aggregation to avoid double counting.
+- **Statistics steps visibility:** Steps are now shown on the statistics screen only when tracking is enabled, with live updates after settings changes.
+- **Backup destination reliability:** Fixed auto-backup failures for invalid or unwritable folders and added SAF-backed writing to the exact user-selected external folder on Android.
+- **Workout and AI polish:** Localized cardio set-row headers and improved Android speech-recognition availability and retry handling in AI meal capture.
+
+## 0.7.1-beta.1 - 2026-03-27
+
+### Fixed
+- **Cardio set-row header localization (#75):** Localized cardio header labels (`Distance`, `Time`, `Intensity`) in workout set rows.
+- **Statistics steps visibility (#150):** Steps metric is now shown on the statistics screen only when step tracking is enabled in settings, with live UI updates when toggled.
+- **Auto backup reliability (#151):** Fixed auto-backup failures for invalid/unwritable selected folders by validating writability and falling back to a safe app backup directory.
+- **Android auto-backup folder targeting (#151):** Added SAF-based folder access so backups can be written to the exact user-selected external folder path on Android.
+- **AI meal voice capture on Android (#143):** Improved speech recognition initialization/retry flow and Android-specific availability handling; fixed platform guidance text (no more incorrect iOS-only prompt on Android).
+## 0.7.1-alpha.4 — 2026-03-26
+
+### Fixed
+- **Android Health Connect paging:** Fixed `readRecords` ingestion to read all pages instead of only the first result page.
+- **Missing steps on Android:** Resolved undercounted daily totals caused by incomplete Health Connect imports (especially visible when comparing Hypertrack vs Google Fit / Withings).
+
+## 0.7.1-alpha.3 — 2026-03-26
+
+### Fixed
+- **Steps inflation after re-enabling tracking:** Resolved an issue where daily totals could jump too high after disabling and re-enabling step tracking.
+- **Idempotent refresh pipeline:** Force refresh and incremental refresh now safely replace overlapping sync windows to prevent duplicate counting.
+- **Safer multi-source aggregation:** Improved handling for overlapping sources (e.g. smartwatch + phone / Withings + system) to avoid double counting.
+
+### Added
+- **Steps source policy (Settings):**
+  - `Auto (dominant source)` (default, recommended)
+  - `Merge (max per hour)`
+- **Debug diagnostics for sync:** Added debug logging of sync window/fetch stats plus per-source daily totals to speed up troubleshooting.
+
+### Tests
+- Added coverage for:
+  - disable -> re-enable -> overlapping sync window (no inflation),
+  - multi-source overlap behavior for both source policies.
+## [0.7.1-alpha.2+70006] - 2026-03-26
+
+### Added
+- **Steps Module UX (Day/Week/Month):** Expanded the dedicated steps screen with clear Day/Week/Month views and period navigation for date/week/month switching.
+- **Richer Step Trend Context:** Added compact insight chips in trend cards (total, active hours, peak hour, average/day, goal-hit days) for faster interpretation.
+
+### Changed
+- **Weekly & Monthly Steps Visualization:** Reworked bars/labels to better match the intended visual style (clean baseline, target reference line, improved spacing and readability).
+- **Statistics Hub Steps Card:** Refined the reusable steps card rendering and alignment so it visually matches the redesigned steps module.
+
+### Fixed
+- **Bar Baseline Consistency:** Step bars now correctly grow from zero baseline in trend charts instead of appearing visually offset.
+- **Goal Label Alignment:** Goal labels (for example `8k`) are now positioned directly at line height instead of drifting above the dashed target line.
+- **Week Chart Scaling Accuracy:** Goal check markers no longer affect bar-height calculations, preventing subtly shortened bars.
+- **Day Histogram Scaling:** Hourly bars now scale against the actual drawable chart height, fixing incorrect visual heights in the daily timeline.
+
+## [0.7.1-alpha.1] - 2026-03-26
+
+### Added
+- **Health Steps Integration (Alpha):** Read and sync daily step data from native health providers directly into the diary.
+  - **Android – Health Connect:** Full integration with Health Connect on Android 14+ (API 34+). Includes all required manifest declarations (`READ_STEPS` permission, `ACTION_SHOW_PERMISSIONS_RATIONALE` intent-filter, `VIEW_PERMISSION_USAGE` activity-alias, and `health_permissions` resource).
+  - **iOS – HealthKit:** Native Swift implementation using `HKSampleQuery` to read `stepCount` data. Configured with `NSHealthShareUsageDescription` and HealthKit entitlement.
+  - **Platform Bridge:** New `MethodChannel` (`hypertrack.health/steps`) with three methods: `getAvailability`, `requestPermissions`, `readStepSegments`.
+  - **Sync Service:** Automatic background sync with 48h overlap window, SHA1-based deduplication, and configurable provider filter (All / Apple / Google).
+  - **Steps Goal:** Users can set a daily steps goal during onboarding and in the goals screen, with historical goal tracking via `daily_goals_history`.
+- **Settings – Health Steps Section:** New settings section to enable/disable step tracking and select the preferred health data provider.
+- **Database:** Added `health_step_segments` table with `ON CONFLICT` upsert logic and `target_steps` column in `app_settings` and `daily_goals_history`.
+
+### Changed
+- **Smarter Permission Flow:** Permissions are now requested only once when the user enables step tracking in Settings (not on every sync cycle), reducing permission dialog fatigue.
+- **Diary Refresh on Return:** The diary screen now automatically refreshes its data when returning from Settings or Profile, ensuring step tracking changes are immediately visible.
+
+### Fixed
+- **"App Update Required" on Android 14+:** Added the missing `<activity-alias>` for `VIEW_PERMISSION_USAGE` with `HEALTH_PERMISSIONS` category, which Android 14+ requires to recognize the app as Health Connect-compatible.
+- **Sync Error Handling:** `StepsSyncService.sync()` now gracefully catches `PlatformException` when permissions are missing, instead of crashing or repeatedly prompting the user.
+
 ## [0.7.0] - 2026-03-25
 
 ### Added

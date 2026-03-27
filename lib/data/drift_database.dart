@@ -33,8 +33,8 @@ class Profiles extends Table with HybridId, MetaColumns {
   TextColumn get username => text().nullable()();
   BoolColumn get isCoach => boolean().withDefault(const Constant(false))();
   TextColumn get visibility => text().withDefault(
-    const Constant('private'),
-  )(); // 'public', 'private', 'friends'
+        const Constant('private'),
+      )(); // 'public', 'private', 'friends'
   DateTimeColumn get birthday => dateTime().nullable()();
   IntColumn get height => integer().nullable()(); // in cm
   TextColumn get gender => text().nullable()(); // 'male', 'female', 'diverse'
@@ -54,6 +54,7 @@ class AppSettings extends Table with HybridId, MetaColumns {
   IntColumn get targetCarbs => integer().withDefault(const Constant(250))();
   IntColumn get targetFat => integer().withDefault(const Constant(80))();
   IntColumn get targetWater => integer().withDefault(const Constant(3000))();
+  IntColumn get targetSteps => integer().withDefault(const Constant(8000))();
 }
 
 // 3. Exercises
@@ -99,8 +100,8 @@ class RoutineSetTemplates extends Table with HybridId, MetaColumns {
   TextColumn get routineExerciseId =>
       text().references(RoutineExercises, #id, onDelete: KeyAction.cascade)();
   TextColumn get setType => text().withDefault(
-    const Constant('normal'),
-  )(); // normal, warmup, dropset, failure
+        const Constant('normal'),
+      )(); // normal, warmup, dropset, failure
   TextColumn get targetReps =>
       text().nullable()(); // String, da z.B. "8-12" möglich
   RealColumn get targetWeight => real().nullable()();
@@ -233,10 +234,10 @@ class SupplementLogs extends Table with HybridId, MetaColumns {
 
   // Verknüpfungen (Aus altem Code übernommen für Auto-Logik bei Kaffee etc.)
   TextColumn get sourceNutritionLogId => text().nullable().references(
-    NutritionLogs,
-    #id,
-    onDelete: KeyAction.setNull,
-  )();
+        NutritionLogs,
+        #id,
+        onDelete: KeyAction.setNull,
+      )();
   // Referenz auf FluidLogs unten definiert
 }
 
@@ -252,10 +253,10 @@ class FluidLogs extends Table with HybridId, MetaColumns {
   RealColumn get caffeinePer100ml => real().nullable()();
   // Verknüpfung zu NutritionLogs falls es ein geloggtes Getränk war
   TextColumn get linkedNutritionLogId => text().nullable().references(
-    NutritionLogs,
-    #id,
-    onDelete: KeyAction.cascade,
-  )();
+        NutritionLogs,
+        #id,
+        onDelete: KeyAction.cascade,
+      )();
 }
 
 // 15. Measurements
@@ -333,6 +334,7 @@ class DailyGoalsHistory extends Table with HybridId, MetaColumns {
   IntColumn get targetCarbs => integer()();
   IntColumn get targetFat => integer()();
   IntColumn get targetWater => integer()();
+  IntColumn get targetSteps => integer().withDefault(const Constant(8000))();
   // createdAt dient hier als "gültig ab" Zeitstempel
 }
 
@@ -345,6 +347,15 @@ class SupplementSettingsHistory extends Table with HybridId, MetaColumns {
   RealColumn get dailyGoal => real().nullable()();
   RealColumn get dailyLimit => real().nullable()();
   // createdAt dient als "gültig ab" Zeitstempel
+}
+
+class HealthStepSegments extends Table with HybridId, MetaColumns {
+  TextColumn get provider => text()();
+  TextColumn get sourceId => text().nullable()();
+  DateTimeColumn get startAt => dateTime()();
+  DateTimeColumn get endAt => dateTime()();
+  IntColumn get stepCount => integer()();
+  TextColumn get externalKey => text().unique()();
 }
 
 @DriftDatabase(
@@ -373,54 +384,79 @@ class SupplementSettingsHistory extends Table with HybridId, MetaColumns {
     Favorites,
     DailyGoalsHistory,
     SupplementSettingsHistory,
+    HealthStepSegments,
   ],
 )
+
 /// The central Drift database class for the application.
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7; // Version auf 7 erhöhen für SupplementSettingsHistory und isTracked
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (Migrator m) async {
-      await m.createAll();
-    },
-    onUpgrade: (Migrator m, int from, int to) async {
-      if (from < 2) {
-        await m.createTable(favorites);
-        // WICHTIG: Füge die fehlende Spalte hinzu!
-        await m.addColumn(products, products.category);
-      }
-      // Migration V2 -> V3 (Sync-Spalten & RIR)
-      if (from < 3) {
-        // RIR zu SetLogs hinzufügen
-        await m.addColumn(setLogs, setLogs.rir);
+        onCreate: (Migrator m) async {
+          await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.createTable(favorites);
+            // WICHTIG: Füge die fehlende Spalte hinzu!
+            await m.addColumn(products, products.category);
+          }
+          // Migration V2 -> V3 (Sync-Spalten & RIR)
+          if (from < 3) {
+            // RIR zu SetLogs hinzufügen
+            await m.addColumn(setLogs, setLogs.rir);
 
-        // Favorites Sync-fähig machen (fehlende Spalten adden)
-        // MetaColumns adds: createdAt, updatedAt, deletedAt
-        // Favorites hatte vorher schon barcode und createdAt manuell.
-        // Wir müssen nur updatedAt und deletedAt hinzufügen.
-        await m.addColumn(favorites, favorites.updatedAt);
-        await m.addColumn(favorites, favorites.deletedAt);
-      }
-      if (from < 4) {
-        await m.addColumn(profiles, profiles.birthday);
-      }
-      if (from < 5) {
-        await m.addColumn(profiles, profiles.height);
-        await m.addColumn(profiles, profiles.gender);
-      }
-      if (from < 6) {
-        await m.createTable(dailyGoalsHistory);
-      }
-      if (from < 7) {
-        await m.addColumn(supplements, supplements.isTracked);
-        await m.createTable(supplementSettingsHistory);
-      }
-    },
-  );
+            // Favorites Sync-fähig machen (fehlende Spalten adden)
+            // MetaColumns adds: createdAt, updatedAt, deletedAt
+            // Favorites hatte vorher schon barcode und createdAt manuell.
+            // Wir müssen nur updatedAt und deletedAt hinzufügen.
+            await m.addColumn(favorites, favorites.updatedAt);
+            await m.addColumn(favorites, favorites.deletedAt);
+          }
+          if (from < 4) {
+            await m.addColumn(profiles, profiles.birthday);
+          }
+          if (from < 5) {
+            await m.addColumn(profiles, profiles.height);
+            await m.addColumn(profiles, profiles.gender);
+          }
+          if (from < 6) {
+            await m.createTable(dailyGoalsHistory);
+          }
+          if (from < 7) {
+            await m.addColumn(supplements, supplements.isTracked);
+            await m.createTable(supplementSettingsHistory);
+          }
+          if (from < 8) {
+            await customStatement(
+              'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+            );
+            await customStatement(
+              'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+            );
+            await customStatement('''
+          CREATE TABLE IF NOT EXISTS health_step_segments (
+            local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            id TEXT NOT NULL UNIQUE,
+            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            deleted_at INTEGER NULL,
+            provider TEXT NOT NULL,
+            source_id TEXT NULL,
+            start_at INTEGER NOT NULL,
+            end_at INTEGER NOT NULL,
+            step_count INTEGER NOT NULL,
+            external_key TEXT NOT NULL UNIQUE
+          )
+        ''');
+          }
+        },
+      );
 }
 
 LazyDatabase _openConnection() {

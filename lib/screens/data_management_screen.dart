@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import '../data/backup_manager.dart';
 import '../data/import_manager.dart';
 import '../generated/app_localizations.dart';
@@ -13,6 +14,7 @@ import '../data/workout_database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // NEU
 import 'package:flutter/services.dart'; // NEU (Clipboard)
 import '../widgets/glass_bottom_menu.dart';
+import '../services/storage/saf_storage_service.dart';
 
 /// A screen for managing application data and backups.
 ///
@@ -31,6 +33,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   bool _isCsvExportRunning = false;
   bool _isMigrationRunning = false;
   String? _autoBackupDir; // NEU
+  String? _lastAutoBackupFilePath;
+  String? _lastAutoBackupDirUsed;
+  String? _lastAutoBackupError;
+  bool _lastAutoBackupUsedFallback = false;
   @override
   void initState() {
     super.initState();
@@ -41,6 +47,11 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _autoBackupDir = prefs.getString('auto_backup_dir');
+      _lastAutoBackupFilePath = prefs.getString('auto_backup_last_file_path');
+      _lastAutoBackupDirUsed = prefs.getString('auto_backup_last_dir_used');
+      _lastAutoBackupError = prefs.getString('auto_backup_last_error');
+      _lastAutoBackupUsedFallback =
+          prefs.getBool('auto_backup_last_used_fallback') ?? false;
     });
   }
 
@@ -105,8 +116,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
       if (success) {
         // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten
-        final unknown = await WorkoutDatabaseHelper.instance
-            .findUnknownExerciseNames();
+        final unknown =
+            await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
         if (mounted && unknown.isNotEmpty) {
           /*final bool? changed = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
@@ -150,8 +161,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     setState(() => _isMigrationRunning = false);
 
     if (count > 0) {
-      final unknown = await WorkoutDatabaseHelper.instance
-          .findUnknownExerciseNames();
+      final unknown =
+          await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
       if (mounted && unknown.isNotEmpty) {
         await Navigator.of(context).push(
           MaterialPageRoute(
@@ -346,10 +357,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                      BackupManager.instance.exportNutritionAsCsv,
-                      l10n.snackbarSharingNutrition,
-                      l10n.snackbarExportFailedNoEntries,
-                    ),
+                        BackupManager.instance.exportNutritionAsCsv,
+                        l10n.snackbarSharingNutrition,
+                        l10n.snackbarExportFailedNoEntries,
+                      ),
             ),
             _buildExportTile(
               icon: Icons.monitor_weight_outlined,
@@ -357,10 +368,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                      BackupManager.instance.exportMeasurementsAsCsv,
-                      l10n.snackbarSharingMeasurements,
-                      l10n.snackbarExportFailedNoEntries,
-                    ),
+                        BackupManager.instance.exportMeasurementsAsCsv,
+                        l10n.snackbarSharingMeasurements,
+                        l10n.snackbarExportFailedNoEntries,
+                      ),
             ),
             _buildExportTile(
               icon: Icons.fitness_center,
@@ -368,10 +379,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               onTap: _isCsvExportRunning
                   ? null
                   : () => _exportCsv(
-                      BackupManager.instance.exportWorkoutsAsCsv,
-                      l10n.snackbarSharingWorkouts,
-                      l10n.snackbarExportFailedNoEntries,
-                    ),
+                        BackupManager.instance.exportWorkoutsAsCsv,
+                        l10n.snackbarSharingWorkouts,
+                        l10n.snackbarExportFailedNoEntries,
+                      ),
             ),
             if (_isCsvExportRunning)
               const Padding(
@@ -501,8 +512,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     label: Text(l10n.autoBackupCopyPath),
                     onPressed:
                         (_autoBackupDir == null || _autoBackupDir!.isEmpty)
-                        ? null
-                        : _copyAutoBackupPathToClipboard,
+                            ? null
+                            : _copyAutoBackupPathToClipboard,
                   ),
                 ),
               ],
@@ -522,19 +533,47 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     dirPath: _autoBackupDir,
                     force: true, // NEU: sofort ausführen
                   );
+                  await _loadAutoBackupDir();
                   if (!mounted) return;
+                  final successText = ok
+                      ? (_lastAutoBackupFilePath != null &&
+                              _lastAutoBackupFilePath!.isNotEmpty
+                          ? '${l10n.snackbarAutoBackupSuccess}\n$_lastAutoBackupFilePath'
+                          : l10n.snackbarAutoBackupSuccess)
+                      : (_lastAutoBackupError != null &&
+                              _lastAutoBackupError!.isNotEmpty
+                          ? '${l10n.snackbarAutoBackupFailed}\n$_lastAutoBackupError'
+                          : l10n.snackbarAutoBackupFailed);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        ok
-                            ? l10n.snackbarAutoBackupSuccess
-                            : l10n.snackbarAutoBackupFailed,
-                      ),
+                      content: Text(successText),
+                      backgroundColor: ok
+                          ? (_lastAutoBackupUsedFallback ? Colors.orange : null)
+                          : Colors.red,
                     ),
                   );
                 },
               ),
             ),
+            if (_lastAutoBackupUsedFallback &&
+                _lastAutoBackupDirUsed != null &&
+                _lastAutoBackupDirUsed!.isNotEmpty) ...[
+              const SizedBox(height: DesignConstants.spacingS),
+              Text(
+                'Fallback folder used:\n$_lastAutoBackupDirUsed',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+            if (_lastAutoBackupFilePath != null &&
+                _lastAutoBackupFilePath!.isNotEmpty) ...[
+              const SizedBox(height: DesignConstants.spacingS),
+              SelectableText(
+                _lastAutoBackupFilePath!,
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
           ],
         ),
       ),
@@ -542,8 +581,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Future<void> _openExerciseMapping() async {
-    final unknown = await WorkoutDatabaseHelper.instance
-        .findUnknownExerciseNames();
+    final unknown =
+        await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
     final l10n = AppLocalizations.of(context)!;
     if (!mounted) return;
     if (unknown.isEmpty) {
@@ -560,12 +599,52 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Future<void> _pickAutoBackupDirectory() async {
-    // Directory-Picker (FilePicker unterstützt getDirectoryPath)
     final l10n = AppLocalizations.of(context)!;
+    final prefs = await SharedPreferences.getInstance();
+    if (Platform.isAndroid) {
+      SafPickedDirectory? picked;
+      try {
+        picked = await SafStorageService.instance.pickDirectory();
+      } on MissingPluginException {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Storage picker unavailable. Please fully restart/reinstall the app after updating.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      } on PlatformException catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Folder picker failed: ${e.message ?? e.code}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      if (picked == null) return;
+      final selected = picked;
+      await prefs.setString('auto_backup_dir', selected.displayPath);
+      await prefs.setString('auto_backup_tree_uri', selected.treeUri);
+      setState(() => _autoBackupDir = selected.displayPath);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(l10n.snackbarAutoBackupFolderSet(selected.displayPath))),
+      );
+      return;
+    }
+
+    // Non-Android fallback: directory path picker.
     final path = await FilePicker.platform.getDirectoryPath();
     if (path == null) return;
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auto_backup_dir', path);
+    await prefs.remove('auto_backup_tree_uri');
     setState(() => _autoBackupDir = path);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

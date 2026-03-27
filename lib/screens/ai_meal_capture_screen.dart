@@ -73,21 +73,29 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           if (mounted) setState(() => _isListening = false);
         }
       },
+      options: Platform.isAndroid
+          ? <stt.SpeechConfigOption>[stt.SpeechToText.androidNoBluetooth]
+          : null,
     );
     if (available) {
       // Cache the best matching locale for the app language
       final appLang =
           WidgetsBinding.instance.platformDispatcher.locale.languageCode;
       final locales = await _speech.locales();
-      final match = locales
-          .where((l) => l.localeId.startsWith(appLang))
-          .firstOrNull;
+      final match =
+          locales.where((l) => l.localeId.startsWith(appLang)).firstOrNull;
       _speechLocaleId = match?.localeId;
       debugPrint(
         'speech_to_text: available=true, localeId=$_speechLocaleId, all=${locales.map((l) => l.localeId).toList()}',
       );
     }
     if (mounted) setState(() => _speechAvailable = available);
+  }
+
+  Future<bool> _ensureSpeechAvailable() async {
+    if (_speechAvailable) return true;
+    await _initSpeech();
+    return _speechAvailable;
   }
 
   @override
@@ -142,13 +150,18 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       await _speech.stop();
       if (mounted) setState(() => _isListening = false);
     } else {
-      if (!_speechAvailable) {
+      final available = await _ensureSpeechAvailable();
+      if (!available) {
+        final hasPermission = await _speech.hasPermission;
+        final message = Platform.isAndroid
+            ? (hasPermission
+                ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
+                : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den Android-Einstellungen erlauben.')
+            : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.';
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.',
-              ),
+            SnackBar(
+              content: Text(message),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.red,
             ),
@@ -166,8 +179,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           );
           if (mounted) {
             setState(() {
-              final separator =
-                  _initialTextBeforeSpeech.endsWith(' ') ||
+              final separator = _initialTextBeforeSpeech.endsWith(' ') ||
                       _initialTextBeforeSpeech.isEmpty
                   ? ''
                   : ' ';
@@ -450,9 +462,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                 tooltip: l10n.aiCaptureTabPhoto,
               ),
               IconButton(
-                onPressed: _images.length < _maxImages
-                    ? _pickFromGallery
-                    : null,
+                onPressed:
+                    _images.length < _maxImages ? _pickFromGallery : null,
                 icon: const Icon(Icons.photo_library_rounded),
                 color: theme.colorScheme.primary,
                 tooltip: l10n.tabFavorites,
@@ -461,9 +472,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
               AnimatedBuilder(
                 animation: _pulseController,
                 builder: (context, child) {
-                  final scale = _isListening
-                      ? 1.0 + (_pulseController.value * 0.1)
-                      : 1.0;
+                  final scale =
+                      _isListening ? 1.0 + (_pulseController.value * 0.1) : 1.0;
                   return Transform.scale(
                     scale: scale,
                     child: IconButton(

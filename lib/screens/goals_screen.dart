@@ -27,6 +27,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   final _carbsController = TextEditingController();
   final _fatController = TextEditingController();
   final _waterController = TextEditingController();
+  final _stepsController = TextEditingController();
   final _heightController = TextEditingController();
   final _sugarController = TextEditingController();
   final _fiberController = TextEditingController();
@@ -45,6 +46,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     _carbsController.dispose();
     _fatController.dispose();
     _waterController.dispose();
+    _stepsController.dispose();
     _heightController.dispose();
     _sugarController.dispose();
     _fiberController.dispose();
@@ -54,11 +56,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   Future<void> _loadSettings() async {
     final dbHelper = DatabaseHelper.instance;
-    final prefs =
-        await SharedPreferences.getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
+    final prefs = await SharedPreferences
+        .getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
 
     // Lade Ziele aus der DB
     final settings = await dbHelper.getAppSettings();
+    final targetSteps = await dbHelper.getCurrentTargetStepsOrDefault();
     // Lade Profil für Größe
     // (Optional: Du könntest auch 'getProfile' im Helper bauen, aber prefs für Height ist ok als Übergang)
 
@@ -71,6 +74,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       _carbsController.text = (settings?.targetCarbs ?? 250).toString();
       _fatController.text = (settings?.targetFat ?? 80).toString();
       _waterController.text = (settings?.targetWater ?? 3000).toString();
+      _stepsController.text = targetSteps.toString();
 
       // Hinweis: Sugar, Fiber, Salt sind noch nicht im AppSettings Schema von Drift definiert?
       // Falls du diese auch syncen willst, musst du die Tabelle AppSettings in drift_database.dart erweitern.
@@ -99,6 +103,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       carbs: int.parse(_carbsController.text),
       fat: int.parse(_fatController.text),
       water: int.parse(_waterController.text),
+      steps: int.parse(_stepsController.text),
     );
 
     // 3. Die "Extra"-Werte (Sugar/Fiber/Salt) bleiben vorerst in Prefs,
@@ -149,8 +154,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           : SingleChildScrollView(
               // Die neue Padding-Logik
               padding: DesignConstants.cardPadding.copyWith(
-                top:
-                    DesignConstants.cardPadding.top +
+                top: DesignConstants.cardPadding.top +
                     MediaQuery.of(context).padding.top +
                     kToolbarHeight,
               ),
@@ -190,6 +194,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     _buildSettingsField(
                       controller: _waterController,
                       label: l10n.water,
+                    ),
+                    _buildSettingsField(
+                      controller: _stepsController,
+                      label: 'Steps', // TODO(alpha): localize steps label
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
                     _buildSectionTitle(context, l10n.detailedNutrientGoalsCL),
@@ -242,9 +250,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }
