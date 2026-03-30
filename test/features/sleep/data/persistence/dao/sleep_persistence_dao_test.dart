@@ -15,7 +15,13 @@ void main() {
   late SleepNightlyAnalysesDao analysesDao;
 
   setUp(() {
-    database = AppDatabase(NativeDatabase.memory());
+    database = AppDatabase(
+      NativeDatabase.memory(
+        setup: (rawDb) {
+          rawDb.execute('PRAGMA foreign_keys = ON;');
+        },
+      ),
+    );
     rawDao = SleepRawImportsDao(database);
     sessionsDao = SleepCanonicalSessionsDao(database);
     stagesDao = SleepCanonicalStageSegmentsDao(database);

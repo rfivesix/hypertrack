@@ -40,7 +40,7 @@ Implemented in Drift migration SQL (`lib/data/drift_database.dart`) and exposed 
 - **Ingestion contracts**: `lib/features/sleep/platform/ingestion/sleep_ingestion_models.dart`
   - Platform-agnostic raw ingestion DTOs for sessions, stage segments, and HR samples.
 - **Platform permissions**: `lib/features/sleep/platform/permissions/**`
-  - Typed state and outcomes for ready/denied/partial/unavailable/notInstalled/loading.
+  - Typed state and outcomes for ready/denied/partial/unavailable/notInstalled/loading/technicalError.
   - HealthKit and Health Connect-specific services remain behind bridge interfaces.
 - **Adapters**: `lib/features/sleep/platform/healthkit/`, `lib/features/sleep/platform/health_connect/`
   - Permission-aware import orchestrators returning typed success/failure outcomes.
@@ -100,6 +100,21 @@ Implemented in Drift migration SQL (`lib/data/drift_database.dart`) and exposed 
 
 **Why:**
 - Clarifies it is not canonical ingestion data and will evolve with analysis versions.
+
+### 6) Sleep persistence timestamps use UTC epoch milliseconds end-to-end
+
+**Decision:** Sleep persistence layer stores timestamps as UTC unix epoch milliseconds (`INTEGER`) consistently.
+
+**Why:**
+- Raw sqlite `customStatement` bind parameters in Drift custom SQL paths cannot bind `DateTime` directly.
+- A single storage unit across schema defaults, DAO writes, query variables, range deletes, and row mapping prevents subtle unit/runtime mismatches.
+
+**Implementation notes:**
+- DAO writes convert `DateTime` with `toUtc().millisecondsSinceEpoch`.
+- `customSelect` range variables use epoch-millis `Variable<int>`.
+- Range-delete statements pass epoch-millis integers.
+- Query row mapping reconstructs UTC timestamps with `DateTime.fromMillisecondsSinceEpoch(value, isUtc: true)`.
+- Sleep schema defaults for `created_at`/`updated_at` use millisecond SQL defaults (`CAST(strftime('%s','now') AS INTEGER) * 1000`).
 
 ## Relationships and Indexing Strategy
 
@@ -175,7 +190,7 @@ Intentionally deferred in this batch:
 - Normalization winner selection, dedup, main sleep classification, and decision logging.
 - Stage timeline repair/overlap splitting.
 - Nightly analysis/scoring computation.
-- User-facing sleep screens beyond permission state component.
+- User-facing sleep screens beyond permission-state-driven UX foundations.
 - Conversion of sleep schema from custom migration SQL to full Drift table declarations with generated row classes.
 
 ## Migration Path Forward
