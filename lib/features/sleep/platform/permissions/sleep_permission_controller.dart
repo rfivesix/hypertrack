@@ -16,6 +16,7 @@ class SleepPermissionController {
     final outcome = await _service.checkStatus();
     state.value = SleepPermissionStatus(
       state: outcome.state,
+      error: outcome.error,
       message: outcome.message,
     );
   }
@@ -24,6 +25,7 @@ class SleepPermissionController {
     final outcome = await _service.requestAccess();
     state.value = SleepPermissionStatus(
       state: outcome.state,
+      error: outcome.error,
       message: outcome.message,
     );
   }

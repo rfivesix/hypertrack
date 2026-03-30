@@ -47,8 +47,12 @@ class HealthKitSleepAdapter {
         SleepIngestionFailure(SleepPlatformServiceError.permissionDenied),
       );
     }
-    if (permission.state == SleepPermissionState.unavailable ||
-        permission.state == SleepPermissionState.notInstalled) {
+    if (permission.state == SleepPermissionState.notInstalled) {
+      return const SleepIngestionResult.failure(
+        SleepIngestionFailure(SleepPlatformServiceError.notInstalled),
+      );
+    }
+    if (permission.state == SleepPermissionState.unavailable) {
       return const SleepIngestionResult.failure(
         SleepIngestionFailure(SleepPlatformServiceError.unavailable),
       );
@@ -56,6 +60,14 @@ class HealthKitSleepAdapter {
     if (permission.state == SleepPermissionState.partial) {
       return const SleepIngestionResult.failure(
         SleepIngestionFailure(SleepPlatformServiceError.permissionPartial),
+      );
+    }
+    if (permission.state == SleepPermissionState.technicalError) {
+      return SleepIngestionResult.failure(
+        SleepIngestionFailure(
+          permission.error ?? SleepPlatformServiceError.unknown,
+          message: permission.message,
+        ),
       );
     }
 

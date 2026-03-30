@@ -5,15 +5,18 @@ enum SleepPermissionState {
   partial,
   unavailable,
   notInstalled,
+  technicalError,
 }
 
 class SleepPermissionStatus {
   const SleepPermissionStatus({
     required this.state,
+    this.error,
     this.message,
   });
 
   final SleepPermissionState state;
+  final SleepPlatformServiceError? error;
   final String? message;
 }
 
@@ -35,7 +38,7 @@ class SleepPermissionOutcome {
   const SleepPermissionOutcome.state(this.state, {this.message}) : error = null;
 
   const SleepPermissionOutcome.error(this.error, {this.message})
-      : state = SleepPermissionState.unavailable;
+      : state = SleepPermissionState.technicalError;
 
   final SleepPermissionState state;
   final SleepPlatformServiceError? error;

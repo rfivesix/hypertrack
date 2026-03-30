@@ -87,6 +87,19 @@ void main() {
     final importedAt = DateTime.utc(2026, 2, 2, 7);
     final normalizedAt = DateTime.utc(2026, 2, 2, 7, 5);
 
+    await rawDao.upsert(
+      SleepRawImportCompanion(
+        id: 'raw-1',
+        sourcePlatform: 'health_connect',
+        sourceAppId: 'com.android.healthconnect',
+        sourceConfidence: 'medium',
+        sourceRecordHash: 'hash-raw-for-session-1',
+        importStatus: 'success',
+        importedAt: importedAt,
+        payloadJson: '{"seed":"canonical-test"}',
+      ),
+    );
+
     await sessionsDao.upsert(
       SleepCanonicalSessionCompanion(
         id: 'session-1',
@@ -167,6 +180,25 @@ void main() {
   });
 
   test('derived analyses dao insert/query/delete by night range works', () async {
+    final importedAt = DateTime.utc(2026, 2, 2, 6, 30);
+    final normalizedAt = DateTime.utc(2026, 2, 2, 6, 35);
+    await sessionsDao.upsert(
+      SleepCanonicalSessionCompanion(
+        id: 'session-1',
+        sourcePlatform: 'healthkit',
+        sourceAppId: 'com.apple.health',
+        sourceConfidence: 'high',
+        sourceRecordHash: 'hash-session-for-analysis',
+        normalizationVersion: 'n1',
+        sessionType: 'mainSleep',
+        startedAt: DateTime.utc(2026, 2, 1, 22),
+        endedAt: DateTime.utc(2026, 2, 2, 6),
+        timezone: 'UTC',
+        importedAt: importedAt,
+        normalizedAt: normalizedAt,
+      ),
+    );
+
     await analysesDao.upsert(
       SleepNightlyAnalysisCompanion(
         id: 'analysis-1',

@@ -45,6 +45,14 @@ class HealthConnectSleepAdapter {
         SleepIngestionFailure(SleepPlatformServiceError.permissionPartial),
       );
     }
+    if (permission.state == SleepPermissionState.technicalError) {
+      return SleepIngestionResult.failure(
+        SleepIngestionFailure(
+          permission.error ?? SleepPlatformServiceError.unknown,
+          message: permission.message,
+        ),
+      );
+    }
 
     try {
       final batch = await _dataSource.readSleepAndHeartRate(

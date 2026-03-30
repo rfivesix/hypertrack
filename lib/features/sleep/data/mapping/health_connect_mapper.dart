@@ -25,6 +25,9 @@ class HealthConnectMapper {
             id: session.recordId,
             startAtUtc: session.startAtUtc,
             endAtUtc: session.endAtUtc,
+            // Session typing is intentionally deferred to normalization
+            // (winner-selection + night classification), so ingestion mapping
+            // stays deterministic and source-faithful in this batch.
             sessionType: SleepSessionType.unknown,
             sourcePlatform: session.sourcePlatform,
             sourceAppId: session.sourceAppId,

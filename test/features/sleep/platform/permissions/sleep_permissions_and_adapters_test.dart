@@ -4,6 +4,7 @@ import 'package:hypertrack/features/sleep/platform/healthkit/healthkit_sleep_ada
 import 'package:hypertrack/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
 import 'package:hypertrack/features/sleep/platform/permissions/health_connect_sleep_permissions_service.dart';
 import 'package:hypertrack/features/sleep/platform/permissions/healthkit_sleep_permissions_service.dart';
+import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_controller.dart';
 import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
 import 'package:hypertrack/features/sleep/platform/permissions/sleep_permissions_service.dart';
 
@@ -268,6 +269,39 @@ void main() {
       );
       expect(success.isSuccess, isTrue);
       expect(success.batch?.sessions.length, 1);
+    });
+
+    test('HealthKit adapter keeps not-installed distinct', () async {
+      final adapter = HealthKitSleepAdapter(
+        permissionsService: const _StaticPermissionService(
+          SleepPermissionOutcome.state(SleepPermissionState.notInstalled),
+        ),
+        dataSource: _FakeHealthKitDataSource(_sampleBatch()),
+      );
+      final result = await adapter.importRange(
+        fromUtc: DateTime.utc(2026, 1, 1),
+        toUtc: DateTime.utc(2026, 1, 2),
+      );
+      expect(result.failure?.error, SleepPlatformServiceError.notInstalled);
+    });
+  });
+
+  group('SleepPermissionController', () {
+    test('preserves technical error details in status', () async {
+      final controller = SleepPermissionController(
+        const _StaticPermissionService(
+          SleepPermissionOutcome.error(
+            SleepPlatformServiceError.queryFailed,
+            message: 'bridge timeout',
+          ),
+        ),
+      );
+
+      await controller.refresh();
+
+      expect(controller.state.value.state, SleepPermissionState.technicalError);
+      expect(controller.state.value.error, SleepPlatformServiceError.queryFailed);
+      expect(controller.state.value.message, 'bridge timeout');
     });
   });
 }

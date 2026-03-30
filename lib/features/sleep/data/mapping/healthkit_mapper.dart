@@ -25,6 +25,9 @@ class HealthKitMapper {
             id: session.recordId,
             startAtUtc: session.startAtUtc,
             endAtUtc: session.endAtUtc,
+            // Session typing is intentionally deferred to normalization
+            // (winner-selection + night classification), so ingestion mapping
+            // stays deterministic and source-faithful in this batch.
             sessionType: SleepSessionType.unknown,
             sourcePlatform: session.sourcePlatform,
             sourceAppId: session.sourceAppId,
@@ -37,23 +40,23 @@ class HealthKitMapper {
 
     final stageSegments = batch.stageSegments
         .where((segment) => sessionIds.contains(segment.sessionRecordId))
-        .map(
-          (segment) => SleepStageSegment(
+        .map((segment) {
+          final stage = _mapStage(segment.platformStage);
+          return SleepStageSegment(
             id: segment.recordId,
             sessionId: segment.sessionRecordId,
-            stage: _mapStage(segment.platformStage),
+            stage: stage,
             startAtUtc: segment.startAtUtc,
             endAtUtc: segment.endAtUtc,
             sourcePlatform: segment.sourcePlatform,
             sourceAppId: segment.sourceAppId,
             sourceRecordHash: segment.sourceRecordHash,
             sourceConfidence: segment.sourceConfidence,
-            stageConfidence:
-                _mapStage(segment.platformStage) == CanonicalSleepStage.inBedOnly
-                    ? SleepStageConfidence.low
-                    : SleepStageConfidence.unknown,
-          ),
-        )
+            stageConfidence: stage == CanonicalSleepStage.inBedOnly
+                ? SleepStageConfidence.low
+                : SleepStageConfidence.unknown,
+          );
+        })
         .toList(growable: false);
 
     final heartRates = batch.heartRateSamples

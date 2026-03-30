@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart';
+
 import '../../../../../data/drift_database.dart';
 import '../sleep_persistence_models.dart';
 
