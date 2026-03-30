@@ -337,7 +337,7 @@ class DatabaseHelper {
   // FLUID LOGS
   // ===========================================================================
 
-  /// Records a new [FluidEntry] and automatically logs caffeine if applicable.
+  /// Records a new [FluidEntry].
   Future<int> insertFluidEntry(FluidEntry entry) async {
     final dbInstance = await database;
 
@@ -353,39 +353,6 @@ class DatabaseHelper {
 
     final row =
         await dbInstance.into(dbInstance.fluidLogs).insertReturning(companion);
-
-    // 2. AUTOMATIK: Koffein-Log erstellen
-    if (entry.caffeinePer100ml != null && entry.caffeinePer100ml! > 0) {
-      try {
-        // Suche das Supplement mit dem Code 'caffeine'
-        final caffeineSupp = await (dbInstance.select(
-          dbInstance.supplements,
-        )..where((t) => t.code.equals('caffeine')))
-            .getSingleOrNull();
-
-        if (caffeineSupp != null) {
-          // Berechne Dosis: (Menge / 100) * mg_pro_100ml
-          final double totalCaffeine =
-              (entry.quantityInMl / 100.0) * entry.caffeinePer100ml!;
-
-          if (totalCaffeine > 0) {
-            // Log erstellen
-            // HINWEIS: Wir konvertieren ID zu String, passend zu deiner neuen Logik
-            final String supplementIdString = caffeineSupp.id.toString();
-
-            await dbInstance.into(dbInstance.supplementLogs).insert(
-                  db.SupplementLogsCompanion(
-                    supplementId: drift.Value(supplementIdString),
-                    amount: drift.Value(totalCaffeine),
-                    takenAt: drift.Value(entry.timestamp),
-                  ),
-                );
-          }
-        }
-      } catch (e) {
-        // failed silently
-      }
-    }
 
     return row.localId;
   }
