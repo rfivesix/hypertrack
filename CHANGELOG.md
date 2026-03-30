@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.2] - 2026-03-31
+
+### Fixed
+- **Duplicate caffeine logging for fluid entries:** Fixed an issue where saving caffeinated drinks could create duplicate caffeine supplement logs, leading to inflated caffeine totals.
+
+### Tests
+- Added regression coverage to ensure fluid entries no longer create duplicate caffeine supplement logs.
+
 ## [0.7.1] - 2026-03-27
 
 ### Added
