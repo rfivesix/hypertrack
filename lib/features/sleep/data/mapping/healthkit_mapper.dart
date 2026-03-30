@@ -26,8 +26,9 @@ class HealthKitMapper {
             startAtUtc: session.startAtUtc,
             endAtUtc: session.endAtUtc,
             // Session typing is intentionally deferred to normalization
-            // (winner-selection + night classification), so ingestion mapping
-            // stays deterministic and source-faithful in this batch.
+            // (winner-selection + night classification) owned by the
+            // normalization processing orchestrator in a later batch, so
+            // ingestion mapping stays deterministic and source-faithful here.
             sessionType: SleepSessionType.unknown,
             sourcePlatform: session.sourcePlatform,
             sourceAppId: session.sourceAppId,

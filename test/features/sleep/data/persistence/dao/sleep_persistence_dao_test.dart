@@ -182,9 +182,22 @@ void main() {
   test('derived analyses dao insert/query/delete by night range works', () async {
     final importedAt = DateTime.utc(2026, 2, 2, 6, 30);
     final normalizedAt = DateTime.utc(2026, 2, 2, 6, 35);
+    await rawDao.upsert(
+      SleepRawImportCompanion(
+        id: 'raw-for-analysis-session',
+        sourcePlatform: 'healthkit',
+        sourceAppId: 'com.apple.health',
+        sourceConfidence: 'high',
+        sourceRecordHash: 'hash-raw-for-analysis-session',
+        importStatus: 'success',
+        importedAt: importedAt,
+        payloadJson: '{"seed":"analysis-test"}',
+      ),
+    );
     await sessionsDao.upsert(
       SleepCanonicalSessionCompanion(
         id: 'session-1',
+        rawImportId: 'raw-for-analysis-session',
         sourcePlatform: 'healthkit',
         sourceAppId: 'com.apple.health',
         sourceConfidence: 'high',
