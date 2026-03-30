@@ -8,6 +8,11 @@ class SleepRawImportsDao {
 
   final AppDatabase _db;
 
+  int _toEpochMillis(DateTime value) => value.toUtc().millisecondsSinceEpoch;
+
+  DateTime _fromEpochMillis(int value) =>
+      DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+
   Future<void> upsert(SleepRawImportCompanion row) async {
     await _db.customStatement(
       '''
@@ -34,9 +39,9 @@ class SleepRawImportsDao {
         row.importStatus,
         row.errorCode,
         row.errorMessage,
-        row.importedAt,
+        _toEpochMillis(row.importedAt),
         row.payloadJson,
-        DateTime.now().toUtc(),
+        _toEpochMillis(DateTime.now()),
       ],
     );
   }
@@ -60,8 +65,8 @@ class SleepRawImportsDao {
       ORDER BY imported_at ASC
       ''',
       variables: [
-        Variable<DateTime>(fromInclusive),
-        Variable<DateTime>(toExclusive),
+        Variable<int>(_toEpochMillis(fromInclusive)),
+        Variable<int>(_toEpochMillis(toExclusive)),
       ],
     ).get();
     return result.map(_mapRaw).toList(growable: false);
@@ -101,7 +106,7 @@ class SleepRawImportsDao {
   }) async {
     await _db.customStatement(
       'DELETE FROM sleep_raw_imports WHERE imported_at >= ? AND imported_at < ?',
-      <Object?>[fromInclusive, toExclusive],
+      <Object?>[_toEpochMillis(fromInclusive), _toEpochMillis(toExclusive)],
     );
   }
 
@@ -115,10 +120,10 @@ class SleepRawImportsDao {
       importStatus: row.read<String>('import_status'),
       errorCode: row.readNullable<String>('error_code'),
       errorMessage: row.readNullable<String>('error_message'),
-      importedAt: row.read<DateTime>('imported_at'),
+      importedAt: _fromEpochMillis(row.read<int>('imported_at')),
       payloadJson: row.read<String>('payload_json'),
-      createdAt: row.read<DateTime>('created_at'),
-      updatedAt: row.read<DateTime>('updated_at'),
+      createdAt: _fromEpochMillis(row.read<int>('created_at')),
+      updatedAt: _fromEpochMillis(row.read<int>('updated_at')),
     );
   }
 }

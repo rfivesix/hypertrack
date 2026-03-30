@@ -8,6 +8,11 @@ class SleepNightlyAnalysesDao {
 
   final AppDatabase _db;
 
+  int _toEpochMillis(DateTime value) => value.toUtc().millisecondsSinceEpoch;
+
+  DateTime _fromEpochMillis(int value) =>
+      DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+
   Future<void> upsert(SleepNightlyAnalysisCompanion row) async {
     await _db.customStatement(
       '''
@@ -43,8 +48,8 @@ class SleepNightlyAnalysesDao {
         row.totalSleepMinutes,
         row.sleepEfficiencyPct,
         row.restingHeartRateBpm,
-        row.analyzedAt,
-        DateTime.now().toUtc(),
+        _toEpochMillis(row.analyzedAt),
+        _toEpochMillis(DateTime.now()),
       ],
     );
   }
@@ -119,9 +124,9 @@ class SleepNightlyAnalysesDao {
       totalSleepMinutes: row.readNullable<int>('total_sleep_minutes'),
       sleepEfficiencyPct: row.readNullable<double>('sleep_efficiency_pct'),
       restingHeartRateBpm: row.readNullable<double>('resting_heart_rate_bpm'),
-      analyzedAt: row.read<DateTime>('analyzed_at'),
-      createdAt: row.read<DateTime>('created_at'),
-      updatedAt: row.read<DateTime>('updated_at'),
+      analyzedAt: _fromEpochMillis(row.read<int>('analyzed_at')),
+      createdAt: _fromEpochMillis(row.read<int>('created_at')),
+      updatedAt: _fromEpochMillis(row.read<int>('updated_at')),
     );
   }
 }

@@ -8,6 +8,11 @@ class SleepCanonicalSessionsDao {
 
   final AppDatabase _db;
 
+  int _toEpochMillis(DateTime value) => value.toUtc().millisecondsSinceEpoch;
+
+  DateTime _fromEpochMillis(int value) =>
+      DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+
   Future<void> upsert(SleepCanonicalSessionCompanion row) async {
     await _db.customStatement(
       '''
@@ -37,12 +42,12 @@ class SleepCanonicalSessionsDao {
         row.sourceRecordHash,
         row.normalizationVersion,
         row.sessionType,
-        row.startedAt,
-        row.endedAt,
+        _toEpochMillis(row.startedAt),
+        _toEpochMillis(row.endedAt),
         row.timezone,
-        row.importedAt,
-        row.normalizedAt,
-        DateTime.now().toUtc(),
+        _toEpochMillis(row.importedAt),
+        _toEpochMillis(row.normalizedAt),
+        _toEpochMillis(DateTime.now()),
       ],
     );
   }
@@ -66,8 +71,8 @@ class SleepCanonicalSessionsDao {
       ORDER BY started_at ASC
       ''',
       variables: [
-        Variable<DateTime>(toExclusive),
-        Variable<DateTime>(fromInclusive),
+        Variable<int>(_toEpochMillis(toExclusive)),
+        Variable<int>(_toEpochMillis(fromInclusive)),
       ],
     ).get();
     return result.map(_mapSession).toList(growable: false);
@@ -107,7 +112,7 @@ class SleepCanonicalSessionsDao {
       DELETE FROM sleep_canonical_sessions
       WHERE started_at < ? AND ended_at > ?
       ''',
-      <Object?>[toExclusive, fromInclusive],
+      <Object?>[_toEpochMillis(toExclusive), _toEpochMillis(fromInclusive)],
     );
   }
 
@@ -121,13 +126,13 @@ class SleepCanonicalSessionsDao {
       sourceRecordHash: row.read<String>('source_record_hash'),
       normalizationVersion: row.read<String>('normalization_version'),
       sessionType: row.read<String>('session_type'),
-      startedAt: row.read<DateTime>('started_at'),
-      endedAt: row.read<DateTime>('ended_at'),
+      startedAt: _fromEpochMillis(row.read<int>('started_at')),
+      endedAt: _fromEpochMillis(row.read<int>('ended_at')),
       timezone: row.readNullable<String>('timezone'),
-      importedAt: row.read<DateTime>('imported_at'),
-      normalizedAt: row.read<DateTime>('normalized_at'),
-      createdAt: row.read<DateTime>('created_at'),
-      updatedAt: row.read<DateTime>('updated_at'),
+      importedAt: _fromEpochMillis(row.read<int>('imported_at')),
+      normalizedAt: _fromEpochMillis(row.read<int>('normalized_at')),
+      createdAt: _fromEpochMillis(row.read<int>('created_at')),
+      updatedAt: _fromEpochMillis(row.read<int>('updated_at')),
     );
   }
 }
@@ -136,6 +141,11 @@ class SleepCanonicalStageSegmentsDao {
   const SleepCanonicalStageSegmentsDao(this._db);
 
   final AppDatabase _db;
+
+  int _toEpochMillis(DateTime value) => value.toUtc().millisecondsSinceEpoch;
+
+  DateTime _fromEpochMillis(int value) =>
+      DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
 
   Future<void> upsertBatch(List<SleepCanonicalStageSegmentCompanion> rows) async {
     await _db.transaction(() async {
@@ -167,11 +177,11 @@ class SleepCanonicalStageSegmentsDao {
             row.sourceRecordHash,
             row.normalizationVersion,
             row.stage,
-            row.startedAt,
-            row.endedAt,
-            row.importedAt,
-            row.normalizedAt,
-            DateTime.now().toUtc(),
+            _toEpochMillis(row.startedAt),
+            _toEpochMillis(row.endedAt),
+            _toEpochMillis(row.importedAt),
+            _toEpochMillis(row.normalizedAt),
+            _toEpochMillis(DateTime.now()),
           ],
         );
       }
@@ -209,12 +219,12 @@ class SleepCanonicalStageSegmentsDao {
       sourceRecordHash: row.read<String>('source_record_hash'),
       normalizationVersion: row.read<String>('normalization_version'),
       stage: row.read<String>('stage'),
-      startedAt: row.read<DateTime>('started_at'),
-      endedAt: row.read<DateTime>('ended_at'),
-      importedAt: row.read<DateTime>('imported_at'),
-      normalizedAt: row.read<DateTime>('normalized_at'),
-      createdAt: row.read<DateTime>('created_at'),
-      updatedAt: row.read<DateTime>('updated_at'),
+      startedAt: _fromEpochMillis(row.read<int>('started_at')),
+      endedAt: _fromEpochMillis(row.read<int>('ended_at')),
+      importedAt: _fromEpochMillis(row.read<int>('imported_at')),
+      normalizedAt: _fromEpochMillis(row.read<int>('normalized_at')),
+      createdAt: _fromEpochMillis(row.read<int>('created_at')),
+      updatedAt: _fromEpochMillis(row.read<int>('updated_at')),
     );
   }
 }
@@ -223,6 +233,11 @@ class SleepCanonicalHeartRateSamplesDao {
   const SleepCanonicalHeartRateSamplesDao(this._db);
 
   final AppDatabase _db;
+
+  int _toEpochMillis(DateTime value) => value.toUtc().millisecondsSinceEpoch;
+
+  DateTime _fromEpochMillis(int value) =>
+      DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
 
   Future<void> upsertBatch(List<SleepCanonicalHeartRateSampleCompanion> rows) async {
     await _db.transaction(() async {
@@ -252,11 +267,11 @@ class SleepCanonicalHeartRateSamplesDao {
             row.sourceConfidence,
             row.sourceRecordHash,
             row.normalizationVersion,
-            row.sampledAt,
+            _toEpochMillis(row.sampledAt),
             row.bpm,
-            row.importedAt,
-            row.normalizedAt,
-            DateTime.now().toUtc(),
+            _toEpochMillis(row.importedAt),
+            _toEpochMillis(row.normalizedAt),
+            _toEpochMillis(DateTime.now()),
           ],
         );
       }
@@ -293,12 +308,12 @@ class SleepCanonicalHeartRateSamplesDao {
       sourceConfidence: row.readNullable<String>('source_confidence'),
       sourceRecordHash: row.read<String>('source_record_hash'),
       normalizationVersion: row.read<String>('normalization_version'),
-      sampledAt: row.read<DateTime>('sampled_at'),
+      sampledAt: _fromEpochMillis(row.read<int>('sampled_at')),
       bpm: row.read<double>('bpm'),
-      importedAt: row.read<DateTime>('imported_at'),
-      normalizedAt: row.read<DateTime>('normalized_at'),
-      createdAt: row.read<DateTime>('created_at'),
-      updatedAt: row.read<DateTime>('updated_at'),
+      importedAt: _fromEpochMillis(row.read<int>('imported_at')),
+      normalizedAt: _fromEpochMillis(row.read<int>('normalized_at')),
+      createdAt: _fromEpochMillis(row.read<int>('created_at')),
+      updatedAt: _fromEpochMillis(row.read<int>('updated_at')),
     );
   }
 }

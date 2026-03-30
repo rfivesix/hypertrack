@@ -410,8 +410,8 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       error_message TEXT NULL,
       imported_at INTEGER NOT NULL,
       payload_json TEXT NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
     )
   ''');
 
@@ -430,8 +430,8 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       timezone TEXT NULL,
       imported_at INTEGER NOT NULL,
       normalized_at INTEGER NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
     )
   ''');
 
@@ -449,8 +449,8 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       ended_at INTEGER NOT NULL,
       imported_at INTEGER NOT NULL,
       normalized_at INTEGER NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
     )
   ''');
 
@@ -467,8 +467,8 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       bpm REAL NOT NULL,
       imported_at INTEGER NOT NULL,
       normalized_at INTEGER NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
     )
   ''');
 
@@ -488,8 +488,8 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       sleep_efficiency_pct REAL NULL,
       resting_heart_rate_bpm REAL NULL,
       analyzed_at INTEGER NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
     )
   ''');
 
