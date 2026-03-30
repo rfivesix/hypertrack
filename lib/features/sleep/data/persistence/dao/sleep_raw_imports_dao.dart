@@ -1,4 +1,4 @@
-import '../../../../data/drift_database.dart';
+import '../../../../../data/drift_database.dart';
 import '../sleep_persistence_models.dart';
 
 class SleepRawImportsDao {
@@ -57,11 +57,10 @@ class SleepRawImportsDao {
       WHERE imported_at >= ? AND imported_at < ?
       ORDER BY imported_at ASC
       ''',
-      variables: <Variable<Object>>[
+      variables: [
         Variable<DateTime>(fromInclusive),
         Variable<DateTime>(toExclusive),
       ],
-      readsFrom: const {},
     ).get();
     return result.map(_mapRaw).toList(growable: false);
   }
@@ -73,8 +72,7 @@ class SleepRawImportsDao {
       WHERE source_record_hash = ?
       ORDER BY imported_at DESC
       ''',
-      variables: <Variable<Object>>[Variable<String>(sourceRecordHash)],
-      readsFrom: const {},
+      variables: [Variable<String>(sourceRecordHash)],
     ).get();
     return result.map(_mapRaw).toList(growable: false);
   }
@@ -86,8 +84,7 @@ class SleepRawImportsDao {
       WHERE import_status = ?
       ORDER BY imported_at DESC
       ''',
-      variables: <Variable<Object>>[Variable<String>(status)],
-      readsFrom: const {},
+      variables: [Variable<String>(status)],
     ).get();
     return result.map(_mapRaw).toList(growable: false);
   }

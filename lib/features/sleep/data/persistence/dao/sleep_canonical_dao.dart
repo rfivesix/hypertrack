@@ -1,4 +1,4 @@
-import '../../../../data/drift_database.dart';
+import '../../../../../data/drift_database.dart';
 import '../sleep_persistence_models.dart';
 
 class SleepCanonicalSessionsDao {
@@ -63,11 +63,10 @@ class SleepCanonicalSessionsDao {
       WHERE started_at < ? AND ended_at > ?
       ORDER BY started_at ASC
       ''',
-      variables: <Variable<Object>>[
+      variables: [
         Variable<DateTime>(toExclusive),
         Variable<DateTime>(fromInclusive),
       ],
-      readsFrom: const {},
     ).get();
     return result.map(_mapSession).toList(growable: false);
   }
@@ -75,8 +74,7 @@ class SleepCanonicalSessionsDao {
   Future<SleepCanonicalSessionRecord?> findById(String sessionId) async {
     final row = await _db.customSelect(
       'SELECT * FROM sleep_canonical_sessions WHERE id = ? LIMIT 1',
-      variables: <Variable<Object>>[Variable<String>(sessionId)],
-      readsFrom: const {},
+      variables: [Variable<String>(sessionId)],
     ).getSingleOrNull();
     if (row == null) return null;
     return _mapSession(row);
@@ -89,8 +87,7 @@ class SleepCanonicalSessionsDao {
       WHERE source_record_hash = ?
       ORDER BY normalized_at DESC
       ''',
-      variables: <Variable<Object>>[Variable<String>(sourceRecordHash)],
-      readsFrom: const {},
+      variables: [Variable<String>(sourceRecordHash)],
     ).get();
     return result.map(_mapSession).toList(growable: false);
   }
@@ -186,8 +183,7 @@ class SleepCanonicalStageSegmentsDao {
       WHERE session_id = ?
       ORDER BY started_at ASC
       ''',
-      variables: <Variable<Object>>[Variable<String>(sessionId)],
-      readsFrom: const {},
+      variables: [Variable<String>(sessionId)],
     ).get();
     return result.map(_mapRow).toList(growable: false);
   }
@@ -197,7 +193,7 @@ class SleepCanonicalStageSegmentsDao {
     final placeholders = List.filled(sessionIds.length, '?').join(', ');
     await _db.customStatement(
       'DELETE FROM sleep_canonical_stage_segments WHERE session_id IN ($placeholders)',
-      sessionIds,
+      sessionIds.cast<Object?>(),
     );
   }
 
@@ -272,8 +268,7 @@ class SleepCanonicalHeartRateSamplesDao {
       WHERE session_id = ?
       ORDER BY sampled_at ASC
       ''',
-      variables: <Variable<Object>>[Variable<String>(sessionId)],
-      readsFrom: const {},
+      variables: [Variable<String>(sessionId)],
     ).get();
     return result.map(_mapRow).toList(growable: false);
   }
@@ -283,7 +278,7 @@ class SleepCanonicalHeartRateSamplesDao {
     final placeholders = List.filled(sessionIds.length, '?').join(', ');
     await _db.customStatement(
       'DELETE FROM sleep_canonical_heart_rate_samples WHERE session_id IN ($placeholders)',
-      sessionIds,
+      sessionIds.cast<Object?>(),
     );
   }
 

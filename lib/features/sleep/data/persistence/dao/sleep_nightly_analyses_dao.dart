@@ -1,4 +1,4 @@
-import '../../../../data/drift_database.dart';
+import '../../../../../data/drift_database.dart';
 import '../sleep_persistence_models.dart';
 
 class SleepNightlyAnalysesDao {
@@ -65,11 +65,10 @@ class SleepNightlyAnalysesDao {
       WHERE night_date >= ? AND night_date <= ?
       ORDER BY night_date ASC
       ''',
-      variables: <Variable<Object>>[
+      variables: [
         Variable<String>(fromNightDateInclusive),
         Variable<String>(toNightDateInclusive),
       ],
-      readsFrom: const {},
     ).get();
     return rows.map(_mapRow).toList(growable: false);
   }
@@ -81,8 +80,7 @@ class SleepNightlyAnalysesDao {
       WHERE session_id = ?
       ORDER BY analyzed_at DESC
       ''',
-      variables: <Variable<Object>>[Variable<String>(sessionId)],
-      readsFrom: const {},
+      variables: [Variable<String>(sessionId)],
     ).get();
     return rows.map(_mapRow).toList(growable: false);
   }
