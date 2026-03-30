@@ -171,10 +171,12 @@ void main() {
       fromInclusive: DateTime.utc(2026, 2, 1, 20),
       toExclusive: DateTime.utc(2026, 2, 2, 8),
     );
+    final rawAfterDelete = await rawDao.findBySourceHash('hash-raw-for-session-1');
     final segmentsAfterDelete = await stagesDao.findBySessionId('session-1');
     final samplesAfterDelete = await hrDao.findBySessionId('session-1');
 
     expect(sessionsAfterDelete, isEmpty);
+    expect(rawAfterDelete.length, 1);
     expect(segmentsAfterDelete, isEmpty);
     expect(samplesAfterDelete, isEmpty);
   });
