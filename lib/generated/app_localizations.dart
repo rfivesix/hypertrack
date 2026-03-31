@@ -4453,6 +4453,71 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'How did the workout go?'**
   String get finishWorkoutNotesHint;
+
+  /// No description provided for @sleepSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get sleepSectionTitle;
+
+  /// No description provided for @sleepSectionSubtitleDayEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Day overview and detail drill-downs'**
+  String get sleepSectionSubtitleDayEntry;
+
+  /// No description provided for @sleepSectionSubtitleAllEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep day, week, and month views are available from this entry'**
+  String get sleepSectionSubtitleAllEntry;
+
+  String get sleepScopeDay;
+  String get sleepScopeWeek;
+  String get sleepScopeMonth;
+  String get sleepWeekSummaryTitle;
+  String get sleepMonthSummaryTitle;
+  String get sleepSleepWindowTitle;
+  String get sleepDailyScoreTitle;
+  String get sleepMonthDailyScoreStatesTitle;
+  String sleepMeanScoreLabel(String value);
+  String sleepWeekdayAvgDurationLabel(String value);
+  String sleepWeekendAvgDurationLabel(String value);
+  String get sleepWeekNoScoredNights;
+  String get sleepMonthNoScoredNights;
+  String get sleepSettingsSectionTitle;
+  String get sleepEnableTrackingTitle;
+  String get sleepEnableTrackingSubtitle;
+  String get sleepHealthConnectionStatusTitle;
+  String get sleepRequestAccessTitle;
+  String get sleepRequestAccessSubtitle;
+  String get sleepImportNowTitle;
+  String get sleepImportNowSubtitle;
+  String get sleepRawImportsTitle;
+  String get sleepRawImportsSubtitle;
+  String get sleepDataStatusTitle;
+  String get sleepDataStatusSubtitle;
+  String get sleepNoPermissionTitle;
+  String get sleepNoPermissionSubtitle;
+  String get sleepFeatureUnavailableTitle;
+  String get sleepFeatureUnavailableSubtitle;
+  String get sleepNoRawImportsFound;
+  String get sleepRawImportsSheetTitle;
+  String sleepImportFinishedSessions(int count);
+  String get sleepImportUnavailableCheckPermissions;
+  String get sleepStatusChecking;
+  String get sleepStatusReady;
+  String get sleepStatusDenied;
+  String get sleepStatusPartial;
+  String get sleepStatusUnavailable;
+  String get sleepStatusNotInstalled;
+  String get sleepStatusTechnicalError;
+  String get sleepConnectHealthDataTitle;
+  String get sleepConnectHealthDataMessage;
+  String get sleepPermissionDeniedTitle;
+  String get sleepPermissionDeniedMessage;
+  String get sleepSourceUnavailableTitle;
+  String get sleepSourceUnavailableMessage;
 }
 
 class _AppLocalizationsDelegate

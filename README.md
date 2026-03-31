@@ -13,6 +13,7 @@ Learn more about the project: **[Hypertrack Project Overview](documentation/over
 - [UI & Widgets](documentation/ui_and_widgets.md)
 - [Statistics Module (Source of Truth)](documentation/statistics_module.md)
 - [Sleep Module — Day Batch 2](documentation/sleep/sleep_day_batch_2.md)
+- [Sleep Module — Final Product Batch](documentation/sleep/sleep_final_product_batch.md)
 
 ---
 

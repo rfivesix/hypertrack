@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../generated/app_localizations.dart';
 import '../../../../screens/settings_screen.dart';
 import '../../../../util/design_constants.dart';
 import '../../../../widgets/global_app_bar.dart';
@@ -16,18 +17,24 @@ class SleepDayOverviewPage extends StatelessWidget {
     super.key,
     SleepDayDataRepository? repository,
     SleepDayViewModel? viewModel,
+    DateTime? selectedDay,
   })  : _repository = repository,
-        _viewModel = viewModel;
+        _viewModel = viewModel,
+        _selectedDay = selectedDay;
 
   final SleepDayDataRepository? _repository;
   final SleepDayViewModel? _viewModel;
+  final DateTime? _selectedDay;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<SleepDayViewModel>(
       create: (_) {
         final model = _viewModel ??
-            SleepDayViewModel(repository: _repository ?? SleepDayRepository());
+            SleepDayViewModel(
+              repository: _repository ?? SleepDayRepository(),
+              selectedDay: _selectedDay,
+            );
         model.load();
         return model;
       },
@@ -42,13 +49,14 @@ class _SleepDayOverviewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<SleepDayViewModel>();
+    final l10n = AppLocalizations.of(context)!;
     final overview = model.overview;
     final localeCode = Localizations.localeOf(
       context,
     ).languageCode.toLowerCase();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const GlobalAppBar(title: 'Sleep'),
+      appBar: GlobalAppBar(title: l10n.sleepSectionTitle),
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top +
@@ -58,14 +66,22 @@ class _SleepDayOverviewBody extends StatelessWidget {
         ),
         children: [
           SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 0, label: Text('Day')),
-              ButtonSegment(value: 1, label: Text('Week')),
-              ButtonSegment(value: 2, label: Text('Month')),
+            segments: [
+              ButtonSegment(value: 0, label: Text(l10n.sleepScopeDay)),
+              ButtonSegment(value: 1, label: Text(l10n.sleepScopeWeek)),
+              ButtonSegment(value: 2, label: Text(l10n.sleepScopeMonth)),
             ],
             selected: {model.selectedScopeIndex},
             onSelectionChanged: (selection) {
               final selected = selection.first;
+              if (selected == 1) {
+                SleepNavigation.openWeekForDate(context, model.selectedDay);
+                return;
+              }
+              if (selected == 2) {
+                SleepNavigation.openMonthForDate(context, model.selectedDay);
+                return;
+              }
               model.setScopeIndex(selected);
             },
           ),

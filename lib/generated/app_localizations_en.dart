@@ -2362,4 +2362,171 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finishWorkoutNotesHint => 'How did the workout go?';
+
+  @override
+  String get sleepSectionTitle => 'Sleep';
+
+  @override
+  String get sleepSectionSubtitleDayEntry => 'Day overview and detail drill-downs';
+
+  @override
+  String get sleepSectionSubtitleAllEntry =>
+      'Sleep day, week, and month views are available from this entry';
+
+  @override
+  String get sleepScopeDay => 'Day';
+
+  @override
+  String get sleepScopeWeek => 'Week';
+
+  @override
+  String get sleepScopeMonth => 'Month';
+
+  @override
+  String get sleepWeekSummaryTitle => 'Week summary';
+
+  @override
+  String get sleepMonthSummaryTitle => 'Month summary';
+
+  @override
+  String get sleepSleepWindowTitle => 'Sleep window';
+
+  @override
+  String get sleepDailyScoreTitle => 'Daily score';
+
+  @override
+  String get sleepMonthDailyScoreStatesTitle => 'Daily score states';
+
+  @override
+  String sleepMeanScoreLabel(String value) {
+    return 'Mean score: $value';
+  }
+
+  @override
+  String sleepWeekdayAvgDurationLabel(String value) {
+    return 'Weekday avg duration: $value';
+  }
+
+  @override
+  String sleepWeekendAvgDurationLabel(String value) {
+    return 'Weekend avg duration: $value';
+  }
+
+  @override
+  String get sleepWeekNoScoredNights =>
+      'No scored sleep nights available in this week yet.';
+
+  @override
+  String get sleepMonthNoScoredNights =>
+      'No scored sleep nights available this month yet.';
+
+  @override
+  String get sleepSettingsSectionTitle => 'Sleep (Batch 2)';
+
+  @override
+  String get sleepEnableTrackingTitle => 'Enable sleep tracking';
+
+  @override
+  String get sleepEnableTrackingSubtitle =>
+      'Read sleep and overnight heart rate from Health Connect / HealthKit';
+
+  @override
+  String get sleepHealthConnectionStatusTitle => 'Health connection status';
+
+  @override
+  String get sleepRequestAccessTitle => 'Request access';
+
+  @override
+  String get sleepRequestAccessSubtitle =>
+      'Request or re-request sleep/heart-rate permissions';
+
+  @override
+  String get sleepImportNowTitle => 'Import sleep data now';
+
+  @override
+  String get sleepImportNowSubtitle => 'Import the last 30 days for testing';
+
+  @override
+  String get sleepRawImportsTitle => 'View raw sleep imports';
+
+  @override
+  String get sleepRawImportsSubtitle => 'Show recent Health Connect payloads';
+
+  @override
+  String get sleepDataStatusTitle => 'Data status';
+
+  @override
+  String get sleepDataStatusSubtitle =>
+      'Permissions granted. If no sleep appears yet, run a manual import below.';
+
+  @override
+  String get sleepNoPermissionTitle => 'No permission';
+
+  @override
+  String get sleepNoPermissionSubtitle =>
+      'Sleep and heart-rate permissions are required to import sleep data.';
+
+  @override
+  String get sleepFeatureUnavailableTitle => 'Feature unavailable';
+
+  @override
+  String get sleepFeatureUnavailableSubtitle =>
+      'Sleep import is unavailable on this device or Health Connect is not installed.';
+
+  @override
+  String get sleepNoRawImportsFound => 'No raw sleep imports found yet.';
+
+  @override
+  String get sleepRawImportsSheetTitle => 'Raw sleep imports (latest)';
+
+  @override
+  String sleepImportFinishedSessions(int count) {
+    return 'Sleep import finished ($count sessions).';
+  }
+
+  @override
+  String get sleepImportUnavailableCheckPermissions =>
+      'Sleep import unavailable. Check permissions.';
+
+  @override
+  String get sleepStatusChecking => 'Checking permission status…';
+
+  @override
+  String get sleepStatusReady => 'Ready';
+
+  @override
+  String get sleepStatusDenied => 'Denied';
+
+  @override
+  String get sleepStatusPartial => 'Partial access';
+
+  @override
+  String get sleepStatusUnavailable => 'Unavailable on this device';
+
+  @override
+  String get sleepStatusNotInstalled => 'Health Connect not installed';
+
+  @override
+  String get sleepStatusTechnicalError => 'Technical error';
+
+  @override
+  String get sleepConnectHealthDataTitle => 'Connect health data';
+
+  @override
+  String get sleepConnectHealthDataMessage =>
+      'Connect HealthKit or Health Connect to import sleep records.';
+
+  @override
+  String get sleepPermissionDeniedTitle => 'Permission denied';
+
+  @override
+  String get sleepPermissionDeniedMessage =>
+      'Sleep permissions are denied. Open settings to grant access.';
+
+  @override
+  String get sleepSourceUnavailableTitle => 'Source unavailable';
+
+  @override
+  String get sleepSourceUnavailableMessage =>
+      'Sleep data source is unavailable or not installed on this device.';
 }

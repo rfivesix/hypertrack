@@ -992,4 +992,73 @@
   ,"finishWorkoutTitleLabel": "Workout-Titel"
   ,"finishWorkoutNotesLabel": "Notizen (optional)"
   ,"finishWorkoutNotesHint": "Wie lief das Workout?"
+  ,"sleepSectionTitle": "Schlaf"
+  ,"sleepSectionSubtitleDayEntry": "Tagesübersicht und Detail-Ansichten"
+  ,"sleepSectionSubtitleAllEntry": "Tages-, Wochen- und Monatsansicht sind über diesen Einstieg verfügbar"
+  ,"sleepScopeDay": "Tag"
+  ,"sleepScopeWeek": "Woche"
+  ,"sleepScopeMonth": "Monat"
+  ,"sleepWeekSummaryTitle": "Wochenübersicht"
+  ,"sleepMonthSummaryTitle": "Monatsübersicht"
+  ,"sleepSleepWindowTitle": "Schlaffenster"
+  ,"sleepDailyScoreTitle": "Tages-Score"
+  ,"sleepMonthDailyScoreStatesTitle": "Tägliche Score-Zustände"
+  ,"sleepMeanScoreLabel": "Durchschnittlicher Score: {value}"
+  ,"@sleepMeanScoreLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepWeekdayAvgDurationLabel": "Durchschnitt Werktage: {value}"
+  ,"@sleepWeekdayAvgDurationLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepWeekendAvgDurationLabel": "Durchschnitt Wochenende: {value}"
+  ,"@sleepWeekendAvgDurationLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepWeekNoScoredNights": "In dieser Woche sind noch keine bewerteten Schlafnächte verfügbar."
+  ,"sleepMonthNoScoredNights": "In diesem Monat sind noch keine bewerteten Schlafnächte verfügbar."
+  ,"sleepSettingsSectionTitle": "Schlaf (Batch 2)"
+  ,"sleepEnableTrackingTitle": "Schlaf-Tracking aktivieren"
+  ,"sleepEnableTrackingSubtitle": "Schlaf- und nächtliche Herzfrequenzdaten aus Health Connect / HealthKit lesen"
+  ,"sleepHealthConnectionStatusTitle": "Status der Gesundheitsverbindung"
+  ,"sleepRequestAccessTitle": "Zugriff anfordern"
+  ,"sleepRequestAccessSubtitle": "Schlaf-/Herzfrequenz-Berechtigungen anfordern oder erneut anfordern"
+  ,"sleepImportNowTitle": "Schlafdaten jetzt importieren"
+  ,"sleepImportNowSubtitle": "Importiert die letzten 30 Tage zum Testen"
+  ,"sleepRawImportsTitle": "Rohimporte anzeigen"
+  ,"sleepRawImportsSubtitle": "Zeigt aktuelle Health-Connect-Payloads"
+  ,"sleepDataStatusTitle": "Datenstatus"
+  ,"sleepDataStatusSubtitle": "Berechtigungen erteilt. Wenn noch kein Schlaf angezeigt wird, unten manuell importieren."
+  ,"sleepNoPermissionTitle": "Keine Berechtigung"
+  ,"sleepNoPermissionSubtitle": "Schlaf- und Herzfrequenz-Berechtigungen sind für den Import erforderlich."
+  ,"sleepFeatureUnavailableTitle": "Funktion nicht verfügbar"
+  ,"sleepFeatureUnavailableSubtitle": "Der Schlafimport ist auf diesem Gerät nicht verfügbar oder Health Connect ist nicht installiert."
+  ,"sleepNoRawImportsFound": "Es wurden noch keine Schlaf-Rohimporte gefunden."
+  ,"sleepRawImportsSheetTitle": "Schlaf-Rohimporte (neueste)"
+  ,"sleepImportFinishedSessions": "Schlafimport abgeschlossen ({count} Sitzungen)."
+  ,"@sleepImportFinishedSessions": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+  ,"sleepImportUnavailableCheckPermissions": "Schlafimport nicht verfügbar. Berechtigungen prüfen."
+  ,"sleepStatusChecking": "Berechtigungsstatus wird geprüft…"
+  ,"sleepStatusReady": "Bereit"
+  ,"sleepStatusDenied": "Abgelehnt"
+  ,"sleepStatusPartial": "Teilzugriff"
+  ,"sleepStatusUnavailable": "Auf diesem Gerät nicht verfügbar"
+  ,"sleepStatusNotInstalled": "Health Connect nicht installiert"
+  ,"sleepStatusTechnicalError": "Technischer Fehler"
+  ,"sleepConnectHealthDataTitle": "Gesundheitsdaten verbinden"
+  ,"sleepConnectHealthDataMessage": "Verbinde HealthKit oder Health Connect, um Schlafdaten zu importieren."
+  ,"sleepPermissionDeniedTitle": "Berechtigung verweigert"
+  ,"sleepPermissionDeniedMessage": "Schlaf-Berechtigungen sind verweigert. Öffne die Einstellungen, um Zugriff zu gewähren."
+  ,"sleepSourceUnavailableTitle": "Quelle nicht verfügbar"
+  ,"sleepSourceUnavailableMessage": "Die Schlafdatenquelle ist auf diesem Gerät nicht verfügbar oder nicht installiert."
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../generated/app_localizations.dart';
 import '../data/sleep_day_repository.dart';
 import 'details/depth_detail_page.dart';
 import 'details/duration_detail_page.dart';
@@ -7,7 +8,9 @@ import 'details/heart_rate_detail_page.dart';
 import 'details/interruptions_detail_page.dart';
 import 'details/regularity_detail_page.dart';
 import 'day/sleep_day_overview_page.dart';
+import 'month/sleep_month_overview_page.dart';
 import 'sleep_placeholder_pages.dart';
+import 'week/sleep_week_overview_page.dart';
 
 class SleepRouteNames {
   static const day = '/sleep/day';
@@ -24,6 +27,15 @@ class SleepRouteNames {
 }
 
 class SleepNavigation {
+  static DateTime _readAnchorDate(RouteSettings settings) {
+    final args = settings.arguments;
+    if (args is DateTime) {
+      return DateTime(args.year, args.month, args.day);
+    }
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
   static SleepDayOverviewData? _readOverview(RouteSettings settings) {
     final args = settings.arguments;
     if (args is SleepDayOverviewData) return args;
@@ -33,25 +45,22 @@ class SleepNavigation {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case SleepRouteNames.day:
+        final selectedDay = _readAnchorDate(settings);
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const SleepDayOverviewPage(),
+          builder: (_) => SleepDayOverviewPage(selectedDay: selectedDay),
         );
       case SleepRouteNames.week:
+        final anchor = _readAnchorDate(settings);
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const SleepPlaceholderPage(
-            title: 'Sleep week',
-            message: 'Week overview is intentionally deferred in this batch.',
-          ),
+          builder: (_) => SleepWeekOverviewPage(anchorDay: anchor),
         );
       case SleepRouteNames.month:
+        final anchor = _readAnchorDate(settings);
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const SleepPlaceholderPage(
-            title: 'Sleep month',
-            message: 'Month overview is intentionally deferred in this batch.',
-          ),
+          builder: (_) => SleepMonthOverviewPage(anchorDay: anchor),
         );
       case SleepRouteNames.durationDetail:
         return MaterialPageRoute(
@@ -84,29 +93,35 @@ class SleepNavigation {
       case SleepRouteNames.connectHealthData:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const SleepPlaceholderPage(
-            title: 'Connect health data',
-            message:
-                'Connect HealthKit or Health Connect to import sleep records.',
-          ),
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return SleepPlaceholderPage(
+              title: l10n.sleepConnectHealthDataTitle,
+              message: l10n.sleepConnectHealthDataMessage,
+            );
+          },
         );
       case SleepRouteNames.permissionDenied:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const SleepPlaceholderPage(
-            title: 'Permission denied',
-            message:
-                'Sleep permissions are denied. Open settings to grant access.',
-          ),
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return SleepPlaceholderPage(
+              title: l10n.sleepPermissionDeniedTitle,
+              message: l10n.sleepPermissionDeniedMessage,
+            );
+          },
         );
       case SleepRouteNames.sourceUnavailable:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const SleepPlaceholderPage(
-            title: 'Source unavailable',
-            message:
-                'Sleep data source is unavailable or not installed on this device.',
-          ),
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return SleepPlaceholderPage(
+              title: l10n.sleepSourceUnavailableTitle,
+              message: l10n.sleepSourceUnavailableMessage,
+            );
+          },
         );
       default:
         return null;
@@ -114,15 +129,41 @@ class SleepNavigation {
   }
 
   static Future<void> openDay(BuildContext context) {
-    return Navigator.of(context).pushNamed(SleepRouteNames.day);
+    return openDayForDate(context, DateTime.now());
+  }
+
+  static Future<void> openDayForDate(BuildContext context, DateTime day) {
+    return Navigator.of(context).pushNamed(SleepRouteNames.day, arguments: day);
   }
 
   static Future<void> openWeek(BuildContext context) {
-    return Navigator.of(context).pushNamed(SleepRouteNames.week);
+    return openWeekForDate(context, DateTime.now());
+  }
+
+  static Future<void> openWeekForDate(
+    BuildContext context,
+    DateTime anchorDay, {
+    bool replace = false,
+  }) {
+    if (replace) {
+      return Navigator.of(context).pushReplacementNamed(
+        SleepRouteNames.week,
+        arguments: anchorDay,
+      );
+    }
+    return Navigator.of(
+      context,
+    ).pushNamed(SleepRouteNames.week, arguments: anchorDay);
   }
 
   static Future<void> openMonth(BuildContext context) {
-    return Navigator.of(context).pushNamed(SleepRouteNames.month);
+    return openMonthForDate(context, DateTime.now());
+  }
+
+  static Future<void> openMonthForDate(BuildContext context, DateTime anchorDay) {
+    return Navigator.of(
+      context,
+    ).pushNamed(SleepRouteNames.month, arguments: anchorDay);
   }
 
   static Future<void> openDurationDetail(

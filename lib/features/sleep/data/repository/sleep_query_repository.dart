@@ -56,6 +56,7 @@ class DriftSleepQueryRepository implements SleepQueryRepository {
       normalizationVersion: record.normalizationVersion,
       analyzedAtUtc: record.analyzedAt.toUtc(),
       score: record.score,
+      totalSleepMinutes: record.totalSleepMinutes,
       sleepQuality: _qualityFromScore(record.score),
       sourcePlatform: record.sourcePlatform,
       sourceAppId: record.sourceAppId,

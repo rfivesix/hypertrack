@@ -247,7 +247,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
                 const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, 'Sleep'),
+                _buildSectionTitle(context, l10n.sleepSectionTitle),
                 _buildSleepSection(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.sectionConsistency),
@@ -731,28 +731,53 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildSleepSection() {
+    final l10n = AppLocalizations.of(context)!;
     final subtitle = _selectedTimeRangeIndex == 0
-        ? 'Day overview and detail drill-downs'
-        : 'Sleep day view is available from this entry';
+        ? l10n.sleepSectionSubtitleDayEntry
+        : l10n.sleepSectionSubtitleAllEntry;
     return SummaryCard(
-      onTap: () => SleepNavigation.openDay(context),
-      child: ListTile(
-        leading: Icon(
-          Icons.bedtime_outlined,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        title: const Text(
-          'Sleep',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(subtitle),
-        trailing: Icon(
-          Icons.chevron_right,
-          size: DesignConstants.iconSizeM,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Sleep business logic remains owned by features/sleep; statistics
+            // only links into sleep-owned entry points and consumes its outputs.
+            Row(
+              children: [
+                Icon(
+                  Icons.bedtime_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.sleepSectionTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(subtitle),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  onPressed: () => SleepNavigation.openDay(context),
+                  child: Text(l10n.sleepScopeDay),
+                ),
+                OutlinedButton(
+                  onPressed: () => SleepNavigation.openWeek(context),
+                  child: Text(l10n.sleepScopeWeek),
+                ),
+                OutlinedButton(
+                  onPressed: () => SleepNavigation.openMonth(context),
+                  child: Text(l10n.sleepScopeMonth),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
