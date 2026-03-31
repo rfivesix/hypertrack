@@ -57,4 +57,3 @@ void main() {
     expect(metrics.sleepEfficiencyPct, closeTo(97.9, 0.2));
   });
 }
-

@@ -76,4 +76,3 @@ void main() {
     expect(repaired.single.endAtUtc, DateTime.utc(2026, 3, 2, 0));
   });
 }
-

@@ -94,4 +94,3 @@ void main() {
     expect(empty, isEmpty);
   });
 }
-

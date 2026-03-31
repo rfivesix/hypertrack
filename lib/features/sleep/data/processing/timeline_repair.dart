@@ -137,4 +137,3 @@ class _IndexedSegment {
   final int index;
   final SleepStageSegment segment;
 }
-

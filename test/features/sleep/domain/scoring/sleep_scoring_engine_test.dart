@@ -32,4 +32,3 @@ void main() {
     expect(result.state, isNot(SleepScoreState.unavailable));
   });
 }
-

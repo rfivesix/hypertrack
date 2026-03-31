@@ -42,4 +42,3 @@ void main() {
     expect(result.regularityMinutes, isNotNull);
   });
 }
-

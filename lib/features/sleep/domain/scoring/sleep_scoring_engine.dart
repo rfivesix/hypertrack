@@ -139,4 +139,3 @@ SleepScoreState _scoreState(double score) {
   if (score >= 60) return SleepScoreState.average;
   return SleepScoreState.poor;
 }
-

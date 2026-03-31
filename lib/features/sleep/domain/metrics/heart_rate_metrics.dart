@@ -104,4 +104,3 @@ double _median(List<double> sortedValues) {
   if (sortedValues.length.isOdd) return sortedValues[middle];
   return (sortedValues[middle - 1] + sortedValues[middle]) / 2;
 }
-
