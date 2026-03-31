@@ -204,11 +204,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => const CreateFoodScreen()))
         .then((_) {
-      _searchController.clear();
-      _runFilter('');
-      _loadFavorites();
-      _loadRecentItems();
-    });
+          _searchController.clear();
+          _runFilter('');
+          _loadFavorites();
+          _loadRecentItems();
+        });
   }
 
   Future<void> _loadFavorites() async {
@@ -754,43 +754,42 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           child: _isLoadingSearch
               ? const Center(child: CircularProgressIndicator())
               : (baseHits.isEmpty && otherHits.isEmpty)
-                  ? Center(
-                      child: Text(
-                        l10n.searchNoResults,
+              ? Center(
+                  child: Text(
+                    l10n.searchNoResults,
+                    style: textTheme.titleMedium,
+                  ),
+                )
+              : ListView(
+                  padding: DesignConstants.cardPadding.copyWith(
+                    bottom: _bottomPadding,
+                  ),
+                  children: [
+                    if (baseHits.isNotEmpty) ...[
+                      Text(
+                        l10n.searchSectionBase,
                         style: textTheme.titleMedium,
                       ),
-                    )
-                  : ListView(
-                      padding: DesignConstants.cardPadding.copyWith(
-                        bottom: _bottomPadding,
+                      const SizedBox(height: 8),
+                      ...baseHits.map(_buildFoodListItem),
+                      const SizedBox(height: DesignConstants.spacingL),
+                    ],
+                    if (otherHits.isNotEmpty) ...[
+                      Text(
+                        l10n.searchSectionOther,
+                        style: textTheme.titleMedium,
                       ),
-                      children: [
-                        if (baseHits.isNotEmpty) ...[
-                          Text(
-                            l10n.searchSectionBase,
-                            style: textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          ...baseHits.map(_buildFoodListItem),
-                          const SizedBox(height: DesignConstants.spacingL),
-                        ],
-                        if (otherHits.isNotEmpty) ...[
-                          Text(
-                            l10n.searchSectionOther,
-                            style: textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          ...otherHits.map(_buildFoodListItem),
-                        ],
-                        if (otherHits
-                            .any((i) => i.source == FoodItemSource.off))
-                          const Padding(
-                            padding: EdgeInsets.only(top: 12),
-                            child: OffAttributionWidget(),
-                          ),
-                        const BottomContentSpacer(),
-                      ],
-                    ),
+                      const SizedBox(height: 8),
+                      ...otherHits.map(_buildFoodListItem),
+                    ],
+                    if (otherHits.any((i) => i.source == FoodItemSource.off))
+                      const Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: OffAttributionWidget(),
+                      ),
+                    const BottomContentSpacer(),
+                  ],
+                ),
         ),
       ],
     );
@@ -1022,7 +1021,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       'mealtypeSnack': l10n.mealtypeSnack,
     };
 
-    final ok = await showGlassBottomMenu<bool>(
+    final ok =
+        await showGlassBottomMenu<bool>(
           context: context,
           title: l10n.mealsAddToDiary,
           contentBuilder: (ctx, close) {
@@ -1108,8 +1108,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                         filled: true,
                         fillColor:
                             Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.black.withOpacity(0.05),
                       ),
                       items: internalTypes
                           .map(
@@ -1138,8 +1138,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                           final it = rawItems[i];
                           final bc = it['barcode'] as String;
                           final fi = products[bc];
-                          final displayName =
-                              (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                          final displayName = (fi?.name.isNotEmpty ?? false)
+                              ? fi!.name
+                              : bc;
                           final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
 
                           return Row(
@@ -1155,13 +1156,14 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                   controller: qtyCtrls[bc],
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
+                                        decimal: true,
+                                      ),
                                   decoration: InputDecoration(
                                     labelText: displayName,
                                     suffixText: unit,
                                     filled: true,
-                                    fillColor: Theme.of(context).brightness ==
+                                    fillColor:
+                                        Theme.of(context).brightness ==
                                             Brightness.dark
                                         ? Colors.white.withOpacity(0.05)
                                         : Colors.black.withOpacity(0.05),
@@ -1269,7 +1271,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       ),
     );
 
-    final caffeineId = caffeine.id ??
+    final caffeineId =
+        caffeine.id ??
         (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
 
     await DatabaseHelper.instance.insertSupplementLog(

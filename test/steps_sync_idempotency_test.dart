@@ -49,62 +49,69 @@ void main() {
       await database.close();
     });
 
-    test('re-enable sync with overlapping range does not inflate totals',
-        () async {
-      final t1 = DateTime.utc(2026, 3, 26, 12);
-      final t2 = t1.add(const Duration(hours: 1));
-      final dayLocal = DateTime(2026, 3, 26);
+    test(
+      're-enable sync with overlapping range does not inflate totals',
+      () async {
+        final t1 = DateTime.utc(2026, 3, 26, 12);
+        final t2 = t1.add(const Duration(hours: 1));
+        final dayLocal = DateTime(2026, 3, 26);
 
-      final firstRead = <HealthStepSegmentDto>[
-        HealthStepSegmentDto(
-          startAtUtc: DateTime.utc(2026, 3, 26, 10),
-          endAtUtc: DateTime.utc(2026, 3, 26, 11),
-          stepCount: 400,
-          sourceId: 'watch',
-          nativeId: 'native-a',
-        ),
-        HealthStepSegmentDto(
-          startAtUtc: DateTime.utc(2026, 3, 26, 11),
-          endAtUtc: DateTime.utc(2026, 3, 26, 12),
-          stepCount: 600,
-          sourceId: 'watch',
-          nativeId: 'native-b',
-        ),
-      ];
-      final secondRead = <HealthStepSegmentDto>[
-        HealthStepSegmentDto(
-          startAtUtc: DateTime.utc(2026, 3, 26, 10),
-          endAtUtc: DateTime.utc(2026, 3, 26, 11),
-          stepCount: 400,
-          sourceId: 'watch',
-          nativeId: 'native-a-new',
-        ),
-        HealthStepSegmentDto(
-          startAtUtc: DateTime.utc(2026, 3, 26, 11),
-          endAtUtc: DateTime.utc(2026, 3, 26, 12),
-          stepCount: 600,
-          sourceId: 'watch',
-          nativeId: 'native-b-new',
-        ),
-      ];
+        final firstRead = <HealthStepSegmentDto>[
+          HealthStepSegmentDto(
+            startAtUtc: DateTime.utc(2026, 3, 26, 10),
+            endAtUtc: DateTime.utc(2026, 3, 26, 11),
+            stepCount: 400,
+            sourceId: 'watch',
+            nativeId: 'native-a',
+          ),
+          HealthStepSegmentDto(
+            startAtUtc: DateTime.utc(2026, 3, 26, 11),
+            endAtUtc: DateTime.utc(2026, 3, 26, 12),
+            stepCount: 600,
+            sourceId: 'watch',
+            nativeId: 'native-b',
+          ),
+        ];
+        final secondRead = <HealthStepSegmentDto>[
+          HealthStepSegmentDto(
+            startAtUtc: DateTime.utc(2026, 3, 26, 10),
+            endAtUtc: DateTime.utc(2026, 3, 26, 11),
+            stepCount: 400,
+            sourceId: 'watch',
+            nativeId: 'native-a-new',
+          ),
+          HealthStepSegmentDto(
+            startAtUtc: DateTime.utc(2026, 3, 26, 11),
+            endAtUtc: DateTime.utc(2026, 3, 26, 12),
+            stepCount: 600,
+            sourceId: 'watch',
+            nativeId: 'native-b-new',
+          ),
+        ];
 
-      final platform = _FakeHealthPlatformSteps([firstRead, secondRead]);
-      final service = StepsSyncService(platform: platform, dbHelper: dbHelper);
+        final platform = _FakeHealthPlatformSteps([firstRead, secondRead]);
+        final service = StepsSyncService(
+          platform: platform,
+          dbHelper: dbHelper,
+        );
 
-      await service.setTrackingEnabled(true);
-      await service.sync(now: t1, forceRefresh: true);
-      final totalAfterFirst =
-          await dbHelper.getDailyStepsTotal(dayLocal: dayLocal);
-      expect(totalAfterFirst, 1000);
+        await service.setTrackingEnabled(true);
+        await service.sync(now: t1, forceRefresh: true);
+        final totalAfterFirst = await dbHelper.getDailyStepsTotal(
+          dayLocal: dayLocal,
+        );
+        expect(totalAfterFirst, 1000);
 
-      await service.setTrackingEnabled(false);
-      await service.setTrackingEnabled(true);
-      await service.sync(now: t2, forceRefresh: false);
-      final totalAfterReenable =
-          await dbHelper.getDailyStepsTotal(dayLocal: dayLocal);
+        await service.setTrackingEnabled(false);
+        await service.setTrackingEnabled(true);
+        await service.sync(now: t2, forceRefresh: false);
+        final totalAfterReenable = await dbHelper.getDailyStepsTotal(
+          dayLocal: dayLocal,
+        );
 
-      expect(totalAfterReenable, totalAfterFirst);
-    });
+        expect(totalAfterReenable, totalAfterFirst);
+      },
+    );
 
     test('aggregation auto policy uses dominant source per day', () async {
       await dbHelper.upsertHealthStepSegments(<Map<String, dynamic>>[
@@ -146,12 +153,12 @@ void main() {
       final total = await dbHelper.getDailyStepsTotal(dayLocal: dayLocal);
       expect(total, 1500);
 
-      final hourly =
-          await dbHelper.getHourlyStepsTotalsForDay(dayLocal: dayLocal);
-      final hourlyTotals = hourly
-          .map((row) => row['totalSteps'] as int)
-          .toList(growable: false)
-        ..sort();
+      final hourly = await dbHelper.getHourlyStepsTotalsForDay(
+        dayLocal: dayLocal,
+      );
+      final hourlyTotals =
+          hourly.map((row) => row['totalSteps'] as int).toList(growable: false)
+            ..sort();
       expect(hourlyTotals, <int>[500, 1000]);
 
       final range = await dbHelper.getDailyStepsTotalsForRange(
@@ -209,10 +216,9 @@ void main() {
         dayLocal: dayLocal,
         sourcePolicy: 'max_per_hour',
       );
-      final hourlyTotals = hourly
-          .map((row) => row['totalSteps'] as int)
-          .toList(growable: false)
-        ..sort();
+      final hourlyTotals =
+          hourly.map((row) => row['totalSteps'] as int).toList(growable: false)
+            ..sort();
       expect(hourlyTotals, <int>[500, 1200]);
 
       final range = await dbHelper.getDailyStepsTotalsForRange(

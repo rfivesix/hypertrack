@@ -13,10 +13,12 @@ class SleepDayViewModel extends ChangeNotifier {
     required SleepDayDataRepository repository,
     SleepImportService? syncService,
     DateTime? selectedDay,
-  })  : _repository = repository,
-        _syncService = syncService ?? SleepSyncService(),
-        _period = SleepPeriodSelection(anchorDate: selectedDay) {
-    SleepSyncService.lastImportAtListenable.addListener(_onSleepImportCompleted);
+  }) : _repository = repository,
+       _syncService = syncService ?? SleepSyncService(),
+       _period = SleepPeriodSelection(anchorDate: selectedDay) {
+    SleepSyncService.lastImportAtListenable.addListener(
+      _onSleepImportCompleted,
+    );
   }
 
   final SleepDayDataRepository _repository;
@@ -93,8 +95,9 @@ class SleepDayViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    SleepSyncService.lastImportAtListenable
-        .removeListener(_onSleepImportCompleted);
+    SleepSyncService.lastImportAtListenable.removeListener(
+      _onSleepImportCompleted,
+    );
     unawaited(_syncService.dispose());
     unawaited(_repository.dispose());
     super.dispose();
@@ -105,8 +108,8 @@ class SleepPeriodSelection {
   SleepPeriodSelection({
     DateTime? anchorDate,
     SleepPeriodScope scope = SleepPeriodScope.day,
-  })  : _anchorDate = _normalizeDate(anchorDate ?? DateTime.now()),
-        _scope = scope;
+  }) : _anchorDate = _normalizeDate(anchorDate ?? DateTime.now()),
+       _scope = scope;
 
   DateTime _anchorDate;
   SleepPeriodScope _scope;
@@ -165,9 +168,9 @@ class SleepPeriodSelection {
         final end = periodEnd;
         return '${DateFormat.MMMd(localeCode).format(start)} - ${DateFormat.MMMd(localeCode).format(end)}';
       case SleepPeriodScope.month:
-        return DateFormat.yMMMM(localeCode).format(
-          DateTime(_anchorDate.year, _anchorDate.month, 1),
-        );
+        return DateFormat.yMMMM(
+          localeCode,
+        ).format(DateTime(_anchorDate.year, _anchorDate.month, 1));
     }
   }
 

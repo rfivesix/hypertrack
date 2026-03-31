@@ -30,8 +30,8 @@ class SettingsScreen extends StatefulWidget {
     super.key,
     SleepSettingsService? sleepSyncService,
     SleepPermissionController? sleepPermissionController,
-  })  : _sleepSyncService = sleepSyncService,
-        _sleepPermissionController = sleepPermissionController;
+  }) : _sleepSyncService = sleepSyncService,
+       _sleepPermissionController = sleepPermissionController;
 
   final SleepSettingsService? _sleepSyncService;
   final SleepPermissionController? _sleepPermissionController;
@@ -65,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _ownsSleepPermissionController = widget._sleepPermissionController == null;
     _sleepPermissionController =
         widget._sleepPermissionController ??
-            _sleepSyncService.buildPermissionController();
+        _sleepSyncService.buildPermissionController();
     _loadAppVersion();
     _loadStepsSettings();
     _loadSleepSettings();
@@ -243,9 +243,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           child: Text(
                             l10n.settingsVisualStyleTitle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelLarge
+                            style: Theme.of(context).textTheme.labelLarge
                                 ?.copyWith(
                                   color: Colors.grey,
                                   fontWeight: FontWeight.bold,
@@ -476,20 +474,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.sync),
                         title: const Text('Import sleep data now'),
-                        subtitle: const Text('Import the last 30 days for testing'),
+                        subtitle: const Text(
+                          'Import the last 30 days for testing',
+                        ),
                         trailing: _isSleepImporting
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.chevron_right),
                         onTap: _isSleepImporting
                             ? null
                             : () async {
                                 setState(() => _isSleepImporting = true);
-                                final result =
-                                    await _sleepSyncService.importRecent();
+                                final result = await _sleepSyncService
+                                    .importRecent();
                                 if (!mounted) return;
                                 setState(() => _isSleepImporting = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -498,7 +500,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       result.success
                                           ? 'Sleep import finished (${result.importedSessions} sessions).'
                                           : (result.message ??
-                                              'Sleep import unavailable. Check permissions.'),
+                                                'Sleep import unavailable. Check permissions.'),
                                     ),
                                   ),
                                 );
@@ -509,12 +511,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.data_object_outlined),
                         title: const Text('View raw sleep imports'),
-                        subtitle: const Text('Show recent Health Connect payloads'),
+                        subtitle: const Text(
+                          'Show recent Health Connect payloads',
+                        ),
                         trailing: _isSleepRawLoading
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.chevron_right),
                         onTap: _isSleepRawLoading ? null : _showRawSleepImports,
@@ -611,9 +617,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

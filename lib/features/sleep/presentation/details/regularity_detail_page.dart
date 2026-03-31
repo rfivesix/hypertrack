@@ -34,8 +34,9 @@ class RegularityDetailPage extends StatelessWidget {
     return SleepDetailPageShell(
       title: 'Regularity',
       value: '${nights.length}-night range',
-      statusLabel:
-          nights.length >= 7 ? 'Sufficient trend data' : 'Limited trend data',
+      statusLabel: nights.length >= 7
+          ? 'Sufficient trend data'
+          : 'Limited trend data',
       subtitle: 'Bedtime and wake windows for recent nights.',
       children: [
         _RegularityChart(nights: nights),
@@ -62,14 +63,16 @@ class _RegularityChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayNights =
-        nights.length <= 7 ? nights : nights.sublist(nights.length - 7);
+    final displayNights = nights.length <= 7
+        ? nights
+        : nights.sublist(nights.length - 7);
     final adjusted = displayNights
         .map((night) => _AdjustedNight.from(night, _defaultAxisStart))
         .toList(growable: false);
     final minBed = adjusted.map((night) => night.bedAdjusted).reduce(math.min);
-    final maxWake =
-        adjusted.map((night) => night.wakeAdjusted).reduce(math.max);
+    final maxWake = adjusted
+        .map((night) => night.wakeAdjusted)
+        .reduce(math.max);
     final axisStart = math.min(_defaultAxisStart, minBed).toInt();
     final axisEnd = math.max(_defaultAxisEnd, maxWake).toInt();
     final ticks = _buildTicks(axisStart, axisEnd);
@@ -91,8 +94,7 @@ class _RegularityChart extends StatelessWidget {
                       children: [
                         for (final tick in ticks)
                           Positioned(
-                            top: _yFor(tick, height, axisStart, axisEnd) -
-                                8,
+                            top: _yFor(tick, height, axisStart, axisEnd) - 8,
                             left: 0,
                             right: 0,
                             child: Text(
@@ -137,14 +139,14 @@ class _RegularityChart extends StatelessWidget {
                                   axisStart: axisStart,
                                   axisEnd: axisEnd,
                                   height: height,
-                                  left: (columnWidth * i) +
+                                  left:
+                                      (columnWidth * i) +
                                       (columnWidth / 2) -
                                       (barWidth / 2),
                                   width: barWidth,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.85),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.85),
                                 ),
                             ],
                           );
@@ -226,8 +228,7 @@ class _SleepWindowBar extends StatelessWidget {
     final bedY = _yFor(bed, height, axisStart, axisEnd);
     final wakeY = _yFor(wake, height, axisStart, axisEnd);
     final barTop = math.min(bedY, wakeY);
-    final barHeight =
-        (wakeY - bedY).abs().clamp(2.0, height).toDouble();
+    final barHeight = (wakeY - bedY).abs().clamp(2.0, height).toDouble();
     return Positioned(
       top: barTop,
       left: left,
@@ -274,10 +275,7 @@ double _yFor(num minutes, double height, int axisStart, int axisEnd) {
 }
 
 class _RegularitySummaryRow extends StatelessWidget {
-  const _RegularitySummaryRow({
-    required this.label,
-    required this.value,
-  });
+  const _RegularitySummaryRow({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -288,10 +286,7 @@ class _RegularitySummaryRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text(value),
-        ],
+        children: [Text(label), Text(value)],
       ),
     );
   }

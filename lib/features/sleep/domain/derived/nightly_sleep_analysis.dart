@@ -32,16 +32,16 @@ class NightlySleepAnalysis {
   final String? sourceRecordHash;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'sessionId': sessionId,
-        'nightDate': nightDate.toIso8601String(),
-        'analysisVersion': analysisVersion,
-        'normalizationVersion': normalizationVersion,
-        'analyzedAtUtc': analyzedAtUtc.toIso8601String(),
-        'score': score,
-        'sleepQuality': sleepQuality.name,
-        'sourcePlatform': sourcePlatform,
-        'sourceAppId': sourceAppId,
-        'sourceRecordHash': sourceRecordHash,
-      };
+    'id': id,
+    'sessionId': sessionId,
+    'nightDate': nightDate.toIso8601String(),
+    'analysisVersion': analysisVersion,
+    'normalizationVersion': normalizationVersion,
+    'analyzedAtUtc': analyzedAtUtc.toIso8601String(),
+    'score': score,
+    'sleepQuality': sleepQuality.name,
+    'sourcePlatform': sourcePlatform,
+    'sourceAppId': sourceAppId,
+    'sourceRecordHash': sourceRecordHash,
+  };
 }

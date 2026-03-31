@@ -143,9 +143,9 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 2),
             Text(
@@ -175,8 +175,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     return Text(
       label,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+        color: Theme.of(context).colorScheme.outline,
+      ),
     );
   }
 
@@ -196,7 +196,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   }
 
   List<MuscleRadarDatum> _buildRadarData(List<RecoveryMusclePayload> muscles) {
-    final sorted = [...muscles]..sort(
+    final sorted = [...muscles]
+      ..sort(
         (a, b) =>
             _recoveryPressureScore(b).compareTo(_recoveryPressureScore(a)),
       );
@@ -261,9 +262,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                         children: [
                           Text(
                             _overallLabel(l10n, _recovery.overallState),
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
+                            style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: _overallStateColor(
@@ -357,9 +356,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                           const SizedBox(height: 8),
                           Text(
                             l10n.recoveryHeuristicDisclaimer,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
@@ -397,9 +394,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                           const SizedBox(height: 8),
                           Text(
                             l10n.recoveryRadarHeuristicCaption,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
@@ -426,8 +421,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       final muscleName = muscle.muscleGroup;
                       final state = muscle.state;
                       final stateColor = _stateColor(context, state);
-                      final hours =
-                          muscle.hoursSinceLastSignificantLoad.round();
+                      final hours = muscle.hoursSinceLastSignificantLoad
+                          .round();
                       final highFatigue = muscle.highSessionFatigue;
                       final eqSets = muscle.lastEquivalentSets;
                       final recoveringUpper = muscle.recoveringUpperHours;
@@ -557,9 +552,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                     recoveringUpper,
                                     readyUpper,
                                   ),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: Theme.of(
                                           context,
@@ -569,9 +562,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                 const SizedBox(height: 6),
                                 Text(
                                   _explanationForMuscle(l10n, muscle),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: Theme.of(
                                           context,

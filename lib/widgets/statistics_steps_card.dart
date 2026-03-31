@@ -104,10 +104,7 @@ class StatisticsStepsCard extends StatelessWidget {
                 // Right Column: Bar Chart
                 Expanded(
                   flex: 3,
-                  child: SizedBox(
-                    height: 84,
-                    child: _buildBarChart(context),
-                  ),
+                  child: SizedBox(height: 84, child: _buildBarChart(context)),
                 ),
               ],
             ),
@@ -142,7 +139,7 @@ class StatisticsStepsCard extends StatelessWidget {
     final goalRatio = (dailyGoal / maxValue).clamp(0.0, 1.0);
     final averageSteps =
         chartBuckets.fold<int>(0, (sum, bucket) => sum + bucket.steps) ~/
-            chartBuckets.length;
+        chartBuckets.length;
     final averageRatio = (averageSteps / maxValue).clamp(0.0, 1.0);
     final showAverageLine =
         showWeekDecorations && averageSteps > 0 && (averageSteps != dailyGoal);
@@ -191,10 +188,14 @@ class StatisticsStepsCard extends StatelessWidget {
                   topMargin: topMargin,
                   bottomMargin: bottomMargin,
                 );
-                final goalTop =
-                    (goalY - 8).clamp(0.0, constraints.maxHeight - 16);
-                final avgTop =
-                    (avgY - 8).clamp(0.0, constraints.maxHeight - 16);
+                final goalTop = (goalY - 8).clamp(
+                  0.0,
+                  constraints.maxHeight - 16,
+                );
+                final avgTop = (avgY - 8).clamp(
+                  0.0,
+                  constraints.maxHeight - 16,
+                );
                 final showAverageLabel =
                     showAverageLine && (goalTop - avgTop).abs() > 12;
                 return Stack(
@@ -210,10 +211,13 @@ class StatisticsStepsCard extends StatelessWidget {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           child: Text(
                             _compactAxisLabel(
-                                dailyGoal > 0 ? dailyGoal : maxValue),
+                              dailyGoal > 0 ? dailyGoal : maxValue,
+                            ),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.outline,
                               fontWeight: FontWeight.w600,
@@ -234,7 +238,9 @@ class StatisticsStepsCard extends StatelessWidget {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 1),
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
                             child: Text(
                               'Ø ${_compactAxisLabel(averageSteps)}',
                               style: theme.textTheme.labelSmall?.copyWith(
@@ -263,21 +269,28 @@ class StatisticsStepsCard extends StatelessWidget {
               children: List.generate(chartBuckets.length, (index) {
                 final bucket = chartBuckets[index];
                 final bucketDay = DateTime(
-                    bucket.start.year, bucket.start.month, bucket.start.day);
+                  bucket.start.year,
+                  bucket.start.month,
+                  bucket.start.day,
+                );
                 final isToday = bucketDay == today;
-                final double heightRatio =
-                    (bucket.steps / maxValue).clamp(0.0, 1.0);
+                final double heightRatio = (bucket.steps / maxValue).clamp(
+                  0.0,
+                  1.0,
+                );
                 final bool metGoal = bucket.steps >= dailyGoal && dailyGoal > 0;
                 final barColor = bucket.steps <= 0
                     ? theme.colorScheme.outlineVariant
                     : primaryColor;
-                final barWidth =
-                    singlePoint ? 12.0 : (isSevenDays ? 14.0 : 5.0);
+                final barWidth = singlePoint
+                    ? 12.0
+                    : (isSevenDays ? 14.0 : 5.0);
 
                 return Expanded(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                        horizontal: isSevenDays ? 3.0 : 1.0),
+                      horizontal: isSevenDays ? 3.0 : 1.0,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -329,7 +342,8 @@ class StatisticsStepsCard extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           color: barColor,
                                           borderRadius: BorderRadius.circular(
-                                              isSevenDays ? 4 : 1),
+                                            isSevenDays ? 4 : 1,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -349,11 +363,12 @@ class StatisticsStepsCard extends StatelessWidget {
                               color: isToday
                                   ? theme.colorScheme.onSurface
                                   : theme.colorScheme.onSurfaceVariant,
-                              fontWeight:
-                                  isToday ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isToday
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
@@ -418,12 +433,13 @@ class _DashedLinePainter extends CustomPainter {
   final double bottomMargin;
   final double leftInset;
 
-  _DashedLinePainter(
-      {required this.color,
-      required this.yRatio,
-      required this.topMargin,
-      required this.bottomMargin,
-      required this.leftInset});
+  _DashedLinePainter({
+    required this.color,
+    required this.yRatio,
+    required this.topMargin,
+    required this.bottomMargin,
+    required this.leftInset,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -20,7 +20,8 @@ class StatisticsDataQualityPolicy {
     required int weightDays,
     required int loggedCalorieDays,
   }) {
-    final sufficient = spanDays >= 14 &&
+    final sufficient =
+        spanDays >= 14 &&
         totalDays >= 14 &&
         weightDays >= 5 &&
         loggedCalorieDays >= 7;

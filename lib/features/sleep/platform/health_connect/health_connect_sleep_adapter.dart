@@ -14,8 +14,8 @@ class HealthConnectSleepAdapter {
   const HealthConnectSleepAdapter({
     required SleepPermissionsService permissionsService,
     required HealthConnectDataSource dataSource,
-  })  : _permissionsService = permissionsService,
-        _dataSource = dataSource;
+  }) : _permissionsService = permissionsService,
+       _dataSource = dataSource;
 
   final SleepPermissionsService _permissionsService;
   final HealthConnectDataSource _dataSource;

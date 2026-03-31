@@ -26,10 +26,12 @@ class _FakeHealthKitPermissionBridge implements HealthKitPermissionBridge {
   Future<HealthKitAuthorizationSnapshot> checkAuthorization() async => check;
 
   @override
-  Future<HealthKitAuthorizationSnapshot> requestAuthorization() async => request;
+  Future<HealthKitAuthorizationSnapshot> requestAuthorization() async =>
+      request;
 }
 
-class _FakeHealthConnectPermissionBridge implements HealthConnectPermissionBridge {
+class _FakeHealthConnectPermissionBridge
+    implements HealthConnectPermissionBridge {
   _FakeHealthConnectPermissionBridge({
     required this.availability,
     required this.check,
@@ -58,8 +60,7 @@ class _FakeHealthKitDataSource implements HealthKitDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async =>
-      batch;
+  }) async => batch;
 }
 
 class _ThrowingHealthKitDataSource implements HealthKitDataSource {
@@ -80,8 +81,7 @@ class _FakeHealthConnectDataSource implements HealthConnectDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async =>
-      batch;
+  }) async => batch;
 }
 
 class _StaticPermissionService implements SleepPermissionsService {
@@ -97,18 +97,18 @@ class _StaticPermissionService implements SleepPermissionsService {
 }
 
 SleepRawIngestionBatch _sampleBatch() => SleepRawIngestionBatch(
-      sessions: [
-        SleepIngestionSession(
-          recordId: 's',
-          startAtUtc: DateTime.utc(2026, 1, 1, 22),
-          endAtUtc: DateTime.utc(2026, 1, 2, 6),
-          platformSessionType: 'sleep',
-          sourcePlatform: 'test',
-        ),
-      ],
-      stageSegments: const [],
-      heartRateSamples: const [],
-    );
+  sessions: [
+    SleepIngestionSession(
+      recordId: 's',
+      startAtUtc: DateTime.utc(2026, 1, 1, 22),
+      endAtUtc: DateTime.utc(2026, 1, 2, 6),
+      platformSessionType: 'sleep',
+      sourcePlatform: 'test',
+    ),
+  ],
+  stageSegments: const [],
+  heartRateSamples: const [],
+);
 
 void main() {
   group('HealthKitSleepPermissionsService', () {
@@ -199,10 +199,14 @@ void main() {
         ),
       );
 
-      expect((await notInstalled.checkStatus()).state,
-          SleepPermissionState.notInstalled);
-      expect((await unavailable.checkStatus()).state,
-          SleepPermissionState.unavailable);
+      expect(
+        (await notInstalled.checkStatus()).state,
+        SleepPermissionState.notInstalled,
+      );
+      expect(
+        (await unavailable.checkStatus()).state,
+        SleepPermissionState.unavailable,
+      );
     });
   });
 
@@ -231,11 +235,15 @@ void main() {
         fromUtc: DateTime.utc(2026, 1, 1),
         toUtc: DateTime.utc(2026, 1, 2),
       );
-      expect(partial.failure?.error, SleepPlatformServiceError.permissionPartial);
+      expect(
+        partial.failure?.error,
+        SleepPlatformServiceError.permissionPartial,
+      );
 
       final failingAdapter = HealthKitSleepAdapter(
-        permissionsService:
-            const _StaticPermissionService(SleepPermissionOutcome.ready()),
+        permissionsService: const _StaticPermissionService(
+          SleepPermissionOutcome.ready(),
+        ),
         dataSource: _ThrowingHealthKitDataSource(),
       );
       final failed = await failingAdapter.importRange(
@@ -256,11 +264,15 @@ void main() {
         fromUtc: DateTime.utc(2026, 1, 1),
         toUtc: DateTime.utc(2026, 1, 2),
       );
-      expect(unavailable.failure?.error, SleepPlatformServiceError.notInstalled);
+      expect(
+        unavailable.failure?.error,
+        SleepPlatformServiceError.notInstalled,
+      );
 
       final successAdapter = HealthConnectSleepAdapter(
-        permissionsService:
-            const _StaticPermissionService(SleepPermissionOutcome.ready()),
+        permissionsService: const _StaticPermissionService(
+          SleepPermissionOutcome.ready(),
+        ),
         dataSource: _FakeHealthConnectDataSource(_sampleBatch()),
       );
       final success = await successAdapter.importRange(
@@ -300,7 +312,10 @@ void main() {
       await controller.refresh();
 
       expect(controller.state.value.state, SleepPermissionState.technicalError);
-      expect(controller.state.value.error, SleepPlatformServiceError.queryFailed);
+      expect(
+        controller.state.value.error,
+        SleepPlatformServiceError.queryFailed,
+      );
       expect(controller.state.value.message, 'bridge timeout');
     });
   });

@@ -12,11 +12,13 @@ String formatBedtimeMinutes(int minutes) {
   final normalized = ((minutes % 1440) + 1440) % 1440;
   final hour = normalized ~/ 60;
   final minute = normalized % 60;
-  return DateFormat('HH:mm').format(DateTime(
-    _timeFormattingAnchorDate.year,
-    _timeFormattingAnchorDate.month,
-    _timeFormattingAnchorDate.day,
-    hour,
-    minute,
-  ));
+  return DateFormat('HH:mm').format(
+    DateTime(
+      _timeFormattingAnchorDate.year,
+      _timeFormattingAnchorDate.month,
+      _timeFormattingAnchorDate.day,
+      hour,
+      minute,
+    ),
+  );
 }

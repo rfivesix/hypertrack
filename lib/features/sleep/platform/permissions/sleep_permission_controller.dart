@@ -5,9 +5,9 @@ import 'sleep_permissions_service.dart';
 
 class SleepPermissionController {
   SleepPermissionController(this._service)
-      : state = ValueNotifier<SleepPermissionStatus>(
-          const SleepPermissionStatus(state: SleepPermissionState.loading),
-        );
+    : state = ValueNotifier<SleepPermissionStatus>(
+        const SleepPermissionStatus(state: SleepPermissionState.loading),
+      );
 
   final SleepPermissionsService _service;
   final ValueNotifier<SleepPermissionStatus> state;

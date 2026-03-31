@@ -35,11 +35,13 @@ class InterruptionsDetailPage extends StatelessWidget {
     return SleepDetailPageShell(
       title: 'Interruptions',
       value: '${overview.interruptionsCount}',
-      statusLabel:
-          overview.interruptionsCount! == 0 ? 'None detected' : 'Detected',
+      statusLabel: overview.interruptionsCount! == 0
+          ? 'None detected'
+          : 'Detected',
       subtitle: 'Qualifying wake interruptions overnight.',
-      statusColor:
-           overview.interruptionsCount! <= 1 ? Colors.green : Colors.orange,
+      statusColor: overview.interruptionsCount! <= 1
+          ? Colors.green
+          : Colors.orange,
       children: [
         SummaryCard(
           child: Padding(

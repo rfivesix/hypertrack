@@ -20,7 +20,8 @@ class DepthDetailPage extends StatelessWidget {
       );
     }
 
-    final hasReliableStageData = overview.hasStageData &&
+    final hasReliableStageData =
+        overview.hasStageData &&
         overview.stageDataConfidence != SleepStageConfidence.low;
 
     if (!hasReliableStageData) {
@@ -58,42 +59,24 @@ class DepthDetailPage extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                flex: deepDuration.inMinutes
-                    .clamp(1, totalMinutes)
-                    .toInt(),
+                flex: deepDuration.inMinutes.clamp(1, totalMinutes).toInt(),
                 child: Container(color: Colors.indigo),
               ),
               Expanded(
-                flex: lightDuration.inMinutes
-                    .clamp(1, totalMinutes)
-                    .toInt(),
+                flex: lightDuration.inMinutes.clamp(1, totalMinutes).toInt(),
                 child: Container(color: Colors.blue),
               ),
               Expanded(
-                flex: remDuration.inMinutes
-                    .clamp(1, totalMinutes)
-                    .toInt(),
+                flex: remDuration.inMinutes.clamp(1, totalMinutes).toInt(),
                 child: Container(color: Colors.purple),
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        _DepthRow(
-          label: 'Deep',
-          duration: deepDuration,
-          percent: deepPct,
-        ),
-        _DepthRow(
-          label: 'Light',
-          duration: lightDuration,
-          percent: lightPct,
-        ),
-        _DepthRow(
-          label: 'REM',
-          duration: remDuration,
-          percent: remPct,
-        ),
+        _DepthRow(label: 'Deep', duration: deepDuration, percent: deepPct),
+        _DepthRow(label: 'Light', duration: lightDuration, percent: lightPct),
+        _DepthRow(label: 'REM', duration: remDuration, percent: remPct),
       ],
     );
   }

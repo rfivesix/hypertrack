@@ -20,7 +20,8 @@ class DurationDetailPage extends StatelessWidget {
         body: const Padding(
           padding: EdgeInsets.all(16),
           child: SleepDataUnavailableCard(
-              message: 'Duration data is unavailable.'),
+            message: 'Duration data is unavailable.',
+          ),
         ),
       );
     }
@@ -30,8 +31,9 @@ class DurationDetailPage extends StatelessWidget {
         appBar: AppBar(title: const Text('Duration')),
         body: const Padding(
           padding: EdgeInsets.all(16),
-          child:
-              SleepDataUnavailableCard(message: 'Duration data is unavailable.'),
+          child: SleepDataUnavailableCard(
+            message: 'Duration data is unavailable.',
+          ),
         ),
       );
     }

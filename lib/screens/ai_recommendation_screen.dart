@@ -124,19 +124,19 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         // E.g., target = remaining - (daily / 3)
         targetMacros['kcal'] =
             (targetMacros['kcal']! - (dailyKcal / 3.0).round()).clamp(
-          0,
-          targetMacros['kcal']!,
-        );
+              0,
+              targetMacros['kcal']!,
+            );
         targetMacros['protein'] =
             (targetMacros['protein']! - (dailyP / 3.0).round()).clamp(
-          0,
-          targetMacros['protein']!,
-        );
+              0,
+              targetMacros['protein']!,
+            );
         targetMacros['carbs'] =
             (targetMacros['carbs']! - (dailyC / 3.0).round()).clamp(
-          0,
-          targetMacros['carbs']!,
-        );
+              0,
+              targetMacros['carbs']!,
+            );
         targetMacros['fat'] = (targetMacros['fat']! - (dailyF / 3.0).round())
             .clamp(0, targetMacros['fat']!);
       } else if (widget.mealType == 'mealtypeDinner') {
@@ -407,8 +407,9 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                           'Cooking allowed',
                           isSelected: _selectedSituation == 'Cooking allowed',
                           onSelected: (v) => setState(
-                            () => _selectedSituation =
-                                v ? 'Cooking allowed' : null,
+                            () => _selectedSituation = v
+                                ? 'Cooking allowed'
+                                : null,
                           ),
                         ),
                       ],
@@ -785,7 +786,8 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(
-                    onPressed: (_isSaving ||
+                    onPressed:
+                        (_isSaving ||
                             _matchedIngredients.every(
                               (m) => m.matchedFood == null,
                             ))

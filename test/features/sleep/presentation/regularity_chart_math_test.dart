@@ -4,10 +4,7 @@ import 'package:hypertrack/features/sleep/presentation/details/regularity_chart_
 void main() {
   test('unwrapWakeMinutes wraps midnight correctly', () {
     expect(
-      unwrapWakeMinutes(
-        bedtimeMinutes: 23 * 60 + 30,
-        wakeMinutes: 6 * 60 + 15,
-      ),
+      unwrapWakeMinutes(bedtimeMinutes: 23 * 60 + 30, wakeMinutes: 6 * 60 + 15),
       24 * 60 + 6 * 60 + 15,
     );
   });

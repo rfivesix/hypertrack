@@ -23,8 +23,11 @@ class _FakeStepsRepository implements StepsAggregationRepository {
     required DateTime endDate,
     required int daysBack,
   }) async {
-    final start = DateTime(endDate.year, endDate.month, endDate.day)
-        .subtract(Duration(days: daysBack - 1));
+    final start = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+    ).subtract(Duration(days: daysBack - 1));
     final buckets = List.generate(
       daysBack,
       (index) => StepsBucket(
@@ -48,8 +51,8 @@ class _FakeStepsRepository implements StepsAggregationRepository {
 
   @override
   Future<MonthStepsAggregation> getMonthAggregation(
-          DateTime dateInMonth) async =>
-      throw UnimplementedError();
+    DateTime dateInMonth,
+  ) async => throw UnimplementedError();
 
   @override
   Future<WeekStepsAggregation> getWeekAggregation(DateTime dateInWeek) async =>
@@ -66,15 +69,16 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   Future<bool> isTrackingEnabled() async => trackingEnabled;
 
   @override
-  Future<StepsRefreshResult> refresh(
-          {bool force = false, DateTime? now}) async =>
-      const StepsRefreshResult(
-        didRun: true,
-        permissionGranted: true,
-        skipped: false,
-        fetchedCount: 0,
-        upsertedCount: 0,
-      );
+  Future<StepsRefreshResult> refresh({
+    bool force = false,
+    DateTime? now,
+  }) async => const StepsRefreshResult(
+    didRun: true,
+    permissionGranted: true,
+    skipped: false,
+    fetchedCount: 0,
+    upsertedCount: 0,
+  );
 }
 
 void main() {
@@ -124,7 +128,9 @@ void main() {
       ),
       BodyNutritionAnalyticsResult(
         range: DateTimeRange(
-            start: DateTime(2026, 1, 1), end: DateTime(2026, 1, 30)),
+          start: DateTime(2026, 1, 1),
+          end: DateTime(2026, 1, 30),
+        ),
         totalDays: 30,
         currentWeightKg: null,
         weightChangeKg: null,

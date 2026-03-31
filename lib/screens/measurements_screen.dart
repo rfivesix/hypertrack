@@ -86,8 +86,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         start = now.subtract(const Duration(days: 179));
         break;
       case 'All':
-        final earliest =
-            await DatabaseHelper.instance.getEarliestMeasurementDate();
+        final earliest = await DatabaseHelper.instance
+            .getEarliestMeasurementDate();
         start = earliest ?? now;
         break;
       case '30D':
@@ -129,28 +129,28 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _sessions.isEmpty
-              ? _buildEmptyState(l10n, context)
-              : ListView(
-                  padding: DesignConstants.cardPadding.copyWith(
-                    top: DesignConstants.cardPadding.top + topPadding,
+          ? _buildEmptyState(l10n, context)
+          : ListView(
+              padding: DesignConstants.cardPadding.copyWith(
+                top: DesignConstants.cardPadding.top + topPadding,
+              ),
+              children: [
+                if (_availableMeasurementTypes.isNotEmpty) ...[
+                  _buildChartSection(
+                    l10n,
+                    colorScheme,
+                    Theme.of(context).textTheme,
                   ),
-                  children: [
-                    if (_availableMeasurementTypes.isNotEmpty) ...[
-                      _buildChartSection(
-                        l10n,
-                        colorScheme,
-                        Theme.of(context).textTheme,
-                      ),
-                      const SizedBox(height: DesignConstants.spacingXL),
-                    ],
-                    _buildSectionTitle(context, l10n.all_measurements),
-                    ..._sessions.map(
-                      (session) => _buildMeasurementSessionCard(
-                          l10n, colorScheme, session),
-                    ),
-                    const BottomContentSpacer(),
-                  ],
+                  const SizedBox(height: DesignConstants.spacingXL),
+                ],
+                _buildSectionTitle(context, l10n.all_measurements),
+                ..._sessions.map(
+                  (session) =>
+                      _buildMeasurementSessionCard(l10n, colorScheme, session),
                 ),
+                const BottomContentSpacer(),
+              ],
+            ),
       floatingActionButton: GlassFab(
         label: l10n.addMeasurement,
         onPressed: _navigateToCreateMeasurement,
@@ -189,9 +189,9 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -227,13 +227,14 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                       },
                       items: _availableMeasurementTypes
                           .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(
-                            l10n.getLocalizedMeasurementName(value),
-                          ),
-                        );
-                      }).toList(),
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                l10n.getLocalizedMeasurementName(value),
+                              ),
+                            );
+                          })
+                          .toList(),
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

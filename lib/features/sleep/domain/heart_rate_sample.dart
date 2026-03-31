@@ -25,14 +25,14 @@ class HeartRateSample {
   final HeartRateConfidence heartRateConfidence;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'sessionId': sessionId,
-        'sampledAtUtc': sampledAtUtc.toIso8601String(),
-        'bpm': bpm,
-        'sourcePlatform': sourcePlatform,
-        'sourceAppId': sourceAppId,
-        'sourceRecordHash': sourceRecordHash,
-        'sourceConfidence': sourceConfidence,
-        'heartRateConfidence': heartRateConfidence.name,
-      };
+    'id': id,
+    'sessionId': sessionId,
+    'sampledAtUtc': sampledAtUtc.toIso8601String(),
+    'bpm': bpm,
+    'sourcePlatform': sourcePlatform,
+    'sourceAppId': sourceAppId,
+    'sourceRecordHash': sourceRecordHash,
+    'sourceConfidence': sourceConfidence,
+    'heartRateConfidence': heartRateConfidence.name,
+  };
 }

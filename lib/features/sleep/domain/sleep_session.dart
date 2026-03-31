@@ -29,16 +29,16 @@ class SleepSession {
   final String? normalizationVersion;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'startAtUtc': startAtUtc.toIso8601String(),
-        'endAtUtc': endAtUtc.toIso8601String(),
-        'sessionType': sessionType.name,
-        'sourcePlatform': sourcePlatform,
-        'sourceAppId': sourceAppId,
-        'sourceRecordHash': sourceRecordHash,
-        'sourceConfidence': sourceConfidence,
-        'stageConfidence': stageConfidence.name,
-        'overallConfidence': overallConfidence.name,
-        'normalizationVersion': normalizationVersion,
-      };
+    'id': id,
+    'startAtUtc': startAtUtc.toIso8601String(),
+    'endAtUtc': endAtUtc.toIso8601String(),
+    'sessionType': sessionType.name,
+    'sourcePlatform': sourcePlatform,
+    'sourceAppId': sourceAppId,
+    'sourceRecordHash': sourceRecordHash,
+    'sourceConfidence': sourceConfidence,
+    'stageConfidence': stageConfidence.name,
+    'overallConfidence': overallConfidence.name,
+    'normalizationVersion': normalizationVersion,
+  };
 }

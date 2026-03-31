@@ -119,92 +119,91 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null
-              ? Center(child: Text(l10n.workoutNotFound))
-              : Padding(
-                  padding: DesignConstants.cardPadding,
-                  child: Column(
-                    children: [
-                      // Gesamt-Statistiken
-                      WorkoutSummaryBar(
-                        duration: _log!.endTime?.difference(_log!.startTime),
-                        volume: globalVolume,
-                        sets: _log!.sets.length,
-                        progress: null,
-                      ),
-                      const SizedBox(height: DesignConstants.spacingXL),
+          ? Center(child: Text(l10n.workoutNotFound))
+          : Padding(
+              padding: DesignConstants.cardPadding,
+              child: Column(
+                children: [
+                  // Gesamt-Statistiken
+                  WorkoutSummaryBar(
+                    duration: _log!.endTime?.difference(_log!.startTime),
+                    volume: globalVolume,
+                    sets: _log!.sets.length,
+                    progress: null,
+                  ),
+                  const SizedBox(height: DesignConstants.spacingXL),
 
-                      // Liste der Übungen
-                      Expanded(
-                        child: ListView(
-                          children: [
-                            if (_log!.routineName != null &&
-                                _log!.routineName!.isNotEmpty) ...[
-                              Text(
-                                _log!.routineName!,
-                                style: textTheme.headlineSmall?.copyWith(
+                  // Liste der Übungen
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        if (_log!.routineName != null &&
+                            _log!.routineName!.isNotEmpty) ...[
+                          Text(
+                            _log!.routineName!,
+                            style: textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: DesignConstants.spacingS),
+                        ],
+                        if (_log!.notes != null && _log!.notes!.isNotEmpty) ...[
+                          Text(
+                            _log!.notes!,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: DesignConstants.spacingL),
+                        ],
+                        Text(
+                          l10n.workoutSummaryExerciseOverview,
+                          style: textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: DesignConstants.spacingS),
+                        ..._summaryPerExercise.entries.map((entry) {
+                          return SummaryCard(
+                            child: ListTile(
+                              title: Text(
+                                entry.key,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: DesignConstants.spacingS),
-                            ],
-                            if (_log!.notes != null &&
-                                _log!.notes!.isNotEmpty) ...[
-                              Text(
-                                _log!.notes!,
-                                style: textTheme.bodyMedium?.copyWith(
-                                  fontStyle: FontStyle.italic,
-                                ),
-                                textAlign: TextAlign.center,
+                              // Hier wird nun entweder "X kg" oder "X km | Y min" angezeigt
+                              trailing: Text(
+                                entry.value,
+                                style: textTheme.bodyLarge,
                               ),
-                              const SizedBox(height: DesignConstants.spacingL),
-                            ],
-                            Text(
-                              l10n.workoutSummaryExerciseOverview,
-                              style: textTheme.titleMedium,
                             ),
-                            const SizedBox(height: DesignConstants.spacingS),
-                            ..._summaryPerExercise.entries.map((entry) {
-                              return SummaryCard(
-                                child: ListTile(
-                                  title: Text(
-                                    entry.key,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  // Hier wird nun entweder "X kg" oder "X km | Y min" angezeigt
-                                  trailing: Text(
-                                    entry.value,
-                                    style: textTheme.bodyLarge,
-                                  ),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: DesignConstants.spacingXL),
-
-                      // Fertig-Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(
-                            l10n.doneButtonLabel,
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ],
+                          );
+                        }),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: DesignConstants.spacingXL),
+
+                  // Fertig-Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        l10n.doneButtonLabel,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

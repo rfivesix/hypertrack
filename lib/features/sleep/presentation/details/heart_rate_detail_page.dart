@@ -27,8 +27,8 @@ class HeartRateDetailPage extends StatelessWidget {
     final statusLabel = !established
         ? 'Baseline not established'
         : (delta == null
-            ? 'Baseline comparison unavailable'
-            : (delta <= 0 ? 'Below baseline' : 'Above baseline'));
+              ? 'Baseline comparison unavailable'
+              : (delta <= 0 ? 'Below baseline' : 'Above baseline'));
 
     return SleepDetailPageShell(
       title: 'Heart rate',
@@ -52,8 +52,8 @@ class HeartRateDetailPage extends StatelessWidget {
         Text(
           established
               ? (delta == null
-                  ? 'Baseline comparison is currently unavailable for this night.'
-                  : 'Your sleep HR is ${delta.isNegative ? 'below' : 'above'} baseline by ${delta.abs().toStringAsFixed(1)} bpm.')
+                    ? 'Baseline comparison is currently unavailable for this night.'
+                    : 'Your sleep HR is ${delta.isNegative ? 'below' : 'above'} baseline by ${delta.abs().toStringAsFixed(1)} bpm.')
               : 'Baseline not established yet. This is neutral and expected early on.',
         ),
       ],

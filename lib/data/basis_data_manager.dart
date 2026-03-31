@@ -12,8 +12,8 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:drift/drift.dart' as drift;
 
 // Typ-Definition für den Callback
-typedef ProgressCallback = void Function(
-    String task, String detail, double progress);
+typedef ProgressCallback =
+    void Function(String task, String detail, double progress);
 
 /// Manager responsible for initializing and updating the application's base data.
 ///

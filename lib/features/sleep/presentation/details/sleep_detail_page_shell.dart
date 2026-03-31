@@ -31,7 +31,8 @@ class SleepDetailPageShell extends StatelessWidget {
       appBar: GlobalAppBar(title: title),
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
-          top: DesignConstants.cardPadding.top +
+          top:
+              DesignConstants.cardPadding.top +
               MediaQuery.of(context).padding.top +
               kToolbarHeight +
               16,
@@ -43,10 +44,7 @@ class SleepDetailPageShell extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
+                  Text(value, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -98,14 +96,13 @@ class SleepDetailUnavailablePage extends StatelessWidget {
       appBar: GlobalAppBar(title: title),
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
-          top: DesignConstants.cardPadding.top +
+          top:
+              DesignConstants.cardPadding.top +
               MediaQuery.of(context).padding.top +
               kToolbarHeight +
               16,
         ),
-        children: [
-          SleepDataUnavailableCard(message: message),
-        ],
+        children: [SleepDataUnavailableCard(message: message)],
       ),
     );
   }

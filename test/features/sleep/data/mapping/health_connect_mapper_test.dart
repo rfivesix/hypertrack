@@ -39,20 +39,24 @@ void main() {
 
   test('maps known health connect stages and out-of-bed', () {
     final result = mapper.map(
-      batchWithStages(['awake', 'light', 'deep', 'REM', 'asleep', 'out_of_bed']),
+      batchWithStages([
+        'awake',
+        'light',
+        'deep',
+        'REM',
+        'asleep',
+        'out_of_bed',
+      ]),
     );
 
-    expect(
-      result.stageSegments.map((s) => s.stage).toList(growable: false),
-      [
-        CanonicalSleepStage.awake,
-        CanonicalSleepStage.light,
-        CanonicalSleepStage.deep,
-        CanonicalSleepStage.rem,
-        CanonicalSleepStage.asleepUnspecified,
-        CanonicalSleepStage.outOfBed,
-      ],
-    );
+    expect(result.stageSegments.map((s) => s.stage).toList(growable: false), [
+      CanonicalSleepStage.awake,
+      CanonicalSleepStage.light,
+      CanonicalSleepStage.deep,
+      CanonicalSleepStage.rem,
+      CanonicalSleepStage.asleepUnspecified,
+      CanonicalSleepStage.outOfBed,
+    ]);
   });
 
   test('maps unknown stage to unknown', () {

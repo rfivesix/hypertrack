@@ -341,8 +341,9 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     // Volumens-Berechnung update (Nur für Krafttraining relevant)
     if (finalWeight != null || finalReps != null || clearWeight || clearReps) {
       final oldVol = (oldLog.weightKg ?? 0) * (oldLog.reps ?? 0);
-      final newWeight =
-          clearWeight ? 0.0 : (finalWeight ?? oldLog.weightKg ?? 0.0);
+      final newWeight = clearWeight
+          ? 0.0
+          : (finalWeight ?? oldLog.weightKg ?? 0.0);
       final newReps = clearReps ? 0 : (finalReps ?? oldLog.reps ?? 0);
       _totalVolume = _totalVolume - oldVol + (newWeight * newReps);
     }
@@ -481,8 +482,9 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     // FIX: Cardio Check für Anzahl der Sets
     final isCardio = exercise.categoryName.toLowerCase() == 'cardio';
     final initialSetCount = isCardio ? 1 : 3;
-    final initialReps =
-        isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
+    final initialReps = isCardio
+        ? ''
+        : '10'; // Auch hier: Cardio leer, Kraft 10
 
     final templates = List.generate(
       initialSetCount,

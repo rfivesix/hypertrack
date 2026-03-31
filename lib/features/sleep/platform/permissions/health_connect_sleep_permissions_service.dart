@@ -61,9 +61,13 @@ class HealthConnectSleepPermissionsService implements SleepPermissionsService {
       case HealthConnectAvailability.available:
         return null;
       case HealthConnectAvailability.unavailable:
-        return const SleepPermissionOutcome.state(SleepPermissionState.unavailable);
+        return const SleepPermissionOutcome.state(
+          SleepPermissionState.unavailable,
+        );
       case HealthConnectAvailability.notInstalled:
-        return const SleepPermissionOutcome.state(SleepPermissionState.notInstalled);
+        return const SleepPermissionOutcome.state(
+          SleepPermissionState.notInstalled,
+        );
     }
   }
 

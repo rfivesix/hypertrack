@@ -146,7 +146,9 @@ void main() {
     expect(find.text('Ready'), findsOneWidget);
   });
 
-  testWidgets('tapping import sleep data triggers orchestration', (tester) async {
+  testWidgets('tapping import sleep data triggers orchestration', (
+    tester,
+  ) async {
     final controller = SleepPermissionController(
       _StubPermissionService(
         const SleepPermissionOutcome.ready(),

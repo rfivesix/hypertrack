@@ -28,8 +28,7 @@ class _HealthKitSource implements HealthKitDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async =>
-      batch;
+  }) async => batch;
 }
 
 class _HealthConnectSource implements HealthConnectDataSource {
@@ -40,8 +39,7 @@ class _HealthConnectSource implements HealthConnectDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async =>
-      batch;
+  }) async => batch;
 }
 
 SleepRawIngestionBatch _batch() {
@@ -91,9 +89,12 @@ void main() {
       ),
     );
     final service = SleepSyncService.withOverrides(
-      iosPermissionsService: const _PermissionService(SleepPermissionOutcome.ready()),
-      androidPermissionsService:
-          const _PermissionService(SleepPermissionOutcome.ready()),
+      iosPermissionsService: const _PermissionService(
+        SleepPermissionOutcome.ready(),
+      ),
+      androidPermissionsService: const _PermissionService(
+        SleepPermissionOutcome.ready(),
+      ),
       iosDataSource: _HealthKitSource(_batch()),
       androidDataSource: _HealthConnectSource(_batch()),
       database: db,
@@ -103,13 +104,16 @@ void main() {
     final result = await service.importRecent();
     expect(result.success, isTrue);
 
-    final sessions = await db.customSelect('SELECT COUNT(*) c FROM sleep_canonical_sessions')
+    final sessions = await db
+        .customSelect('SELECT COUNT(*) c FROM sleep_canonical_sessions')
         .getSingle();
-    final segments =
-        await db.customSelect('SELECT COUNT(*) c FROM sleep_canonical_stage_segments')
-            .getSingle();
+    final segments = await db
+        .customSelect('SELECT COUNT(*) c FROM sleep_canonical_stage_segments')
+        .getSingle();
     final hrs = await db
-        .customSelect('SELECT COUNT(*) c FROM sleep_canonical_heart_rate_samples')
+        .customSelect(
+          'SELECT COUNT(*) c FROM sleep_canonical_heart_rate_samples',
+        )
         .getSingle();
 
     expect(sessions.read<int>('c'), greaterThan(0));
@@ -125,9 +129,12 @@ void main() {
       ),
     );
     final service = SleepSyncService.withOverrides(
-      iosPermissionsService: const _PermissionService(SleepPermissionOutcome.ready()),
-      androidPermissionsService:
-          const _PermissionService(SleepPermissionOutcome.ready()),
+      iosPermissionsService: const _PermissionService(
+        SleepPermissionOutcome.ready(),
+      ),
+      androidPermissionsService: const _PermissionService(
+        SleepPermissionOutcome.ready(),
+      ),
       iosDataSource: _HealthKitSource(_batch()),
       androidDataSource: _HealthConnectSource(_batch()),
       database: db,

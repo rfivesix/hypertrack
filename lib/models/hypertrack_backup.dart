@@ -97,7 +97,8 @@ class HypertrackBackup {
   factory HypertrackBackup.fromJson(Map<String, dynamic> json) {
     return HypertrackBackup(
       schemaVersion: json['schemaVersion'] as int? ?? 1,
-      foodEntries: (json['foodEntries'] as List<dynamic>?)
+      foodEntries:
+          (json['foodEntries'] as List<dynamic>?)
               ?.map(
                 (e) => FoodEntry(
                   id: e['id'],
@@ -109,12 +110,14 @@ class HypertrackBackup {
               )
               .toList() ??
           [],
-      fluidEntries: (json['fluidEntries'] as List<dynamic>?)
+      fluidEntries:
+          (json['fluidEntries'] as List<dynamic>?)
               ?.map((e) => FluidEntry.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
       favoriteBarcodes: List<String>.from(json['favoriteBarcodes'] ?? []),
-      customFoodItems: (json['customFoodItems'] as List<dynamic>?)
+      customFoodItems:
+          (json['customFoodItems'] as List<dynamic>?)
               ?.map(
                 (e) => FoodItem.fromMap(
                   e as Map<String, dynamic>,
@@ -123,10 +126,11 @@ class HypertrackBackup {
               )
               .toList() ??
           [],
-      measurementSessions: (json['measurementSessions'] as List<dynamic>?)
-              ?.map((s) {
+      measurementSessions:
+          (json['measurementSessions'] as List<dynamic>?)?.map((s) {
             final sessionMap = s as Map<String, dynamic>;
-            final measurements = (sessionMap['measurements'] as List<dynamic>?)
+            final measurements =
+                (sessionMap['measurements'] as List<dynamic>?)
                     ?.map((m) => Measurement.fromMap(m as Map<String, dynamic>))
                     .toList() ??
                 [];
@@ -139,12 +143,14 @@ class HypertrackBackup {
           [],
 
       // KORRIGIERT: Detaillierte Deserialisierung für Routinen
-      routines: (json['routines'] as List<dynamic>?)?.map((r) {
+      routines:
+          (json['routines'] as List<dynamic>?)?.map((r) {
             final routineMap = r as Map<String, dynamic>;
             return Routine(
               id: routineMap['id'],
               name: routineMap['name'],
-              exercises: (routineMap['exercises'] as List<dynamic>?)?.map((re) {
+              exercises:
+                  (routineMap['exercises'] as List<dynamic>?)?.map((re) {
                     final reMap = re as Map<String, dynamic>;
                     return RoutineExercise(
                       id: reMap['id'],
@@ -152,7 +158,8 @@ class HypertrackBackup {
                       exercise: Exercise.fromMap(
                         reMap['exercise'] as Map<String, dynamic>,
                       ),
-                      setTemplates: (reMap['setTemplates'] as List<dynamic>?)
+                      setTemplates:
+                          (reMap['setTemplates'] as List<dynamic>?)
                               ?.map(
                                 (st) => SetTemplate.fromMap(
                                   st as Map<String, dynamic>,
@@ -168,9 +175,11 @@ class HypertrackBackup {
           }).toList() ??
           [],
 
-      workoutLogs: (json['workoutLogs'] as List<dynamic>?)?.map((log) {
+      workoutLogs:
+          (json['workoutLogs'] as List<dynamic>?)?.map((log) {
             final logMap = log as Map<String, dynamic>;
-            final sets = (logMap['sets'] as List<dynamic>?)
+            final sets =
+                (logMap['sets'] as List<dynamic>?)
                     ?.map((set) => SetLog.fromMap(set as Map<String, dynamic>))
                     .toList() ??
                 [];
@@ -178,34 +187,39 @@ class HypertrackBackup {
           }).toList() ??
           [],
       userPreferences: Map<String, dynamic>.from(json['userPreferences'] ?? {}),
-      supplements: (json['supplements'] as List<dynamic>?)
+      supplements:
+          (json['supplements'] as List<dynamic>?)
               ?.map((e) => Supplement.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-      supplementLogs: (json['supplementLogs'] as List<dynamic>?)
+      supplementLogs:
+          (json['supplementLogs'] as List<dynamic>?)
               ?.map((e) => SupplementLog.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-      customExercises: (json['customExercises'] as List<dynamic>?)
+      customExercises:
+          (json['customExercises'] as List<dynamic>?)
               ?.map((e) => Exercise.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-      dailyGoalsHistory: (json['dailyGoalsHistory'] as List<dynamic>?)
+      dailyGoalsHistory:
+          (json['dailyGoalsHistory'] as List<dynamic>?)
               ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ??
           [],
       supplementSettingsHistory:
           (json['supplementSettingsHistory'] as List<dynamic>?)
-                  ?.map((e) => Map<String, dynamic>.from(e as Map))
-                  .toList() ??
-              [],
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
+              .toList() ??
+          [],
       appSettings: json['appSettings'] != null
           ? Map<String, dynamic>.from(json['appSettings'] as Map)
           : null,
       profile: json['profile'] != null
           ? Map<String, dynamic>.from(json['profile'] as Map)
           : null,
-      healthStepSegments: (json['healthStepSegments'] as List<dynamic>?)
+      healthStepSegments:
+          (json['healthStepSegments'] as List<dynamic>?)
               ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ??
           [],
@@ -235,8 +249,9 @@ class HypertrackBackup {
           .map(
             (log) => {
               ...log.toMap(), // Nutzt die existierende toMap-Methode
-              'sets':
-                  log.sets.map((s) => s.toMap()).toList(), // Hängt die Sets an
+              'sets': log.sets
+                  .map((s) => s.toMap())
+                  .toList(), // Hängt die Sets an
             },
           )
           .toList(),

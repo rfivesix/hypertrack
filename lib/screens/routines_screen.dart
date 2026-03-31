@@ -163,67 +163,67 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _routines.isEmpty
-              ? _buildEmptyState(context, l10n, textTheme)
-              : ListView.builder(
-                  padding: DesignConstants.cardPadding.copyWith(
-                    top: DesignConstants.cardPadding.top + topPadding,
+          ? _buildEmptyState(context, l10n, textTheme)
+          : ListView.builder(
+              padding: DesignConstants.cardPadding.copyWith(
+                top: DesignConstants.cardPadding.top + topPadding,
+              ),
+              itemCount: _routines.length + 1, // statt +2
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return _buildStartEmptyWorkoutCard(context, l10n);
+                }
+                final routine = _routines[index - 1];
+                return Dismissible(
+                  key: Key('routine_${routine.id}'),
+                  direction: DismissDirection.endToStart,
+
+                  // gleiche Hintergründe wie im Nutrition Screen
+                  background: const SwipeActionBackground(
+                    color: Colors.redAccent,
+                    icon: Icons.delete,
+                    alignment: Alignment.centerRight,
                   ),
-                  itemCount: _routines.length + 1, // statt +2
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildStartEmptyWorkoutCard(context, l10n);
+
+                  // Swipe-Logik wie bei Nutrition:
+                  // links→rechts = Edit (nicht wirklich dismissen),
+                  // rechts→links = Delete (mit Bestätigung)
+                  confirmDismiss: (direction) async {
+                    // NEU: Helper
+                    return await showDeleteConfirmation(context);
+                  },
+
+                  onDismissed: (direction) {
+                    if (direction == DismissDirection.endToStart) {
+                      _deleteRoutine(context, routine); // wirklich löschen
                     }
-                    final routine = _routines[index - 1];
-                    return Dismissible(
-                      key: Key('routine_${routine.id}'),
-                      direction: DismissDirection.endToStart,
+                  },
 
-                      // gleiche Hintergründe wie im Nutrition Screen
-                      background: const SwipeActionBackground(
-                        color: Colors.redAccent,
-                        icon: Icons.delete,
-                        alignment: Alignment.centerRight,
+                  child: SummaryCard(
+                    child: ListTile(
+                      leading: ElevatedButton(
+                        onPressed: () => _startWorkout(routine),
+                        child: Text(l10n.startButton),
                       ),
-
-                      // Swipe-Logik wie bei Nutrition:
-                      // links→rechts = Edit (nicht wirklich dismissen),
-                      // rechts→links = Delete (mit Bestätigung)
-                      confirmDismiss: (direction) async {
-                        // NEU: Helper
-                        return await showDeleteConfirmation(context);
-                      },
-
-                      onDismissed: (direction) {
-                        if (direction == DismissDirection.endToStart) {
-                          _deleteRoutine(context, routine); // wirklich löschen
-                        }
-                      },
-
-                      child: SummaryCard(
-                        child: ListTile(
-                          leading: ElevatedButton(
-                            onPressed: () => _startWorkout(routine),
-                            child: Text(l10n.startButton),
-                          ),
-                          title: Text(
-                            routine.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.editRoutineSubtitle),
-                          trailing: PopupMenuButton<String>(
-                            icon: Icon(
-                              Icons.more_vert,
-                              color: textTheme.bodyMedium?.color,
-                            ),
-                            onSelected: (value) {
-                              if (value == 'duplicate') {
-                                _duplicateRoutine(routine.id!);
-                              } else if (value == 'delete') {
-                                _deleteRoutine(context, routine);
-                              }
-                            },
-                            itemBuilder: (BuildContext context) =>
-                                <PopupMenuEntry<String>>[
+                      title: Text(
+                        routine.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(l10n.editRoutineSubtitle),
+                      trailing: PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: textTheme.bodyMedium?.color,
+                        ),
+                        onSelected: (value) {
+                          if (value == 'duplicate') {
+                            _duplicateRoutine(routine.id!);
+                          } else if (value == 'delete') {
+                            _deleteRoutine(context, routine);
+                          }
+                        },
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<String>>[
                               PopupMenuItem<String>(
                                 value: 'duplicate',
                                 child: Text(l10n.duplicate),
@@ -233,24 +233,24 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                                 child: Text(l10n.delete),
                               ),
                             ],
-                          ),
-                          onTap: () {
-                            Navigator.of(context)
-                                .push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditRoutineScreen(routine: routine),
-                                  ),
-                                )
-                                .then(
-                                  (_) => _loadRoutines(l10n),
-                                ); // l10n hier übergeben
-                          },
-                        ),
                       ),
-                    );
-                  },
-                ),
+                      onTap: () {
+                        Navigator.of(context)
+                            .push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditRoutineScreen(routine: routine),
+                              ),
+                            )
+                            .then(
+                              (_) => _loadRoutines(l10n),
+                            ); // l10n hier übergeben
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: GlassFab(
         label: l10n.addRoutineButton,
         onPressed: _createNewRoutine,

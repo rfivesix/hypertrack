@@ -58,41 +58,49 @@ class SleepRawImportsDao {
     required DateTime fromInclusive,
     required DateTime toExclusive,
   }) async {
-    final result = await _db.customSelect(
-      '''
+    final result = await _db
+        .customSelect(
+          '''
       SELECT * FROM sleep_raw_imports
       WHERE imported_at >= ? AND imported_at < ?
       ORDER BY imported_at ASC
       ''',
-      variables: [
-        Variable<int>(_toEpochMillis(fromInclusive)),
-        Variable<int>(_toEpochMillis(toExclusive)),
-      ],
-    ).get();
+          variables: [
+            Variable<int>(_toEpochMillis(fromInclusive)),
+            Variable<int>(_toEpochMillis(toExclusive)),
+          ],
+        )
+        .get();
     return result.map(_mapRaw).toList(growable: false);
   }
 
-  Future<List<SleepRawImportRecord>> findBySourceHash(String sourceRecordHash) async {
-    final result = await _db.customSelect(
-      '''
+  Future<List<SleepRawImportRecord>> findBySourceHash(
+    String sourceRecordHash,
+  ) async {
+    final result = await _db
+        .customSelect(
+          '''
       SELECT * FROM sleep_raw_imports
       WHERE source_record_hash = ?
       ORDER BY imported_at DESC
       ''',
-      variables: [Variable<String>(sourceRecordHash)],
-    ).get();
+          variables: [Variable<String>(sourceRecordHash)],
+        )
+        .get();
     return result.map(_mapRaw).toList(growable: false);
   }
 
   Future<List<SleepRawImportRecord>> findByStatus(String status) async {
-    final result = await _db.customSelect(
-      '''
+    final result = await _db
+        .customSelect(
+          '''
       SELECT * FROM sleep_raw_imports
       WHERE import_status = ?
       ORDER BY imported_at DESC
       ''',
-      variables: [Variable<String>(status)],
-    ).get();
+          variables: [Variable<String>(status)],
+        )
+        .get();
     return result.map(_mapRaw).toList(growable: false);
   }
 

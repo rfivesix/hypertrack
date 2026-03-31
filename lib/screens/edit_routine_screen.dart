@@ -78,8 +78,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   Future<void> _loadExercisesForRoutine() async {
     if (_routineId == null) return;
     setState(() => _isLoading = true);
-    final routineWithExercises =
-        await WorkoutDatabaseHelper.instance.getRoutineById(_routineId!);
+    final routineWithExercises = await WorkoutDatabaseHelper.instance
+        .getRoutineById(_routineId!);
     if (mounted && routineWithExercises != null) {
       for (var c in _repsControllers.values) {
         c.dispose();
@@ -138,12 +138,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       final isCardio = selectedExercise.categoryName.toLowerCase() == 'cardio';
       final initialSetCount = isCardio ? 1 : 3;
 
-      final newRoutineExercise =
-          await WorkoutDatabaseHelper.instance.addExerciseToRoutine(
-        _routineId!,
-        selectedExercise.id!,
-        initialSetCount: initialSetCount,
-      ); // Parameter
+      final newRoutineExercise = await WorkoutDatabaseHelper.instance
+          .addExerciseToRoutine(
+            _routineId!,
+            selectedExercise.id!,
+            initialSetCount: initialSetCount,
+          ); // Parameter
 
       if (newRoutineExercise != null) {
         for (var st in newRoutineExercise.setTemplates) {
@@ -511,123 +511,119 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _routineExercises.isEmpty
-                    ? Center(
-                        child: Text(
-                          l10n.emptyStateAddFirstExercise,
-                          style: textTheme.titleMedium,
-                        ),
-                      )
-                    : ReorderableListView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: _routineExercises.length,
-                        proxyDecorator:
-                            (Widget child, int index, Animation<double> anim) {
+                ? Center(
+                    child: Text(
+                      l10n.emptyStateAddFirstExercise,
+                      style: textTheme.titleMedium,
+                    ),
+                  )
+                : ReorderableListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: _routineExercises.length,
+                    proxyDecorator:
+                        (Widget child, int index, Animation<double> anim) {
                           return Material(
                             elevation: 4.0,
                             color: Theme.of(context).scaffoldBackgroundColor,
                             child: child,
                           );
                         },
-                        onReorder: _onReorder,
-                        itemBuilder: (context, index) {
-                          final routineExercise = _routineExercises[index];
-                          final bool isCardio = _isCardio(routineExercise);
+                    onReorder: _onReorder,
+                    itemBuilder: (context, index) {
+                      final routineExercise = _routineExercises[index];
+                      final bool isCardio = _isCardio(routineExercise);
 
-                          return WorkoutCard(
-                            key: ValueKey(routineExercise.id),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0,
-                                    vertical: 8.0,
-                                  ),
-                                  title: InkWell(
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ExerciseDetailScreen(
-                                          exercise: routineExercise.exercise,
-                                        ),
-                                      ),
+                      return WorkoutCard(
+                        key: ValueKey(routineExercise.id),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 8.0,
+                              ),
+                              title: InkWell(
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => ExerciseDetailScreen(
+                                      exercise: routineExercise.exercise,
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4.0,
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4.0,
+                                  ),
+                                  child: Text(
+                                    routineExercise.exercise.getLocalizedName(
+                                      context,
+                                    ),
+                                    style: textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              leading: ReorderableDragStartListener(
+                                index: index,
+                                child: const Icon(Icons.drag_handle),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (routineExercise.pauseSeconds != null &&
+                                      routineExercise.pauseSeconds! > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 4.0,
                                       ),
                                       child: Text(
-                                        routineExercise.exercise
-                                            .getLocalizedName(
-                                          context,
-                                        ),
-                                        style: textTheme.titleLarge?.copyWith(
+                                        "${routineExercise.pauseSeconds}s",
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          color: colorScheme.primary,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
+                                  IconButton(
+                                    icon: const Icon(Icons.timer_outlined),
+                                    tooltip: l10n.editPauseTime,
+                                    onPressed: () =>
+                                        _editPauseTime(routineExercise),
                                   ),
-                                  leading: ReorderableDragStartListener(
-                                    index: index,
-                                    child: const Icon(Icons.drag_handle),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.redAccent,
+                                    ),
+                                    tooltip: l10n.removeExercise,
+                                    onPressed: () =>
+                                        _deleteSingleExercise(routineExercise),
                                   ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (routineExercise.pauseSeconds !=
-                                              null &&
-                                          routineExercise.pauseSeconds! > 0)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: 4.0,
-                                          ),
-                                          child: Text(
-                                            "${routineExercise.pauseSeconds}s",
-                                            style:
-                                                textTheme.bodyMedium?.copyWith(
-                                              color: colorScheme.primary,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      IconButton(
-                                        icon: const Icon(Icons.timer_outlined),
-                                        tooltip: l10n.editPauseTime,
-                                        onPressed: () =>
-                                            _editPauseTime(routineExercise),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete_outline,
-                                          color: Colors.redAccent,
-                                        ),
-                                        tooltip: l10n.removeExercise,
-                                        onPressed: () => _deleteSingleExercise(
-                                            routineExercise),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 0.0,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildHeaderRow(routineExercise, l10n),
-                                      ...routineExercise.setTemplates
-                                          .asMap()
-                                          .entries
-                                          .map((entry) {
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 0.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildHeaderRow(routineExercise, l10n),
+                                  ...routineExercise.setTemplates
+                                      .asMap()
+                                      .entries
+                                      .map((entry) {
                                         final setIndex = entry.key;
                                         final setTemplate = entry.value;
 
                                         int workingSetIndex = 0;
                                         for (int i = 0; i <= setIndex; i++) {
                                           if (routineExercise
-                                                  .setTemplates[i].setType !=
+                                                  .setTemplates[i]
+                                                  .setType !=
                                               'warmup') {
                                             workingSetIndex++;
                                           }
@@ -643,28 +639,27 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                           l10n,
                                         );
                                       }),
-                                      const SizedBox(
-                                        height: DesignConstants.spacingS,
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16.0,
-                                        ),
-                                        child: TextButton.icon(
-                                          onPressed: () =>
-                                              _addSet(routineExercise),
-                                          icon: const Icon(Icons.add),
-                                          label: Text(l10n.addSetButton),
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(
+                                    height: DesignConstants.spacingS,
                                   ),
-                                ),
-                              ],
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0,
+                                    ),
+                                    child: TextButton.icon(
+                                      onPressed: () => _addSet(routineExercise),
+                                      icon: const Icon(Icons.add),
+                                      label: Text(l10n.addSetButton),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
@@ -689,8 +684,10 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       return Row(
         children: [
           _buildHeader(l10n.setLabel, flex: 2), // FIX: Kleiner
-          _buildHeader(l10n.cardioDistanceLabel,
-              flex: 4), // FIX: Sehr viel Platz
+          _buildHeader(
+            l10n.cardioDistanceLabel,
+            flex: 4,
+          ), // FIX: Sehr viel Platz
           const SizedBox(width: 8),
           _buildHeader(l10n.cardioTimeLabel, flex: 4), // FIX: Sehr viel Platz
           const SizedBox(width: 8),
@@ -870,15 +867,15 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   }
 
   Widget _buildHeader(String text, {required int flex}) => Expanded(
-        flex: flex,
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
+    flex: flex,
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: Colors.grey[600],
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 }

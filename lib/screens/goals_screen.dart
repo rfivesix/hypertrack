@@ -56,8 +56,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   Future<void> _loadSettings() async {
     final dbHelper = DatabaseHelper.instance;
-    final prefs = await SharedPreferences
-        .getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
+    final prefs =
+        await SharedPreferences.getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
 
     // Lade Ziele aus der DB
     final settings = await dbHelper.getAppSettings();
@@ -154,7 +154,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
           : SingleChildScrollView(
               // Die neue Padding-Logik
               padding: DesignConstants.cardPadding.copyWith(
-                top: DesignConstants.cardPadding.top +
+                top:
+                    DesignConstants.cardPadding.top +
                     MediaQuery.of(context).padding.top +
                     kToolbarHeight,
               ),
@@ -250,9 +251,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+          color: Colors.grey[600],
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.3-alpha.1] - 2026-03-31
+
+### Added
+- **Sleep tracking (alpha) across iOS and Android:** Added HealthKit and Health Connect ingestion for sleep sessions, stages, and overnight heart rate with new native method-channel bridges and permissions.
+- **Sleep Day experience (Batch 2):** Added the Sleep Day overview (timeline, score, and key tiles) plus dedicated detail screens for Duration, Heart rate, Regularity, Depth, and Interruptions, with shared navigation routing.
+- **Sleep controls in Settings:** Added a Sleep section to enable tracking, request permissions, run a manual 30‑day import, and view raw import payloads.
+- **Statistics Hub entry:** Added a Sleep card to launch the new Sleep Day overview.
+
+### Changed
+- **Sleep data persistence:** Added canonical sleep tables and raw import storage to power the day experience and detail views.
+- **Summary card layout:** Added an optional margin configuration to support sleep UI layouts.
+
+### Tests
+- Added coverage for sleep mapping, persistence DAOs, permissions/adapters, sync service behavior, navigation, settings UI, and regularity chart math.
+
 ## [0.7.2] - 2026-03-31
 
 ### Fixed

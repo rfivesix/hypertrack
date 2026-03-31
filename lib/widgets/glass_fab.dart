@@ -64,8 +64,8 @@ class _GlassFabState extends State<GlassFab>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     final hasLabel = widget.label != null;
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withOpacity(isDark ? 0.1 : 0.1);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
       bg.withOpacity(isDark ? 0.8 : 0.5),

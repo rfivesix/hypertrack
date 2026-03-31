@@ -50,15 +50,15 @@ String _dayLabel(DateTime day, {String localeCode = 'en'}) {
 
 String _weekLabel(DateTime day, {String localeCode = 'en'}) {
   final normalized = DateTime(day.year, day.month, day.day);
-  final start =
-      normalized.subtract(Duration(days: normalized.weekday - DateTime.monday));
+  final start = normalized.subtract(
+    Duration(days: normalized.weekday - DateTime.monday),
+  );
   final end = start.add(const Duration(days: 6));
   return '${DateFormat.MMMd(localeCode).format(start)} - ${DateFormat.MMMd(localeCode).format(end)}';
 }
 
 String _monthLabel(DateTime day, {String localeCode = 'en'}) {
-  return DateFormat.yMMMM(localeCode)
-      .format(DateTime(day.year, day.month, 1));
+  return DateFormat.yMMMM(localeCode).format(DateTime(day.year, day.month, 1));
 }
 
 SleepDayOverviewData _sampleOverview() {
@@ -174,7 +174,9 @@ void main() {
 
   testWidgets('navigates from day tiles to detail routes', (tester) async {
     final overview = _sampleOverview();
-    final model = SleepDayViewModel(repository: _FakeSleepDayRepository(overview));
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(overview),
+    );
 
     await tester.pumpWidget(
       MaterialApp(
@@ -187,7 +189,12 @@ void main() {
     await tester.tap(find.text('Duration'));
     await tester.pumpAndSettle();
     expect(find.text('Duration'), findsWidgets);
-    expect(find.text('Adults often do best with roughly 7–9 hours. This benchmark helps you see where your night sits in that range.'), findsOneWidget);
+    expect(
+      find.text(
+        'Adults often do best with roughly 7–9 hours. This benchmark helps you see where your night sits in that range.',
+      ),
+      findsOneWidget,
+    );
 
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -351,7 +358,9 @@ void main() {
     expect(find.text(_monthLabel(DateTime(2026, 2, 28))), findsOneWidget);
   });
 
-  testWidgets('import now action triggers import orchestration', (tester) async {
+  testWidgets('import now action triggers import orchestration', (
+    tester,
+  ) async {
     final import = _FakeSleepImportService(
       const SleepSyncResult(
         success: true,
@@ -376,7 +385,9 @@ void main() {
     expect(import.calls, 1);
   });
 
-  testWidgets('successful import refreshes day view model data', (tester) async {
+  testWidgets('successful import refreshes day view model data', (
+    tester,
+  ) async {
     final repo = _FakeSleepDayRepository(_sampleOverview());
     final import = _FakeSleepImportService(
       const SleepSyncResult(
@@ -385,10 +396,7 @@ void main() {
         importedSessions: 1,
       ),
     );
-    final model = SleepDayViewModel(
-      repository: repo,
-      syncService: import,
-    );
+    final model = SleepDayViewModel(repository: repo, syncService: import);
     await tester.pumpWidget(
       MaterialApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
@@ -403,7 +411,9 @@ void main() {
     expect(repo.fetchCount, greaterThan(initialFetches));
   });
 
-  testWidgets('sleep day list top padding includes app bar height', (tester) async {
+  testWidgets('sleep day list top padding includes app bar height', (
+    tester,
+  ) async {
     final model = SleepDayViewModel(repository: _FakeSleepDayRepository(null));
     await tester.pumpWidget(
       MaterialApp(

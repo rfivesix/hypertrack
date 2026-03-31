@@ -39,7 +39,8 @@ class SleepNavigation {
       case SleepRouteNames.heartRateDetail:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => HeartRateDetailPage(overview: _readOverview(settings)),
+          builder: (_) =>
+              HeartRateDetailPage(overview: _readOverview(settings)),
         );
       case SleepRouteNames.interruptionsDetail:
         return MaterialPageRoute(
@@ -55,7 +56,8 @@ class SleepNavigation {
       case SleepRouteNames.regularityDetail:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => RegularityDetailPage(overview: _readOverview(settings)),
+          builder: (_) =>
+              RegularityDetailPage(overview: _readOverview(settings)),
         );
       default:
         return null;

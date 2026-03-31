@@ -30,7 +30,8 @@ class ShadowContainer extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: borderRadius,
-        boxShadow: boxShadow ??
+        boxShadow:
+            boxShadow ??
             [
               // Standard-Schatten, wenn keiner angegeben ist
               BoxShadow(

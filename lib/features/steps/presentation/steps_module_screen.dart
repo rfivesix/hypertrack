@@ -60,8 +60,8 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   Future<void> _loadScopeData() async {
     setState(() => _isLoading = true);
     final anchor = _anchorDate;
-    final targetStepsFuture =
-        DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
+    final targetStepsFuture = DatabaseHelper.instance
+        .getCurrentTargetStepsOrDefault();
     final providerFuture = StepsSyncService().getProviderFilter();
     switch (_scope) {
       case StepsScope.day:
@@ -119,8 +119,11 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
     final now = DateTime.now();
     switch (_scope) {
       case StepsScope.day:
-        final selected =
-            DateTime(_anchorDate.year, _anchorDate.month, _anchorDate.day);
+        final selected = DateTime(
+          _anchorDate.year,
+          _anchorDate.month,
+          _anchorDate.day,
+        );
         final today = DateTime(now.year, now.month, now.day);
         return selected.isBefore(today);
       case StepsScope.week:
@@ -140,8 +143,9 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   }
 
   String _periodLabel(BuildContext context) {
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     switch (_scope) {
       case StepsScope.day:
         return DateFormat.yMMMd(localeCode).format(_anchorDate);
@@ -150,9 +154,9 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         final end = start.add(const Duration(days: 6));
         return '${DateFormat.MMMd(localeCode).format(start)} – ${DateFormat.MMMd(localeCode).format(end)}';
       case StepsScope.month:
-        return DateFormat.yMMMM(localeCode).format(
-          DateTime(_anchorDate.year, _anchorDate.month, 1),
-        );
+        return DateFormat.yMMMM(
+          localeCode,
+        ).format(DateTime(_anchorDate.year, _anchorDate.month, 1));
     }
   }
 
@@ -171,9 +175,9 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
             child: Text(
               _periodLabel(context),
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           IconButton(
@@ -222,15 +226,16 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
                           if (_lastUpdatedAtUtc != null)
                             Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               child: Text(
                                 _lastUpdatedLabel(context, _lastUpdatedAtUtc!),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
+                                style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
-                                      color:
-                                          Theme.of(context).colorScheme.outline,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     ),
                               ),
                             ),
@@ -246,14 +251,16 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   }
 
   Widget _buildScopeSummaryCard(BuildContext context) {
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     final isDe = localeCode == 'de';
     final title = isDe ? 'Schritte' : 'Steps';
     final todayLabel = isDe ? 'Heute' : 'Today';
     final totalLabel = isDe ? 'Gesamtschrittzahl' : 'Total steps';
-    final safeGoal =
-        _targetSteps > 0 ? _targetSteps : StepsSyncService.defaultStepsGoal;
+    final safeGoal = _targetSteps > 0
+        ? _targetSteps
+        : StepsSyncService.defaultStepsGoal;
 
     switch (_scope) {
       case StepsScope.day:
@@ -304,8 +311,9 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   }
 
   String _lastUpdatedLabel(BuildContext context, DateTime timestampUtc) {
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     final timeText = DateFormat.Hm().format(timestampUtc.toLocal());
     if (localeCode == 'de') {
       return 'Aktualisiert $timeText';
@@ -332,10 +340,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
 }
 
 class _ScopeSwitcher extends StatelessWidget {
-  const _ScopeSwitcher({
-    required this.scope,
-    required this.onChanged,
-  });
+  const _ScopeSwitcher({required this.scope, required this.onChanged});
 
   final StepsScope scope;
   final ValueChanged<StepsScope> onChanged;
@@ -350,11 +355,17 @@ class _ScopeSwitcher extends StatelessWidget {
         showSelectedIcon: false,
         segments: [
           ButtonSegment(
-              value: StepsScope.day, label: Text(isDe ? 'Tag' : 'Day')),
+            value: StepsScope.day,
+            label: Text(isDe ? 'Tag' : 'Day'),
+          ),
           ButtonSegment(
-              value: StepsScope.week, label: Text(isDe ? 'Woche' : 'Week')),
+            value: StepsScope.week,
+            label: Text(isDe ? 'Woche' : 'Week'),
+          ),
           ButtonSegment(
-              value: StepsScope.month, label: Text(isDe ? 'Monat' : 'Month')),
+            value: StepsScope.month,
+            label: Text(isDe ? 'Monat' : 'Month'),
+          ),
         ],
         selected: {scope},
         onSelectionChanged: (selected) => onChanged(selected.first),
@@ -388,23 +399,23 @@ class _TrendCanvas extends StatelessWidget {
           duration: const Duration(milliseconds: 250),
           child: switch (scope) {
             StepsScope.day => _DayHistogram(
-                key: const ValueKey('day-canvas'),
-                date: dayData?.date,
-                buckets: dayData?.hourlyBuckets ?? const [],
-                dailyGoal: dailyGoal,
-              ),
+              key: const ValueKey('day-canvas'),
+              date: dayData?.date,
+              buckets: dayData?.hourlyBuckets ?? const [],
+              dailyGoal: dailyGoal,
+            ),
             StepsScope.week => _WeekBars(
-                key: const ValueKey('week-canvas'),
-                weekStart: weekData?.weekStart,
-                buckets: weekData?.dailyTotals ?? const [],
-                dailyGoal: dailyGoal,
-              ),
+              key: const ValueKey('week-canvas'),
+              weekStart: weekData?.weekStart,
+              buckets: weekData?.dailyTotals ?? const [],
+              dailyGoal: dailyGoal,
+            ),
             StepsScope.month => _MonthGrid(
-                key: const ValueKey('month-canvas'),
-                monthStart: monthData?.monthStart,
-                buckets: monthData?.dailyTotals ?? const [],
-                dailyGoal: dailyGoal,
-              ),
+              key: const ValueKey('month-canvas'),
+              monthStart: monthData?.monthStart,
+              buckets: monthData?.dailyTotals ?? const [],
+              dailyGoal: dailyGoal,
+            ),
           },
         ),
       ),
@@ -426,14 +437,16 @@ class _DayHistogram extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     final isDe = localeCode == 'de';
     final numberFormat = NumberFormat.decimalPattern(localeCode);
     final total = buckets.fold<int>(0, (sum, b) => sum + b.steps);
     final activeHours = buckets.where((b) => b.steps > 0).length;
-    final safeGoal =
-        dailyGoal > 0 ? dailyGoal : StepsSyncService.defaultStepsGoal;
+    final safeGoal = dailyGoal > 0
+        ? dailyGoal
+        : StepsSyncService.defaultStepsGoal;
 
     StepsBucket? peakBucket;
     for (final bucket in buckets) {
@@ -456,8 +469,9 @@ class _DayHistogram extends StatelessWidget {
     const dayDrawableHeight = dayChartBottom - _chartTopInset;
     final dayGoalRatio = (safeGoal / maxValue).clamp(0.0, 1.0);
     final dayGoalLineY = dayChartBottom - (dayDrawableHeight * dayGoalRatio);
-    final dayGoalLabelTop =
-        (dayGoalLineY - 10).clamp(0.0, dayChartHeight - 16).toDouble();
+    final dayGoalLabelTop = (dayGoalLineY - 10)
+        .clamp(0.0, dayChartHeight - 16)
+        .toDouble();
 
     final peakText = peakBucket == null || peakBucket.steps <= 0
         ? '-'
@@ -475,8 +489,8 @@ class _DayHistogram extends StatelessWidget {
           Text(
             DateFormat.MMMd(localeCode).format(date!),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
         const SizedBox(height: 12),
         Wrap(
@@ -505,10 +519,9 @@ class _DayHistogram extends StatelessWidget {
               Positioned.fill(
                 child: CustomPaint(
                   painter: _HorizontalGuidePainter(
-                    lineColor: Theme.of(context)
-                        .colorScheme
-                        .outlineVariant
-                        .withValues(alpha: 0.5),
+                    lineColor: Theme.of(
+                      context,
+                    ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                     goalColor: Theme.of(context).colorScheme.primary,
                     goalRatio: (safeGoal / maxValue).clamp(0.0, 1.0),
                     leftInset: _chartLeftInset,
@@ -523,22 +536,23 @@ class _DayHistogram extends StatelessWidget {
                 child: Text(
                   _compactAxisLabel(maxValue),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               Positioned(
                 left: 0,
-                top: ((160 - _chartBottomInset - _chartTopInset) / 2) +
+                top:
+                    ((160 - _chartBottomInset - _chartTopInset) / 2) +
                     _chartTopInset -
                     8,
                 child: Text(
                   _compactAxisLabel((maxValue / 2).round()),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               Positioned.fill(
@@ -551,40 +565,47 @@ class _DayHistogram extends StatelessWidget {
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: buckets.map((bucket) {
-                      final ratio = (bucket.steps / maxValue).clamp(0.0, 1.0);
-                      return Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final barHeight = constraints.maxHeight * ratio;
-                            return Align(
-                              alignment: Alignment.bottomCenter,
-                              child: bucket.steps <= 0
-                                  ? Container(
-                                      width: 4,
-                                      height: 4,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .outlineVariant,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    )
-                                  : Container(
-                                      width: 6,
-                                      height: barHeight,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                    ),
-                            );
-                          },
-                        ),
-                      );
-                    }).toList(growable: false),
+                    children: buckets
+                        .map((bucket) {
+                          final ratio = (bucket.steps / maxValue).clamp(
+                            0.0,
+                            1.0,
+                          );
+                          return Expanded(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final barHeight = constraints.maxHeight * ratio;
+                                return Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: bucket.steps <= 0
+                                      ? Container(
+                                          width: 4,
+                                          height: 4,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.outlineVariant,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 6,
+                                          height: barHeight,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                        ),
+                                );
+                              },
+                            ),
+                          );
+                        })
+                        .toList(growable: false),
                   ),
                 ),
               ),
@@ -598,32 +619,32 @@ class _DayHistogram extends StatelessWidget {
                     Text(
                       '00',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     Text(
                       '06',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     Text(
                       '12',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     Text(
                       '18',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     Text(
                       '24',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -650,12 +671,14 @@ class _WeekBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     final isDe = localeCode == 'de';
     final numberFormat = NumberFormat.decimalPattern(localeCode);
-    final safeGoal =
-        dailyGoal > 0 ? dailyGoal : StepsSyncService.defaultStepsGoal;
+    final safeGoal = dailyGoal > 0
+        ? dailyGoal
+        : StepsSyncService.defaultStepsGoal;
     final total = buckets.fold<int>(0, (sum, b) => sum + b.steps);
     final avg = buckets.isEmpty ? 0 : (total / buckets.length).round();
     final goalDays = buckets.where((b) => b.steps >= safeGoal).length;
@@ -675,8 +698,9 @@ class _WeekBars extends StatelessWidget {
     final weekGoalRatio = (safeGoal / maxValue).clamp(0.0, 1.0);
     final weekGoalLineY =
         weekChartBottom - (weekDrawableHeight * weekGoalRatio);
-    final weekGoalLabelTop =
-        (weekGoalLineY - 10).clamp(0.0, weekChartHeight - 16).toDouble();
+    final weekGoalLabelTop = (weekGoalLineY - 10)
+        .clamp(0.0, weekChartHeight - 16)
+        .toDouble();
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -718,10 +742,9 @@ class _WeekBars extends StatelessWidget {
               Positioned.fill(
                 child: CustomPaint(
                   painter: _HorizontalGuidePainter(
-                    lineColor: Theme.of(context)
-                        .colorScheme
-                        .outlineVariant
-                        .withValues(alpha: 0.5),
+                    lineColor: Theme.of(
+                      context,
+                    ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                     goalColor: Theme.of(context).colorScheme.primary,
                     goalRatio: (safeGoal / maxValue).clamp(0.0, 1.0),
                     leftInset: _chartLeftInset,
@@ -736,22 +759,23 @@ class _WeekBars extends StatelessWidget {
                 child: Text(
                   _compactAxisLabel(maxValue),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               Positioned(
                 left: 0,
-                top: ((172 - _chartBottomInset - _weekChartTopInset) / 2) +
+                top:
+                    ((172 - _chartBottomInset - _weekChartTopInset) / 2) +
                     _weekChartTopInset -
                     8,
                 child: Text(
                   _compactAxisLabel((maxValue / 2).round()),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               Positioned.fill(
@@ -782,9 +806,9 @@ class _WeekBars extends StatelessWidget {
                                     width: 14,
                                     height: 4,
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .outlineVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outlineVariant,
                                       borderRadius: BorderRadius.circular(3),
                                     ),
                                   )
@@ -793,8 +817,9 @@ class _WeekBars extends StatelessWidget {
                                     width: 34,
                                     height: barHeight,
                                     decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
@@ -805,9 +830,9 @@ class _WeekBars extends StatelessWidget {
                                       width: 13,
                                       height: 13,
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                         borderRadius: BorderRadius.circular(3),
                                       ),
                                       child: const Icon(
@@ -839,25 +864,23 @@ class _WeekBars extends StatelessWidget {
                       bucket.start.day,
                     );
                     final isToday = day == today;
-                    final label = DateFormat.E(localeCode)
-                        .format(bucket.start)
-                        .substring(0, 1)
-                        .toUpperCase();
+                    final label = DateFormat.E(
+                      localeCode,
+                    ).format(bucket.start).substring(0, 1).toUpperCase();
                     return Expanded(
                       child: Center(
                         child: Text(
                           label,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium
+                          style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
-                                fontWeight:
-                                    isToday ? FontWeight.w700 : FontWeight.w500,
+                                fontWeight: isToday
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
                                 color: isToday
                                     ? Theme.of(context).colorScheme.onSurface
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                               ),
                         ),
                       ),
@@ -887,19 +910,25 @@ class _MonthGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     final isDe = localeCode == 'de';
     final numberFormat = NumberFormat.decimalPattern(localeCode);
-    final safeGoal =
-        dailyGoal > 0 ? dailyGoal : StepsSyncService.defaultStepsGoal;
+    final safeGoal = dailyGoal > 0
+        ? dailyGoal
+        : StepsSyncService.defaultStepsGoal;
 
-    final resolvedMonthStart = monthStart ??
+    final resolvedMonthStart =
+        monthStart ??
         (buckets.isNotEmpty
             ? DateTime(buckets.first.start.year, buckets.first.start.month, 1)
             : DateTime(DateTime.now().year, DateTime.now().month, 1));
-    final nextMonth =
-        DateTime(resolvedMonthStart.year, resolvedMonthStart.month + 1, 1);
+    final nextMonth = DateTime(
+      resolvedMonthStart.year,
+      resolvedMonthStart.month + 1,
+      1,
+    );
     final daysInMonth = nextMonth.difference(resolvedMonthStart).inDays;
     final leadingEmpty = resolvedMonthStart.weekday - DateTime.monday;
 
@@ -959,8 +988,8 @@ class _MonthGrid extends StatelessWidget {
                 child: Text(
                   dayLabel,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
               ),
             );
@@ -984,7 +1013,8 @@ class _MonthGrid extends StatelessWidget {
             final day = index - leadingEmpty + 1;
             final steps = byDay[day] ?? 0;
             final ratio = (steps / maxValue).clamp(0.0, 1.0);
-            final isToday = today.year == resolvedMonthStart.year &&
+            final isToday =
+                today.year == resolvedMonthStart.year &&
                 today.month == resolvedMonthStart.month &&
                 today.day == day;
             final background = Color.lerp(
@@ -996,10 +1026,8 @@ class _MonthGrid extends StatelessWidget {
             return Container(
               decoration: BoxDecoration(
                 color: steps == 0
-                    ? Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: 0.6)
+                    ? Theme.of(context).colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.6)
                     : background,
                 borderRadius: BorderRadius.circular(6),
                 border: isToday
@@ -1013,11 +1041,11 @@ class _MonthGrid extends StatelessWidget {
                 child: Text(
                   '$day',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: steps == 0
-                            ? Theme.of(context).colorScheme.outline
-                            : Theme.of(context).colorScheme.onPrimary,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: steps == 0
+                        ? Theme.of(context).colorScheme.outline
+                        : Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ),
               ),
             );
@@ -1048,15 +1076,15 @@ class _InsightPill extends StatelessWidget {
             TextSpan(
               text: '$label: ',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             TextSpan(
               text: value,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ],
         ),
@@ -1106,7 +1134,10 @@ class _HorizontalGuidePainter extends CustomPainter {
     var startX = chartStart;
     while (startX < chartEnd) {
       canvas.drawLine(
-          Offset(startX, yGoal), Offset(startX + 6, yGoal), goalPaint);
+        Offset(startX, yGoal),
+        Offset(startX + 6, yGoal),
+        goalPaint,
+      );
       startX += 10;
     }
   }

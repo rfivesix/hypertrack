@@ -10,8 +10,9 @@ class HealthConnectSleepMethodChannelBridge
     implements HealthConnectPermissionBridge {
   const HealthConnectSleepMethodChannelBridge();
 
-  static const MethodChannel _channel =
-      MethodChannel('hypertrack.health/sleep_health_connect');
+  static const MethodChannel _channel = MethodChannel(
+    'hypertrack.health/sleep_health_connect',
+  );
 
   @override
   Future<HealthConnectAvailability> getAvailability() async {
@@ -34,7 +35,7 @@ class HealthConnectSleepMethodChannelBridge
   Future<HealthConnectPermissionSnapshot> checkPermissions() async {
     final map =
         await _channel.invokeMapMethod<String, dynamic>('checkPermissions') ??
-            const <String, dynamic>{};
+        const <String, dynamic>{};
     return HealthConnectPermissionSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -45,7 +46,7 @@ class HealthConnectSleepMethodChannelBridge
   Future<HealthConnectPermissionSnapshot> requestPermissions() async {
     final map =
         await _channel.invokeMapMethod<String, dynamic>('requestPermissions') ??
-            const <String, dynamic>{};
+        const <String, dynamic>{};
     return HealthConnectPermissionSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -56,8 +57,9 @@ class HealthConnectSleepMethodChannelBridge
 class HealthKitSleepMethodChannelBridge implements HealthKitPermissionBridge {
   const HealthKitSleepMethodChannelBridge();
 
-  static const MethodChannel _channel =
-      MethodChannel('hypertrack.health/sleep_healthkit');
+  static const MethodChannel _channel = MethodChannel(
+    'hypertrack.health/sleep_healthkit',
+  );
 
   @override
   Future<bool> isAvailable() async {
@@ -69,7 +71,7 @@ class HealthKitSleepMethodChannelBridge implements HealthKitPermissionBridge {
   Future<HealthKitAuthorizationSnapshot> checkAuthorization() async {
     final map =
         await _channel.invokeMapMethod<String, dynamic>('checkPermissions') ??
-            const <String, dynamic>{};
+        const <String, dynamic>{};
     return HealthKitAuthorizationSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -80,7 +82,7 @@ class HealthKitSleepMethodChannelBridge implements HealthKitPermissionBridge {
   Future<HealthKitAuthorizationSnapshot> requestAuthorization() async {
     final map =
         await _channel.invokeMapMethod<String, dynamic>('requestPermissions') ??
-            const <String, dynamic>{};
+        const <String, dynamic>{};
     return HealthKitAuthorizationSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -92,15 +94,17 @@ class HealthConnectSleepMethodChannelDataSource
     implements HealthConnectDataSource {
   const HealthConnectSleepMethodChannelDataSource();
 
-  static const MethodChannel _channel =
-      MethodChannel('hypertrack.health/sleep_health_connect');
+  static const MethodChannel _channel = MethodChannel(
+    'hypertrack.health/sleep_health_connect',
+  );
 
   @override
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
   }) async {
-    final response = await _channel.invokeMapMethod<String, dynamic>(
+    final response =
+        await _channel.invokeMapMethod<String, dynamic>(
           'readSleepAndHeartRate',
           <String, dynamic>{
             'fromUtcIso': fromUtc.toUtc().toIso8601String(),
@@ -115,15 +119,17 @@ class HealthConnectSleepMethodChannelDataSource
 class HealthKitSleepMethodChannelDataSource implements HealthKitDataSource {
   const HealthKitSleepMethodChannelDataSource();
 
-  static const MethodChannel _channel =
-      MethodChannel('hypertrack.health/sleep_healthkit');
+  static const MethodChannel _channel = MethodChannel(
+    'hypertrack.health/sleep_healthkit',
+  );
 
   @override
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
   }) async {
-    final response = await _channel.invokeMapMethod<String, dynamic>(
+    final response =
+        await _channel.invokeMapMethod<String, dynamic>(
           'readSleepAndHeartRate',
           <String, dynamic>{
             'fromUtcIso': fromUtc.toUtc().toIso8601String(),

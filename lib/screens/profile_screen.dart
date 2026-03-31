@@ -279,13 +279,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       .withOpacity(0.1),
                                   backgroundImage:
                                       profileService.profileImagePath != null
-                                          ? FileImage(
-                                              File(
-                                                profileService
-                                                    .profileImagePath!,
-                                              ),
-                                            )
-                                          : null,
+                                      ? FileImage(
+                                          File(
+                                            profileService.profileImagePath!,
+                                          ),
+                                        )
+                                      : null,
                                   child: profileService.profileImagePath == null
                                       ? Icon(
                                           Icons.person,

@@ -144,12 +144,13 @@ class WorkoutDatabaseHelper {
 
   Future<Exercise?> getExerciseByName(String name) async {
     final dbInstance = await database;
-    final row = await (dbInstance.select(dbInstance.exercises)
-          ..where(
-            (tbl) => tbl.nameDe.equals(name) | tbl.nameEn.equals(name),
-          )
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (dbInstance.select(dbInstance.exercises)
+              ..where(
+                (tbl) => tbl.nameDe.equals(name) | tbl.nameEn.equals(name),
+              )
+              ..limit(1))
+            .getSingleOrNull();
 
     return row != null ? _mapExerciseToModel(row) : null;
   }
@@ -169,8 +170,9 @@ class WorkoutDatabaseHelper {
       isCustom: const drift.Value(true),
     );
 
-    final row =
-        await dbInstance.into(dbInstance.exercises).insertReturning(companion);
+    final row = await dbInstance
+        .into(dbInstance.exercises)
+        .insertReturning(companion);
     return _mapExerciseToModel(row);
   }
 
@@ -178,8 +180,7 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     final rows = await (dbInstance.select(
       dbInstance.exercises,
-    )..where((tbl) => tbl.isCustom.equals(true)))
-        .get();
+    )..where((tbl) => tbl.isCustom.equals(true))).get();
     return rows.map(_mapExerciseToModel).toList();
   }
 
@@ -214,8 +215,7 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     final rows = await (dbInstance.select(
       dbInstance.routines,
-    )..orderBy([(t) => drift.OrderingTerm(expression: t.name)]))
-        .get();
+    )..orderBy([(t) => drift.OrderingTerm(expression: t.name)])).get();
 
     return rows.map((r) => Routine(id: r.localId, name: r.name)).toList();
   }
@@ -276,26 +276,28 @@ class WorkoutDatabaseHelper {
         maxOrderResult.read(dbInstance.routineExercises.orderIndex.max()) ?? -1;
 
     // RoutineExercise einfügen
-    final reRow =
-        await dbInstance.into(dbInstance.routineExercises).insertReturning(
-              db.RoutineExercisesCompanion(
-                routineId: drift.Value(routineUuid),
-                exerciseId: drift.Value(exerciseUuid),
-                orderIndex: drift.Value(maxOrder + 1),
-              ),
-            );
+    final reRow = await dbInstance
+        .into(dbInstance.routineExercises)
+        .insertReturning(
+          db.RoutineExercisesCompanion(
+            routineId: drift.Value(routineUuid),
+            exerciseId: drift.Value(exerciseUuid),
+            orderIndex: drift.Value(maxOrder + 1),
+          ),
+        );
 
     // FIX: Dynamische Anzahl von Sets (statt hardcoded 3)
     final templates = <SetTemplate>[];
     for (int i = 0; i < initialSetCount; i++) {
-      final stRow =
-          await dbInstance.into(dbInstance.routineSetTemplates).insertReturning(
-                db.RoutineSetTemplatesCompanion(
-                  routineExerciseId: drift.Value(reRow.id),
-                  setType: const drift.Value('normal'),
-                  targetReps: const drift.Value('8-12'),
-                ),
-              );
+      final stRow = await dbInstance
+          .into(dbInstance.routineSetTemplates)
+          .insertReturning(
+            db.RoutineSetTemplatesCompanion(
+              routineExerciseId: drift.Value(reRow.id),
+              setType: const drift.Value('normal'),
+              targetReps: const drift.Value('8-12'),
+            ),
+          );
       templates.add(
         SetTemplate(id: stRow.localId, setType: 'normal', targetReps: '8-12'),
       );
@@ -304,8 +306,7 @@ class WorkoutDatabaseHelper {
     // Exercise Daten laden für Rückgabe
     final exRow = await (dbInstance.select(
       dbInstance.exercises,
-    )..where((tbl) => tbl.id.equals(exerciseUuid)))
-        .getSingle();
+    )..where((tbl) => tbl.id.equals(exerciseUuid))).getSingle();
 
     return RoutineExercise(
       id: reRow.localId,
@@ -319,8 +320,7 @@ class WorkoutDatabaseHelper {
     // OnDelete Cascade in DB Definition sollte Kinder löschen
     await (dbInstance.delete(
       dbInstance.routineExercises,
-    )..where((tbl) => tbl.localId.equals(routineExerciseId)))
-        .go();
+    )..where((tbl) => tbl.localId.equals(routineExerciseId))).go();
   }
 
   Future<void> updateExerciseOrder(
@@ -347,21 +347,20 @@ class WorkoutDatabaseHelper {
     // 1. Routine laden
     final routineRow = await (dbInstance.select(
       dbInstance.routines,
-    )..where((tbl) => tbl.localId.equals(id)))
-        .getSingleOrNull();
+    )..where((tbl) => tbl.localId.equals(id))).getSingleOrNull();
 
     if (routineRow == null) return null;
 
     // 2. RoutineExercises laden
     final routineExercisesQuery =
         dbInstance.select(dbInstance.routineExercises).join([
-      drift.innerJoin(
-        dbInstance.exercises,
-        dbInstance.exercises.id.equalsExp(
-          dbInstance.routineExercises.exerciseId,
-        ),
-      ),
-    ])
+            drift.innerJoin(
+              dbInstance.exercises,
+              dbInstance.exercises.id.equalsExp(
+                dbInstance.routineExercises.exerciseId,
+              ),
+            ),
+          ])
           ..where(dbInstance.routineExercises.routineId.equals(routineRow.id))
           ..orderBy([
             drift.OrderingTerm(
@@ -377,10 +376,11 @@ class WorkoutDatabaseHelper {
       final exData = row.readTable(dbInstance.exercises);
 
       // 3. SetTemplates laden
-      final templates = await (dbInstance.select(dbInstance.routineSetTemplates)
-            ..where((tbl) => tbl.routineExerciseId.equals(reData.id))
-            ..orderBy([(t) => drift.OrderingTerm(expression: t.localId)]))
-          .get();
+      final templates =
+          await (dbInstance.select(dbInstance.routineSetTemplates)
+                ..where((tbl) => tbl.routineExerciseId.equals(reData.id))
+                ..orderBy([(t) => drift.OrderingTerm(expression: t.localId)]))
+              .get();
 
       final setTemplates = templates
           .map(
@@ -416,8 +416,7 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     await (dbInstance.update(
       dbInstance.routineSetTemplates,
-    )..where((tbl) => tbl.localId.equals(setTemplate.id!)))
-        .write(
+    )..where((tbl) => tbl.localId.equals(setTemplate.id!))).write(
       db.RoutineSetTemplatesCompanion(
         setType: drift.Value(setTemplate.setType),
         targetReps: drift.Value(setTemplate.targetReps),
@@ -442,12 +441,13 @@ class WorkoutDatabaseHelper {
       // Löschen
       await (dbInstance.delete(
         dbInstance.routineSetTemplates,
-      )..where((tbl) => tbl.routineExerciseId.equals(reUuid)))
-          .go();
+      )..where((tbl) => tbl.routineExerciseId.equals(reUuid))).go();
 
       // Neu einfügen
       for (final t in newTemplates) {
-        await dbInstance.into(dbInstance.routineSetTemplates).insert(
+        await dbInstance
+            .into(dbInstance.routineSetTemplates)
+            .insert(
               db.RoutineSetTemplatesCompanion(
                 routineExerciseId: drift.Value(reUuid),
                 setType: drift.Value(t.setType),
@@ -464,8 +464,7 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     await (dbInstance.delete(
       dbInstance.routines,
-    )..where((tbl) => tbl.localId.equals(routineId)))
-        .go();
+    )..where((tbl) => tbl.localId.equals(routineId))).go();
   }
 
   Future<void> duplicateRoutine(int routineId) async {
@@ -493,18 +492,18 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     await (dbInstance.update(
       dbInstance.routineExercises,
-    )..where((tbl) => tbl.localId.equals(routineExerciseId)))
-        .write(
+    )..where((tbl) => tbl.localId.equals(routineExerciseId))).write(
       db.RoutineExercisesCompanion(pauseSeconds: drift.Value(seconds)),
     );
   }
 
   Future<Routine?> getRoutineByName(String name) async {
     final dbInstance = await database;
-    final row = await (dbInstance.select(dbInstance.routines)
-          ..where((tbl) => tbl.name.equals(name))
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (dbInstance.select(dbInstance.routines)
+              ..where((tbl) => tbl.name.equals(name))
+              ..limit(1))
+            .getSingleOrNull();
 
     if (row != null) {
       return getRoutineById(row.localId);
@@ -526,14 +525,17 @@ class WorkoutDatabaseHelper {
     String? routineNameSnapshot = routineName;
 
     if (routineName != null) {
-      final rRow = await (dbInstance.select(dbInstance.routines)
-            ..where((tbl) => tbl.name.equals(routineName))
-            ..limit(1))
-          .getSingleOrNull();
+      final rRow =
+          await (dbInstance.select(dbInstance.routines)
+                ..where((tbl) => tbl.name.equals(routineName))
+                ..limit(1))
+              .getSingleOrNull();
       routineId = rRow?.id;
     }
 
-    final row = await dbInstance.into(dbInstance.workoutLogs).insertReturning(
+    final row = await dbInstance
+        .into(dbInstance.workoutLogs)
+        .insertReturning(
           db.WorkoutLogsCompanion(
             startTime: drift.Value(now),
             status: const drift.Value('ongoing'),
@@ -558,13 +560,13 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     await (dbInstance.update(
       dbInstance.workoutLogs,
-    )..where((tbl) => tbl.localId.equals(workoutLogId)))
-        .write(
+    )..where((tbl) => tbl.localId.equals(workoutLogId))).write(
       db.WorkoutLogsCompanion(
         endTime: drift.Value(DateTime.now()),
         status: const drift.Value('completed'),
-        routineNameSnapshot:
-            title != null ? drift.Value(title) : const drift.Value.absent(),
+        routineNameSnapshot: title != null
+            ? drift.Value(title)
+            : const drift.Value.absent(),
         notes: notes != null ? drift.Value(notes) : const drift.Value.absent(),
       ),
     );
@@ -585,14 +587,15 @@ class WorkoutDatabaseHelper {
 
     // Exercise UUID suchen
     String? exerciseUuid;
-    final exRow = await (dbInstance.select(dbInstance.exercises)
-          ..where(
-            (tbl) =>
-                tbl.nameDe.equals(setLog.exerciseName) |
-                tbl.nameEn.equals(setLog.exerciseName),
-          )
-          ..limit(1))
-        .getSingleOrNull();
+    final exRow =
+        await (dbInstance.select(dbInstance.exercises)
+              ..where(
+                (tbl) =>
+                    tbl.nameDe.equals(setLog.exerciseName) |
+                    tbl.nameEn.equals(setLog.exerciseName),
+              )
+              ..limit(1))
+            .getSingleOrNull();
     exerciseUuid = exRow?.id;
 
     final companion = db.SetLogsCompanion(
@@ -616,13 +619,13 @@ class WorkoutDatabaseHelper {
       // Update
       await (dbInstance.update(
         dbInstance.setLogs,
-      )..where((tbl) => tbl.localId.equals(setLog.id!)))
-          .write(companion);
+      )..where((tbl) => tbl.localId.equals(setLog.id!))).write(companion);
       return setLog.id!;
     } else {
       // Insert
-      final row =
-          await dbInstance.into(dbInstance.setLogs).insertReturning(companion);
+      final row = await dbInstance
+          .into(dbInstance.setLogs)
+          .insertReturning(companion);
       return row.localId;
     }
   }
@@ -631,15 +634,15 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     final logRow = await (dbInstance.select(
       dbInstance.workoutLogs,
-    )..where((tbl) => tbl.localId.equals(id)))
-        .getSingleOrNull();
+    )..where((tbl) => tbl.localId.equals(id))).getSingleOrNull();
 
     if (logRow == null) return null;
 
-    final setRows = await (dbInstance.select(dbInstance.setLogs)
-          ..where((tbl) => tbl.workoutLogId.equals(logRow.id))
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
-        .get();
+    final setRows =
+        await (dbInstance.select(dbInstance.setLogs)
+              ..where((tbl) => tbl.workoutLogId.equals(logRow.id))
+              ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
+            .get();
 
     final sets = setRows
         .map(
@@ -708,9 +711,9 @@ class WorkoutDatabaseHelper {
       )
       ..orderBy([
         (t) => drift.OrderingTerm(
-              expression: t.localId,
-              mode: drift.OrderingMode.desc,
-            ),
+          expression: t.localId,
+          mode: drift.OrderingMode.desc,
+        ),
       ])
       ..limit(1);
 
@@ -742,22 +745,22 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     await (dbInstance.delete(
       dbInstance.workoutLogs,
-    )..where((tbl) => tbl.localId.equals(logId)))
-        .go();
+    )..where((tbl) => tbl.localId.equals(logId))).go();
   }
 
   Future<List<WorkoutLog>> getWorkoutLogs() async {
     // Gibt nur abgeschlossene Logs zurück (Basis-Infos)
     final dbInstance = await database;
-    final rows = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where((tbl) => tbl.status.equals('completed'))
-          ..orderBy([
-            (t) => drift.OrderingTerm(
+    final rows =
+        await (dbInstance.select(dbInstance.workoutLogs)
+              ..where((tbl) => tbl.status.equals('completed'))
+              ..orderBy([
+                (t) => drift.OrderingTerm(
                   expression: t.startTime,
                   mode: drift.OrderingMode.desc,
                 ),
-          ]))
-        .get();
+              ]))
+            .get();
 
     return rows
         .map(
@@ -786,15 +789,16 @@ class WorkoutDatabaseHelper {
 
   Future<WorkoutLog?> getLatestWorkoutLog() async {
     final dbInstance = await database;
-    final row = await (dbInstance.select(dbInstance.workoutLogs)
-          ..orderBy([
-            (t) => drift.OrderingTerm(
+    final row =
+        await (dbInstance.select(dbInstance.workoutLogs)
+              ..orderBy([
+                (t) => drift.OrderingTerm(
                   expression: t.startTime,
                   mode: drift.OrderingMode.desc,
                 ),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
+              ])
+              ..limit(1))
+            .getSingleOrNull();
 
     if (row != null) {
       return getWorkoutLogById(row.localId);
@@ -811,22 +815,23 @@ class WorkoutDatabaseHelper {
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-    final rows = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where(
-            (tbl) =>
-                tbl.startTime.isBetweenValues(
-                  effectiveStart,
-                  effectiveEnd,
-                ) &
-                tbl.status.equals('completed'),
-          )
-          ..orderBy([
-            (t) => drift.OrderingTerm(
+    final rows =
+        await (dbInstance.select(dbInstance.workoutLogs)
+              ..where(
+                (tbl) =>
+                    tbl.startTime.isBetweenValues(
+                      effectiveStart,
+                      effectiveEnd,
+                    ) &
+                    tbl.status.equals('completed'),
+              )
+              ..orderBy([
+                (t) => drift.OrderingTerm(
                   expression: t.startTime,
                   mode: drift.OrderingMode.desc,
                 ),
-          ]))
-        .get();
+              ]))
+            .get();
 
     final list = <WorkoutLog>[];
     for (var r in rows) {
@@ -844,8 +849,7 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     await (dbInstance.update(
       dbInstance.workoutLogs,
-    )..where((tbl) => tbl.localId.equals(logId)))
-        .write(
+    )..where((tbl) => tbl.localId.equals(logId))).write(
       db.WorkoutLogsCompanion(
         startTime: drift.Value(startTime),
         notes: drift.Value(notes),
@@ -857,8 +861,7 @@ class WorkoutDatabaseHelper {
     final dbInstance = await database;
     await (dbInstance.delete(
       dbInstance.setLogs,
-    )..where((tbl) => tbl.localId.isIn(idsToDelete)))
-        .go();
+    )..where((tbl) => tbl.localId.isIn(idsToDelete))).go();
   }
 
   Future<List<SetLog>> getSetLogsForWorkout(int workoutLogId) async {
@@ -887,14 +890,15 @@ class WorkoutDatabaseHelper {
           // Exercise Mapping checken (Name -> UUID)
           // Wir suchen die Übung in der DB. Falls custom und im Backup vorhanden, sollte sie bereits importiert sein.
           final exModel = re.exercise;
-          final exRow = await (dbInstance.select(dbInstance.exercises)
-                ..where(
-                  (tbl) =>
-                      tbl.nameEn.equals(exModel.nameEn) |
-                      tbl.nameDe.equals(exModel.nameDe),
-                )
-                ..limit(1))
-              .getSingleOrNull();
+          final exRow =
+              await (dbInstance.select(dbInstance.exercises)
+                    ..where(
+                      (tbl) =>
+                          tbl.nameEn.equals(exModel.nameEn) |
+                          tbl.nameDe.equals(exModel.nameDe),
+                    )
+                    ..limit(1))
+                  .getSingleOrNull();
 
           if (exRow == null) continue;
 
@@ -913,7 +917,9 @@ class WorkoutDatabaseHelper {
 
           // Templates
           for (final t in re.setTemplates) {
-            await dbInstance.into(dbInstance.routineSetTemplates).insert(
+            await dbInstance
+                .into(dbInstance.routineSetTemplates)
+                .insert(
                   db.RoutineSetTemplatesCompanion(
                     routineExerciseId: drift.Value(reRow.id),
                     setType: drift.Value(t.setType),
@@ -927,28 +933,32 @@ class WorkoutDatabaseHelper {
 
       // WorkoutLogs
       for (final w in workoutLogs) {
-        final wRow =
-            await dbInstance.into(dbInstance.workoutLogs).insertReturning(
-                  db.WorkoutLogsCompanion(
-                    startTime: drift.Value(w.startTime),
-                    endTime: drift.Value(w.endTime),
-                    status: const drift.Value('completed'),
-                    routineNameSnapshot: drift.Value(w.routineName),
-                    notes: drift.Value(w.notes),
-                  ),
-                );
+        final wRow = await dbInstance
+            .into(dbInstance.workoutLogs)
+            .insertReturning(
+              db.WorkoutLogsCompanion(
+                startTime: drift.Value(w.startTime),
+                endTime: drift.Value(w.endTime),
+                status: const drift.Value('completed'),
+                routineNameSnapshot: drift.Value(w.routineName),
+                notes: drift.Value(w.notes),
+              ),
+            );
 
         for (final s in w.sets) {
-          final exRow = await (dbInstance.select(dbInstance.exercises)
-                ..where(
-                  (tbl) =>
-                      tbl.nameEn.equals(s.exerciseName) |
-                      tbl.nameDe.equals(s.exerciseName),
-                )
-                ..limit(1))
-              .getSingleOrNull();
+          final exRow =
+              await (dbInstance.select(dbInstance.exercises)
+                    ..where(
+                      (tbl) =>
+                          tbl.nameEn.equals(s.exerciseName) |
+                          tbl.nameDe.equals(s.exerciseName),
+                    )
+                    ..limit(1))
+                  .getSingleOrNull();
 
-          await dbInstance.into(dbInstance.setLogs).insert(
+          await dbInstance
+              .into(dbInstance.setLogs)
+              .insert(
                 db.SetLogsCompanion(
                   workoutLogId: drift.Value(wRow.id),
                   exerciseNameSnapshot: drift.Value(s.exerciseName),
@@ -988,20 +998,20 @@ class WorkoutDatabaseHelper {
         final newName = entry.value;
 
         // Finde die neue Exercise UUID
-        final exRow = await (dbInstance.select(dbInstance.exercises)
-              ..where(
-                (tbl) =>
-                    tbl.nameEn.equals(newName) | tbl.nameDe.equals(newName),
-              )
-              ..limit(1))
-            .getSingleOrNull();
+        final exRow =
+            await (dbInstance.select(dbInstance.exercises)
+                  ..where(
+                    (tbl) =>
+                        tbl.nameEn.equals(newName) | tbl.nameDe.equals(newName),
+                  )
+                  ..limit(1))
+                .getSingleOrNull();
 
         if (exRow != null) {
           // Update SetLogs
           await (dbInstance.update(
             dbInstance.setLogs,
-          )..where((tbl) => tbl.exerciseNameSnapshot.equals(oldName)))
-              .write(
+          )..where((tbl) => tbl.exerciseNameSnapshot.equals(oldName))).write(
             db.SetLogsCompanion(
               exerciseId: drift.Value(exRow.id),
               exerciseNameSnapshot: drift.Value(newName),
@@ -1017,12 +1027,13 @@ class WorkoutDatabaseHelper {
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
-    final rows = await (dbInstance.selectOnly(dbInstance.workoutLogs)
-          ..addColumns([dbInstance.workoutLogs.startTime])
-          ..where(
-            dbInstance.workoutLogs.startTime.isBetweenValues(start, end),
-          ))
-        .get();
+    final rows =
+        await (dbInstance.selectOnly(dbInstance.workoutLogs)
+              ..addColumns([dbInstance.workoutLogs.startTime])
+              ..where(
+                dbInstance.workoutLogs.startTime.isBetweenValues(start, end),
+              ))
+            .get();
 
     return rows
         .map((r) => r.read(dbInstance.workoutLogs.startTime)!.day)
@@ -1032,25 +1043,26 @@ class WorkoutDatabaseHelper {
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async {
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.workoutLogs).join([
-      drift.innerJoin(
-        dbInstance.setLogs,
-        dbInstance.setLogs.workoutLogId.equalsExp(
-          dbInstance.workoutLogs.id,
-        ),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.exerciseNameSnapshot.equals(exerciseName) &
-            dbInstance.workoutLogs.status.equals('completed'),
-      )
-      ..orderBy([
-        drift.OrderingTerm(
-          expression: dbInstance.workoutLogs.startTime,
-          mode: drift.OrderingMode.desc,
-        ),
-      ])
-      ..limit(1);
+    final query =
+        dbInstance.select(dbInstance.workoutLogs).join([
+            drift.innerJoin(
+              dbInstance.setLogs,
+              dbInstance.setLogs.workoutLogId.equalsExp(
+                dbInstance.workoutLogs.id,
+              ),
+            ),
+          ])
+          ..where(
+            dbInstance.setLogs.exerciseNameSnapshot.equals(exerciseName) &
+                dbInstance.workoutLogs.status.equals('completed'),
+          )
+          ..orderBy([
+            drift.OrderingTerm(
+              expression: dbInstance.workoutLogs.startTime,
+              mode: drift.OrderingMode.desc,
+            ),
+          ])
+          ..limit(1);
 
     final result = await query.getSingleOrNull();
     if (result == null) return [];
@@ -1058,14 +1070,15 @@ class WorkoutDatabaseHelper {
     final logUuid = result.readTable(dbInstance.workoutLogs).id;
     final wLogId = result.readTable(dbInstance.workoutLogs).localId;
 
-    final setRows = await (dbInstance.select(dbInstance.setLogs)
-          ..where(
-            (tbl) =>
-                tbl.workoutLogId.equals(logUuid) &
-                tbl.exerciseNameSnapshot.equals(exerciseName),
-          )
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
-        .get();
+    final setRows =
+        await (dbInstance.select(dbInstance.setLogs)
+              ..where(
+                (tbl) =>
+                    tbl.workoutLogId.equals(logUuid) &
+                    tbl.exerciseNameSnapshot.equals(exerciseName),
+              )
+              ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
+            .get();
 
     return setRows
         .map(
@@ -1094,23 +1107,23 @@ class WorkoutDatabaseHelper {
       // Lösche nur custom exercises
       await (dbInstance.delete(
         dbInstance.exercises,
-      )..where((tbl) => tbl.isCustom.equals(true)))
-          .go();
+      )..where((tbl) => tbl.isCustom.equals(true))).go();
     });
   }
 
   Future<WorkoutLog?> getOngoingWorkout() async {
     final dbInstance = await database;
-    final row = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where((tbl) => tbl.status.equals('ongoing'))
-          ..orderBy([
-            (t) => drift.OrderingTerm(
+    final row =
+        await (dbInstance.select(dbInstance.workoutLogs)
+              ..where((tbl) => tbl.status.equals('ongoing'))
+              ..orderBy([
+                (t) => drift.OrderingTerm(
                   expression: t.startTime,
                   mode: drift.OrderingMode.desc,
                 ),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
+              ])
+              ..limit(1))
+            .getSingleOrNull();
 
     if (row != null) {
       return getWorkoutLogById(row.localId);
@@ -1125,10 +1138,11 @@ class WorkoutDatabaseHelper {
   /// Retrieves the UUID (string) for an exercise given its local integer ID.
   Future<String?> getExerciseUuidByLocalId(int localId) async {
     final dbInstance = await database;
-    final row = await (dbInstance.select(dbInstance.exercises)
-          ..where((tbl) => tbl.localId.equals(localId))
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (dbInstance.select(dbInstance.exercises)
+              ..where((tbl) => tbl.localId.equals(localId))
+              ..limit(1))
+            .getSingleOrNull();
     return row?.id;
   }
 
@@ -1140,8 +1154,8 @@ class WorkoutDatabaseHelper {
     String? altName,
     String? exerciseUuid,
   }) {
-    drift.Expression<bool> nameExpr =
-        dbInstance.setLogs.exerciseNameSnapshot.equals(exerciseName);
+    drift.Expression<bool> nameExpr = dbInstance.setLogs.exerciseNameSnapshot
+        .equals(exerciseName);
 
     if (altName != null && altName.isNotEmpty && altName != exerciseName) {
       nameExpr =
@@ -1173,21 +1187,21 @@ class WorkoutDatabaseHelper {
 
     // Qualifying sets for PRs:
     // isCompleted == true, setType != 'warmup', weight > 0, reps > 0
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-      ..where(
-        exerciseMatch &
-            dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0),
-      );
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+          drift.innerJoin(
+            dbInstance.workoutLogs,
+            dbInstance.workoutLogs.id.equalsExp(
+              dbInstance.setLogs.workoutLogId,
+            ),
+          ),
+        ])..where(
+          exerciseMatch &
+              dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0),
+        );
 
     final rows = await query.get();
 
@@ -1281,26 +1295,27 @@ class WorkoutDatabaseHelper {
       exerciseUuid: exerciseUuid,
     );
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-      ..where(
-        exerciseMatch &
-            dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.workoutLogs.status.equals('completed'),
-      )
-      ..orderBy([
-        drift.OrderingTerm(
-          expression: dbInstance.workoutLogs.startTime,
-          mode: drift.OrderingMode.asc,
-        ),
-      ]);
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+            drift.innerJoin(
+              dbInstance.workoutLogs,
+              dbInstance.workoutLogs.id.equalsExp(
+                dbInstance.setLogs.workoutLogId,
+              ),
+            ),
+          ])
+          ..where(
+            exerciseMatch &
+                dbInstance.setLogs.isCompleted.equals(true) &
+                dbInstance.setLogs.setType.isNotIn(['warmup']) &
+                dbInstance.workoutLogs.status.equals('completed'),
+          )
+          ..orderBy([
+            drift.OrderingTerm(
+              expression: dbInstance.workoutLogs.startTime,
+              mode: drift.OrderingMode.asc,
+            ),
+          ]);
 
     final rows = await query.get();
 
@@ -1355,8 +1370,9 @@ class WorkoutDatabaseHelper {
   Future<List<Map<String, dynamic>>> getRecentGlobalPRs({int limit = 3}) async {
     final dbInstance = await database;
 
-    final rows = await dbInstance.customSelect(
-      '''
+    final rows = await dbInstance
+        .customSelect(
+          '''
       SELECT
         s1.exercise_name_snapshot AS exerciseName,
         s1.weight                 AS weight,
@@ -1380,8 +1396,9 @@ class WorkoutDatabaseHelper {
       ORDER BY MAX(wl.start_time) DESC
       LIMIT ?
       ''',
-      variables: [drift.Variable.withInt(limit)],
-    ).get();
+          variables: [drift.Variable.withInt(limit)],
+        )
+        .get();
 
     return rows
         .map(
@@ -1407,28 +1424,29 @@ class WorkoutDatabaseHelper {
     final since = now.subtract(Duration(days: weeksBack * 7));
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed') &
-            dbInstance.workoutLogs.startTime.isBetweenValues(
-              since,
-              now.add(const Duration(days: 1)),
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+            drift.innerJoin(
+              dbInstance.workoutLogs,
+              dbInstance.workoutLogs.id.equalsExp(
+                dbInstance.setLogs.workoutLogId,
+              ),
             ),
-      )
-      ..orderBy([
-        drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime),
-      ]);
+          ])
+          ..where(
+            dbInstance.setLogs.isCompleted.equals(true) &
+                dbInstance.setLogs.setType.isNotIn(['warmup']) &
+                dbInstance.setLogs.weight.isBiggerThanValue(0) &
+                dbInstance.setLogs.reps.isBiggerThanValue(0) &
+                dbInstance.workoutLogs.status.equals('completed') &
+                dbInstance.workoutLogs.startTime.isBetweenValues(
+                  since,
+                  now.add(const Duration(days: 1)),
+                ),
+          )
+          ..orderBy([
+            drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime),
+          ]);
 
     final rows = await query.get();
 
@@ -1490,29 +1508,29 @@ class WorkoutDatabaseHelper {
     final since = now.subtract(Duration(days: daysBack));
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-      drift.leftOuterJoin(
-        dbInstance.exercises,
-        dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed') &
-            dbInstance.workoutLogs.startTime.isBetweenValues(
-              since,
-              now.add(const Duration(days: 1)),
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+          drift.innerJoin(
+            dbInstance.workoutLogs,
+            dbInstance.workoutLogs.id.equalsExp(
+              dbInstance.setLogs.workoutLogId,
             ),
-      );
+          ),
+          drift.leftOuterJoin(
+            dbInstance.exercises,
+            dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId),
+          ),
+        ])..where(
+          dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0) &
+              dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime.isBetweenValues(
+                since,
+                now.add(const Duration(days: 1)),
+              ),
+        );
 
     final rows = await query.get();
     final Map<String, double> muscleVolume = {};
@@ -1536,12 +1554,14 @@ class WorkoutDatabaseHelper {
       }
     }
 
-    final result = muscleVolume.entries
-        .map((e) => {'muscleGroup': e.key, 'tonnage': e.value})
-        .toList()
-      ..sort(
-        (a, b) => (b['tonnage'] as double).compareTo(a['tonnage'] as double),
-      );
+    final result =
+        muscleVolume.entries
+            .map((e) => {'muscleGroup': e.key, 'tonnage': e.value})
+            .toList()
+          ..sort(
+            (a, b) =>
+                (b['tonnage'] as double).compareTo(a['tonnage'] as double),
+          );
     return result;
   }
 
@@ -1566,29 +1586,29 @@ class WorkoutDatabaseHelper {
     final since = now.subtract(Duration(days: daysBack));
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-      drift.leftOuterJoin(
-        dbInstance.exercises,
-        dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed') &
-            dbInstance.workoutLogs.startTime.isBetweenValues(
-              since,
-              now.add(const Duration(days: 1)),
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+          drift.innerJoin(
+            dbInstance.workoutLogs,
+            dbInstance.workoutLogs.id.equalsExp(
+              dbInstance.setLogs.workoutLogId,
             ),
-      );
+          ),
+          drift.leftOuterJoin(
+            dbInstance.exercises,
+            dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId),
+          ),
+        ])..where(
+          dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0) &
+              dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime.isBetweenValues(
+                since,
+                now.add(const Duration(days: 1)),
+              ),
+        );
 
     final rows = await query.get();
 
@@ -1659,25 +1679,25 @@ class WorkoutDatabaseHelper {
     final now = DateTime.now();
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-      drift.leftOuterJoin(
-        dbInstance.exercises,
-        dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed'),
-      );
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+          drift.innerJoin(
+            dbInstance.workoutLogs,
+            dbInstance.workoutLogs.id.equalsExp(
+              dbInstance.setLogs.workoutLogId,
+            ),
+          ),
+          drift.leftOuterJoin(
+            dbInstance.exercises,
+            dbInstance.exercises.id.equalsExp(dbInstance.setLogs.exerciseId),
+          ),
+        ])..where(
+          dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0) &
+              dbInstance.workoutLogs.status.equals('completed'),
+        );
 
     final rows = await query.get();
 
@@ -1789,10 +1809,12 @@ class WorkoutDatabaseHelper {
       final rirCount = lastSession['rirCount'] as int;
       final rpeCount = lastSession['rpeCount'] as int;
 
-      final avgRir =
-          rirCount > 0 ? (lastSession['rirSum'] as double) / rirCount : null;
-      final avgRpe =
-          rpeCount > 0 ? (lastSession['rpeSum'] as double) / rpeCount : null;
+      final avgRir = rirCount > 0
+          ? (lastSession['rirSum'] as double) / rirCount
+          : null;
+      final avgRpe = rpeCount > 0
+          ? (lastSession['rpeSum'] as double) / rpeCount
+          : null;
 
       final highSessionFatigue = RecoveryDomainService.hasHighSessionFatigue(
         avgRir: avgRir,
@@ -1879,25 +1901,25 @@ class WorkoutDatabaseHelper {
     final since = now.subtract(Duration(days: daysBack));
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed') &
-            dbInstance.workoutLogs.startTime.isBetweenValues(
-              since,
-              now.add(const Duration(days: 1)),
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+          drift.innerJoin(
+            dbInstance.workoutLogs,
+            dbInstance.workoutLogs.id.equalsExp(
+              dbInstance.setLogs.workoutLogId,
             ),
-      );
+          ),
+        ])..where(
+          dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0) &
+              dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime.isBetweenValues(
+                since,
+                now.add(const Duration(days: 1)),
+              ),
+        );
 
     final rows = await query.get();
     final Map<String, double> exVolume = {};
@@ -1925,17 +1947,18 @@ class WorkoutDatabaseHelper {
     final since = now.subtract(Duration(days: weeksBack * 7));
     final dbInstance = await database;
 
-    final rows = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where(
-            (tbl) =>
-                tbl.status.equals('completed') &
-                tbl.startTime.isBetweenValues(
-                  since,
-                  now.add(const Duration(days: 1)),
-                ),
-          )
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.startTime)]))
-        .get();
+    final rows =
+        await (dbInstance.select(dbInstance.workoutLogs)
+              ..where(
+                (tbl) =>
+                    tbl.status.equals('completed') &
+                    tbl.startTime.isBetweenValues(
+                      since,
+                      now.add(const Duration(days: 1)),
+                    ),
+              )
+              ..orderBy([(t) => drift.OrderingTerm(expression: t.startTime)]))
+            .get();
 
     final Map<String, Map<String, dynamic>> weekMap = {};
 
@@ -1964,11 +1987,10 @@ class WorkoutDatabaseHelper {
       }
     }
 
-    return weekMap.values.toList()
-      ..sort(
-        (a, b) =>
-            (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime),
-      );
+    return weekMap.values.toList()..sort(
+      (a, b) =>
+          (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime),
+    );
   }
 
   /// Returns per-week consistency metrics for the last [weeksBack] weeks.
@@ -2009,17 +2031,18 @@ class WorkoutDatabaseHelper {
       ensureWeek(now.subtract(Duration(days: w * 7)));
     }
 
-    final workoutRows = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where(
-            (tbl) =>
-                tbl.status.equals('completed') &
-                tbl.startTime.isBetweenValues(
-                  since,
-                  now.add(const Duration(days: 1)),
-                ),
-          )
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.startTime)]))
-        .get();
+    final workoutRows =
+        await (dbInstance.select(dbInstance.workoutLogs)
+              ..where(
+                (tbl) =>
+                    tbl.status.equals('completed') &
+                    tbl.startTime.isBetweenValues(
+                      since,
+                      now.add(const Duration(days: 1)),
+                    ),
+              )
+              ..orderBy([(t) => drift.OrderingTerm(expression: t.startTime)]))
+            .get();
 
     for (final row in workoutRows) {
       final start = row.startTime;
@@ -2033,37 +2056,37 @@ class WorkoutDatabaseHelper {
       final durationMinutes = row.endTime == null
           ? 0.0
           : row.endTime!
-                  .difference(start)
-                  .inSeconds
-                  .clamp(0, 24 * 60 * 60)
-                  .toDouble() /
-              60.0;
+                    .difference(start)
+                    .inSeconds
+                    .clamp(0, 24 * 60 * 60)
+                    .toDouble() /
+                60.0;
 
       weekMap[key]!['count'] = (weekMap[key]!['count'] as int) + 1;
       weekMap[key]!['durationMinutes'] =
           (weekMap[key]!['durationMinutes'] as double) + durationMinutes;
     }
 
-    final tonnageRows = await (dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-          ..where(
-            dbInstance.setLogs.isCompleted.equals(true) &
-                dbInstance.setLogs.setType.isNotIn(['warmup']) &
-                dbInstance.setLogs.weight.isBiggerThanValue(0) &
-                dbInstance.setLogs.reps.isBiggerThanValue(0) &
-                dbInstance.workoutLogs.status.equals('completed') &
-                dbInstance.workoutLogs.startTime.isBetweenValues(
-                  since,
-                  now.add(const Duration(days: 1)),
+    final tonnageRows =
+        await (dbInstance.select(dbInstance.setLogs).join([
+              drift.innerJoin(
+                dbInstance.workoutLogs,
+                dbInstance.workoutLogs.id.equalsExp(
+                  dbInstance.setLogs.workoutLogId,
                 ),
-          ))
-        .get();
+              ),
+            ])..where(
+              dbInstance.setLogs.isCompleted.equals(true) &
+                  dbInstance.setLogs.setType.isNotIn(['warmup']) &
+                  dbInstance.setLogs.weight.isBiggerThanValue(0) &
+                  dbInstance.setLogs.reps.isBiggerThanValue(0) &
+                  dbInstance.workoutLogs.status.equals('completed') &
+                  dbInstance.workoutLogs.startTime.isBetweenValues(
+                    since,
+                    now.add(const Duration(days: 1)),
+                  ),
+            ))
+            .get();
 
     for (final row in tonnageRows) {
       final setRow = row.readTable(dbInstance.setLogs);
@@ -2080,11 +2103,10 @@ class WorkoutDatabaseHelper {
       weekMap[key]!['tonnage'] = (weekMap[key]!['tonnage'] as double) + tonnage;
     }
 
-    return weekMap.values.toList()
-      ..sort(
-        (a, b) =>
-            (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime),
-      );
+    return weekMap.values.toList()..sort(
+      (a, b) =>
+          (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime),
+    );
   }
 
   /// Returns key training stats: totalWorkouts, thisWeekCount, avgPerWeek (last 4 wks), streakWeeks.
@@ -2092,15 +2114,16 @@ class WorkoutDatabaseHelper {
     final now = DateTime.now();
     final dbInstance = await database;
 
-    final allLogs = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where((tbl) => tbl.status.equals('completed'))
-          ..orderBy([
-            (t) => drift.OrderingTerm(
+    final allLogs =
+        await (dbInstance.select(dbInstance.workoutLogs)
+              ..where((tbl) => tbl.status.equals('completed'))
+              ..orderBy([
+                (t) => drift.OrderingTerm(
                   expression: t.startTime,
                   mode: drift.OrderingMode.desc,
                 ),
-          ]))
-        .get();
+              ]))
+            .get();
 
     final totalWorkouts = allLogs.length;
 
@@ -2118,8 +2141,9 @@ class WorkoutDatabaseHelper {
         .length;
 
     final fourWeeksAgo = now.subtract(const Duration(days: 28));
-    final last4Count =
-        allLogs.where((r) => r.startTime.isAfter(fourWeeksAgo)).length;
+    final last4Count = allLogs
+        .where((r) => r.startTime.isAfter(fourWeeksAgo))
+        .length;
     final avgPerWeek = last4Count / 4.0;
 
     // Current weekly streak
@@ -2153,16 +2177,16 @@ class WorkoutDatabaseHelper {
     final since = now.subtract(Duration(days: daysBack));
     final dbInstance = await database;
 
-    final rows = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where(
-            (tbl) =>
-                tbl.status.equals('completed') &
-                tbl.startTime.isBetweenValues(
-                  since,
-                  now.add(const Duration(days: 1)),
-                ),
-          ))
-        .get();
+    final rows =
+        await (dbInstance.select(dbInstance.workoutLogs)..where(
+              (tbl) =>
+                  tbl.status.equals('completed') &
+                  tbl.startTime.isBetweenValues(
+                    since,
+                    now.add(const Duration(days: 1)),
+                  ),
+            ))
+            .get();
 
     return rows.map((r) {
       final d = r.startTime;
@@ -2176,16 +2200,16 @@ class WorkoutDatabaseHelper {
     final since = now.subtract(Duration(days: daysBack));
     final dbInstance = await database;
 
-    final rows = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where(
-            (tbl) =>
-                tbl.status.equals('completed') &
-                tbl.startTime.isBetweenValues(
-                  since,
-                  now.add(const Duration(days: 1)),
-                ),
-          ))
-        .get();
+    final rows =
+        await (dbInstance.select(dbInstance.workoutLogs)..where(
+              (tbl) =>
+                  tbl.status.equals('completed') &
+                  tbl.startTime.isBetweenValues(
+                    since,
+                    now.add(const Duration(days: 1)),
+                  ),
+            ))
+            .get();
 
     final Map<DateTime, int> counts = {};
     for (final row in rows) {
@@ -2201,21 +2225,21 @@ class WorkoutDatabaseHelper {
   Future<Map<String, Map<String, dynamic>?>> getAllTimePRsByRepBracket() async {
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed'),
-      );
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+          drift.innerJoin(
+            dbInstance.workoutLogs,
+            dbInstance.workoutLogs.id.equalsExp(
+              dbInstance.setLogs.workoutLogId,
+            ),
+          ),
+        ])..where(
+          dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0) &
+              dbInstance.workoutLogs.status.equals('completed'),
+        );
 
     final rows = await query.get();
 
@@ -2264,8 +2288,9 @@ class WorkoutDatabaseHelper {
   }) async {
     final dbInstance = await database;
 
-    final rows = await dbInstance.customSelect(
-      '''
+    final rows = await dbInstance
+        .customSelect(
+          '''
       SELECT
         s1.exercise_name_snapshot AS exerciseName,
         s1.weight                 AS weight,
@@ -2289,8 +2314,9 @@ class WorkoutDatabaseHelper {
       ORDER BY s1.weight DESC
       LIMIT ?
       ''',
-      variables: [drift.Variable.withInt(limit)],
-    ).get();
+          variables: [drift.Variable.withInt(limit)],
+        )
+        .get();
 
     return rows
         .map(
@@ -2317,28 +2343,29 @@ class WorkoutDatabaseHelper {
     );
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed') &
-            dbInstance.workoutLogs.startTime.isBetweenValues(
-              since,
-              now.add(const Duration(days: 1)),
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+            drift.innerJoin(
+              dbInstance.workoutLogs,
+              dbInstance.workoutLogs.id.equalsExp(
+                dbInstance.setLogs.workoutLogId,
+              ),
             ),
-      )
-      ..orderBy([
-        drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime),
-      ]);
+          ])
+          ..where(
+            dbInstance.setLogs.isCompleted.equals(true) &
+                dbInstance.setLogs.setType.isNotIn(['warmup']) &
+                dbInstance.setLogs.weight.isBiggerThanValue(0) &
+                dbInstance.setLogs.reps.isBiggerThanValue(0) &
+                dbInstance.workoutLogs.status.equals('completed') &
+                dbInstance.workoutLogs.startTime.isBetweenValues(
+                  since,
+                  now.add(const Duration(days: 1)),
+                ),
+          )
+          ..orderBy([
+            drift.OrderingTerm(expression: dbInstance.workoutLogs.startTime),
+          ]);
 
     final rows = await query.get();
 
@@ -2405,25 +2432,25 @@ class WorkoutDatabaseHelper {
     final previousStart = recentStart.subtract(Duration(days: daysWindow));
     final dbInstance = await database;
 
-    final query = dbInstance.select(dbInstance.setLogs).join([
-      drift.innerJoin(
-        dbInstance.workoutLogs,
-        dbInstance.workoutLogs.id.equalsExp(
-          dbInstance.setLogs.workoutLogId,
-        ),
-      ),
-    ])
-      ..where(
-        dbInstance.setLogs.isCompleted.equals(true) &
-            dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
-            dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed') &
-            dbInstance.workoutLogs.startTime.isBetweenValues(
-              previousStart,
-              now.add(const Duration(days: 1)),
+    final query =
+        dbInstance.select(dbInstance.setLogs).join([
+          drift.innerJoin(
+            dbInstance.workoutLogs,
+            dbInstance.workoutLogs.id.equalsExp(
+              dbInstance.setLogs.workoutLogId,
             ),
-      );
+          ),
+        ])..where(
+          dbInstance.setLogs.isCompleted.equals(true) &
+              dbInstance.setLogs.setType.isNotIn(['warmup']) &
+              dbInstance.setLogs.weight.isBiggerThanValue(0) &
+              dbInstance.setLogs.reps.isBiggerThanValue(0) &
+              dbInstance.workoutLogs.status.equals('completed') &
+              dbInstance.workoutLogs.startTime.isBetweenValues(
+                previousStart,
+                now.add(const Duration(days: 1)),
+              ),
+        );
 
     final rows = await query.get();
 

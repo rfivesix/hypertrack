@@ -9,11 +9,7 @@ enum SleepPermissionState {
 }
 
 class SleepPermissionStatus {
-  const SleepPermissionStatus({
-    required this.state,
-    this.error,
-    this.message,
-  });
+  const SleepPermissionStatus({required this.state, this.error, this.message});
 
   final SleepPermissionState state;
   final SleepPlatformServiceError? error;
@@ -31,14 +27,14 @@ enum SleepPlatformServiceError {
 
 class SleepPermissionOutcome {
   const SleepPermissionOutcome.ready()
-      : state = SleepPermissionState.ready,
-        error = null,
-        message = null;
+    : state = SleepPermissionState.ready,
+      error = null,
+      message = null;
 
   const SleepPermissionOutcome.state(this.state, {this.message}) : error = null;
 
   const SleepPermissionOutcome.error(this.error, {this.message})
-      : state = SleepPermissionState.technicalError;
+    : state = SleepPermissionState.technicalError;
 
   final SleepPermissionState state;
   final SleepPlatformServiceError? error;

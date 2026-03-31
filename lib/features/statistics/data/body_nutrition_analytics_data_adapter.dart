@@ -29,9 +29,9 @@ class BodyNutritionAnalyticsDataAdapter {
     required ProductDatabaseHelper productDatabaseHelper,
     StatisticsRangePolicyService rangePolicy =
         StatisticsRangePolicyService.instance,
-  })  : _databaseHelper = databaseHelper,
-        _productDatabaseHelper = productDatabaseHelper,
-        _rangePolicy = rangePolicy;
+  }) : _databaseHelper = databaseHelper,
+       _productDatabaseHelper = productDatabaseHelper,
+       _rangePolicy = rangePolicy;
 
   static DateTime normalizeDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);

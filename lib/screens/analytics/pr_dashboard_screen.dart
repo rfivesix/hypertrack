@@ -40,17 +40,18 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
       limit: 10,
     );
     final repRange = WorkoutDatabaseHelper.instance.getAllTimePRsByRepBracket();
-    final improvements =
-        WorkoutDatabaseHelper.instance.getNotablePrImprovements(
-      daysWindow: _rangePolicy
-              .resolve(
-                metricId: StatisticsMetricId.prNotableImprovements,
-                selectedDays: _selectedWindowDays,
-              )
-              .effectiveDays ??
-          _selectedWindowDays,
-      limit: 6,
-    );
+    final improvements = WorkoutDatabaseHelper.instance
+        .getNotablePrImprovements(
+          daysWindow:
+              _rangePolicy
+                  .resolve(
+                    metricId: StatisticsMetricId.prNotableImprovements,
+                    selectedDays: _selectedWindowDays,
+                  )
+                  .effectiveDays ??
+              _selectedWindowDays,
+          limit: 6,
+        );
 
     final results = await Future.wait([
       recent,
@@ -118,12 +119,12 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                               entry,
                             ) {
                               final row = entry.value;
-                              final previous =
-                                  (row['previousBestE1rm'] as num).toDouble();
-                              final recent =
-                                  (row['recentBestE1rm'] as num).toDouble();
-                              final improvement =
-                                  (row['improvementPct'] as num).toDouble();
+                              final previous = (row['previousBestE1rm'] as num)
+                                  .toDouble();
+                              final recent = (row['recentBestE1rm'] as num)
+                                  .toDouble();
+                              final improvement = (row['improvementPct'] as num)
+                                  .toDouble();
                               final delta = recent - previous;
 
                               return ListTile(
@@ -146,12 +147,10 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                 ),
                                 subtitle: Text(
                                   l10n.analyticsE1rmProgress(
-                                    StatisticsPresentationFormatter
-                                        .formatWeight(
+                                    StatisticsPresentationFormatter.formatWeight(
                                       previous,
                                     ),
-                                    StatisticsPresentationFormatter
-                                        .formatWeight(
+                                    StatisticsPresentationFormatter.formatWeight(
                                       recent,
                                     ),
                                   ),
@@ -310,8 +309,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                   if (hasData) ...[
                                     Text(
                                       l10n.analyticsPerfWithReps(
-                                        StatisticsPresentationFormatter
-                                            .formatWeight(
+                                        StatisticsPresentationFormatter.formatWeight(
                                           (data['weight'] as num).toDouble(),
                                         ),
                                         (data['reps'] as num).toInt(),
@@ -376,10 +374,10 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
-              color: Colors.grey[600],
-            ),
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.2,
+          color: Colors.grey[600],
+        ),
       ),
     );
   }
@@ -398,9 +396,9 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
             child: Text(
               '$rank.',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
           Expanded(

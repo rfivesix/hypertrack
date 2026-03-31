@@ -56,12 +56,13 @@ class SleepDayOverviewData {
     return session.endAtUtc.difference(session.startAtUtc);
   }
 
-  bool get hasStageData =>
-      timelineSegments.any((segment) =>
-          segment.stage == CanonicalSleepStage.deep ||
-          segment.stage == CanonicalSleepStage.light ||
-          segment.stage == CanonicalSleepStage.rem ||
-          segment.stage == CanonicalSleepStage.asleepUnspecified);
+  bool get hasStageData => timelineSegments.any(
+    (segment) =>
+        segment.stage == CanonicalSleepStage.deep ||
+        segment.stage == CanonicalSleepStage.light ||
+        segment.stage == CanonicalSleepStage.rem ||
+        segment.stage == CanonicalSleepStage.asleepUnspecified,
+  );
 
   bool get hasStageDurations =>
       (deepDuration?.inMinutes ?? 0) > 0 ||
@@ -79,8 +80,8 @@ abstract class SleepDayDataRepository {
 
 class SleepDayRepository implements SleepDayDataRepository {
   SleepDayRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null {
+    : _database = database ?? AppDatabase(),
+      _ownsDatabase = database == null {
     _analysesDao = SleepNightlyAnalysesDao(_database);
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _segmentsDao = SleepCanonicalStageSegmentsDao(_database);
@@ -133,7 +134,9 @@ class SleepDayRepository implements SleepDayDataRepository {
       sourceRecordHash: sessionRecord.sourceRecordHash,
       sourceConfidence: sessionRecord.sourceConfidence,
       stageConfidence: _parseStageConfidence(sessionRecord.sourceConfidence),
-      overallConfidence: _parseOverallConfidence(sessionRecord.sourceConfidence),
+      overallConfidence: _parseOverallConfidence(
+        sessionRecord.sourceConfidence,
+      ),
       normalizationVersion: sessionRecord.normalizationVersion,
     );
 
@@ -152,7 +155,10 @@ class SleepDayRepository implements SleepDayDataRepository {
     );
 
     final deepDuration = _sumStageDuration(segments, CanonicalSleepStage.deep);
-    final lightDuration = _sumStageDuration(segments, CanonicalSleepStage.light);
+    final lightDuration = _sumStageDuration(
+      segments,
+      CanonicalSleepStage.light,
+    );
     final remDuration = _sumStageDuration(segments, CanonicalSleepStage.rem);
     final regularityNights = await _fetchRegularityNights(day);
 
@@ -213,20 +219,24 @@ class SleepDayRepository implements SleepDayDataRepository {
 
   SleepStageConfidence _timelineConfidence(List<SleepStageSegment> segments) {
     if (segments.isEmpty) return SleepStageConfidence.unknown;
-    if (segments
-        .every((segment) => segment.stageConfidence == SleepStageConfidence.unknown)) {
+    if (segments.every(
+      (segment) => segment.stageConfidence == SleepStageConfidence.unknown,
+    )) {
       return SleepStageConfidence.unknown;
     }
-    if (segments
-        .any((segment) => segment.stageConfidence == SleepStageConfidence.low)) {
+    if (segments.any(
+      (segment) => segment.stageConfidence == SleepStageConfidence.low,
+    )) {
       return SleepStageConfidence.low;
     }
     if (segments.any(
-        (segment) => segment.stageConfidence == SleepStageConfidence.medium)) {
+      (segment) => segment.stageConfidence == SleepStageConfidence.medium,
+    )) {
       return SleepStageConfidence.medium;
     }
-    if (segments
-        .any((segment) => segment.stageConfidence == SleepStageConfidence.high)) {
+    if (segments.any(
+      (segment) => segment.stageConfidence == SleepStageConfidence.high,
+    )) {
       return SleepStageConfidence.high;
     }
     return SleepStageConfidence.unknown;
@@ -239,7 +249,9 @@ class SleepDayRepository implements SleepDayDataRepository {
     return SleepQualityBucket.poor;
   }
 
-  Future<List<SleepRegularityNight>> _fetchRegularityNights(DateTime day) async {
+  Future<List<SleepRegularityNight>> _fetchRegularityNights(
+    DateTime day,
+  ) async {
     final to = _nightKey(day);
     final from = _nightKey(day.subtract(const Duration(days: 6)));
     final analyses = await _analysesDao.findByNightRange(
@@ -254,9 +266,11 @@ class SleepDayRepository implements SleepDayDataRepository {
         SleepRegularityNight(
           nightDate: DateTime.parse(analysis.nightDate),
           bedtimeMinutes:
-              session.startedAt.toLocal().hour * 60 + session.startedAt.toLocal().minute,
+              session.startedAt.toLocal().hour * 60 +
+              session.startedAt.toLocal().minute,
           wakeMinutes:
-              session.endedAt.toLocal().hour * 60 + session.endedAt.toLocal().minute,
+              session.endedAt.toLocal().hour * 60 +
+              session.endedAt.toLocal().minute,
         ),
       );
     }
@@ -268,9 +282,12 @@ class SleepDayRepository implements SleepDayDataRepository {
     List<SleepStageSegment> segments,
     CanonicalSleepStage stage,
   ) {
-    return segments.where((segment) => segment.stage == stage).fold<Duration>(
+    return segments
+        .where((segment) => segment.stage == stage)
+        .fold<Duration>(
           Duration.zero,
-          (total, segment) => total + segment.endAtUtc.difference(segment.startAtUtc),
+          (total, segment) =>
+              total + segment.endAtUtc.difference(segment.startAtUtc),
         );
   }
 

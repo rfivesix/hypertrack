@@ -48,17 +48,16 @@ void main() {
   });
 
   test('maps mixed healthkit stages deterministically', () {
-    final result = mapper.map(batchWithStages(['awake', 'core', 'deep', 'REM']));
-
-    expect(
-      result.stageSegments.map((s) => s.stage).toList(growable: false),
-      [
-        CanonicalSleepStage.awake,
-        CanonicalSleepStage.light,
-        CanonicalSleepStage.deep,
-        CanonicalSleepStage.rem,
-      ],
+    final result = mapper.map(
+      batchWithStages(['awake', 'core', 'deep', 'REM']),
     );
+
+    expect(result.stageSegments.map((s) => s.stage).toList(growable: false), [
+      CanonicalSleepStage.awake,
+      CanonicalSleepStage.light,
+      CanonicalSleepStage.deep,
+      CanonicalSleepStage.rem,
+    ]);
   });
 
   test('maps unknown category to unknown stage', () {

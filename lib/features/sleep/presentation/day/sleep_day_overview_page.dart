@@ -16,8 +16,8 @@ class SleepDayOverviewPage extends StatelessWidget {
     super.key,
     SleepDayDataRepository? repository,
     SleepDayViewModel? viewModel,
-  })  : _repository = repository,
-        _viewModel = viewModel;
+  }) : _repository = repository,
+       _viewModel = viewModel;
 
   final SleepDayDataRepository? _repository;
   final SleepDayViewModel? _viewModel;
@@ -26,7 +26,8 @@ class SleepDayOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<SleepDayViewModel>(
       create: (_) {
-        final model = _viewModel ??
+        final model =
+            _viewModel ??
             SleepDayViewModel(repository: _repository ?? SleepDayRepository());
         model.load();
         return model;
@@ -43,14 +44,16 @@ class _SleepDayOverviewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = context.watch<SleepDayViewModel>();
     final overview = model.overview;
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const GlobalAppBar(title: 'Sleep'),
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
-          top: DesignConstants.cardPadding.top +
+          top:
+              DesignConstants.cardPadding.top +
               MediaQuery.of(context).padding.top +
               kToolbarHeight +
               16,
@@ -200,9 +203,9 @@ class _SleepPeriodNavigator extends StatelessWidget {
               key: const Key('sleep-period-label'),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           IconButton(
@@ -241,7 +244,9 @@ class _SleepTimelineCard extends StatelessWidget {
       );
     }
 
-    final duration = overview.session.endAtUtc.difference(overview.session.startAtUtc);
+    final duration = overview.session.endAtUtc.difference(
+      overview.session.startAtUtc,
+    );
     final totalMinutes = duration.inMinutes <= 0 ? 1 : duration.inMinutes;
     return SummaryCard(
       child: Padding(
@@ -257,11 +262,12 @@ class _SleepTimelineCard extends StatelessWidget {
                 children: [
                   for (final segment in segments)
                     Expanded(
-                      flex: (segment.endAtUtc
-                              .difference(segment.startAtUtc)
-                              .inMinutes
-                              .clamp(1, totalMinutes))
-                          .toInt(),
+                      flex:
+                          (segment.endAtUtc
+                                  .difference(segment.startAtUtc)
+                                  .inMinutes
+                                  .clamp(1, totalMinutes))
+                              .toInt(),
                       child: Container(
                         color: _timelineStageColor(context, segment.stage),
                       ),
@@ -321,8 +327,9 @@ class _SleepScoreCard extends StatelessWidget {
                     value: score == null
                         ? 0
                         : (score.clamp(0.0, 100.0) / 100.0).toDouble(),
-                    backgroundColor:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     color: _qualityColor(quality),
                   ),
                   Text(scoreText),
@@ -397,39 +404,32 @@ class _SleepMetricTileGrid extends StatelessWidget {
       children: [
         _MetricTile(
           title: 'Duration',
-          subtitle: '${overview.totalSleepDuration.inHours}h ${overview.totalSleepDuration.inMinutes.remainder(60)}m',
-          onTap: () => SleepNavigation.openDurationDetail(
-            context,
-            overview: overview,
-          ),
+          subtitle:
+              '${overview.totalSleepDuration.inHours}h ${overview.totalSleepDuration.inMinutes.remainder(60)}m',
+          onTap: () =>
+              SleepNavigation.openDurationDetail(context, overview: overview),
         ),
         _MetricTile(
           title: 'Heart rate',
           subtitle: overview.sleepHrAvg == null
               ? 'Unavailable'
               : '${overview.sleepHrAvg!.round()} bpm',
-          onTap: () => SleepNavigation.openHeartRateDetail(
-            context,
-            overview: overview,
-          ),
+          onTap: () =>
+              SleepNavigation.openHeartRateDetail(context, overview: overview),
         ),
         _MetricTile(
           title: 'Regularity',
           subtitle: regularitySubtitle,
-          onTap: () => SleepNavigation.openRegularityDetail(
-            context,
-            overview: overview,
-          ),
+          onTap: () =>
+              SleepNavigation.openRegularityDetail(context, overview: overview),
         ),
         _MetricTile(
           title: 'Depth',
           subtitle: overview.stageDataConfidence == SleepStageConfidence.low
               ? 'Low confidence'
               : (overview.hasStageData ? 'Stages available' : 'Unavailable'),
-          onTap: () => SleepNavigation.openDepthDetail(
-            context,
-            overview: overview,
-          ),
+          onTap: () =>
+              SleepNavigation.openDepthDetail(context, overview: overview),
         ),
         _MetricTile(
           title: 'Interruptions',
@@ -474,11 +474,7 @@ class _MetricTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
-          Text(
-            subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
     );

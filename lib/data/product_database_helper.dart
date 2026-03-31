@@ -117,16 +117,15 @@ class ProductDatabaseHelper {
 
     final rows = await (dbInstance.select(
       dbInstance.products,
-    )..where((tbl) => tbl.barcode.isIn(barcodes)))
-        .get();
+    )..where((tbl) => tbl.barcode.isIn(barcodes))).get();
 
     return rows.map(_mapRowToModel).toList();
   }
 
   /// Retrieves recently used products based on the user's consumption history.
   Future<List<FoodItem>> getRecentProducts() async {
-    final recentBarcodes =
-        await DatabaseHelper.instance.getRecentlyUsedBarcodes();
+    final recentBarcodes = await DatabaseHelper.instance
+        .getRecentlyUsedBarcodes();
     return await getProductsByBarcodes(recentBarcodes);
   }
 
@@ -139,8 +138,7 @@ class ProductDatabaseHelper {
     // Sortiert nach 'key' (oder wie du magst)
     final rows = await (db.select(
       db.foodCategories,
-    )..orderBy([(t) => OrderingTerm(expression: t.key)]))
-        .get();
+    )..orderBy([(t) => OrderingTerm(expression: t.key)])).get();
 
     return rows.map((row) {
       return {
@@ -189,41 +187,43 @@ class ProductDatabaseHelper {
 
     // 1. Priorisierte Suche: Eigene Lebensmittel (user) & Grundnahrungsmittel (base)
     // Diese sind am wichtigsten und sollen immer oben stehen.
-    final priorityRows = await (db.select(db.products)
-          ..where(
-            (t) =>
-                (t.name.like('%$term%') | t.brand.like('%$term%')) &
-                t.source.isIn(['user', 'base']),
-          )
-          ..orderBy([
-            // Kürzere Namen zuerst (Exakte Treffer nach oben)
-            (t) => OrderingTerm(
+    final priorityRows =
+        await (db.select(db.products)
+              ..where(
+                (t) =>
+                    (t.name.like('%$term%') | t.brand.like('%$term%')) &
+                    t.source.isIn(['user', 'base']),
+              )
+              ..orderBy([
+                // Kürzere Namen zuerst (Exakte Treffer nach oben)
+                (t) => OrderingTerm(
                   expression: t.name.length,
                   mode: OrderingMode.asc,
                 ),
-          ])
-          ..limit(limit))
-        .get();
+              ])
+              ..limit(limit))
+            .get();
 
     final List<FoodItem> results = priorityRows.map(_mapRowToFoodItem).toList();
 
     // 2. Auffüllen mit Open Food Facts (off), falls noch Platz in der Liste ist
     if (results.length < limit) {
       final int remaining = limit - results.length;
-      final offRows = await (db.select(db.products)
-            ..where(
-              (t) =>
-                  (t.name.like('%$term%') | t.brand.like('%$term%')) &
-                  t.source.equals('off'),
-            )
-            ..orderBy([
-              (t) => OrderingTerm(
+      final offRows =
+          await (db.select(db.products)
+                ..where(
+                  (t) =>
+                      (t.name.like('%$term%') | t.brand.like('%$term%')) &
+                      t.source.equals('off'),
+                )
+                ..orderBy([
+                  (t) => OrderingTerm(
                     expression: t.name.length,
                     mode: OrderingMode.asc,
                   ),
-            ])
-            ..limit(remaining))
-          .get();
+                ])
+                ..limit(remaining))
+              .get();
 
       results.addAll(offRows.map(_mapRowToFoodItem));
     }
@@ -235,10 +235,11 @@ class ProductDatabaseHelper {
   /// Retrieves a single product by its [barcode].
   Future<FoodItem?> getProductByBarcode(String barcode) async {
     final db = await database;
-    final row = await (db.select(db.products)
-          ..where((t) => t.barcode.equals(barcode))
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (db.select(db.products)
+              ..where((t) => t.barcode.equals(barcode))
+              ..limit(1))
+            .getSingleOrNull();
 
     if (row == null) return null;
     return _mapRowToFoodItem(row);
@@ -339,9 +340,9 @@ class ProductDatabaseHelper {
         ..limit(fetchLimit)
         ..orderBy([
           (t) => OrderingTerm(
-                expression: sourcePriority(t.source),
-                mode: OrderingMode.asc,
-              ),
+            expression: sourcePriority(t.source),
+            mode: OrderingMode.asc,
+          ),
           (t) =>
               OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
         ]);
@@ -355,20 +356,21 @@ class ProductDatabaseHelper {
     if (rows.isEmpty) {
       tokens.sort((a, b) => b.length.compareTo(a.length));
       final bestToken = tokens.first;
-      rows = await (dbInstance.select(dbInstance.products)
-            ..where((t) => t.name.like('%$bestToken%'))
-            ..orderBy([
-              (t) => OrderingTerm(
+      rows =
+          await (dbInstance.select(dbInstance.products)
+                ..where((t) => t.name.like('%$bestToken%'))
+                ..orderBy([
+                  (t) => OrderingTerm(
                     expression: sourcePriority(t.source),
                     mode: OrderingMode.asc,
                   ),
-              (t) => OrderingTerm(
+                  (t) => OrderingTerm(
                     expression: t.name.length,
                     mode: OrderingMode.asc,
                   ),
-            ])
-            ..limit(fetchLimit))
-          .get();
+                ])
+                ..limit(fetchLimit))
+              .get();
     }
 
     if (rows.isEmpty) return [];

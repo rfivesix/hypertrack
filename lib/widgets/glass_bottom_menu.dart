@@ -29,9 +29,9 @@ class GlassMenuAction {
     this.subtitle,
     required this.onTap,
   }) : assert(
-          icon != null || customIcon != null,
-          'Icon or customIcon must be provided',
-        );
+         icon != null || customIcon != null,
+         'Icon or customIcon must be provided',
+       );
 }
 
 // ... (showGlassBottomMenu und _GlassBottomMenuSheet bleiben unverändert) ...
@@ -58,8 +58,8 @@ Future<T?> showGlassBottomMenu<T>({
 
   final Color barrierColor = isDark
       ? (!isLiquid
-          ? Colors.grey.withOpacity(0.187)
-          : Colors.black.withOpacity(0.5))
+            ? Colors.grey.withOpacity(0.187)
+            : Colors.black.withOpacity(0.5))
       : Colors.black.withOpacity(0.3);
 
   return showModalBottomSheet<T>(
@@ -329,16 +329,17 @@ class _GlassTile extends StatelessWidget {
     final themeService = context.watch<ThemeService>();
 
     // Hintergrund-Tint etwas anpassen
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.05);
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withOpacity(0.05);
 
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
       Colors.white.withOpacity(isDark ? 0.10 : 0.12),
     );
 
-    final Widget leadingWidget =
-        customIcon != null ? customIcon! : Icon(icon, size: 22);
+    final Widget leadingWidget = customIcon != null
+        ? customIcon!
+        : Icon(icon, size: 22);
 
     final tileContent = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

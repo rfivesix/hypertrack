@@ -233,11 +233,13 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       // Hier wieder die Unterscheidung: Was bedeuten die Controller-Werte?
       final isCardio = _isCardio(setLog.exerciseName);
 
-      final val1 = double.tryParse(
+      final val1 =
+          double.tryParse(
             _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0',
           ) ??
           0.0;
-      final val2 = double.tryParse(
+      final val2 =
+          double.tryParse(
             _repsControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0',
           ) ??
           0.0;
@@ -339,170 +341,165 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null
-              ? Center(child: Text(l10n.workoutNotFound))
-              : Column(
-                  children: [
-                    WorkoutSummaryBar(
-                      duration: duration,
-                      volume: totalVolume,
-                      sets: _log!.sets.length,
-                      progress: null,
-                    ),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.1),
-                    ),
-                    Expanded(
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: [
-                          // Header Info
-                          Padding(
-                            padding: DesignConstants.cardPadding,
-                            child: SummaryCard(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Form(
-                                  key: _formKey,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+          ? Center(child: Text(l10n.workoutNotFound))
+          : Column(
+              children: [
+                WorkoutSummaryBar(
+                  duration: duration,
+                  volume: totalVolume,
+                  sets: _log!.sets.length,
+                  progress: null,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      // Header Info
+                      Padding(
+                        padding: DesignConstants.cardPadding,
+                        child: SummaryCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _log!.routineName ?? l10n.freeWorkoutTitle,
+                                    style: textTheme.headlineMedium,
+                                  ),
+                                  Row(
                                     children: [
                                       Text(
-                                        _log!.routineName ??
-                                            l10n.freeWorkoutTitle,
-                                        style: textTheme.headlineMedium,
+                                        DateFormat.yMMMMd(
+                                          locale,
+                                        ).add_Hm().format(
+                                          _editedStartTime ?? _log!.startTime,
+                                        ),
                                       ),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            DateFormat.yMMMMd(
-                                              locale,
-                                            ).add_Hm().format(
-                                                  _editedStartTime ??
-                                                      _log!.startTime,
-                                                ),
+                                      if (_isEditMode)
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.calendar_today,
+                                            size: 18,
+                                            color: colorScheme.primary,
                                           ),
-                                          if (_isEditMode)
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.calendar_today,
-                                                size: 18,
-                                                color: colorScheme.primary,
-                                              ),
-                                              onPressed: _pickDateTime,
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: DesignConstants.spacingM,
-                                      ),
-                                      _isEditMode
-                                          ? TextFormField(
-                                              controller: _notesController,
-                                              decoration: InputDecoration(
-                                                labelText: l10n.notesLabel,
-                                              ),
-                                              maxLines: 3,
-                                            )
-                                          : (_log!.notes != null &&
-                                                  _log!.notes!.isNotEmpty
-                                              ? Text(
-                                                  '${l10n.notesLabel}: ${_log!.notes!}',
-                                                  style: const TextStyle(
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                )
-                                              : const SizedBox.shrink()),
-                                      if (_categoryVolume.isNotEmpty) ...[
-                                        const Divider(height: 24),
-                                        Text(
-                                          l10n.muscleSplitLabel,
-                                          style: textTheme.titleMedium,
+                                          onPressed: _pickDateTime,
                                         ),
-                                        const SizedBox(
-                                          height: DesignConstants.spacingS,
-                                        ),
-                                        ..._buildCategoryBars(context),
-                                      ],
                                     ],
                                   ),
-                                ),
+                                  const SizedBox(
+                                    height: DesignConstants.spacingM,
+                                  ),
+                                  _isEditMode
+                                      ? TextFormField(
+                                          controller: _notesController,
+                                          decoration: InputDecoration(
+                                            labelText: l10n.notesLabel,
+                                          ),
+                                          maxLines: 3,
+                                        )
+                                      : (_log!.notes != null &&
+                                                _log!.notes!.isNotEmpty
+                                            ? Text(
+                                                '${l10n.notesLabel}: ${_log!.notes!}',
+                                                style: const TextStyle(
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              )
+                                            : const SizedBox.shrink()),
+                                  if (_categoryVolume.isNotEmpty) ...[
+                                    const Divider(height: 24),
+                                    Text(
+                                      l10n.muscleSplitLabel,
+                                      style: textTheme.titleMedium,
+                                    ),
+                                    const SizedBox(
+                                      height: DesignConstants.spacingS,
+                                    ),
+                                    ..._buildCategoryBars(context),
+                                  ],
+                                ],
                               ),
                             ),
                           ),
+                        ),
+                      ),
 
-                          // Sets
-                          ..._buildSetList(context, l10n),
+                      // Sets
+                      ..._buildSetList(context, l10n),
 
-                          // Add Exercise (Edit Mode)
-                          if (_isEditMode)
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: TextButton.icon(
-                                onPressed: () async {
-                                  final selectedExercise =
-                                      await Navigator.of(context)
-                                          .push<Exercise>(
+                      // Add Exercise (Edit Mode)
+                      if (_isEditMode)
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: TextButton.icon(
+                            onPressed: () async {
+                              final selectedExercise =
+                                  await Navigator.of(context).push<Exercise>(
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           const GeneralExerciseSelectionScreen(),
                                     ),
                                   );
-                                  if (selectedExercise != null) {
-                                    setState(() {
-                                      // Exercise Details lokal speichern, damit _isCardio und Name funktionieren
-                                      _exerciseDetails[selectedExercise
-                                              .getLocalizedName(context)] =
-                                          selectedExercise;
+                              if (selectedExercise != null) {
+                                setState(() {
+                                  // Exercise Details lokal speichern, damit _isCardio und Name funktionieren
+                                  _exerciseDetails[selectedExercise
+                                          .getLocalizedName(context)] =
+                                      selectedExercise;
 
-                                      final newSet = SetLog(
-                                        id: DateTime.now()
-                                            .millisecondsSinceEpoch,
-                                        workoutLogId: _log!.id!,
-                                        exerciseName: selectedExercise
-                                            .getLocalizedName(context),
-                                        setType: 'normal',
-                                        isCompleted: true,
-                                        // Default Werte setzen
-                                        weightKg: 0,
-                                        reps: 0,
-                                        distanceKm: 0,
-                                        durationSeconds: 0,
-                                      );
-                                      _groupedSets[selectedExercise
-                                          .getLocalizedName(context)] = [
-                                        newSet,
-                                      ];
+                                  final newSet = SetLog(
+                                    id: DateTime.now().millisecondsSinceEpoch,
+                                    workoutLogId: _log!.id!,
+                                    exerciseName: selectedExercise
+                                        .getLocalizedName(context),
+                                    setType: 'normal',
+                                    isCompleted: true,
+                                    // Default Werte setzen
+                                    weightKg: 0,
+                                    reps: 0,
+                                    distanceKm: 0,
+                                    durationSeconds: 0,
+                                  );
+                                  _groupedSets[selectedExercise
+                                      .getLocalizedName(context)] = [
+                                    newSet,
+                                  ];
 
-                                      _weightControllers[newSet.id!] =
-                                          TextEditingController();
-                                      _repsControllers[newSet.id!] =
-                                          TextEditingController();
-                                      _rirControllers[newSet.id!] =
-                                          TextEditingController();
-                                    });
-                                  }
-                                },
-                                icon: const Icon(Icons.add),
-                                label: Text(l10n.addExerciseToWorkoutButton),
-                              ),
-                            ),
-
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                            child: WgerAttributionWidget(
-                              textStyle: textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                            ),
+                                  _weightControllers[newSet.id!] =
+                                      TextEditingController();
+                                  _repsControllers[newSet.id!] =
+                                      TextEditingController();
+                                  _rirControllers[newSet.id!] =
+                                      TextEditingController();
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.add),
+                            label: Text(l10n.addExerciseToWorkoutButton),
                           ),
-                        ],
+                        ),
+
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                        child: WgerAttributionWidget(
+                          textStyle: textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -755,8 +752,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
+              ? Colors.grey.withOpacity(0.1)
+              : Colors.white.withOpacity(0.1))
         : Colors.transparent;
 
     // View Values

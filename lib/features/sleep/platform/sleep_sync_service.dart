@@ -56,12 +56,12 @@ class SleepSyncService implements SleepSettingsService {
       ValueNotifier<DateTime?>(null);
 
   SleepSyncService({AppDatabase? database})
-      : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null,
-        _iosPermissionsService = null,
-        _androidPermissionsService = null,
-        _iosDataSource = null,
-        _androidDataSource = null {
+    : _database = database ?? AppDatabase(),
+      _ownsDatabase = database == null,
+      _iosPermissionsService = null,
+      _androidPermissionsService = null,
+      _iosDataSource = null,
+      _androidDataSource = null {
     _rawDao = SleepRawImportsDao(_database);
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _stagesDao = SleepCanonicalStageSegmentsDao(_database);
@@ -75,12 +75,12 @@ class SleepSyncService implements SleepSettingsService {
     required HealthKitDataSource iosDataSource,
     required HealthConnectDataSource androidDataSource,
     AppDatabase? database,
-  })  : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null,
-        _iosPermissionsService = iosPermissionsService,
-        _androidPermissionsService = androidPermissionsService,
-        _iosDataSource = iosDataSource,
-        _androidDataSource = androidDataSource {
+  }) : _database = database ?? AppDatabase(),
+       _ownsDatabase = database == null,
+       _iosPermissionsService = iosPermissionsService,
+       _androidPermissionsService = androidPermissionsService,
+       _iosDataSource = iosDataSource,
+       _androidDataSource = androidDataSource {
     _rawDao = SleepRawImportsDao(_database);
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _stagesDao = SleepCanonicalStageSegmentsDao(_database);
@@ -186,13 +186,15 @@ class SleepSyncService implements SleepSettingsService {
     required DateTime fromUtc,
     required DateTime toUtc,
   }) async {
-    final permissionService = _androidPermissionsService ??
+    final permissionService =
+        _androidPermissionsService ??
         HealthConnectSleepPermissionsService(
           const HealthConnectSleepMethodChannelBridge(),
         );
     final adapter = HealthConnectSleepAdapter(
       permissionsService: permissionService,
-      dataSource: _androidDataSource ??
+      dataSource:
+          _androidDataSource ??
           const HealthConnectSleepMethodChannelDataSource(),
     );
     final import = await adapter.importRange(fromUtc: fromUtc, toUtc: toUtc);
@@ -205,8 +207,12 @@ class SleepSyncService implements SleepSettingsService {
       );
     }
     final mapping = const HealthConnectMapper().map(import.batch!);
-    await _persistBatch(import.batch!, mapping.sessions, mapping.stageSegments,
-        mapping.heartRateSamples);
+    await _persistBatch(
+      import.batch!,
+      mapping.sessions,
+      mapping.stageSegments,
+      mapping.heartRateSamples,
+    );
     return SleepSyncResult(
       success: true,
       permissionState: SleepPermissionState.ready,
@@ -218,7 +224,8 @@ class SleepSyncService implements SleepSettingsService {
     required DateTime fromUtc,
     required DateTime toUtc,
   }) async {
-    final permissionService = _iosPermissionsService ??
+    final permissionService =
+        _iosPermissionsService ??
         HealthKitSleepPermissionsService(
           const HealthKitSleepMethodChannelBridge(),
         );
@@ -237,8 +244,12 @@ class SleepSyncService implements SleepSettingsService {
       );
     }
     final mapping = const HealthKitMapper().map(import.batch!);
-    await _persistBatch(import.batch!, mapping.sessions, mapping.stageSegments,
-        mapping.heartRateSamples);
+    await _persistBatch(
+      import.batch!,
+      mapping.sessions,
+      mapping.stageSegments,
+      mapping.heartRateSamples,
+    );
     return SleepSyncResult(
       success: true,
       permissionState: SleepPermissionState.ready,
@@ -306,7 +317,8 @@ class SleepSyncService implements SleepSettingsService {
               sourcePlatform: session.sourcePlatform,
               sourceAppId: session.sourceAppId,
               sourceConfidence: session.sourceConfidence,
-              sourceRecordHash: session.sourceRecordHash ??
+              sourceRecordHash:
+                  session.sourceRecordHash ??
                   _hashRecord('session:${session.id}'),
               normalizationVersion: normalizationVersion,
               sessionType: session.sessionType.name,
@@ -328,7 +340,8 @@ class SleepSyncService implements SleepSettingsService {
               sourcePlatform: segment.sourcePlatform,
               sourceAppId: segment.sourceAppId,
               sourceConfidence: segment.sourceConfidence,
-              sourceRecordHash: segment.sourceRecordHash ??
+              sourceRecordHash:
+                  segment.sourceRecordHash ??
                   _hashRecord('segment:${segment.id}'),
               normalizationVersion: normalizationVersion,
               stage: segment.stage.name,
@@ -375,14 +388,16 @@ class SleepSyncService implements SleepSettingsService {
                 sourcePlatform: session.sourcePlatform,
                 sourceAppId: session.sourceAppId,
                 sourceConfidence: session.sourceConfidence,
-                sourceRecordHash: session.sourceRecordHash ??
+                sourceRecordHash:
+                    session.sourceRecordHash ??
                     _hashRecord('analysis:${session.id}'),
                 normalizationVersion: normalizationVersion,
                 analysisVersion: analysisVersion,
                 nightDate: _nightKey(session.endAtUtc),
                 score: null,
-                totalSleepMinutes:
-                    session.endAtUtc.difference(session.startAtUtc).inMinutes,
+                totalSleepMinutes: session.endAtUtc
+                    .difference(session.startAtUtc)
+                    .inMinutes,
                 sleepEfficiencyPct: null,
                 restingHeartRateBpm: _averageBpm(hrBySession[session.id]),
                 analyzedAt: importedAt,
