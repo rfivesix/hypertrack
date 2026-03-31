@@ -24,12 +24,14 @@ class RegularityDetailPage extends StatelessWidget {
       );
     }
 
-    final bedtimeAvg = circularAverageMinutes(
-      nights.map((night) => night.bedtimeMinutes),
-    );
-    final wakeAvg = circularAverageMinutes(
-      nights.map((night) => night.wakeMinutes),
-    );
+    final bedtimeValues = <int>[];
+    final wakeValues = <int>[];
+    for (final night in nights) {
+      bedtimeValues.add(night.bedtimeMinutes);
+      wakeValues.add(night.wakeMinutes);
+    }
+    final bedtimeAvg = circularAverageMinutes(bedtimeValues);
+    final wakeAvg = circularAverageMinutes(wakeValues);
 
     return SleepDetailPageShell(
       title: 'Regularity',
