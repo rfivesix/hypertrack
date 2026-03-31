@@ -29,7 +29,7 @@ class SleepPeriodScopeLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
-    final localeCode = Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(context).languageCode;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(title: appBarTitle),
