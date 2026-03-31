@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../widgets/summary_card.dart';
 import '../../data/sleep_day_repository.dart';
-import 'sleep_data_unavailable_card.dart';
 import 'sleep_detail_page_shell.dart';
 import 'sleep_metric_formatters.dart';
 
@@ -15,36 +14,22 @@ class InterruptionsDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final overview = this.overview;
     if (overview == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Interruptions')),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(
-              message: 'Interruptions data is unavailable.'),
-        ),
+      return const SleepDetailUnavailablePage(
+        title: 'Interruptions',
+        message: 'Interruptions data is unavailable.',
       );
     }
     if (overview.interruptionsCount == null ||
         overview.interruptionsWakeDuration == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Interruptions')),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(
-            message: 'Interruptions data is unavailable.',
-          ),
-        ),
+      return const SleepDetailUnavailablePage(
+        title: 'Interruptions',
+        message: 'Interruptions data is unavailable.',
       );
     }
     if (overview.interruptionsCount! < 0) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Interruptions')),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(
-            message: 'Interruptions data is unavailable.',
-          ),
-        ),
+      return const SleepDetailUnavailablePage(
+        title: 'Interruptions',
+        message: 'Interruptions data is unavailable.',
       );
     }
     return SleepDetailPageShell(

@@ -43,6 +43,8 @@ class _SleepDayOverviewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = context.watch<SleepDayViewModel>();
     final overview = model.overview;
+    final localeCode =
+        Localizations.localeOf(context).languageCode.toLowerCase();
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const GlobalAppBar(title: 'Sleep'),
@@ -64,18 +66,14 @@ class _SleepDayOverviewBody extends StatelessWidget {
             onSelectionChanged: (selection) {
               final selected = selection.first;
               model.setScopeIndex(selected);
-              if (selected != 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Week and Month views are not available in this batch yet.',
-                    ),
-                  ),
-                );
-              }
             },
           ),
-          const SizedBox(height: 16),
+          _SleepPeriodNavigator(
+            label: model.periodLabel(localeCode),
+            onPrevious: () => model.shiftPeriod(-1),
+            onNext: () => model.shiftPeriod(1),
+          ),
+          const SizedBox(height: 8),
           if (model.isLoading)
             const Center(child: CircularProgressIndicator())
           else if (!model.isDayScope)
@@ -169,6 +167,52 @@ class _SleepScopeNotAvailableCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SleepDataUnavailableCard(
       message: 'Week and Month views are not implemented in this batch yet.',
+    );
+  }
+}
+
+class _SleepPeriodNavigator extends StatelessWidget {
+  const _SleepPeriodNavigator({
+    required this.label,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final String label;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
+      child: Row(
+        children: [
+          IconButton(
+            key: const Key('sleep-period-prev'),
+            onPressed: onPrevious,
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Previous',
+          ),
+          Expanded(
+            child: Text(
+              label,
+              key: const Key('sleep-period-label'),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          IconButton(
+            key: const Key('sleep-period-next'),
+            onPressed: onNext,
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Next',
+          ),
+        ],
+      ),
     );
   }
 }
@@ -349,7 +393,7 @@ class _SleepMetricTileGrid extends StatelessWidget {
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.9,
+      childAspectRatio: 1.8,
       children: [
         _MetricTile(
           title: 'Duration',
@@ -416,18 +460,26 @@ class _MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SummaryCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 4),
-            Text(subtitle),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

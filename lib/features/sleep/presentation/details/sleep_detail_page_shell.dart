@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../util/design_constants.dart';
 import '../../../../widgets/global_app_bar.dart';
 import '../../../../widgets/summary_card.dart';
+import 'sleep_data_unavailable_card.dart';
 
 class SleepDetailPageShell extends StatelessWidget {
   const SleepDetailPageShell({
@@ -74,6 +75,36 @@ class SleepDetailPageShell extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class SleepDetailUnavailablePage extends StatelessWidget {
+  const SleepDetailUnavailablePage({
+    super.key,
+    required this.title,
+    required this.message,
+  });
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(title: title),
+      body: ListView(
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top +
+              MediaQuery.of(context).padding.top +
+              kToolbarHeight +
+              16,
+        ),
+        children: [
+          SleepDataUnavailableCard(message: message),
         ],
       ),
     );

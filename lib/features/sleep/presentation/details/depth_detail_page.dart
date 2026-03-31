@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../data/sleep_day_repository.dart';
 import '../../domain/sleep_enums.dart';
-import 'sleep_data_unavailable_card.dart';
 import 'sleep_detail_page_shell.dart';
 import 'sleep_metric_formatters.dart';
 
@@ -15,13 +14,9 @@ class DepthDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final overview = this.overview;
     if (overview == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Depth')),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child:
-              SleepDataUnavailableCard(message: 'Depth data is unavailable.'),
-        ),
+      return const SleepDetailUnavailablePage(
+        title: 'Depth',
+        message: 'Depth data is unavailable.',
       );
     }
 
@@ -29,27 +24,16 @@ class DepthDetailPage extends StatelessWidget {
         overview.stageDataConfidence != SleepStageConfidence.low;
 
     if (!hasReliableStageData) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Depth')),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(
-            message:
-                'Stage confidence is too low for a reliable depth breakdown.',
-          ),
-        ),
+      return const SleepDetailUnavailablePage(
+        title: 'Depth',
+        message: 'Stage confidence is too low for a reliable depth breakdown.',
       );
     }
 
     if (!overview.hasStageDurations) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Depth')),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(
-            message: 'Stage duration breakdown is unavailable for this night.',
-          ),
-        ),
+      return const SleepDetailUnavailablePage(
+        title: 'Depth',
+        message: 'Stage duration breakdown is unavailable for this night.',
       );
     }
 

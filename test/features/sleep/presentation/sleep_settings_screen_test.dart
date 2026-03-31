@@ -104,7 +104,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Sleep (Batch 2)'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('SLEEP (BATCH 2)'),
+      500,
+      scrollable: find.byType(Scrollable),
+    );
+    expect(find.text('SLEEP (BATCH 2)'), findsOneWidget);
     expect(find.text('Enable sleep tracking'), findsOneWidget);
     expect(find.text('Health connection status'), findsOneWidget);
     expect(find.text('Partial access'), findsOneWidget);
@@ -130,6 +135,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Request access'),
+      500,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('Denied'), findsOneWidget);
     await tester.tap(find.text('Request access'));
     await tester.pumpAndSettle();
@@ -154,6 +164,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Import sleep data now'),
+      500,
+      scrollable: find.byType(Scrollable),
+    );
     await tester.tap(find.text('Import sleep data now'));
     await tester.pumpAndSettle();
     expect(service.importCalls, 1);
@@ -177,6 +192,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Health connection status'),
+      500,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('Health Connect not installed'), findsOneWidget);
   });
 }

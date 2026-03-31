@@ -9,6 +9,7 @@ import '../../../data/drift_database.dart';
 import '../data/mapping/health_connect_mapper.dart';
 import '../data/mapping/healthkit_mapper.dart';
 import '../data/persistence/dao/sleep_canonical_dao.dart';
+import '../data/persistence/dao/sleep_nightly_analyses_dao.dart';
 import '../data/persistence/dao/sleep_raw_imports_dao.dart';
 import '../data/persistence/sleep_persistence_models.dart';
 import '../domain/heart_rate_sample.dart';
@@ -21,6 +22,7 @@ import 'permissions/health_connect_sleep_permissions_service.dart';
 import 'permissions/healthkit_sleep_permissions_service.dart';
 import 'permissions/sleep_permission_controller.dart';
 import 'permissions/sleep_permission_models.dart';
+import 'permissions/sleep_permissions_service.dart';
 import 'sleep_platform_channel.dart';
 
 class SleepSyncResult {
@@ -55,11 +57,16 @@ class SleepSyncService implements SleepSettingsService {
 
   SleepSyncService({AppDatabase? database})
       : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null {
+        _ownsDatabase = database == null,
+        _iosPermissionsService = null,
+        _androidPermissionsService = null,
+        _iosDataSource = null,
+        _androidDataSource = null {
     _rawDao = SleepRawImportsDao(_database);
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _stagesDao = SleepCanonicalStageSegmentsDao(_database);
     _hrDao = SleepCanonicalHeartRateSamplesDao(_database);
+    _analysesDao = SleepNightlyAnalysesDao(_database);
   }
 
   SleepSyncService.withOverrides({
@@ -78,6 +85,7 @@ class SleepSyncService implements SleepSettingsService {
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _stagesDao = SleepCanonicalStageSegmentsDao(_database);
     _hrDao = SleepCanonicalHeartRateSamplesDao(_database);
+    _analysesDao = SleepNightlyAnalysesDao(_database);
   }
 
   final AppDatabase _database;
@@ -86,6 +94,7 @@ class SleepSyncService implements SleepSettingsService {
   late final SleepCanonicalSessionsDao _sessionsDao;
   late final SleepCanonicalStageSegmentsDao _stagesDao;
   late final SleepCanonicalHeartRateSamplesDao _hrDao;
+  late final SleepNightlyAnalysesDao _analysesDao;
   final SleepPermissionsService? _iosPermissionsService;
   final SleepPermissionsService? _androidPermissionsService;
   final HealthKitDataSource? _iosDataSource;
@@ -157,6 +166,22 @@ class SleepSyncService implements SleepSettingsService {
     return result;
   }
 
+  Future<List<SleepRawImportRecord>> fetchRecentRawImports({
+    int lookbackDays = 7,
+    int limit = 50,
+  }) async {
+    final nowUtc = DateTime.now().toUtc();
+    final fromUtc = nowUtc.subtract(Duration(days: lookbackDays));
+    final toExclusive = nowUtc.add(const Duration(seconds: 1));
+    final rows = await _rawDao.findByDateRange(
+      fromInclusive: fromUtc,
+      toExclusive: toExclusive,
+    );
+    rows.sort((a, b) => b.importedAt.compareTo(a.importedAt));
+    if (rows.length <= limit) return rows;
+    return rows.sublist(0, limit);
+  }
+
   Future<SleepSyncResult> _importWithHealthConnect({
     required DateTime fromUtc,
     required DateTime toUtc,
@@ -167,8 +192,8 @@ class SleepSyncService implements SleepSettingsService {
         );
     final adapter = HealthConnectSleepAdapter(
       permissionsService: permissionService,
-      dataSource:
-          _androidDataSource ?? const HealthConnectSleepMethodChannelDataSource(),
+      dataSource: _androidDataSource ??
+          const HealthConnectSleepMethodChannelDataSource(),
     );
     final import = await adapter.importRange(fromUtc: fromUtc, toUtc: toUtc);
     if (!import.isSuccess) {
@@ -199,7 +224,8 @@ class SleepSyncService implements SleepSettingsService {
         );
     final adapter = HealthKitSleepAdapter(
       permissionsService: permissionService,
-      dataSource: _iosDataSource ?? const HealthKitSleepMethodChannelDataSource(),
+      dataSource:
+          _iosDataSource ?? const HealthKitSleepMethodChannelDataSource(),
     );
     final import = await adapter.importRange(fromUtc: fromUtc, toUtc: toUtc);
     if (!import.isSuccess) {
@@ -224,10 +250,12 @@ class SleepSyncService implements SleepSettingsService {
     SleepPlatformServiceError? error,
   ) {
     return switch (error) {
-      SleepPlatformServiceError.notInstalled => SleepPermissionState.notInstalled,
+      SleepPlatformServiceError.notInstalled =>
+        SleepPermissionState.notInstalled,
       SleepPlatformServiceError.unavailable => SleepPermissionState.unavailable,
       SleepPlatformServiceError.permissionDenied => SleepPermissionState.denied,
-      SleepPlatformServiceError.permissionPartial => SleepPermissionState.partial,
+      SleepPlatformServiceError.permissionPartial =>
+        SleepPermissionState.partial,
       _ => SleepPermissionState.technicalError,
     };
   }
@@ -240,6 +268,7 @@ class SleepSyncService implements SleepSettingsService {
   ) async {
     final importedAt = DateTime.now().toUtc();
     const normalizationVersion = 'sleep-import-v1';
+    const analysisVersion = 'sleep-analysis-v1';
     await _database.transaction(() async {
       final rawRows = batch.sessions
           .map(
@@ -320,8 +349,8 @@ class SleepSyncService implements SleepSettingsService {
               sourcePlatform: sample.sourcePlatform,
               sourceAppId: sample.sourceAppId,
               sourceConfidence: sample.sourceConfidence,
-              sourceRecordHash: sample.sourceRecordHash ??
-                  _hashRecord('hr:${sample.id}'),
+              sourceRecordHash:
+                  sample.sourceRecordHash ?? _hashRecord('hr:${sample.id}'),
               normalizationVersion: normalizationVersion,
               sampledAt: sample.sampledAtUtc,
               bpm: sample.bpm,
@@ -331,10 +360,57 @@ class SleepSyncService implements SleepSettingsService {
           )
           .toList(growable: false);
       await _hrDao.upsertBatch(hrRows);
+
+      if (sessions.isNotEmpty) {
+        final hrBySession = <String, List<HeartRateSample>>{};
+        for (final sample in heartRateSamples) {
+          hrBySession.putIfAbsent(sample.sessionId, () => []).add(sample);
+        }
+
+        final analysisRows = sessions
+            .map<SleepNightlyAnalysisCompanion>(
+              (session) => SleepNightlyAnalysisCompanion(
+                id: 'analysis:${session.id}',
+                sessionId: session.id,
+                sourcePlatform: session.sourcePlatform,
+                sourceAppId: session.sourceAppId,
+                sourceConfidence: session.sourceConfidence,
+                sourceRecordHash: session.sourceRecordHash ??
+                    _hashRecord('analysis:${session.id}'),
+                normalizationVersion: normalizationVersion,
+                analysisVersion: analysisVersion,
+                nightDate: _nightKey(session.endAtUtc),
+                score: null,
+                totalSleepMinutes:
+                    session.endAtUtc.difference(session.startAtUtc).inMinutes,
+                sleepEfficiencyPct: null,
+                restingHeartRateBpm: _averageBpm(hrBySession[session.id]),
+                analyzedAt: importedAt,
+              ),
+            )
+            .toList(growable: false);
+
+        await _analysesDao.upsertBatch(analysisRows);
+      }
     });
   }
 
-  String _hashRecord(String value) => sha1.convert(utf8.encode(value)).toString();
+  double? _averageBpm(List<HeartRateSample>? samples) {
+    if (samples == null || samples.isEmpty) return null;
+    final total = samples.fold<double>(0, (sum, sample) => sum + sample.bpm);
+    return total / samples.length;
+  }
+
+  String _nightKey(DateTime utcDate) {
+    final local = utcDate.toLocal();
+    final normalized = DateTime(local.year, local.month, local.day);
+    final month = normalized.month.toString().padLeft(2, '0');
+    final day = normalized.day.toString().padLeft(2, '0');
+    return '${normalized.year}-$month-$day';
+  }
+
+  String _hashRecord(String value) =>
+      sha1.convert(utf8.encode(value)).toString();
 
   @override
   Future<void> dispose() async {

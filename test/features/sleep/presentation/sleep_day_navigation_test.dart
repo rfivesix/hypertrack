@@ -8,6 +8,7 @@ import 'package:hypertrack/features/sleep/presentation/day/sleep_day_view_model.
 import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
 import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
 import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
+import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,6 +42,23 @@ class _FakeSleepImportService implements SleepImportService {
 
   @override
   Future<void> dispose() async {}
+}
+
+String _dayLabel(DateTime day, {String localeCode = 'en'}) {
+  return DateFormat.yMMMd(localeCode).format(day);
+}
+
+String _weekLabel(DateTime day, {String localeCode = 'en'}) {
+  final normalized = DateTime(day.year, day.month, day.day);
+  final start =
+      normalized.subtract(Duration(days: normalized.weekday - DateTime.monday));
+  final end = start.add(const Duration(days: 6));
+  return '${DateFormat.MMMd(localeCode).format(start)} - ${DateFormat.MMMd(localeCode).format(end)}';
+}
+
+String _monthLabel(DateTime day, {String localeCode = 'en'}) {
+  return DateFormat.yMMMM(localeCode)
+      .format(DateTime(day.year, day.month, 1));
 }
 
 SleepDayOverviewData _sampleOverview() {
@@ -151,6 +169,7 @@ void main() {
       buildSignature: '',
     );
     SharedPreferences.setMockInitialValues(<String, Object>{});
+    Intl.defaultLocale = 'en';
   });
 
   testWidgets('navigates from day tiles to detail routes', (tester) async {
@@ -256,6 +275,80 @@ void main() {
       find.text('Stage confidence is too low for a reliable depth breakdown.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('period navigation shifts day and reloads', (tester) async {
+    final repository = _FakeSleepDayRepository(_sampleOverview());
+    final model = SleepDayViewModel(
+      repository: repository,
+      selectedDay: DateTime(2026, 3, 31),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(_dayLabel(DateTime(2026, 3, 31))), findsOneWidget);
+    final initialFetches = repository.fetchCount;
+
+    await tester.tap(find.byKey(const Key('sleep-period-prev')));
+    await tester.pumpAndSettle();
+    expect(find.text(_dayLabel(DateTime(2026, 3, 30))), findsOneWidget);
+    expect(repository.fetchCount, initialFetches + 1);
+  });
+
+  testWidgets('period navigation shifts week labels', (tester) async {
+    final repository = _FakeSleepDayRepository(_sampleOverview());
+    final model = SleepDayViewModel(
+      repository: repository,
+      selectedDay: DateTime(2026, 3, 31),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Week'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(_weekLabel(DateTime(2026, 3, 31))), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('sleep-period-prev')));
+    await tester.pumpAndSettle();
+    expect(find.text(_weekLabel(DateTime(2026, 3, 24))), findsOneWidget);
+  });
+
+  testWidgets('period navigation shifts month labels', (tester) async {
+    final repository = _FakeSleepDayRepository(_sampleOverview());
+    final model = SleepDayViewModel(
+      repository: repository,
+      selectedDay: DateTime(2026, 3, 31),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Month'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(_monthLabel(DateTime(2026, 3, 31))), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('sleep-period-prev')));
+    await tester.pumpAndSettle();
+    expect(find.text(_monthLabel(DateTime(2026, 2, 28))), findsOneWidget);
   });
 
   testWidgets('import now action triggers import orchestration', (tester) async {

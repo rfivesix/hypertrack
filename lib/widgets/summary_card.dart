@@ -11,6 +11,9 @@ class SummaryCard extends StatelessWidget {
   /// Internal padding for the [child].
   final EdgeInsetsGeometry padding;
 
+  /// Optional margin for the card container.
+  final EdgeInsetsGeometry margin;
+
   /// Optional tap handler for the card.
   final VoidCallback? onTap;
 
@@ -18,6 +21,7 @@ class SummaryCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(12.0),
+    this.margin = const EdgeInsets.symmetric(vertical: 6.0),
     this.onTap,
   });
 
@@ -31,7 +35,7 @@ class SummaryCard extends StatelessWidget {
         : summary_card_white_mode;
 
     final card = Container(
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      margin: margin,
       padding: padding,
       decoration: BoxDecoration(
         color: background,

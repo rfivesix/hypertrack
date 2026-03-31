@@ -30,6 +30,7 @@ class MainActivity : FlutterFragmentActivity() {
     private val sleepHealthConnectChannelName = "hypertrack.health/sleep_health_connect"
     private val storageChannelName = "hypertrack.storage/saf"
     private var pendingPermissionResult: MethodChannel.Result? = null
+    private var pendingPermissionRequestSet: Set<String>? = null
     private var pendingDirectoryPickerResult: MethodChannel.Result? = null
     private val requiredPermissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
@@ -43,9 +44,11 @@ class MainActivity : FlutterFragmentActivity() {
         PermissionController.createRequestPermissionResultContract(),
     ) { _: Set<String> ->
         val result = pendingPermissionResult ?: return@registerForActivityResult
+        val requestedPermissions = pendingPermissionRequestSet ?: requiredPermissions
         pendingPermissionResult = null
+        pendingPermissionRequestSet = null
         CoroutineScope(Dispatchers.IO).launch {
-            val granted = hasAllPermissions()
+            val granted = hasPermissions(requestedPermissions)
             withContext(Dispatchers.Main) {
                 result.success(granted)
             }
@@ -129,7 +132,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            val alreadyGranted = hasAllPermissions()
+            val alreadyGranted = hasPermissions(requiredPermissions)
             if (alreadyGranted) {
                 withContext(Dispatchers.Main) { result.success(true) }
                 return@launch
@@ -137,6 +140,7 @@ class MainActivity : FlutterFragmentActivity() {
 
             withContext(Dispatchers.Main) {
                 pendingPermissionResult = result
+                pendingPermissionRequestSet = requiredPermissions
                 permissionLauncher.launch(requiredPermissions)
             }
         }
@@ -233,6 +237,7 @@ class MainActivity : FlutterFragmentActivity() {
                         result.notImplemented()
                     }
                 }
+                pendingPermissionRequestSet = requiredSleepPermissions
                 permissionLauncher.launch(requiredSleepPermissions)
             }
         }
@@ -260,6 +265,14 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         CoroutineScope(Dispatchers.IO).launch {
+            val hasPermission = hasPermissions(requiredSleepPermissions)
+            if (!hasPermission) {
+                withContext(Dispatchers.Main) {
+                    result.error("permission_denied", "Permissions not granted", null)
+                }
+                return@launch
+            }
+
             try {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val from = Instant.parse(fromIso)
@@ -342,9 +355,9 @@ class MainActivity : FlutterFragmentActivity() {
     private fun mapSleepStage(stage: Int): String {
         return when (stage) {
             SleepSessionRecord.STAGE_TYPE_AWAKE -> "awake"
-            SleepSessionRecord.STAGE_TYPE_SLEEPING_DEEP -> "deep"
-            SleepSessionRecord.STAGE_TYPE_SLEEPING_LIGHT -> "light"
-            SleepSessionRecord.STAGE_TYPE_SLEEPING_REM -> "rem"
+            SleepSessionRecord.STAGE_TYPE_DEEP -> "deep"
+            SleepSessionRecord.STAGE_TYPE_LIGHT -> "light"
+            SleepSessionRecord.STAGE_TYPE_REM -> "rem"
             SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> "out_of_bed"
             else -> "asleep"
         }
@@ -366,7 +379,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            val hasPermission = hasAllPermissions()
+            val hasPermission = hasPermissions(requiredPermissions)
             if (!hasPermission) {
                 withContext(Dispatchers.Main) {
                     result.error("permission_denied", "Permissions not granted", null)
@@ -412,7 +425,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private suspend fun hasAllPermissions(): Boolean {
+    private suspend fun hasPermissions(requiredPermissions: Set<String>): Boolean {
         val status = HealthConnectClient.getSdkStatus(this)
         if (status != HealthConnectClient.SDK_AVAILABLE) return false
         val granted = HealthConnectClient.getOrCreate(this)

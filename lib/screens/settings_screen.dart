@@ -1,4 +1,7 @@
 // lib/screens/settings_screen.dart
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../generated/app_localizations.dart';
@@ -16,6 +19,7 @@ import '../services/health/steps_sync_service.dart';
 import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/sleep/platform/permissions/sleep_permission_controller.dart';
 import '../features/sleep/platform/permissions/sleep_permission_models.dart';
+import '../features/sleep/data/persistence/sleep_persistence_models.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -48,6 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final bool _ownsSleepSyncService;
   late final bool _ownsSleepPermissionController;
   bool _isSleepImporting = false;
+  bool _isSleepRawLoading = false;
 
   /// Flag for parent screens to know steps settings changed and data should be refreshed.
   bool hasStepsSettingsChanged = false;
@@ -103,6 +108,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
       unawaited(_sleepSyncService.dispose());
     }
     super.dispose();
+  }
+
+  Future<List<SleepRawImportRecord>> _loadRawSleepImports() async {
+    final service = _sleepSyncService;
+    if (service is! SleepSyncService) return const <SleepRawImportRecord>[];
+    return service.fetchRecentRawImports();
+  }
+
+  String _formatRawImport(SleepRawImportRecord record) {
+    final importedAt = record.importedAt.toLocal().toIso8601String();
+    final header = [
+      'Imported at: $importedAt',
+      'Status: ${record.importStatus}',
+      'Source: ${record.sourcePlatform}',
+      if (record.sourceAppId != null) 'App: ${record.sourceAppId}',
+      if (record.sourceConfidence != null)
+        'Confidence: ${record.sourceConfidence}',
+    ].join('\n');
+    final payload = () {
+      try {
+        final decoded = jsonDecode(record.payloadJson);
+        return const JsonEncoder.withIndent('  ').convert(decoded);
+      } catch (_) {
+        return record.payloadJson;
+      }
+    }();
+    return '$header\nPayload:\n$payload';
+  }
+
+  Future<void> _showRawSleepImports() async {
+    if (_isSleepRawLoading) return;
+    setState(() => _isSleepRawLoading = true);
+    final records = await _loadRawSleepImports();
+    if (!mounted) return;
+    setState(() => _isSleepRawLoading = false);
+
+    if (records.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No raw sleep imports found yet.')),
+      );
+      return;
+    }
+
+    final formatted = records.map(_formatRawImport).join('\n\n---\n\n');
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Raw sleep imports (latest)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      formatted,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -355,8 +435,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         value: _sleepTrackingEnabled,
                         onChanged: (value) async {
+                          final wasEnabled = _sleepTrackingEnabled;
                           await _sleepSyncService.setTrackingEnabled(value);
                           hasStepsSettingsChanged = true;
+                          if (value && !wasEnabled) {
+                            await _sleepPermissionController.requestAccess();
+                          }
+                          await _sleepPermissionController.refresh();
                           if (!mounted) return;
                           setState(() => _sleepTrackingEnabled = value);
                         },
@@ -420,6 +505,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 await _sleepPermissionController.refresh();
                                 hasStepsSettingsChanged = true;
                               },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.data_object_outlined),
+                        title: const Text('View raw sleep imports'),
+                        subtitle: const Text('Show recent Health Connect payloads'),
+                        trailing: _isSleepRawLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.chevron_right),
+                        onTap: _isSleepRawLoading ? null : _showRawSleepImports,
                       ),
                     ],
                   ),

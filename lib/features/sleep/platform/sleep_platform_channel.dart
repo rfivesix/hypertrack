@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import 'health_connect/health_connect_sleep_adapter.dart';
+import 'healthkit/healthkit_sleep_adapter.dart';
 import 'ingestion/sleep_ingestion_models.dart';
 import 'permissions/health_connect_sleep_permissions_service.dart';
 import 'permissions/healthkit_sleep_permissions_service.dart';
@@ -30,8 +32,9 @@ class HealthConnectSleepMethodChannelBridge
 
   @override
   Future<HealthConnectPermissionSnapshot> checkPermissions() async {
-    final map = await _channel.invokeMapMethod<String, dynamic>('checkPermissions') ??
-        const <String, dynamic>{};
+    final map =
+        await _channel.invokeMapMethod<String, dynamic>('checkPermissions') ??
+            const <String, dynamic>{};
     return HealthConnectPermissionSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -40,8 +43,9 @@ class HealthConnectSleepMethodChannelBridge
 
   @override
   Future<HealthConnectPermissionSnapshot> requestPermissions() async {
-    final map = await _channel.invokeMapMethod<String, dynamic>('requestPermissions') ??
-        const <String, dynamic>{};
+    final map =
+        await _channel.invokeMapMethod<String, dynamic>('requestPermissions') ??
+            const <String, dynamic>{};
     return HealthConnectPermissionSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -63,8 +67,9 @@ class HealthKitSleepMethodChannelBridge implements HealthKitPermissionBridge {
 
   @override
   Future<HealthKitAuthorizationSnapshot> checkAuthorization() async {
-    final map = await _channel.invokeMapMethod<String, dynamic>('checkPermissions') ??
-        const <String, dynamic>{};
+    final map =
+        await _channel.invokeMapMethod<String, dynamic>('checkPermissions') ??
+            const <String, dynamic>{};
     return HealthKitAuthorizationSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -73,8 +78,9 @@ class HealthKitSleepMethodChannelBridge implements HealthKitPermissionBridge {
 
   @override
   Future<HealthKitAuthorizationSnapshot> requestAuthorization() async {
-    final map = await _channel.invokeMapMethod<String, dynamic>('requestPermissions') ??
-        const <String, dynamic>{};
+    final map =
+        await _channel.invokeMapMethod<String, dynamic>('requestPermissions') ??
+            const <String, dynamic>{};
     return HealthKitAuthorizationSnapshot(
       sleepGranted: map['sleepGranted'] == true,
       heartRateGranted: map['heartRateGranted'] == true,
@@ -82,7 +88,8 @@ class HealthKitSleepMethodChannelBridge implements HealthKitPermissionBridge {
   }
 }
 
-class HealthConnectSleepMethodChannelDataSource implements HealthConnectDataSource {
+class HealthConnectSleepMethodChannelDataSource
+    implements HealthConnectDataSource {
   const HealthConnectSleepMethodChannelDataSource();
 
   static const MethodChannel _channel =
@@ -132,7 +139,8 @@ SleepRawIngestionBatch _mapBatch(Map<String, dynamic> map) {
   final sessionRows = (map['sessions'] as List<dynamic>? ?? const <dynamic>[]);
   final segmentRows =
       (map['stageSegments'] as List<dynamic>? ?? const <dynamic>[]);
-  final hrRows = (map['heartRateSamples'] as List<dynamic>? ?? const <dynamic>[]);
+  final hrRows =
+      (map['heartRateSamples'] as List<dynamic>? ?? const <dynamic>[]);
 
   return SleepRawIngestionBatch(
     sessions: sessionRows

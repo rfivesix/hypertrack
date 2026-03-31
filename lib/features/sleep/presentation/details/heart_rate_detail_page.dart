@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../data/sleep_day_repository.dart';
-import 'sleep_data_unavailable_card.dart';
 import 'sleep_detail_page_shell.dart';
 import 'widgets/sleep_benchmark_bar.dart';
 
@@ -14,13 +13,9 @@ class HeartRateDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final overview = this.overview;
     if (overview == null || overview.sleepHrAvg == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Heart rate')),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(
-              message: 'Sleep heart-rate data is unavailable.'),
-        ),
+      return const SleepDetailUnavailablePage(
+        title: 'Heart rate',
+        message: 'Sleep heart-rate data is unavailable.',
       );
     }
 
