@@ -8,6 +8,7 @@ import 'package:hypertrack/features/statistics/domain/recovery_payload_models.da
 import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
 import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
 import 'package:hypertrack/features/steps/domain/steps_models.dart';
+import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
 import 'package:hypertrack/screens/statistics_hub_screen.dart';
 import 'package:hypertrack/services/health/steps_sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -217,5 +218,29 @@ void main() {
     await stepsService.setTrackingEnabled(true);
     await pumpLoaded(tester);
     expect(find.text('Steps'), findsOneWidget);
+  });
+
+  testWidgets('statistics hub sleep card opens sleep day screen', (
+    WidgetTester tester,
+  ) async {
+    await StepsSyncService().setTrackingEnabled(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatisticsHubScreen(
+          stepsRepository: _FakeStepsRepository(),
+          fetchHubAnalytics: fakeFetch,
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+
+    expect(find.text('Sleep'), findsOneWidget);
+    await tester.tap(find.text('Sleep'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SleepDayOverviewPage), findsOneWidget);
   });
 }
