@@ -51,7 +51,7 @@ class HeartRateDetailPage extends StatelessWidget {
           max: 90,
           value: avg,
           lowerTarget: established ? baseline! - 3 : avg - 2,
-          upperTarget: established ? baseline + 3 : avg + 2,
+          upperTarget: established ? baseline! + 3 : avg + 2,
         ),
         const SizedBox(height: 12),
         Text(
