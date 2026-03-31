@@ -388,17 +388,155 @@ class HealthStepSegments extends Table with HybridId, MetaColumns {
   ],
 )
 
+/// Sleep persistence schema foundations.
+///
+/// This follows a strict three-layer storage architecture:
+/// 1) raw imports (`sleep_raw_imports`) for archival/provenance/debugging,
+/// 2) canonical normalized records (`sleep_canonical_*`),
+/// 3) derived nightly outputs (`sleep_nightly_analyses`).
+///
+/// Versioning fields (`normalization_version`, `analysis_version`) are stored
+/// on canonical/derived records to support deterministic recomputation.
+Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
+  await db.customStatement('''
+    CREATE TABLE IF NOT EXISTS sleep_raw_imports (
+      id TEXT NOT NULL PRIMARY KEY,
+      source_platform TEXT NOT NULL,
+      source_app_id TEXT NULL,
+      source_confidence TEXT NULL,
+      source_record_hash TEXT NOT NULL,
+      import_status TEXT NOT NULL,
+      error_code TEXT NULL,
+      error_message TEXT NULL,
+      imported_at INTEGER NOT NULL,
+      payload_json TEXT NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+    )
+  ''');
+
+  await db.customStatement('''
+    CREATE TABLE IF NOT EXISTS sleep_canonical_sessions (
+      id TEXT NOT NULL PRIMARY KEY,
+      raw_import_id TEXT NULL REFERENCES sleep_raw_imports(id) ON DELETE SET NULL,
+      source_platform TEXT NOT NULL,
+      source_app_id TEXT NULL,
+      source_confidence TEXT NULL,
+      source_record_hash TEXT NOT NULL,
+      normalization_version TEXT NOT NULL,
+      session_type TEXT NOT NULL,
+      started_at INTEGER NOT NULL,
+      ended_at INTEGER NOT NULL,
+      timezone TEXT NULL,
+      imported_at INTEGER NOT NULL,
+      normalized_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+    )
+  ''');
+
+  await db.customStatement('''
+    CREATE TABLE IF NOT EXISTS sleep_canonical_stage_segments (
+      id TEXT NOT NULL PRIMARY KEY,
+      session_id TEXT NOT NULL REFERENCES sleep_canonical_sessions(id) ON DELETE CASCADE,
+      source_platform TEXT NOT NULL,
+      source_app_id TEXT NULL,
+      source_confidence TEXT NULL,
+      source_record_hash TEXT NOT NULL,
+      normalization_version TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      started_at INTEGER NOT NULL,
+      ended_at INTEGER NOT NULL,
+      imported_at INTEGER NOT NULL,
+      normalized_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+    )
+  ''');
+
+  await db.customStatement('''
+    CREATE TABLE IF NOT EXISTS sleep_canonical_heart_rate_samples (
+      id TEXT NOT NULL PRIMARY KEY,
+      session_id TEXT NOT NULL REFERENCES sleep_canonical_sessions(id) ON DELETE CASCADE,
+      source_platform TEXT NOT NULL,
+      source_app_id TEXT NULL,
+      source_confidence TEXT NULL,
+      source_record_hash TEXT NOT NULL,
+      normalization_version TEXT NOT NULL,
+      sampled_at INTEGER NOT NULL,
+      bpm REAL NOT NULL,
+      imported_at INTEGER NOT NULL,
+      normalized_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+    )
+  ''');
+
+  await db.customStatement('''
+    CREATE TABLE IF NOT EXISTS sleep_nightly_analyses (
+      id TEXT NOT NULL PRIMARY KEY,
+      session_id TEXT NOT NULL REFERENCES sleep_canonical_sessions(id) ON DELETE CASCADE,
+      source_platform TEXT NOT NULL,
+      source_app_id TEXT NULL,
+      source_confidence TEXT NULL,
+      source_record_hash TEXT NOT NULL,
+      normalization_version TEXT NOT NULL,
+      analysis_version TEXT NOT NULL,
+      night_date TEXT NOT NULL,
+      score REAL NULL,
+      total_sleep_minutes INTEGER NULL,
+      sleep_efficiency_pct REAL NULL,
+      resting_heart_rate_bpm REAL NULL,
+      analyzed_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+    )
+  ''');
+
+  // Optional physiological signals are planned as nullable scalar columns in
+  // canonical/derived tables (e.g. HRV/SpO₂/resp/temp delta) in future
+  // migrations instead of opaque blobs, except raw archival payload JSON.
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_raw_imports_imported_at ON sleep_raw_imports(imported_at)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_raw_imports_status_hash ON sleep_raw_imports(import_status, source_record_hash)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_sessions_range ON sleep_canonical_sessions(started_at, ended_at)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_sessions_hash ON sleep_canonical_sessions(source_record_hash)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_segments_session ON sleep_canonical_stage_segments(session_id)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_segments_range ON sleep_canonical_stage_segments(started_at, ended_at)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_hr_session_sampled ON sleep_canonical_heart_rate_samples(session_id, sampled_at)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_analyses_night ON sleep_nightly_analyses(night_date)',
+  );
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_sleep_analyses_session ON sleep_nightly_analyses(session_id)',
+  );
+}
+
 /// The central Drift database class for the application.
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+          await _createSleepPersistenceSchema(this);
         },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
@@ -455,6 +593,9 @@ class AppDatabase extends _$AppDatabase {
           )
         ''');
           }
+          if (from < 9) {
+            await _createSleepPersistenceSchema(this);
+          }
         },
       );
 }
@@ -463,6 +604,11 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'app_hybrid.sqlite'));
-    return NativeDatabase(file);
+    return NativeDatabase(
+      file,
+      setup: (rawDb) {
+        rawDb.execute('PRAGMA foreign_keys = ON;');
+      },
+    );
   });
 }
