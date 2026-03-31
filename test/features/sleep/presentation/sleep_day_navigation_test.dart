@@ -222,6 +222,26 @@ void main() {
     expect(find.text('Interruptions'), findsWidgets);
   });
 
+  testWidgets('sleep placeholder routes render without crashing', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        initialRoute: SleepRouteNames.week,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Sleep week'), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        initialRoute: SleepRouteNames.connectHealthData,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Connect health data'), findsOneWidget);
+  });
+
   testWidgets('renders empty state without crash', (tester) async {
     final model = SleepDayViewModel(
       repository: _FakeSleepDayRepository(null),

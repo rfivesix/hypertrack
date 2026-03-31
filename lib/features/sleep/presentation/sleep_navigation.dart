@@ -7,14 +7,20 @@ import 'details/heart_rate_detail_page.dart';
 import 'details/interruptions_detail_page.dart';
 import 'details/regularity_detail_page.dart';
 import 'day/sleep_day_overview_page.dart';
+import 'sleep_placeholder_pages.dart';
 
 class SleepRouteNames {
   static const day = '/sleep/day';
+  static const week = '/sleep/week';
+  static const month = '/sleep/month';
   static const durationDetail = '/sleep/day/duration';
   static const heartRateDetail = '/sleep/day/heart-rate';
   static const interruptionsDetail = '/sleep/day/interruptions';
   static const depthDetail = '/sleep/day/depth';
   static const regularityDetail = '/sleep/day/regularity';
+  static const connectHealthData = '/sleep/state/connect-health-data';
+  static const permissionDenied = '/sleep/state/permission-denied';
+  static const sourceUnavailable = '/sleep/state/source-unavailable';
 }
 
 class SleepNavigation {
@@ -30,6 +36,22 @@ class SleepNavigation {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => const SleepDayOverviewPage(),
+        );
+      case SleepRouteNames.week:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SleepPlaceholderPage(
+            title: 'Sleep week',
+            message: 'Week overview is intentionally deferred in this batch.',
+          ),
+        );
+      case SleepRouteNames.month:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SleepPlaceholderPage(
+            title: 'Sleep month',
+            message: 'Month overview is intentionally deferred in this batch.',
+          ),
         );
       case SleepRouteNames.durationDetail:
         return MaterialPageRoute(
@@ -59,6 +81,33 @@ class SleepNavigation {
           builder: (_) =>
               RegularityDetailPage(overview: _readOverview(settings)),
         );
+      case SleepRouteNames.connectHealthData:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SleepPlaceholderPage(
+            title: 'Connect health data',
+            message:
+                'Connect HealthKit or Health Connect to import sleep records.',
+          ),
+        );
+      case SleepRouteNames.permissionDenied:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SleepPlaceholderPage(
+            title: 'Permission denied',
+            message:
+                'Sleep permissions are denied. Open settings to grant access.',
+          ),
+        );
+      case SleepRouteNames.sourceUnavailable:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SleepPlaceholderPage(
+            title: 'Source unavailable',
+            message:
+                'Sleep data source is unavailable or not installed on this device.',
+          ),
+        );
       default:
         return null;
     }
@@ -66,6 +115,14 @@ class SleepNavigation {
 
   static Future<void> openDay(BuildContext context) {
     return Navigator.of(context).pushNamed(SleepRouteNames.day);
+  }
+
+  static Future<void> openWeek(BuildContext context) {
+    return Navigator.of(context).pushNamed(SleepRouteNames.week);
+  }
+
+  static Future<void> openMonth(BuildContext context) {
+    return Navigator.of(context).pushNamed(SleepRouteNames.month);
   }
 
   static Future<void> openDurationDetail(
