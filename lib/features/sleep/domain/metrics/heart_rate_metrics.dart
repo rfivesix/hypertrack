@@ -60,8 +60,8 @@ NightlyHeartRateMetrics calculateNightlyHeartRateMetrics({
 SleepHeartRateBaseline calculateSleepHeartRateBaseline(
   List<double> nightlyAverageHeartRates,
 ) {
-  final valid = nightlyAverageHeartRates.where((value) => value.isFinite).toList()
-    ..sort();
+  final valid =
+      nightlyAverageHeartRates.where((value) => value.isFinite).toList();
   if (valid.length < 10) {
     return SleepHeartRateBaseline(
       baselineSleepHr: null,
@@ -69,9 +69,11 @@ SleepHeartRateBaseline calculateSleepHeartRateBaseline(
       validNights: valid.length,
     );
   }
-  final window = valid.length <= 30 ? valid : valid.sublist(valid.length - 30);
+  final windowStart = valid.length <= 30 ? 0 : valid.length - 30;
+  final window = valid.sublist(windowStart);
+  final sortedWindow = List<double>.from(window)..sort();
   return SleepHeartRateBaseline(
-    baselineSleepHr: _median(window),
+    baselineSleepHr: _median(sortedWindow),
     isEstablished: true,
     validNights: valid.length,
   );

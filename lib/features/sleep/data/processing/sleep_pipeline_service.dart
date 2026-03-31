@@ -70,18 +70,37 @@ class SleepPipelineService {
             .add(const Duration(seconds: 1));
 
     if (forceRecompute) {
-      await _rawDao.deleteByImportedAtRange(
+      final sessionsToRecompute = await _sessionsDao.findByDateRange(
         fromInclusive: from,
         toExclusive: to,
       );
+      final rawImportIds = sessionsToRecompute
+          .map((session) => session.rawImportId)
+          .whereType<String>()
+          .toSet()
+          .toList(growable: false);
+      final nightDates = sessionsToRecompute
+          .map((session) => _nightKey(session.endedAt))
+          .toSet()
+          .toList(growable: false)
+        ..sort();
+      if (nightDates.isNotEmpty) {
+        await _analysesDao.deleteByNightRange(
+          fromNightDateInclusive: nightDates.first,
+          toNightDateInclusive: nightDates.last,
+        );
+      } else {
+        final toInclusive = to.subtract(const Duration(milliseconds: 1));
+        await _analysesDao.deleteByNightRange(
+          fromNightDateInclusive: _nightKey(from),
+          toNightDateInclusive: _nightKey(toInclusive),
+        );
+      }
       await _sessionsDao.deleteByDateRange(
         fromInclusive: from,
         toExclusive: to,
       );
-      await _analysesDao.deleteByNightRange(
-        fromNightDateInclusive: _nightKey(from),
-        toNightDateInclusive: _nightKey(to.subtract(const Duration(days: 1))),
-      );
+      await _rawDao.deleteByIds(rawImportIds);
     }
 
     final mapped = _mapBatch(batch);

@@ -14,16 +14,16 @@
 | #156 Sleep persistence roadmap/schema | **Fully implemented** | 3-layer schema + indices + version/provenance fields in `lib/data/drift_database.dart` | None material | No schema changes required |
 | #157 Drift persistence foundations/DAOs + migration tests | **Fully implemented** | DAOs for raw/canonical/derived + migration/basic DAO tests in `test/features/sleep/data/persistence/dao/sleep_persistence_dao_test.dart` | None material | No change required |
 | #158 Ingestion contracts/models | **Partially implemented** | Existing raw ingestion models in `lib/features/sleep/platform/ingestion/sleep_ingestion_models.dart` | Missing explicit contract interfaces for pagination/status/error classification | Added `lib/features/sleep/data/ingestion/sleep_ingestion_contracts.dart` |
-| #166 Normalization pipeline (selection, dedup, nap/main, versioning) | **Partially implemented** | Mapping + persistence pipeline existed in `SleepSyncService` | Deterministic processing entrypoint with recompute support and version-aware orchestration missing | Added `lib/features/sleep/data/processing/sleep_pipeline_service.dart` |
+| #166 Normalization pipeline (selection, dedup, nap/main, versioning) | **Partially implemented** | Mapping + persistence pipeline existed in `SleepSyncService` | Deterministic orchestration entrypoint plus selection/dedup/nap-main logic missing | Added `lib/features/sleep/data/processing/sleep_pipeline_service.dart` for deterministic persistence/recompute; selection/dedup/nap-main still pending |
 | #167 Timeline repair/overlap resolution | **Missing** | None | Pure deterministic timeline repair + overlap priority resolution | Added `lib/features/sleep/data/processing/timeline_repair.dart` + tests |
 | #168 Nightly metrics calculator | **Missing** | None | Deterministic calculator for TIB/SOL/TST/WASO/SE/interruptions/final-awakening | Added `lib/features/sleep/domain/metrics/nightly_metrics_calculator.dart` + tests |
 | #169 Regularity calculator | **Missing** | Only presentation math helper existed | Domain calculator with circular SD, 7-night window, partial/insufficient states | Added `lib/features/sleep/domain/metrics/regularity_calculator.dart` + tests |
-| #170 HR nightly metrics + baseline | **Missing** | None | Nightly avg/min(5th percentile), baseline maturity (10 nights), 30-night median, deltas | Added `lib/features/sleep/domain/metrics/heart_rate_metrics.dart` + tests |
+| #170 HR nightly metrics + baseline | **Missing** | None | Nightly avg/min(5th percentile), baseline maturity (10 nights), 30-night median, deltas | Added `lib/features/sleep/domain/metrics/heart_rate_metrics.dart` + tests (domain-only; not yet wired into pipeline/derived outputs) |
 | #171 Scoring engine | **Missing** | Score display existed, not full scoring engine | Versioned scoring config + pure scoring + missing-data reweighting | Added `lib/features/sleep/domain/scoring/sleep_scoring_engine.dart` + tests |
 | #172 Read-only query repository | **Partially implemented** | `SleepDayRepository` existed for day composition | Dedicated read-only derived query repository interface missing | Added `lib/features/sleep/data/repository/sleep_query_repository.dart` + tests |
-| #173 Pipeline orchestration + recompute support | **Partially implemented** | Import persisted raw/canonical/derived in sync service | Dedicated orchestration service + explicit forced recompute behavior missing | Added `lib/features/sleep/data/processing/sleep_pipeline_service.dart` + tests |
+| #173 Pipeline orchestration + recompute support | **Partially implemented** | Import persisted raw/canonical/derived in sync service | Dedicated orchestration service + explicit forced recompute behavior missing | Added `lib/features/sleep/data/processing/sleep_pipeline_service.dart` + tests (service exists but not yet wired into sync flow) |
 | #174 UI shell + routing module setup | **Partially implemented** | Day + 5 detail routes existed | Week/month route placeholders and connect/denied/unavailable route targets missing | Added routes + placeholders in `sleep_navigation.dart` and `sleep_placeholder_pages.dart` |
-| #175 Reusable widgets/chart primitives + provider states | **Partially implemented** | Reusable detail shells/cards/benchmark widgets existed | Dedicated provider-facing day/week/month derived state model missing | Added `lib/features/sleep/presentation/providers/sleep_derived_providers.dart` |
+| #175 Reusable widgets/chart primitives + provider states | **Partially implemented** | Reusable detail shells/cards/benchmark widgets existed | Dedicated provider-facing day/week/month derived state model missing | Added `lib/features/sleep/presentation/providers/sleep_derived_providers.dart` (provider not yet connected to UI) |
 
 ## Architectural Decisions and Boundaries
 
@@ -34,7 +34,7 @@
    `DriftSleepQueryRepository` maps derived rows into `NightlySleepAnalysis` and does not expose Drift row types to presentation.
 
 3. **Orchestration separated from UI and adapters**  
-   `SleepPipelineService` now owns deterministic import persistence + canonical timeline repair + derived metric/score persistence + forced recompute path.
+   `SleepPipelineService` provides deterministic import persistence + canonical timeline repair + derived metric/score persistence + forced recompute path, but is not yet wired into the sync flow.
 
 4. **UI route placeholders remain explicit non-goal for full week/month UX**  
    Added only route shells and unavailable/connect/denied targets per issue scope; no Batch-3 screen buildout.

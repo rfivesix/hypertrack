@@ -35,4 +35,15 @@ void main() {
     expect(mature.isEstablished, isTrue);
     expect(mature.baselineSleepHr, isNotNull);
   });
+
+  test('baseline uses last 30 nights in chronological order', () {
+    final nightly = <double>[
+      ...List<double>.filled(20, 100),
+      ...List<double>.filled(30, 50),
+    ];
+    final baseline = calculateSleepHeartRateBaseline(nightly);
+    expect(baseline.isEstablished, isTrue);
+    expect(baseline.baselineSleepHr, 50);
+    expect(baseline.validNights, nightly.length);
+  });
 }

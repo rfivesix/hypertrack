@@ -59,4 +59,58 @@ void main() {
 
     await db.close();
   });
+
+  test('forced recompute deletes raw imports for sessions in target window', () async {
+    final db = AppDatabase(
+      NativeDatabase.memory(
+        setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+      ),
+    );
+    final service = SleepPipelineService(database: db);
+
+    final batchOne = SleepRawIngestionBatch(
+      sessions: [
+        SleepIngestionSession(
+          recordId: 'session-1',
+          startAtUtc: DateTime.utc(2026, 3, 1, 22),
+          endAtUtc: DateTime.utc(2026, 3, 2, 6),
+          platformSessionType: 'sleep',
+          sourcePlatform: 'healthkit',
+        ),
+      ],
+      stageSegments: const [],
+      heartRateSamples: const [],
+    );
+
+    final batchTwo = SleepRawIngestionBatch(
+      sessions: [
+        SleepIngestionSession(
+          recordId: 'session-2',
+          startAtUtc: DateTime.utc(2026, 3, 10, 22),
+          endAtUtc: DateTime.utc(2026, 3, 11, 6),
+          platformSessionType: 'sleep',
+          sourcePlatform: 'healthkit',
+        ),
+      ],
+      stageSegments: const [],
+      heartRateSamples: const [],
+    );
+
+    await service.runImport(batch: batchOne);
+
+    await service.runImport(
+      batch: batchTwo,
+      forceRecompute: true,
+      recomputeFromInclusive: DateTime.utc(2026, 3, 1),
+      recomputeToExclusive: DateTime.utc(2026, 3, 3),
+    );
+
+    final rows = await db
+        .customSelect('SELECT id FROM sleep_raw_imports ORDER BY id')
+        .get();
+    final ids = rows.map((row) => row.read<String>('id')).toList();
+    expect(ids, ['raw:session-2']);
+
+    await db.close();
+  });
 }
