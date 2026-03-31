@@ -14,20 +14,23 @@ class InterruptionsDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final overview = this.overview;
     if (overview == null) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Interruptions')),
-        body: Padding(
+      return Scaffold(
+        appBar: AppBar(title: const Text('Interruptions')),
+        body: const Padding(
           padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(message: 'Interruptions data is unavailable.'),
+          child: SleepDataUnavailableCard(
+              message: 'Interruptions data is unavailable.'),
         ),
       );
     }
     return SleepDetailPageShell(
       title: 'Interruptions',
       value: '${overview.interruptionsCount}',
-      statusLabel: overview.interruptionsCount == 0 ? 'None detected' : 'Detected',
+      statusLabel:
+          overview.interruptionsCount == 0 ? 'None detected' : 'Detected',
       subtitle: 'Qualifying wake interruptions overnight.',
-      statusColor: overview.interruptionsCount <= 1 ? Colors.green : Colors.orange,
+      statusColor:
+          overview.interruptionsCount <= 1 ? Colors.green : Colors.orange,
       children: [
         Container(
           width: double.infinity,

@@ -14,11 +14,12 @@ class HeartRateDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final overview = this.overview;
     if (overview == null || overview.sleepHrAvg == null) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Heart rate')),
-        body: Padding(
+      return Scaffold(
+        appBar: AppBar(title: const Text('Heart rate')),
+        body: const Padding(
           padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(message: 'Sleep heart-rate data is unavailable.'),
+          child: SleepDataUnavailableCard(
+              message: 'Sleep heart-rate data is unavailable.'),
         ),
       );
     }

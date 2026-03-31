@@ -15,11 +15,12 @@ class DepthDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final overview = this.overview;
     if (overview == null) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Depth')),
-        body: Padding(
+      return Scaffold(
+        appBar: AppBar(title: const Text('Depth')),
+        body: const Padding(
           padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(message: 'Depth data is unavailable.'),
+          child:
+              SleepDataUnavailableCard(message: 'Depth data is unavailable.'),
         ),
       );
     }
@@ -28,18 +29,20 @@ class DepthDetailPage extends StatelessWidget {
         overview.stageDataConfidence != SleepStageConfidence.low;
 
     if (!hasReliableStageData) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Depth')),
-        body: Padding(
+      return Scaffold(
+        appBar: AppBar(title: const Text('Depth')),
+        body: const Padding(
           padding: EdgeInsets.all(16),
           child: SleepDataUnavailableCard(
-            message: 'Stage confidence is too low for a reliable depth breakdown.',
+            message:
+                'Stage confidence is too low for a reliable depth breakdown.',
           ),
         ),
       );
     }
 
-    final total = overview.deepDuration + overview.lightDuration + overview.remDuration;
+    final total =
+        overview.deepDuration + overview.lightDuration + overview.remDuration;
     final totalMinutes = total.inMinutes == 0 ? 1 : total.inMinutes;
     final deepPct = (overview.deepDuration.inMinutes / totalMinutes) * 100;
     final lightPct = (overview.lightDuration.inMinutes / totalMinutes) * 100;

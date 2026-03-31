@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-const _timeFormattingAnchorDate = DateTime(2020, 1, 1);
+final _timeFormattingAnchorDate = DateTime(2020, 1, 1);
 
 String formatDuration(Duration duration) {
   final hours = duration.inHours;

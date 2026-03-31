@@ -15,11 +15,12 @@ class DurationDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final overview = this.overview;
     if (overview == null) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Duration')),
-        body: Padding(
+      return Scaffold(
+        appBar: AppBar(title: const Text('Duration')),
+        body: const Padding(
           padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(message: 'Duration data is unavailable.'),
+          child: SleepDataUnavailableCard(
+              message: 'Duration data is unavailable.'),
         ),
       );
     }

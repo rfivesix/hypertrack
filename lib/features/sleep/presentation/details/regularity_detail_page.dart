@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/sleep_day_repository.dart';
+import '../../domain/derived/nightly_sleep_analysis.dart';
 import 'regularity_chart_math.dart';
 import 'sleep_data_unavailable_card.dart';
 import 'sleep_detail_page_shell.dart';
@@ -15,11 +16,12 @@ class RegularityDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final nights = overview?.regularityNights ?? const <SleepRegularityNight>[];
     if (nights.isEmpty) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Regularity')),
-        body: Padding(
+      return Scaffold(
+        appBar: AppBar(title: const Text('Regularity')),
+        body: const Padding(
           padding: EdgeInsets.all(16),
-          child: SleepDataUnavailableCard(message: 'Regularity data is unavailable.'),
+          child: SleepDataUnavailableCard(
+              message: 'Regularity data is unavailable.'),
         ),
       );
     }
@@ -36,7 +38,8 @@ class RegularityDetailPage extends StatelessWidget {
     return SleepDetailPageShell(
       title: 'Regularity',
       value: '${nights.length}-night range',
-      statusLabel: nights.length >= 7 ? 'Sufficient trend data' : 'Limited trend data',
+      statusLabel:
+          nights.length >= 7 ? 'Sufficient trend data' : 'Limited trend data',
       subtitle: 'Bedtime and wake windows for recent nights.',
       children: [
         _RegularityChart(nights: nights),
@@ -80,14 +83,16 @@ class _RegularityChart extends StatelessWidget {
                     wakeMinutes: night.wakeMinutes,
                   );
                   final startX = (bed / 1440) * constraints.maxWidth;
-                  final endX = ((wake - bed) / 1440) * constraints.maxWidth + startX;
+                  final endX =
+                      ((wake - bed) / 1440) * constraints.maxWidth + startX;
                   return Stack(
                     children: [
                       Positioned(
                         left: 0,
                         right: 0,
                         top: 8,
-                        child: Container(height: 2, color: Theme.of(context).dividerColor),
+                        child: Container(
+                            height: 2, color: Theme.of(context).dividerColor),
                       ),
                       Positioned(
                         left: startX,
@@ -98,7 +103,10 @@ class _RegularityChart extends StatelessWidget {
                         child: Container(
                           height: 8,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.8),
                             borderRadius: BorderRadius.circular(99),
                           ),
                         ),
