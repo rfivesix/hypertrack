@@ -1,6 +1,6 @@
 # Sleep Module Batch 2 — Day Experience Vertical Slice
 
-## What was implemented
+## What was implemented (refinement pass)
 
 This batch delivers a cohesive Day sleep UX vertical slice:
 
@@ -17,6 +17,16 @@ This batch delivers a cohesive Day sleep UX vertical slice:
   - Regularity detail with 7-night range chart and midnight-wrap handling utilities.
 - Centralized Sleep navigation helper using named routes.
 - Provider-style state management for the day screen using `SleepDayViewModel`.
+- Real in-app reachability entry from Statistics Hub.
+
+## Real app reachability
+
+The Sleep Day screen is now reachable in normal app flow:
+
+1. Open the app
+2. Go to the **Stats** tab (bottom navigation)
+3. In **Statistics Hub**, tap the **Sleep** card section
+4. This opens the Sleep Day overview (`/sleep/day`)
 
 ## Screen architecture and navigation flow
 
@@ -25,6 +35,7 @@ This batch delivers a cohesive Day sleep UX vertical slice:
 - `SleepDayOverviewPage` owns Day UX composition.
 - It is backed by `SleepDayViewModel` (`ChangeNotifier`) which calls a repository interface (`SleepDayDataRepository`).
 - The page gracefully handles loading and empty states.
+- Week/Month segmented choices explicitly show “not implemented in this batch” fallback messaging.
 - Tile taps route through `SleepNavigation` helper to named routes:
   - `/sleep/day/duration`
   - `/sleep/day/heart-rate`
@@ -42,30 +53,52 @@ All detail pages use one shared shell:
 - Shared fallback pattern:
   - `SleepDataUnavailableCard` is used for missing/insufficient data states.
 
+## Reuse of existing app widgets/patterns
+
+Refinement replaced ad-hoc containers with existing app primitives:
+
+- `SummaryCard` used for overview cards/tiles, detail sections, and regularity chart container.
+- `GlobalAppBar` used in shared detail shell and day overview for app-wide visual consistency.
+- `DesignConstants.cardPadding` and existing spacing tokens reused for layout.
+- Existing Statistics Hub section/tile pattern reused for the new Sleep entry card.
+
 ## Data dependencies and ownership boundaries
 
 ### Repository-facing Day model
 
 - `SleepDayRepository` composes `SleepDayOverviewData` from:
   - `SleepNightlyAnalysesDao` (derived analysis records),
-  - canonical session/stage/heart-rate DAOs.
+  - canonical session/stage DAOs.
 - UI consumes only the Day repository output (`SleepDayOverviewData`) through the view model.
 
 ### Derived model usage
 
-- `NightlySleepAnalysis` remains the core derived nightly model and was extended with additional optional fields needed by Day/detail UI:
-  - total sleep minutes,
-  - HR baseline context,
-  - interruptions fields,
-  - stage-duration fields,
-  - stage sufficiency flag,
-  - regularity nights payload.
+- `NightlySleepAnalysis` was cleaned back to core nightly derived semantics.
+- Presentation-facing data is carried by `SleepDayOverviewData` instead of bloating core domain entities.
 
 ### Ownership discipline
 
-- UI/presentation does **not** implement canonical repair, scoring, baseline derivation policy definitions, or interruption definitions as source-of-truth logic.
+- UI/presentation does **not** implement canonical repair, scoring, baseline derivation policy definitions, interruption qualification rules, or regularity semantics as source-of-truth logic.
 - The UI reads repository/derived outputs and only formats for display.
 - Fallback rendering paths are explicit and safe for absent/partial outputs.
+
+### Logic removed from UI-facing repository layer
+
+The refinement intentionally removed business-logic recreation from `SleepDayRepository`:
+
+- Removed custom HR baseline derivation heuristics.
+- Removed custom interruption qualification/counting logic.
+- Removed recreated baseline establishment policy logic.
+- Removed stage-sufficiency policy recreation beyond conservative confidence mapping.
+
+When data is not explicitly available from current derived outputs, UI now shows conservative unavailable/limited states.
+
+## Lifecycle / resource ownership semantics
+
+- `SleepDayRepository` now tracks whether `AppDatabase` is owned internally.
+- If DB is injected externally, repository **does not** close it on dispose.
+- If repository creates DB itself, it owns and closes it.
+- This behavior is explicit and testable.
 
 ## Why each UI structure/fallback was chosen
 
@@ -82,10 +115,12 @@ All detail pages use one shared shell:
 - Detail routes without overview payload → unavailable fallback card.
 - Missing HR baseline or sparse history → neutral baseline-not-established messaging.
 - Missing/low-confidence stage data for depth → confidence fallback UI.
-- Interruptions computed from qualifying wake segments only from repository-composed data.
+- Missing interruptions-derived outputs → explicit unavailable fallback.
 - Regularity chart midnight wrap handled via utility:
   - `unwrapWakeMinutes()`
   - plus circular average for summary rows.
+- Unknown timeline confidence is preserved as unknown (not upgraded to high).
+- Week/month segmented choices are explicitly marked unavailable in this batch.
 
 ## Shared detail-shell design decisions
 
@@ -100,6 +135,12 @@ All detail pages use one shared shell:
 - `test/features/sleep/presentation/sleep_day_navigation_test.dart`
   - day overview tile navigation to detail screens,
   - empty-state rendering safety.
+- `test/statistics_hub_steps_card_test.dart` (updated)
+  - verifies in-app Statistics Hub Sleep entry navigates to Sleep Day screen.
+- `test/features/sleep/presentation/sleep_day_navigation_test.dart` (expanded)
+  - overview → each detail route navigation coverage,
+  - baseline-missing heart-rate fallback state,
+  - low-confidence depth fallback state.
 - `test/features/sleep/presentation/regularity_chart_math_test.dart`
   - midnight-wrap utility behavior,
   - circular average around midnight.
@@ -108,7 +149,7 @@ All detail pages use one shared shell:
 
 - Week/month UI content remains deferred (segmented control shell only).
 - Full localization pass intentionally deferred; copy uses inline strings for now.
-- Statistics-tab integration entrypoint is not expanded in this batch.
+- Statistics-tab integration is intentionally minimal (single Sleep entry card only).
 - End-to-end UI tests beyond focused widget/unit coverage are deferred.
 - Repository baseline/regularity heuristics are intentionally conservative and may be refined in later analysis-specific issues.
 
@@ -118,3 +159,22 @@ All detail pages use one shared shell:
 - Broader statistics and app-shell integration work.
 - Localization issue for all Sleep copy.
 - E2E test expansion and visual-regression snapshots.
+
+## Exact files changed in refinement pass
+
+- `lib/screens/statistics_hub_screen.dart`
+- `lib/features/sleep/data/sleep_day_repository.dart`
+- `lib/features/sleep/domain/derived/nightly_sleep_analysis.dart`
+- `lib/features/sleep/presentation/day/sleep_day_overview_page.dart`
+- `lib/features/sleep/presentation/day/sleep_day_view_model.dart`
+- `lib/features/sleep/presentation/details/sleep_detail_page_shell.dart`
+- `lib/features/sleep/presentation/details/sleep_data_unavailable_card.dart`
+- `lib/features/sleep/presentation/details/duration_detail_page.dart`
+- `lib/features/sleep/presentation/details/heart_rate_detail_page.dart`
+- `lib/features/sleep/presentation/details/interruptions_detail_page.dart`
+- `lib/features/sleep/presentation/details/depth_detail_page.dart`
+- `lib/features/sleep/presentation/details/regularity_detail_page.dart`
+- `lib/features/sleep/presentation/details/widgets/sleep_benchmark_bar.dart`
+- `test/statistics_hub_steps_card_test.dart`
+- `test/features/sleep/presentation/sleep_day_navigation_test.dart`
+- `documentation/sleep/sleep_day_batch_2.md`

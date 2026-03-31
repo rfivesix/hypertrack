@@ -61,7 +61,6 @@ SleepDayOverviewData _sampleOverview() {
     sleepHrAvg: 53,
     baselineSleepHr: 55,
     deltaSleepHr: -2,
-    isHrBaselineEstablished: true,
     interruptionsCount: 1,
     interruptionsWakeDuration: const Duration(minutes: 10),
     deepDuration: const Duration(minutes: 90),
@@ -75,6 +74,46 @@ SleepDayOverviewData _sampleOverview() {
       ),
     ],
     stageDataConfidence: SleepStageConfidence.high,
+  );
+}
+
+SleepDayOverviewData _baselineMissingOverview() {
+  final base = _sampleOverview();
+  return SleepDayOverviewData(
+    analysis: base.analysis,
+    session: base.session,
+    timelineSegments: base.timelineSegments,
+    stageDataConfidence: base.stageDataConfidence,
+    totalSleepMinutes: base.totalSleepMinutes,
+    sleepHrAvg: base.sleepHrAvg,
+    baselineSleepHr: null,
+    deltaSleepHr: null,
+    interruptionsCount: base.interruptionsCount,
+    interruptionsWakeDuration: base.interruptionsWakeDuration,
+    deepDuration: base.deepDuration,
+    lightDuration: base.lightDuration,
+    remDuration: base.remDuration,
+    regularityNights: base.regularityNights,
+  );
+}
+
+SleepDayOverviewData _lowConfidenceDepthOverview() {
+  final base = _sampleOverview();
+  return SleepDayOverviewData(
+    analysis: base.analysis,
+    session: base.session,
+    timelineSegments: base.timelineSegments,
+    stageDataConfidence: SleepStageConfidence.low,
+    totalSleepMinutes: base.totalSleepMinutes,
+    sleepHrAvg: base.sleepHrAvg,
+    baselineSleepHr: base.baselineSleepHr,
+    deltaSleepHr: base.deltaSleepHr,
+    interruptionsCount: base.interruptionsCount,
+    interruptionsWakeDuration: base.interruptionsWakeDuration,
+    deepDuration: base.deepDuration,
+    lightDuration: base.lightDuration,
+    remDuration: base.remDuration,
+    regularityNights: base.regularityNights,
   );
 }
 
@@ -102,6 +141,24 @@ void main() {
     await tester.tap(find.text('Heart rate'));
     await tester.pumpAndSettle();
     expect(find.text('Heart rate'), findsWidgets);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Regularity'));
+    await tester.pumpAndSettle();
+    expect(find.text('Average bedtime'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Depth'));
+    await tester.pumpAndSettle();
+    expect(find.text('Depth'), findsWidgets);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Interruptions'));
+    await tester.pumpAndSettle();
+    expect(find.text('Interruptions'), findsWidgets);
   });
 
   testWidgets('renders empty state without crash', (tester) async {
@@ -114,5 +171,44 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('No sleep data available for this day.'), findsOneWidget);
+  });
+
+  testWidgets('heart-rate detail shows neutral baseline-missing state', (
+    tester,
+  ) async {
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(_baselineMissingOverview()),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Heart rate'));
+    await tester.pumpAndSettle();
+    expect(find.text('Baseline not established'), findsOneWidget);
+  });
+
+  testWidgets('depth detail shows low-confidence fallback', (tester) async {
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(_lowConfidenceDepthOverview()),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Depth'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Stage confidence is too low for a reliable depth breakdown.'),
+      findsOneWidget,
+    );
   });
 }

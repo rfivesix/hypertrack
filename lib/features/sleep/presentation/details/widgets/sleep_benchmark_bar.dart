@@ -47,7 +47,7 @@ class SleepBenchmarkBar extends StatelessWidget {
                       bottom: 12,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.25),
+                          color: Colors.green.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),

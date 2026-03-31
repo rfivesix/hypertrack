@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../util/design_constants.dart';
+import '../../../../widgets/global_app_bar.dart';
+import '../../../../widgets/summary_card.dart';
 import '../../data/sleep_day_repository.dart';
 import '../../domain/sleep_enums.dart';
+import '../details/sleep_data_unavailable_card.dart';
 import '../sleep_navigation.dart';
 import 'sleep_day_view_model.dart';
 
@@ -39,9 +43,14 @@ class _SleepDayOverviewBody extends StatelessWidget {
     final model = context.watch<SleepDayViewModel>();
     final overview = model.overview;
     return Scaffold(
-      appBar: AppBar(title: const Text('Sleep')),
+      extendBodyBehindAppBar: true,
+      appBar: const GlobalAppBar(title: 'Sleep'),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top +
+              MediaQuery.of(context).padding.top +
+              16,
+        ),
         children: [
           SegmentedButton<int>(
             segments: const [
@@ -51,12 +60,24 @@ class _SleepDayOverviewBody extends StatelessWidget {
             ],
             selected: {model.selectedScopeIndex},
             onSelectionChanged: (selection) {
-              model.setScopeIndex(selection.first);
+              final selected = selection.first;
+              model.setScopeIndex(selected);
+              if (selected != 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Week and Month views are not available in this batch yet.',
+                    ),
+                  ),
+                );
+              }
             },
           ),
           const SizedBox(height: 16),
           if (model.isLoading)
             const Center(child: CircularProgressIndicator())
+          else if (!model.isDayScope)
+            const _SleepScopeNotAvailableCard()
           else if (overview == null)
             const _SleepEmptyStateCard()
           else ...[
@@ -77,13 +98,22 @@ class _SleepEmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: const Text('No sleep data available for this day.'),
       ),
-      child: const Text('No sleep data available for this day.'),
+    );
+  }
+}
+
+class _SleepScopeNotAvailableCard extends StatelessWidget {
+  const _SleepScopeNotAvailableCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SleepDataUnavailableCard(
+      message: 'Week and Month views are not implemented in this batch yet.',
     );
   }
 }
@@ -97,55 +127,51 @@ class _SleepTimelineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final segments = overview.timelineSegments;
     if (segments.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            const Text('No stage timeline available for this night.'),
-          ],
+      return SummaryCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              const Text('No stage timeline available for this night.'),
+            ],
+          ),
         ),
       );
     }
 
     final duration = overview.session.endAtUtc.difference(overview.session.startAtUtc);
     final totalMinutes = duration.inMinutes <= 0 ? 1 : duration.inMinutes;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 16,
-            child: Row(
-              children: [
-                for (final segment in segments)
-                  Expanded(
-                    flex: (segment.endAtUtc
-                            .difference(segment.startAtUtc)
-                            .inMinutes
-                            .clamp(1, totalMinutes))
-                        .toInt(),
-                    child: Container(
-                      color: _timelineStageColor(context, segment.stage),
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 16,
+              child: Row(
+                children: [
+                  for (final segment in segments)
+                    Expanded(
+                      flex: (segment.endAtUtc
+                              .difference(segment.startAtUtc)
+                              .inMinutes
+                              .clamp(1, totalMinutes))
+                          .toInt(),
+                      child: Container(
+                        color: _timelineStageColor(context, segment.stage),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -178,46 +204,48 @@ class _SleepScoreCard extends StatelessWidget {
     final score = overview.analysis.score;
     final scoreText = score == null ? '--' : score.round().toString();
     final quality = overview.analysis.sleepQuality;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  value: score == null
-                      ? 0
-                      : (score.clamp(0.0, 100.0) / 100.0).toDouble(),
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  color: _qualityColor(quality),
-                ),
-                Text(scoreText),
-              ],
+    final subtitle = overview.analysis.score == null
+        ? 'Score unavailable for this night.'
+        : _qualitySubtitle(quality);
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 64,
+              height: 64,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: score == null
+                        ? 0
+                        : (score.clamp(0.0, 100.0) / 100.0).toDouble(),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: _qualityColor(quality),
+                  ),
+                  Text(scoreText),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Sleep quality'),
-                Text(
-                  _qualityLabel(quality),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                Text(_qualitySubtitle(quality)),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Sleep quality'),
+                  Text(
+                    _qualityLabel(quality),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(subtitle),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -257,6 +285,9 @@ class _SleepMetricTileGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final regularitySubtitle = overview.regularityNights.isEmpty
+        ? 'Unavailable'
+        : '${overview.regularityNights.length.clamp(0, 7)}-night view';
     return GridView.count(
       shrinkWrap: true,
       crossAxisCount: 2,
@@ -285,7 +316,7 @@ class _SleepMetricTileGrid extends StatelessWidget {
         ),
         _MetricTile(
           title: 'Regularity',
-          subtitle: overview.regularityNights.length >= 7 ? '7-night view' : 'Limited',
+          subtitle: regularitySubtitle,
           onTap: () => SleepNavigation.openRegularityDetail(
             context,
             overview: overview,
@@ -293,7 +324,9 @@ class _SleepMetricTileGrid extends StatelessWidget {
         ),
         _MetricTile(
           title: 'Depth',
-          subtitle: overview.hasStageData ? 'Stages available' : 'Unavailable',
+          subtitle: overview.stageDataConfidence == SleepStageConfidence.low
+              ? 'Low confidence'
+              : (overview.hasStageData ? 'Stages available' : 'Unavailable'),
           onTap: () => SleepNavigation.openDepthDetail(
             context,
             overview: overview,
@@ -301,7 +334,9 @@ class _SleepMetricTileGrid extends StatelessWidget {
         ),
         _MetricTile(
           title: 'Interruptions',
-          subtitle: '${overview.interruptionsCount}',
+          subtitle: overview.interruptionsCount == null
+              ? 'Unavailable'
+              : '${overview.interruptionsCount}',
           onTap: () => SleepNavigation.openInterruptionsDetail(
             context,
             overview: overview,
@@ -325,23 +360,18 @@ class _MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Theme.of(context).cardColor,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 4),
-              Text(subtitle),
-            ],
-          ),
+    return SummaryCard(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 4),
+            Text(subtitle),
+          ],
         ),
       ),
     );

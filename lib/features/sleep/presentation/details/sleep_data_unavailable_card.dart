@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../widgets/summary_card.dart';
+
 class SleepDataUnavailableCard extends StatelessWidget {
   const SleepDataUnavailableCard({
     super.key,
@@ -10,14 +12,11 @@ class SleepDataUnavailableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Theme.of(context).cardColor,
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(message),
       ),
-      child: Text(message),
     );
   }
 }

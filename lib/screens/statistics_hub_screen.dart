@@ -9,6 +9,7 @@ import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/hub_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
+import '../features/sleep/presentation/sleep_navigation.dart';
 import '../features/steps/data/steps_aggregation_repository.dart';
 import '../features/steps/domain/steps_models.dart';
 import '../generated/app_localizations.dart';
@@ -242,6 +243,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 ],
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
+                const SizedBox(height: DesignConstants.spacingL),
+                _buildSectionTitle(context, 'Sleep'),
+                _buildSleepSection(),
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.sectionConsistency),
                 _buildConsistencySection(),
@@ -713,6 +717,34 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               ],
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSleepSection() {
+    final subtitle = _selectedTimeRangeIndex == 0
+        ? 'Day overview and detail drill-downs'
+        : 'Sleep day view is available from this entry';
+    return SummaryCard(
+      onTap: () => SleepNavigation.openDay(context),
+      child: ListTile(
+        leading: Icon(
+          Icons.bedtime_outlined,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: const Text(
+          'Sleep',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle),
+        trailing: Icon(
+          Icons.chevron_right,
+          size: DesignConstants.iconSizeM,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
         ),
       ),
     );

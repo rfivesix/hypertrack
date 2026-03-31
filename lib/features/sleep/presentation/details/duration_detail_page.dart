@@ -25,6 +25,16 @@ class DurationDetailPage extends StatelessWidget {
       );
     }
     final duration = overview.totalSleepDuration;
+    if (duration <= Duration.zero) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Duration')),
+        body: const Padding(
+          padding: EdgeInsets.all(16),
+          child:
+              SleepDataUnavailableCard(message: 'Duration data is unavailable.'),
+        ),
+      );
+    }
     final status = duration.inHours >= 7 ? 'Within target' : 'Below target';
     return SleepDetailPageShell(
       title: 'Duration',

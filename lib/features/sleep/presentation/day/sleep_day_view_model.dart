@@ -19,6 +19,7 @@ class SleepDayViewModel extends ChangeNotifier {
 
   int _selectedScopeIndex = 0;
   int get selectedScopeIndex => _selectedScopeIndex;
+  bool get isDayScope => _selectedScopeIndex == 0;
 
   bool _isLoading = true;
   bool get isLoading => _isLoading;

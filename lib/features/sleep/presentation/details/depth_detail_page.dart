@@ -41,12 +41,26 @@ class DepthDetailPage extends StatelessWidget {
       );
     }
 
-    final total =
-        overview.deepDuration + overview.lightDuration + overview.remDuration;
+    if (!overview.hasStageDurations) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Depth')),
+        body: const Padding(
+          padding: EdgeInsets.all(16),
+          child: SleepDataUnavailableCard(
+            message: 'Stage duration breakdown is unavailable for this night.',
+          ),
+        ),
+      );
+    }
+
+    final deepDuration = overview.deepDuration ?? Duration.zero;
+    final lightDuration = overview.lightDuration ?? Duration.zero;
+    final remDuration = overview.remDuration ?? Duration.zero;
+    final total = deepDuration + lightDuration + remDuration;
     final totalMinutes = total.inMinutes == 0 ? 1 : total.inMinutes;
-    final deepPct = (overview.deepDuration.inMinutes / totalMinutes) * 100;
-    final lightPct = (overview.lightDuration.inMinutes / totalMinutes) * 100;
-    final remPct = (overview.remDuration.inMinutes / totalMinutes) * 100;
+    final deepPct = (deepDuration.inMinutes / totalMinutes) * 100;
+    final lightPct = (lightDuration.inMinutes / totalMinutes) * 100;
+    final remPct = (remDuration.inMinutes / totalMinutes) * 100;
     final rating = deepPct >= 20 ? 'Restorative' : 'Light-leaning';
 
     return SleepDetailPageShell(
@@ -60,19 +74,19 @@ class DepthDetailPage extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                flex: overview.deepDuration.inMinutes
+                flex: deepDuration.inMinutes
                     .clamp(1, totalMinutes)
                     .toInt(),
                 child: Container(color: Colors.indigo),
               ),
               Expanded(
-                flex: overview.lightDuration.inMinutes
+                flex: lightDuration.inMinutes
                     .clamp(1, totalMinutes)
                     .toInt(),
                 child: Container(color: Colors.blue),
               ),
               Expanded(
-                flex: overview.remDuration.inMinutes
+                flex: remDuration.inMinutes
                     .clamp(1, totalMinutes)
                     .toInt(),
                 child: Container(color: Colors.purple),
@@ -83,17 +97,17 @@ class DepthDetailPage extends StatelessWidget {
         const SizedBox(height: 12),
         _DepthRow(
           label: 'Deep',
-          duration: overview.deepDuration,
+          duration: deepDuration,
           percent: deepPct,
         ),
         _DepthRow(
           label: 'Light',
-          duration: overview.lightDuration,
+          duration: lightDuration,
           percent: lightPct,
         ),
         _DepthRow(
           label: 'REM',
-          duration: overview.remDuration,
+          duration: remDuration,
           percent: remPct,
         ),
       ],

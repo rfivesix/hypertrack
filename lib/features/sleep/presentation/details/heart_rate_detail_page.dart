@@ -25,23 +25,23 @@ class HeartRateDetailPage extends StatelessWidget {
     }
 
     final avg = overview.sleepHrAvg!;
+    final established = overview.hasHeartRateBaseline;
     final baseline = overview.baselineSleepHr;
-    final established = overview.isHrBaselineEstablished && baseline != null;
     final delta = overview.deltaSleepHr;
 
-    final statusLabel = established
-        ? (delta == null
+    final statusLabel = !established
+        ? 'Baseline not established'
+        : (delta == null
             ? 'Baseline comparison unavailable'
-            : (delta <= 0 ? 'Below baseline' : 'Above baseline'))
-        : 'Baseline not established';
+            : (delta <= 0 ? 'Below baseline' : 'Above baseline'));
 
     return SleepDetailPageShell(
       title: 'Heart rate',
       value: '${avg.round()} bpm',
       statusLabel: statusLabel,
       subtitle: established
-          ? 'Compared with your recent sleep baseline.'
-          : 'We need more nights to establish a stable baseline.',
+          ? 'Compared with your established sleep baseline.'
+          : 'Baseline is not established yet. This is neutral.',
       statusColor: established
           ? (delta != null && delta <= 0 ? Colors.green : Colors.orange)
           : Colors.grey,
@@ -51,7 +51,7 @@ class HeartRateDetailPage extends StatelessWidget {
           max: 90,
           value: avg,
           lowerTarget: established ? baseline! - 3 : avg - 2,
-          upperTarget: established ? baseline! + 3 : avg + 2,
+          upperTarget: established ? baseline + 3 : avg + 2,
         ),
         const SizedBox(height: 12),
         Text(
