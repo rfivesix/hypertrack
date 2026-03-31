@@ -6,14 +6,38 @@ import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_view_model.dart';
 import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
+import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
+import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeSleepDayRepository implements SleepDayDataRepository {
   _FakeSleepDayRepository(this.data);
 
   final SleepDayOverviewData? data;
+  int fetchCount = 0;
 
   @override
-  Future<SleepDayOverviewData?> fetchOverview(DateTime day) async => data;
+  Future<SleepDayOverviewData?> fetchOverview(DateTime day) async {
+    fetchCount += 1;
+    return data;
+  }
+
+  @override
+  Future<void> dispose() async {}
+}
+
+class _FakeSleepImportService implements SleepImportService {
+  _FakeSleepImportService(this.result);
+
+  final SleepSyncResult result;
+  int calls = 0;
+
+  @override
+  Future<SleepSyncResult> importRecent({int lookbackDays = 30}) async {
+    calls += 1;
+    return result;
+  }
 
   @override
   Future<void> dispose() async {}
@@ -118,6 +142,17 @@ SleepDayOverviewData _lowConfidenceDepthOverview() {
 }
 
 void main() {
+  setUp(() {
+    PackageInfo.setMockInitialValues(
+      appName: 'HyperTrack',
+      packageName: 'com.rfivesix.hypertrack',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
   testWidgets('navigates from day tiles to detail routes', (tester) async {
     final overview = _sampleOverview();
     final model = SleepDayViewModel(repository: _FakeSleepDayRepository(overview));
@@ -162,7 +197,16 @@ void main() {
   });
 
   testWidgets('renders empty state without crash', (tester) async {
-    final model = SleepDayViewModel(repository: _FakeSleepDayRepository(null));
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(null),
+      syncService: _FakeSleepImportService(
+        const SleepSyncResult(
+          success: false,
+          permissionState: SleepPermissionState.denied,
+          importedSessions: 0,
+        ),
+      ),
+    );
     await tester.pumpWidget(
       MaterialApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
@@ -171,6 +215,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('No sleep data available for this day.'), findsOneWidget);
+    expect(find.text('Open settings'), findsOneWidget);
+    expect(find.text('Import now'), findsOneWidget);
   });
 
   testWidgets('heart-rate detail shows neutral baseline-missing state', (
@@ -210,5 +256,72 @@ void main() {
       find.text('Stage confidence is too low for a reliable depth breakdown.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('import now action triggers import orchestration', (tester) async {
+    final import = _FakeSleepImportService(
+      const SleepSyncResult(
+        success: true,
+        permissionState: SleepPermissionState.ready,
+        importedSessions: 1,
+      ),
+    );
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(null),
+      syncService: import,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Import now'));
+    await tester.pumpAndSettle();
+    expect(import.calls, 1);
+  });
+
+  testWidgets('successful import refreshes day view model data', (tester) async {
+    final repo = _FakeSleepDayRepository(_sampleOverview());
+    final import = _FakeSleepImportService(
+      const SleepSyncResult(
+        success: true,
+        permissionState: SleepPermissionState.ready,
+        importedSessions: 1,
+      ),
+    );
+    final model = SleepDayViewModel(
+      repository: repo,
+      syncService: import,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final initialFetches = repo.fetchCount;
+
+    await model.importNow();
+    await tester.pumpAndSettle();
+    expect(repo.fetchCount, greaterThan(initialFetches));
+  });
+
+  testWidgets('sleep day list top padding includes app bar height', (tester) async {
+    final model = SleepDayViewModel(repository: _FakeSleepDayRepository(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final listView = tester.widget<ListView>(find.byType(ListView).first);
+    final padding = listView.padding as EdgeInsets;
+    expect(padding.top, greaterThanOrEqualTo(kToolbarHeight));
   });
 }

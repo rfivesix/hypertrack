@@ -32,6 +32,7 @@ class SleepDetailPageShell extends StatelessWidget {
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top +
               MediaQuery.of(context).padding.top +
+              kToolbarHeight +
               16,
         ),
         children: [

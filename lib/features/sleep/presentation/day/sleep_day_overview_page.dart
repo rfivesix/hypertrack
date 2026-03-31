@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../screens/settings_screen.dart';
 import '../../../../util/design_constants.dart';
 import '../../../../widgets/global_app_bar.dart';
 import '../../../../widgets/summary_card.dart';
@@ -49,6 +50,7 @@ class _SleepDayOverviewBody extends StatelessWidget {
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top +
               MediaQuery.of(context).padding.top +
+              kToolbarHeight +
               16,
         ),
         children: [
@@ -79,7 +81,16 @@ class _SleepDayOverviewBody extends StatelessWidget {
           else if (!model.isDayScope)
             const _SleepScopeNotAvailableCard()
           else if (overview == null)
-            const _SleepEmptyStateCard()
+            _SleepEmptyStateCard(
+              onOpenSettings: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                );
+                if (!context.mounted) return;
+                await context.read<SleepDayViewModel>().load();
+              },
+              onImportNow: model.importNow,
+            )
           else ...[
             _SleepTimelineCard(overview: overview),
             const SizedBox(height: 12),
@@ -94,14 +105,58 @@ class _SleepDayOverviewBody extends StatelessWidget {
 }
 
 class _SleepEmptyStateCard extends StatelessWidget {
-  const _SleepEmptyStateCard();
+  const _SleepEmptyStateCard({
+    required this.onOpenSettings,
+    required this.onImportNow,
+  });
+
+  final VoidCallback onOpenSettings;
+  final Future<bool> Function() onImportNow;
 
   @override
   Widget build(BuildContext context) {
     return SummaryCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: const Text('No sleep data available for this day.'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('No sleep data available for this day.'),
+            const SizedBox(height: 8),
+            const Text(
+              'Connect Health Connect/HealthKit in Settings and import recent sleep data.',
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: onOpenSettings,
+                  icon: const Icon(Icons.settings_outlined),
+                  label: const Text('Open settings'),
+                ),
+                FilledButton.icon(
+                  onPressed: () async {
+                    final ok = await onImportNow();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          ok
+                              ? 'Sleep import finished. Refreshing...'
+                              : 'Sleep import not available. Check permissions in Settings.',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.sync),
+                  label: const Text('Import now'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -4,15 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/sleep_day_repository.dart';
+import '../../platform/sleep_sync_service.dart';
 
 class SleepDayViewModel extends ChangeNotifier {
   SleepDayViewModel({
     required SleepDayDataRepository repository,
+    SleepImportService? syncService,
     DateTime? selectedDay,
   })  : _repository = repository,
-        _selectedDay = _normalizeDate(selectedDay ?? DateTime.now());
+        _syncService = syncService ?? SleepSyncService(),
+        _selectedDay = _normalizeDate(selectedDay ?? DateTime.now()) {
+    SleepSyncService.lastImportAtListenable.addListener(_onSleepImportCompleted);
+  }
 
   final SleepDayDataRepository _repository;
+  final SleepImportService _syncService;
 
   DateTime _selectedDay;
   DateTime get selectedDay => _selectedDay;
@@ -58,8 +64,24 @@ class SleepDayViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> importNow() async {
+    final result = await _syncService.importRecent();
+    if (result.success) {
+      await load();
+      return true;
+    }
+    return false;
+  }
+
+  void _onSleepImportCompleted() {
+    unawaited(load());
+  }
+
   @override
   void dispose() {
+    SleepSyncService.lastImportAtListenable
+        .removeListener(_onSleepImportCompleted);
+    unawaited(_syncService.dispose());
     unawaited(_repository.dispose());
     super.dispose();
   }

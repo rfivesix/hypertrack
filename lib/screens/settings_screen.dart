@@ -1,5 +1,6 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../generated/app_localizations.dart';
 import 'ai_settings_screen.dart';
 import 'data_management_screen.dart';
@@ -12,13 +13,24 @@ import '../widgets/global_app_bar.dart';
 import '../services/health/health_models.dart';
 import '../services/health/health_platform_steps.dart';
 import '../services/health/steps_sync_service.dart';
+import '../features/sleep/platform/sleep_sync_service.dart';
+import '../features/sleep/platform/permissions/sleep_permission_controller.dart';
+import '../features/sleep/platform/permissions/sleep_permission_models.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
 /// Includes theme selection (light/dark/system), visual style toggles,
 /// and navigation to data management (backup/import) and legal information.
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({
+    super.key,
+    SleepSettingsService? sleepSyncService,
+    SleepPermissionController? sleepPermissionController,
+  })  : _sleepSyncService = sleepSyncService,
+        _sleepPermissionController = sleepPermissionController;
+
+  final SleepSettingsService? _sleepSyncService;
+  final SleepPermissionController? _sleepPermissionController;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -27,9 +39,15 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _appVersion = '';
   final StepsSyncService _stepsSyncService = StepsSyncService();
+  late final SleepSettingsService _sleepSyncService;
   bool _stepsTrackingEnabled = true;
+  bool _sleepTrackingEnabled = false;
   StepsProviderFilter _stepsProviderFilter = StepsProviderFilter.all;
   StepsSourcePolicy _stepsSourcePolicy = StepsSourcePolicy.autoDominant;
+  late final SleepPermissionController _sleepPermissionController;
+  late final bool _ownsSleepSyncService;
+  late final bool _ownsSleepPermissionController;
+  bool _isSleepImporting = false;
 
   /// Flag for parent screens to know steps settings changed and data should be refreshed.
   bool hasStepsSettingsChanged = false;
@@ -37,8 +55,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _ownsSleepSyncService = widget._sleepSyncService == null;
+    _sleepSyncService = widget._sleepSyncService ?? SleepSyncService();
+    _ownsSleepPermissionController = widget._sleepPermissionController == null;
+    _sleepPermissionController =
+        widget._sleepPermissionController ??
+            _sleepSyncService.buildPermissionController();
     _loadAppVersion();
     _loadStepsSettings();
+    _loadSleepSettings();
   }
 
   Future<void> _loadAppVersion() async {
@@ -60,6 +85,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _stepsProviderFilter = providerFilter;
       _stepsSourcePolicy = sourcePolicy;
     });
+  }
+
+  Future<void> _loadSleepSettings() async {
+    final enabled = await _sleepSyncService.isTrackingEnabled();
+    if (!mounted) return;
+    setState(() => _sleepTrackingEnabled = enabled);
+    await _sleepPermissionController.refresh();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsSleepPermissionController) {
+      _sleepPermissionController.state.dispose();
+    }
+    if (_ownsSleepSyncService) {
+      unawaited(_sleepSyncService.dispose());
+    }
+    super.dispose();
   }
 
   @override
@@ -294,6 +337,96 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: DesignConstants.spacingXL),
+            _buildSectionTitle(context, 'Sleep (Batch 2)'),
+            ValueListenableBuilder<SleepPermissionStatus>(
+              valueListenable: _sleepPermissionController.state,
+              builder: (context, permission, _) {
+                return SummaryCard(
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        secondary: const Icon(Icons.bedtime_outlined),
+                        title: const Text(
+                          'Enable sleep tracking',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: const Text(
+                          'Read sleep and overnight heart rate from Health Connect / HealthKit',
+                        ),
+                        value: _sleepTrackingEnabled,
+                        onChanged: (value) async {
+                          await _sleepSyncService.setTrackingEnabled(value);
+                          hasStepsSettingsChanged = true;
+                          if (!mounted) return;
+                          setState(() => _sleepTrackingEnabled = value);
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.health_and_safety_outlined),
+                        title: const Text(
+                          'Health connection status',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(_sleepStatusSubtitle(permission)),
+                        trailing: Icon(
+                          _sleepStatusIcon(permission.state),
+                          color: _sleepStatusColor(context, permission.state),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.lock_open_outlined),
+                        title: const Text('Request access'),
+                        subtitle: const Text(
+                          'Request or re-request sleep/heart-rate permissions',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () async {
+                          await _sleepPermissionController.requestAccess();
+                          if (!mounted) return;
+                          setState(() {});
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.sync),
+                        title: const Text('Import sleep data now'),
+                        subtitle: const Text('Import the last 30 days for testing'),
+                        trailing: _isSleepImporting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.chevron_right),
+                        onTap: _isSleepImporting
+                            ? null
+                            : () async {
+                                setState(() => _isSleepImporting = true);
+                                final result =
+                                    await _sleepSyncService.importRecent();
+                                if (!mounted) return;
+                                setState(() => _isSleepImporting = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      result.success
+                                          ? 'Sleep import finished (${result.importedSessions} sessions).'
+                                          : (result.message ??
+                                              'Sleep import unavailable. Check permissions.'),
+                                    ),
+                                  ),
+                                );
+                                await _sleepPermissionController.refresh();
+                                hasStepsSettingsChanged = true;
+                              },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: DesignConstants.spacingXL),
             _buildSectionTitle(context, l10n.aiSettingsTitle),
             SummaryCard(
               child: SwitchListTile(
@@ -385,6 +518,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
       ),
     );
+  }
+
+  String _sleepStatusSubtitle(SleepPermissionStatus status) {
+    final custom = status.message;
+    if (custom != null && custom.isNotEmpty) return custom;
+    return switch (status.state) {
+      SleepPermissionState.loading => 'Checking permission status…',
+      SleepPermissionState.ready => 'Ready',
+      SleepPermissionState.denied => 'Denied',
+      SleepPermissionState.partial => 'Partial access',
+      SleepPermissionState.unavailable => 'Unavailable on this device',
+      SleepPermissionState.notInstalled => 'Health Connect not installed',
+      SleepPermissionState.technicalError => 'Technical error',
+    };
+  }
+
+  IconData _sleepStatusIcon(SleepPermissionState state) {
+    return switch (state) {
+      SleepPermissionState.ready => Icons.check_circle_outline,
+      SleepPermissionState.loading => Icons.hourglass_bottom,
+      SleepPermissionState.denied => Icons.block_outlined,
+      SleepPermissionState.partial => Icons.warning_amber_outlined,
+      SleepPermissionState.unavailable => Icons.mobiledata_off_outlined,
+      SleepPermissionState.notInstalled => Icons.download_outlined,
+      SleepPermissionState.technicalError => Icons.error_outline,
+    };
+  }
+
+  Color _sleepStatusColor(BuildContext context, SleepPermissionState state) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (state) {
+      SleepPermissionState.ready => Colors.green,
+      SleepPermissionState.loading => scheme.outline,
+      SleepPermissionState.denied => scheme.error,
+      SleepPermissionState.partial => Colors.orange,
+      SleepPermissionState.unavailable => scheme.outline,
+      SleepPermissionState.notInstalled => scheme.secondary,
+      SleepPermissionState.technicalError => scheme.error,
+    };
   }
 
   /// AI gradient colours for the entry-point icon accent.

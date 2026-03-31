@@ -28,6 +28,14 @@ The Sleep Day screen is now reachable in normal app flow:
 3. In **Statistics Hub**, tap the **Sleep** card section
 4. This opens the Sleep Day overview (`/sleep/day`)
 
+Sleep setup/import is now also reachable in normal app flow:
+
+1. Open app
+2. Go to **Profile**
+3. Open **Settings**
+4. Scroll to **Sleep (Batch 2)**
+5. Toggle sleep tracking, request access, and run manual import
+
 ## Screen architecture and navigation flow
 
 ### Day hub
@@ -100,6 +108,41 @@ When data is not explicitly available from current derived outputs, UI now shows
 - If repository creates DB itself, it owns and closes it.
 - This behavior is explicit and testable.
 
+## Settings + permission/import integration
+
+`settings_screen.dart` now includes a dedicated **Sleep (Batch 2)** section, reusing the same settings patterns as existing sections:
+
+- `SwitchListTile` for sleep tracking enable/disable.
+- status row showing permission state (`ready`, `denied`, `partial`, `unavailable`, `not installed`, `technical error`).
+- `Request access` action.
+- `Import sleep data now` action (manual import trigger for testing).
+
+Permission and import orchestration boundaries:
+
+- Permission state/requests are owned by `SleepPermissionController` + platform permission services.
+- Import orchestration is owned by `SleepSyncService` (not by widgets).
+- Platform IO remains in channel bridge implementations:
+  - `sleep_platform_channel.dart`
+- Mapping and persistence reuse existing sleep foundations:
+  - `HealthConnectMapper` / `HealthKitMapper`
+  - sleep canonical/raw DAOs
+- Sleep Day refresh path:
+  - Day VM `importNow()` triggers import service and reloads Day overview on success.
+
+## Manual end-to-end test flow
+
+1. Open **Profile → Settings**
+2. In **Sleep (Batch 2)**:
+   - enable sleep tracking
+   - tap **Request access**
+   - verify status row updates
+   - tap **Import sleep data now**
+3. Open **Stats → Sleep**
+4. Verify Day screen refreshes and data is shown when available
+5. If no data is shown, verify empty-state CTA offers:
+   - **Open settings**
+   - **Import now**
+
 ## Why each UI structure/fallback was chosen
 
 - **Segmented control:** keeps UX aligned with target IA while deferring non-Day rendering scope.
@@ -121,6 +164,7 @@ When data is not explicitly available from current derived outputs, UI now shows
   - plus circular average for summary rows.
 - Unknown timeline confidence is preserved as unknown (not upgraded to high).
 - Week/month segmented choices are explicitly marked unavailable in this batch.
+- Empty Day state now includes actionable neutral CTA (open settings/import now).
 
 ## Shared detail-shell design decisions
 
@@ -167,6 +211,8 @@ When data is not explicitly available from current derived outputs, UI now shows
 - `lib/features/sleep/domain/derived/nightly_sleep_analysis.dart`
 - `lib/features/sleep/presentation/day/sleep_day_overview_page.dart`
 - `lib/features/sleep/presentation/day/sleep_day_view_model.dart`
+- `lib/features/sleep/platform/sleep_sync_service.dart`
+- `lib/features/sleep/platform/sleep_platform_channel.dart`
 - `lib/features/sleep/presentation/details/sleep_detail_page_shell.dart`
 - `lib/features/sleep/presentation/details/sleep_data_unavailable_card.dart`
 - `lib/features/sleep/presentation/details/duration_detail_page.dart`
@@ -177,4 +223,5 @@ When data is not explicitly available from current derived outputs, UI now shows
 - `lib/features/sleep/presentation/details/widgets/sleep_benchmark_bar.dart`
 - `test/statistics_hub_steps_card_test.dart`
 - `test/features/sleep/presentation/sleep_day_navigation_test.dart`
+- `test/features/sleep/presentation/sleep_settings_screen_test.dart`
 - `documentation/sleep/sleep_day_batch_2.md`
