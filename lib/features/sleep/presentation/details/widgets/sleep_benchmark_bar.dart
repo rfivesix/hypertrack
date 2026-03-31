@@ -21,9 +21,8 @@ class SleepBenchmarkBar extends StatelessWidget {
     final range = (max - min).abs() < 0.0001 ? 1.0 : (max - min);
     final low = ((lowerTarget - min) / range).clamp(0.0, 1.0);
     final high = ((upperTarget - min) / range).clamp(0.0, 1.0);
-    final marker = value == null
-        ? null
-        : ((value! - min) / range).clamp(0.0, 1.0);
+    final marker =
+        value == null ? null : ((value! - min) / range).clamp(0.0, 1.0);
 
     return SizedBox(
       height: 34,

@@ -27,17 +27,11 @@ class _StubPermissionService implements SleepPermissionsService {
 class _FakeSleepSettingsService implements SleepSettingsService {
   _FakeSleepSettingsService({
     required this.controller,
-    this.enabled = false,
-    this.importResult = const SleepSyncResult(
-      success: true,
-      permissionState: SleepPermissionState.ready,
-      importedSessions: 2,
-    ),
   });
 
   final SleepPermissionController controller;
-  bool enabled;
-  SleepSyncResult importResult;
+  bool enabled = false;
+  late SleepSyncResult importResult;
   int importCalls = 0;
 
   @override

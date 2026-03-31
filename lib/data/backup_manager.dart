@@ -122,7 +122,8 @@ class BackupManager {
     final db = await _userDb.database;
     final customProductRows = await (db.select(
       db.products,
-    )..where((t) => t.source.equals('user'))).get();
+    )..where((t) => t.source.equals('user')))
+        .get();
 
     final customFoodItems = customProductRows.map((row) {
       return FoodItem(
@@ -345,7 +346,8 @@ class BackupManager {
       final db = await _userDb.database;
       await (db.delete(
         db.products,
-      )..where((t) => t.source.equals('user'))).go();
+      )..where((t) => t.source.equals('user')))
+          .go();
 
       for (final entry in backup.userPreferences.entries) {
         final key = entry.key;
@@ -412,9 +414,7 @@ class BackupManager {
       // Import DailyGoalsHistory
       if (backup.dailyGoalsHistory.isNotEmpty) {
         for (final row in backup.dailyGoalsHistory) {
-          final inserted = await db
-              .into(db.dailyGoalsHistory)
-              .insertReturning(
+          final inserted = await db.into(db.dailyGoalsHistory).insertReturning(
                 DailyGoalsHistoryCompanion(
                   targetCalories: drift.Value(row['targetCalories'] as int),
                   targetProtein: drift.Value(row['targetProtein'] as int),
@@ -470,9 +470,7 @@ class BackupManager {
       // Import Profile
       if (backup.profile != null) {
         final p = backup.profile!;
-        await db
-            .into(db.profiles)
-            .insert(
+        await db.into(db.profiles).insert(
               ProfilesCompanion(
                 id: drift.Value(p['id'] as String),
                 username: drift.Value(p['username'] as String?),
@@ -496,9 +494,7 @@ class BackupManager {
       // Import AppSettings
       if (backup.appSettings != null && backup.profile != null) {
         final s = backup.appSettings!;
-        await db
-            .into(db.appSettings)
-            .insert(
+        await db.into(db.appSettings).insert(
               AppSettingsCompanion(
                 userId: drift.Value(backup.profile!['id'] as String),
                 themeMode: drift.Value(s['themeMode'] as String? ?? 'system'),
@@ -577,12 +573,12 @@ class BackupManager {
       if (Platform.isAndroid) {
         final treeUri = prefs.getString('auto_backup_tree_uri');
         if (treeUri != null && treeUri.trim().isNotEmpty) {
-          final displayPath = await SafStorageService.instance
-              .writeTextFileToTree(
-                treeUri: treeUri.trim(),
-                fileName: targetFileName,
-                content: content,
-              );
+          final displayPath =
+              await SafStorageService.instance.writeTextFileToTree(
+            treeUri: treeUri.trim(),
+            fileName: targetFileName,
+            content: content,
+          );
           await SafStorageService.instance.pruneAutoBackupsInTree(
             treeUri: treeUri.trim(),
             filePrefix: 'hypertrack_auto',
@@ -615,9 +611,8 @@ class BackupManager {
 
       final docs = await getApplicationDocumentsDirectory();
       final external = await getExternalStorageDirectory();
-      final externalFallbackDir = external != null
-          ? p.join(external.path, 'Backups')
-          : null;
+      final externalFallbackDir =
+          external != null ? p.join(external.path, 'Backups') : null;
       final baseDir = await resolveWritableBackupDirectory(
         docsDir: docs,
         dirPath: configuredDirPath,
@@ -625,8 +620,7 @@ class BackupManager {
         externalFallbackDir: externalFallbackDir,
       );
       final requestedDir = configuredDirPath;
-      final usedFallback =
-          requestedDir != null &&
+      final usedFallback = requestedDir != null &&
           requestedDir.isNotEmpty &&
           p.normalize(requestedDir) != p.normalize(baseDir.path);
 
@@ -634,15 +628,14 @@ class BackupManager {
       await file.writeAsString(content);
 
       try {
-        final files =
-            baseDir
-                .listSync()
-                .whereType<File>()
-                .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
-                .toList()
-              ..sort(
-                (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
-              );
+        final files = baseDir
+            .listSync()
+            .whereType<File>()
+            .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
+            .toList()
+          ..sort(
+            (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
+          );
 
         if (files.length > retention) {
           for (var i = retention; i < files.length; i++) {

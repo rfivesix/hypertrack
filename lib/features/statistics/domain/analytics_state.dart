@@ -45,35 +45,35 @@ class AnalyticsState<T> {
 
   /// A state indicating data is currently being loaded.
   const AnalyticsState.loading()
-    : status = AnalyticsStatus.loading,
-      data = null,
-      errorMessage = null;
+      : status = AnalyticsStatus.loading,
+        data = null,
+        errorMessage = null;
 
   /// A state indicating no data is available for the requested range.
   const AnalyticsState.empty()
-    : status = AnalyticsStatus.empty,
-      data = null,
-      errorMessage = null;
+      : status = AnalyticsStatus.empty,
+        data = null,
+        errorMessage = null;
 
   /// A state indicating data exists but quality is insufficient for
   /// meaningful insight computation.
   const AnalyticsState.insufficient()
-    : status = AnalyticsStatus.insufficient,
-      data = null,
-      errorMessage = null;
+      : status = AnalyticsStatus.insufficient,
+        data = null,
+        errorMessage = null;
 
   /// A state indicating an error occurred. An optional [message] may
   /// carry diagnostic context for logging or display.
   AnalyticsState.error([String? message])
-    : status = AnalyticsStatus.error,
-      data = null,
-      errorMessage = message;
+      : status = AnalyticsStatus.error,
+        data = null,
+        errorMessage = message;
 
   /// A state indicating data is ready for display.
   AnalyticsState.ready(T value)
-    : status = AnalyticsStatus.ready,
-      data = value,
-      errorMessage = null;
+      : status = AnalyticsStatus.ready,
+        data = value,
+        errorMessage = null;
 
   /// The lifecycle status of this analytics result.
   final AnalyticsStatus status;

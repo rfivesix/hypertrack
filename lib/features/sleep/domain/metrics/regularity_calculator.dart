@@ -36,10 +36,12 @@ class RegularityMetrics {
   final double? regularityMinutes;
 }
 
-RegularityMetrics calculateRegularityMetrics(List<RegularityNightInput> nights) {
+RegularityMetrics calculateRegularityMetrics(
+    List<RegularityNightInput> nights) {
   final sorted = List<RegularityNightInput>.from(nights)
     ..sort((a, b) => a.nightDate.compareTo(b.nightDate));
-  final window = sorted.length <= 7 ? sorted : sorted.sublist(sorted.length - 7);
+  final window =
+      sorted.length <= 7 ? sorted : sorted.sublist(sorted.length - 7);
   final validCount = window.length;
   if (validCount < 3) {
     return RegularityMetrics(
@@ -48,8 +50,10 @@ RegularityMetrics calculateRegularityMetrics(List<RegularityNightInput> nights) 
     );
   }
 
-  final bedtimes = window.map((night) => night.bedtimeMinutes.toDouble()).toList();
-  final wakeTimes = window.map((night) => night.wakeMinutes.toDouble()).toList();
+  final bedtimes =
+      window.map((night) => night.bedtimeMinutes.toDouble()).toList();
+  final wakeTimes =
+      window.map((night) => night.wakeMinutes.toDouble()).toList();
   final mids = window.map((night) {
     final wake = _unwrapWake(
       bedtimeMinutes: night.bedtimeMinutes,

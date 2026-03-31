@@ -60,7 +60,8 @@ class _FakeHealthKitDataSource implements HealthKitDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async => batch;
+  }) async =>
+      batch;
 }
 
 class _ThrowingHealthKitDataSource implements HealthKitDataSource {
@@ -81,7 +82,8 @@ class _FakeHealthConnectDataSource implements HealthConnectDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async => batch;
+  }) async =>
+      batch;
 }
 
 class _StaticPermissionService implements SleepPermissionsService {
@@ -97,18 +99,18 @@ class _StaticPermissionService implements SleepPermissionsService {
 }
 
 SleepRawIngestionBatch _sampleBatch() => SleepRawIngestionBatch(
-  sessions: [
-    SleepIngestionSession(
-      recordId: 's',
-      startAtUtc: DateTime.utc(2026, 1, 1, 22),
-      endAtUtc: DateTime.utc(2026, 1, 2, 6),
-      platformSessionType: 'sleep',
-      sourcePlatform: 'test',
-    ),
-  ],
-  stageSegments: const [],
-  heartRateSamples: const [],
-);
+      sessions: [
+        SleepIngestionSession(
+          recordId: 's',
+          startAtUtc: DateTime.utc(2026, 1, 1, 22),
+          endAtUtc: DateTime.utc(2026, 1, 2, 6),
+          platformSessionType: 'sleep',
+          sourcePlatform: 'test',
+        ),
+      ],
+      stageSegments: const [],
+      heartRateSamples: const [],
+    );
 
 void main() {
   group('HealthKitSleepPermissionsService', () {

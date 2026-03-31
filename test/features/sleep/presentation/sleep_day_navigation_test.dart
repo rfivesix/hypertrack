@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/sleep/data/sleep_day_repository.dart';
-import 'package:hypertrack/features/sleep/domain/derived/nightly_sleep_analysis.dart';
 import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_view_model.dart';
@@ -222,9 +221,10 @@ void main() {
     expect(find.text('Interruptions'), findsWidgets);
   });
 
-  testWidgets('sleep placeholder routes render without crashing', (tester) async {
+  testWidgets('sleep placeholder routes render without crashing',
+      (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         initialRoute: SleepRouteNames.week,
       ),
@@ -233,7 +233,7 @@ void main() {
     expect(find.text('Sleep week'), findsOneWidget);
 
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         initialRoute: SleepRouteNames.connectHealthData,
       ),

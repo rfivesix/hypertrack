@@ -27,15 +27,15 @@ class SleepStageSegment {
   final SleepStageConfidence stageConfidence;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'id': id,
-    'sessionId': sessionId,
-    'stage': stage.name,
-    'startAtUtc': startAtUtc.toIso8601String(),
-    'endAtUtc': endAtUtc.toIso8601String(),
-    'sourcePlatform': sourcePlatform,
-    'sourceAppId': sourceAppId,
-    'sourceRecordHash': sourceRecordHash,
-    'sourceConfidence': sourceConfidence,
-    'stageConfidence': stageConfidence.name,
-  };
+        'id': id,
+        'sessionId': sessionId,
+        'stage': stage.name,
+        'startAtUtc': startAtUtc.toIso8601String(),
+        'endAtUtc': endAtUtc.toIso8601String(),
+        'sourcePlatform': sourcePlatform,
+        'sourceAppId': sourceAppId,
+        'sourceRecordHash': sourceRecordHash,
+        'sourceConfidence': sourceConfidence,
+        'stageConfidence': stageConfidence.name,
+      };
 }

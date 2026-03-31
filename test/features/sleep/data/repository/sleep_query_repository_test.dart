@@ -78,7 +78,8 @@ void main() {
     expect(analysis!.score, 80);
   });
 
-  test('reads analyses in date range and returns empty for missing data', () async {
+  test('reads analyses in date range and returns empty for missing data',
+      () async {
     await seed();
     final repo = DriftSleepQueryRepository(database: db);
     final rows = await repo.getAnalysesInRange(

@@ -80,7 +80,8 @@ NightlySleepMetrics calculateNightlySleepMetrics({
     }
   }
 
-  final interruptions = _countInterruptions(segments, sleepOnsetAt: sleepOnsetAt);
+  final interruptions =
+      _countInterruptions(segments, sleepOnsetAt: sleepOnsetAt);
   final stagePercentages = <CanonicalSleepStage, double>{};
   if (tst > Duration.zero) {
     for (final entry in stageDurations.entries) {
@@ -98,7 +99,8 @@ NightlySleepMetrics calculateNightlySleepMetrics({
         : sleepOnsetAt.difference(session.startAtUtc),
     totalSleepTime: tst,
     wakeAfterSleepOnset: waso,
-    sleepEfficiencyPct: tib.inSeconds == 0 ? 0 : (tst.inSeconds / tib.inSeconds) * 100,
+    sleepEfficiencyPct:
+        tib.inSeconds == 0 ? 0 : (tst.inSeconds / tib.inSeconds) * 100,
     finalAwakeningAtUtc: finalAwakeningAt,
     interruptionsCount: interruptions,
     totalWakeDuration: totalWake,

@@ -258,13 +258,13 @@ void main() {
     });
 
     test('data quality policy marks sufficient ranges correctly', () {
-      final assessment = StatisticsDataQualityPolicy.instance
-          .bodyNutritionInsight(
-            spanDays: 30,
-            totalDays: 30,
-            weightDays: 10,
-            loggedCalorieDays: 10,
-          );
+      final assessment =
+          StatisticsDataQualityPolicy.instance.bodyNutritionInsight(
+        spanDays: 30,
+        totalDays: 30,
+        weightDays: 10,
+        loggedCalorieDays: 10,
+      );
       expect(assessment.hasSufficientData, isTrue);
     });
 

@@ -64,29 +64,25 @@ class SleepCanonicalSessionsDao {
     required DateTime fromInclusive,
     required DateTime toExclusive,
   }) async {
-    final result = await _db
-        .customSelect(
-          '''
+    final result = await _db.customSelect(
+      '''
       SELECT * FROM sleep_canonical_sessions
       WHERE started_at < ? AND ended_at > ?
       ORDER BY started_at ASC
       ''',
-          variables: [
-            Variable<int>(_toEpochMillis(toExclusive)),
-            Variable<int>(_toEpochMillis(fromInclusive)),
-          ],
-        )
-        .get();
+      variables: [
+        Variable<int>(_toEpochMillis(toExclusive)),
+        Variable<int>(_toEpochMillis(fromInclusive)),
+      ],
+    ).get();
     return result.map(_mapSession).toList(growable: false);
   }
 
   Future<SleepCanonicalSessionRecord?> findById(String sessionId) async {
-    final row = await _db
-        .customSelect(
-          'SELECT * FROM sleep_canonical_sessions WHERE id = ? LIMIT 1',
-          variables: [Variable<String>(sessionId)],
-        )
-        .getSingleOrNull();
+    final row = await _db.customSelect(
+      'SELECT * FROM sleep_canonical_sessions WHERE id = ? LIMIT 1',
+      variables: [Variable<String>(sessionId)],
+    ).getSingleOrNull();
     if (row == null) return null;
     return _mapSession(row);
   }
@@ -94,16 +90,14 @@ class SleepCanonicalSessionsDao {
   Future<List<SleepCanonicalSessionRecord>> findBySourceHash(
     String sourceRecordHash,
   ) async {
-    final result = await _db
-        .customSelect(
-          '''
+    final result = await _db.customSelect(
+      '''
       SELECT * FROM sleep_canonical_sessions
       WHERE source_record_hash = ?
       ORDER BY normalized_at DESC
       ''',
-          variables: [Variable<String>(sourceRecordHash)],
-        )
-        .get();
+      variables: [Variable<String>(sourceRecordHash)],
+    ).get();
     return result.map(_mapSession).toList(growable: false);
   }
 
@@ -201,16 +195,14 @@ class SleepCanonicalStageSegmentsDao {
   Future<List<SleepCanonicalStageSegmentRecord>> findBySessionId(
     String sessionId,
   ) async {
-    final result = await _db
-        .customSelect(
-          '''
+    final result = await _db.customSelect(
+      '''
       SELECT * FROM sleep_canonical_stage_segments
       WHERE session_id = ?
       ORDER BY started_at ASC
       ''',
-          variables: [Variable<String>(sessionId)],
-        )
-        .get();
+      variables: [Variable<String>(sessionId)],
+    ).get();
     return result.map(_mapRow).toList(growable: false);
   }
 
@@ -297,16 +289,14 @@ class SleepCanonicalHeartRateSamplesDao {
   Future<List<SleepCanonicalHeartRateSampleRecord>> findBySessionId(
     String sessionId,
   ) async {
-    final result = await _db
-        .customSelect(
-          '''
+    final result = await _db.customSelect(
+      '''
       SELECT * FROM sleep_canonical_heart_rate_samples
       WHERE session_id = ?
       ORDER BY sampled_at ASC
       ''',
-          variables: [Variable<String>(sessionId)],
-        )
-        .get();
+      variables: [Variable<String>(sessionId)],
+    ).get();
     return result.map(_mapRow).toList(growable: false);
   }
 

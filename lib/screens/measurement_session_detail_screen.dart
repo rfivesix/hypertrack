@@ -60,8 +60,8 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
                 trailing: Text(
                   "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             );

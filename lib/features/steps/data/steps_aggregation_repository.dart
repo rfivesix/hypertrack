@@ -163,8 +163,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   HealthStepsAggregationRepository({
     DatabaseHelper? dbHelper,
     StepsSyncService? stepsSyncService,
-  }) : dbHelper = dbHelper ?? DatabaseHelper.instance,
-       stepsSyncService = stepsSyncService ?? StepsSyncService();
+  })  : dbHelper = dbHelper ?? DatabaseHelper.instance,
+        stepsSyncService = stepsSyncService ?? StepsSyncService();
 
   final DatabaseHelper dbHelper;
   final StepsSyncService stepsSyncService;

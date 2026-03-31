@@ -45,10 +45,10 @@ class AiSuggestedItem {
   }
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'estimatedGrams': estimatedGrams,
-    'confidence': confidence,
-  };
+        'name': name,
+        'estimatedGrams': estimatedGrams,
+        'confidence': confidence,
+      };
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +65,7 @@ sealed class AiServiceException implements Exception {
 
 class AiKeyMissingException extends AiServiceException {
   const AiKeyMissingException()
-    : super('No API key configured for the selected provider.');
+      : super('No API key configured for the selected provider.');
 }
 
 class AiAuthException extends AiServiceException {
@@ -112,8 +112,8 @@ class AiService {
   static String _buildSystemPrompt({String? languageCode}) {
     final langRule = (languageCode != null && languageCode.isNotEmpty)
         ? '\n5. IMPORTANT: All food "name" values MUST be in the "$languageCode" language '
-              '(e.g. use "Apfel" instead of "Apple" when language is "de"). '
-              'Never mix languages.'
+            '(e.g. use "Apfel" instead of "Apple" when language is "de"). '
+            'Never mix languages.'
         : '';
 
     return '''
@@ -253,8 +253,7 @@ Example response:
     final previousJson = jsonEncode(
       previousResults.map((e) => e.toJson()).toList(),
     );
-    final userContent =
-        '''
+    final userContent = '''
 Previous analysis result:
 $previousJson
 
@@ -521,8 +520,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       return p;
     }).toList();
 
-    final userContent =
-        '''
+    final userContent = '''
 Target Meal: $mealTypeLabel
 
 Target macros for THIS meal:

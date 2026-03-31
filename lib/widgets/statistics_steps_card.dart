@@ -139,7 +139,7 @@ class StatisticsStepsCard extends StatelessWidget {
     final goalRatio = (dailyGoal / maxValue).clamp(0.0, 1.0);
     final averageSteps =
         chartBuckets.fold<int>(0, (sum, bucket) => sum + bucket.steps) ~/
-        chartBuckets.length;
+            chartBuckets.length;
     final averageRatio = (averageSteps / maxValue).clamp(0.0, 1.0);
     final showAverageLine =
         showWeekDecorations && averageSteps > 0 && (averageSteps != dailyGoal);
@@ -282,9 +282,8 @@ class StatisticsStepsCard extends StatelessWidget {
                 final barColor = bucket.steps <= 0
                     ? theme.colorScheme.outlineVariant
                     : primaryColor;
-                final barWidth = singlePoint
-                    ? 12.0
-                    : (isSevenDays ? 14.0 : 5.0);
+                final barWidth =
+                    singlePoint ? 12.0 : (isSevenDays ? 14.0 : 5.0);
 
                 return Expanded(
                   child: Padding(
@@ -363,9 +362,8 @@ class StatisticsStepsCard extends StatelessWidget {
                               color: isToday
                                   ? theme.colorScheme.onSurface
                                   : theme.colorScheme.onSurfaceVariant,
-                              fontWeight: isToday
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                              fontWeight:
+                                  isToday ? FontWeight.w700 : FontWeight.w500,
                             ),
                           ),
                         ],

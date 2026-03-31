@@ -1,5 +1,4 @@
 import '../../../data/drift_database.dart';
-import '../domain/derived/nightly_sleep_analysis.dart';
 import '../domain/sleep_domain.dart';
 import 'persistence/dao/sleep_canonical_dao.dart';
 import 'persistence/dao/sleep_nightly_analyses_dao.dart';
@@ -57,12 +56,12 @@ class SleepDayOverviewData {
   }
 
   bool get hasStageData => timelineSegments.any(
-    (segment) =>
-        segment.stage == CanonicalSleepStage.deep ||
-        segment.stage == CanonicalSleepStage.light ||
-        segment.stage == CanonicalSleepStage.rem ||
-        segment.stage == CanonicalSleepStage.asleepUnspecified,
-  );
+        (segment) =>
+            segment.stage == CanonicalSleepStage.deep ||
+            segment.stage == CanonicalSleepStage.light ||
+            segment.stage == CanonicalSleepStage.rem ||
+            segment.stage == CanonicalSleepStage.asleepUnspecified,
+      );
 
   bool get hasStageDurations =>
       (deepDuration?.inMinutes ?? 0) > 0 ||
@@ -80,8 +79,8 @@ abstract class SleepDayDataRepository {
 
 class SleepDayRepository implements SleepDayDataRepository {
   SleepDayRepository({AppDatabase? database})
-    : _database = database ?? AppDatabase(),
-      _ownsDatabase = database == null {
+      : _database = database ?? AppDatabase(),
+        _ownsDatabase = database == null {
     _analysesDao = SleepNightlyAnalysesDao(_database);
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _segmentsDao = SleepCanonicalStageSegmentsDao(_database);
@@ -265,11 +264,9 @@ class SleepDayRepository implements SleepDayDataRepository {
       result.add(
         SleepRegularityNight(
           nightDate: DateTime.parse(analysis.nightDate),
-          bedtimeMinutes:
-              session.startedAt.toLocal().hour * 60 +
+          bedtimeMinutes: session.startedAt.toLocal().hour * 60 +
               session.startedAt.toLocal().minute,
-          wakeMinutes:
-              session.endedAt.toLocal().hour * 60 +
+          wakeMinutes: session.endedAt.toLocal().hour * 60 +
               session.endedAt.toLocal().minute,
         ),
       );
@@ -282,9 +279,7 @@ class SleepDayRepository implements SleepDayDataRepository {
     List<SleepStageSegment> segments,
     CanonicalSleepStage stage,
   ) {
-    return segments
-        .where((segment) => segment.stage == stage)
-        .fold<Duration>(
+    return segments.where((segment) => segment.stage == stage).fold<Duration>(
           Duration.zero,
           (total, segment) =>
               total + segment.endAtUtc.difference(segment.startAtUtc),

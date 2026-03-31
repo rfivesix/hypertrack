@@ -34,9 +34,8 @@ class RegularityDetailPage extends StatelessWidget {
     return SleepDetailPageShell(
       title: 'Regularity',
       value: '${nights.length}-night range',
-      statusLabel: nights.length >= 7
-          ? 'Sufficient trend data'
-          : 'Limited trend data',
+      statusLabel:
+          nights.length >= 7 ? 'Sufficient trend data' : 'Limited trend data',
       subtitle: 'Bedtime and wake windows for recent nights.',
       children: [
         _RegularityChart(nights: nights),
@@ -63,16 +62,14 @@ class _RegularityChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayNights = nights.length <= 7
-        ? nights
-        : nights.sublist(nights.length - 7);
+    final displayNights =
+        nights.length <= 7 ? nights : nights.sublist(nights.length - 7);
     final adjusted = displayNights
         .map((night) => _AdjustedNight.from(night, _defaultAxisStart))
         .toList(growable: false);
     final minBed = adjusted.map((night) => night.bedAdjusted).reduce(math.min);
-    final maxWake = adjusted
-        .map((night) => night.wakeAdjusted)
-        .reduce(math.max);
+    final maxWake =
+        adjusted.map((night) => night.wakeAdjusted).reduce(math.max);
     final axisStart = math.min(_defaultAxisStart, minBed).toInt();
     final axisEnd = math.max(_defaultAxisEnd, maxWake).toInt();
     final ticks = _buildTicks(axisStart, axisEnd);
@@ -117,9 +114,8 @@ class _RegularityChart extends StatelessWidget {
                           final width = constraints.maxWidth;
                           final height = constraints.maxHeight;
                           final columnWidth = width / adjusted.length;
-                          final barWidth = (columnWidth * 0.55)
-                              .clamp(6.0, 18.0)
-                              .toDouble();
+                          final barWidth =
+                              (columnWidth * 0.55).clamp(6.0, 18.0).toDouble();
                           return Stack(
                             children: [
                               for (final tick in ticks)
@@ -139,8 +135,7 @@ class _RegularityChart extends StatelessWidget {
                                   axisStart: axisStart,
                                   axisEnd: axisEnd,
                                   height: height,
-                                  left:
-                                      (columnWidth * i) +
+                                  left: (columnWidth * i) +
                                       (columnWidth / 2) -
                                       (barWidth / 2),
                                   width: barWidth,

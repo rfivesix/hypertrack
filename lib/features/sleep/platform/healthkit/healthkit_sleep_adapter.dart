@@ -31,8 +31,8 @@ class HealthKitSleepAdapter {
   const HealthKitSleepAdapter({
     required SleepPermissionsService permissionsService,
     required HealthKitDataSource dataSource,
-  }) : _permissionsService = permissionsService,
-       _dataSource = dataSource;
+  })  : _permissionsService = permissionsService,
+        _dataSource = dataSource;
 
   final SleepPermissionsService _permissionsService;
   final HealthKitDataSource _dataSource;

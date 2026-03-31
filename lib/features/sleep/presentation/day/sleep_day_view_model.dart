@@ -13,9 +13,9 @@ class SleepDayViewModel extends ChangeNotifier {
     required SleepDayDataRepository repository,
     SleepImportService? syncService,
     DateTime? selectedDay,
-  }) : _repository = repository,
-       _syncService = syncService ?? SleepSyncService(),
-       _period = SleepPeriodSelection(anchorDate: selectedDay) {
+  })  : _repository = repository,
+        _syncService = syncService ?? SleepSyncService(),
+        _period = SleepPeriodSelection(anchorDate: selectedDay) {
     SleepSyncService.lastImportAtListenable.addListener(
       _onSleepImportCompleted,
     );
@@ -108,8 +108,8 @@ class SleepPeriodSelection {
   SleepPeriodSelection({
     DateTime? anchorDate,
     SleepPeriodScope scope = SleepPeriodScope.day,
-  }) : _anchorDate = _normalizeDate(anchorDate ?? DateTime.now()),
-       _scope = scope;
+  })  : _anchorDate = _normalizeDate(anchorDate ?? DateTime.now()),
+        _scope = scope;
 
   DateTime _anchorDate;
   SleepPeriodScope _scope;

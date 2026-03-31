@@ -60,9 +60,8 @@ class CompactNutritionBar extends StatelessWidget {
     bool isWater = false,
   }) {
     final progress = target > 0 ? (value / target).clamp(0.0, 1.0) : 0.0;
-    final displayValue = isWater
-        ? (value / 1000).toStringAsFixed(1)
-        : value.toStringAsFixed(0);
+    final displayValue =
+        isWater ? (value / 1000).toStringAsFixed(1) : value.toStringAsFixed(0);
     final displayTarget = isWater
         ? (target / 1000).toStringAsFixed(0)
         : target.toStringAsFixed(0);

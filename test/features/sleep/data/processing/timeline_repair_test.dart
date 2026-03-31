@@ -4,12 +4,12 @@ import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
 
 void main() {
   SleepSession session() => SleepSession(
-    id: 's1',
-    startAtUtc: DateTime.utc(2026, 3, 1, 22),
-    endAtUtc: DateTime.utc(2026, 3, 2, 6),
-    sessionType: SleepSessionType.mainSleep,
-    sourcePlatform: 'healthkit',
-  );
+        id: 's1',
+        startAtUtc: DateTime.utc(2026, 3, 1, 22),
+        endAtUtc: DateTime.utc(2026, 3, 2, 6),
+        sessionType: SleepSessionType.mainSleep,
+        sourcePlatform: 'healthkit',
+      );
 
   test('repairs overlaps using stage priority', () {
     final repaired = repairSleepTimeline(

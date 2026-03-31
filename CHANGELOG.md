@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.7.3-alpha.2] - 2026-03-31
+
+### App Icon
+- updated the app icon
+
+### Sleep module
+- Corrected sleep heart-rate baseline calculation to use the **last 30 nights in chronological order** before computing the median.
+- Added regression coverage for the HR baseline chronology behavior.
+
+### Sleep pipeline / recompute
+- Fixed forced recompute so raw, canonical, and derived sleep data are removed **consistently for the affected session time window**.
+- Raw imports are now cleared via the associated session IDs instead of broad imported-at behavior.
+- Derived nightly analyses are now cleared via the affected night-date range.
+- Added test coverage for forced recompute behavior.
+
+### Documentation
+- Updated the sleep issue audit document to reflect implementation status more accurately.
+- Adjusted claims for issues **#166, #170, #173, and #175** to match the actual implementation state more honestly.
+- Explicitly documented remaining missing wiring and limitations.
+
+### Tests
+- Added/updated targeted tests for:
+  - heart-rate baseline chronology
+  - sleep pipeline forced recompute behavior
 
 ## [0.7.3-alpha.1] - 2026-03-31
 

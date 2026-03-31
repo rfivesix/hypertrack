@@ -45,10 +45,9 @@ List<SleepStageSegment> repairSleepTimeline({
   if (trimmed.isEmpty) return const <SleepStageSegment>[];
 
   trimmed.sort(
-    (a, b) =>
-        a.segment.startAtUtc.compareTo(b.segment.startAtUtc) != 0
-            ? a.segment.startAtUtc.compareTo(b.segment.startAtUtc)
-            : a.segment.endAtUtc.compareTo(b.segment.endAtUtc),
+    (a, b) => a.segment.startAtUtc.compareTo(b.segment.startAtUtc) != 0
+        ? a.segment.startAtUtc.compareTo(b.segment.startAtUtc)
+        : a.segment.endAtUtc.compareTo(b.segment.endAtUtc),
   );
 
   final boundaries = <DateTime>{session.startAtUtc, session.endAtUtc};

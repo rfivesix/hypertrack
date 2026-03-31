@@ -28,7 +28,8 @@ class _HealthKitSource implements HealthKitDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async => batch;
+  }) async =>
+      batch;
 }
 
 class _HealthConnectSource implements HealthConnectDataSource {
@@ -39,7 +40,8 @@ class _HealthConnectSource implements HealthConnectDataSource {
   Future<SleepRawIngestionBatch> readSleepAndHeartRate({
     required DateTime fromUtc,
     required DateTime toUtc,
-  }) async => batch;
+  }) async =>
+      batch;
 }
 
 SleepRawIngestionBatch _batch() {

@@ -66,35 +66,31 @@ class SleepNightlyAnalysesDao {
     required String fromNightDateInclusive,
     required String toNightDateInclusive,
   }) async {
-    final rows = await _db
-        .customSelect(
-          '''
+    final rows = await _db.customSelect(
+      '''
       SELECT * FROM sleep_nightly_analyses
       WHERE night_date >= ? AND night_date <= ?
       ORDER BY night_date ASC
       ''',
-          variables: [
-            Variable<String>(fromNightDateInclusive),
-            Variable<String>(toNightDateInclusive),
-          ],
-        )
-        .get();
+      variables: [
+        Variable<String>(fromNightDateInclusive),
+        Variable<String>(toNightDateInclusive),
+      ],
+    ).get();
     return rows.map(_mapRow).toList(growable: false);
   }
 
   Future<List<SleepNightlyAnalysisRecord>> findBySessionId(
     String sessionId,
   ) async {
-    final rows = await _db
-        .customSelect(
-          '''
+    final rows = await _db.customSelect(
+      '''
       SELECT * FROM sleep_nightly_analyses
       WHERE session_id = ?
       ORDER BY analyzed_at DESC
       ''',
-          variables: [Variable<String>(sessionId)],
-        )
-        .get();
+      variables: [Variable<String>(sessionId)],
+    ).get();
     return rows.map(_mapRow).toList(growable: false);
   }
 

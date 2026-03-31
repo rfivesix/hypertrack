@@ -156,9 +156,10 @@ void main() {
       final hourly = await dbHelper.getHourlyStepsTotalsForDay(
         dayLocal: dayLocal,
       );
-      final hourlyTotals =
-          hourly.map((row) => row['totalSteps'] as int).toList(growable: false)
-            ..sort();
+      final hourlyTotals = hourly
+          .map((row) => row['totalSteps'] as int)
+          .toList(growable: false)
+        ..sort();
       expect(hourlyTotals, <int>[500, 1000]);
 
       final range = await dbHelper.getDailyStepsTotalsForRange(
@@ -216,9 +217,10 @@ void main() {
         dayLocal: dayLocal,
         sourcePolicy: 'max_per_hour',
       );
-      final hourlyTotals =
-          hourly.map((row) => row['totalSteps'] as int).toList(growable: false)
-            ..sort();
+      final hourlyTotals = hourly
+          .map((row) => row['totalSteps'] as int)
+          .toList(growable: false)
+        ..sort();
       expect(hourlyTotals, <int>[500, 1200]);
 
       final range = await dbHelper.getDailyStepsTotalsForRange(

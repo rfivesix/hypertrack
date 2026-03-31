@@ -13,8 +13,8 @@ class StatisticsHubDataAdapter {
     required WorkoutDatabaseHelper workoutDatabaseHelper,
     StatisticsRangePolicyService rangePolicy =
         StatisticsRangePolicyService.instance,
-  }) : _workoutDatabaseHelper = workoutDatabaseHelper,
-       _rangePolicy = rangePolicy;
+  })  : _workoutDatabaseHelper = workoutDatabaseHelper,
+        _rangePolicy = rangePolicy;
 
   Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fetch({
     required int selectedTimeRangeIndex,
@@ -51,10 +51,10 @@ class StatisticsHubDataAdapter {
     final workoutsPerWeek = _workoutDatabaseHelper.getWorkoutsPerWeek(
       weeksBack: workoutsPerWeekRange.effectiveWeeks ?? 6,
     );
-    final consistencyMetrics = _workoutDatabaseHelper
-        .getWeeklyConsistencyMetrics(
-          weeksBack: consistencyRange.effectiveWeeks ?? 6,
-        );
+    final consistencyMetrics =
+        _workoutDatabaseHelper.getWeeklyConsistencyMetrics(
+      weeksBack: consistencyRange.effectiveWeeks ?? 6,
+    );
     final muscleAnalytics = _workoutDatabaseHelper.getMuscleGroupAnalytics(
       daysBack: selectedDays,
       weeksBack: muscleRange.effectiveWeeks ?? 8,

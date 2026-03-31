@@ -4,7 +4,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/drift_database.dart';
-import '../../domain/heart_rate_sample.dart';
 import '../../domain/metrics/nightly_metrics_calculator.dart';
 import '../../domain/sleep_domain.dart';
 import '../../domain/scoring/sleep_scoring_engine.dart';
@@ -29,8 +28,8 @@ class SleepPipelineRunResult {
 
 class SleepPipelineService {
   SleepPipelineService({AppDatabase? database})
-    : _database = database ?? AppDatabase(),
-      _ownsDatabase = database == null {
+      : _database = database ?? AppDatabase(),
+        _ownsDatabase = database == null {
     _rawDao = SleepRawImportsDao(_database);
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _segmentsDao = SleepCanonicalStageSegmentsDao(_database);
@@ -55,7 +54,8 @@ class SleepPipelineService {
     DateTime? recomputeToExclusive,
   }) async {
     if (batch.sessions.isEmpty) {
-      return const SleepPipelineRunResult(importedSessions: 0, analyzedNights: 0);
+      return const SleepPipelineRunResult(
+          importedSessions: 0, analyzedNights: 0);
     }
 
     final importedAt = DateTime.now().toUtc();
@@ -113,8 +113,8 @@ class SleepPipelineService {
     final hrBySession = <String, List<HeartRateSample>>{};
     for (final sample in mapped.heartRateSamples) {
       hrBySession.putIfAbsent(sample.sessionId, () => <HeartRateSample>[]).add(
-        sample,
-      );
+            sample,
+          );
     }
 
     await _database.transaction(() async {
@@ -125,8 +125,7 @@ class SleepPipelineService {
               sourcePlatform: session.sourcePlatform,
               sourceAppId: session.sourceAppId,
               sourceConfidence: session.sourceConfidence,
-              sourceRecordHash:
-                  session.sourceRecordHash ??
+              sourceRecordHash: session.sourceRecordHash ??
                   _hashRecord('raw:${session.recordId}'),
               importStatus: 'success',
               importedAt: importedAt,
@@ -150,8 +149,7 @@ class SleepPipelineService {
                 sourcePlatform: session.sourcePlatform,
                 sourceAppId: session.sourceAppId,
                 sourceConfidence: session.sourceConfidence,
-                sourceRecordHash:
-                    session.sourceRecordHash ??
+                sourceRecordHash: session.sourceRecordHash ??
                     _hashRecord('session:${session.id}'),
                 normalizationVersion: normalizationVersion,
                 sessionType: session.sessionType.name,
@@ -174,8 +172,7 @@ class SleepPipelineService {
                 sourcePlatform: segment.sourcePlatform,
                 sourceAppId: segment.sourceAppId,
                 sourceConfidence: segment.sourceConfidence,
-                sourceRecordHash:
-                    segment.sourceRecordHash ??
+                sourceRecordHash: segment.sourceRecordHash ??
                     _hashRecord('segment:${segment.id}'),
                 normalizationVersion: normalizationVersion,
                 stage: segment.stage.name,
@@ -213,7 +210,8 @@ class SleepPipelineService {
       for (final session in mapped.sessions) {
         final repaired = repairSleepTimeline(
           session: session,
-          segments: segmentsBySession[session.id] ?? const <SleepStageSegment>[],
+          segments:
+              segmentsBySession[session.id] ?? const <SleepStageSegment>[],
         );
         final metrics = calculateNightlySleepMetrics(
           session: session,
@@ -240,8 +238,8 @@ class SleepPipelineService {
             sourcePlatform: session.sourcePlatform,
             sourceAppId: session.sourceAppId,
             sourceConfidence: session.sourceConfidence,
-            sourceRecordHash:
-                session.sourceRecordHash ?? _hashRecord('analysis:${session.id}'),
+            sourceRecordHash: session.sourceRecordHash ??
+                _hashRecord('analysis:${session.id}'),
             normalizationVersion: normalizationVersion,
             analysisVersion: analysisVersion,
             nightDate: night,
@@ -287,7 +285,8 @@ class SleepPipelineService {
     return '${normalized.year}-$month-$day';
   }
 
-  String _hashRecord(String value) => sha1.convert(utf8.encode(value)).toString();
+  String _hashRecord(String value) =>
+      sha1.convert(utf8.encode(value)).toString();
 
   Future<void> dispose() async {
     if (_ownsDatabase) {

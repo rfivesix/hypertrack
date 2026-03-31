@@ -16,8 +16,8 @@ class SleepDayOverviewPage extends StatelessWidget {
     super.key,
     SleepDayDataRepository? repository,
     SleepDayViewModel? viewModel,
-  }) : _repository = repository,
-       _viewModel = viewModel;
+  })  : _repository = repository,
+        _viewModel = viewModel;
 
   final SleepDayDataRepository? _repository;
   final SleepDayViewModel? _viewModel;
@@ -26,8 +26,7 @@ class SleepDayOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<SleepDayViewModel>(
       create: (_) {
-        final model =
-            _viewModel ??
+        final model = _viewModel ??
             SleepDayViewModel(repository: _repository ?? SleepDayRepository());
         model.load();
         return model;
@@ -52,8 +51,7 @@ class _SleepDayOverviewBody extends StatelessWidget {
       appBar: const GlobalAppBar(title: 'Sleep'),
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
-          top:
-              DesignConstants.cardPadding.top +
+          top: DesignConstants.cardPadding.top +
               MediaQuery.of(context).padding.top +
               kToolbarHeight +
               16,
@@ -262,12 +260,11 @@ class _SleepTimelineCard extends StatelessWidget {
                 children: [
                   for (final segment in segments)
                     Expanded(
-                      flex:
-                          (segment.endAtUtc
-                                  .difference(segment.startAtUtc)
-                                  .inMinutes
-                                  .clamp(1, totalMinutes))
-                              .toInt(),
+                      flex: (segment.endAtUtc
+                              .difference(segment.startAtUtc)
+                              .inMinutes
+                              .clamp(1, totalMinutes))
+                          .toInt(),
                       child: Container(
                         color: _timelineStageColor(context, segment.stage),
                       ),

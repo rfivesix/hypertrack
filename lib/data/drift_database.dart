@@ -33,8 +33,8 @@ class Profiles extends Table with HybridId, MetaColumns {
   TextColumn get username => text().nullable()();
   BoolColumn get isCoach => boolean().withDefault(const Constant(false))();
   TextColumn get visibility => text().withDefault(
-    const Constant('private'),
-  )(); // 'public', 'private', 'friends'
+        const Constant('private'),
+      )(); // 'public', 'private', 'friends'
   DateTimeColumn get birthday => dateTime().nullable()();
   IntColumn get height => integer().nullable()(); // in cm
   TextColumn get gender => text().nullable()(); // 'male', 'female', 'diverse'
@@ -100,8 +100,8 @@ class RoutineSetTemplates extends Table with HybridId, MetaColumns {
   TextColumn get routineExerciseId =>
       text().references(RoutineExercises, #id, onDelete: KeyAction.cascade)();
   TextColumn get setType => text().withDefault(
-    const Constant('normal'),
-  )(); // normal, warmup, dropset, failure
+        const Constant('normal'),
+      )(); // normal, warmup, dropset, failure
   TextColumn get targetReps =>
       text().nullable()(); // String, da z.B. "8-12" möglich
   RealColumn get targetWeight => real().nullable()();
@@ -234,10 +234,10 @@ class SupplementLogs extends Table with HybridId, MetaColumns {
 
   // Verknüpfungen (Aus altem Code übernommen für Auto-Logik bei Kaffee etc.)
   TextColumn get sourceNutritionLogId => text().nullable().references(
-    NutritionLogs,
-    #id,
-    onDelete: KeyAction.setNull,
-  )();
+        NutritionLogs,
+        #id,
+        onDelete: KeyAction.setNull,
+      )();
   // Referenz auf FluidLogs unten definiert
 }
 
@@ -253,10 +253,10 @@ class FluidLogs extends Table with HybridId, MetaColumns {
   RealColumn get caffeinePer100ml => real().nullable()();
   // Verknüpfung zu NutritionLogs falls es ein geloggtes Getränk war
   TextColumn get linkedNutritionLogId => text().nullable().references(
-    NutritionLogs,
-    #id,
-    onDelete: KeyAction.cascade,
-  )();
+        NutritionLogs,
+        #id,
+        onDelete: KeyAction.cascade,
+      )();
 }
 
 // 15. Measurements
@@ -387,6 +387,7 @@ class HealthStepSegments extends Table with HybridId, MetaColumns {
     HealthStepSegments,
   ],
 )
+
 /// Sleep persistence schema foundations.
 ///
 /// This follows a strict three-layer storage architecture:
@@ -533,50 +534,50 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (Migrator m) async {
-      await m.createAll();
-      await _createSleepPersistenceSchema(this);
-    },
-    onUpgrade: (Migrator m, int from, int to) async {
-      if (from < 2) {
-        await m.createTable(favorites);
-        // WICHTIG: Füge die fehlende Spalte hinzu!
-        await m.addColumn(products, products.category);
-      }
-      // Migration V2 -> V3 (Sync-Spalten & RIR)
-      if (from < 3) {
-        // RIR zu SetLogs hinzufügen
-        await m.addColumn(setLogs, setLogs.rir);
+        onCreate: (Migrator m) async {
+          await m.createAll();
+          await _createSleepPersistenceSchema(this);
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.createTable(favorites);
+            // WICHTIG: Füge die fehlende Spalte hinzu!
+            await m.addColumn(products, products.category);
+          }
+          // Migration V2 -> V3 (Sync-Spalten & RIR)
+          if (from < 3) {
+            // RIR zu SetLogs hinzufügen
+            await m.addColumn(setLogs, setLogs.rir);
 
-        // Favorites Sync-fähig machen (fehlende Spalten adden)
-        // MetaColumns adds: createdAt, updatedAt, deletedAt
-        // Favorites hatte vorher schon barcode und createdAt manuell.
-        // Wir müssen nur updatedAt und deletedAt hinzufügen.
-        await m.addColumn(favorites, favorites.updatedAt);
-        await m.addColumn(favorites, favorites.deletedAt);
-      }
-      if (from < 4) {
-        await m.addColumn(profiles, profiles.birthday);
-      }
-      if (from < 5) {
-        await m.addColumn(profiles, profiles.height);
-        await m.addColumn(profiles, profiles.gender);
-      }
-      if (from < 6) {
-        await m.createTable(dailyGoalsHistory);
-      }
-      if (from < 7) {
-        await m.addColumn(supplements, supplements.isTracked);
-        await m.createTable(supplementSettingsHistory);
-      }
-      if (from < 8) {
-        await customStatement(
-          'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
-        );
-        await customStatement(
-          'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
-        );
-        await customStatement('''
+            // Favorites Sync-fähig machen (fehlende Spalten adden)
+            // MetaColumns adds: createdAt, updatedAt, deletedAt
+            // Favorites hatte vorher schon barcode und createdAt manuell.
+            // Wir müssen nur updatedAt und deletedAt hinzufügen.
+            await m.addColumn(favorites, favorites.updatedAt);
+            await m.addColumn(favorites, favorites.deletedAt);
+          }
+          if (from < 4) {
+            await m.addColumn(profiles, profiles.birthday);
+          }
+          if (from < 5) {
+            await m.addColumn(profiles, profiles.height);
+            await m.addColumn(profiles, profiles.gender);
+          }
+          if (from < 6) {
+            await m.createTable(dailyGoalsHistory);
+          }
+          if (from < 7) {
+            await m.addColumn(supplements, supplements.isTracked);
+            await m.createTable(supplementSettingsHistory);
+          }
+          if (from < 8) {
+            await customStatement(
+              'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+            );
+            await customStatement(
+              'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+            );
+            await customStatement('''
           CREATE TABLE IF NOT EXISTS health_step_segments (
             local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             id TEXT NOT NULL UNIQUE,
@@ -591,12 +592,12 @@ class AppDatabase extends _$AppDatabase {
             external_key TEXT NOT NULL UNIQUE
           )
         ''');
-      }
-      if (from < 9) {
-        await _createSleepPersistenceSchema(this);
-      }
-    },
-  );
+          }
+          if (from < 9) {
+            await _createSleepPersistenceSchema(this);
+          }
+        },
+      );
 }
 
 LazyDatabase _openConnection() {

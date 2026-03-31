@@ -33,13 +33,15 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   @override
   Future<MonthStepsAggregation> getMonthAggregation(
     DateTime dateInMonth,
-  ) async => throw UnimplementedError();
+  ) async =>
+      throw UnimplementedError();
 
   @override
   Future<RangeStepsAggregation> getRangeAggregation({
     required DateTime endDate,
     required int daysBack,
-  }) async => throw UnimplementedError();
+  }) async =>
+      throw UnimplementedError();
 
   @override
   Future<DateTime?> getEarliestAvailableDate() async => null;

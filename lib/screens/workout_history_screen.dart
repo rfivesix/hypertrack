@@ -66,149 +66,150 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
-          // KORREKTUR: Aufgewerteter "Empty State"
-          ? Center(
-              child: Padding(
-                padding: DesignConstants.cardPadding.copyWith(
-                  top: DesignConstants.cardPadding.top + topPadding,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.history_toggle_off_outlined,
-                      size: 80,
-                      color: Colors.grey.shade400,
+              // KORREKTUR: Aufgewerteter "Empty State"
+              ? Center(
+                  child: Padding(
+                    padding: DesignConstants.cardPadding.copyWith(
+                      top: DesignConstants.cardPadding.top + topPadding,
                     ),
-                    const SizedBox(height: DesignConstants.spacingL),
-                    Text(
-                      l10n.workoutHistoryEmptyTitle,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                      textAlign: TextAlign.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.history_toggle_off_outlined,
+                          size: 80,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: DesignConstants.spacingL),
+                        Text(
+                          l10n.workoutHistoryEmptyTitle,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: DesignConstants.spacingS),
+                        Text(
+                          l10n.emptyHistory,
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Colors.grey.shade600,
+                                  ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: DesignConstants.spacingS),
-                    Text(
-                      l10n.emptyHistory,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : ListView.builder(
-              padding: DesignConstants.cardPadding.copyWith(
-                top: DesignConstants.cardPadding.top + topPadding,
-              ),
-              itemCount: _logs.length,
-              itemBuilder: (context, index) {
-                final log = _logs[index];
-                final duration = log.endTime?.difference(log.startTime);
-
-                // NEU: Berechne Volumen und Sätze für diesen Log
-                final totalSets = log.sets.length;
-                final totalVolume = log.sets.fold<double>(
-                  0,
-                  (sum, set) => sum + (set.weightKg ?? 0) * (set.reps ?? 0),
-                );
-
-                return Dismissible(
-                  key: Key('log_${log.id}'),
-                  direction: DismissDirection.endToStart,
-
-                  // KORRIGIERT: Nur `secondaryBackground` wird hier benötigt
-                  background: const SwipeActionBackground(
-                    color: Colors.redAccent,
-                    icon: Icons.delete,
-                    alignment: Alignment.centerRight,
                   ),
-                  confirmDismiss: (direction) async {
-                    // NEU: Helper (Textspezifizierung hier nötig)
-                    return await showDeleteConfirmation(
-                      context,
-                      content: l10n.deleteWorkoutConfirmContent,
+                )
+              : ListView.builder(
+                  padding: DesignConstants.cardPadding.copyWith(
+                    top: DesignConstants.cardPadding.top + topPadding,
+                  ),
+                  itemCount: _logs.length,
+                  itemBuilder: (context, index) {
+                    final log = _logs[index];
+                    final duration = log.endTime?.difference(log.startTime);
+
+                    // NEU: Berechne Volumen und Sätze für diesen Log
+                    final totalSets = log.sets.length;
+                    final totalVolume = log.sets.fold<double>(
+                      0,
+                      (sum, set) => sum + (set.weightKg ?? 0) * (set.reps ?? 0),
                     );
-                  },
-                  onDismissed: (direction) {
-                    _deleteLog(log.id!);
-                  },
-                  child: SummaryCard(
-                    child: ListTile(
-                      leading: const Icon(Icons.event_note, size: 40),
-                      title: Text(
-                        log.routineName ?? l10n.freeWorkoutTitle,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+
+                    return Dismissible(
+                      key: Key('log_${log.id}'),
+                      direction: DismissDirection.endToStart,
+
+                      // KORRIGIERT: Nur `secondaryBackground` wird hier benötigt
+                      background: const SwipeActionBackground(
+                        color: Colors.redAccent,
+                        icon: Icons.delete,
+                        alignment: Alignment.centerRight,
                       ),
-                      // KORREKTUR: Das Subtitle wird jetzt ein Column mit mehr Infos
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          Text(
-                            DateFormat.yMMMMd(
-                              locale,
-                            ).add_Hm().format(log.startTime),
+                      confirmDismiss: (direction) async {
+                        // NEU: Helper (Textspezifizierung hier nötig)
+                        return await showDeleteConfirmation(
+                          context,
+                          content: l10n.deleteWorkoutConfirmContent,
+                        );
+                      },
+                      onDismissed: (direction) {
+                        _deleteLog(log.id!);
+                      },
+                      child: SummaryCard(
+                        child: ListTile(
+                          leading: const Icon(Icons.event_note, size: 40),
+                          title: Text(
+                            log.routineName ?? l10n.freeWorkoutTitle,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 8),
-                          Row(
+                          // KORREKTUR: Das Subtitle wird jetzt ein Column mit mehr Infos
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.monitor_weight_outlined,
-                                size: 14,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
+                              const SizedBox(height: 4),
                               Text(
-                                '${totalVolume.toStringAsFixed(0)} kg',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                ),
+                                DateFormat.yMMMMd(
+                                  locale,
+                                ).add_Hm().format(log.startTime),
                               ),
-                              const SizedBox(width: 12),
-                              Icon(
-                                Icons.replay_circle_filled_outlined,
-                                size: 14,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                l10n.setCount(
-                                  totalSets,
-                                ), // Nutzt die Plural-Funktion
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.monitor_weight_outlined,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${totalVolume.toStringAsFixed(0)} kg',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Icon(
+                                    Icons.replay_circle_filled_outlined,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    l10n.setCount(
+                                      totalSets,
+                                    ), // Nutzt die Plural-Funktion
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                          trailing: duration != null
+                              ? Text(
+                                  formatDuration(duration),
+                                  style: TextStyle(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
+                              : null,
+                          onTap: () => Navigator.of(context)
+                              .push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      WorkoutLogDetailScreen(logId: log.id!),
+                                ),
+                              )
+                              .then((_) => _loadHistory()),
+                        ),
                       ),
-                      trailing: duration != null
-                          ? Text(
-                              formatDuration(duration),
-                              style: TextStyle(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            )
-                          : null,
-                      onTap: () => Navigator.of(context)
-                          .push(
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  WorkoutLogDetailScreen(logId: log.id!),
-                            ),
-                          )
-                          .then((_) => _loadHistory()),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
     );
   }
 }

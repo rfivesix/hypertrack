@@ -6,9 +6,9 @@ import 'food_item.dart';
 // damit die UI sie einfach an einem Ort abgreifen kann.
 class TrackedFoodItem {
   final FoodEntry
-  entry; // Der eigentliche Tagebucheintrag (mit ID, Menge, Zeit)
+      entry; // Der eigentliche Tagebucheintrag (mit ID, Menge, Zeit)
   final FoodItem
-  item; // Die Details des Lebensmittels (mit Name, Kalorien etc.)
+      item; // Die Details des Lebensmittels (mit Name, Kalorien etc.)
 
   TrackedFoodItem({required this.entry, required this.item});
 

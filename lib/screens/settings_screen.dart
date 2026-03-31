@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../generated/app_localizations.dart';
 import 'ai_settings_screen.dart';
 import 'data_management_screen.dart';
@@ -30,8 +29,8 @@ class SettingsScreen extends StatefulWidget {
     super.key,
     SleepSettingsService? sleepSyncService,
     SleepPermissionController? sleepPermissionController,
-  }) : _sleepSyncService = sleepSyncService,
-       _sleepPermissionController = sleepPermissionController;
+  })  : _sleepSyncService = sleepSyncService,
+        _sleepPermissionController = sleepPermissionController;
 
   final SleepSettingsService? _sleepSyncService;
   final SleepPermissionController? _sleepPermissionController;
@@ -63,8 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _ownsSleepSyncService = widget._sleepSyncService == null;
     _sleepSyncService = widget._sleepSyncService ?? SleepSyncService();
     _ownsSleepPermissionController = widget._sleepPermissionController == null;
-    _sleepPermissionController =
-        widget._sleepPermissionController ??
+    _sleepPermissionController = widget._sleepPermissionController ??
         _sleepSyncService.buildPermissionController();
     _loadAppVersion();
     _loadStepsSettings();
@@ -243,7 +241,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           child: Text(
                             l10n.settingsVisualStyleTitle,
-                            style: Theme.of(context).textTheme.labelLarge
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
                                 ?.copyWith(
                                   color: Colors.grey,
                                   fontWeight: FontWeight.bold,
@@ -490,8 +490,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? null
                             : () async {
                                 setState(() => _isSleepImporting = true);
-                                final result = await _sleepSyncService
-                                    .importRecent();
+                                final result =
+                                    await _sleepSyncService.importRecent();
                                 if (!mounted) return;
                                 setState(() => _isSleepImporting = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -500,7 +500,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       result.success
                                           ? 'Sleep import finished (${result.importedSessions} sessions).'
                                           : (result.message ??
-                                                'Sleep import unavailable. Check permissions.'),
+                                              'Sleep import unavailable. Check permissions.'),
                                     ),
                                   ),
                                 );
@@ -617,9 +617,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.grey[600],
-          fontWeight: FontWeight.bold,
-        ),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }

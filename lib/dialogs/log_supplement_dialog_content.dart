@@ -39,8 +39,7 @@ class LogSupplementDialogContentState
   void initState() {
     super.initState();
     _doseController = TextEditingController(
-      text:
-          widget.initialDose?.toStringAsFixed(1).replaceAll('.0', '') ??
+      text: widget.initialDose?.toStringAsFixed(1).replaceAll('.0', '') ??
           widget.supplement.defaultDose.toStringAsFixed(1).replaceAll('.0', ''),
     );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();

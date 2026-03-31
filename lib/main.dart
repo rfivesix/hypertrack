@@ -172,10 +172,10 @@ class MyApp extends StatelessWidget {
           ),
 
           textTheme: ThemeData.light().textTheme.apply(
-            fontFamily: 'Inter',
-            bodyColor: Colors.black87,
-            displayColor: Colors.black87,
-          ),
+                fontFamily: 'Inter',
+                bodyColor: Colors.black87,
+                displayColor: Colors.black87,
+              ),
 
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
@@ -288,10 +288,10 @@ class MyApp extends StatelessWidget {
           ),
 
           textTheme: ThemeData.dark().textTheme.apply(
-            fontFamily: 'Inter',
-            bodyColor: Colors.white,
-            displayColor: Colors.white,
-          ),
+                fontFamily: 'Inter',
+                bodyColor: Colors.white,
+                displayColor: Colors.white,
+              ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: darkScheme.primary,

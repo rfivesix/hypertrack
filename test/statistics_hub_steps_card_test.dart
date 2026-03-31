@@ -52,7 +52,8 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   @override
   Future<MonthStepsAggregation> getMonthAggregation(
     DateTime dateInMonth,
-  ) async => throw UnimplementedError();
+  ) async =>
+      throw UnimplementedError();
 
   @override
   Future<WeekStepsAggregation> getWeekAggregation(DateTime dateInWeek) async =>
@@ -72,13 +73,14 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   Future<StepsRefreshResult> refresh({
     bool force = false,
     DateTime? now,
-  }) async => const StepsRefreshResult(
-    didRun: true,
-    permissionGranted: true,
-    skipped: false,
-    fetchedCount: 0,
-    upsertedCount: 0,
-  );
+  }) async =>
+      const StepsRefreshResult(
+        didRun: true,
+        permissionGranted: true,
+        skipped: false,
+        fetchedCount: 0,
+        upsertedCount: 0,
+      );
 }
 
 void main() {

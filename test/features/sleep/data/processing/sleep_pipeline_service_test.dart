@@ -5,7 +5,8 @@ import 'package:hypertrack/features/sleep/data/processing/sleep_pipeline_service
 import 'package:hypertrack/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
 
 void main() {
-  test('pipeline imports, persists analyses and supports forced recompute', () async {
+  test('pipeline imports, persists analyses and supports forced recompute',
+      () async {
     final db = AppDatabase(
       NativeDatabase.memory(
         setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
@@ -60,7 +61,8 @@ void main() {
     await db.close();
   });
 
-  test('forced recompute deletes raw imports for sessions in target window', () async {
+  test('forced recompute deletes raw imports for sessions in target window',
+      () async {
     final db = AppDatabase(
       NativeDatabase.memory(
         setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),

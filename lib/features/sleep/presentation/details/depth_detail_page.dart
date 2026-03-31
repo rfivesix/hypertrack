@@ -20,8 +20,7 @@ class DepthDetailPage extends StatelessWidget {
       );
     }
 
-    final hasReliableStageData =
-        overview.hasStageData &&
+    final hasReliableStageData = overview.hasStageData &&
         overview.stageDataConfidence != SleepStageConfidence.low;
 
     if (!hasReliableStageData) {
