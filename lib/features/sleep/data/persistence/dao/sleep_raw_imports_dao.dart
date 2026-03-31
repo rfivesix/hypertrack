@@ -118,6 +118,15 @@ class SleepRawImportsDao {
     );
   }
 
+  Future<void> deleteByIds(List<String> rawImportIds) async {
+    if (rawImportIds.isEmpty) return;
+    final placeholders = List.filled(rawImportIds.length, '?').join(', ');
+    await _db.customStatement(
+      'DELETE FROM sleep_raw_imports WHERE id IN ($placeholders)',
+      rawImportIds.cast<Object?>(),
+    );
+  }
+
   SleepRawImportRecord _mapRaw(QueryRow row) {
     return SleepRawImportRecord(
       id: row.read<String>('id'),
