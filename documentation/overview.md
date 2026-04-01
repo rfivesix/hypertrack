@@ -190,3 +190,4 @@ The application contains **44 screens** in `lib/screens/`. Here is a categorized
 - **[UI & Widgets](ui_and_widgets.md):** Design philosophy, custom widget catalog, and layout patterns.
 - **[Statistics Module](statistics_module.md):** Current source-of-truth reference for Statistics architecture, range policy, payloads, and screen responsibilities.
 - **[Sleep Module — Day Batch 2](sleep/sleep_day_batch_2.md):** Day overview + detail screens architecture, navigation, data contracts, and fallback behavior.
+- **[Sleep Module — Final Product Batch](sleep/sleep_final_product_batch.md):** Week/month overviews, settings/permission/sync UX completion, statistics entry-point integration, and final fallback/test coverage.

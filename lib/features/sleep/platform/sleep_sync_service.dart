@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart';
 import '../data/mapping/health_connect_mapper.dart';
 import '../data/mapping/healthkit_mapper.dart';
@@ -55,19 +56,18 @@ class SleepSyncService implements SleepSettingsService {
   static final ValueNotifier<DateTime?> lastImportAtListenable =
       ValueNotifier<DateTime?>(null);
 
-  SleepSyncService({AppDatabase? database})
-      : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null,
+  SleepSyncService({
+    AppDatabase? database,
+    DatabaseHelper? databaseHelper,
+    bool ownsDatabase = false,
+  })  : _databaseFuture = database != null
+            ? Future.value(database)
+            : (databaseHelper ?? DatabaseHelper.instance).database,
+        _ownsDatabase = ownsDatabase && database != null,
         _iosPermissionsService = null,
         _androidPermissionsService = null,
         _iosDataSource = null,
-        _androidDataSource = null {
-    _rawDao = SleepRawImportsDao(_database);
-    _sessionsDao = SleepCanonicalSessionsDao(_database);
-    _stagesDao = SleepCanonicalStageSegmentsDao(_database);
-    _hrDao = SleepCanonicalHeartRateSamplesDao(_database);
-    _analysesDao = SleepNightlyAnalysesDao(_database);
-  }
+        _androidDataSource = null;
 
   SleepSyncService.withOverrides({
     required SleepPermissionsService iosPermissionsService,
@@ -75,26 +75,25 @@ class SleepSyncService implements SleepSettingsService {
     required HealthKitDataSource iosDataSource,
     required HealthConnectDataSource androidDataSource,
     AppDatabase? database,
-  })  : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null,
+    DatabaseHelper? databaseHelper,
+    bool ownsDatabase = false,
+  })  : _databaseFuture = database != null
+            ? Future.value(database)
+            : (databaseHelper ?? DatabaseHelper.instance).database,
+        _ownsDatabase = ownsDatabase && database != null,
         _iosPermissionsService = iosPermissionsService,
         _androidPermissionsService = androidPermissionsService,
         _iosDataSource = iosDataSource,
-        _androidDataSource = androidDataSource {
-    _rawDao = SleepRawImportsDao(_database);
-    _sessionsDao = SleepCanonicalSessionsDao(_database);
-    _stagesDao = SleepCanonicalStageSegmentsDao(_database);
-    _hrDao = SleepCanonicalHeartRateSamplesDao(_database);
-    _analysesDao = SleepNightlyAnalysesDao(_database);
-  }
+        _androidDataSource = androidDataSource;
 
-  final AppDatabase _database;
+  final Future<AppDatabase> _databaseFuture;
   final bool _ownsDatabase;
-  late final SleepRawImportsDao _rawDao;
-  late final SleepCanonicalSessionsDao _sessionsDao;
-  late final SleepCanonicalStageSegmentsDao _stagesDao;
-  late final SleepCanonicalHeartRateSamplesDao _hrDao;
-  late final SleepNightlyAnalysesDao _analysesDao;
+  AppDatabase? _database;
+  SleepRawImportsDao? _rawDao;
+  SleepCanonicalSessionsDao? _sessionsDao;
+  SleepCanonicalStageSegmentsDao? _stagesDao;
+  SleepCanonicalHeartRateSamplesDao? _hrDao;
+  SleepNightlyAnalysesDao? _analysesDao;
   final SleepPermissionsService? _iosPermissionsService;
   final SleepPermissionsService? _androidPermissionsService;
   final HealthKitDataSource? _iosDataSource;
@@ -154,6 +153,8 @@ class SleepSyncService implements SleepSettingsService {
       );
     }
 
+    await _ensureDaos();
+
     final nowUtc = DateTime.now().toUtc();
     final fromUtc = nowUtc.subtract(Duration(days: lookbackDays));
     final result = Platform.isIOS
@@ -170,10 +171,11 @@ class SleepSyncService implements SleepSettingsService {
     int lookbackDays = 7,
     int limit = 50,
   }) async {
+    await _ensureDaos();
     final nowUtc = DateTime.now().toUtc();
     final fromUtc = nowUtc.subtract(Duration(days: lookbackDays));
     final toExclusive = nowUtc.add(const Duration(seconds: 1));
-    final rows = await _rawDao.findByDateRange(
+    final rows = await _rawDao!.findByDateRange(
       fromInclusive: fromUtc,
       toExclusive: toExclusive,
     );
@@ -274,10 +276,11 @@ class SleepSyncService implements SleepSettingsService {
     List<SleepStageSegment> stageSegments,
     List<HeartRateSample> heartRateSamples,
   ) async {
+    await _ensureDaos();
     final importedAt = DateTime.now().toUtc();
     const normalizationVersion = 'sleep-import-v1';
     const analysisVersion = 'sleep-analysis-v1';
-    await _database.transaction(() async {
+    await _database!.transaction(() async {
       final rawRows = batch.sessions
           .map(
             (session) => SleepRawImportCompanion(
@@ -304,7 +307,7 @@ class SleepSyncService implements SleepSettingsService {
             ),
           )
           .toList(growable: false);
-      await _rawDao.upsertBatch(rawRows);
+      await _rawDao!.upsertBatch(rawRows);
 
       final canonicalSessionRows = sessions
           .map<SleepCanonicalSessionCompanion>(
@@ -326,7 +329,7 @@ class SleepSyncService implements SleepSettingsService {
             ),
           )
           .toList(growable: false);
-      await _sessionsDao.upsertBatch(canonicalSessionRows);
+      await _sessionsDao!.upsertBatch(canonicalSessionRows);
 
       final stageRows = stageSegments
           .map<SleepCanonicalStageSegmentCompanion>(
@@ -347,7 +350,7 @@ class SleepSyncService implements SleepSettingsService {
             ),
           )
           .toList(growable: false);
-      await _stagesDao.upsertBatch(stageRows);
+      await _stagesDao!.upsertBatch(stageRows);
 
       final hrRows = heartRateSamples
           .map<SleepCanonicalHeartRateSampleCompanion>(
@@ -367,7 +370,7 @@ class SleepSyncService implements SleepSettingsService {
             ),
           )
           .toList(growable: false);
-      await _hrDao.upsertBatch(hrRows);
+      await _hrDao!.upsertBatch(hrRows);
 
       if (sessions.isNotEmpty) {
         final hrBySession = <String, List<HeartRateSample>>{};
@@ -398,7 +401,7 @@ class SleepSyncService implements SleepSettingsService {
             )
             .toList(growable: false);
 
-        await _analysesDao.upsertBatch(analysisRows);
+        await _analysesDao!.upsertBatch(analysisRows);
       }
     });
   }
@@ -423,7 +426,18 @@ class SleepSyncService implements SleepSettingsService {
   @override
   Future<void> dispose() async {
     if (_ownsDatabase) {
-      await _database.close();
+      final db = _database ?? await _databaseFuture;
+      await db.close();
     }
+  }
+
+  Future<void> _ensureDaos() async {
+    if (_rawDao != null) return;
+    final db = _database ??= await _databaseFuture;
+    _rawDao = SleepRawImportsDao(db);
+    _sessionsDao = SleepCanonicalSessionsDao(db);
+    _stagesDao = SleepCanonicalStageSegmentsDao(db);
+    _hrDao = SleepCanonicalHeartRateSamplesDao(db);
+    _analysesDao = SleepNightlyAnalysesDao(db);
   }
 }

@@ -13,6 +13,7 @@ class NightlySleepAnalysis {
     required this.normalizationVersion,
     required this.analyzedAtUtc,
     this.score,
+    this.totalSleepMinutes,
     this.sleepQuality = SleepQualityBucket.unavailable,
     this.sourcePlatform,
     this.sourceAppId,
@@ -26,6 +27,7 @@ class NightlySleepAnalysis {
   final String normalizationVersion;
   final DateTime analyzedAtUtc;
   final double? score;
+  final int? totalSleepMinutes;
   final SleepQualityBucket sleepQuality;
   final String? sourcePlatform;
   final String? sourceAppId;
@@ -39,6 +41,7 @@ class NightlySleepAnalysis {
         'normalizationVersion': normalizationVersion,
         'analyzedAtUtc': analyzedAtUtc.toIso8601String(),
         'score': score,
+        'totalSleepMinutes': totalSleepMinutes,
         'sleepQuality': sleepQuality.name,
         'sourcePlatform': sourcePlatform,
         'sourceAppId': sourceAppId,

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/sleep/data/sleep_day_repository.dart';
+import 'package:hypertrack/features/sleep/data/repository/sleep_query_repository.dart';
 import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_view_model.dart';
+import 'package:hypertrack/features/sleep/presentation/month/sleep_month_overview_page.dart';
 import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
+import 'package:hypertrack/features/sleep/presentation/week/sleep_week_overview_page.dart';
 import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
 import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeSleepDayRepository implements SleepDayDataRepository {
@@ -41,6 +45,38 @@ class _FakeSleepImportService implements SleepImportService {
 
   @override
   Future<void> dispose() async {}
+}
+
+class _FakeSleepQueryRepository implements SleepQueryRepository {
+  _FakeSleepQueryRepository(this.items);
+
+  final List<NightlySleepAnalysis> items;
+
+  @override
+  Future<List<NightlySleepAnalysis>> getAnalysesInRange({
+    required DateTime fromInclusive,
+    required DateTime toInclusive,
+  }) async {
+    return items
+        .where(
+          (item) =>
+              !item.nightDate.isBefore(fromInclusive) &&
+              !item.nightDate.isAfter(toInclusive),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<NightlySleepAnalysis?> getNightlyAnalysisByDate(DateTime day) async {
+    for (final item in items) {
+      if (item.nightDate.year == day.year &&
+          item.nightDate.month == day.month &&
+          item.nightDate.day == day.day) {
+        return item;
+      }
+    }
+    return null;
+  }
 }
 
 String _dayLabel(DateTime day, {String localeCode = 'en'}) {
@@ -221,17 +257,8 @@ void main() {
     expect(find.text('Interruptions'), findsWidgets);
   });
 
-  testWidgets('sleep placeholder routes render without crashing',
+  testWidgets('sleep state placeholder routes render without crashing',
       (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        onGenerateRoute: SleepNavigation.onGenerateRoute,
-        initialRoute: SleepRouteNames.week,
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Sleep week'), findsOneWidget);
-
     await tester.pumpWidget(
       const MaterialApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
@@ -240,6 +267,75 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Connect health data'), findsOneWidget);
+  });
+
+  testWidgets('week and month screens render sparse data safely', (tester) async {
+    final repo = _FakeSleepQueryRepository([
+      NightlySleepAnalysis(
+        id: 'a1',
+        sessionId: 's1',
+        nightDate: DateTime(2026, 3, 31),
+        analysisVersion: 'v1',
+        normalizationVersion: 'n1',
+        analyzedAtUtc: DateTime.utc(2026, 3, 31, 8),
+        score: 78,
+        totalSleepMinutes: 430,
+        sleepQuality: SleepQualityBucket.average,
+      ),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepWeekOverviewPage(
+          anchorDay: DateTime(2026, 3, 31),
+          repository: repo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Week summary'), findsOneWidget);
+    expect(find.text('Daily score'), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepMonthOverviewPage(
+          anchorDay: DateTime(2026, 3, 31),
+          repository: repo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Month summary'), findsOneWidget);
+    expect(find.text('Daily score states'), findsOneWidget);
+  });
+
+  testWidgets('day scope switch opens week and month screens', (tester) async {
+    final overview = _sampleOverview();
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(overview),
+      selectedDay: DateTime(2026, 3, 31),
+    );
+    final repo = _FakeSleepQueryRepository(const <NightlySleepAnalysis>[]);
+
+    await tester.pumpWidget(
+      Provider<SleepQueryRepository>.value(
+        value: repo,
+        child: MaterialApp(
+          onGenerateRoute: SleepNavigation.onGenerateRoute,
+          home: SleepDayOverviewPage(viewModel: model),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Week'));
+    await tester.pumpAndSettle();
+    expect(find.text('Week summary'), findsOneWidget);
+
+    await tester.tap(find.text('Month'));
+    await tester.pumpAndSettle();
+    expect(find.text('Month summary'), findsOneWidget);
   });
 
   testWidgets('renders empty state without crash', (tester) async {

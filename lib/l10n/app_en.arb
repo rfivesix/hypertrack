@@ -987,4 +987,84 @@
   ,"finishWorkoutTitleLabel": "Workout Title"
   ,"finishWorkoutNotesLabel": "Notes (optional)"
   ,"finishWorkoutNotesHint": "How did the workout go?"
+  ,"sleepSectionTitle": "Sleep"
+  ,"sleepSectionSubtitleDayEntry": "Day overview and detail drill-downs"
+  ,"sleepSectionSubtitleAllEntry": "Sleep day, week, and month views are available from this entry"
+  ,"sleepScopeDay": "Day"
+  ,"sleepScopeWeek": "Week"
+  ,"sleepScopeMonth": "Month"
+  ,"sleepWeekSummaryTitle": "Week summary"
+  ,"sleepMonthSummaryTitle": "Month summary"
+  ,"sleepSleepWindowTitle": "Sleep window"
+  ,"sleepDailyScoreTitle": "Daily score"
+  ,"sleepMonthDailyScoreStatesTitle": "Daily score states"
+  ,"sleepMeanScoreLabel": "Mean score: {value}"
+  ,"@sleepMeanScoreLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepHubScoreLabel": "Sleep score"
+  ,"sleepHubAverageLabel": "Average"
+  ,"sleepHubBedtimeLabel": "Bedtime"
+  ,"sleepHubInterruptionsLabel": "Interruptions"
+  ,"sleepHubInterruptionsSummary": "{count} wake-ups, {duration} total"
+  ,"@sleepHubInterruptionsSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "duration": { "type": "String" }
+    }
+  }
+  ,"sleepWeekdayAvgDurationLabel": "Weekday avg duration: {value}"
+  ,"@sleepWeekdayAvgDurationLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepWeekendAvgDurationLabel": "Weekend avg duration: {value}"
+  ,"@sleepWeekendAvgDurationLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepWeekNoScoredNights": "No scored sleep nights available in this week yet."
+  ,"sleepMonthNoScoredNights": "No scored sleep nights available this month yet."
+  ,"sleepSettingsSectionTitle": "Sleep (Batch 2)"
+  ,"sleepEnableTrackingTitle": "Enable sleep tracking"
+  ,"sleepEnableTrackingSubtitle": "Read sleep and overnight heart rate from Health Connect / HealthKit"
+  ,"sleepHealthConnectionStatusTitle": "Health connection status"
+  ,"sleepRequestAccessTitle": "Request access"
+  ,"sleepRequestAccessSubtitle": "Request or re-request sleep/heart-rate permissions"
+  ,"sleepImportNowTitle": "Import sleep data now"
+  ,"sleepImportNowSubtitle": "Import the last 30 days for testing"
+  ,"sleepRawImportsTitle": "View raw sleep imports"
+  ,"sleepRawImportsSubtitle": "Show recent Health Connect payloads"
+  ,"sleepDataStatusTitle": "Data status"
+  ,"sleepDataStatusSubtitle": "Permissions granted. If no sleep appears yet, run a manual import below."
+  ,"sleepNoPermissionTitle": "No permission"
+  ,"sleepNoPermissionSubtitle": "Sleep and heart-rate permissions are required to import sleep data."
+  ,"sleepFeatureUnavailableTitle": "Feature unavailable"
+  ,"sleepFeatureUnavailableSubtitle": "Sleep import is unavailable on this device or Health Connect is not installed."
+  ,"sleepNoRawImportsFound": "No raw sleep imports found yet."
+  ,"sleepRawImportsSheetTitle": "Raw sleep imports (latest)"
+  ,"sleepImportFinishedSessions": "Sleep import finished ({count} sessions)."
+  ,"@sleepImportFinishedSessions": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+  ,"sleepImportUnavailableCheckPermissions": "Sleep import unavailable. Check permissions."
+  ,"sleepStatusChecking": "Checking permission status…"
+  ,"sleepStatusReady": "Ready"
+  ,"sleepStatusDenied": "Denied"
+  ,"sleepStatusPartial": "Partial access"
+  ,"sleepStatusUnavailable": "Unavailable on this device"
+  ,"sleepStatusNotInstalled": "Health Connect not installed"
+  ,"sleepStatusTechnicalError": "Technical error"
+  ,"sleepConnectHealthDataTitle": "Connect health data"
+  ,"sleepConnectHealthDataMessage": "Connect HealthKit or Health Connect to import sleep records."
+  ,"sleepPermissionDeniedTitle": "Permission denied"
+  ,"sleepPermissionDeniedMessage": "Sleep permissions are denied. Open settings to grant access."
+  ,"sleepSourceUnavailableTitle": "Source unavailable"
+  ,"sleepSourceUnavailableMessage": "Sleep data source is unavailable or not installed on this device."
 }

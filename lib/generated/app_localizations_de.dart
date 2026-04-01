@@ -2377,4 +2377,193 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get finishWorkoutNotesHint => 'Wie lief das Workout?';
+
+  @override
+  String get sleepSectionTitle => 'Schlaf';
+
+  @override
+  String get sleepSectionSubtitleDayEntry =>
+      'Tagesübersicht und Detail-Ansichten';
+
+  @override
+  String get sleepSectionSubtitleAllEntry =>
+      'Tages-, Wochen- und Monatsansicht sind über diesen Einstieg verfügbar';
+
+  @override
+  String get sleepScopeDay => 'Tag';
+
+  @override
+  String get sleepScopeWeek => 'Woche';
+
+  @override
+  String get sleepScopeMonth => 'Monat';
+
+  @override
+  String get sleepWeekSummaryTitle => 'Wochenübersicht';
+
+  @override
+  String get sleepMonthSummaryTitle => 'Monatsübersicht';
+
+  @override
+  String get sleepSleepWindowTitle => 'Schlaffenster';
+
+  @override
+  String get sleepDailyScoreTitle => 'Tages-Score';
+
+  @override
+  String get sleepMonthDailyScoreStatesTitle => 'Tägliche Score-Zustände';
+
+  @override
+  String sleepMeanScoreLabel(String value) {
+    return 'Durchschnittlicher Score: $value';
+  }
+
+  @override
+  String get sleepHubScoreLabel => 'Schlaf-Score';
+
+  @override
+  String get sleepHubAverageLabel => 'Durchschnitt';
+
+  @override
+  String get sleepHubBedtimeLabel => 'Schlafenszeit';
+
+  @override
+  String get sleepHubInterruptionsLabel => 'Unterbrechungen';
+
+  @override
+  String sleepHubInterruptionsSummary(int count, String duration) {
+    return '$count Wachphasen, $duration gesamt';
+  }
+
+  @override
+  String sleepWeekdayAvgDurationLabel(String value) {
+    return 'Durchschnitt Werktage: $value';
+  }
+
+  @override
+  String sleepWeekendAvgDurationLabel(String value) {
+    return 'Durchschnitt Wochenende: $value';
+  }
+
+  @override
+  String get sleepWeekNoScoredNights =>
+      'In dieser Woche sind noch keine bewerteten Schlafnächte verfügbar.';
+
+  @override
+  String get sleepMonthNoScoredNights =>
+      'In diesem Monat sind noch keine bewerteten Schlafnächte verfügbar.';
+
+  @override
+  String get sleepSettingsSectionTitle => 'Schlaf (Batch 2)';
+
+  @override
+  String get sleepEnableTrackingTitle => 'Schlaf-Tracking aktivieren';
+
+  @override
+  String get sleepEnableTrackingSubtitle =>
+      'Schlaf- und nächtliche Herzfrequenzdaten aus Health Connect / HealthKit lesen';
+
+  @override
+  String get sleepHealthConnectionStatusTitle =>
+      'Status der Gesundheitsverbindung';
+
+  @override
+  String get sleepRequestAccessTitle => 'Zugriff anfordern';
+
+  @override
+  String get sleepRequestAccessSubtitle =>
+      'Schlaf-/Herzfrequenz-Berechtigungen anfordern oder erneut anfordern';
+
+  @override
+  String get sleepImportNowTitle => 'Schlafdaten jetzt importieren';
+
+  @override
+  String get sleepImportNowSubtitle =>
+      'Importiert die letzten 30 Tage zum Testen';
+
+  @override
+  String get sleepRawImportsTitle => 'Rohimporte anzeigen';
+
+  @override
+  String get sleepRawImportsSubtitle =>
+      'Zeigt aktuelle Health-Connect-Payloads';
+
+  @override
+  String get sleepDataStatusTitle => 'Datenstatus';
+
+  @override
+  String get sleepDataStatusSubtitle =>
+      'Berechtigungen erteilt. Wenn noch kein Schlaf angezeigt wird, unten manuell importieren.';
+
+  @override
+  String get sleepNoPermissionTitle => 'Keine Berechtigung';
+
+  @override
+  String get sleepNoPermissionSubtitle =>
+      'Schlaf- und Herzfrequenz-Berechtigungen sind für den Import erforderlich.';
+
+  @override
+  String get sleepFeatureUnavailableTitle => 'Funktion nicht verfügbar';
+
+  @override
+  String get sleepFeatureUnavailableSubtitle =>
+      'Der Schlafimport ist auf diesem Gerät nicht verfügbar oder Health Connect ist nicht installiert.';
+
+  @override
+  String get sleepNoRawImportsFound =>
+      'Es wurden noch keine Schlaf-Rohimporte gefunden.';
+
+  @override
+  String get sleepRawImportsSheetTitle => 'Schlaf-Rohimporte (neueste)';
+
+  @override
+  String sleepImportFinishedSessions(int count) {
+    return 'Schlafimport abgeschlossen ($count Sitzungen).';
+  }
+
+  @override
+  String get sleepImportUnavailableCheckPermissions =>
+      'Schlafimport nicht verfügbar. Berechtigungen prüfen.';
+
+  @override
+  String get sleepStatusChecking => 'Berechtigungsstatus wird geprüft…';
+
+  @override
+  String get sleepStatusReady => 'Bereit';
+
+  @override
+  String get sleepStatusDenied => 'Abgelehnt';
+
+  @override
+  String get sleepStatusPartial => 'Teilzugriff';
+
+  @override
+  String get sleepStatusUnavailable => 'Auf diesem Gerät nicht verfügbar';
+
+  @override
+  String get sleepStatusNotInstalled => 'Health Connect nicht installiert';
+
+  @override
+  String get sleepStatusTechnicalError => 'Technischer Fehler';
+
+  @override
+  String get sleepConnectHealthDataTitle => 'Gesundheitsdaten verbinden';
+
+  @override
+  String get sleepConnectHealthDataMessage =>
+      'Verbinde HealthKit oder Health Connect, um Schlafdaten zu importieren.';
+
+  @override
+  String get sleepPermissionDeniedTitle => 'Berechtigung verweigert';
+
+  @override
+  String get sleepPermissionDeniedMessage =>
+      'Schlaf-Berechtigungen sind verweigert. Öffne die Einstellungen, um Zugriff zu gewähren.';
+
+  @override
+  String get sleepSourceUnavailableTitle => 'Quelle nicht verfügbar';
+
+  @override
+  String get sleepSourceUnavailableMessage =>
+      'Die Schlafdatenquelle ist auf diesem Gerät nicht verfügbar oder nicht installiert.';
 }

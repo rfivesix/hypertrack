@@ -30,9 +30,16 @@ String _compactAxisLabel(int value) {
 }
 
 class StepsModuleScreen extends StatefulWidget {
-  const StepsModuleScreen({super.key, this.repository});
+  const StepsModuleScreen({
+    super.key,
+    this.repository,
+    this.initialScope = StepsScope.day,
+    this.initialDate,
+  });
 
   final StepsAggregationRepository? repository;
+  final StepsScope initialScope;
+  final DateTime? initialDate;
 
   @override
   State<StepsModuleScreen> createState() => _StepsModuleScreenState();
@@ -54,6 +61,9 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   void initState() {
     super.initState();
     _repository = widget.repository ?? HealthStepsAggregationRepository();
+    _scope = widget.initialScope;
+    final seed = widget.initialDate ?? DateTime.now();
+    _anchorDate = DateTime(seed.year, seed.month, seed.day);
     _loadScopeData();
   }
 
@@ -193,6 +203,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+    final showSummaryCard = _scope == StepsScope.month;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: const GlobalAppBar(title: 'Steps'),
@@ -221,8 +232,12 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
                             monthData: _monthData,
                             dailyGoal: _targetSteps,
                           ),
-                          const SizedBox(height: DesignConstants.spacingS),
-                          _buildScopeSummaryCard(context),
+                          if (showSummaryCard) ...[
+                            const SizedBox(height: DesignConstants.spacingS),
+                            _buildScopeSummaryCard(context),
+                          ],
+                          if (!showSummaryCard)
+                            const SizedBox(height: DesignConstants.spacingS),
                           if (_lastUpdatedAtUtc != null)
                             Padding(
                               padding: const EdgeInsets.symmetric(
@@ -455,14 +470,17 @@ class _DayHistogram extends StatelessWidget {
       }
     }
 
-    int maxValue = safeGoal;
+    int maxValue = 0;
     for (final bucket in buckets) {
       if (bucket.steps > maxValue) {
         maxValue = bucket.steps;
       }
     }
     if (maxValue <= 0) {
-      maxValue = 1;
+      maxValue = 2000;
+    } else {
+      // Round up to the nearest 2,000 steps for the Y axis max.
+      maxValue = ((maxValue + 1999) ~/ 2000) * 2000;
     }
     const dayChartHeight = 160.0;
     const dayChartBottom = dayChartHeight - _chartBottomInset;

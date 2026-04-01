@@ -13,9 +13,11 @@ abstract class SleepQueryRepository {
 }
 
 class DriftSleepQueryRepository implements SleepQueryRepository {
-  DriftSleepQueryRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null {
+  DriftSleepQueryRepository({
+    required AppDatabase database,
+    bool ownsDatabase = false,
+  })  : _database = database,
+        _ownsDatabase = ownsDatabase {
     _dao = SleepNightlyAnalysesDao(_database);
   }
 
@@ -56,6 +58,7 @@ class DriftSleepQueryRepository implements SleepQueryRepository {
       normalizationVersion: record.normalizationVersion,
       analyzedAtUtc: record.analyzedAt.toUtc(),
       score: record.score,
+      totalSleepMinutes: record.totalSleepMinutes,
       sleepQuality: _qualityFromScore(record.score),
       sourcePlatform: record.sourcePlatform,
       sourceAppId: record.sourceAppId,

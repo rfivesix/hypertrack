@@ -136,6 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showRawSleepImports() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_isSleepRawLoading) return;
     setState(() => _isSleepRawLoading = true);
     final records = await _loadRawSleepImports();
@@ -144,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (records.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No raw sleep imports found yet.')),
+        SnackBar(content: Text(l10n.sleepNoRawImportsFound)),
       );
       return;
     }
@@ -162,8 +163,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Raw sleep imports (latest)',
+                Text(
+                  l10n.sleepRawImportsSheetTitle,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
@@ -415,7 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, 'Sleep (Batch 2)'),
+            _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
             ValueListenableBuilder<SleepPermissionStatus>(
               valueListenable: _sleepPermissionController.state,
               builder: (context, permission, _) {
@@ -424,12 +425,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       SwitchListTile(
                         secondary: const Icon(Icons.bedtime_outlined),
-                        title: const Text(
-                          'Enable sleep tracking',
+                        title: Text(
+                          l10n.sleepEnableTrackingTitle,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: const Text(
-                          'Read sleep and overnight heart rate from Health Connect / HealthKit',
+                        subtitle: Text(
+                          l10n.sleepEnableTrackingSubtitle,
                         ),
                         value: _sleepTrackingEnabled,
                         onChanged: (value) async {
@@ -447,23 +448,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.health_and_safety_outlined),
-                        title: const Text(
-                          'Health connection status',
+                        title: Text(
+                          l10n.sleepHealthConnectionStatusTitle,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text(_sleepStatusSubtitle(permission)),
+                        subtitle: Text(_sleepStatusSubtitle(permission, l10n)),
                         trailing: Icon(
                           _sleepStatusIcon(permission.state),
                           color: _sleepStatusColor(context, permission.state),
                         ),
                       ),
+                      if (permission.state == SleepPermissionState.ready)
+                        ListTile(
+                          leading: const Icon(Icons.info_outline),
+                          title: Text(
+                            l10n.sleepDataStatusTitle,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            l10n.sleepDataStatusSubtitle,
+                          ),
+                        ),
+                      if (permission.state == SleepPermissionState.denied ||
+                          permission.state == SleepPermissionState.partial)
+                        ListTile(
+                          leading: const Icon(Icons.lock_outline),
+                          title: Text(
+                            l10n.sleepNoPermissionTitle,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            l10n.sleepNoPermissionSubtitle,
+                          ),
+                        ),
+                      if (permission.state == SleepPermissionState.unavailable ||
+                          permission.state == SleepPermissionState.notInstalled)
+                        ListTile(
+                          leading: const Icon(Icons.mobiledata_off_outlined),
+                          title: Text(
+                            l10n.sleepFeatureUnavailableTitle,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            l10n.sleepFeatureUnavailableSubtitle,
+                          ),
+                        ),
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.lock_open_outlined),
-                        title: const Text('Request access'),
-                        subtitle: const Text(
-                          'Request or re-request sleep/heart-rate permissions',
-                        ),
+                        title: Text(l10n.sleepRequestAccessTitle),
+                        subtitle: Text(l10n.sleepRequestAccessSubtitle),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () async {
                           await _sleepPermissionController.requestAccess();
@@ -473,10 +507,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       ListTile(
                         leading: const Icon(Icons.sync),
-                        title: const Text('Import sleep data now'),
-                        subtitle: const Text(
-                          'Import the last 30 days for testing',
-                        ),
+                        title: Text(l10n.sleepImportNowTitle),
+                        subtitle: Text(l10n.sleepImportNowSubtitle),
                         trailing: _isSleepImporting
                             ? const SizedBox(
                                 width: 18,
@@ -498,9 +530,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   SnackBar(
                                     content: Text(
                                       result.success
-                                          ? 'Sleep import finished (${result.importedSessions} sessions).'
+                                          ? l10n.sleepImportFinishedSessions(
+                                              result.importedSessions,
+                                            )
                                           : (result.message ??
-                                              'Sleep import unavailable. Check permissions.'),
+                                              l10n
+                                                  .sleepImportUnavailableCheckPermissions),
                                     ),
                                   ),
                                 );
@@ -510,10 +545,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       ListTile(
                         leading: const Icon(Icons.data_object_outlined),
-                        title: const Text('View raw sleep imports'),
-                        subtitle: const Text(
-                          'Show recent Health Connect payloads',
-                        ),
+                        title: Text(l10n.sleepRawImportsTitle),
+                        subtitle: Text(l10n.sleepRawImportsSubtitle),
                         trailing: _isSleepRawLoading
                             ? const SizedBox(
                                 width: 18,
@@ -624,17 +657,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  String _sleepStatusSubtitle(SleepPermissionStatus status) {
+  String _sleepStatusSubtitle(
+    SleepPermissionStatus status,
+    AppLocalizations l10n,
+  ) {
     final custom = status.message;
     if (custom != null && custom.isNotEmpty) return custom;
     return switch (status.state) {
-      SleepPermissionState.loading => 'Checking permission status…',
-      SleepPermissionState.ready => 'Ready',
-      SleepPermissionState.denied => 'Denied',
-      SleepPermissionState.partial => 'Partial access',
-      SleepPermissionState.unavailable => 'Unavailable on this device',
-      SleepPermissionState.notInstalled => 'Health Connect not installed',
-      SleepPermissionState.technicalError => 'Technical error',
+      SleepPermissionState.loading => l10n.sleepStatusChecking,
+      SleepPermissionState.ready => l10n.sleepStatusReady,
+      SleepPermissionState.denied => l10n.sleepStatusDenied,
+      SleepPermissionState.partial => l10n.sleepStatusPartial,
+      SleepPermissionState.unavailable => l10n.sleepStatusUnavailable,
+      SleepPermissionState.notInstalled => l10n.sleepStatusNotInstalled,
+      SleepPermissionState.technicalError => l10n.sleepStatusTechnicalError,
     };
   }
 
