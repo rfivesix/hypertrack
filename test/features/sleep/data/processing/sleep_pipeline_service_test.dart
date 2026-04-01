@@ -29,8 +29,24 @@ void main() {
           recordId: 'seg-1',
           sessionRecordId: 'session-1',
           startAtUtc: DateTime.utc(2026, 3, 1, 22),
+          endAtUtc: DateTime.utc(2026, 3, 2, 2),
+          platformStage: 'core',
+          sourcePlatform: 'healthkit',
+        ),
+        SleepIngestionStageSegment(
+          recordId: 'seg-2',
+          sessionRecordId: 'session-1',
+          startAtUtc: DateTime.utc(2026, 3, 2, 2),
+          endAtUtc: DateTime.utc(2026, 3, 2, 2, 5),
+          platformStage: 'awake',
+          sourcePlatform: 'healthkit',
+        ),
+        SleepIngestionStageSegment(
+          recordId: 'seg-3',
+          sessionRecordId: 'session-1',
+          startAtUtc: DateTime.utc(2026, 3, 2, 2, 5),
           endAtUtc: DateTime.utc(2026, 3, 2, 6),
-          platformStage: 'light',
+          platformStage: 'core',
           sourcePlatform: 'healthkit',
         ),
       ],
@@ -57,6 +73,17 @@ void main() {
         .customSelect('SELECT COUNT(*) c FROM sleep_nightly_analyses')
         .getSingle();
     expect(analysesCount.read<int>('c'), 1);
+
+    final analysis = await db.customSelect(
+      '''
+      SELECT score, interruptions_count, interruptions_wake_minutes
+      FROM sleep_nightly_analyses
+      LIMIT 1
+      ''',
+    ).getSingle();
+    expect(analysis.readNullable<double>('score'), isNotNull);
+    expect(analysis.readNullable<int>('interruptions_count'), 1);
+    expect(analysis.readNullable<int>('interruptions_wake_minutes'), 5);
 
     await db.close();
   });

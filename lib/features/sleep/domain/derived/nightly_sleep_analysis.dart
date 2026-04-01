@@ -14,6 +14,10 @@ class NightlySleepAnalysis {
     required this.analyzedAtUtc,
     this.score,
     this.totalSleepMinutes,
+    this.sleepEfficiencyPct,
+    this.restingHeartRateBpm,
+    this.interruptionsCount,
+    this.interruptionsWakeMinutes,
     this.sleepQuality = SleepQualityBucket.unavailable,
     this.sourcePlatform,
     this.sourceAppId,
@@ -28,6 +32,10 @@ class NightlySleepAnalysis {
   final DateTime analyzedAtUtc;
   final double? score;
   final int? totalSleepMinutes;
+  final double? sleepEfficiencyPct;
+  final double? restingHeartRateBpm;
+  final int? interruptionsCount;
+  final int? interruptionsWakeMinutes;
   final SleepQualityBucket sleepQuality;
   final String? sourcePlatform;
   final String? sourceAppId;
@@ -42,6 +50,10 @@ class NightlySleepAnalysis {
         'analyzedAtUtc': analyzedAtUtc.toIso8601String(),
         'score': score,
         'totalSleepMinutes': totalSleepMinutes,
+        'sleepEfficiencyPct': sleepEfficiencyPct,
+        'restingHeartRateBpm': restingHeartRateBpm,
+        'interruptionsCount': interruptionsCount,
+        'interruptionsWakeMinutes': interruptionsWakeMinutes,
         'sleepQuality': sleepQuality.name,
         'sourcePlatform': sourcePlatform,
         'sourceAppId': sourceAppId,

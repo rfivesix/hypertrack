@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../data/database_helper.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../screens/settings_screen.dart';
+import '../../../../util/design_constants.dart';
 import '../../../../widgets/summary_card.dart';
 import '../../data/repository/sleep_query_repository.dart';
 import '../../data/sleep_day_repository.dart';
@@ -44,6 +45,8 @@ class SleepDayOverviewPage extends StatefulWidget {
   @override
   State<SleepDayOverviewPage> createState() => _SleepDayOverviewPageState();
 }
+
+const _sleepOverviewSectionSpacing = DesignConstants.spacingM;
 
 class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
   late final SleepDayViewModel _dayViewModel;
@@ -123,20 +126,20 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             WeekSummaryCard(aggregation: aggregation),
-            const SizedBox(height: 12),
+            const SizedBox(height: _sleepOverviewSectionSpacing),
             WeekWindowCard(aggregation: aggregation),
-            const SizedBox(height: 12),
+            const SizedBox(height: _sleepOverviewSectionSpacing),
             WeekScoreStrip(
               aggregation: aggregation,
               onTapDay: _selectDay,
             ),
-            if (aggregation.days.every((day) => day.score == null))
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: SleepDataUnavailableCard(
-                  message: l10n.sleepWeekNoScoredNights,
-                ),
+            if (aggregation.days.every((day) => day.score == null)) ...[
+              const SizedBox(height: _sleepOverviewSectionSpacing),
+              SleepDataUnavailableCard(
+                message: l10n.sleepWeekNoScoredNights,
+                margin: EdgeInsets.zero,
               ),
+            ],
           ],
         );
       case SleepPeriodScope.month:
@@ -148,18 +151,18 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             MonthSummaryCard(aggregation: aggregation),
-            const SizedBox(height: 12),
+            const SizedBox(height: _sleepOverviewSectionSpacing),
             MonthCalendarGrid(
               aggregation: aggregation,
               onTapDay: _selectDay,
             ),
-            if (aggregation.days.every((day) => day.score == null))
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: SleepDataUnavailableCard(
-                  message: l10n.sleepMonthNoScoredNights,
-                ),
+            if (aggregation.days.every((day) => day.score == null)) ...[
+              const SizedBox(height: _sleepOverviewSectionSpacing),
+              SleepDataUnavailableCard(
+                message: l10n.sleepMonthNoScoredNights,
+                margin: EdgeInsets.zero,
               ),
+            ],
           ],
         );
     }
@@ -303,9 +306,9 @@ class _SleepDayOverviewContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SleepTimelineCard(overview: overview),
-        const SizedBox(height: 12),
+        const SizedBox(height: _sleepOverviewSectionSpacing),
         _SleepScoreCard(overview: overview),
-        const SizedBox(height: 12),
+        const SizedBox(height: _sleepOverviewSectionSpacing),
         _SleepMetricTileGrid(overview: overview),
       ],
     );
@@ -324,6 +327,7 @@ class _SleepEmptyStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -380,6 +384,7 @@ class _SleepTimelineCard extends StatelessWidget {
     final segments = overview.timelineSegments;
     if (segments.isEmpty) {
       return SummaryCard(
+        margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -434,6 +439,7 @@ class _SleepTimelineCard extends StatelessWidget {
         .toList(growable: false);
     if (visibleRows.isEmpty) {
       return SummaryCard(
+        margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -448,6 +454,7 @@ class _SleepTimelineCard extends StatelessWidget {
       );
     }
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -572,6 +579,7 @@ class _SleepScoreCard extends StatelessWidget {
         ? 'Score unavailable for this night.'
         : _qualitySubtitle(quality);
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -655,6 +663,7 @@ class _SleepMetricTileGrid extends StatelessWidget {
         : '${overview.regularityNights.length.clamp(0, 7)}-night view';
     return GridView.count(
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       crossAxisCount: 2,
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,

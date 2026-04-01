@@ -249,6 +249,8 @@ class SleepPipelineService {
             totalSleepMinutes: metrics.totalSleepTime.inMinutes,
             sleepEfficiencyPct: metrics.sleepEfficiencyPct,
             restingHeartRateBpm: avgHr,
+            interruptionsCount: metrics.interruptionsCount,
+            interruptionsWakeMinutes: metrics.wakeAfterSleepOnset.inMinutes,
             analyzedAt: importedAt,
           ),
         );

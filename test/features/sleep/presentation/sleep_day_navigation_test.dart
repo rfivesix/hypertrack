@@ -269,7 +269,8 @@ void main() {
     expect(find.text('Connect health data'), findsOneWidget);
   });
 
-  testWidgets('week and month screens render sparse data safely', (tester) async {
+  testWidgets('week and month screens render sparse data safely',
+      (tester) async {
     final repo = _FakeSleepQueryRepository([
       NightlySleepAnalysis(
         id: 'a1',

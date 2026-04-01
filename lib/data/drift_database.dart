@@ -487,6 +487,8 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       total_sleep_minutes INTEGER NULL,
       sleep_efficiency_pct REAL NULL,
       resting_heart_rate_bpm REAL NULL,
+      interruptions_count INTEGER NULL,
+      interruptions_wake_minutes INTEGER NULL,
       analyzed_at INTEGER NOT NULL,
       created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
       updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
@@ -530,7 +532,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -595,6 +597,14 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 9) {
             await _createSleepPersistenceSchema(this);
+          }
+          if (from >= 9 && from < 10) {
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN interruptions_count INTEGER NULL',
+            );
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN interruptions_wake_minutes INTEGER NULL',
+            );
           }
         },
       );

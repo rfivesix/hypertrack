@@ -80,6 +80,8 @@ class HealthConnectMapper {
   CanonicalSleepStage _mapStage(String raw) {
     switch (raw.trim().toLowerCase()) {
       case 'awake':
+      case 'awake_in_bed':
+      case 'awake in bed':
         return CanonicalSleepStage.awake;
       case 'light':
         return CanonicalSleepStage.light;

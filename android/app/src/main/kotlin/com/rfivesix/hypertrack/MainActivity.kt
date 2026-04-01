@@ -278,20 +278,35 @@ class MainActivity : FlutterFragmentActivity() {
                 val from = Instant.parse(fromIso)
                 val to = Instant.parse(toIso)
 
-                val sessionsResponse = client.readRecords(
-                    ReadRecordsRequest(
-                        recordType = SleepSessionRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(from, to),
-                    ),
-                )
-                val hrResponse = client.readRecords(
-                    ReadRecordsRequest(
-                        recordType = HeartRateRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(from, to),
-                    ),
-                )
+                val sessionsRecords = mutableListOf<SleepSessionRecord>()
+                var sessionsPageToken: String? = null
+                do {
+                    val sessionsResponse = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = SleepSessionRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(from, to),
+                            pageToken = sessionsPageToken,
+                        ),
+                    )
+                    sessionsRecords.addAll(sessionsResponse.records)
+                    sessionsPageToken = sessionsResponse.pageToken
+                } while (sessionsPageToken != null)
 
-                val sessions = sessionsResponse.records.map { record ->
+                val hrRecords = mutableListOf<HeartRateRecord>()
+                var hrPageToken: String? = null
+                do {
+                    val hrResponse = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = HeartRateRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(from, to),
+                            pageToken = hrPageToken,
+                        ),
+                    )
+                    hrRecords.addAll(hrResponse.records)
+                    hrPageToken = hrResponse.pageToken
+                } while (hrPageToken != null)
+
+                val sessions = sessionsRecords.map { record ->
                     mapOf(
                         "recordId" to record.metadata.id,
                         "startAtUtcIso" to record.startTime.toString(),
@@ -303,7 +318,7 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
 
-                val stageSegments = sessionsResponse.records.flatMap { record ->
+                val stageSegments = sessionsRecords.flatMap { record ->
                     record.stages.mapIndexed { index, stage ->
                         mapOf(
                             "recordId" to "${record.metadata.id}-$index",
@@ -318,9 +333,9 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                 }
 
-                val hrRows = hrResponse.records.flatMap { record ->
+                val hrRows = hrRecords.flatMap { record ->
                     record.samples.mapIndexedNotNull { index, sample ->
-                        val sessionId = sessionsResponse.records.firstOrNull {
+                        val sessionId = sessionsRecords.firstOrNull {
                             sample.time in it.startTime..it.endTime
                         }?.metadata?.id ?: return@mapIndexedNotNull null
                         mapOf(
@@ -355,6 +370,7 @@ class MainActivity : FlutterFragmentActivity() {
     private fun mapSleepStage(stage: Int): String {
         return when (stage) {
             SleepSessionRecord.STAGE_TYPE_AWAKE -> "awake"
+            SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED -> "awake_in_bed"
             SleepSessionRecord.STAGE_TYPE_DEEP -> "deep"
             SleepSessionRecord.STAGE_TYPE_LIGHT -> "light"
             SleepSessionRecord.STAGE_TYPE_REM -> "rem"

@@ -10,6 +10,8 @@ import '../details/sleep_data_unavailable_card.dart';
 import '../sleep_navigation.dart';
 import '../widgets/sleep_period_scope_layout.dart';
 
+const _sleepOverviewSectionSpacing = DesignConstants.spacingM;
+
 class SleepMonthOverviewPage extends StatefulWidget {
   const SleepMonthOverviewPage({
     super.key,
@@ -57,19 +59,19 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 MonthSummaryCard(aggregation: _aggregation!),
-                const SizedBox(height: 12),
+                const SizedBox(height: _sleepOverviewSectionSpacing),
                 MonthCalendarGrid(
                   aggregation: _aggregation!,
                   onTapDay: (day) =>
                       SleepNavigation.openDayForDate(context, day),
                 ),
-                if (_aggregation!.days.every((day) => day.score == null))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: SleepDataUnavailableCard(
-                      message: l10n.sleepMonthNoScoredNights,
-                    ),
+                if (_aggregation!.days.every((day) => day.score == null)) ...[
+                  const SizedBox(height: _sleepOverviewSectionSpacing),
+                  SleepDataUnavailableCard(
+                    message: l10n.sleepMonthNoScoredNights,
+                    margin: EdgeInsets.zero,
                   ),
+                ],
               ],
             ),
     );
@@ -140,6 +142,7 @@ class MonthSummaryCard extends StatelessWidget {
         ? '--'
         : aggregation.meanScore!.toStringAsFixed(0);
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -191,6 +194,7 @@ class MonthCalendarGrid extends StatelessWidget {
       padded.addAll(List<SleepDayAggregate?>.filled(7 - remainder, null));
     }
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

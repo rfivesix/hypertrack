@@ -7,7 +7,7 @@ import '../../domain/sleep_domain.dart';
 /// - Drop zero-length intervals.
 /// - Resolve overlaps by splitting on boundaries and selecting the highest
 ///   priority stage:
-///   awake/rem/deep/light > asleep_unspecified > in_bed_only > unknown.
+///   awake/out_of_bed/rem/deep/light > asleep_unspecified > in_bed_only > unknown.
 /// - Merge adjacent intervals with the same stage.
 List<SleepStageSegment> repairSleepTimeline({
   required SleepSession session,
@@ -120,6 +120,7 @@ List<SleepStageSegment> repairSleepTimeline({
 int _stagePriority(CanonicalSleepStage stage) {
   return switch (stage) {
     CanonicalSleepStage.awake ||
+    CanonicalSleepStage.outOfBed ||
     CanonicalSleepStage.rem ||
     CanonicalSleepStage.deep ||
     CanonicalSleepStage.light =>

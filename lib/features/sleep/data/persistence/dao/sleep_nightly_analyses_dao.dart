@@ -30,9 +30,11 @@ class SleepNightlyAnalysesDao {
         total_sleep_minutes,
         sleep_efficiency_pct,
         resting_heart_rate_bpm,
+        interruptions_count,
+        interruptions_wake_minutes,
         analyzed_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ''',
       <Object?>[
         row.id,
@@ -48,6 +50,8 @@ class SleepNightlyAnalysesDao {
         row.totalSleepMinutes,
         row.sleepEfficiencyPct,
         row.restingHeartRateBpm,
+        row.interruptionsCount,
+        row.interruptionsWakeMinutes,
         _toEpochMillis(row.analyzedAt),
         _toEpochMillis(DateTime.now()),
       ],
@@ -126,6 +130,9 @@ class SleepNightlyAnalysesDao {
       totalSleepMinutes: row.readNullable<int>('total_sleep_minutes'),
       sleepEfficiencyPct: row.readNullable<double>('sleep_efficiency_pct'),
       restingHeartRateBpm: row.readNullable<double>('resting_heart_rate_bpm'),
+      interruptionsCount: row.readNullable<int>('interruptions_count'),
+      interruptionsWakeMinutes:
+          row.readNullable<int>('interruptions_wake_minutes'),
       analyzedAt: _fromEpochMillis(row.read<int>('analyzed_at')),
       createdAt: _fromEpochMillis(row.read<int>('created_at')),
       updatedAt: _fromEpochMillis(row.read<int>('updated_at')),

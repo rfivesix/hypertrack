@@ -83,7 +83,8 @@ class SleepPeriodAggregationEngine {
         SleepDayAggregate(
           date: date,
           score: analysis?.score,
-          sleepQuality: analysis?.sleepQuality ?? SleepQualityBucket.unavailable,
+          sleepQuality:
+              analysis?.sleepQuality ?? SleepQualityBucket.unavailable,
           totalSleepMinutes: analysis?.totalSleepMinutes,
         ),
       );
@@ -111,17 +112,16 @@ class SleepPeriodAggregationEngine {
     final monthEnd = DateTime(monthStart.year, monthStart.month + 1, 0);
     final byDate = _latestByDate(analyses);
     final days = <SleepDayAggregate>[];
-    for (
-      var date = normalizedMonthStart;
-      !date.isAfter(monthEnd);
-      date = date.add(const Duration(days: 1))
-    ) {
+    for (var date = normalizedMonthStart;
+        !date.isAfter(monthEnd);
+        date = date.add(const Duration(days: 1))) {
       final analysis = byDate[date];
       days.add(
         SleepDayAggregate(
           date: date,
           score: analysis?.score,
-          sleepQuality: analysis?.sleepQuality ?? SleepQualityBucket.unavailable,
+          sleepQuality:
+              analysis?.sleepQuality ?? SleepQualityBucket.unavailable,
           totalSleepMinutes: analysis?.totalSleepMinutes,
         ),
       );

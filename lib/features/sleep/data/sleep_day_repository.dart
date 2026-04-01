@@ -1,8 +1,12 @@
 import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart';
 import '../domain/sleep_domain.dart';
+import '../domain/metrics/heart_rate_metrics.dart';
+import '../domain/metrics/nightly_metrics_calculator.dart';
 import 'persistence/dao/sleep_canonical_dao.dart';
 import 'persistence/dao/sleep_nightly_analyses_dao.dart';
+import 'persistence/sleep_persistence_models.dart';
+import 'processing/timeline_repair.dart';
 
 class SleepRegularityNight {
   const SleepRegularityNight({
@@ -94,6 +98,7 @@ class SleepDayRepository implements SleepDayDataRepository {
   SleepNightlyAnalysesDao? _analysesDao;
   SleepCanonicalSessionsDao? _sessionsDao;
   SleepCanonicalStageSegmentsDao? _segmentsDao;
+  SleepCanonicalHeartRateSamplesDao? _hrDao;
 
   @override
   Future<SleepDayOverviewData?> fetchOverview(DateTime day) async {
@@ -151,10 +156,52 @@ class SleepDayRepository implements SleepDayDataRepository {
       normalizationVersion: record.normalizationVersion,
       analyzedAtUtc: record.analyzedAt.toUtc(),
       score: record.score,
+      totalSleepMinutes: record.totalSleepMinutes,
+      sleepEfficiencyPct: record.sleepEfficiencyPct,
+      restingHeartRateBpm: record.restingHeartRateBpm,
+      interruptionsCount: record.interruptionsCount,
+      interruptionsWakeMinutes: record.interruptionsWakeMinutes,
       sleepQuality: _qualityFromScore(record.score),
       sourcePlatform: record.sourcePlatform,
       sourceAppId: record.sourceAppId,
       sourceRecordHash: record.sourceRecordHash,
+    );
+
+    final repaired = repairSleepTimeline(session: session, segments: segments);
+    final nightlyMetrics = calculateNightlySleepMetrics(
+      session: session,
+      repairedSegments: repaired,
+    );
+
+    final (interruptionsCount, interruptionsWakeMinutes) =
+        _resolveInterruptions(
+      record: record,
+      repairedSegments: repaired,
+      metrics: nightlyMetrics,
+    );
+
+    final currentHrSamples = (await _hrDao!.findBySessionId(record.sessionId))
+        .map(
+          (row) => HeartRateSample(
+            id: row.id,
+            sessionId: row.sessionId,
+            sampledAtUtc: row.sampledAt,
+            bpm: row.bpm,
+            sourcePlatform: row.sourcePlatform,
+            sourceAppId: row.sourceAppId,
+            sourceRecordHash: row.sourceRecordHash,
+            sourceConfidence: row.sourceConfidence,
+          ),
+        )
+        .toList(growable: false);
+    final nightlyHr = calculateNightlyHeartRateMetrics(
+      sleepWindowSamples: currentHrSamples,
+    );
+    final historicalHrs = await _historicalNightlyHeartRatesBefore(day);
+    final baseline = calculateSleepHeartRateBaseline(historicalHrs);
+    final hrDelta = calculateSleepHeartRateDelta(
+      nightly: nightlyHr,
+      baseline: baseline,
     );
 
     final deepDuration = _sumStageDuration(segments, CanonicalSleepStage.deep);
@@ -171,9 +218,13 @@ class SleepDayRepository implements SleepDayDataRepository {
       timelineSegments: segments,
       stageDataConfidence: _timelineConfidence(segments),
       totalSleepMinutes: record.totalSleepMinutes,
-      sleepHrAvg: record.restingHeartRateBpm,
-      interruptionsCount: null,
-      interruptionsWakeDuration: null,
+      sleepHrAvg: record.restingHeartRateBpm ?? nightlyHr.sleepHrAvg,
+      baselineSleepHr: baseline.baselineSleepHr,
+      deltaSleepHr: hrDelta.deltaSleepHr,
+      interruptionsCount: interruptionsCount,
+      interruptionsWakeDuration: interruptionsWakeMinutes == null
+          ? null
+          : Duration(minutes: interruptionsWakeMinutes),
       deepDuration: deepDuration,
       lightDuration: lightDuration,
       remDuration: remDuration,
@@ -281,6 +332,44 @@ class SleepDayRepository implements SleepDayDataRepository {
     return result;
   }
 
+  (int?, int?) _resolveInterruptions({
+    required SleepNightlyAnalysisRecord record,
+    required List<SleepStageSegment> repairedSegments,
+    required NightlySleepMetrics metrics,
+  }) {
+    if (record.interruptionsCount != null &&
+        record.interruptionsWakeMinutes != null) {
+      return (record.interruptionsCount, record.interruptionsWakeMinutes);
+    }
+    if (repairedSegments.isEmpty) {
+      return (null, null);
+    }
+    return (metrics.interruptionsCount, metrics.wakeAfterSleepOnset.inMinutes);
+  }
+
+  Future<List<double>> _historicalNightlyHeartRatesBefore(DateTime day) async {
+    final from = _nightKey(day.subtract(const Duration(days: 90)));
+    final to = _nightKey(day.subtract(const Duration(days: 1)));
+    final analyses = await _analysesDao!.findByNightRange(
+      fromNightDateInclusive: from,
+      toNightDateInclusive: to,
+    );
+    final latestByNight = <String, SleepNightlyAnalysisRecord>{};
+    for (final analysis in analyses) {
+      final existing = latestByNight[analysis.nightDate];
+      if (existing == null ||
+          analysis.analyzedAt.isAfter(existing.analyzedAt)) {
+        latestByNight[analysis.nightDate] = analysis;
+      }
+    }
+    final sortedNights = latestByNight.keys.toList()..sort();
+    return sortedNights
+        .map((night) => latestByNight[night]!.restingHeartRateBpm)
+        .whereType<double>()
+        .where((value) => value.isFinite)
+        .toList(growable: false);
+  }
+
   Duration _sumStageDuration(
     List<SleepStageSegment> segments,
     CanonicalSleepStage stage,
@@ -305,5 +394,6 @@ class SleepDayRepository implements SleepDayDataRepository {
     _analysesDao = SleepNightlyAnalysesDao(db);
     _sessionsDao = SleepCanonicalSessionsDao(db);
     _segmentsDao = SleepCanonicalStageSegmentsDao(db);
+    _hrDao = SleepCanonicalHeartRateSamplesDao(db);
   }
 }

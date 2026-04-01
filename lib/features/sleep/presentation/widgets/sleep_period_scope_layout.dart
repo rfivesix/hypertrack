@@ -73,7 +73,10 @@ class SleepPeriodScopeLayout extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: Theme.of(
                       context,
-                    ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    )
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
                 IconButton(
@@ -92,7 +95,8 @@ class SleepPeriodScopeLayout extends StatelessWidget {
   }
 
   String _periodLabel(String localeCode) {
-    final normalized = DateTime(anchorDate.year, anchorDate.month, anchorDate.day);
+    final normalized =
+        DateTime(anchorDate.year, anchorDate.month, anchorDate.day);
     switch (selectedScope) {
       case SleepPeriodScope.day:
         return DateFormat.yMMMd(localeCode).format(normalized);

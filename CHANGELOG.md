@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.7.3-alpha.3] - 2026-04-01
+
+This alpha significantly expands the Sleep module from early foundation work into a usable end-to-end feature set for testing. It adds broader Sleep navigation and overview coverage, improves setup and sync flows, strengthens Health Connect ingestion, and fixes key issues in scoring, heart-rate handling, and interruption detection, alongside localization, stability, and test coverage improvements.
+
+### Added
+- Sleep module progression from initial day-only flow toward connected day, week, and month experiences
+- Sleep week and month overview support for broader period-based navigation and summaries
+- Statistics tab entry points into Sleep flows
+- Expanded Sleep settings surfaces for permissions, sync, and debug/import visibility
+- Additional Sleep localization coverage across screens, labels, and state messaging
+- Additional automated coverage for Sleep aggregation, pipeline, persistence, and presentation paths
+
+### Changed
+- Refined Sleep navigation structure and routing across day, week, and month scopes
+- Improved Sleep settings, permission, and sync UX to better distinguish setup state, access state, and data state
+- Updated Sleep data flow to rely more consistently on derived and repository-backed outputs
+- Improved Health Connect ingestion behavior and mapping for sleep-stage and heart-rate records
+- Refined Sleep overview and detail screen behavior, layout consistency, and fallback handling
+- Improved Statistics-to-Sleep integration while keeping Sleep logic owned by the Sleep feature
+- Updated repository and aggregation layers to support broader Sleep summaries and derived period views
+
+### Fixed
+- Fixed Sleep score pipeline issues that caused scores to remain missing or uncomputed on the live import path
+- Fixed interruption detection gaps that caused wake/interruption results to be missing or unavailable
+- Fixed Sleep heart-rate handling issues affecting import completeness, baseline/delta availability, and display
+- Fixed Health Connect stage-mapping gaps that could incorrectly classify wake-related segments
+- Fixed issues in nightly analysis persistence and derived field propagation
+- Fixed localization inconsistencies and remaining hardcoded Sleep UI text in key surfaces
+- Fixed several Sleep-related stability problems across sync, repository, and overview flows
+- Improved regression protection with targeted test additions and updates for recent Sleep fixes
 ## [0.7.3-alpha.2] - 2026-03-31
 
 ### App Icon

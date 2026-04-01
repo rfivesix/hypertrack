@@ -12,6 +12,8 @@ import '../sleep_navigation.dart';
 import '../details/sleep_data_unavailable_card.dart';
 import '../widgets/sleep_period_scope_layout.dart';
 
+const _sleepOverviewSectionSpacing = DesignConstants.spacingM;
+
 class SleepWeekOverviewPage extends StatefulWidget {
   const SleepWeekOverviewPage({
     super.key,
@@ -59,21 +61,21 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 WeekSummaryCard(aggregation: _aggregation!),
-                const SizedBox(height: 12),
+                const SizedBox(height: _sleepOverviewSectionSpacing),
                 WeekWindowCard(aggregation: _aggregation!),
-                const SizedBox(height: 12),
+                const SizedBox(height: _sleepOverviewSectionSpacing),
                 WeekScoreStrip(
                   aggregation: _aggregation!,
                   onTapDay: (day) =>
                       SleepNavigation.openDayForDate(context, day),
                 ),
-                if (_aggregation!.days.every((day) => day.score == null))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: SleepDataUnavailableCard(
-                      message: l10n.sleepWeekNoScoredNights,
-                    ),
+                if (_aggregation!.days.every((day) => day.score == null)) ...[
+                  const SizedBox(height: _sleepOverviewSectionSpacing),
+                  SleepDataUnavailableCard(
+                    message: l10n.sleepWeekNoScoredNights,
+                    margin: EdgeInsets.zero,
                   ),
+                ],
               ],
             ),
     );
@@ -145,6 +147,7 @@ class WeekSummaryCard extends StatelessWidget {
         ? '--'
         : aggregation.meanScore!.toStringAsFixed(0);
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -194,6 +197,7 @@ class WeekWindowCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -505,6 +509,7 @@ class WeekScoreStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return SummaryCard(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

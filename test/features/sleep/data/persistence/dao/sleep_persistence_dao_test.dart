@@ -237,6 +237,8 @@ void main() {
           totalSleepMinutes: 432,
           sleepEfficiencyPct: 91.2,
           restingHeartRateBpm: 50,
+          interruptionsCount: 2,
+          interruptionsWakeMinutes: 14,
           analyzedAt: DateTime.utc(2026, 2, 2, 7),
         ),
       );
@@ -249,6 +251,8 @@ void main() {
 
       expect(bySession.length, 1);
       expect(byRange.single.totalSleepMinutes, 432);
+      expect(byRange.single.interruptionsCount, 2);
+      expect(byRange.single.interruptionsWakeMinutes, 14);
 
       await analysesDao.deleteByNightRange(
         fromNightDateInclusive: '2026-02-01',

@@ -481,7 +481,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             l10n.sleepNoPermissionSubtitle,
                           ),
                         ),
-                      if (permission.state == SleepPermissionState.unavailable ||
+                      if (permission.state ==
+                              SleepPermissionState.unavailable ||
                           permission.state == SleepPermissionState.notInstalled)
                         ListTile(
                           leading: const Icon(Icons.mobiledata_off_outlined),
@@ -534,8 +535,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               result.importedSessions,
                                             )
                                           : (result.message ??
-                                              l10n
-                                                  .sleepImportUnavailableCheckPermissions),
+                                              l10n.sleepImportUnavailableCheckPermissions),
                                     ),
                                   ),
                                 );

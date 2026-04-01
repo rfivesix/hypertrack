@@ -95,7 +95,8 @@ class SleepHubSummaryRepository {
 
       final segmentRows = await _segmentsDao!.findBySessionId(session.id);
       if (segmentRows.isEmpty) continue;
-      final segments = segmentRows.map(_toDomainSegment).toList(growable: false);
+      final segments =
+          segmentRows.map(_toDomainSegment).toList(growable: false);
       final repaired = repairSleepTimeline(
         session: session,
         segments: segments,
@@ -142,7 +143,8 @@ class SleepHubSummaryRepository {
     for (final analysis in analyses) {
       final key = _normalizeDate(DateTime.parse(analysis.nightDate));
       final existing = byDate[key];
-      if (existing == null || analysis.analyzedAt.isAfter(existing.analyzedAt)) {
+      if (existing == null ||
+          analysis.analyzedAt.isAfter(existing.analyzedAt)) {
         byDate[key] = analysis;
       }
     }
@@ -171,7 +173,8 @@ class SleepHubSummaryRepository {
       sumCos += math.cos(angle);
     }
     if (sumSin.abs() < 1e-6 && sumCos.abs() < 1e-6) return null;
-    final avgAngle = math.atan2(sumSin / minutes.length, sumCos / minutes.length);
+    final avgAngle =
+        math.atan2(sumSin / minutes.length, sumCos / minutes.length);
     final normalized = avgAngle < 0 ? avgAngle + 2 * math.pi : avgAngle;
     final avgMinutes = (normalized / (2 * math.pi) * 1440).round() % 1440;
     return avgMinutes;

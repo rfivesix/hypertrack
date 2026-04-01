@@ -1,21 +1,13 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart';
-import '../data/mapping/health_connect_mapper.dart';
-import '../data/mapping/healthkit_mapper.dart';
-import '../data/persistence/dao/sleep_canonical_dao.dart';
-import '../data/persistence/dao/sleep_nightly_analyses_dao.dart';
+import '../data/processing/sleep_pipeline_service.dart';
 import '../data/persistence/dao/sleep_raw_imports_dao.dart';
 import '../data/persistence/sleep_persistence_models.dart';
-import '../domain/heart_rate_sample.dart';
-import '../domain/sleep_session.dart';
-import '../domain/sleep_stage_segment.dart';
 import 'health_connect/health_connect_sleep_adapter.dart';
 import 'healthkit/healthkit_sleep_adapter.dart';
 import 'ingestion/sleep_ingestion_models.dart';
@@ -90,10 +82,6 @@ class SleepSyncService implements SleepSettingsService {
   final bool _ownsDatabase;
   AppDatabase? _database;
   SleepRawImportsDao? _rawDao;
-  SleepCanonicalSessionsDao? _sessionsDao;
-  SleepCanonicalStageSegmentsDao? _stagesDao;
-  SleepCanonicalHeartRateSamplesDao? _hrDao;
-  SleepNightlyAnalysesDao? _analysesDao;
   final SleepPermissionsService? _iosPermissionsService;
   final SleepPermissionsService? _androidPermissionsService;
   final HealthKitDataSource? _iosDataSource;
@@ -206,17 +194,11 @@ class SleepSyncService implements SleepSettingsService {
         message: import.failure?.message,
       );
     }
-    final mapping = const HealthConnectMapper().map(import.batch!);
-    await _persistBatch(
-      import.batch!,
-      mapping.sessions,
-      mapping.stageSegments,
-      mapping.heartRateSamples,
-    );
+    final run = await _runPipelineImport(import.batch!);
     return SleepSyncResult(
       success: true,
       permissionState: SleepPermissionState.ready,
-      importedSessions: mapping.sessions.length,
+      importedSessions: run.importedSessions,
     );
   }
 
@@ -242,17 +224,11 @@ class SleepSyncService implements SleepSettingsService {
         message: import.failure?.message,
       );
     }
-    final mapping = const HealthKitMapper().map(import.batch!);
-    await _persistBatch(
-      import.batch!,
-      mapping.sessions,
-      mapping.stageSegments,
-      mapping.heartRateSamples,
-    );
+    final run = await _runPipelineImport(import.batch!);
     return SleepSyncResult(
       success: true,
       permissionState: SleepPermissionState.ready,
-      importedSessions: mapping.sessions.length,
+      importedSessions: run.importedSessions,
     );
   }
 
@@ -270,158 +246,13 @@ class SleepSyncService implements SleepSettingsService {
     };
   }
 
-  Future<void> _persistBatch(
+  Future<SleepPipelineRunResult> _runPipelineImport(
     SleepRawIngestionBatch batch,
-    List<SleepSession> sessions,
-    List<SleepStageSegment> stageSegments,
-    List<HeartRateSample> heartRateSamples,
   ) async {
-    await _ensureDaos();
-    final importedAt = DateTime.now().toUtc();
-    const normalizationVersion = 'sleep-import-v1';
-    const analysisVersion = 'sleep-analysis-v1';
-    await _database!.transaction(() async {
-      final rawRows = batch.sessions
-          .map(
-            (session) => SleepRawImportCompanion(
-              id: 'raw:${session.recordId}',
-              sourcePlatform: session.sourcePlatform,
-              sourceAppId: session.sourceAppId,
-              sourceConfidence: session.sourceConfidence,
-              sourceRecordHash: _hashRecord(
-                [
-                  session.sourcePlatform,
-                  session.recordId,
-                  session.startAtUtc.toIso8601String(),
-                  session.endAtUtc.toIso8601String(),
-                ].join('|'),
-              ),
-              importStatus: 'success',
-              importedAt: importedAt,
-              payloadJson: jsonEncode(<String, dynamic>{
-                'recordId': session.recordId,
-                'startAtUtc': session.startAtUtc.toIso8601String(),
-                'endAtUtc': session.endAtUtc.toIso8601String(),
-                'platformSessionType': session.platformSessionType,
-              }),
-            ),
-          )
-          .toList(growable: false);
-      await _rawDao!.upsertBatch(rawRows);
-
-      final canonicalSessionRows = sessions
-          .map<SleepCanonicalSessionCompanion>(
-            (session) => SleepCanonicalSessionCompanion(
-              id: session.id,
-              rawImportId: 'raw:${session.id}',
-              sourcePlatform: session.sourcePlatform,
-              sourceAppId: session.sourceAppId,
-              sourceConfidence: session.sourceConfidence,
-              sourceRecordHash: session.sourceRecordHash ??
-                  _hashRecord('session:${session.id}'),
-              normalizationVersion: normalizationVersion,
-              sessionType: session.sessionType.name,
-              startedAt: session.startAtUtc,
-              endedAt: session.endAtUtc,
-              timezone: null,
-              importedAt: importedAt,
-              normalizedAt: importedAt,
-            ),
-          )
-          .toList(growable: false);
-      await _sessionsDao!.upsertBatch(canonicalSessionRows);
-
-      final stageRows = stageSegments
-          .map<SleepCanonicalStageSegmentCompanion>(
-            (segment) => SleepCanonicalStageSegmentCompanion(
-              id: segment.id,
-              sessionId: segment.sessionId,
-              sourcePlatform: segment.sourcePlatform,
-              sourceAppId: segment.sourceAppId,
-              sourceConfidence: segment.sourceConfidence,
-              sourceRecordHash: segment.sourceRecordHash ??
-                  _hashRecord('segment:${segment.id}'),
-              normalizationVersion: normalizationVersion,
-              stage: segment.stage.name,
-              startedAt: segment.startAtUtc,
-              endedAt: segment.endAtUtc,
-              importedAt: importedAt,
-              normalizedAt: importedAt,
-            ),
-          )
-          .toList(growable: false);
-      await _stagesDao!.upsertBatch(stageRows);
-
-      final hrRows = heartRateSamples
-          .map<SleepCanonicalHeartRateSampleCompanion>(
-            (sample) => SleepCanonicalHeartRateSampleCompanion(
-              id: sample.id,
-              sessionId: sample.sessionId,
-              sourcePlatform: sample.sourcePlatform,
-              sourceAppId: sample.sourceAppId,
-              sourceConfidence: sample.sourceConfidence,
-              sourceRecordHash:
-                  sample.sourceRecordHash ?? _hashRecord('hr:${sample.id}'),
-              normalizationVersion: normalizationVersion,
-              sampledAt: sample.sampledAtUtc,
-              bpm: sample.bpm,
-              importedAt: importedAt,
-              normalizedAt: importedAt,
-            ),
-          )
-          .toList(growable: false);
-      await _hrDao!.upsertBatch(hrRows);
-
-      if (sessions.isNotEmpty) {
-        final hrBySession = <String, List<HeartRateSample>>{};
-        for (final sample in heartRateSamples) {
-          hrBySession.putIfAbsent(sample.sessionId, () => []).add(sample);
-        }
-
-        final analysisRows = sessions
-            .map<SleepNightlyAnalysisCompanion>(
-              (session) => SleepNightlyAnalysisCompanion(
-                id: 'analysis:${session.id}',
-                sessionId: session.id,
-                sourcePlatform: session.sourcePlatform,
-                sourceAppId: session.sourceAppId,
-                sourceConfidence: session.sourceConfidence,
-                sourceRecordHash: session.sourceRecordHash ??
-                    _hashRecord('analysis:${session.id}'),
-                normalizationVersion: normalizationVersion,
-                analysisVersion: analysisVersion,
-                nightDate: _nightKey(session.endAtUtc),
-                score: null,
-                totalSleepMinutes:
-                    session.endAtUtc.difference(session.startAtUtc).inMinutes,
-                sleepEfficiencyPct: null,
-                restingHeartRateBpm: _averageBpm(hrBySession[session.id]),
-                analyzedAt: importedAt,
-              ),
-            )
-            .toList(growable: false);
-
-        await _analysesDao!.upsertBatch(analysisRows);
-      }
-    });
+    final db = _database ??= await _databaseFuture;
+    final pipeline = SleepPipelineService(database: db);
+    return pipeline.runImport(batch: batch);
   }
-
-  double? _averageBpm(List<HeartRateSample>? samples) {
-    if (samples == null || samples.isEmpty) return null;
-    final total = samples.fold<double>(0, (sum, sample) => sum + sample.bpm);
-    return total / samples.length;
-  }
-
-  String _nightKey(DateTime utcDate) {
-    final local = utcDate.toLocal();
-    final normalized = DateTime(local.year, local.month, local.day);
-    final month = normalized.month.toString().padLeft(2, '0');
-    final day = normalized.day.toString().padLeft(2, '0');
-    return '${normalized.year}-$month-$day';
-  }
-
-  String _hashRecord(String value) =>
-      sha1.convert(utf8.encode(value)).toString();
 
   @override
   Future<void> dispose() async {
@@ -435,9 +266,5 @@ class SleepSyncService implements SleepSettingsService {
     if (_rawDao != null) return;
     final db = _database ??= await _databaseFuture;
     _rawDao = SleepRawImportsDao(db);
-    _sessionsDao = SleepCanonicalSessionsDao(db);
-    _stagesDao = SleepCanonicalStageSegmentsDao(db);
-    _hrDao = SleepCanonicalHeartRateSamplesDao(db);
-    _analysesDao = SleepNightlyAnalysesDao(db);
   }
 }

@@ -37,10 +37,11 @@ void main() {
     );
   }
 
-  test('maps known health connect stages and out-of-bed', () {
+  test('maps known health connect stages including awake-in-bed', () {
     final result = mapper.map(
       batchWithStages([
         'awake',
+        'awake_in_bed',
         'light',
         'deep',
         'REM',
@@ -50,6 +51,7 @@ void main() {
     );
 
     expect(result.stageSegments.map((s) => s.stage).toList(growable: false), [
+      CanonicalSleepStage.awake,
       CanonicalSleepStage.awake,
       CanonicalSleepStage.light,
       CanonicalSleepStage.deep,

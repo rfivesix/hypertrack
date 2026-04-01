@@ -261,6 +261,8 @@ class SleepNightlyAnalysisRecord {
     this.totalSleepMinutes,
     this.sleepEfficiencyPct,
     this.restingHeartRateBpm,
+    this.interruptionsCount,
+    this.interruptionsWakeMinutes,
     required this.analyzedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -279,6 +281,8 @@ class SleepNightlyAnalysisRecord {
   final int? totalSleepMinutes;
   final double? sleepEfficiencyPct;
   final double? restingHeartRateBpm;
+  final int? interruptionsCount;
+  final int? interruptionsWakeMinutes;
   final DateTime analyzedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -299,6 +303,8 @@ class SleepNightlyAnalysisCompanion {
     this.totalSleepMinutes,
     this.sleepEfficiencyPct,
     this.restingHeartRateBpm,
+    this.interruptionsCount,
+    this.interruptionsWakeMinutes,
     required this.analyzedAt,
   });
 
@@ -315,5 +321,7 @@ class SleepNightlyAnalysisCompanion {
   final int? totalSleepMinutes;
   final double? sleepEfficiencyPct;
   final double? restingHeartRateBpm;
+  final int? interruptionsCount;
+  final int? interruptionsWakeMinutes;
   final DateTime analyzedAt;
 }
