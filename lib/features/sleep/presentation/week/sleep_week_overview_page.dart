@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -16,11 +16,11 @@ class SleepWeekOverviewPage extends StatefulWidget {
   const SleepWeekOverviewPage({
     super.key,
     required this.anchorDay,
-    this.repository,
+    required this.repository,
   });
 
   final DateTime anchorDay;
-  final SleepQueryRepository? repository;
+  final SleepQueryRepository repository;
 
   @override
   State<SleepWeekOverviewPage> createState() => _SleepWeekOverviewPageState();
@@ -29,7 +29,6 @@ class SleepWeekOverviewPage extends StatefulWidget {
 class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
   late DateTime _anchorDay;
   late final SleepQueryRepository _repository;
-  late final bool _ownsRepository;
   WeekSleepAggregation? _aggregation;
   bool _isLoading = true;
 
@@ -41,17 +40,8 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
       widget.anchorDay.month,
       widget.anchorDay.day,
     );
-    _ownsRepository = widget.repository == null;
-    _repository = widget.repository ?? DriftSleepQueryRepository();
+    _repository = widget.repository;
     _loadWeek();
-  }
-
-  @override
-  void dispose() {
-    if (_ownsRepository && _repository is DriftSleepQueryRepository) {
-      unawaited((_repository as DriftSleepQueryRepository).dispose());
-    }
-    super.dispose();
   }
 
   @override
@@ -68,17 +58,18 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _WeekSummaryCard(aggregation: _aggregation!),
+                WeekSummaryCard(aggregation: _aggregation!),
                 const SizedBox(height: 12),
-                _WeekWindowCard(aggregation: _aggregation!),
+                WeekWindowCard(aggregation: _aggregation!),
                 const SizedBox(height: 12),
-                _WeekScoreStrip(
+                WeekScoreStrip(
                   aggregation: _aggregation!,
-                  onTapDay: (day) => SleepNavigation.openDayForDate(context, day),
+                  onTapDay: (day) =>
+                      SleepNavigation.openDayForDate(context, day),
                 ),
                 if (_aggregation!.days.every((day) => day.score == null))
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
                     child: SleepDataUnavailableCard(
                       message: l10n.sleepWeekNoScoredNights,
                     ),
@@ -110,11 +101,19 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
 
   Future<void> _onScopeChanged(SleepPeriodScope scope) async {
     if (scope == SleepPeriodScope.day) {
-      await SleepNavigation.openDayForDate(context, _anchorDay);
+      await SleepNavigation.openDayForDate(
+        context,
+        _anchorDay,
+        replace: true,
+      );
       return;
     }
     if (scope == SleepPeriodScope.month) {
-      await SleepNavigation.openMonthForDate(context, _anchorDay);
+      await SleepNavigation.openMonthForDate(
+        context,
+        _anchorDay,
+        replace: true,
+      );
       return;
     }
   }
@@ -127,8 +126,8 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
   }
 }
 
-class _WeekSummaryCard extends StatelessWidget {
-  const _WeekSummaryCard({required this.aggregation});
+class WeekSummaryCard extends StatelessWidget {
+  const WeekSummaryCard({required this.aggregation});
 
   final WeekSleepAggregation aggregation;
 
@@ -174,10 +173,22 @@ class _WeekSummaryCard extends StatelessWidget {
   }
 }
 
-class _WeekWindowCard extends StatelessWidget {
-  const _WeekWindowCard({required this.aggregation});
+class WeekWindowCard extends StatelessWidget {
+  const WeekWindowCard({required this.aggregation});
 
   final WeekSleepAggregation aggregation;
+  static const int _minMinutes = 20 * 60;
+  static const int _maxMinutes = 36 * 60;
+  static const List<int> _tickMinutes = <int>[
+    21 * 60,
+    24 * 60,
+    27 * 60,
+    30 * 60,
+    33 * 60,
+    36 * 60,
+  ];
+  static const double _labelSpacing = 4;
+  static const double _labelRowHeight = 16;
 
   @override
   Widget build(BuildContext context) {
@@ -197,15 +208,84 @@ class _WeekWindowCard extends StatelessWidget {
               height: 140,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: aggregation.sleepWindows.map((window) {
-                  final top = window.normalizedTop();
-                  final height = window.normalizedHeight();
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Column(
-                        children: [
-                          Expanded(
+                children: [
+                  SizedBox(
+                    width: 44,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: _TimeAxisLabels(
+                            tickMinutes: _tickMinutes,
+                            minMinutes: _minMinutes,
+                            maxMinutes: _maxMinutes,
+                          ),
+                        ),
+                        const SizedBox(height: _labelSpacing),
+                        const SizedBox(height: _labelRowHeight),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: _WeekWindowChart(
+                      windows: aggregation.sleepWindows,
+                      minMinutes: _minMinutes,
+                      maxMinutes: _maxMinutes,
+                      tickMinutes: _tickMinutes,
+                      labelRowHeight: _labelRowHeight,
+                      labelSpacing: _labelSpacing,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WeekWindowChart extends StatelessWidget {
+  const _WeekWindowChart({
+    required this.windows,
+    required this.minMinutes,
+    required this.maxMinutes,
+    required this.tickMinutes,
+    required this.labelRowHeight,
+    required this.labelSpacing,
+  });
+
+  final List<SleepWindowSegment> windows;
+  final int minMinutes;
+  final int maxMinutes;
+  final List<int> tickMinutes;
+  final double labelRowHeight;
+  final double labelSpacing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: windows.map((window) {
+                        final top = window.normalizedTop(
+                          minMinutes: minMinutes,
+                          maxMinutes: maxMinutes,
+                        );
+                        final height = window.normalizedHeight(
+                          minMinutes: minMinutes,
+                          maxMinutes: maxMinutes,
+                        );
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 final maxHeight = constraints.maxHeight;
@@ -219,7 +299,8 @@ class _WeekWindowCard extends StatelessWidget {
                                           color: Theme.of(context)
                                               .colorScheme
                                               .surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                         ),
                                       ),
                                     ),
@@ -231,9 +312,9 @@ class _WeekWindowCard extends StatelessWidget {
                                         height: barHeight.clamp(4, maxHeight),
                                         child: Container(
                                           decoration: BoxDecoration(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                           ),
@@ -244,40 +325,178 @@ class _WeekWindowCard extends StatelessWidget {
                               },
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _weekdayShort(window.date.weekday),
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                        ],
+                        );
+                      }).toList(growable: false),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: _TimeGridPainter(
+                          tickMinutes: tickMinutes,
+                          minMinutes: minMinutes,
+                          maxMinutes: maxMinutes,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outlineVariant
+                              .withOpacity(0.6),
+                        ),
                       ),
                     ),
-                  );
-                }).toList(growable: false),
-              ),
-            ),
-          ],
+                  ),
+                ],
+              );
+            },
+          ),
         ),
-      ),
+        SizedBox(height: labelSpacing),
+        SizedBox(
+          height: labelRowHeight,
+          child: Row(
+            children: windows
+                .map(
+                  (window) => Expanded(
+                    child: Text(
+                      _weekdayShort(window.date.weekday),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ),
+      ],
     );
-  }
-
-  String _weekdayShort(int weekday) {
-    return switch (weekday) {
-      DateTime.monday => 'M',
-      DateTime.tuesday => 'T',
-      DateTime.wednesday => 'W',
-      DateTime.thursday => 'T',
-      DateTime.friday => 'F',
-      DateTime.saturday => 'S',
-      DateTime.sunday => 'S',
-      _ => '-',
-    };
   }
 }
 
-class _WeekScoreStrip extends StatelessWidget {
-  const _WeekScoreStrip({required this.aggregation, required this.onTapDay});
+class _TimeAxisLabels extends StatelessWidget {
+  const _TimeAxisLabels({
+    required this.tickMinutes,
+    required this.minMinutes,
+    required this.maxMinutes,
+  });
+
+  final List<int> tickMinutes;
+  final int minMinutes;
+  final int maxMinutes;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = constraints.maxHeight;
+        final range = (maxMinutes - minMinutes).clamp(1, maxMinutes).toDouble();
+        return Stack(
+          children: [
+            for (final minute in tickMinutes)
+              Positioned(
+                top: _positionForMinute(minute.toDouble(), height, range),
+                right: 6,
+                child: Text(
+                  _formatTickLabel(minute),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  double _positionForMinute(double minute, double height, double range) {
+    final normalized = ((minute - minMinutes) / range).clamp(0.0, 1.0);
+    return (normalized * height) - 6;
+  }
+
+  String _formatTickLabel(int minute) {
+    var hours = (minute ~/ 60) % 24;
+    if (hours < 0) hours += 24;
+    return '${hours}:00';
+  }
+}
+
+class _TimeGridPainter extends CustomPainter {
+  _TimeGridPainter({
+    required this.tickMinutes,
+    required this.minMinutes,
+    required this.maxMinutes,
+    required this.color,
+  });
+
+  final List<int> tickMinutes;
+  final int minMinutes;
+  final int maxMinutes;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    final range = math.max(1, maxMinutes - minMinutes).toDouble();
+    for (final minute in tickMinutes) {
+      final normalized = ((minute - minMinutes) / range).clamp(0.0, 1.0);
+      final y = normalized * size.height;
+      _drawDashedLine(canvas, paint, Offset(0, y), Offset(size.width, y));
+    }
+  }
+
+  void _drawDashedLine(
+    Canvas canvas,
+    Paint paint,
+    Offset start,
+    Offset end,
+  ) {
+    const dashWidth = 4.0;
+    const dashSpace = 3.0;
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    final distance = math.sqrt(dx * dx + dy * dy);
+    var progress = 0.0;
+    while (progress < distance) {
+      final current = progress / distance;
+      final next = (progress + dashWidth) / distance;
+      final from = Offset(
+        start.dx + dx * current,
+        start.dy + dy * current,
+      );
+      final to = Offset(
+        start.dx + dx * next.clamp(0.0, 1.0),
+        start.dy + dy * next.clamp(0.0, 1.0),
+      );
+      canvas.drawLine(from, to, paint);
+      progress += dashWidth + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TimeGridPainter oldDelegate) {
+    return oldDelegate.tickMinutes != tickMinutes ||
+        oldDelegate.minMinutes != minMinutes ||
+        oldDelegate.maxMinutes != maxMinutes ||
+        oldDelegate.color != color;
+  }
+}
+
+String _weekdayShort(int weekday) {
+  return switch (weekday) {
+    DateTime.monday => 'M',
+    DateTime.tuesday => 'T',
+    DateTime.wednesday => 'W',
+    DateTime.thursday => 'T',
+    DateTime.friday => 'F',
+    DateTime.saturday => 'S',
+    DateTime.sunday => 'S',
+    _ => '-',
+  };
+}
+
+class WeekScoreStrip extends StatelessWidget {
+  const WeekScoreStrip({required this.aggregation, required this.onTapDay});
 
   final WeekSleepAggregation aggregation;
   final ValueChanged<DateTime> onTapDay;

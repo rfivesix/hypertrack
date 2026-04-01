@@ -4472,51 +4472,310 @@ abstract class AppLocalizations {
   /// **'Sleep day, week, and month views are available from this entry'**
   String get sleepSectionSubtitleAllEntry;
 
+  /// No description provided for @sleepScopeDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
   String get sleepScopeDay;
+
+  /// No description provided for @sleepScopeWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
   String get sleepScopeWeek;
+
+  /// No description provided for @sleepScopeMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
   String get sleepScopeMonth;
+
+  /// No description provided for @sleepWeekSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Week summary'**
   String get sleepWeekSummaryTitle;
+
+  /// No description provided for @sleepMonthSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Month summary'**
   String get sleepMonthSummaryTitle;
+
+  /// No description provided for @sleepSleepWindowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep window'**
   String get sleepSleepWindowTitle;
+
+  /// No description provided for @sleepDailyScoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily score'**
   String get sleepDailyScoreTitle;
+
+  /// No description provided for @sleepMonthDailyScoreStatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily score states'**
   String get sleepMonthDailyScoreStatesTitle;
+
+  /// No description provided for @sleepMeanScoreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mean score: {value}'**
   String sleepMeanScoreLabel(String value);
+
+  /// No description provided for @sleepHubScoreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep score'**
+  String get sleepHubScoreLabel;
+
+  /// No description provided for @sleepHubAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get sleepHubAverageLabel;
+
+  /// No description provided for @sleepHubBedtimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime'**
+  String get sleepHubBedtimeLabel;
+
+  /// No description provided for @sleepHubInterruptionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Interruptions'**
+  String get sleepHubInterruptionsLabel;
+
+  /// No description provided for @sleepHubInterruptionsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} wake-ups, {duration} total'**
+  String sleepHubInterruptionsSummary(int count, String duration);
+
+  /// No description provided for @sleepWeekdayAvgDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekday avg duration: {value}'**
   String sleepWeekdayAvgDurationLabel(String value);
+
+  /// No description provided for @sleepWeekendAvgDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend avg duration: {value}'**
   String sleepWeekendAvgDurationLabel(String value);
+
+  /// No description provided for @sleepWeekNoScoredNights.
+  ///
+  /// In en, this message translates to:
+  /// **'No scored sleep nights available in this week yet.'**
   String get sleepWeekNoScoredNights;
+
+  /// No description provided for @sleepMonthNoScoredNights.
+  ///
+  /// In en, this message translates to:
+  /// **'No scored sleep nights available this month yet.'**
   String get sleepMonthNoScoredNights;
+
+  /// No description provided for @sleepSettingsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep (Batch 2)'**
   String get sleepSettingsSectionTitle;
+
+  /// No description provided for @sleepEnableTrackingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable sleep tracking'**
   String get sleepEnableTrackingTitle;
+
+  /// No description provided for @sleepEnableTrackingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read sleep and overnight heart rate from Health Connect / HealthKit'**
   String get sleepEnableTrackingSubtitle;
+
+  /// No description provided for @sleepHealthConnectionStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health connection status'**
   String get sleepHealthConnectionStatusTitle;
+
+  /// No description provided for @sleepRequestAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request access'**
   String get sleepRequestAccessTitle;
+
+  /// No description provided for @sleepRequestAccessSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request or re-request sleep/heart-rate permissions'**
   String get sleepRequestAccessSubtitle;
+
+  /// No description provided for @sleepImportNowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import sleep data now'**
   String get sleepImportNowTitle;
+
+  /// No description provided for @sleepImportNowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import the last 30 days for testing'**
   String get sleepImportNowSubtitle;
+
+  /// No description provided for @sleepRawImportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View raw sleep imports'**
   String get sleepRawImportsTitle;
+
+  /// No description provided for @sleepRawImportsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show recent Health Connect payloads'**
   String get sleepRawImportsSubtitle;
+
+  /// No description provided for @sleepDataStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data status'**
   String get sleepDataStatusTitle;
+
+  /// No description provided for @sleepDataStatusSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions granted. If no sleep appears yet, run a manual import below.'**
   String get sleepDataStatusSubtitle;
+
+  /// No description provided for @sleepNoPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No permission'**
   String get sleepNoPermissionTitle;
+
+  /// No description provided for @sleepNoPermissionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep and heart-rate permissions are required to import sleep data.'**
   String get sleepNoPermissionSubtitle;
+
+  /// No description provided for @sleepFeatureUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature unavailable'**
   String get sleepFeatureUnavailableTitle;
+
+  /// No description provided for @sleepFeatureUnavailableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep import is unavailable on this device or Health Connect is not installed.'**
   String get sleepFeatureUnavailableSubtitle;
+
+  /// No description provided for @sleepNoRawImportsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No raw sleep imports found yet.'**
   String get sleepNoRawImportsFound;
+
+  /// No description provided for @sleepRawImportsSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw sleep imports (latest)'**
   String get sleepRawImportsSheetTitle;
+
+  /// No description provided for @sleepImportFinishedSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep import finished ({count} sessions).'**
   String sleepImportFinishedSessions(int count);
+
+  /// No description provided for @sleepImportUnavailableCheckPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep import unavailable. Check permissions.'**
   String get sleepImportUnavailableCheckPermissions;
+
+  /// No description provided for @sleepStatusChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking permission status…'**
   String get sleepStatusChecking;
+
+  /// No description provided for @sleepStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
   String get sleepStatusReady;
+
+  /// No description provided for @sleepStatusDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Denied'**
   String get sleepStatusDenied;
+
+  /// No description provided for @sleepStatusPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial access'**
   String get sleepStatusPartial;
+
+  /// No description provided for @sleepStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable on this device'**
   String get sleepStatusUnavailable;
+
+  /// No description provided for @sleepStatusNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect not installed'**
   String get sleepStatusNotInstalled;
+
+  /// No description provided for @sleepStatusTechnicalError.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical error'**
   String get sleepStatusTechnicalError;
+
+  /// No description provided for @sleepConnectHealthDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect health data'**
   String get sleepConnectHealthDataTitle;
+
+  /// No description provided for @sleepConnectHealthDataMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect HealthKit or Health Connect to import sleep records.'**
   String get sleepConnectHealthDataMessage;
+
+  /// No description provided for @sleepPermissionDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
   String get sleepPermissionDeniedTitle;
+
+  /// No description provided for @sleepPermissionDeniedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep permissions are denied. Open settings to grant access.'**
   String get sleepPermissionDeniedMessage;
+
+  /// No description provided for @sleepSourceUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Source unavailable'**
   String get sleepSourceUnavailableTitle;
+
+  /// No description provided for @sleepSourceUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep data source is unavailable or not installed on this device.'**
   String get sleepSourceUnavailableMessage;
 }
 

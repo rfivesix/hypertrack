@@ -13,9 +13,11 @@ abstract class SleepQueryRepository {
 }
 
 class DriftSleepQueryRepository implements SleepQueryRepository {
-  DriftSleepQueryRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null {
+  DriftSleepQueryRepository({
+    required AppDatabase database,
+    bool ownsDatabase = false,
+  })  : _database = database,
+        _ownsDatabase = ownsDatabase {
     _dao = SleepNightlyAnalysesDao(_database);
   }
 

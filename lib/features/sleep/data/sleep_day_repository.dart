@@ -1,3 +1,4 @@
+import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart';
 import '../domain/sleep_domain.dart';
 import 'persistence/dao/sleep_canonical_dao.dart';
@@ -78,24 +79,27 @@ abstract class SleepDayDataRepository {
 }
 
 class SleepDayRepository implements SleepDayDataRepository {
-  SleepDayRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null {
-    _analysesDao = SleepNightlyAnalysesDao(_database);
-    _sessionsDao = SleepCanonicalSessionsDao(_database);
-    _segmentsDao = SleepCanonicalStageSegmentsDao(_database);
-  }
+  SleepDayRepository({
+    AppDatabase? database,
+    DatabaseHelper? databaseHelper,
+    bool ownsDatabase = false,
+  })  : _databaseFuture = database != null
+            ? Future.value(database)
+            : (databaseHelper ?? DatabaseHelper.instance).database,
+        _ownsDatabase = ownsDatabase && database != null;
 
-  final AppDatabase _database;
+  final Future<AppDatabase> _databaseFuture;
   final bool _ownsDatabase;
-  late final SleepNightlyAnalysesDao _analysesDao;
-  late final SleepCanonicalSessionsDao _sessionsDao;
-  late final SleepCanonicalStageSegmentsDao _segmentsDao;
+  AppDatabase? _database;
+  SleepNightlyAnalysesDao? _analysesDao;
+  SleepCanonicalSessionsDao? _sessionsDao;
+  SleepCanonicalStageSegmentsDao? _segmentsDao;
 
   @override
   Future<SleepDayOverviewData?> fetchOverview(DateTime day) async {
+    await _ensureDaos();
     final key = _nightKey(day);
-    final analyses = await _analysesDao.findByNightRange(
+    final analyses = await _analysesDao!.findByNightRange(
       fromNightDateInclusive: key,
       toNightDateInclusive: key,
     );
@@ -103,10 +107,10 @@ class SleepDayRepository implements SleepDayDataRepository {
 
     analyses.sort((a, b) => b.analyzedAt.compareTo(a.analyzedAt));
     final record = analyses.first;
-    final sessionRecord = await _sessionsDao.findById(record.sessionId);
+    final sessionRecord = await _sessionsDao!.findById(record.sessionId);
     if (sessionRecord == null) return null;
 
-    final segments = (await _segmentsDao.findBySessionId(record.sessionId))
+    final segments = (await _segmentsDao!.findBySessionId(record.sessionId))
         .map(
           (row) => SleepStageSegment(
             id: row.id,
@@ -180,7 +184,8 @@ class SleepDayRepository implements SleepDayDataRepository {
   @override
   Future<void> dispose() async {
     if (_ownsDatabase) {
-      await _database.close();
+      final db = _database ?? await _databaseFuture;
+      await db.close();
     }
   }
 
@@ -251,15 +256,16 @@ class SleepDayRepository implements SleepDayDataRepository {
   Future<List<SleepRegularityNight>> _fetchRegularityNights(
     DateTime day,
   ) async {
+    await _ensureDaos();
     final to = _nightKey(day);
     final from = _nightKey(day.subtract(const Duration(days: 6)));
-    final analyses = await _analysesDao.findByNightRange(
+    final analyses = await _analysesDao!.findByNightRange(
       fromNightDateInclusive: from,
       toNightDateInclusive: to,
     );
     final result = <SleepRegularityNight>[];
     for (final analysis in analyses) {
-      final session = await _sessionsDao.findById(analysis.sessionId);
+      final session = await _sessionsDao!.findById(analysis.sessionId);
       if (session == null) continue;
       result.add(
         SleepRegularityNight(
@@ -291,5 +297,13 @@ class SleepDayRepository implements SleepDayDataRepository {
     final month = normalized.month.toString().padLeft(2, '0');
     final dayPart = normalized.day.toString().padLeft(2, '0');
     return '${normalized.year}-$month-$dayPart';
+  }
+
+  Future<void> _ensureDaos() async {
+    if (_analysesDao != null) return;
+    final db = _database ??= await _databaseFuture;
+    _analysesDao = SleepNightlyAnalysesDao(db);
+    _sessionsDao = SleepCanonicalSessionsDao(db);
+    _segmentsDao = SleepCanonicalStageSegmentsDao(db);
   }
 }

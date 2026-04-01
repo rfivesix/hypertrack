@@ -1004,6 +1004,17 @@
       "value": { "type": "String" }
     }
   }
+  ,"sleepHubScoreLabel": "Sleep score"
+  ,"sleepHubAverageLabel": "Average"
+  ,"sleepHubBedtimeLabel": "Bedtime"
+  ,"sleepHubInterruptionsLabel": "Interruptions"
+  ,"sleepHubInterruptionsSummary": "{count} wake-ups, {duration} total"
+  ,"@sleepHubInterruptionsSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "duration": { "type": "String" }
+    }
+  }
   ,"sleepWeekdayAvgDurationLabel": "Weekday avg duration: {value}"
   ,"@sleepWeekdayAvgDurationLabel": {
     "placeholders": {

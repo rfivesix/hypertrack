@@ -1,120 +1,313 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../data/database_helper.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../screens/settings_screen.dart';
-import '../../../../util/design_constants.dart';
-import '../../../../widgets/global_app_bar.dart';
 import '../../../../widgets/summary_card.dart';
+import '../../data/repository/sleep_query_repository.dart';
 import '../../data/sleep_day_repository.dart';
+import '../../domain/aggregation/sleep_period_aggregations.dart';
 import '../../domain/sleep_enums.dart';
+import '../../domain/sleep_stage_segment.dart';
+import '../../platform/sleep_sync_service.dart';
 import '../details/sleep_data_unavailable_card.dart';
+import '../month/sleep_month_overview_page.dart';
 import '../sleep_navigation.dart';
-import 'sleep_day_view_model.dart';
+import '../week/sleep_week_overview_page.dart';
+import '../widgets/sleep_period_scope_layout.dart';
+import 'sleep_day_view_model.dart' hide SleepPeriodScope;
 
-class SleepDayOverviewPage extends StatelessWidget {
+class SleepDayOverviewPage extends StatefulWidget {
   const SleepDayOverviewPage({
     super.key,
     SleepDayDataRepository? repository,
     SleepDayViewModel? viewModel,
+    SleepQueryRepository? queryRepository,
+    SleepPeriodScope? initialScope,
     DateTime? selectedDay,
+    SleepImportService? syncService,
   })  : _repository = repository,
         _viewModel = viewModel,
-        _selectedDay = selectedDay;
+        _queryRepository = queryRepository,
+        _initialScope = initialScope,
+        _selectedDay = selectedDay,
+        _syncService = syncService;
 
   final SleepDayDataRepository? _repository;
   final SleepDayViewModel? _viewModel;
+  final SleepQueryRepository? _queryRepository;
+  final SleepPeriodScope? _initialScope;
   final DateTime? _selectedDay;
+  final SleepImportService? _syncService;
+
+  @override
+  State<SleepDayOverviewPage> createState() => _SleepDayOverviewPageState();
+}
+
+class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
+  late final SleepDayViewModel _dayViewModel;
+  late final bool _ownsDayViewModel;
+  late DateTime _anchorDay;
+  SleepPeriodScope _scope = SleepPeriodScope.day;
+  SleepQueryRepository? _queryRepository;
+  bool _isLoadingWeek = false;
+  bool _isLoadingMonth = false;
+  WeekSleepAggregation? _weekAggregation;
+  MonthSleepAggregation? _monthAggregation;
+  bool _hasInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _anchorDay = _normalizeDate(
+      widget._selectedDay ?? widget._viewModel?.selectedDay ?? DateTime.now(),
+    );
+    _scope = widget._initialScope ?? SleepPeriodScope.day;
+    _ownsDayViewModel = widget._viewModel == null;
+    _dayViewModel = widget._viewModel ??
+        SleepDayViewModel(
+          repository: widget._repository ?? SleepDayRepository(),
+          syncService: widget._syncService,
+          selectedDay: _anchorDay,
+        );
+    _dayViewModel.load();
+    _queryRepository = widget._queryRepository;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      _queryRepository ??= _readQueryRepositoryFromProvider();
+      _loadScopeData();
+      _hasInitialized = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_ownsDayViewModel) {
+      _dayViewModel.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<SleepDayViewModel>(
-      create: (_) {
-        final model = _viewModel ??
-            SleepDayViewModel(
-              repository: _repository ?? SleepDayRepository(),
-              selectedDay: _selectedDay,
-            );
-        model.load();
-        return model;
-      },
-      child: const _SleepDayOverviewBody(),
+    final l10n = AppLocalizations.of(context)!;
+    return ChangeNotifierProvider.value(
+      value: _dayViewModel,
+      child: SleepPeriodScopeLayout(
+        appBarTitle: l10n.sleepSectionTitle,
+        selectedScope: _scope,
+        anchorDate: _anchorDay,
+        onScopeChanged: _onScopeChanged,
+        onShiftPeriod: _shiftPeriod,
+        child: _buildScopeContent(context),
+      ),
     );
   }
+
+  Widget _buildScopeContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (_scope) {
+      case SleepPeriodScope.day:
+        return const _SleepDayOverviewContent();
+      case SleepPeriodScope.week:
+        if (_isLoadingWeek || _weekAggregation == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final aggregation = _weekAggregation!;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            WeekSummaryCard(aggregation: aggregation),
+            const SizedBox(height: 12),
+            WeekWindowCard(aggregation: aggregation),
+            const SizedBox(height: 12),
+            WeekScoreStrip(
+              aggregation: aggregation,
+              onTapDay: _selectDay,
+            ),
+            if (aggregation.days.every((day) => day.score == null))
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: SleepDataUnavailableCard(
+                  message: l10n.sleepWeekNoScoredNights,
+                ),
+              ),
+          ],
+        );
+      case SleepPeriodScope.month:
+        if (_isLoadingMonth || _monthAggregation == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final aggregation = _monthAggregation!;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            MonthSummaryCard(aggregation: aggregation),
+            const SizedBox(height: 12),
+            MonthCalendarGrid(
+              aggregation: aggregation,
+              onTapDay: _selectDay,
+            ),
+            if (aggregation.days.every((day) => day.score == null))
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: SleepDataUnavailableCard(
+                  message: l10n.sleepMonthNoScoredNights,
+                ),
+              ),
+          ],
+        );
+    }
+  }
+
+  void _onScopeChanged(SleepPeriodScope scope) {
+    if (_scope == scope) return;
+    setState(() => _scope = scope);
+    _loadScopeData();
+  }
+
+  void _shiftPeriod(int direction) {
+    if (direction == 0) return;
+    setState(() {
+      switch (_scope) {
+        case SleepPeriodScope.day:
+          _anchorDay = _anchorDay.add(Duration(days: direction));
+          break;
+        case SleepPeriodScope.week:
+          _anchorDay = _anchorDay.add(Duration(days: 7 * direction));
+          break;
+        case SleepPeriodScope.month:
+          _anchorDay =
+              DateTime(_anchorDay.year, _anchorDay.month + direction, 1);
+          break;
+      }
+    });
+    _loadScopeData();
+  }
+
+  void _selectDay(DateTime day) {
+    setState(() {
+      _anchorDay = _normalizeDate(day);
+      _scope = SleepPeriodScope.day;
+    });
+    _loadScopeData();
+  }
+
+  Future<void> _loadScopeData() async {
+    switch (_scope) {
+      case SleepPeriodScope.day:
+        await _dayViewModel.setSelectedDay(_anchorDay);
+        break;
+      case SleepPeriodScope.week:
+        await _loadWeek();
+        break;
+      case SleepPeriodScope.month:
+        await _loadMonth();
+        break;
+    }
+  }
+
+  Future<void> _loadWeek() async {
+    final repo = await _ensureQueryRepository();
+    if (repo == null) return;
+    setState(() => _isLoadingWeek = true);
+    final weekStart = _anchorDay.subtract(
+      Duration(days: _anchorDay.weekday - DateTime.monday),
+    );
+    final analyses = await repo.getAnalysesInRange(
+      fromInclusive: weekStart,
+      toInclusive: weekStart.add(const Duration(days: 6)),
+    );
+    final aggregation = const SleepPeriodAggregationEngine().aggregateWeek(
+      weekStart: weekStart,
+      analyses: analyses,
+    );
+    if (!mounted) return;
+    setState(() {
+      _weekAggregation = aggregation;
+      _isLoadingWeek = false;
+    });
+  }
+
+  Future<void> _loadMonth() async {
+    final repo = await _ensureQueryRepository();
+    if (repo == null) return;
+    setState(() => _isLoadingMonth = true);
+    final monthStart = DateTime(_anchorDay.year, _anchorDay.month, 1);
+    final monthEnd = DateTime(_anchorDay.year, _anchorDay.month + 1, 0);
+    final analyses = await repo.getAnalysesInRange(
+      fromInclusive: monthStart,
+      toInclusive: monthEnd,
+    );
+    final aggregation = const SleepPeriodAggregationEngine().aggregateMonth(
+      monthStart: monthStart,
+      analyses: analyses,
+    );
+    if (!mounted) return;
+    setState(() {
+      _monthAggregation = aggregation;
+      _isLoadingMonth = false;
+    });
+  }
+
+  Future<SleepQueryRepository?> _ensureQueryRepository() async {
+    if (_queryRepository != null) return _queryRepository;
+    final database = await DatabaseHelper.instance.database;
+    if (!mounted) return null;
+    setState(
+      () => _queryRepository = DriftSleepQueryRepository(database: database),
+    );
+    return _queryRepository;
+  }
+
+  SleepQueryRepository? _readQueryRepositoryFromProvider() {
+    try {
+      return Provider.of<SleepQueryRepository>(context, listen: false);
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
+  DateTime _normalizeDate(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 }
 
-class _SleepDayOverviewBody extends StatelessWidget {
-  const _SleepDayOverviewBody();
+class _SleepDayOverviewContent extends StatelessWidget {
+  const _SleepDayOverviewContent();
 
   @override
   Widget build(BuildContext context) {
     final model = context.watch<SleepDayViewModel>();
-    final l10n = AppLocalizations.of(context)!;
     final overview = model.overview;
-    final localeCode = Localizations.localeOf(
-      context,
-    ).languageCode.toLowerCase();
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(title: l10n.sleepSectionTitle),
-      body: ListView(
-        padding: DesignConstants.cardPadding.copyWith(
-          top: DesignConstants.cardPadding.top +
-              MediaQuery.of(context).padding.top +
-              kToolbarHeight +
-              16,
-        ),
-        children: [
-          SegmentedButton<int>(
-            segments: [
-              ButtonSegment(value: 0, label: Text(l10n.sleepScopeDay)),
-              ButtonSegment(value: 1, label: Text(l10n.sleepScopeWeek)),
-              ButtonSegment(value: 2, label: Text(l10n.sleepScopeMonth)),
-            ],
-            selected: {model.selectedScopeIndex},
-            onSelectionChanged: (selection) {
-              final selected = selection.first;
-              if (selected == 1) {
-                SleepNavigation.openWeekForDate(context, model.selectedDay);
-                return;
-              }
-              if (selected == 2) {
-                SleepNavigation.openMonthForDate(context, model.selectedDay);
-                return;
-              }
-              model.setScopeIndex(selected);
-            },
-          ),
-          _SleepPeriodNavigator(
-            label: model.periodLabel(localeCode),
-            onPrevious: () => model.shiftPeriod(-1),
-            onNext: () => model.shiftPeriod(1),
-          ),
-          const SizedBox(height: 8),
-          if (model.isLoading)
-            const Center(child: CircularProgressIndicator())
-          else if (!model.isDayScope)
-            const _SleepScopeNotAvailableCard()
-          else if (overview == null)
-            _SleepEmptyStateCard(
-              onOpenSettings: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
-                if (!context.mounted) return;
-                await context.read<SleepDayViewModel>().load();
-              },
-              onImportNow: model.importNow,
-            )
-          else ...[
-            _SleepTimelineCard(overview: overview),
-            const SizedBox(height: 12),
-            _SleepScoreCard(overview: overview),
-            const SizedBox(height: 12),
-            _SleepMetricTileGrid(overview: overview),
-          ],
-        ],
-      ),
+    if (model.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (overview == null) {
+      return _SleepEmptyStateCard(
+        onOpenSettings: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+          );
+          if (!context.mounted) return;
+          await context.read<SleepDayViewModel>().load();
+        },
+        onImportNow: model.importNow,
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SleepTimelineCard(overview: overview),
+        const SizedBox(height: 12),
+        _SleepScoreCard(overview: overview),
+        const SizedBox(height: 12),
+        _SleepMetricTileGrid(overview: overview),
+      ],
     );
   }
 }
@@ -177,63 +370,6 @@ class _SleepEmptyStateCard extends StatelessWidget {
   }
 }
 
-class _SleepScopeNotAvailableCard extends StatelessWidget {
-  const _SleepScopeNotAvailableCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SleepDataUnavailableCard(
-      message: 'Week and Month views are not implemented in this batch yet.',
-    );
-  }
-}
-
-class _SleepPeriodNavigator extends StatelessWidget {
-  const _SleepPeriodNavigator({
-    required this.label,
-    required this.onPrevious,
-    required this.onNext,
-  });
-
-  final String label;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 8),
-      child: Row(
-        children: [
-          IconButton(
-            key: const Key('sleep-period-prev'),
-            onPressed: onPrevious,
-            icon: const Icon(Icons.chevron_left),
-            tooltip: 'Previous',
-          ),
-          Expanded(
-            child: Text(
-              label,
-              key: const Key('sleep-period-label'),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          IconButton(
-            key: const Key('sleep-period-next'),
-            onPressed: onNext,
-            icon: const Icon(Icons.chevron_right),
-            tooltip: 'Next',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SleepTimelineCard extends StatelessWidget {
   const _SleepTimelineCard({required this.overview});
 
@@ -262,6 +398,55 @@ class _SleepTimelineCard extends StatelessWidget {
       overview.session.startAtUtc,
     );
     final totalMinutes = duration.inMinutes <= 0 ? 1 : duration.inMinutes;
+    final stageRows = <_StageRowData>[
+      _StageRowData(
+        label: 'Deep',
+        stages: const {CanonicalSleepStage.deep},
+        color: Colors.indigo,
+      ),
+      _StageRowData(
+        label: 'Light',
+        stages: const {
+          CanonicalSleepStage.light,
+          CanonicalSleepStage.asleepUnspecified,
+        },
+        color: Colors.blue,
+      ),
+      _StageRowData(
+        label: 'REM',
+        stages: const {CanonicalSleepStage.rem},
+        color: Colors.purple,
+      ),
+      _StageRowData(
+        label: 'Awake',
+        stages: const {
+          CanonicalSleepStage.awake,
+          CanonicalSleepStage.outOfBed,
+        },
+        color: Theme.of(context).colorScheme.outline,
+      ),
+    ];
+    final visibleRows = stageRows
+        .where(
+          (row) =>
+              segments.any((segment) => row.stages.contains(segment.stage)),
+        )
+        .toList(growable: false);
+    if (visibleRows.isEmpty) {
+      return SummaryCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              const Text('No stage timeline available for this night.'),
+            ],
+          ),
+        ),
+      );
+    }
     return SummaryCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -270,24 +455,16 @@ class _SleepTimelineCard extends StatelessWidget {
           children: [
             Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
-            SizedBox(
-              height: 16,
-              child: Row(
-                children: [
-                  for (final segment in segments)
-                    Expanded(
-                      flex: (segment.endAtUtc
-                              .difference(segment.startAtUtc)
-                              .inMinutes
-                              .clamp(1, totalMinutes))
-                          .toInt(),
-                      child: Container(
-                        color: _timelineStageColor(context, segment.stage),
-                      ),
-                    ),
-                ],
+            for (final row in visibleRows) ...[
+              _StageTimelineRow(
+                label: row.label,
+                segments: segments,
+                totalMinutes: totalMinutes,
+                stages: row.stages,
+                color: row.color,
               ),
-            ),
+              const SizedBox(height: 6),
+            ],
           ],
         ),
       ),
@@ -310,6 +487,75 @@ class _SleepTimelineCard extends StatelessWidget {
         return Theme.of(context).colorScheme.outlineVariant;
     }
   }
+}
+
+class _StageTimelineRow extends StatelessWidget {
+  const _StageTimelineRow({
+    required this.label,
+    required this.segments,
+    required this.totalMinutes,
+    required this.stages,
+    required this.color,
+  });
+
+  final String label;
+  final List<SleepStageSegment> segments;
+  final int totalMinutes;
+  final Set<CanonicalSleepStage> stages;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final background = Theme.of(context).colorScheme.surfaceContainerHighest;
+    return Row(
+      children: [
+        SizedBox(
+          width: 56,
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SizedBox(
+            height: 12,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Row(
+                children: [
+                  for (final segment in segments)
+                    Expanded(
+                      flex: (segment.endAtUtc
+                              .difference(segment.startAtUtc)
+                              .inMinutes
+                              .clamp(1, totalMinutes))
+                          .toInt(),
+                      child: Container(
+                        color:
+                            stages.contains(segment.stage) ? color : background,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StageRowData {
+  const _StageRowData({
+    required this.label,
+    required this.stages,
+    required this.color,
+  });
+
+  final String label;
+  final Set<CanonicalSleepStage> stages;
+  final Color color;
 }
 
 class _SleepScoreCard extends StatelessWidget {

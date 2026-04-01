@@ -2367,7 +2367,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepSectionTitle => 'Sleep';
 
   @override
-  String get sleepSectionSubtitleDayEntry => 'Day overview and detail drill-downs';
+  String get sleepSectionSubtitleDayEntry =>
+      'Day overview and detail drill-downs';
 
   @override
   String get sleepSectionSubtitleAllEntry =>
@@ -2400,6 +2401,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String sleepMeanScoreLabel(String value) {
     return 'Mean score: $value';
+  }
+
+  @override
+  String get sleepHubScoreLabel => 'Sleep score';
+
+  @override
+  String get sleepHubAverageLabel => 'Average';
+
+  @override
+  String get sleepHubBedtimeLabel => 'Bedtime';
+
+  @override
+  String get sleepHubInterruptionsLabel => 'Interruptions';
+
+  @override
+  String sleepHubInterruptionsSummary(int count, String duration) {
+    return '$count wake-ups, $duration total';
   }
 
   @override

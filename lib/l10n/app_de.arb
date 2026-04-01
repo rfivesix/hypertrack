@@ -1009,6 +1009,17 @@
       "value": { "type": "String" }
     }
   }
+  ,"sleepHubScoreLabel": "Schlaf-Score"
+  ,"sleepHubAverageLabel": "Durchschnitt"
+  ,"sleepHubBedtimeLabel": "Schlafenszeit"
+  ,"sleepHubInterruptionsLabel": "Unterbrechungen"
+  ,"sleepHubInterruptionsSummary": "{count} Wachphasen, {duration} gesamt"
+  ,"@sleepHubInterruptionsSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "duration": { "type": "String" }
+    }
+  }
   ,"sleepWeekdayAvgDurationLabel": "Durchschnitt Werktage: {value}"
   ,"@sleepWeekdayAvgDurationLabel": {
     "placeholders": {

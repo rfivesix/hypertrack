@@ -12,6 +12,7 @@ import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_
 import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeSleepDayRepository implements SleepDayDataRepository {
@@ -315,11 +316,15 @@ void main() {
       repository: _FakeSleepDayRepository(overview),
       selectedDay: DateTime(2026, 3, 31),
     );
+    final repo = _FakeSleepQueryRepository(const <NightlySleepAnalysis>[]);
 
     await tester.pumpWidget(
-      MaterialApp(
-        onGenerateRoute: SleepNavigation.onGenerateRoute,
-        home: SleepDayOverviewPage(viewModel: model),
+      Provider<SleepQueryRepository>.value(
+        value: repo,
+        child: MaterialApp(
+          onGenerateRoute: SleepNavigation.onGenerateRoute,
+          home: SleepDayOverviewPage(viewModel: model),
+        ),
       ),
     );
     await tester.pumpAndSettle();

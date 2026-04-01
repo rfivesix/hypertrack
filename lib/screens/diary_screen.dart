@@ -32,6 +32,11 @@ import '../data/workout_database_helper.dart';
 import '../services/theme_service.dart';
 import '../services/health/steps_sync_service.dart';
 import '../features/steps/data/steps_aggregation_repository.dart';
+import '../features/steps/domain/steps_models.dart';
+import '../features/steps/presentation/steps_module_screen.dart';
+import '../features/sleep/data/sleep_day_repository.dart';
+import '../features/sleep/platform/sleep_sync_service.dart';
+import '../features/sleep/presentation/sleep_navigation.dart';
 import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
@@ -66,6 +71,11 @@ class DiaryScreenState extends State<DiaryScreen> {
   bool _isStepsWidgetLoading = false;
   bool _stepsTrackingEnabled = true;
   int _targetSteps = StepsSyncService.defaultStepsGoal;
+  final SleepSyncService _sleepSyncService = SleepSyncService();
+  final SleepDayDataRepository _sleepRepository = SleepDayRepository();
+  SleepDayOverviewData? _sleepOverview;
+  bool _isSleepWidgetLoading = false;
+  bool _sleepTrackingEnabled = false;
 
   // Workout summary state used by the daily overview card.
   Map<String, dynamic>? _workoutSummary;
@@ -278,6 +288,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       });
     }
     await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
+    await _loadSleepForDate(date);
     await _syncStepsIfDue(date, force: forceStepsRefresh);
   }
 
@@ -309,6 +320,28 @@ class DiaryScreenState extends State<DiaryScreen> {
       _stepsForSelectedDay = total;
       _stepsTrackingEnabled = true;
       _isStepsWidgetLoading = false;
+    });
+  }
+
+  Future<void> _loadSleepForDate(DateTime date) async {
+    final enabled = await _sleepSyncService.isTrackingEnabled();
+    if (!enabled) {
+      if (!mounted) return;
+      setState(() {
+        _sleepOverview = null;
+        _sleepTrackingEnabled = false;
+        _isSleepWidgetLoading = false;
+      });
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _isSleepWidgetLoading = true);
+    final overview = await _sleepRepository.fetchOverview(date);
+    if (!mounted) return;
+    setState(() {
+      _sleepOverview = overview;
+      _sleepTrackingEnabled = true;
+      _isSleepWidgetLoading = false;
     });
   }
 
@@ -809,6 +842,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                       .then((_) => loadDataForDate(_selectedDate)),
                 ),
                 if (_stepsTrackingEnabled) ...[_buildStepsSummaryCard()],
+                if (_sleepTrackingEnabled) ...[_buildSleepSummaryCard()],
                 // NEUER TEIL: Workout-Zusammenfassung hier einfügen
                 if (_workoutSummary != null) ...[
                   //const SizedBox(height: DesignConstants.spacingXS),
@@ -870,19 +904,118 @@ class DiaryScreenState extends State<DiaryScreen> {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: GlassProgressBar(
-        label: 'Steps',
-        unit: 'steps',
-        value: (_stepsForSelectedDay ?? 0).toDouble(),
-        target: (_targetSteps > 0
-                ? _targetSteps
-                : StepsSyncService.defaultStepsGoal)
-            .toDouble(),
-        color: theme.colorScheme.primary,
-        height: 50,
-        borderRadius: 16,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => StepsModuleScreen(
+                initialScope: StepsScope.day,
+                initialDate: _selectedDate,
+              ),
+            ),
+          );
+        },
+        child: GlassProgressBar(
+          label: 'Steps',
+          unit: 'steps',
+          value: (_stepsForSelectedDay ?? 0).toDouble(),
+          target: (_targetSteps > 0
+                  ? _targetSteps
+                  : StepsSyncService.defaultStepsGoal)
+              .toDouble(),
+          color: theme.colorScheme.primary,
+          height: 50,
+          borderRadius: 16,
+        ),
       ),
     );
+  }
+
+  Widget _buildSleepSummaryCard() {
+    if (_isSleepWidgetLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 4),
+        child: SummaryCard(
+          margin: EdgeInsets.symmetric(vertical: 4.0),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text('Loading sleep...'),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    final overview = _sleepOverview;
+    if (overview == null) {
+      return const SizedBox.shrink();
+    }
+    final durationText = _formatSleepDuration(overview.totalSleepDuration);
+    final score = overview.analysis.score;
+    final scoreText = score == null ? '--' : score.round().toString();
+    return SummaryCard(
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      onTap: () => SleepNavigation.openDayForDate(context, _selectedDate),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.sleepSectionTitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${AppLocalizations.of(context)!.durationLabel}: $durationText',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  AppLocalizations.of(context)!.sleepHubScoreLabel,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  scoreText,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatSleepDuration(Duration value) {
+    final hours = value.inHours;
+    final minutes = value.inMinutes.remainder(60);
+    return '${hours}h ${minutes}m';
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {

@@ -2419,6 +2419,23 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get sleepHubScoreLabel => 'Schlaf-Score';
+
+  @override
+  String get sleepHubAverageLabel => 'Durchschnitt';
+
+  @override
+  String get sleepHubBedtimeLabel => 'Schlafenszeit';
+
+  @override
+  String get sleepHubInterruptionsLabel => 'Unterbrechungen';
+
+  @override
+  String sleepHubInterruptionsSummary(int count, String duration) {
+    return '$count Wachphasen, $duration gesamt';
+  }
+
+  @override
   String sleepWeekdayAvgDurationLabel(String value) {
     return 'Durchschnitt Werktage: $value';
   }
@@ -2447,7 +2464,8 @@ class AppLocalizationsDe extends AppLocalizations {
       'Schlaf- und nächtliche Herzfrequenzdaten aus Health Connect / HealthKit lesen';
 
   @override
-  String get sleepHealthConnectionStatusTitle => 'Status der Gesundheitsverbindung';
+  String get sleepHealthConnectionStatusTitle =>
+      'Status der Gesundheitsverbindung';
 
   @override
   String get sleepRequestAccessTitle => 'Zugriff anfordern';
@@ -2460,13 +2478,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sleepImportNowTitle => 'Schlafdaten jetzt importieren';
 
   @override
-  String get sleepImportNowSubtitle => 'Importiert die letzten 30 Tage zum Testen';
+  String get sleepImportNowSubtitle =>
+      'Importiert die letzten 30 Tage zum Testen';
 
   @override
   String get sleepRawImportsTitle => 'Rohimporte anzeigen';
 
   @override
-  String get sleepRawImportsSubtitle => 'Zeigt aktuelle Health-Connect-Payloads';
+  String get sleepRawImportsSubtitle =>
+      'Zeigt aktuelle Health-Connect-Payloads';
 
   @override
   String get sleepDataStatusTitle => 'Datenstatus';

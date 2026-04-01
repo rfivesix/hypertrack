@@ -27,9 +27,11 @@ class SleepPipelineRunResult {
 }
 
 class SleepPipelineService {
-  SleepPipelineService({AppDatabase? database})
-      : _database = database ?? AppDatabase(),
-        _ownsDatabase = database == null {
+  SleepPipelineService({
+    required AppDatabase database,
+    bool ownsDatabase = false,
+  })  : _database = database,
+        _ownsDatabase = ownsDatabase {
     _rawDao = SleepRawImportsDao(_database);
     _sessionsDao = SleepCanonicalSessionsDao(_database);
     _segmentsDao = SleepCanonicalStageSegmentsDao(_database);

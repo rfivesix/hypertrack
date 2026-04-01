@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../../generated/app_localizations.dart';
@@ -16,11 +14,11 @@ class SleepMonthOverviewPage extends StatefulWidget {
   const SleepMonthOverviewPage({
     super.key,
     required this.anchorDay,
-    this.repository,
+    required this.repository,
   });
 
   final DateTime anchorDay;
-  final SleepQueryRepository? repository;
+  final SleepQueryRepository repository;
 
   @override
   State<SleepMonthOverviewPage> createState() => _SleepMonthOverviewPageState();
@@ -29,7 +27,6 @@ class SleepMonthOverviewPage extends StatefulWidget {
 class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
   late DateTime _anchorDay;
   late final SleepQueryRepository _repository;
-  late final bool _ownsRepository;
   MonthSleepAggregation? _aggregation;
   bool _isLoading = true;
 
@@ -41,17 +38,8 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
       widget.anchorDay.month,
       widget.anchorDay.day,
     );
-    _ownsRepository = widget.repository == null;
-    _repository = widget.repository ?? DriftSleepQueryRepository();
+    _repository = widget.repository;
     _loadMonth();
-  }
-
-  @override
-  void dispose() {
-    if (_ownsRepository && _repository is DriftSleepQueryRepository) {
-      unawaited((_repository as DriftSleepQueryRepository).dispose());
-    }
-    super.dispose();
   }
 
   @override
@@ -68,15 +56,16 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _MonthSummaryCard(aggregation: _aggregation!),
+                MonthSummaryCard(aggregation: _aggregation!),
                 const SizedBox(height: 12),
-                _MonthCalendarGrid(
+                MonthCalendarGrid(
                   aggregation: _aggregation!,
-                  onTapDay: (day) => SleepNavigation.openDayForDate(context, day),
+                  onTapDay: (day) =>
+                      SleepNavigation.openDayForDate(context, day),
                 ),
                 if (_aggregation!.days.every((day) => day.score == null))
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
                     child: SleepDataUnavailableCard(
                       message: l10n.sleepMonthNoScoredNights,
                     ),
@@ -107,11 +96,19 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
 
   Future<void> _onScopeChanged(SleepPeriodScope scope) async {
     if (scope == SleepPeriodScope.day) {
-      await SleepNavigation.openDayForDate(context, _anchorDay);
+      await SleepNavigation.openDayForDate(
+        context,
+        _anchorDay,
+        replace: true,
+      );
       return;
     }
     if (scope == SleepPeriodScope.week) {
-      await SleepNavigation.openWeekForDate(context, _anchorDay);
+      await SleepNavigation.openWeekForDate(
+        context,
+        _anchorDay,
+        replace: true,
+      );
       return;
     }
   }
@@ -124,8 +121,8 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
   }
 }
 
-class _MonthSummaryCard extends StatelessWidget {
-  const _MonthSummaryCard({required this.aggregation});
+class MonthSummaryCard extends StatelessWidget {
+  const MonthSummaryCard({required this.aggregation});
 
   final MonthSleepAggregation aggregation;
 
@@ -171,8 +168,8 @@ class _MonthSummaryCard extends StatelessWidget {
   }
 }
 
-class _MonthCalendarGrid extends StatelessWidget {
-  const _MonthCalendarGrid({
+class MonthCalendarGrid extends StatelessWidget {
+  const MonthCalendarGrid({
     required this.aggregation,
     required this.onTapDay,
   });

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../generated/app_localizations.dart';
 import '../data/sleep_day_repository.dart';
 import 'details/depth_detail_page.dart';
@@ -8,9 +7,8 @@ import 'details/heart_rate_detail_page.dart';
 import 'details/interruptions_detail_page.dart';
 import 'details/regularity_detail_page.dart';
 import 'day/sleep_day_overview_page.dart';
-import 'month/sleep_month_overview_page.dart';
 import 'sleep_placeholder_pages.dart';
-import 'week/sleep_week_overview_page.dart';
+import 'widgets/sleep_period_scope_layout.dart';
 
 class SleepRouteNames {
   static const day = '/sleep/day';
@@ -48,19 +46,28 @@ class SleepNavigation {
         final selectedDay = _readAnchorDate(settings);
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => SleepDayOverviewPage(selectedDay: selectedDay),
+          builder: (_) => SleepDayOverviewPage(
+            selectedDay: selectedDay,
+            initialScope: SleepPeriodScope.day,
+          ),
         );
       case SleepRouteNames.week:
         final anchor = _readAnchorDate(settings);
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => SleepWeekOverviewPage(anchorDay: anchor),
+          builder: (_) => SleepDayOverviewPage(
+            selectedDay: anchor,
+            initialScope: SleepPeriodScope.week,
+          ),
         );
       case SleepRouteNames.month:
         final anchor = _readAnchorDate(settings);
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => SleepMonthOverviewPage(anchorDay: anchor),
+          builder: (_) => SleepDayOverviewPage(
+            selectedDay: anchor,
+            initialScope: SleepPeriodScope.month,
+          ),
         );
       case SleepRouteNames.durationDetail:
         return MaterialPageRoute(
@@ -128,16 +135,26 @@ class SleepNavigation {
     }
   }
 
-  static Future<void> openDay(BuildContext context) {
-    return openDayForDate(context, DateTime.now());
+  static Future<void> openDay(BuildContext context, {bool replace = false}) {
+    return openDayForDate(context, DateTime.now(), replace: replace);
   }
 
-  static Future<void> openDayForDate(BuildContext context, DateTime day) {
+  static Future<void> openDayForDate(
+    BuildContext context,
+    DateTime day, {
+    bool replace = false,
+  }) {
+    if (replace) {
+      return Navigator.of(context).pushReplacementNamed(
+        SleepRouteNames.day,
+        arguments: day,
+      );
+    }
     return Navigator.of(context).pushNamed(SleepRouteNames.day, arguments: day);
   }
 
-  static Future<void> openWeek(BuildContext context) {
-    return openWeekForDate(context, DateTime.now());
+  static Future<void> openWeek(BuildContext context, {bool replace = false}) {
+    return openWeekForDate(context, DateTime.now(), replace: replace);
   }
 
   static Future<void> openWeekForDate(
@@ -156,11 +173,21 @@ class SleepNavigation {
     ).pushNamed(SleepRouteNames.week, arguments: anchorDay);
   }
 
-  static Future<void> openMonth(BuildContext context) {
-    return openMonthForDate(context, DateTime.now());
+  static Future<void> openMonth(BuildContext context, {bool replace = false}) {
+    return openMonthForDate(context, DateTime.now(), replace: replace);
   }
 
-  static Future<void> openMonthForDate(BuildContext context, DateTime anchorDay) {
+  static Future<void> openMonthForDate(
+    BuildContext context,
+    DateTime anchorDay, {
+    bool replace = false,
+  }) {
+    if (replace) {
+      return Navigator.of(context).pushReplacementNamed(
+        SleepRouteNames.month,
+        arguments: anchorDay,
+      );
+    }
     return Navigator.of(
       context,
     ).pushNamed(SleepRouteNames.month, arguments: anchorDay);

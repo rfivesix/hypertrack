@@ -9,7 +9,9 @@ import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/hub_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
+import '../features/sleep/data/sleep_hub_summary_repository.dart';
 import '../features/sleep/presentation/sleep_navigation.dart';
+import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/steps/data/steps_aggregation_repository.dart';
 import '../features/steps/domain/steps_models.dart';
 import '../generated/app_localizations.dart';
@@ -34,12 +36,15 @@ class StatisticsHubScreen extends StatefulWidget {
     super.key,
     StatisticsHubDataAdapter? hubDataAdapter,
     StepsAggregationRepository? stepsRepository,
+    SleepHubSummaryRepository? sleepSummaryRepository,
     this.fetchHubAnalytics,
   })  : _hubDataAdapter = hubDataAdapter,
-        _stepsRepository = stepsRepository;
+        _stepsRepository = stepsRepository,
+        _sleepSummaryRepository = sleepSummaryRepository;
 
   final StatisticsHubDataAdapter? _hubDataAdapter;
   final StepsAggregationRepository? _stepsRepository;
+  final SleepHubSummaryRepository? _sleepSummaryRepository;
   final Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(
     int selectedTimeRangeIndex,
   )? fetchHubAnalytics;
@@ -63,7 +68,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   late final StatisticsHubDataAdapter _hubDataAdapter;
   final _rangePolicy = StatisticsRangePolicyService.instance;
   late final StepsAggregationRepository _stepsRepository;
+  late final SleepHubSummaryRepository _sleepSummaryRepository;
   final StepsSyncService _stepsSyncService = StepsSyncService();
+  final SleepSyncService _sleepSyncService = SleepSyncService();
 
   int _selectedTimeRangeIndex = 1;
 
@@ -90,7 +97,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   );
   BodyNutritionAnalyticsResult? _bodyNutrition;
   RangeStepsAggregation? _stepsRange;
+  SleepHubSummary? _sleepSummary;
   bool _stepsTrackingEnabled = false;
+  bool _sleepTrackingEnabled = false;
   int _targetSteps = 8000;
   String _stepsProviderName = '';
   @override
@@ -102,6 +111,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         );
     _stepsRepository =
         widget._stepsRepository ?? HealthStepsAggregationRepository();
+    _sleepSummaryRepository =
+        widget._sleepSummaryRepository ?? SleepHubSummaryRepository();
     StepsSyncService.trackingEnabledListenable.addListener(
       _onTrackingEnabledChanged,
     );
@@ -114,6 +125,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     StepsSyncService.trackingEnabledListenable.removeListener(
       _onTrackingEnabledChanged,
     );
+    _sleepSummaryRepository.dispose();
     super.dispose();
   }
 
@@ -158,14 +170,21 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       endDate: DateTime.now(),
       daysBack: daysBack,
     );
+    final sleepSummaryFuture = _sleepSummaryRepository.fetchSummary(
+      endDate: DateTime.now(),
+      daysBack: daysBack,
+    );
     final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
+    final sleepTrackingFuture = _sleepSyncService.isTrackingEnabled();
     final targetStepsFuture =
         DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
     final providerFuture = _stepsSyncService.getProviderFilter();
 
     final tuple = await hubFuture;
     final stepsRange = await stepsRangeFuture;
+    final sleepSummary = await sleepSummaryFuture;
     final stepsTrackingEnabled = await stepsTrackingFuture;
+    final sleepTrackingEnabled = await sleepTrackingFuture;
     final targetSteps = await targetStepsFuture;
     final providerFilter = await providerFuture;
     final providerRaw = StepsSyncService.providerFilterToRaw(providerFilter);
@@ -197,7 +216,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _notableImprovements = hub.notableImprovements;
       _bodyNutrition = bodyNutrition;
       _stepsRange = stepsRange;
+      _sleepSummary = sleepSummary;
       _stepsTrackingEnabled = effectiveStepsTrackingEnabled;
+      _sleepTrackingEnabled = sleepTrackingEnabled;
       _targetSteps = targetSteps;
       _stepsProviderName = providerName;
       _isLoadingStats = false;
@@ -241,15 +262,18 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
                 if (_stepsTrackingEnabled) ...[
+                  _buildSectionTitle(context, "Steps"),
                   _buildStepsCard(),
                   const SizedBox(height: DesignConstants.spacingL),
                 ],
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
                 const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.sleepSectionTitle),
-                _buildSleepSection(),
-                const SizedBox(height: DesignConstants.spacingL),
+                if (_sleepTrackingEnabled) ...[
+                  _buildSectionTitle(context, l10n.sleepSectionTitle),
+                  _buildSleepSection(),
+                  const SizedBox(height: DesignConstants.spacingL),
+                ],
                 _buildSectionTitle(context, l10n.sectionConsistency),
                 _buildConsistencySection(),
                 const SizedBox(height: DesignConstants.spacingL),
@@ -732,55 +756,238 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Widget _buildSleepSection() {
     final l10n = AppLocalizations.of(context)!;
-    final subtitle = _selectedTimeRangeIndex == 0
-        ? l10n.sleepSectionSubtitleDayEntry
-        : l10n.sleepSectionSubtitleAllEntry;
+    final rangeLabel = _timeRanges[_selectedTimeRangeIndex];
+    final summary = _sleepSummary;
+    final score = summary?.averageScore;
+    final scoreText = score == null ? '--' : score.round().toString();
+    final scoreValue =
+        score == null ? 0.0 : (score.clamp(0.0, 100.0) / 100.0).toDouble();
+    final durationText = _formatSleepDuration(summary?.averageDuration);
+    final bedtimeText = _formatBedtime(summary?.averageBedtimeMinutes);
+    final interruptionsCount = summary?.averageInterruptions?.round();
+    final interruptionsValue =
+        interruptionsCount == null ? '--' : interruptionsCount.toString();
+    final interruptionsSubtitle =
+        (interruptionsCount == null || summary?.averageWakeDuration == null)
+            ? l10n.sleepHubAverageLabel
+            : l10n.sleepHubInterruptionsSummary(
+                interruptionsCount,
+                _formatSleepDuration(summary!.averageWakeDuration),
+              );
     return SummaryCard(
+      onTap: () => SleepNavigation.openDay(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Sleep business logic remains owned by features/sleep; statistics
-            // only links into sleep-owned entry points and consumes its outputs.
             Row(
               children: [
-                Icon(
-                  Icons.bedtime_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                const Spacer(),
+                _buildRangeChip(rangeLabel),
                 const SizedBox(width: 8),
-                Text(
-                  l10n.sleepSectionTitle,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                _buildDrillDownHint(),
+                if (_isLoadingStats)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: SizedBox(
+                      height: 14,
+                      width: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildSleepScoreRing(
+                  context,
+                  scoreValue: scoreValue,
+                  scoreText: scoreText,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.sleepHubScoreLabel,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.sleepMeanScoreLabel(scoreText),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(subtitle),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton(
-                  onPressed: () => SleepNavigation.openDay(context),
-                  child: Text(l10n.sleepScopeDay),
-                ),
-                OutlinedButton(
-                  onPressed: () => SleepNavigation.openWeek(context),
-                  child: Text(l10n.sleepScopeWeek),
-                ),
-                OutlinedButton(
-                  onPressed: () => SleepNavigation.openMonth(context),
-                  child: Text(l10n.sleepScopeMonth),
-                ),
-              ],
+            const SizedBox(height: 12),
+            _buildSleepMetricRow(
+              context,
+              color: Theme.of(context).colorScheme.primary,
+              label: l10n.durationLabel,
+              value: durationText,
+              subtitle: l10n.sleepHubAverageLabel,
+            ),
+            const Divider(height: 20),
+            _buildSleepMetricRow(
+              context,
+              color: Theme.of(context).colorScheme.tertiary,
+              label: l10n.sleepHubBedtimeLabel,
+              value: bedtimeText,
+              subtitle: l10n.sleepHubAverageLabel,
+            ),
+            const Divider(height: 20),
+            _buildSleepMetricRow(
+              context,
+              color: Theme.of(context).colorScheme.error,
+              label: l10n.sleepHubInterruptionsLabel,
+              value: interruptionsValue,
+              subtitle: interruptionsSubtitle,
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSleepScoreRing(
+    BuildContext context, {
+    required double scoreValue,
+    required String scoreText,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 72,
+      width: 72,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            height: 72,
+            width: 72,
+            child: CircularProgressIndicator(
+              value: 1,
+              strokeWidth: 8,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                colorScheme.surfaceVariant,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 72,
+            width: 72,
+            child: CircularProgressIndicator(
+              value: scoreValue,
+              strokeWidth: 8,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                colorScheme.primary,
+              ),
+              backgroundColor: Colors.transparent,
+            ),
+          ),
+          Text(
+            scoreText,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSleepMetricRow(
+    BuildContext context, {
+    required Color color,
+    required String label,
+    required String value,
+    String? subtitle,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 4),
+          height: 10,
+          width: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              if (subtitle != null)
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+            ],
+          ),
+        ),
+        Text(
+          value,
+          textAlign: TextAlign.right,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRangeChip(String label) {
+    final chipColor = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignConstants.spacingS,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: _chipBackgroundOpacity),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: chipColor,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+
+  String _formatSleepDuration(Duration? value) {
+    if (value == null) return '--';
+    final hours = value.inHours;
+    final minutes = value.inMinutes.remainder(60);
+    return '${hours}h ${minutes}m';
+  }
+
+  String _formatBedtime(int? minutes) {
+    if (minutes == null) return '--';
+    final normalized = minutes % 1440;
+    final dateTime = DateTime(2020, 1, 1, normalized ~/ 60, normalized % 60);
+    return DateFormat.Hm().format(dateTime);
   }
 
   Widget _buildRecoveryDistributionBar({
