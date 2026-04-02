@@ -4777,6 +4777,504 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sleep data source is unavailable or not installed on this device.'**
   String get sleepSourceUnavailableMessage;
+
+  /// No description provided for @sleepEmptyDayNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No sleep data available for this day.'**
+  String get sleepEmptyDayNoData;
+
+  /// No description provided for @sleepEmptyDayConnectMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Health Connect/HealthKit in Settings and import recent sleep data.'**
+  String get sleepEmptyDayConnectMessage;
+
+  /// No description provided for @sleepOpenSettingsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get sleepOpenSettingsButton;
+
+  /// No description provided for @sleepImportNowButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Import now'**
+  String get sleepImportNowButton;
+
+  /// No description provided for @sleepImportFinishedRefreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep import finished. Refreshing...'**
+  String get sleepImportFinishedRefreshing;
+
+  /// No description provided for @sleepImportUnavailableSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep import not available. Check permissions in Settings.'**
+  String get sleepImportUnavailableSettingsHint;
+
+  /// No description provided for @sleepTimelineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get sleepTimelineTitle;
+
+  /// No description provided for @sleepTimelineUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No stage timeline available for this night.'**
+  String get sleepTimelineUnavailable;
+
+  /// No description provided for @sleepStageDeepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep'**
+  String get sleepStageDeepLabel;
+
+  /// No description provided for @sleepStageLightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get sleepStageLightLabel;
+
+  /// No description provided for @sleepStageRemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'REM'**
+  String get sleepStageRemLabel;
+
+  /// No description provided for @sleepStageAwakeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Awake'**
+  String get sleepStageAwakeLabel;
+
+  /// No description provided for @sleepScoreCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep quality'**
+  String get sleepScoreCardTitle;
+
+  /// No description provided for @sleepScoreUnavailableForNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Score unavailable for this night.'**
+  String get sleepScoreUnavailableForNight;
+
+  /// No description provided for @sleepScoreCompletenessLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Score completeness: {value}'**
+  String sleepScoreCompletenessLabel(String value);
+
+  /// No description provided for @sleepQualityGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get sleepQualityGood;
+
+  /// No description provided for @sleepQualityAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get sleepQualityAverage;
+
+  /// No description provided for @sleepQualityPoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Poor'**
+  String get sleepQualityPoor;
+
+  /// No description provided for @sleepQualityUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get sleepQualityUnavailable;
+
+  /// No description provided for @sleepQualitySubtitleGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery looked strong overnight.'**
+  String get sleepQualitySubtitleGood;
+
+  /// No description provided for @sleepQualitySubtitleAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep was okay with room for improvement.'**
+  String get sleepQualitySubtitleAverage;
+
+  /// No description provided for @sleepQualitySubtitlePoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery signals were weak tonight.'**
+  String get sleepQualitySubtitlePoor;
+
+  /// No description provided for @sleepQualitySubtitleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data to score this night.'**
+  String get sleepQualitySubtitleUnavailable;
+
+  /// No description provided for @sleepQualityRegularityNotContributing.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity did not contribute (<5 valid days).'**
+  String get sleepQualityRegularityNotContributing;
+
+  /// No description provided for @sleepQualityRegularityPreliminary.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity is preliminary (5-6 valid days).'**
+  String get sleepQualityRegularityPreliminary;
+
+  /// No description provided for @sleepQualityRegularityStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity is stable ({days} days).'**
+  String sleepQualityRegularityStable(int days);
+
+  /// No description provided for @sleepRegularityNightView.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}-night view'**
+  String sleepRegularityNightView(int count);
+
+  /// No description provided for @sleepMetricUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get sleepMetricUnavailable;
+
+  /// No description provided for @sleepMetricDurationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get sleepMetricDurationTitle;
+
+  /// No description provided for @sleepMetricHeartRateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get sleepMetricHeartRateTitle;
+
+  /// No description provided for @sleepMetricRegularityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity'**
+  String get sleepMetricRegularityTitle;
+
+  /// No description provided for @sleepMetricDepthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Depth'**
+  String get sleepMetricDepthTitle;
+
+  /// No description provided for @sleepMetricInterruptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interruptions'**
+  String get sleepMetricInterruptionsTitle;
+
+  /// No description provided for @sleepMetricDepthLowConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Low confidence'**
+  String get sleepMetricDepthLowConfidence;
+
+  /// No description provided for @sleepMetricDepthStagesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stages available'**
+  String get sleepMetricDepthStagesAvailable;
+
+  /// No description provided for @sleepDurationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration data is unavailable.'**
+  String get sleepDurationUnavailable;
+
+  /// No description provided for @sleepDurationStatusWithinTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Within target'**
+  String get sleepDurationStatusWithinTarget;
+
+  /// No description provided for @sleepDurationStatusBelowTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Below target'**
+  String get sleepDurationStatusBelowTarget;
+
+  /// No description provided for @sleepDurationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your total sleep duration for this night.'**
+  String get sleepDurationSubtitle;
+
+  /// No description provided for @sleepDurationBenchmarkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Adults often do best with roughly 7–9 hours. This benchmark helps you see where your night sits in that range.'**
+  String get sleepDurationBenchmarkHint;
+
+  /// No description provided for @sleepDepthUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Depth data is unavailable.'**
+  String get sleepDepthUnavailable;
+
+  /// No description provided for @sleepDepthConfidenceTooLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage confidence is too low for a reliable depth breakdown.'**
+  String get sleepDepthConfidenceTooLow;
+
+  /// No description provided for @sleepDepthBreakdownUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage duration breakdown is unavailable for this night.'**
+  String get sleepDepthBreakdownUnavailable;
+
+  /// No description provided for @sleepDepthRatingRestorative.
+  ///
+  /// In en, this message translates to:
+  /// **'Restorative'**
+  String get sleepDepthRatingRestorative;
+
+  /// No description provided for @sleepDepthRatingLightLeaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Light-leaning'**
+  String get sleepDepthRatingLightLeaning;
+
+  /// No description provided for @sleepDepthStageConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage confidence: {value}'**
+  String sleepDepthStageConfidenceLabel(String value);
+
+  /// No description provided for @sleepDepthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage distribution based on derived timeline segments.'**
+  String get sleepDepthSubtitle;
+
+  /// No description provided for @sleepInterruptionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Interruptions data is unavailable.'**
+  String get sleepInterruptionsUnavailable;
+
+  /// No description provided for @sleepInterruptionsStatusNoneDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'None detected'**
+  String get sleepInterruptionsStatusNoneDetected;
+
+  /// No description provided for @sleepInterruptionsStatusDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected'**
+  String get sleepInterruptionsStatusDetected;
+
+  /// No description provided for @sleepInterruptionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Qualifying wake interruptions overnight.'**
+  String get sleepInterruptionsSubtitle;
+
+  /// No description provided for @sleepInterruptionsTotalWakeDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Total wake duration'**
+  String get sleepInterruptionsTotalWakeDuration;
+
+  /// No description provided for @sleepInterruptionsFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'This view includes only qualifying interruptions from derived analysis outputs.'**
+  String get sleepInterruptionsFootnote;
+
+  /// No description provided for @sleepRegularityUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity data is unavailable.'**
+  String get sleepRegularityUnavailable;
+
+  /// No description provided for @sleepRegularityNightRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}-night range'**
+  String sleepRegularityNightRange(int count);
+
+  /// No description provided for @sleepRegularityStatusSufficientTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Sufficient trend data'**
+  String get sleepRegularityStatusSufficientTrend;
+
+  /// No description provided for @sleepRegularityStatusLimitedTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited trend data'**
+  String get sleepRegularityStatusLimitedTrend;
+
+  /// No description provided for @sleepRegularitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime and wake windows for recent nights.'**
+  String get sleepRegularitySubtitle;
+
+  /// No description provided for @sleepRegularityAverageBedtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Average bedtime'**
+  String get sleepRegularityAverageBedtime;
+
+  /// No description provided for @sleepRegularityAverageWake.
+  ///
+  /// In en, this message translates to:
+  /// **'Average wake'**
+  String get sleepRegularityAverageWake;
+
+  /// No description provided for @sleepHeartRateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep heart-rate data is unavailable.'**
+  String get sleepHeartRateUnavailable;
+
+  /// No description provided for @sleepHeartRateStatusNoSampleSeries.
+  ///
+  /// In en, this message translates to:
+  /// **'No sample series for this night'**
+  String get sleepHeartRateStatusNoSampleSeries;
+
+  /// No description provided for @sleepHeartRateStatusBaselineNotEstablished.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline not established'**
+  String get sleepHeartRateStatusBaselineNotEstablished;
+
+  /// No description provided for @sleepHeartRateStatusComparisonUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline comparison unavailable'**
+  String get sleepHeartRateStatusComparisonUnavailable;
+
+  /// No description provided for @sleepHeartRateStatusBelowBaseline.
+  ///
+  /// In en, this message translates to:
+  /// **'Below baseline'**
+  String get sleepHeartRateStatusBelowBaseline;
+
+  /// No description provided for @sleepHeartRateStatusAboveBaseline.
+  ///
+  /// In en, this message translates to:
+  /// **'Above baseline'**
+  String get sleepHeartRateStatusAboveBaseline;
+
+  /// No description provided for @sleepHeartRateNoSamplesText.
+  ///
+  /// In en, this message translates to:
+  /// **'No persisted sleep heart-rate samples are available for this night.'**
+  String get sleepHeartRateNoSamplesText;
+
+  /// No description provided for @sleepHeartRateBaselineNotEstablishedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline not established yet. This is neutral and expected early on.'**
+  String get sleepHeartRateBaselineNotEstablishedText;
+
+  /// No description provided for @sleepHeartRateComparisonUnavailableText.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline comparison is currently unavailable for this night.'**
+  String get sleepHeartRateComparisonUnavailableText;
+
+  /// No description provided for @sleepHeartRateDeltaText.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sleep HR is {direction} baseline by {delta} {unit}.'**
+  String sleepHeartRateDeltaText(String direction, String delta, String unit);
+
+  /// No description provided for @sleepHeartRateDirectionBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'below'**
+  String get sleepHeartRateDirectionBelow;
+
+  /// No description provided for @sleepHeartRateDirectionAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'above'**
+  String get sleepHeartRateDirectionAbove;
+
+  /// No description provided for @sleepHeartRateComparedBaselineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compared with your established sleep baseline.'**
+  String get sleepHeartRateComparedBaselineSubtitle;
+
+  /// No description provided for @sleepHeartRateNoBaselineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline is not established yet. This is neutral.'**
+  String get sleepHeartRateNoBaselineSubtitle;
+
+  /// No description provided for @sleepHeartRateSamplesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No heart-rate samples were stored for this night. Trend chart is unavailable.'**
+  String get sleepHeartRateSamplesUnavailable;
+
+  /// No description provided for @sleepHeartRateDashedLineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashed line shows baseline ({value} {unit}).'**
+  String sleepHeartRateDashedLineHint(String value, String unit);
+
+  /// No description provided for @sleepBpmUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'bpm'**
+  String get sleepBpmUnit;
+
+  /// No description provided for @sleepRawImportImportedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported at'**
+  String get sleepRawImportImportedAt;
+
+  /// No description provided for @sleepRawImportStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get sleepRawImportStatus;
+
+  /// No description provided for @sleepRawImportSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get sleepRawImportSource;
+
+  /// No description provided for @sleepRawImportApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get sleepRawImportApp;
+
+  /// No description provided for @sleepRawImportConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence'**
+  String get sleepRawImportConfidence;
+
+  /// No description provided for @sleepRawImportPayload.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload'**
+  String get sleepRawImportPayload;
 }
 
 class _AppLocalizationsDelegate

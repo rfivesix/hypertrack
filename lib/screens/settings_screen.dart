@@ -114,15 +114,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return service.fetchRecentRawImports();
   }
 
-  String _formatRawImport(SleepRawImportRecord record) {
+  String _formatRawImport(SleepRawImportRecord record, AppLocalizations l10n) {
     final importedAt = record.importedAt.toLocal().toIso8601String();
     final header = [
-      'Imported at: $importedAt',
-      'Status: ${record.importStatus}',
-      'Source: ${record.sourcePlatform}',
-      if (record.sourceAppId != null) 'App: ${record.sourceAppId}',
+      '${l10n.sleepRawImportImportedAt}: $importedAt',
+      '${l10n.sleepRawImportStatus}: ${record.importStatus}',
+      '${l10n.sleepRawImportSource}: ${record.sourcePlatform}',
+      if (record.sourceAppId != null)
+        '${l10n.sleepRawImportApp}: ${record.sourceAppId}',
       if (record.sourceConfidence != null)
-        'Confidence: ${record.sourceConfidence}',
+        '${l10n.sleepRawImportConfidence}: ${record.sourceConfidence}',
     ].join('\n');
     final payload = () {
       try {
@@ -132,7 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return record.payloadJson;
       }
     }();
-    return '$header\nPayload:\n$payload';
+    return '$header\n${l10n.sleepRawImportPayload}:\n$payload';
   }
 
   Future<void> _showRawSleepImports() async {
@@ -150,7 +151,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    final formatted = records.map(_formatRawImport).join('\n\n---\n\n');
+    final formatted = records
+        .map((record) => _formatRawImport(record, l10n))
+        .join('\n\n---\n\n');
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

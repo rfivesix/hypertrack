@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../generated/app_localizations.dart';
 import '../../data/sleep_day_repository.dart';
 import '../../domain/sleep_enums.dart';
 import 'sleep_detail_page_shell.dart';
@@ -12,11 +13,12 @@ class DepthDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final overview = this.overview;
     if (overview == null) {
-      return const SleepDetailUnavailablePage(
-        title: 'Depth',
-        message: 'Depth data is unavailable.',
+      return SleepDetailUnavailablePage(
+        title: l10n.sleepMetricDepthTitle,
+        message: l10n.sleepDepthUnavailable,
       );
     }
 
@@ -24,16 +26,16 @@ class DepthDetailPage extends StatelessWidget {
         overview.stageDataConfidence != SleepStageConfidence.low;
 
     if (!hasReliableStageData) {
-      return const SleepDetailUnavailablePage(
-        title: 'Depth',
-        message: 'Stage confidence is too low for a reliable depth breakdown.',
+      return SleepDetailUnavailablePage(
+        title: l10n.sleepMetricDepthTitle,
+        message: l10n.sleepDepthConfidenceTooLow,
       );
     }
 
     if (!overview.hasStageDurations) {
-      return const SleepDetailUnavailablePage(
-        title: 'Depth',
-        message: 'Stage duration breakdown is unavailable for this night.',
+      return SleepDetailUnavailablePage(
+        title: l10n.sleepMetricDepthTitle,
+        message: l10n.sleepDepthBreakdownUnavailable,
       );
     }
 
@@ -45,13 +47,16 @@ class DepthDetailPage extends StatelessWidget {
     final deepPct = (deepDuration.inMinutes / totalMinutes) * 100;
     final lightPct = (lightDuration.inMinutes / totalMinutes) * 100;
     final remPct = (remDuration.inMinutes / totalMinutes) * 100;
-    final rating = deepPct >= 20 ? 'Restorative' : 'Light-leaning';
+    final rating = deepPct >= 20
+        ? l10n.sleepDepthRatingRestorative
+        : l10n.sleepDepthRatingLightLeaning;
 
     return SleepDetailPageShell(
-      title: 'Depth',
+      title: l10n.sleepMetricDepthTitle,
       value: rating,
-      statusLabel: 'Stage confidence: ${overview.stageDataConfidence.name}',
-      subtitle: 'Stage distribution based on derived timeline segments.',
+      statusLabel: l10n
+          .sleepDepthStageConfidenceLabel(overview.stageDataConfidence.name),
+      subtitle: l10n.sleepDepthSubtitle,
       children: [
         SizedBox(
           height: 16,
@@ -73,9 +78,21 @@ class DepthDetailPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _DepthRow(label: 'Deep', duration: deepDuration, percent: deepPct),
-        _DepthRow(label: 'Light', duration: lightDuration, percent: lightPct),
-        _DepthRow(label: 'REM', duration: remDuration, percent: remPct),
+        _DepthRow(
+          label: l10n.sleepStageDeepLabel,
+          duration: deepDuration,
+          percent: deepPct,
+        ),
+        _DepthRow(
+          label: l10n.sleepStageLightLabel,
+          duration: lightDuration,
+          percent: lightPct,
+        ),
+        _DepthRow(
+          label: l10n.sleepStageRemLabel,
+          duration: remDuration,
+          percent: remPct,
+        ),
       ],
     );
   }

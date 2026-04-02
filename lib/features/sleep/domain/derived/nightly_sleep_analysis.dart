@@ -18,6 +18,10 @@ class NightlySleepAnalysis {
     this.restingHeartRateBpm,
     this.interruptionsCount,
     this.interruptionsWakeMinutes,
+    this.scoreCompleteness,
+    this.regularitySri,
+    this.regularityValidDays,
+    this.regularityStable,
     this.sleepQuality = SleepQualityBucket.unavailable,
     this.sourcePlatform,
     this.sourceAppId,
@@ -36,6 +40,10 @@ class NightlySleepAnalysis {
   final double? restingHeartRateBpm;
   final int? interruptionsCount;
   final int? interruptionsWakeMinutes;
+  final double? scoreCompleteness;
+  final double? regularitySri;
+  final int? regularityValidDays;
+  final bool? regularityStable;
   final SleepQualityBucket sleepQuality;
   final String? sourcePlatform;
   final String? sourceAppId;
@@ -54,6 +62,10 @@ class NightlySleepAnalysis {
         'restingHeartRateBpm': restingHeartRateBpm,
         'interruptionsCount': interruptionsCount,
         'interruptionsWakeMinutes': interruptionsWakeMinutes,
+        'scoreCompleteness': scoreCompleteness,
+        'regularitySri': regularitySri,
+        'regularityValidDays': regularityValidDays,
+        'regularityStable': regularityStable,
         'sleepQuality': sleepQuality.name,
         'sourcePlatform': sourcePlatform,
         'sourceAppId': sourceAppId,

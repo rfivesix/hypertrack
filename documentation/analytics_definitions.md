@@ -1,10 +1,15 @@
 # Shared Analytics Logic & Definitions
 
-This document defines the core business logic and shared rules for the new Statistics & Analytics Tab (Issue #89). It ensures that all charts, PR calculations, and insights remain consistent across the app.
+> Status: Legacy heuristic reference.  
+> This file is **not** the canonical source of truth for current Statistics implementation details.  
+> Use [statistics_module.md](statistics_module.md) for current code-audited behavior.
+
+This document preserves historical analytics heuristics and terminology that may still be partially reflected in code.
+If statements here differ from implementation, code (and `statistics_module.md`) is authoritative.
 
 ## Versioning Note
 
-The definitions in this document represent the v1 analytics rules for the new Statistics tab. Some heuristics (especially muscle weighting and recovery interpretation) may be refined later, but all implementation in the next version should use these rules consistently unless explicitly changed.
+The definitions below represent a historical v1 rule set. Some heuristics may still apply, while others may have diverged in implementation over time.
 
 ---
 

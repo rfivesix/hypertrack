@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../generated/app_localizations.dart';
 import '../../../../widgets/summary_card.dart';
 import '../../data/sleep_day_repository.dart';
 import 'sleep_detail_page_shell.dart';
@@ -12,32 +13,34 @@ class InterruptionsDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final overview = this.overview;
     if (overview == null) {
-      return const SleepDetailUnavailablePage(
-        title: 'Interruptions',
-        message: 'Interruptions data is unavailable.',
+      return SleepDetailUnavailablePage(
+        title: l10n.sleepMetricInterruptionsTitle,
+        message: l10n.sleepInterruptionsUnavailable,
       );
     }
     if (overview.interruptionsCount == null ||
         overview.interruptionsWakeDuration == null) {
-      return const SleepDetailUnavailablePage(
-        title: 'Interruptions',
-        message: 'Interruptions data is unavailable.',
+      return SleepDetailUnavailablePage(
+        title: l10n.sleepMetricInterruptionsTitle,
+        message: l10n.sleepInterruptionsUnavailable,
       );
     }
     if (overview.interruptionsCount! < 0) {
-      return const SleepDetailUnavailablePage(
-        title: 'Interruptions',
-        message: 'Interruptions data is unavailable.',
+      return SleepDetailUnavailablePage(
+        title: l10n.sleepMetricInterruptionsTitle,
+        message: l10n.sleepInterruptionsUnavailable,
       );
     }
     return SleepDetailPageShell(
-      title: 'Interruptions',
+      title: l10n.sleepMetricInterruptionsTitle,
       value: '${overview.interruptionsCount}',
-      statusLabel:
-          overview.interruptionsCount! == 0 ? 'None detected' : 'Detected',
-      subtitle: 'Qualifying wake interruptions overnight.',
+      statusLabel: overview.interruptionsCount! == 0
+          ? l10n.sleepInterruptionsStatusNoneDetected
+          : l10n.sleepInterruptionsStatusDetected,
+      subtitle: l10n.sleepInterruptionsSubtitle,
       statusColor:
           overview.interruptionsCount! <= 1 ? Colors.green : Colors.orange,
       children: [
@@ -47,16 +50,14 @@ class InterruptionsDetailPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total wake duration'),
+                Text(l10n.sleepInterruptionsTotalWakeDuration),
                 Text(formatDuration(overview.interruptionsWakeDuration!)),
               ],
             ),
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'This view includes only qualifying interruptions from derived analysis outputs.',
-        ),
+        Text(l10n.sleepInterruptionsFootnote),
       ],
     );
   }

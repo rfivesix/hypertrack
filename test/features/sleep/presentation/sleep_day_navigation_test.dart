@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hypertrack/generated/app_localizations.dart';
 import 'package:hypertrack/features/sleep/data/sleep_day_repository.dart';
 import 'package:hypertrack/features/sleep/data/repository/sleep_query_repository.dart';
 import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
@@ -10,6 +11,7 @@ import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
 import 'package:hypertrack/features/sleep/presentation/week/sleep_week_overview_page.dart';
 import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
 import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
+import 'package:hypertrack/widgets/measurement_chart_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -96,6 +98,20 @@ String _monthLabel(DateTime day, {String localeCode = 'en'}) {
   return DateFormat.yMMMM(localeCode).format(DateTime(day.year, day.month, 1));
 }
 
+Widget _testApp({
+  RouteFactory? onGenerateRoute,
+  Widget? home,
+  String? initialRoute,
+}) {
+  return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    onGenerateRoute: onGenerateRoute,
+    home: home,
+    initialRoute: initialRoute,
+  );
+}
+
 SleepDayOverviewData _sampleOverview() {
   final session = SleepSession(
     id: 'session-1',
@@ -148,6 +164,36 @@ SleepDayOverviewData _sampleOverview() {
         nightDate: DateTime.utc(2026, 3, 25),
         bedtimeMinutes: 22 * 60 + 45,
         wakeMinutes: 6 * 60 + 30,
+      ),
+    ],
+    heartRateSamples: [
+      HeartRateSample(
+        id: 'hr-1',
+        sessionId: session.id,
+        sampledAtUtc: DateTime.utc(2026, 3, 30, 22, 30),
+        bpm: 56,
+        sourcePlatform: 'healthkit',
+      ),
+      HeartRateSample(
+        id: 'hr-2',
+        sessionId: session.id,
+        sampledAtUtc: DateTime.utc(2026, 3, 30, 23, 45),
+        bpm: 53,
+        sourcePlatform: 'healthkit',
+      ),
+      HeartRateSample(
+        id: 'hr-3',
+        sessionId: session.id,
+        sampledAtUtc: DateTime.utc(2026, 3, 31, 1, 15),
+        bpm: 52,
+        sourcePlatform: 'healthkit',
+      ),
+      HeartRateSample(
+        id: 'hr-4',
+        sessionId: session.id,
+        sampledAtUtc: DateTime.utc(2026, 3, 31, 3, 0),
+        bpm: 54,
+        sourcePlatform: 'healthkit',
       ),
     ],
     stageDataConfidence: SleepStageConfidence.high,
@@ -214,7 +260,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -237,6 +283,7 @@ void main() {
     await tester.tap(find.text('Heart rate'));
     await tester.pumpAndSettle();
     expect(find.text('Heart rate'), findsWidgets);
+    expect(find.byType(MeasurementChartWidget), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -260,7 +307,7 @@ void main() {
   testWidgets('sleep state placeholder routes render without crashing',
       (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         initialRoute: SleepRouteNames.connectHealthData,
       ),
@@ -285,7 +332,7 @@ void main() {
       ),
     ]);
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepWeekOverviewPage(
           anchorDay: DateTime(2026, 3, 31),
@@ -298,7 +345,7 @@ void main() {
     expect(find.text('Daily score'), findsOneWidget);
 
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepMonthOverviewPage(
           anchorDay: DateTime(2026, 3, 31),
@@ -322,7 +369,7 @@ void main() {
     await tester.pumpWidget(
       Provider<SleepQueryRepository>.value(
         value: repo,
-        child: MaterialApp(
+        child: _testApp(
           onGenerateRoute: SleepNavigation.onGenerateRoute,
           home: SleepDayOverviewPage(viewModel: model),
         ),
@@ -351,7 +398,7 @@ void main() {
       ),
     );
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -369,7 +416,7 @@ void main() {
       repository: _FakeSleepDayRepository(_baselineMissingOverview()),
     );
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -379,6 +426,51 @@ void main() {
     await tester.tap(find.text('Heart rate'));
     await tester.pumpAndSettle();
     expect(find.text('Baseline not established'), findsOneWidget);
+    expect(find.byType(MeasurementChartWidget), findsOneWidget);
+  });
+
+  testWidgets('heart-rate detail shows fallback when samples are missing', (
+    tester,
+  ) async {
+    final base = _sampleOverview();
+    final noSamples = SleepDayOverviewData(
+      analysis: base.analysis,
+      session: base.session,
+      timelineSegments: base.timelineSegments,
+      stageDataConfidence: base.stageDataConfidence,
+      totalSleepMinutes: base.totalSleepMinutes,
+      sleepHrAvg: base.sleepHrAvg,
+      baselineSleepHr: base.baselineSleepHr,
+      deltaSleepHr: base.deltaSleepHr,
+      interruptionsCount: base.interruptionsCount,
+      interruptionsWakeDuration: base.interruptionsWakeDuration,
+      deepDuration: base.deepDuration,
+      lightDuration: base.lightDuration,
+      remDuration: base.remDuration,
+      regularityNights: base.regularityNights,
+      heartRateSamples: const [],
+    );
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(noSamples),
+    );
+
+    await tester.pumpWidget(
+      _testApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Heart rate'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'No heart-rate samples were stored for this night. Trend chart is unavailable.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(MeasurementChartWidget), findsNothing);
   });
 
   testWidgets('depth detail shows low-confidence fallback', (tester) async {
@@ -386,7 +478,7 @@ void main() {
       repository: _FakeSleepDayRepository(_lowConfidenceDepthOverview()),
     );
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -409,7 +501,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -433,7 +525,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -458,7 +550,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -490,7 +582,7 @@ void main() {
       syncService: import,
     );
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -515,7 +607,7 @@ void main() {
     );
     final model = SleepDayViewModel(repository: repo, syncService: import);
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),
@@ -533,7 +625,7 @@ void main() {
   ) async {
     final model = SleepDayViewModel(repository: _FakeSleepDayRepository(null));
     await tester.pumpWidget(
-      MaterialApp(
+      _testApp(
         onGenerateRoute: SleepNavigation.onGenerateRoute,
         home: SleepDayOverviewPage(viewModel: model),
       ),

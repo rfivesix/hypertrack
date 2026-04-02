@@ -1,6 +1,7 @@
 # UI & Widgets
 
 This document covers the design system, widget catalog, dialog system, and layout patterns used throughout Hypertrack.
+It is a broad UI reference; for current Statistics/Sleep implementation specifics, use [statistics_module.md](statistics_module.md) and [sleep_current_state.md](sleep/sleep_current_state.md).
 
 ---
 
@@ -53,7 +54,7 @@ Hardcoded color tokens for light and dark modes:
 
 ## Widget Catalog
 
-The application provides **29 reusable widgets** in `lib/widgets/`. Here is a categorized reference:
+The application provides reusable widgets in `lib/widgets/`. Here is a categorized reference:
 
 ### Layout & Containers
 

@@ -1,40 +1,41 @@
-# Health Steps Alpha
+# Health Steps Module (Current Implementation Notes)
 
-This document describes the alpha implementation of steps integration.
+This file documents the currently implemented steps integration behavior.
 
 ## Providers
 
 - iOS: Apple HealthKit (`HKQuantityTypeIdentifier.stepCount`)
 - Android: Google Health Connect (`StepsRecord`)
 
-## Permissions flow
+## Permissions and sync flow
 
-1. User enables "steps tracking" in Settings (default: enabled).
-2. On Diary load/date change, background sync is attempted if last sync is older than 6 hours.
-3. If permission is not granted, native permission request is triggered.
-4. If denied, sync is skipped and no steps card is shown.
+1. User controls tracking in Settings (`steps_tracking_enabled`).
+2. Diary triggers periodic refresh (`~6h`) via `_syncStepsIfDue(...)`.
+3. Repository refresh checks availability, requests permission when needed, and syncs step segments.
+4. If tracking is disabled or permission/availability fails, refresh is skipped.
 
-## Settings
+Primary files:
+
+- `lib/services/health/steps_sync_service.dart`
+- `lib/features/steps/data/steps_aggregation_repository.dart`
+- `lib/screens/diary_screen.dart`
+
+## Settings keys used
 
 - `steps_tracking_enabled` (`bool`, default `true`)
-  - If disabled: no permission prompts, no sync, no steps card.
 - `steps_provider_filter` (`String`, default `all`)
-  - Values: `all`, `apple`, `google`.
+- `steps_source_policy` (`String`, default `auto_dominant`)
 - `steps_last_sync_at_iso` (`String?`)
-  - Last successful sync timestamp in UTC ISO-8601.
 
 ## Storage and deduplication
 
-- Raw segments are stored in `health_step_segments`.
-- UTC timestamps are stored in DB.
-- Dedup key (`external_key`) is:
-  - `<provider>:<nativeId>` when available
-  - `<provider>:sha1(sourceId|startAtUtcIso|endAtUtcIso|stepCount)` fallback
+- Storage table: `health_step_segments`
+- Dedup key (`external_key`):
+  - preferred: `<provider>:<nativeId>`
+  - fallback: `<provider>:sha1(sourceId|startAtUtcIso|endAtUtcIso|stepCount)`
 
-## Current alpha limitations
+## Current limitations
 
-- Steps only (no distance, calories, sleep, heart-rate sync yet)
-- Sync is foreground-triggered from Diary only
-- No background scheduler yet
-- UI labels are not localized yet in this alpha pass
+- Steps is integrated as read-only import/aggregation (no write-back to platform health stores).
+- Background scheduler integration is not implemented; sync is foreground-triggered by app flows (Diary/repository refresh).
 

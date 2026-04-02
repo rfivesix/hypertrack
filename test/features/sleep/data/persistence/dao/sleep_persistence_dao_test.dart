@@ -54,6 +54,17 @@ void main() {
       'sleep_nightly_analyses',
       'sleep_raw_imports',
     ]);
+
+    final nightlyColumns = await database.customSelect('''
+      PRAGMA table_info(sleep_nightly_analyses)
+      ''').get();
+    final names = nightlyColumns
+        .map((row) => row.read<String>('name'))
+        .toList(growable: false);
+    expect(names, contains('score_completeness'));
+    expect(names, contains('regularity_sri'));
+    expect(names, contains('regularity_valid_days'));
+    expect(names, contains('regularity_is_stable'));
   });
 
   test('raw dao insert and query by status/hash works', () async {
@@ -239,6 +250,10 @@ void main() {
           restingHeartRateBpm: 50,
           interruptionsCount: 2,
           interruptionsWakeMinutes: 14,
+          scoreCompleteness: 0.70,
+          regularitySri: null,
+          regularityValidDays: 4,
+          regularityIsStable: false,
           analyzedAt: DateTime.utc(2026, 2, 2, 7),
         ),
       );
@@ -253,6 +268,10 @@ void main() {
       expect(byRange.single.totalSleepMinutes, 432);
       expect(byRange.single.interruptionsCount, 2);
       expect(byRange.single.interruptionsWakeMinutes, 14);
+      expect(byRange.single.scoreCompleteness, 0.70);
+      expect(byRange.single.regularitySri, isNull);
+      expect(byRange.single.regularityValidDays, 4);
+      expect(byRange.single.regularityIsStable, isFalse);
 
       await analysesDao.deleteByNightRange(
         fromNightDateInclusive: '2026-02-01',

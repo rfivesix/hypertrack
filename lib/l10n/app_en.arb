@@ -1067,4 +1067,125 @@
   ,"sleepPermissionDeniedMessage": "Sleep permissions are denied. Open settings to grant access."
   ,"sleepSourceUnavailableTitle": "Source unavailable"
   ,"sleepSourceUnavailableMessage": "Sleep data source is unavailable or not installed on this device."
+  ,"sleepEmptyDayNoData": "No sleep data available for this day."
+  ,"sleepEmptyDayConnectMessage": "Connect Health Connect/HealthKit in Settings and import recent sleep data."
+  ,"sleepOpenSettingsButton": "Open settings"
+  ,"sleepImportNowButton": "Import now"
+  ,"sleepImportFinishedRefreshing": "Sleep import finished. Refreshing..."
+  ,"sleepImportUnavailableSettingsHint": "Sleep import not available. Check permissions in Settings."
+  ,"sleepTimelineTitle": "Timeline"
+  ,"sleepTimelineUnavailable": "No stage timeline available for this night."
+  ,"sleepStageDeepLabel": "Deep"
+  ,"sleepStageLightLabel": "Light"
+  ,"sleepStageRemLabel": "REM"
+  ,"sleepStageAwakeLabel": "Awake"
+  ,"sleepScoreCardTitle": "Sleep quality"
+  ,"sleepScoreUnavailableForNight": "Score unavailable for this night."
+  ,"sleepScoreCompletenessLabel": "Score completeness: {value}"
+  ,"@sleepScoreCompletenessLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepQualityGood": "Good"
+  ,"sleepQualityAverage": "Average"
+  ,"sleepQualityPoor": "Poor"
+  ,"sleepQualityUnavailable": "Unavailable"
+  ,"sleepQualitySubtitleGood": "Recovery looked strong overnight."
+  ,"sleepQualitySubtitleAverage": "Sleep was okay with room for improvement."
+  ,"sleepQualitySubtitlePoor": "Recovery signals were weak tonight."
+  ,"sleepQualitySubtitleUnavailable": "Not enough data to score this night."
+  ,"sleepQualityRegularityNotContributing": "Regularity did not contribute (<5 valid days)."
+  ,"sleepQualityRegularityPreliminary": "Regularity is preliminary (5-6 valid days)."
+  ,"sleepQualityRegularityStable": "Regularity is stable ({days} days)."
+  ,"@sleepQualityRegularityStable": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
+  ,"sleepRegularityNightView": "{count}-night view"
+  ,"@sleepRegularityNightView": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+  ,"sleepMetricUnavailable": "Unavailable"
+  ,"sleepMetricDurationTitle": "Duration"
+  ,"sleepMetricHeartRateTitle": "Heart rate"
+  ,"sleepMetricRegularityTitle": "Regularity"
+  ,"sleepMetricDepthTitle": "Depth"
+  ,"sleepMetricInterruptionsTitle": "Interruptions"
+  ,"sleepMetricDepthLowConfidence": "Low confidence"
+  ,"sleepMetricDepthStagesAvailable": "Stages available"
+  ,"sleepDurationUnavailable": "Duration data is unavailable."
+  ,"sleepDurationStatusWithinTarget": "Within target"
+  ,"sleepDurationStatusBelowTarget": "Below target"
+  ,"sleepDurationSubtitle": "Your total sleep duration for this night."
+  ,"sleepDurationBenchmarkHint": "Adults often do best with roughly 7–9 hours. This benchmark helps you see where your night sits in that range."
+  ,"sleepDepthUnavailable": "Depth data is unavailable."
+  ,"sleepDepthConfidenceTooLow": "Stage confidence is too low for a reliable depth breakdown."
+  ,"sleepDepthBreakdownUnavailable": "Stage duration breakdown is unavailable for this night."
+  ,"sleepDepthRatingRestorative": "Restorative"
+  ,"sleepDepthRatingLightLeaning": "Light-leaning"
+  ,"sleepDepthStageConfidenceLabel": "Stage confidence: {value}"
+  ,"@sleepDepthStageConfidenceLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepDepthSubtitle": "Stage distribution based on derived timeline segments."
+  ,"sleepInterruptionsUnavailable": "Interruptions data is unavailable."
+  ,"sleepInterruptionsStatusNoneDetected": "None detected"
+  ,"sleepInterruptionsStatusDetected": "Detected"
+  ,"sleepInterruptionsSubtitle": "Qualifying wake interruptions overnight."
+  ,"sleepInterruptionsTotalWakeDuration": "Total wake duration"
+  ,"sleepInterruptionsFootnote": "This view includes only qualifying interruptions from derived analysis outputs."
+  ,"sleepRegularityUnavailable": "Regularity data is unavailable."
+  ,"sleepRegularityNightRange": "{count}-night range"
+  ,"@sleepRegularityNightRange": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+  ,"sleepRegularityStatusSufficientTrend": "Sufficient trend data"
+  ,"sleepRegularityStatusLimitedTrend": "Limited trend data"
+  ,"sleepRegularitySubtitle": "Bedtime and wake windows for recent nights."
+  ,"sleepRegularityAverageBedtime": "Average bedtime"
+  ,"sleepRegularityAverageWake": "Average wake"
+  ,"sleepHeartRateUnavailable": "Sleep heart-rate data is unavailable."
+  ,"sleepHeartRateStatusNoSampleSeries": "No sample series for this night"
+  ,"sleepHeartRateStatusBaselineNotEstablished": "Baseline not established"
+  ,"sleepHeartRateStatusComparisonUnavailable": "Baseline comparison unavailable"
+  ,"sleepHeartRateStatusBelowBaseline": "Below baseline"
+  ,"sleepHeartRateStatusAboveBaseline": "Above baseline"
+  ,"sleepHeartRateNoSamplesText": "No persisted sleep heart-rate samples are available for this night."
+  ,"sleepHeartRateBaselineNotEstablishedText": "Baseline not established yet. This is neutral and expected early on."
+  ,"sleepHeartRateComparisonUnavailableText": "Baseline comparison is currently unavailable for this night."
+  ,"sleepHeartRateDeltaText": "Your sleep HR is {direction} baseline by {delta} {unit}."
+  ,"@sleepHeartRateDeltaText": {
+    "placeholders": {
+      "direction": { "type": "String" },
+      "delta": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  }
+  ,"sleepHeartRateDirectionBelow": "below"
+  ,"sleepHeartRateDirectionAbove": "above"
+  ,"sleepHeartRateComparedBaselineSubtitle": "Compared with your established sleep baseline."
+  ,"sleepHeartRateNoBaselineSubtitle": "Baseline is not established yet. This is neutral."
+  ,"sleepHeartRateSamplesUnavailable": "No heart-rate samples were stored for this night. Trend chart is unavailable."
+  ,"sleepHeartRateDashedLineHint": "Dashed line shows baseline ({value} {unit})."
+  ,"@sleepHeartRateDashedLineHint": {
+    "placeholders": {
+      "value": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  }
+  ,"sleepBpmUnit": "bpm"
+  ,"sleepRawImportImportedAt": "Imported at"
+  ,"sleepRawImportStatus": "Status"
+  ,"sleepRawImportSource": "Source"
+  ,"sleepRawImportApp": "App"
+  ,"sleepRawImportConfidence": "Confidence"
+  ,"sleepRawImportPayload": "Payload"
 }

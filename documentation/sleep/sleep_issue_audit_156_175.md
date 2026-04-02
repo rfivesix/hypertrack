@@ -1,5 +1,8 @@
 # Sleep Issue Audit & Completion Report (#156, #157, #158, #166–#175)
 
+> Status: Historical issue-audit snapshot.  
+> For current implemented behavior, use [sleep_current_state.md](sleep_current_state.md).
+
 ## Scope Guardrails Followed
 
 - No Batch-3 week/month product feature implementation was started.

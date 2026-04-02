@@ -32,9 +32,13 @@ class SleepNightlyAnalysesDao {
         resting_heart_rate_bpm,
         interruptions_count,
         interruptions_wake_minutes,
+        score_completeness,
+        regularity_sri,
+        regularity_valid_days,
+        regularity_is_stable,
         analyzed_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ''',
       <Object?>[
         row.id,
@@ -52,6 +56,12 @@ class SleepNightlyAnalysesDao {
         row.restingHeartRateBpm,
         row.interruptionsCount,
         row.interruptionsWakeMinutes,
+        row.scoreCompleteness,
+        row.regularitySri,
+        row.regularityValidDays,
+        row.regularityIsStable == null
+            ? null
+            : (row.regularityIsStable! ? 1 : 0),
         _toEpochMillis(row.analyzedAt),
         _toEpochMillis(DateTime.now()),
       ],
@@ -133,6 +143,15 @@ class SleepNightlyAnalysesDao {
       interruptionsCount: row.readNullable<int>('interruptions_count'),
       interruptionsWakeMinutes:
           row.readNullable<int>('interruptions_wake_minutes'),
+      scoreCompleteness: row.readNullable<double>('score_completeness'),
+      regularitySri: row.readNullable<double>('regularity_sri'),
+      regularityValidDays: row.readNullable<int>('regularity_valid_days'),
+      regularityIsStable: switch (
+          row.readNullable<int>('regularity_is_stable')) {
+        1 => true,
+        0 => false,
+        _ => null,
+      },
       analyzedAt: _fromEpochMillis(row.read<int>('analyzed_at')),
       createdAt: _fromEpochMillis(row.read<int>('created_at')),
       updatedAt: _fromEpochMillis(row.read<int>('updated_at')),

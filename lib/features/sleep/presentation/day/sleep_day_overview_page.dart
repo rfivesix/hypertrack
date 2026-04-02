@@ -326,6 +326,7 @@ class _SleepEmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SummaryCard(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -333,11 +334,9 @@ class _SleepEmptyStateCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('No sleep data available for this day.'),
+            Text(l10n.sleepEmptyDayNoData),
             const SizedBox(height: 8),
-            const Text(
-              'Connect Health Connect/HealthKit in Settings and import recent sleep data.',
-            ),
+            Text(l10n.sleepEmptyDayConnectMessage),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -346,7 +345,7 @@ class _SleepEmptyStateCard extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: onOpenSettings,
                   icon: const Icon(Icons.settings_outlined),
-                  label: const Text('Open settings'),
+                  label: Text(l10n.sleepOpenSettingsButton),
                 ),
                 FilledButton.icon(
                   onPressed: () async {
@@ -356,14 +355,14 @@ class _SleepEmptyStateCard extends StatelessWidget {
                       SnackBar(
                         content: Text(
                           ok
-                              ? 'Sleep import finished. Refreshing...'
-                              : 'Sleep import not available. Check permissions in Settings.',
+                              ? l10n.sleepImportFinishedRefreshing
+                              : l10n.sleepImportUnavailableSettingsHint,
                         ),
                       ),
                     );
                   },
                   icon: const Icon(Icons.sync),
-                  label: const Text('Import now'),
+                  label: Text(l10n.sleepImportNowButton),
                 ),
               ],
             ),
@@ -381,6 +380,7 @@ class _SleepTimelineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final segments = overview.timelineSegments;
     if (segments.isEmpty) {
       return SummaryCard(
@@ -390,9 +390,12 @@ class _SleepTimelineCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                l10n.sleepTimelineTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
-              const Text('No stage timeline available for this night.'),
+              Text(l10n.sleepTimelineUnavailable),
             ],
           ),
         ),
@@ -405,12 +408,12 @@ class _SleepTimelineCard extends StatelessWidget {
     final totalMinutes = duration.inMinutes <= 0 ? 1 : duration.inMinutes;
     final stageRows = <_StageRowData>[
       _StageRowData(
-        label: 'Deep',
+        label: l10n.sleepStageDeepLabel,
         stages: const {CanonicalSleepStage.deep},
         color: Colors.indigo,
       ),
       _StageRowData(
-        label: 'Light',
+        label: l10n.sleepStageLightLabel,
         stages: const {
           CanonicalSleepStage.light,
           CanonicalSleepStage.asleepUnspecified,
@@ -418,12 +421,12 @@ class _SleepTimelineCard extends StatelessWidget {
         color: Colors.blue,
       ),
       _StageRowData(
-        label: 'REM',
+        label: l10n.sleepStageRemLabel,
         stages: const {CanonicalSleepStage.rem},
         color: Colors.purple,
       ),
       _StageRowData(
-        label: 'Awake',
+        label: l10n.sleepStageAwakeLabel,
         stages: const {
           CanonicalSleepStage.awake,
           CanonicalSleepStage.outOfBed,
@@ -445,9 +448,12 @@ class _SleepTimelineCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                l10n.sleepTimelineTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
-              const Text('No stage timeline available for this night.'),
+              Text(l10n.sleepTimelineUnavailable),
             ],
           ),
         ),
@@ -460,7 +466,10 @@ class _SleepTimelineCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Timeline', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.sleepTimelineTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 10),
             for (final row in visibleRows) ...[
               _StageTimelineRow(
@@ -476,23 +485,6 @@ class _SleepTimelineCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _timelineStageColor(BuildContext context, CanonicalSleepStage stage) {
-    switch (stage) {
-      case CanonicalSleepStage.deep:
-        return Colors.indigo;
-      case CanonicalSleepStage.rem:
-        return Colors.purple;
-      case CanonicalSleepStage.light:
-      case CanonicalSleepStage.asleepUnspecified:
-        return Colors.blue;
-      case CanonicalSleepStage.awake:
-      case CanonicalSleepStage.outOfBed:
-        return Theme.of(context).colorScheme.outline;
-      default:
-        return Theme.of(context).colorScheme.outlineVariant;
-    }
   }
 }
 
@@ -572,12 +564,26 @@ class _SleepScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final score = overview.analysis.score;
     final scoreText = score == null ? '--' : score.round().toString();
     final quality = overview.analysis.sleepQuality;
+    final completeness = overview.analysis.scoreCompleteness;
+    final regularityDays = overview.analysis.regularityValidDays ?? 0;
+    final regularityUsed = overview.analysis.regularitySri != null;
+    final regularityStable = overview.analysis.regularityStable == true;
     final subtitle = overview.analysis.score == null
-        ? 'Score unavailable for this night.'
-        : _qualitySubtitle(quality);
+        ? l10n.sleepScoreUnavailableForNight
+        : _qualitySubtitle(
+            l10n,
+            quality,
+            regularityUsed: regularityUsed,
+            regularityStable: regularityStable,
+            regularityDays: regularityDays,
+          );
+    final completenessText = completeness == null
+        ? l10n.sleepScoreCompletenessLabel('--')
+        : l10n.sleepScoreCompletenessLabel('${(completeness * 100).round()}%');
     return SummaryCard(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -608,12 +614,13 @@ class _SleepScoreCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Sleep quality'),
+                  Text(l10n.sleepScoreCardTitle),
                   Text(
-                    _qualityLabel(quality),
+                    _qualityLabel(l10n, quality),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   Text(subtitle),
+                  Text(completenessText),
                 ],
               ),
             ),
@@ -632,22 +639,35 @@ class _SleepScoreCard extends StatelessWidget {
     };
   }
 
-  String _qualityLabel(SleepQualityBucket quality) {
+  String _qualityLabel(AppLocalizations l10n, SleepQualityBucket quality) {
     return switch (quality) {
-      SleepQualityBucket.good => 'Good',
-      SleepQualityBucket.average => 'Average',
-      SleepQualityBucket.poor => 'Poor',
-      SleepQualityBucket.unavailable => 'Unavailable',
+      SleepQualityBucket.good => l10n.sleepQualityGood,
+      SleepQualityBucket.average => l10n.sleepQualityAverage,
+      SleepQualityBucket.poor => l10n.sleepQualityPoor,
+      SleepQualityBucket.unavailable => l10n.sleepQualityUnavailable,
     };
   }
 
-  String _qualitySubtitle(SleepQualityBucket quality) {
-    return switch (quality) {
-      SleepQualityBucket.good => 'Recovery looked strong overnight.',
-      SleepQualityBucket.average => 'Sleep was okay with room for improvement.',
-      SleepQualityBucket.poor => 'Recovery signals were weak tonight.',
-      SleepQualityBucket.unavailable => 'Not enough data to score this night.',
+  String _qualitySubtitle(
+    AppLocalizations l10n,
+    SleepQualityBucket quality, {
+    required bool regularityUsed,
+    required bool regularityStable,
+    required int regularityDays,
+  }) {
+    final qualityText = switch (quality) {
+      SleepQualityBucket.good => l10n.sleepQualitySubtitleGood,
+      SleepQualityBucket.average => l10n.sleepQualitySubtitleAverage,
+      SleepQualityBucket.poor => l10n.sleepQualitySubtitlePoor,
+      SleepQualityBucket.unavailable => l10n.sleepQualitySubtitleUnavailable,
     };
+    if (!regularityUsed) {
+      return '$qualityText ${l10n.sleepQualityRegularityNotContributing}';
+    }
+    if (!regularityStable) {
+      return '$qualityText ${l10n.sleepQualityRegularityPreliminary}';
+    }
+    return '$qualityText ${l10n.sleepQualityRegularityStable(regularityDays)}';
   }
 }
 
@@ -658,9 +678,12 @@ class _SleepMetricTileGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final regularitySubtitle = overview.regularityNights.isEmpty
-        ? 'Unavailable'
-        : '${overview.regularityNights.length.clamp(0, 7)}-night view';
+        ? l10n.sleepMetricUnavailable
+        : l10n.sleepRegularityNightView(
+            overview.regularityNights.length.clamp(0, 7),
+          );
     return GridView.count(
       shrinkWrap: true,
       padding: EdgeInsets.zero,
@@ -671,38 +694,40 @@ class _SleepMetricTileGrid extends StatelessWidget {
       childAspectRatio: 1.8,
       children: [
         _MetricTile(
-          title: 'Duration',
+          title: l10n.sleepMetricDurationTitle,
           subtitle:
               '${overview.totalSleepDuration.inHours}h ${overview.totalSleepDuration.inMinutes.remainder(60)}m',
           onTap: () =>
               SleepNavigation.openDurationDetail(context, overview: overview),
         ),
         _MetricTile(
-          title: 'Heart rate',
+          title: l10n.sleepMetricHeartRateTitle,
           subtitle: overview.sleepHrAvg == null
-              ? 'Unavailable'
-              : '${overview.sleepHrAvg!.round()} bpm',
+              ? l10n.sleepMetricUnavailable
+              : '${overview.sleepHrAvg!.round()} ${l10n.sleepBpmUnit}',
           onTap: () =>
               SleepNavigation.openHeartRateDetail(context, overview: overview),
         ),
         _MetricTile(
-          title: 'Regularity',
+          title: l10n.sleepMetricRegularityTitle,
           subtitle: regularitySubtitle,
           onTap: () =>
               SleepNavigation.openRegularityDetail(context, overview: overview),
         ),
         _MetricTile(
-          title: 'Depth',
+          title: l10n.sleepMetricDepthTitle,
           subtitle: overview.stageDataConfidence == SleepStageConfidence.low
-              ? 'Low confidence'
-              : (overview.hasStageData ? 'Stages available' : 'Unavailable'),
+              ? l10n.sleepMetricDepthLowConfidence
+              : (overview.hasStageData
+                  ? l10n.sleepMetricDepthStagesAvailable
+                  : l10n.sleepMetricUnavailable),
           onTap: () =>
               SleepNavigation.openDepthDetail(context, overview: overview),
         ),
         _MetricTile(
-          title: 'Interruptions',
+          title: l10n.sleepMetricInterruptionsTitle,
           subtitle: overview.interruptionsCount == null
-              ? 'Unavailable'
+              ? l10n.sleepMetricUnavailable
               : '${overview.interruptionsCount}',
           onTap: () => SleepNavigation.openInterruptionsDetail(
             context,

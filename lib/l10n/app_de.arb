@@ -1072,4 +1072,125 @@
   ,"sleepPermissionDeniedMessage": "Schlaf-Berechtigungen sind verweigert. Öffne die Einstellungen, um Zugriff zu gewähren."
   ,"sleepSourceUnavailableTitle": "Quelle nicht verfügbar"
   ,"sleepSourceUnavailableMessage": "Die Schlafdatenquelle ist auf diesem Gerät nicht verfügbar oder nicht installiert."
+  ,"sleepEmptyDayNoData": "Für diesen Tag sind keine Schlafdaten verfügbar."
+  ,"sleepEmptyDayConnectMessage": "Verbinde Health Connect/HealthKit in den Einstellungen und importiere aktuelle Schlafdaten."
+  ,"sleepOpenSettingsButton": "Einstellungen öffnen"
+  ,"sleepImportNowButton": "Jetzt importieren"
+  ,"sleepImportFinishedRefreshing": "Schlafimport abgeschlossen. Aktualisiere..."
+  ,"sleepImportUnavailableSettingsHint": "Schlafimport nicht verfügbar. Berechtigungen in den Einstellungen prüfen."
+  ,"sleepTimelineTitle": "Timeline"
+  ,"sleepTimelineUnavailable": "Für diese Nacht ist keine Schlafphasen-Timeline verfügbar."
+  ,"sleepStageDeepLabel": "Tief"
+  ,"sleepStageLightLabel": "Leicht"
+  ,"sleepStageRemLabel": "REM"
+  ,"sleepStageAwakeLabel": "Wach"
+  ,"sleepScoreCardTitle": "Schlafqualität"
+  ,"sleepScoreUnavailableForNight": "Für diese Nacht ist kein Score verfügbar."
+  ,"sleepScoreCompletenessLabel": "Score-Vollständigkeit: {value}"
+  ,"@sleepScoreCompletenessLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepQualityGood": "Gut"
+  ,"sleepQualityAverage": "Durchschnittlich"
+  ,"sleepQualityPoor": "Schlecht"
+  ,"sleepQualityUnavailable": "Nicht verfügbar"
+  ,"sleepQualitySubtitleGood": "Die Erholung sah über Nacht stark aus."
+  ,"sleepQualitySubtitleAverage": "Der Schlaf war okay, mit Verbesserungsraum."
+  ,"sleepQualitySubtitlePoor": "Die Erholungssignale waren heute Nacht schwach."
+  ,"sleepQualitySubtitleUnavailable": "Nicht genug Daten, um diese Nacht zu bewerten."
+  ,"sleepQualityRegularityNotContributing": "Regelmäßigkeit hat nicht beigetragen (<5 gültige Tage)."
+  ,"sleepQualityRegularityPreliminary": "Regelmäßigkeit ist vorläufig (5-6 gültige Tage)."
+  ,"sleepQualityRegularityStable": "Regelmäßigkeit ist stabil ({days} Tage)."
+  ,"@sleepQualityRegularityStable": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
+  ,"sleepRegularityNightView": "{count}-Nächte-Ansicht"
+  ,"@sleepRegularityNightView": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+  ,"sleepMetricUnavailable": "Nicht verfügbar"
+  ,"sleepMetricDurationTitle": "Dauer"
+  ,"sleepMetricHeartRateTitle": "Herzfrequenz"
+  ,"sleepMetricRegularityTitle": "Regelmäßigkeit"
+  ,"sleepMetricDepthTitle": "Tiefe"
+  ,"sleepMetricInterruptionsTitle": "Unterbrechungen"
+  ,"sleepMetricDepthLowConfidence": "Niedrige Verlässlichkeit"
+  ,"sleepMetricDepthStagesAvailable": "Phasen verfügbar"
+  ,"sleepDurationUnavailable": "Dauerdaten sind nicht verfügbar."
+  ,"sleepDurationStatusWithinTarget": "Im Zielbereich"
+  ,"sleepDurationStatusBelowTarget": "Unter Zielbereich"
+  ,"sleepDurationSubtitle": "Deine gesamte Schlafdauer für diese Nacht."
+  ,"sleepDurationBenchmarkHint": "Viele Erwachsene profitieren von etwa 7–9 Stunden. Dieser Benchmark zeigt, wo deine Nacht in diesem Bereich liegt."
+  ,"sleepDepthUnavailable": "Tiefendaten sind nicht verfügbar."
+  ,"sleepDepthConfidenceTooLow": "Die Phasen-Verlässlichkeit ist zu niedrig für eine zuverlässige Tiefenaufschlüsselung."
+  ,"sleepDepthBreakdownUnavailable": "Die Aufschlüsselung der Phasendauer ist für diese Nacht nicht verfügbar."
+  ,"sleepDepthRatingRestorative": "Erholsam"
+  ,"sleepDepthRatingLightLeaning": "Eher leicht"
+  ,"sleepDepthStageConfidenceLabel": "Phasen-Verlässlichkeit: {value}"
+  ,"@sleepDepthStageConfidenceLabel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"sleepDepthSubtitle": "Phasenverteilung auf Basis abgeleiteter Timeline-Segmente."
+  ,"sleepInterruptionsUnavailable": "Unterbrechungsdaten sind nicht verfügbar."
+  ,"sleepInterruptionsStatusNoneDetected": "Keine erkannt"
+  ,"sleepInterruptionsStatusDetected": "Erkannt"
+  ,"sleepInterruptionsSubtitle": "Qualifizierte Wachunterbrechungen über Nacht."
+  ,"sleepInterruptionsTotalWakeDuration": "Gesamte Wachdauer"
+  ,"sleepInterruptionsFootnote": "Diese Ansicht enthält nur qualifizierte Unterbrechungen aus abgeleiteten Analyseergebnissen."
+  ,"sleepRegularityUnavailable": "Regelmäßigkeitsdaten sind nicht verfügbar."
+  ,"sleepRegularityNightRange": "{count}-Nächte-Bereich"
+  ,"@sleepRegularityNightRange": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+  ,"sleepRegularityStatusSufficientTrend": "Ausreichend Trenddaten"
+  ,"sleepRegularityStatusLimitedTrend": "Begrenzte Trenddaten"
+  ,"sleepRegularitySubtitle": "Einschlaf- und Aufwachfenster der letzten Nächte."
+  ,"sleepRegularityAverageBedtime": "Durchschnittliche Schlafenszeit"
+  ,"sleepRegularityAverageWake": "Durchschnittliches Aufwachen"
+  ,"sleepHeartRateUnavailable": "Schlaf-Herzfrequenzdaten sind nicht verfügbar."
+  ,"sleepHeartRateStatusNoSampleSeries": "Keine Messreihe für diese Nacht"
+  ,"sleepHeartRateStatusBaselineNotEstablished": "Baseline nicht etabliert"
+  ,"sleepHeartRateStatusComparisonUnavailable": "Baseline-Vergleich nicht verfügbar"
+  ,"sleepHeartRateStatusBelowBaseline": "Unter Baseline"
+  ,"sleepHeartRateStatusAboveBaseline": "Über Baseline"
+  ,"sleepHeartRateNoSamplesText": "Für diese Nacht sind keine gespeicherten Schlaf-Herzfrequenzmessungen verfügbar."
+  ,"sleepHeartRateBaselineNotEstablishedText": "Baseline ist noch nicht etabliert. Das ist am Anfang neutral und erwartbar."
+  ,"sleepHeartRateComparisonUnavailableText": "Baseline-Vergleich ist für diese Nacht derzeit nicht verfügbar."
+  ,"sleepHeartRateDeltaText": "Deine Schlaf-HF liegt {direction} der Baseline um {delta} {unit}."
+  ,"@sleepHeartRateDeltaText": {
+    "placeholders": {
+      "direction": { "type": "String" },
+      "delta": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  }
+  ,"sleepHeartRateDirectionBelow": "unter"
+  ,"sleepHeartRateDirectionAbove": "über"
+  ,"sleepHeartRateComparedBaselineSubtitle": "Verglichen mit deiner etablierten Schlaf-Baseline."
+  ,"sleepHeartRateNoBaselineSubtitle": "Baseline ist noch nicht etabliert. Das ist neutral."
+  ,"sleepHeartRateSamplesUnavailable": "Für diese Nacht wurden keine Herzfrequenzmessungen gespeichert. Trenddiagramm nicht verfügbar."
+  ,"sleepHeartRateDashedLineHint": "Gestrichelte Linie zeigt die Baseline ({value} {unit})."
+  ,"@sleepHeartRateDashedLineHint": {
+    "placeholders": {
+      "value": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  }
+  ,"sleepBpmUnit": "bpm"
+  ,"sleepRawImportImportedAt": "Importiert am"
+  ,"sleepRawImportStatus": "Status"
+  ,"sleepRawImportSource": "Quelle"
+  ,"sleepRawImportApp": "App"
+  ,"sleepRawImportConfidence": "Vertrauen"
+  ,"sleepRawImportPayload": "Payload"
 }

@@ -1,5 +1,8 @@
 # Sleep Foundation Batch: Persistence, Contracts, and Mapping Foundations
 
+> Status: Historical foundation snapshot.  
+> For current implemented behavior, use [sleep_current_state.md](sleep_current_state.md).
+
 ## Problem Being Solved
 
 This batch establishes the technical foundation for Sleep ingestion and canonicalization so subsequent work can implement normalization, analytics, and UI on stable contracts. The core problems addressed are:

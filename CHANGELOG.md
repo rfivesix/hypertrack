@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.7.3-alpha.4] - 2026-04-02
+
+This alpha finalizes the current Sleep health-score pass in the working copy. It documents and ships the implemented V1 scoring model, persists additional nightly analysis fields for score completeness and regularity, expands Sleep day/detail messaging and localization, and refreshes core documentation so release notes and docs align with the current source of truth.
+
+### Added
+- Sleep Health Score V1 documentation describing the implemented scoring model, component weights, regularity rules, completeness semantics, and known limitations.
+- A canonical Sleep current-state document that describes the routed screens, repositories, pipeline flow, persistence layers, and implementation boundaries in the current working copy.
+- Persisted nightly-analysis fields for score completeness and regularity outputs, including SRI, valid-day count, and stable/preliminary state.
+- Additional localized Sleep copy for empty states, timeline/status labels, sleep-score messaging, regularity messaging, heart-rate messaging, and raw-import metadata in English and German.
+- Targeted regression coverage for the updated sleep scoring engine, nightly analysis persistence, pipeline processing, navigation, settings, and regularity index calculation.
+
+### Changed
+- Updated the Sleep scoring engine to the implemented `sleep-health-score-v1` model using top-level Duration, Continuity, and Regularity components with renormalization when component data is missing.
+- Sleep pipeline analysis now computes nightly regularity history from persisted sessions/stages, carries score completeness and regularity metadata forward, and writes those values into derived nightly analyses.
+- Sleep repositories and day-overview composition now expose persisted score-completeness, regularity, and heart-rate sample data to presentation surfaces.
+- Sleep day/detail presentation was refined to better communicate unavailable data, import/setup actions, score-quality state, regularity maturity, and heart-rate baseline/sample availability.
+- Project documentation was rewritten to be implementation-focused and current-state-first across the README, architecture, data/storage, overview, statistics, and sleep technical references.
+
+### Fixed
+- Fixed release/documentation accuracy by replacing stale or historical descriptions with working-copy-based documentation and clearer boundaries around what is actually implemented.
+- Fixed nightly-analysis persistence gaps so newly computed score completeness and regularity fields round-trip through schema migration, DAO writes, and repository mapping.
+- Fixed score-model consistency by aligning the pipeline, persisted analysis version, and documentation around the same Sleep Health Score V1 behavior.
 ## [0.7.3-alpha.3] - 2026-04-01
 
 This alpha significantly expands the Sleep module from early foundation work into a usable end-to-end feature set for testing. It adds broader Sleep navigation and overview coverage, improves setup and sync flows, strengthens Health Connect ingestion, and fixes key issues in scoring, heart-rate handling, and interruption detection, alongside localization, stability, and test coverage improvements.

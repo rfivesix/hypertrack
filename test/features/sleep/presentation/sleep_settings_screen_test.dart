@@ -88,6 +88,11 @@ void main() {
       ),
     );
     final service = _FakeSleepSettingsService(controller: controller);
+    service.importResult = const SleepSyncResult(
+      success: true,
+      permissionState: SleepPermissionState.ready,
+      importedSessions: 1,
+    );
     await tester.pumpWidget(
       _wrap(
         SettingsScreen(
@@ -143,6 +148,9 @@ void main() {
   testWidgets('tapping import sleep data triggers orchestration', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final controller = SleepPermissionController(
       _StubPermissionService(
         const SleepPermissionOutcome.ready(),
@@ -150,6 +158,11 @@ void main() {
       ),
     );
     final service = _FakeSleepSettingsService(controller: controller);
+    service.importResult = const SleepSyncResult(
+      success: true,
+      permissionState: SleepPermissionState.ready,
+      importedSessions: 1,
+    );
     await tester.pumpWidget(
       _wrap(
         SettingsScreen(
@@ -163,9 +176,11 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Import sleep data now'),
       500,
-      scrollable: find.byType(Scrollable),
+      scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Import sleep data now'));
+    final importTile = find.widgetWithText(ListTile, 'Import sleep data now');
+    await tester.ensureVisible(importTile);
+    await tester.tap(importTile);
     await tester.pumpAndSettle();
     expect(service.importCalls, 1);
   });

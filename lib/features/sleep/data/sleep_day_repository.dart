@@ -25,6 +25,7 @@ class SleepDayOverviewData {
     required this.analysis,
     required this.session,
     required this.timelineSegments,
+    this.heartRateSamples = const <HeartRateSample>[],
     required this.stageDataConfidence,
     required this.totalSleepMinutes,
     required this.sleepHrAvg,
@@ -41,6 +42,7 @@ class SleepDayOverviewData {
   final NightlySleepAnalysis analysis;
   final SleepSession session;
   final List<SleepStageSegment> timelineSegments;
+  final List<HeartRateSample> heartRateSamples;
   final SleepStageConfidence stageDataConfidence;
   final int? totalSleepMinutes;
   final double? sleepHrAvg;
@@ -75,6 +77,8 @@ class SleepDayOverviewData {
 
   bool get hasHeartRateBaseline =>
       baselineSleepHr != null && deltaSleepHr != null;
+
+  bool get hasHeartRateSamples => heartRateSamples.isNotEmpty;
 }
 
 abstract class SleepDayDataRepository {
@@ -161,6 +165,10 @@ class SleepDayRepository implements SleepDayDataRepository {
       restingHeartRateBpm: record.restingHeartRateBpm,
       interruptionsCount: record.interruptionsCount,
       interruptionsWakeMinutes: record.interruptionsWakeMinutes,
+      scoreCompleteness: record.scoreCompleteness,
+      regularitySri: record.regularitySri,
+      regularityValidDays: record.regularityValidDays,
+      regularityStable: record.regularityIsStable,
       sleepQuality: _qualityFromScore(record.score),
       sourcePlatform: record.sourcePlatform,
       sourceAppId: record.sourceAppId,
@@ -216,6 +224,7 @@ class SleepDayRepository implements SleepDayDataRepository {
       analysis: analysis,
       session: session,
       timelineSegments: segments,
+      heartRateSamples: currentHrSamples,
       stageDataConfidence: _timelineConfidence(segments),
       totalSleepMinutes: record.totalSleepMinutes,
       sleepHrAvg: record.restingHeartRateBpm ?? nightlyHr.sleepHrAvg,

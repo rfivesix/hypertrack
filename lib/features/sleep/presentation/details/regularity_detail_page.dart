@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../generated/app_localizations.dart';
 import '../../../../widgets/summary_card.dart';
 import '../../data/sleep_day_repository.dart';
 import 'regularity_chart_math.dart';
@@ -16,11 +17,12 @@ class RegularityDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final nights = overview?.regularityNights ?? const <SleepRegularityNight>[];
     if (nights.isEmpty) {
-      return const SleepDetailUnavailablePage(
-        title: 'Regularity',
-        message: 'Regularity data is unavailable.',
+      return SleepDetailUnavailablePage(
+        title: l10n.sleepMetricRegularityTitle,
+        message: l10n.sleepRegularityUnavailable,
       );
     }
 
@@ -32,20 +34,21 @@ class RegularityDetailPage extends StatelessWidget {
     );
 
     return SleepDetailPageShell(
-      title: 'Regularity',
-      value: '${nights.length}-night range',
-      statusLabel:
-          nights.length >= 7 ? 'Sufficient trend data' : 'Limited trend data',
-      subtitle: 'Bedtime and wake windows for recent nights.',
+      title: l10n.sleepMetricRegularityTitle,
+      value: l10n.sleepRegularityNightRange(nights.length),
+      statusLabel: nights.length >= 7
+          ? l10n.sleepRegularityStatusSufficientTrend
+          : l10n.sleepRegularityStatusLimitedTrend,
+      subtitle: l10n.sleepRegularitySubtitle,
       children: [
         _RegularityChart(nights: nights),
         const SizedBox(height: 12),
         _RegularitySummaryRow(
-          label: 'Average bedtime',
+          label: l10n.sleepRegularityAverageBedtime,
           value: formatBedtimeMinutes(bedtimeAvg),
         ),
         _RegularitySummaryRow(
-          label: 'Average wake',
+          label: l10n.sleepRegularityAverageWake,
           value: formatBedtimeMinutes(wakeAvg),
         ),
       ],
@@ -73,7 +76,8 @@ class _RegularityChart extends StatelessWidget {
     final axisStart = math.min(_defaultAxisStart, minBed).toInt();
     final axisEnd = math.max(_defaultAxisEnd, maxWake).toInt();
     final ticks = _buildTicks(axisStart, axisEnd);
-    final dateFormat = DateFormat('MM/dd');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat.Md(locale);
     return SummaryCard(
       child: SizedBox(
         height: 240,

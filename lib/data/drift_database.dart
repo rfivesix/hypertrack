@@ -388,6 +388,103 @@ class HealthStepSegments extends Table with HybridId, MetaColumns {
   ],
 )
 
+/// The central Drift database class for the application.
+class AppDatabase extends _$AppDatabase {
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
+
+  @override
+  int get schemaVersion => 11;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (Migrator m) async {
+          await m.createAll();
+          await _createSleepPersistenceSchema(this);
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.createTable(favorites);
+            // WICHTIG: Füge die fehlende Spalte hinzu!
+            await m.addColumn(products, products.category);
+          }
+          // Migration V2 -> V3 (Sync-Spalten & RIR)
+          if (from < 3) {
+            // RIR zu SetLogs hinzufügen
+            await m.addColumn(setLogs, setLogs.rir);
+
+            // Favorites Sync-fähig machen (fehlende Spalten adden)
+            // MetaColumns adds: createdAt, updatedAt, deletedAt
+            // Favorites hatte vorher schon barcode und createdAt manuell.
+            // Wir müssen nur updatedAt und deletedAt hinzufügen.
+            await m.addColumn(favorites, favorites.updatedAt);
+            await m.addColumn(favorites, favorites.deletedAt);
+          }
+          if (from < 4) {
+            await m.addColumn(profiles, profiles.birthday);
+          }
+          if (from < 5) {
+            await m.addColumn(profiles, profiles.height);
+            await m.addColumn(profiles, profiles.gender);
+          }
+          if (from < 6) {
+            await m.createTable(dailyGoalsHistory);
+          }
+          if (from < 7) {
+            await m.addColumn(supplements, supplements.isTracked);
+            await m.createTable(supplementSettingsHistory);
+          }
+          if (from < 8) {
+            await customStatement(
+              'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+            );
+            await customStatement(
+              'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
+            );
+            await customStatement('''
+          CREATE TABLE IF NOT EXISTS health_step_segments (
+            local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            id TEXT NOT NULL UNIQUE,
+            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            deleted_at INTEGER NULL,
+            provider TEXT NOT NULL,
+            source_id TEXT NULL,
+            start_at INTEGER NOT NULL,
+            end_at INTEGER NOT NULL,
+            step_count INTEGER NOT NULL,
+            external_key TEXT NOT NULL UNIQUE
+          )
+        ''');
+          }
+          if (from < 9) {
+            await _createSleepPersistenceSchema(this);
+          }
+          if (from >= 9 && from < 10) {
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN interruptions_count INTEGER NULL',
+            );
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN interruptions_wake_minutes INTEGER NULL',
+            );
+          }
+          if (from >= 10 && from < 11) {
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN score_completeness REAL NULL',
+            );
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN regularity_sri REAL NULL',
+            );
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN regularity_valid_days INTEGER NULL',
+            );
+            await customStatement(
+              'ALTER TABLE sleep_nightly_analyses ADD COLUMN regularity_is_stable INTEGER NULL',
+            );
+          }
+        },
+      );
+}
+
 /// Sleep persistence schema foundations.
 ///
 /// This follows a strict three-layer storage architecture:
@@ -489,6 +586,10 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       resting_heart_rate_bpm REAL NULL,
       interruptions_count INTEGER NULL,
       interruptions_wake_minutes INTEGER NULL,
+      score_completeness REAL NULL,
+      regularity_sri REAL NULL,
+      regularity_valid_days INTEGER NULL,
+      regularity_is_stable INTEGER NULL,
       analyzed_at INTEGER NOT NULL,
       created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
       updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
@@ -525,89 +626,6 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
   await db.customStatement(
     'CREATE INDEX IF NOT EXISTS idx_sleep_analyses_session ON sleep_nightly_analyses(session_id)',
   );
-}
-
-/// The central Drift database class for the application.
-class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
-
-  @override
-  int get schemaVersion => 10;
-
-  @override
-  MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (Migrator m) async {
-          await m.createAll();
-          await _createSleepPersistenceSchema(this);
-        },
-        onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 2) {
-            await m.createTable(favorites);
-            // WICHTIG: Füge die fehlende Spalte hinzu!
-            await m.addColumn(products, products.category);
-          }
-          // Migration V2 -> V3 (Sync-Spalten & RIR)
-          if (from < 3) {
-            // RIR zu SetLogs hinzufügen
-            await m.addColumn(setLogs, setLogs.rir);
-
-            // Favorites Sync-fähig machen (fehlende Spalten adden)
-            // MetaColumns adds: createdAt, updatedAt, deletedAt
-            // Favorites hatte vorher schon barcode und createdAt manuell.
-            // Wir müssen nur updatedAt und deletedAt hinzufügen.
-            await m.addColumn(favorites, favorites.updatedAt);
-            await m.addColumn(favorites, favorites.deletedAt);
-          }
-          if (from < 4) {
-            await m.addColumn(profiles, profiles.birthday);
-          }
-          if (from < 5) {
-            await m.addColumn(profiles, profiles.height);
-            await m.addColumn(profiles, profiles.gender);
-          }
-          if (from < 6) {
-            await m.createTable(dailyGoalsHistory);
-          }
-          if (from < 7) {
-            await m.addColumn(supplements, supplements.isTracked);
-            await m.createTable(supplementSettingsHistory);
-          }
-          if (from < 8) {
-            await customStatement(
-              'ALTER TABLE app_settings ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
-            );
-            await customStatement(
-              'ALTER TABLE daily_goals_history ADD COLUMN target_steps INTEGER NOT NULL DEFAULT 8000',
-            );
-            await customStatement('''
-          CREATE TABLE IF NOT EXISTS health_step_segments (
-            local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            id TEXT NOT NULL UNIQUE,
-            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-            updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-            deleted_at INTEGER NULL,
-            provider TEXT NOT NULL,
-            source_id TEXT NULL,
-            start_at INTEGER NOT NULL,
-            end_at INTEGER NOT NULL,
-            step_count INTEGER NOT NULL,
-            external_key TEXT NOT NULL UNIQUE
-          )
-        ''');
-          }
-          if (from < 9) {
-            await _createSleepPersistenceSchema(this);
-          }
-          if (from >= 9 && from < 10) {
-            await customStatement(
-              'ALTER TABLE sleep_nightly_analyses ADD COLUMN interruptions_count INTEGER NULL',
-            );
-            await customStatement(
-              'ALTER TABLE sleep_nightly_analyses ADD COLUMN interruptions_wake_minutes INTEGER NULL',
-            );
-          }
-        },
-      );
 }
 
 LazyDatabase _openConnection() {

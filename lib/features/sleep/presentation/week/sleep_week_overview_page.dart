@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../util/design_constants.dart';
@@ -268,6 +269,7 @@ class _WeekWindowChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
     return Column(
       children: [
         Expanded(
@@ -361,7 +363,7 @@ class _WeekWindowChart extends StatelessWidget {
                 .map(
                   (window) => Expanded(
                     child: Text(
-                      _weekdayShort(window.date.weekday),
+                      _weekdayShort(window.date.weekday, locale),
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
@@ -486,17 +488,10 @@ class _TimeGridPainter extends CustomPainter {
   }
 }
 
-String _weekdayShort(int weekday) {
-  return switch (weekday) {
-    DateTime.monday => 'M',
-    DateTime.tuesday => 'T',
-    DateTime.wednesday => 'W',
-    DateTime.thursday => 'T',
-    DateTime.friday => 'F',
-    DateTime.saturday => 'S',
-    DateTime.sunday => 'S',
-    _ => '-',
-  };
+String _weekdayShort(int weekday, String locale) {
+  final date = DateTime.utc(2020, 1, 6).add(Duration(days: weekday - 1));
+  final symbol = DateFormat.E(locale).format(date);
+  return symbol.isEmpty ? '-' : symbol.substring(0, 1).toUpperCase();
 }
 
 class WeekScoreStrip extends StatelessWidget {

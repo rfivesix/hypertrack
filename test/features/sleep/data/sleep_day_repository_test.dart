@@ -87,6 +87,15 @@ void main() {
     expect(overview.sleepHrAvg, isNotNull);
     expect(overview.baselineSleepHr, isNotNull);
     expect(overview.deltaSleepHr, isNotNull);
+    expect(overview.heartRateSamples, isNotEmpty);
+    expect(overview.heartRateSamples.length, 6);
+    expect(overview.heartRateSamples.first.bpm, closeTo(51, 0.001));
+    expect(
+      overview.heartRateSamples.first.sampledAtUtc.isBefore(
+        overview.heartRateSamples.last.sampledAtUtc,
+      ),
+      isTrue,
+    );
 
     await db.close();
   });

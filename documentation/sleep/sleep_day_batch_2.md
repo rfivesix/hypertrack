@@ -1,5 +1,8 @@
 # Sleep Module Batch 2 — Day Experience Vertical Slice
 
+> Status: Historical batch snapshot.  
+> For current implemented behavior, use [sleep_current_state.md](sleep_current_state.md).
+
 ## What was implemented (refinement pass)
 
 This batch delivers a cohesive Day sleep UX vertical slice:

@@ -1,5 +1,8 @@
 # Sleep Module Final Product-Completion Batch (#182–#187)
 
+> Status: Historical batch snapshot.  
+> For current implemented behavior, use [sleep_current_state.md](sleep_current_state.md).
+
 ## What was implemented
 
 This batch completes the remaining user-facing Sleep module product work for alpha readiness:
