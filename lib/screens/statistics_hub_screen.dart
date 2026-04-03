@@ -166,6 +166,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       selectedDays: selectedDays,
       earliestAvailableDay: earliest,
     );
+    // Keep Steps and Sleep cards on the same effective hub window.
     final daysBack = resolvedRange.effectiveDays ?? selectedDays;
     final hubFuture = _fetchHubAnalytics(
       selectedTimeRangeIndex: _selectedTimeRangeIndex,
@@ -378,8 +379,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       );
     }
 
-    // In Screenshot 4, if period is "Letzte 7 Tage", today steps are displayed.
-    // Otherwise, typically the total steps of the entire period.
+    // In 7-day mode we show today's steps; in longer ranges we show total steps.
     final bool isSevenDays = _selectedTimeRangeIndex == 0;
 
     int currentSteps = 0;

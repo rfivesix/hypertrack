@@ -53,6 +53,7 @@ class SleepNavigation {
         );
       case SleepRouteNames.week:
         final anchor = _readAnchorDate(settings);
+        // Week/month routes currently reuse the scoped day overview container.
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => SleepDayOverviewPage(

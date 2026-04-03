@@ -112,8 +112,7 @@ Implemented controls include:
 
 ## Notes on working-copy state
 
-- This overview follows the current checked-out code, including local (uncommitted) behavior.
-- For Sleep details that may be mid-refactor in local changes, see explicit markers in `documentation/sleep/sleep_current_state.md`.
+- This overview follows the current checked-out source tree.
 
 ## Related docs
 

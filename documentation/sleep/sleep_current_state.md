@@ -6,14 +6,14 @@ This is the canonical technical reference for Sleep as implemented in the **curr
 
 - Source of truth: code under `lib/features/sleep/**` plus integration callers in `lib/screens/*`.
 - This document describes implemented behavior only.
-- Where code appears transitional or mid-refactor, it is labeled explicitly.
+- Ambiguities are labeled explicitly when code signals multiple possible interpretations.
 
 ## What is implemented now
 
 Implemented Sleep capability currently includes:
 
 - Platform permission/status checks for iOS HealthKit and Android Health Connect
-- Manual import flow from Settings (`importRecent`)
+- Manual import flow from Settings (`importRecent` with full-history backfill lookback)
 - Ingestion -> mapping -> persistence pipeline with derived nightly analysis writes
 - Day overview + detail pages
 - Week/month scoped overview content (loaded inside day-page scope switch)
@@ -85,7 +85,7 @@ From `sleep_day_overview_page.dart`:
 Day empty state:
 
 - “Open settings” CTA -> `SettingsScreen`
-- “Import now” CTA -> `SleepDayViewModel.importNow()`
+- “Import now” CTA -> `SleepDayViewModel.importNow()` (uses `importRecent()` default lookback: 30 days)
 
 ### Detail pages
 
@@ -378,7 +378,7 @@ Sleep section currently implements:
 - tracking toggle (`sleep_tracking_enabled`)
 - connection/permission status tile
 - request access action
-- import now action
+- import now action (`importRecent(lookbackDays: 36500)` full-history backfill)
 - raw imports viewer (reads `SleepRawImportRecord` and payload JSON)
 
 ## Known gaps and limitations visible from code
@@ -396,7 +396,6 @@ Sleep section currently implements:
 ### Currently ambiguous from code
 
 - Standalone pages `SleepWeekOverviewPage` and `SleepMonthOverviewPage` exist but app routing currently resolves week/month through `SleepDayOverviewPage` scope mode.
-- Some behavior in sleep detail and day repository paths is influenced by local uncommitted working-copy changes; this document treats those as current truth but not necessarily settled architecture.
 
 ## Debugging pointers for score/HR/interruptions issues
 

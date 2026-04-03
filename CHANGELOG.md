@@ -4,6 +4,61 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.3] - 2026-04-03
+
+This stable release includes all `0.7.3-alpha.*` and `0.7.3-beta.1` changes since `0.7.2`, with Sleep moved from early alpha foundations to a release-ready implementation baseline.
+
+### Added
+- End-to-end Sleep tracking across iOS (HealthKit) and Android (Health Connect), including sessions, stages, and overnight heart-rate ingestion.
+- Sleep Day experience (timeline, score, and key metric tiles) plus detail pages for Duration, Heart rate, Regularity, Depth, and Interruptions.
+- Sleep week/month scoped overview support and broader period navigation behavior.
+- Sleep entry points from Statistics Hub and Settings.
+- Sleep settings controls for tracking toggle, permissions/access flow, import actions, and raw-import visibility.
+- Persisted nightly analysis metadata for score completeness and regularity outputs (SRI, valid-day count, stability).
+- Sleep Health Score V2 (`sleep-health-score-v2`) as canonical score model with updated documentation and regression coverage.
+- Automatic throttled sleep import orchestration (`importRecentIfDue`) for periodic sync checks.
+- Expanded localized Sleep copy across setup, status, empty states, timeline/status labels, and detail messaging.
+
+### Changed
+- Sleep scoring evolved from V1 to V2:
+  - top-level weights now Duration `40%`, Continuity `35%`, Regularity `25%`
+  - stricter duration mapping with stronger short-sleep penalties
+  - continuity remains SE + WASO with internal renormalization
+  - regularity remains SRI with lower top-level compensation weight
+- Sleep pipeline default analysis version set to `sleep-health-score-v2`.
+- Sleep navigation and overview flow refined across day/week/month scopes.
+- Sleep settings and status UX refined to better separate setup/access/data state.
+- Sleep timeline presentation redesigned into staged bar-style rendering with clearer legend/axis behavior.
+- Sleep benchmark bars (duration/heart-rate detail views) updated for better contrast in light/dark mode.
+- Statistics-to-Sleep integration refined while preserving clear feature ownership boundaries.
+- Settings section labels updated to release wording (`Sleep/Schlaf`, `Steps/Schritte`).
+- Project docs rewritten and consolidated around implementation-first “current source of truth” references.
+
+### Fixed
+- Manual `Import sleep data now` now performs full-history backfill import.
+- Automatic/periodic sleep import remains incremental (30-day lookback), preserving prior history while refreshing recent windows.
+- Sleep score pipeline issues that previously left scores missing/uncomputed on live import.
+- Interruption detection and wake-duration gaps in nightly outputs.
+- Sleep heart-rate handling issues affecting import completeness, baseline/delta behavior, and display consistency.
+- Health Connect stage-mapping issues that could misclassify wake-related segments.
+- Nightly analysis persistence and derived-field propagation gaps.
+- Forced recompute cleanup now removes raw/canonical/derived records consistently for the affected window.
+- Diary and Statistics refresh flows now trigger periodic sleep sync checks.
+- Removal of temporary hardcoded sleep debug data from day-overview presentation.
+- Remaining key localization inconsistencies and hardcoded Sleep UI text in primary surfaces.
+- Release-readiness documentation/comment drift (broken links, stale wording, ambiguous notes) aligned to current implementation.
+
+### Tests
+- Added/expanded targeted coverage for:
+  - sleep mapping and persistence DAOs
+  - permissions/adapters and sync service behavior
+  - navigation and settings flows
+  - sleep scoring engine and regularity index
+  - nightly-analysis persistence and pipeline processing
+  - heart-rate baseline chronology
+  - forced recompute behavior
+  - automatic import throttling behavior
+
 ## [0.7.3-beta.1] - 2026-04-03
 
 This release promotes the current Sleep feature set from alpha toward beta by finalizing score behavior, settings labeling, timeline presentation, and import orchestration. Sleep scoring is now stricter for short duration nights (V2), settings labels are language-correct and no longer marked as alpha/batch, and sleep import now supports both all-time manual backfill and recurring incremental sync behavior.

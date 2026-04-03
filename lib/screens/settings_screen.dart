@@ -193,8 +193,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final localeCode = Localizations.localeOf(context).languageCode;
     final isGerman = localeCode.toLowerCase() == 'de';
     final themeService = Provider.of<ThemeService>(context);
-    // profileService wird hier aktuell nicht genutzt, aber stört auch nicht
-    // final profileService = Provider.of<ProfileService>(context);
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -323,13 +321,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (!mounted) return;
                       setState(() => _stepsTrackingEnabled = value);
 
-                      // Issue 2 Fix: When enabling, immediately request permissions & sync
+                      // Kick off permission prompt and first sync when enabling.
                       if (value) {
                         const platform = HealthPlatformSteps();
                         final availability = await platform.getAvailability();
                         if (availability == StepsAvailability.available) {
                           await platform.requestPermissions();
-                          // Trigger first sync in background
+                          // Trigger first sync in background.
                           _stepsSyncService.sync();
                         }
                       }

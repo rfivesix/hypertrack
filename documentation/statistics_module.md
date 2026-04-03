@@ -157,10 +157,6 @@ Those are owned by feature modules/services under:
 - `StatisticsStateContainer` exists but is currently a structural stub (`lib/features/statistics/statistics_state_container.dart`).
 - Sleep integration in Statistics is hub-card-only; no dedicated Sleep analytics drill-down inside `lib/screens/analytics/*`.
 
-### Implemented-in-current-working-copy notes
-
-- Sleep detail behavior referenced by Statistics entry is impacted by local working-copy changes in sleep presentation/repository files; this documentation treats that as current truth for this audit.
-
 ### Currently ambiguous from code
 
 - `StatisticsHubScreen` contains provider display-name branches for `withings`, `garmin`, and `fitbit`, but the active `StepsProviderFilter` enum currently exposes only `all`, `apple`, `google`. This appears transitional and is ambiguous as settled architecture.
