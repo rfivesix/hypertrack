@@ -137,17 +137,47 @@ class HealthExportService {
     final statuses = await _statusStore.readStatuses();
     final platformStatus =
         statuses[platform] ?? HealthExportPlatformStatus.initial(platform);
-    final didBackfillBefore = HealthExportDomain.values.every(
-      (domain) => platformStatus.statusFor(domain).lastSuccessfulExportAtUtc != null,
-    );
-    final payload = await _dataSource.loadPayload(
+    final checkpoints = _domainIncrementalCheckpoints(platformStatus);
+
+    final measurementsPayload = await _dataSource.loadMeasurements(
       options: HealthExportLoadOptions(
-        // Initial manual export: full-history backfill.
-        // Later exports: incremental from last successful domain sync checkpoint.
-        lookbackDays: didBackfillBefore ? lookbackDays : null,
-        updatedSinceUtc:
-            didBackfillBefore ? _incrementalSinceUtc(platformStatus) : null,
+        // Per-domain incremental cutoff:
+        // null checkpoint => full-history backfill only for this domain.
+        lookbackDays: checkpoints[HealthExportDomain.measurements] == null
+            ? null
+            : lookbackDays,
+        updatedSinceUtc: checkpoints[HealthExportDomain.measurements],
       ),
+    );
+    final nutritionPayload = await _dataSource.loadNutrition(
+      options: HealthExportLoadOptions(
+        lookbackDays: checkpoints[HealthExportDomain.nutritionHydration] == null
+            ? null
+            : lookbackDays,
+        updatedSinceUtc: checkpoints[HealthExportDomain.nutritionHydration],
+      ),
+    );
+    final hydrationPayload = await _dataSource.loadHydration(
+      options: HealthExportLoadOptions(
+        lookbackDays: checkpoints[HealthExportDomain.nutritionHydration] == null
+            ? null
+            : lookbackDays,
+        updatedSinceUtc: checkpoints[HealthExportDomain.nutritionHydration],
+      ),
+    );
+    final workoutsPayload = await _dataSource.loadWorkouts(
+      options: HealthExportLoadOptions(
+        lookbackDays: checkpoints[HealthExportDomain.workouts] == null
+            ? null
+            : lookbackDays,
+        updatedSinceUtc: checkpoints[HealthExportDomain.workouts],
+      ),
+    );
+    final payload = HealthExportPayload(
+      measurements: measurementsPayload,
+      nutrition: nutritionPayload,
+      hydration: hydrationPayload,
+      workouts: workoutsPayload,
     );
 
     final domainOutcomes = <HealthExportDomain, _DomainExportOutcome>{};
@@ -194,8 +224,10 @@ class HealthExportService {
             .where((record) => !alreadyExported.contains(record.idempotencyKey))
             .toList(growable: false);
 
-        final nutritionExportedKeys = <String>[];
-        final hydrationExportedKeys = <String>[];
+        var nutritionExportedCount = 0;
+        var hydrationExportedCount = 0;
+        final nutritionChunkExportedKeys = <String>[];
+        final hydrationChunkExportedKeys = <String>[];
         final nutritionFailures = <String>[];
         final hydrationFailures = <String>[];
 
@@ -203,7 +235,8 @@ class HealthExportService {
           for (final record in batch) {
             try {
               await adapter.writeNutrition(record);
-              nutritionExportedKeys.add(record.idempotencyKey);
+              nutritionChunkExportedKeys.add(record.idempotencyKey);
+              nutritionExportedCount += 1;
             } catch (error) {
               nutritionFailures.add('${record.idempotencyKey}: $error');
             }
@@ -212,18 +245,19 @@ class HealthExportService {
             platform: platform,
             domain: HealthExportDomain.nutritionHydration,
             idempotencyKeys: [
-              ...nutritionExportedKeys,
-              ...hydrationExportedKeys,
+              ...nutritionChunkExportedKeys,
+              ...hydrationChunkExportedKeys,
             ],
           );
-          nutritionExportedKeys.clear();
-          hydrationExportedKeys.clear();
+          nutritionChunkExportedKeys.clear();
+          hydrationChunkExportedKeys.clear();
         }
         for (final batch in _chunkRecords(pendingHydration)) {
           for (final record in batch) {
             try {
               await adapter.writeHydration(record);
-              hydrationExportedKeys.add(record.idempotencyKey);
+              hydrationChunkExportedKeys.add(record.idempotencyKey);
+              hydrationExportedCount += 1;
             } catch (error) {
               hydrationFailures.add('${record.idempotencyKey}: $error');
             }
@@ -232,20 +266,20 @@ class HealthExportService {
             platform: platform,
             domain: HealthExportDomain.nutritionHydration,
             idempotencyKeys: [
-              ...nutritionExportedKeys,
-              ...hydrationExportedKeys,
+              ...nutritionChunkExportedKeys,
+              ...hydrationChunkExportedKeys,
             ],
           );
-          nutritionExportedKeys.clear();
-          hydrationExportedKeys.clear();
+          nutritionChunkExportedKeys.clear();
+          hydrationChunkExportedKeys.clear();
         }
 
         if (nutritionFailures.isNotEmpty || hydrationFailures.isNotEmpty) {
           final nutritionSummary = nutritionFailures.isEmpty
-              ? 'nutrition=success(${nutritionExportedKeys.length}/${pendingNutrition.length})'
+              ? 'nutrition=success($nutritionExportedCount/${pendingNutrition.length})'
               : 'nutrition=failed(${pendingNutrition.length - nutritionFailures.length}/${pendingNutrition.length}, first=${nutritionFailures.first})';
           final hydrationSummary = hydrationFailures.isEmpty
-              ? 'hydration=success(${hydrationExportedKeys.length}/${pendingHydration.length})'
+              ? 'hydration=success($hydrationExportedCount/${pendingHydration.length})'
               : 'hydration=failed(${pendingHydration.length - hydrationFailures.length}/${pendingHydration.length}, first=${hydrationFailures.first})';
           throw StateError(
             'Nutrition/Hydration export details: $nutritionSummary; $hydrationSummary',
@@ -334,18 +368,17 @@ class HealthExportService {
     }
   }
 
-  DateTime? _incrementalSinceUtc(HealthExportPlatformStatus status) {
-    DateTime? since;
+  Map<HealthExportDomain, DateTime?> _domainIncrementalCheckpoints(
+    HealthExportPlatformStatus status,
+  ) {
+    // Conservative per-domain checkpointing:
+    // each domain advances independently; a failed/missing domain checkpoint
+    // only triggers full-history reload for that domain, not all domains.
+    final checkpoints = <HealthExportDomain, DateTime?>{};
     for (final domain in HealthExportDomain.values) {
-      final candidate = status.statusFor(domain).lastSuccessfulExportAtUtc;
-      if (candidate == null) {
-        return null;
-      }
-      if (since == null || candidate.isBefore(since)) {
-        since = candidate;
-      }
+      checkpoints[domain] = status.statusFor(domain).lastSuccessfulExportAtUtc;
     }
-    return since;
+    return checkpoints;
   }
 
   List<List<T>> _chunkRecords<T>(List<T> records) {

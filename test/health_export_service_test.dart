@@ -15,6 +15,7 @@ class _FakeAdapter implements HealthExportAdapter {
     this.platform, {
     this.failWorkout = false,
     this.failNutrition = false,
+    this.failHydration = false,
     this.failMeasurementAtWriteCount,
   });
 
@@ -23,6 +24,7 @@ class _FakeAdapter implements HealthExportAdapter {
 
   final bool failWorkout;
   final bool failNutrition;
+  final bool failHydration;
   int? failMeasurementAtWriteCount;
 
   int measurementWrites = 0;
@@ -40,6 +42,9 @@ class _FakeAdapter implements HealthExportAdapter {
   @override
   Future<void> writeHydration(ExportHydrationRecord record) async {
     hydrationWrites += 1;
+    if (failHydration) {
+      throw Exception('hydration failure');
+    }
   }
 
   @override
@@ -326,6 +331,87 @@ void main() {
       expect(grouped.state, HealthExportState.failed);
       expect(grouped.lastError, contains('nutrition=failed'));
       expect(grouped.lastError, contains('hydration=success'));
+      expect(grouped.lastError, contains('1/1'));
+    });
+
+    test('split diagnostics keep truthful counts for opposite failure direction',
+        () async {
+      final adapter = _FakeAdapter(
+        HealthExportPlatform.healthConnect,
+        failHydration: true,
+      );
+      final service = HealthExportService(
+        adapters: [adapter],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+
+      await service.requestPermissions(HealthExportPlatform.healthConnect);
+      final result = await service.exportNow(
+        HealthExportPlatform.healthConnect,
+        lookbackDays: 1,
+      );
+
+      expect(result.success, isFalse);
+      final statuses = await service.getStatuses();
+      final grouped = statuses[HealthExportPlatform.healthConnect]!
+          .statusFor(HealthExportDomain.nutritionHydration);
+      expect(grouped.lastError, contains('nutrition=success(1/1)'));
+      expect(grouped.lastError, contains('hydration=failed(0/1'));
+    });
+
+    test('domain failure no longer forces full-history reload for all domains',
+        () async {
+      final failingWorkouts = _FakeAdapter(
+        HealthExportPlatform.healthConnect,
+        failWorkout: true,
+      );
+      final serviceWithFailure = HealthExportService(
+        adapters: [failingWorkouts],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+
+      await serviceWithFailure.requestPermissions(HealthExportPlatform.healthConnect);
+      final first = await serviceWithFailure.exportNow(
+        HealthExportPlatform.healthConnect,
+      );
+      expect(first.success, isFalse);
+      expect(failingWorkouts.measurementWrites, 1);
+      expect(failingWorkouts.nutritionWrites, 1);
+      expect(failingWorkouts.hydrationWrites, 1);
+
+      final succeeding = _FakeAdapter(HealthExportPlatform.healthConnect);
+      final serviceAfterFailure = HealthExportService(
+        adapters: [succeeding],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+      await serviceAfterFailure.requestPermissions(HealthExportPlatform.healthConnect);
+      final second = await serviceAfterFailure.exportNow(
+        HealthExportPlatform.healthConnect,
+      );
+      expect(second.success, isTrue);
+      expect(
+        succeeding.measurementWrites,
+        0,
+        reason: 'Measurements keep their checkpoint and stay incremental',
+      );
+      expect(
+        succeeding.nutritionWrites,
+        0,
+        reason: 'Nutrition keeps its checkpoint and stays incremental',
+      );
+      expect(
+        succeeding.hydrationWrites,
+        0,
+        reason: 'Hydration keeps its checkpoint and stays incremental',
+      );
+      expect(
+        succeeding.workoutWrites,
+        1,
+        reason: 'Only failed workouts domain backfills/retries',
+      );
     });
 
     test('skips BMI writes for Health Connect measurement export', () async {

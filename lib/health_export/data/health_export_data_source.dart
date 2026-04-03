@@ -59,31 +59,21 @@ class HealthExportDataSource {
     HealthExportLoadOptions options = const HealthExportLoadOptions(),
     int? lookbackDays,
   }) async {
-    final resolvedLookbackDays = lookbackDays ?? options.lookbackDays;
-    final now = DateTime.now();
-    final start = resolvedLookbackDays == null
-        ? DateTime.fromMillisecondsSinceEpoch(0)
-        : now.subtract(Duration(days: resolvedLookbackDays));
-
-    final measurements = await _buildMeasurements(
-      start: start,
-      end: now,
-      updatedSinceUtc: options.updatedSinceUtc,
+    final measurements = await loadMeasurements(
+      options: options,
+      lookbackDays: lookbackDays,
     );
-    final nutrition = await _buildNutrition(
-      start: start,
-      end: now,
-      updatedSinceUtc: options.updatedSinceUtc,
+    final nutrition = await loadNutrition(
+      options: options,
+      lookbackDays: lookbackDays,
     );
-    final hydration = await _buildHydration(
-      start: start,
-      end: now,
-      updatedSinceUtc: options.updatedSinceUtc,
+    final hydration = await loadHydration(
+      options: options,
+      lookbackDays: lookbackDays,
     );
-    final workouts = await _buildWorkouts(
-      start: start,
-      end: now,
-      updatedSinceUtc: options.updatedSinceUtc,
+    final workouts = await loadWorkouts(
+      options: options,
+      lookbackDays: lookbackDays,
     );
 
     return HealthExportPayload(
@@ -92,6 +82,70 @@ class HealthExportDataSource {
       hydration: hydration,
       workouts: workouts,
     );
+  }
+
+  Future<List<ExportMeasurementRecord>> loadMeasurements({
+    HealthExportLoadOptions options = const HealthExportLoadOptions(),
+    int? lookbackDays,
+  }) async {
+    final (start, end) =
+        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    return _buildMeasurements(
+      start: start,
+      end: end,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
+  }
+
+  Future<List<ExportNutritionRecord>> loadNutrition({
+    HealthExportLoadOptions options = const HealthExportLoadOptions(),
+    int? lookbackDays,
+  }) async {
+    final (start, end) =
+        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    return _buildNutrition(
+      start: start,
+      end: end,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
+  }
+
+  Future<List<ExportHydrationRecord>> loadHydration({
+    HealthExportLoadOptions options = const HealthExportLoadOptions(),
+    int? lookbackDays,
+  }) async {
+    final (start, end) =
+        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    return _buildHydration(
+      start: start,
+      end: end,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
+  }
+
+  Future<List<ExportWorkoutRecord>> loadWorkouts({
+    HealthExportLoadOptions options = const HealthExportLoadOptions(),
+    int? lookbackDays,
+  }) async {
+    final (start, end) =
+        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    return _buildWorkouts(
+      start: start,
+      end: end,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
+  }
+
+  (DateTime, DateTime) _resolveWindow({
+    int? lookbackDays,
+    required HealthExportLoadOptions options,
+  }) {
+    final resolvedLookbackDays = lookbackDays ?? options.lookbackDays;
+    final now = DateTime.now();
+    final start = resolvedLookbackDays == null
+        ? DateTime.fromMillisecondsSinceEpoch(0)
+        : now.subtract(Duration(days: resolvedLookbackDays));
+    return (start, now);
   }
 
   Future<List<ExportMeasurementRecord>> _buildMeasurements({
