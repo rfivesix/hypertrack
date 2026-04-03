@@ -3,8 +3,106 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.7.4] - 2026-04-04
 
-## 0.7.4-beta.1 - 2026-04-04
+This release completes the main **sleep module rollout** and adds the first full version of **one-way health platform export**.
+
+### Added
+
+- **Sleep module** integrated across the app
+  - day / week / month sleep views
+  - sleep detail screens
+  - sleep timeline visualization
+  - sleep score overview
+  - sleep statistics integration
+- **Sleep Health Score V2**
+  - duration
+  - continuity
+  - regularity
+  - more conservative and better documented scoring model
+- **Sleep localization pass**
+  - localized sleep UI strings
+  - cleaned up remaining hardcoded sleep text
+- **One-way health export** from Hypertrack to:
+  - **Apple Health (HealthKit)**
+  - **Google Health Connect**
+- Export support for:
+  - **body measurements**
+  - **nutrition aggregates**
+  - **hydration**
+  - **workout sessions**
+- New **Health Export** settings surface with:
+  - platform toggles
+  - permission handling
+  - export status visibility
+  - manual export trigger
+
+### Improved
+
+- **Sleep scoring**
+  - better weighting and calibration toward duration / continuity / regularity
+  - clearer documentation of evidence-based vs heuristic parts
+  - cleaner handling of missing data and score completeness
+- **Sleep pipeline / persistence**
+  - improved nightly analysis flow
+  - explicit scoring versioning
+  - regularity calculation support
+  - more robust persistence and repository integration
+- **Sleep documentation**
+  - canonical sleep current-state documentation
+  - canonical sleep health score documentation
+  - cleaned and consolidated sleep docs
+- **Sleep UX**
+  - better empty states
+  - more consistent detail pages
+  - improved score/state wording
+  - better navigation coverage
+- **Workout export quality**
+  - workout export now includes title plus notes/summary text where supported
+  - improved session-level export payload quality
+- **Health export reliability**
+  - full-history initial export
+  - incremental follow-up export
+  - per-domain checkpoint behavior
+  - retry-safe idempotent export bookkeeping
+  - chunked export handling for larger histories
+- **Timezone handling**
+  - export uses source event offsets where available instead of forcing UTC everywhere
+- **Diagnostics**
+  - clearer export failure summaries
+  - better distinction between app-side write problems and downstream platform display limitations
+
+### Fixed
+
+- Removed the previous effective **30-day export cap** for initial health export flows
+- Fixed multiple **Health Connect write-path issues**, including:
+  - invalid equal start/end intervals
+  - body-fat export handling
+  - nutrition/hydration write stability
+  - quota-related write behavior through safer batching
+- Fixed incremental export behavior so a failed domain does not unnecessarily force all other domains back into broad reload behavior
+- Fixed remaining sleep-module localization gaps
+- Fixed several sleep navigation / presentation rough edges found during beta testing
+
+### Documentation
+
+- Added / updated:
+  - sleep current-state documentation
+  - sleep health score v2 documentation
+  - one-way health export documentation
+  - overview / architecture / storage references
+  - README links and module references
+- Reduced outdated or duplicate sleep documentation in favor of clearer canonical sources
+
+### Notes
+
+- **Sleep export/import scope remains unchanged**: the sleep module is about processing and analytics inside Hypertrack, not external sleep write-back.
+- **Health export is one-way only**. Hypertrack remains the source of truth.
+- **Nutrition export is aggregate-based only**. No ingredient or individual food-item reconstruction is exported.
+- **Workout export is session-level only**. Internal workout structure is not exported as structured native workout data.
+- Some downstream behavior, especially in **Google Fit**, may differ from what is actually stored in **Health Connect**. If a field is written correctly but not surfaced there, that is a downstream display limitation rather than a Hypertrack write failure.
+
+## [0.7.4-beta.1] - 2026-04-04
 
 This beta focuses on **one-way health platform export** and the final stabilization work around that integration.
 
