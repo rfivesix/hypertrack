@@ -393,13 +393,24 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
           await _createSleepPersistenceSchema(this);
+          await customStatement('''
+          CREATE TABLE IF NOT EXISTS health_export_records (
+            local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            id TEXT NOT NULL UNIQUE,
+            platform TEXT NOT NULL,
+            domain TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL,
+            exported_at INTEGER NOT NULL,
+            UNIQUE(platform, domain, idempotency_key)
+          )
+        ''');
         },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
@@ -480,6 +491,19 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'ALTER TABLE sleep_nightly_analyses ADD COLUMN regularity_is_stable INTEGER NULL',
             );
+          }
+          if (from < 12) {
+            await customStatement('''
+          CREATE TABLE IF NOT EXISTS health_export_records (
+            local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            id TEXT NOT NULL UNIQUE,
+            platform TEXT NOT NULL,
+            domain TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL,
+            exported_at INTEGER NOT NULL,
+            UNIQUE(platform, domain, idempotency_key)
+          )
+        ''');
           }
         },
       );

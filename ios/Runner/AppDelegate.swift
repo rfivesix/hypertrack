@@ -7,6 +7,7 @@ import UIKit
   private let healthStore = HKHealthStore()
   private let stepsChannelName = "hypertrack.health/steps"
   private let sleepHealthKitChannelName = "hypertrack.health/sleep_healthkit"
+  private let exportAppleHealthChannelName = "hypertrack.health/export_apple_health"
 
   override func application(
     _ application: UIApplication,
@@ -23,6 +24,13 @@ import UIKit
       )
       sleepChannel.setMethodCallHandler { [weak self] call, result in
         self?.handleSleepHealthKitCall(call: call, result: result)
+      }
+      let exportChannel = FlutterMethodChannel(
+        name: exportAppleHealthChannelName,
+        binaryMessenger: controller.binaryMessenger
+      )
+      exportChannel.setMethodCallHandler { [weak self] call, result in
+        self?.handleExportAppleHealthCall(call: call, result: result)
       }
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -132,6 +140,233 @@ import UIKit
       readSleepAndHeartRate(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func handleExportAppleHealthCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "getAvailability":
+      result(HKHealthStore.isHealthDataAvailable())
+    case "requestPermissions":
+      requestExportPermissions(result: result)
+    case "writeMeasurement":
+      writeMeasurement(call: call, result: result)
+    case "writeNutrition":
+      writeNutrition(call: call, result: result)
+    case "writeHydration":
+      writeHydration(call: call, result: result)
+    case "writeWorkout":
+      writeWorkout(call: call, result: result)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func requestExportPermissions(result: @escaping FlutterResult) {
+    guard HKHealthStore.isHealthDataAvailable() else {
+      result(false)
+      return
+    }
+    guard
+      let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass),
+      let bodyFat = HKObjectType.quantityType(forIdentifier: .bodyFatPercentage),
+      let bmi = HKObjectType.quantityType(forIdentifier: .bodyMassIndex),
+      let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned),
+      let dietaryEnergy = HKObjectType.quantityType(forIdentifier: .dietaryEnergyConsumed),
+      let dietaryProtein = HKObjectType.quantityType(forIdentifier: .dietaryProtein),
+      let dietaryCarbs = HKObjectType.quantityType(forIdentifier: .dietaryCarbohydrates),
+      let dietaryFat = HKObjectType.quantityType(forIdentifier: .dietaryFatTotal),
+      let dietaryFiber = HKObjectType.quantityType(forIdentifier: .dietaryFiber),
+      let dietarySugar = HKObjectType.quantityType(forIdentifier: .dietarySugar),
+      let dietarySodium = HKObjectType.quantityType(forIdentifier: .dietarySodium),
+      let hydration = HKObjectType.quantityType(forIdentifier: .dietaryWater)
+    else {
+      result(false)
+      return
+    }
+    let workout = HKObjectType.workoutType()
+
+    let shareTypes: Set<HKSampleType> = [
+      bodyMass, bodyFat, bmi, activeEnergy, dietaryEnergy, dietaryProtein,
+      dietaryCarbs, dietaryFat, dietaryFiber, dietarySugar, dietarySodium,
+      hydration, workout,
+    ]
+
+    healthStore.requestAuthorization(toShare: shareTypes, read: nil) { success, _ in
+      result(success)
+    }
+  }
+
+  private func writeMeasurement(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let timestampIso = args["timestampUtcIso"] as? String,
+          let typeRaw = args["type"] as? String,
+          let rawValue = args["value"] as? NSNumber else {
+      result(FlutterError(code: "invalid_args", message: "Invalid measurement payload", details: nil))
+      return
+    }
+    let value = rawValue.doubleValue
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let timestamp = formatter.date(from: timestampIso) else {
+      result(FlutterError(code: "invalid_args", message: "Invalid timestamp", details: nil))
+      return
+    }
+
+    let quantityType: HKQuantityType?
+    let unit: HKUnit
+    switch typeRaw {
+    case "weight":
+      quantityType = HKObjectType.quantityType(forIdentifier: .bodyMass)
+      unit = HKUnit.gramUnit(with: .kilo)
+    case "bodyFatPercentage":
+      quantityType = HKObjectType.quantityType(forIdentifier: .bodyFatPercentage)
+      unit = HKUnit.percent()
+    case "bmi":
+      quantityType = HKObjectType.quantityType(forIdentifier: .bodyMassIndex)
+      unit = HKUnit.count()
+    default:
+      result(FlutterError(code: "invalid_args", message: "Unsupported measurement type", details: nil))
+      return
+    }
+
+    guard let resolvedType = quantityType else {
+      result(FlutterError(code: "not_available", message: "Measurement type unavailable", details: nil))
+      return
+    }
+
+    let adjustedValue = typeRaw == "bodyFatPercentage" ? value / 100.0 : value
+    let quantity = HKQuantity(unit: unit, doubleValue: adjustedValue)
+    let sample = HKQuantitySample(type: resolvedType, quantity: quantity, start: timestamp, end: timestamp)
+    healthStore.save(sample) { success, error in
+      if let error = error {
+        result(FlutterError(code: "write_failed", message: error.localizedDescription, details: nil))
+        return
+      }
+      result(success)
+    }
+  }
+
+  private func writeNutrition(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let timestampIso = args["timestampUtcIso"] as? String else {
+      result(FlutterError(code: "invalid_args", message: "Invalid nutrition payload", details: nil))
+      return
+    }
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let timestamp = formatter.date(from: timestampIso) else {
+      result(FlutterError(code: "invalid_args", message: "Invalid timestamp", details: nil))
+      return
+    }
+
+    var samples: [HKQuantitySample] = []
+    func value(_ key: String) -> Double? {
+      return (args[key] as? NSNumber)?.doubleValue
+    }
+    func appendSample(_ identifier: HKQuantityTypeIdentifier, _ value: Double?, _ unit: HKUnit) {
+      guard let value = value, let type = HKObjectType.quantityType(forIdentifier: identifier) else { return }
+      let quantity = HKQuantity(unit: unit, doubleValue: value)
+      samples.append(HKQuantitySample(type: type, quantity: quantity, start: timestamp, end: timestamp))
+    }
+
+    appendSample(.dietaryEnergyConsumed, value("caloriesKcal"), HKUnit.kilocalorie())
+    appendSample(.dietaryProtein, value("proteinGrams"), HKUnit.gram())
+    appendSample(.dietaryCarbohydrates, value("carbsGrams"), HKUnit.gram())
+    appendSample(.dietaryFatTotal, value("fatGrams"), HKUnit.gram())
+    appendSample(.dietaryFiber, value("fiberGrams"), HKUnit.gram())
+    appendSample(.dietarySugar, value("sugarGrams"), HKUnit.gram())
+    appendSample(.dietarySodium, value("sodiumGrams"), HKUnit.gram())
+
+    if samples.isEmpty {
+      result(true)
+      return
+    }
+
+    healthStore.save(samples) { success, error in
+      if let error = error {
+        result(FlutterError(code: "write_failed", message: error.localizedDescription, details: nil))
+        return
+      }
+      result(success)
+    }
+  }
+
+  private func writeHydration(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let timestampIso = args["timestampUtcIso"] as? String,
+          let litersRaw = args["volumeLiters"] as? NSNumber,
+          let type = HKObjectType.quantityType(forIdentifier: .dietaryWater) else {
+      result(FlutterError(code: "invalid_args", message: "Invalid hydration payload", details: nil))
+      return
+    }
+    let liters = litersRaw.doubleValue
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let timestamp = formatter.date(from: timestampIso) else {
+      result(FlutterError(code: "invalid_args", message: "Invalid timestamp", details: nil))
+      return
+    }
+
+    let quantity = HKQuantity(unit: HKUnit.liter(), doubleValue: liters)
+    let sample = HKQuantitySample(type: type, quantity: quantity, start: timestamp, end: timestamp)
+    healthStore.save(sample) { success, error in
+      if let error = error {
+        result(FlutterError(code: "write_failed", message: error.localizedDescription, details: nil))
+        return
+      }
+      result(success)
+    }
+  }
+
+  private func writeWorkout(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let args = call.arguments as? [String: Any],
+          let startIso = args["startUtcIso"] as? String,
+          let endIso = args["endUtcIso"] as? String else {
+      result(FlutterError(code: "invalid_args", message: "Invalid workout payload", details: nil))
+      return
+    }
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let start = formatter.date(from: startIso), let end = formatter.date(from: endIso) else {
+      result(FlutterError(code: "invalid_args", message: "Invalid workout time range", details: nil))
+      return
+    }
+
+    let typeRaw = (args["workoutType"] as? String) ?? "strength"
+    let workoutType: HKWorkoutActivityType
+    switch typeRaw {
+    case "running":
+      workoutType = .running
+    case "walking":
+      workoutType = .walking
+    case "cycling":
+      workoutType = .cycling
+    case "yoga":
+      workoutType = .yoga
+    default:
+      workoutType = .traditionalStrengthTraining
+    }
+
+    let calories = (args["caloriesBurnedKcal"] as? NSNumber).map {
+      HKQuantity(unit: HKUnit.kilocalorie(), doubleValue: $0.doubleValue)
+    }
+    let duration = end.timeIntervalSince(start)
+    let workout = HKWorkout(
+      activityType: workoutType,
+      start: start,
+      end: end,
+      duration: duration,
+      totalEnergyBurned: calories,
+      totalDistance: nil,
+      metadata: nil
+    )
+    healthStore.save(workout) { success, error in
+      if let error = error {
+        result(FlutterError(code: "write_failed", message: error.localizedDescription, details: nil))
+        return
+      }
+      result(success)
     }
   }
 

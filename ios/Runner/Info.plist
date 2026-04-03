@@ -32,6 +32,8 @@
 	<string>Hypertrack benötigt Zugriff auf das Mikrofon für die Spracheingabe bei der KI-Mahlzeitenerkennung.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Hypertrack benötigt Lesezugriff auf Schrittzahlen aus Apple Health, um deine täglichen Schritte im Tagebuch anzuzeigen.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Hypertrack benötigt Schreibzugriff auf Apple Health, um Messwerte, Ernährung, Flüssigkeit und Workouts einseitig zu exportieren.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Diese App benötigt Zugriff auf deine Galerie, damit du ein Profilbild auswählen kannst.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

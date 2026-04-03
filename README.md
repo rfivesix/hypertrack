@@ -15,6 +15,7 @@ This README is intentionally implementation-focused and reflects the **current w
 - [Data Models & Storage](documentation/data_models_and_storage.md)
 - [UI & Widgets](documentation/ui_and_widgets.md)
 - [Health Steps Module (Current Implementation)](documentation/health_steps_alpha.md)
+- [One-way Health Export (Current Implementation)](documentation/health_export_one_way.md)
 - [Shared Analytics Definitions (Legacy Reference)](documentation/analytics_definitions.md)
 
 ## Current app shell (implemented)

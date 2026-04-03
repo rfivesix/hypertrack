@@ -109,6 +109,7 @@ Implemented controls include:
 
 - Steps: tracking toggle, provider filter, source policy
 - Sleep: tracking toggle, permission status, request access, import now, raw import viewer
+- Health export: one-way platform export toggles (Apple Health / Health Connect), permission flow, per-domain status summary, and manual export trigger
 
 ## Notes on working-copy state
 
@@ -118,5 +119,6 @@ Implemented controls include:
 
 - [Statistics module](statistics_module.md)
 - [Sleep current state](sleep/sleep_current_state.md)
+- [Health export one-way](health_export_one_way.md)
 - [Architecture](architecture.md)
 - [Data models and storage](data_models_and_storage.md)

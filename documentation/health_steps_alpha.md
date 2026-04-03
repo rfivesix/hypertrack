@@ -36,6 +36,5 @@ Primary files:
 
 ## Current limitations
 
-- Steps is integrated as read-only import/aggregation (no write-back to platform health stores).
+- Steps remains integrated as read-only import/aggregation; outbound export is implemented separately in the one-way health export module (`documentation/health_export_one_way.md`) and does not alter steps import behavior.
 - Background scheduler integration is not implemented; sync is foreground-triggered by app flows (Diary/repository refresh).
-

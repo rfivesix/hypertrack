@@ -81,6 +81,7 @@ class DatabaseHelper {
       await dbInstance.delete(dbInstance.dailyGoalsHistory).go();
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
       await dbInstance.customStatement('DELETE FROM health_step_segments');
+      await dbInstance.customStatement('DELETE FROM health_export_records');
 
       // 2. Child tables (Logs) first
       await dbInstance.delete(dbInstance.supplementLogs).go();
@@ -1716,6 +1717,61 @@ class DatabaseHelper {
             'totalSteps': row.read<int?>('total_steps') ?? 0,
           },
         )
+        .toList(growable: false);
+  }
+
+  Future<void> markHealthExported({
+    required String platform,
+    required String domain,
+    required List<String> idempotencyKeys,
+  }) async {
+    if (idempotencyKeys.isEmpty) return;
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final key in idempotencyKeys) {
+        batch.customStatement(
+          '''
+          INSERT INTO health_export_records
+          (id, platform, domain, idempotency_key, exported_at)
+          VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)
+          ON CONFLICT(platform, domain, idempotency_key) DO UPDATE SET
+            exported_at = excluded.exported_at
+          ''',
+          [
+            platform,
+            domain,
+            key,
+            DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000,
+          ],
+        );
+      }
+    });
+  }
+
+  Future<List<String>> getExportedHealthKeys({
+    required String platform,
+    required String domain,
+    required List<String> idempotencyKeys,
+  }) async {
+    if (idempotencyKeys.isEmpty) return const <String>[];
+    final dbInstance = await database;
+    final placeholders = List.filled(idempotencyKeys.length, '?').join(',');
+    final rows = await dbInstance.customSelect(
+      '''
+      SELECT idempotency_key
+      FROM health_export_records
+      WHERE platform = ?
+        AND domain = ?
+        AND idempotency_key IN ($placeholders)
+      ''',
+      variables: [
+        drift.Variable.withString(platform),
+        drift.Variable.withString(domain),
+        for (final key in idempotencyKeys) drift.Variable.withString(key),
+      ],
+    ).get();
+    return rows
+        .map((row) => row.read<String>('idempotency_key'))
         .toList(growable: false);
   }
 

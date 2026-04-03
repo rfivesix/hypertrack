@@ -11,10 +11,19 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.HydrationRecord
+import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
+import androidx.health.connect.client.units.Energy
+import androidx.health.connect.client.units.Mass
+import androidx.health.connect.client.units.Percentage
+import androidx.health.connect.client.units.Volume
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -24,10 +33,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
+import java.time.ZoneOffset
 
 class MainActivity : FlutterFragmentActivity() {
     private val healthChannelName = "hypertrack.health/steps"
     private val sleepHealthConnectChannelName = "hypertrack.health/sleep_health_connect"
+    private val exportHealthConnectChannelName = "hypertrack.health/export_health_connect"
     private val storageChannelName = "hypertrack.storage/saf"
     private var pendingPermissionResult: MethodChannel.Result? = null
     private var pendingPermissionRequestSet: Set<String>? = null
@@ -38,6 +49,13 @@ class MainActivity : FlutterFragmentActivity() {
     private val requiredSleepPermissions = setOf(
         HealthPermission.getReadPermission(SleepSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
+    )
+    private val requiredExportPermissions = setOf(
+        HealthPermission.getWritePermission(WeightRecord::class),
+        HealthPermission.getWritePermission(BodyFatRecord::class),
+        HealthPermission.getWritePermission(NutritionRecord::class),
+        HealthPermission.getWritePermission(HydrationRecord::class),
+        HealthPermission.getWritePermission(ExerciseSessionRecord::class),
     )
 
     private val permissionLauncher = registerForActivityResult(
@@ -102,6 +120,20 @@ class MainActivity : FlutterFragmentActivity() {
                 "checkPermissions" -> handleSleepCheckPermissions(result)
                 "requestPermissions" -> handleSleepRequestPermissions(result)
                 "readSleepAndHeartRate" -> handleReadSleepAndHeartRate(call, result)
+                else -> result.notImplemented()
+            }
+        }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            exportHealthConnectChannelName,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getAvailability" -> handleSleepAvailability(result)
+                "requestPermissions" -> handleExportRequestPermissions(result)
+                "writeMeasurement" -> handleWriteMeasurement(call, result)
+                "writeNutrition" -> handleWriteNutrition(call, result)
+                "writeHydration" -> handleWriteHydration(call, result)
+                "writeWorkout" -> handleWriteWorkout(call, result)
                 else -> result.notImplemented()
             }
         }
@@ -243,6 +275,45 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    private fun handleExportRequestPermissions(result: MethodChannel.Result) {
+        val status = HealthConnectClient.getSdkStatus(this)
+        if (status != HealthConnectClient.SDK_AVAILABLE) {
+            result.error("not_available", "Health Connect not available", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            val granted = HealthConnectClient.getOrCreate(this@MainActivity)
+                .permissionController
+                .getGrantedPermissions()
+            if (granted.containsAll(requiredExportPermissions)) {
+                withContext(Dispatchers.Main) { result.success(true) }
+                return@launch
+            }
+            withContext(Dispatchers.Main) {
+                pendingPermissionResult = object : MethodChannel.Result {
+                    override fun success(res: Any?) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val current = HealthConnectClient.getOrCreate(this@MainActivity)
+                                .permissionController
+                                .getGrantedPermissions()
+                            withContext(Dispatchers.Main) {
+                                result.success(current.containsAll(requiredExportPermissions))
+                            }
+                        }
+                    }
+                    override fun error(code: String, message: String?, details: Any?) {
+                        result.error(code, message, details)
+                    }
+                    override fun notImplemented() {
+                        result.notImplemented()
+                    }
+                }
+                pendingPermissionRequestSet = requiredExportPermissions
+                permissionLauncher.launch(requiredExportPermissions)
+            }
+        }
+    }
+
     private fun handleReadSleepAndHeartRate(call: MethodCall, result: MethodChannel.Result) {
         val status = HealthConnectClient.getSdkStatus(this)
         if (status != HealthConnectClient.SDK_AVAILABLE) {
@@ -362,6 +433,155 @@ class MainActivity : FlutterFragmentActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     result.error("query_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleWriteMeasurement(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
+        val timestampIso = args["timestampUtcIso"] as? String
+        val typeRaw = args["type"] as? String
+        val value = (args["value"] as? Number)?.toDouble()
+        if (timestampIso == null || typeRaw == null || value == null) {
+            result.error("invalid_args", "Invalid measurement payload", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                val at = Instant.parse(timestampIso)
+                val record = when (typeRaw) {
+                    "weight" -> WeightRecord(
+                        time = at,
+                        zoneOffset = ZoneOffset.UTC,
+                        weight = Mass.kilograms(value),
+                    )
+                    "bodyFatPercentage" -> BodyFatRecord(
+                        time = at,
+                        zoneOffset = ZoneOffset.UTC,
+                        percentage = Percentage(value),
+                    )
+                    "bmi" -> null
+                    else -> null
+                }
+                if (typeRaw == "bmi") {
+                    withContext(Dispatchers.Main) { result.success(true) }
+                    return@launch
+                }
+                if (record == null) {
+                    withContext(Dispatchers.Main) {
+                        result.error("invalid_args", "Unsupported measurement type", null)
+                    }
+                    return@launch
+                }
+                client.insertRecords(listOf(record))
+                withContext(Dispatchers.Main) { result.success(true) }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleWriteNutrition(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
+        val timestampIso = args["timestampUtcIso"] as? String
+        if (timestampIso == null) {
+            result.error("invalid_args", "Invalid nutrition payload", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                val at = Instant.parse(timestampIso)
+                val record = NutritionRecord(
+                    startTime = at,
+                    startZoneOffset = ZoneOffset.UTC,
+                    endTime = at,
+                    endZoneOffset = ZoneOffset.UTC,
+                    energy = (args["caloriesKcal"] as? Number)?.toDouble()?.let(Energy::kilocalories),
+                    protein = (args["proteinGrams"] as? Number)?.toDouble()?.let(Mass::grams),
+                    totalCarbohydrate = (args["carbsGrams"] as? Number)?.toDouble()?.let(Mass::grams),
+                    totalFat = (args["fatGrams"] as? Number)?.toDouble()?.let(Mass::grams),
+                    dietaryFiber = (args["fiberGrams"] as? Number)?.toDouble()?.let(Mass::grams),
+                    sugar = (args["sugarGrams"] as? Number)?.toDouble()?.let(Mass::grams),
+                    sodium = (args["sodiumGrams"] as? Number)?.toDouble()?.let(Mass::grams),
+                )
+                client.insertRecords(listOf(record))
+                withContext(Dispatchers.Main) { result.success(true) }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleWriteHydration(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
+        val timestampIso = args["timestampUtcIso"] as? String
+        val liters = (args["volumeLiters"] as? Number)?.toDouble()
+        if (timestampIso == null || liters == null) {
+            result.error("invalid_args", "Invalid hydration payload", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                val at = Instant.parse(timestampIso)
+                val record = HydrationRecord(
+                    startTime = at,
+                    startZoneOffset = ZoneOffset.UTC,
+                    endTime = at,
+                    endZoneOffset = ZoneOffset.UTC,
+                    volume = Volume.liters(liters),
+                )
+                client.insertRecords(listOf(record))
+                withContext(Dispatchers.Main) { result.success(true) }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleWriteWorkout(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
+        val startIso = args["startUtcIso"] as? String
+        val endIso = args["endUtcIso"] as? String
+        if (startIso == null || endIso == null) {
+            result.error("invalid_args", "Invalid workout payload", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                val start = Instant.parse(startIso)
+                val end = Instant.parse(endIso)
+                val typeRaw = (args["workoutType"] as? String) ?: "strength"
+                val exerciseType = when (typeRaw) {
+                    "running" -> ExerciseSessionRecord.EXERCISE_TYPE_RUNNING
+                    "walking" -> ExerciseSessionRecord.EXERCISE_TYPE_WALKING
+                    "cycling" -> ExerciseSessionRecord.EXERCISE_TYPE_BIKING
+                    "yoga" -> ExerciseSessionRecord.EXERCISE_TYPE_YOGA
+                    else -> ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING
+                }
+                val record = ExerciseSessionRecord(
+                    startTime = start,
+                    startZoneOffset = ZoneOffset.UTC,
+                    endTime = end,
+                    endZoneOffset = ZoneOffset.UTC,
+                    exerciseType = exerciseType,
+                    title = args["title"] as? String,
+                )
+                client.insertRecords(listOf(record))
+                withContext(Dispatchers.Main) { result.success(true) }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
                 }
             }
         }
