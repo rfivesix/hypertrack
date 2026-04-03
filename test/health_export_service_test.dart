@@ -31,6 +31,10 @@ class _FakeAdapter implements HealthExportAdapter {
   int nutritionWrites = 0;
   int hydrationWrites = 0;
   int workoutWrites = 0;
+  int measurementBatchWrites = 0;
+  int nutritionBatchWrites = 0;
+  int hydrationBatchWrites = 0;
+  int workoutBatchWrites = 0;
 
   @override
   Future<HealthExportAvailability> getAvailability() async =>
@@ -69,6 +73,38 @@ class _FakeAdapter implements HealthExportAdapter {
     workoutWrites += 1;
     if (failWorkout) {
       throw Exception('workout failure');
+    }
+  }
+
+  @override
+  Future<void> writeMeasurementsBatch(List<ExportMeasurementRecord> records) async {
+    measurementBatchWrites += 1;
+    for (final record in records) {
+      await writeMeasurement(record);
+    }
+  }
+
+  @override
+  Future<void> writeNutritionBatch(List<ExportNutritionRecord> records) async {
+    nutritionBatchWrites += 1;
+    for (final record in records) {
+      await writeNutrition(record);
+    }
+  }
+
+  @override
+  Future<void> writeHydrationBatch(List<ExportHydrationRecord> records) async {
+    hydrationBatchWrites += 1;
+    for (final record in records) {
+      await writeHydration(record);
+    }
+  }
+
+  @override
+  Future<void> writeWorkoutsBatch(List<ExportWorkoutRecord> records) async {
+    workoutBatchWrites += 1;
+    for (final record in records) {
+      await writeWorkout(record);
     }
   }
 }
@@ -226,6 +262,7 @@ void main() {
       final second = await service.exportNow(HealthExportPlatform.appleHealth);
       expect(second.success, isTrue);
       expect(adapter.measurementWrites, firstMeasurementWrites + 1);
+      expect(adapter.measurementBatchWrites, greaterThan(0));
     });
 
     test('chunked export marks progress and retry resumes after 1000 writes',
@@ -262,6 +299,12 @@ void main() {
       final second = await service.exportNow(HealthExportPlatform.appleHealth);
       expect(second.success, isTrue);
       expect(adapter.measurementWrites, 1502);
+      expect(
+        adapter.measurementBatchWrites,
+        4,
+        reason:
+            'Two export attempts across >1000 records should split into chunked batch calls',
+      );
     });
 
     test('marks failed domain while keeping others successful', () async {
