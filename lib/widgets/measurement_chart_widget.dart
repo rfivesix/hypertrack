@@ -1,31 +1,81 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../data/database_helper.dart';
-import '../models/chart_data_point.dart';
-import 'package:intl/intl.dart';
-import '../generated/app_localizations.dart';
-import '../util/design_constants.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+import '../data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../models/chart_data_point.dart';
+import '../util/design_constants.dart';
+
+enum MeasurementChartAxisMode { day, time }
 
 /// A widget for visualizing body measurement data in a line chart.
 ///
 /// Fetches and displays historical data for a specific [chartType] and [dateRange].
 class MeasurementChartWidget extends StatefulWidget {
-  /// The type of measurement (e.g., 'weight', 'fat_percent').
-  final String chartType;
-
-  /// The time period to display in the chart.
-  final DateTimeRange dateRange;
-
-  /// The unit of measurement for axis labeling.
-  final String unit;
-
   const MeasurementChartWidget({
     super.key,
     required this.chartType,
     required this.dateRange,
     required this.unit,
-  });
+    this.emptyStateLabel,
+    this.referenceLineValue,
+    this.valueFractionDigits = 1,
+    this.valueLabelBuilder,
+    this.selectedDateLabelBuilder,
+    this.axisLabelBuilder,
+  })  : dataPoints = null,
+        axisMode = MeasurementChartAxisMode.day;
+
+  const MeasurementChartWidget.fromData({
+    super.key,
+    required this.dataPoints,
+    required this.unit,
+    this.axisMode = MeasurementChartAxisMode.time,
+    this.emptyStateLabel,
+    this.referenceLineValue,
+    this.valueFractionDigits = 1,
+    this.valueLabelBuilder,
+    this.selectedDateLabelBuilder,
+    this.axisLabelBuilder,
+  })  : chartType = null,
+        dateRange = null;
+
+  /// The type of measurement (e.g., 'weight', 'fat_percent').
+  final String? chartType;
+
+  /// The time period to display in the chart.
+  final DateTimeRange? dateRange;
+
+  /// Optional direct datapoints to render without querying the measurement DB.
+  final List<ChartDataPoint>? dataPoints;
+
+  /// Horizontal axis mode for label and x-value projection.
+  final MeasurementChartAxisMode axisMode;
+
+  /// The unit of measurement for axis labeling.
+  final String unit;
+
+  /// Optional empty state label override.
+  final String? emptyStateLabel;
+
+  /// Optional horizontal reference line value.
+  final double? referenceLineValue;
+
+  /// Digits used by default value formatting.
+  final int valueFractionDigits;
+
+  /// Optional display value builder for the selected point.
+  final String Function(double value, String unit)? valueLabelBuilder;
+
+  /// Optional selected point date label formatter.
+  final String Function(DateTime value)? selectedDateLabelBuilder;
+
+  /// Optional bottom axis label formatter.
+  final String Function(DateTime value, int spanUnits)? axisLabelBuilder;
+
+  bool get usesExternalData => dataPoints != null;
 
   @override
   State<MeasurementChartWidget> createState() => _MeasurementChartWidgetState();
@@ -39,37 +89,82 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
   @override
   void initState() {
     super.initState();
-    _loadChartData();
+    if (widget.usesExternalData) {
+      _applyExternalData(notify: false);
+    } else {
+      _loadChartData();
+    }
   }
 
   @override
   void didUpdateWidget(covariant MeasurementChartWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.usesExternalData) {
+      if (oldWidget.dataPoints != widget.dataPoints ||
+          oldWidget.axisMode != widget.axisMode ||
+          oldWidget.valueFractionDigits != widget.valueFractionDigits ||
+          oldWidget.referenceLineValue != widget.referenceLineValue) {
+        _applyExternalData();
+      }
+      return;
+    }
     if (oldWidget.chartType != widget.chartType ||
-        oldWidget.dateRange != widget.dateRange) {
+        oldWidget.dateRange != widget.dateRange ||
+        oldWidget.axisMode != widget.axisMode) {
       _loadChartData();
     }
   }
 
+  void _applyExternalData({bool notify = true}) {
+    final sorted = List<ChartDataPoint>.from(widget.dataPoints ?? const [])
+      ..sort((a, b) => a.date.compareTo(b.date));
+    if (!notify) {
+      _dataPoints = sorted;
+      _isLoadingChart = false;
+      _touchedIndex = null;
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _dataPoints = sorted;
+      _isLoadingChart = false;
+      _touchedIndex = null;
+    });
+  }
+
   Future<void> _loadChartData() async {
+    final chartType = widget.chartType;
+    final dateRange = widget.dateRange;
+    if (chartType == null || dateRange == null) {
+      if (!mounted) return;
+      setState(() {
+        _dataPoints = const <ChartDataPoint>[];
+        _isLoadingChart = false;
+        _touchedIndex = null;
+      });
+      return;
+    }
+
     setState(() {
       _isLoadingChart = true;
       _touchedIndex = null;
     });
     final data = await DatabaseHelper.instance.getChartDataForTypeAndRange(
-      widget.chartType,
-      widget.dateRange,
+      chartType,
+      dateRange,
     );
     if (mounted) {
+      final sorted = List<ChartDataPoint>.from(data)
+        ..sort((a, b) => a.date.compareTo(b.date));
       setState(() {
-        _dataPoints = data;
+        _dataPoints = sorted;
         _isLoadingChart = false;
       });
     }
   }
 
   void _setTouchedIndexWithHaptics(int? newIndex) {
-    if (newIndex == _touchedIndex) return; // nur bei echter Änderung vibrieren
+    if (newIndex == _touchedIndex) return;
     _touchedIndex = newIndex;
     if (newIndex != null) {
       HapticFeedback.mediumImpact();
@@ -79,7 +174,6 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
 
   void _handleTouchCallback(FlTouchEvent event, LineTouchResponse? response) {
     if (event is FlPanEndEvent || event is FlTapUpEvent) {
-      // Finger losgelassen: Auswahl zurücksetzen (ohne Haptik)
       _touchedIndex = null;
       if (mounted) setState(() {});
       return;
@@ -87,7 +181,6 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
 
     final spots = response?.lineBarSpots;
     if (spots != null && spots.isNotEmpty) {
-      // Index des aktuell getroffenen Punktes
       final idx = spots.first.spotIndex;
       _setTouchedIndexWithHaptics(idx);
     }
@@ -106,11 +199,12 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
     if (_dataPoints.isEmpty) {
       return SizedBox(
         height: 250,
-        child: Center(child: Text(l10n.chart_no_data_for_period)),
+        child: Center(
+          child: Text(widget.emptyStateLabel ?? l10n.chart_no_data_for_period),
+        ),
       );
     }
 
-    // Punkt zur Anzeige (entweder getouched oder letzter)
     final int lastIdx = _dataPoints.length - 1;
     final int shownIdx = (_touchedIndex != null &&
             _touchedIndex! >= 0 &&
@@ -118,45 +212,60 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         ? _touchedIndex!
         : lastIdx;
 
-    // 2) Anzeigezeile oben (unverändert)
     final ChartDataPoint displayPoint = _dataPoints[shownIdx];
-    final String displayValue =
-        '${displayPoint.value.toStringAsFixed(1)} ${widget.unit}';
-    final String displayDate = DateFormat.yMMMd().format(displayPoint.date);
+    final String displayValue = widget.valueLabelBuilder?.call(
+          displayPoint.value,
+          widget.unit,
+        ) ??
+        '${displayPoint.value.toStringAsFixed(widget.valueFractionDigits)} ${widget.unit}';
+    final String displayDate = widget.selectedDateLabelBuilder?.call(
+          displayPoint.date,
+        ) ??
+        _defaultSelectedDateLabel(context, displayPoint.date);
 
-    // 1) Basisdaten: auf Tagesgrenzen normalisieren und SPAN berechnen
-    final DateTime firstDate = DateTime(
-      _dataPoints.first.date.year,
-      _dataPoints.first.date.month,
-      _dataPoints.first.date.day,
-    );
-    final DateTime lastDate = DateTime(
-      _dataPoints.last.date.year,
-      _dataPoints.last.date.month,
-      _dataPoints.last.date.day,
-    );
+    final DateTime firstDate = widget.axisMode == MeasurementChartAxisMode.day
+        ? _atStartOfDay(_dataPoints.first.date)
+        : _dataPoints.first.date;
+    final DateTime lastDate = widget.axisMode == MeasurementChartAxisMode.day
+        ? _atStartOfDay(_dataPoints.last.date)
+        : _dataPoints.last.date;
 
-    final int spanDays = lastDate.difference(firstDate).inDays;
-    final double lastX = spanDays.toDouble();
+    final int spanUnits = widget.axisMode == MeasurementChartAxisMode.day
+        ? lastDate.difference(firstDate).inDays
+        : lastDate.difference(firstDate).inMinutes;
+    final double lastX = spanUnits.toDouble();
+    final int labelEvery = _labelInterval(spanUnits, widget.axisMode);
 
-    // ~6 Labels anpeilen (mind. 1)
-    const int desiredLabels = 6;
-    final int labelEvery = (spanDays / desiredLabels).ceil().clamp(1, 100000);
-
-    // Kompaktes Datumsformat abhängig von der Spannweite
-    String labelFor(DateTime d) {
-      if (spanDays > 365 * 2) return DateFormat('yyyy').format(d);
-      if (spanDays > 365) return DateFormat('MMM yyyy').format(d);
-      if (spanDays > 31) return DateFormat('MMM d').format(d);
-      return DateFormat.MMMd().format(d);
+    double xForPoint(ChartDataPoint point) {
+      if (widget.axisMode == MeasurementChartAxisMode.day) {
+        return _atStartOfDay(point.date)
+            .difference(firstDate)
+            .inDays
+            .toDouble();
+      }
+      return point.date.difference(firstDate).inMinutes.toDouble();
     }
+
+    DateTime dateAtAxisValue(int value) {
+      if (widget.axisMode == MeasurementChartAxisMode.day) {
+        return firstDate.add(Duration(days: value));
+      }
+      return firstDate.add(Duration(minutes: value));
+    }
+
+    String axisLabelFor(DateTime value) {
+      return widget.axisLabelBuilder?.call(value, spanUnits) ??
+          _defaultAxisLabel(value, spanUnits);
+    }
+
+    final double? referenceLineValue = widget.referenceLineValue ??
+        (widget.usesExternalData ? null : _dataPoints.first.value);
 
     return SizedBox(
       height: 250,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // LINKS bündig: Gewicht groß + Datum rechts daneben
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -172,24 +281,21 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
               ),
             ],
           ),
           const SizedBox(height: DesignConstants.spacingS),
-
           Expanded(
             child: LineChart(
               LineChartData(
                 minX: 0,
-                maxX: lastX == 0 ? 1 : lastX, // bei nur einem Punkt min Breite
-                clipData: const FlClipData
-                    .none(), // vermeidet Clipping am rechten Rand
+                maxX: lastX == 0 ? 1 : lastX,
+                clipData: const FlClipData.none(),
                 lineTouchData: LineTouchData(
                   handleBuiltInTouches: true,
                   touchTooltipData: LineTouchTooltipData(
-                    //tooltipBgColor: Colors.transparent,
                     getTooltipItems: (touchedSpots) =>
                         List<LineTooltipItem?>.filled(
                       touchedSpots.length,
@@ -199,20 +305,20 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                   ),
                   touchCallback: _handleTouchCallback,
                 ),
-
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: [
-                    HorizontalLine(
-                      y: _dataPoints.first.value,
-                      color: Colors.grey.withOpacity(0.5),
-                      strokeWidth: 1,
-                      dashArray: [3, 4],
-                    ),
-                  ],
-                ),
+                extraLinesData: referenceLineValue == null
+                    ? const ExtraLinesData()
+                    : ExtraLinesData(
+                        horizontalLines: [
+                          HorizontalLine(
+                            y: referenceLineValue,
+                            color: Colors.grey.withValues(alpha: 0.5),
+                            strokeWidth: 1,
+                            dashArray: [3, 4],
+                          ),
+                        ],
+                      ),
                 gridData: const FlGridData(show: false),
                 borderData: FlBorderData(show: false),
-
                 titlesData: FlTitlesData(
                   leftTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -235,24 +341,24 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
-                      // WIR benutzen zusätzlich eine Guard im Builder, damit niemals zu viele Labels erscheinen:
-                      interval: 1, // technisch 1, aber wir filtern im Builder
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
                         final int v = value.round();
+                        if (v < 0 || v > spanUnits) {
+                          return const SizedBox.shrink();
+                        }
 
-                        // Immer erstes und letztes Label zeigen …
-                        final bool isEdge = (v == 0) || (v == spanDays);
-                        // … und sonst nur jeden 'labelEvery'-ten Tag
+                        final bool isEdge = (v == 0) || (v == spanUnits);
                         final bool show = isEdge || (v % labelEvery == 0);
 
                         if (!show) return const SizedBox.shrink();
 
-                        final date = firstDate.add(Duration(days: v));
+                        final date = dateAtAxisValue(v);
                         return SideTitleWidget(
                           meta: meta,
                           space: 8,
                           child: Text(
-                            labelFor(date),
+                            axisLabelFor(date),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         );
@@ -262,19 +368,13 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                 ),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: _dataPoints.map((p) {
-                      final x = DateTime(
-                        p.date.year,
-                        p.date.month,
-                        p.date.day,
-                      ).difference(firstDate).inDays.toDouble();
-                      return FlSpot(x, p.value);
-                    }).toList(),
-                    isCurved: false, // gerade Linien
+                    spots: _dataPoints
+                        .map((point) => FlSpot(xForPoint(point), point.value))
+                        .toList(),
+                    isCurved: false,
                     color: Theme.of(context).colorScheme.primary,
                     barWidth: 3,
                     isStrokeCapRound: true,
-                    // Dot nur beim getouchten Punkt:
                     dotData: FlDotData(
                       show: true,
                       checkToShowDot: (spot, bar) {
@@ -298,10 +398,10 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                         colors: [
                           Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.3),
+                          ).colorScheme.primary.withValues(alpha: 0.3),
                           Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.0),
+                          ).colorScheme.primary.withValues(alpha: 0.0),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -315,5 +415,40 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         ],
       ),
     );
+  }
+
+  DateTime _atStartOfDay(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  int _labelInterval(int spanUnits, MeasurementChartAxisMode mode) {
+    if (spanUnits <= 1) return 1;
+    if (mode == MeasurementChartAxisMode.day) {
+      const desiredLabels = 6;
+      return (spanUnits / desiredLabels).ceil().clamp(1, 100000);
+    }
+    final raw = (spanUnits / 6).ceil();
+    const candidates = <int>[5, 10, 15, 20, 30, 45, 60, 90, 120];
+    for (final candidate in candidates) {
+      if (raw <= candidate) return candidate;
+    }
+    return ((raw / 60).ceil() * 60).clamp(1, 100000);
+  }
+
+  String _defaultSelectedDateLabel(BuildContext context, DateTime value) {
+    if (widget.axisMode == MeasurementChartAxisMode.day) {
+      return DateFormat.yMMMd().format(value);
+    }
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.Hm(locale).format(value);
+  }
+
+  String _defaultAxisLabel(DateTime value, int spanUnits) {
+    if (widget.axisMode == MeasurementChartAxisMode.time) {
+      return DateFormat.Hm().format(value);
+    }
+    if (spanUnits > 365 * 2) return DateFormat('yyyy').format(value);
+    if (spanUnits > 365) return DateFormat('MMM yyyy').format(value);
+    if (spanUnits > 31) return DateFormat('MMM d').format(value);
+    return DateFormat.MMMd().format(value);
   }
 }

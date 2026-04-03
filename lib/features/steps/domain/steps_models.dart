@@ -1,8 +1,5 @@
 class StepsBucket {
-  const StepsBucket({
-    required this.start,
-    required this.steps,
-  });
+  const StepsBucket({required this.start, required this.steps});
 
   final DateTime start;
   final int steps;

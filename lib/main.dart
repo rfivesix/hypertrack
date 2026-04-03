@@ -4,6 +4,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'data/database_helper.dart';
+import 'features/sleep/presentation/sleep_navigation.dart';
 import 'generated/app_localizations.dart';
 // App startup routing is delegated to the dedicated initializer screen.
 import 'screens/app_initializer_screen.dart';
@@ -347,6 +348,7 @@ class MyApp extends StatelessWidget {
               theme: baseLightTheme,
               darkTheme: baseDarkTheme,
               themeMode: themeService.themeMode,
+              onGenerateRoute: SleepNavigation.onGenerateRoute,
               // FIX: Hier wird nun der ausgelagerte Screen verwendet
               home: const AppInitializerScreen(),
             );

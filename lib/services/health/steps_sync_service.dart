@@ -125,8 +125,10 @@ class StepsSyncService {
 
   Future<bool> requestPermissions() => _platform.requestPermissions();
 
-  Future<StepsSyncResult> sync(
-      {DateTime? now, bool forceRefresh = false}) async {
+  Future<StepsSyncResult> sync({
+    DateTime? now,
+    bool forceRefresh = false,
+  }) async {
     final enabled = await isTrackingEnabled();
     if (!enabled) {
       return const StepsSyncResult(
@@ -145,9 +147,8 @@ class StepsSyncService {
       );
     }
 
-    // Issue 3 Fix: Don't request permissions on every sync.
-    // Permissions are requested once when the user enables tracking (in SettingsScreen).
-    // If permissions are missing, readStepSegments will throw and we skip gracefully.
+    // Permissions are requested from Settings when tracking is enabled.
+    // Sync treats missing permission as a skipped refresh instead of an error.
 
     final nowUtc = (now ?? DateTime.now()).toUtc();
     final lastSync = await getLastSyncAt();

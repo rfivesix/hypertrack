@@ -67,9 +67,7 @@ class BackupManager {
         }
         return directory;
       } catch (e) {
-        debugPrint(
-          'Auto-backup directory not writable ($candidate): $e',
-        );
+        debugPrint('Auto-backup directory not writable ($candidate): $e');
       }
     }
 

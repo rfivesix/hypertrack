@@ -634,8 +634,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content:
-                Text(l10n.snackbarAutoBackupFolderSet(selected.displayPath))),
+          content: Text(l10n.snackbarAutoBackupFolderSet(selected.displayPath)),
+        ),
       );
       return;
     }

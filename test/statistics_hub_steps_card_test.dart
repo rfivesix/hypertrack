@@ -8,6 +8,7 @@ import 'package:hypertrack/features/statistics/domain/recovery_payload_models.da
 import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
 import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
 import 'package:hypertrack/features/steps/domain/steps_models.dart';
+import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
 import 'package:hypertrack/screens/statistics_hub_screen.dart';
 import 'package:hypertrack/services/health/steps_sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,8 +23,11 @@ class _FakeStepsRepository implements StepsAggregationRepository {
     required DateTime endDate,
     required int daysBack,
   }) async {
-    final start = DateTime(endDate.year, endDate.month, endDate.day)
-        .subtract(Duration(days: daysBack - 1));
+    final start = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+    ).subtract(Duration(days: daysBack - 1));
     final buckets = List.generate(
       daysBack,
       (index) => StepsBucket(
@@ -47,7 +51,8 @@ class _FakeStepsRepository implements StepsAggregationRepository {
 
   @override
   Future<MonthStepsAggregation> getMonthAggregation(
-          DateTime dateInMonth) async =>
+    DateTime dateInMonth,
+  ) async =>
       throw UnimplementedError();
 
   @override
@@ -65,8 +70,10 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   Future<bool> isTrackingEnabled() async => trackingEnabled;
 
   @override
-  Future<StepsRefreshResult> refresh(
-          {bool force = false, DateTime? now}) async =>
+  Future<StepsRefreshResult> refresh({
+    bool force = false,
+    DateTime? now,
+  }) async =>
       const StepsRefreshResult(
         didRun: true,
         permissionGranted: true,
@@ -123,7 +130,9 @@ void main() {
       ),
       BodyNutritionAnalyticsResult(
         range: DateTimeRange(
-            start: DateTime(2026, 1, 1), end: DateTime(2026, 1, 30)),
+          start: DateTime(2026, 1, 1),
+          end: DateTime(2026, 1, 30),
+        ),
         totalDays: 30,
         currentWeightKg: null,
         weightChangeKg: null,
@@ -217,5 +226,29 @@ void main() {
     await stepsService.setTrackingEnabled(true);
     await pumpLoaded(tester);
     expect(find.text('Steps'), findsOneWidget);
+  });
+
+  testWidgets('statistics hub sleep card opens sleep day screen', (
+    WidgetTester tester,
+  ) async {
+    await StepsSyncService().setTrackingEnabled(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatisticsHubScreen(
+          stepsRepository: _FakeStepsRepository(),
+          fetchHubAnalytics: fakeFetch,
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+
+    expect(find.text('Sleep'), findsOneWidget);
+    await tester.tap(find.text('Sleep'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SleepDayOverviewPage), findsOneWidget);
   });
 }

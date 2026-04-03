@@ -1,182 +1,171 @@
-# Statistics Module — Source of Truth (v0.7 Refactor Complete)
+# Statistics Module — Current Implementation (Code-Audited)
 
-Implementation-grounded reference for the current Statistics module.  
-Scope is **what exists now in code**.
+This document is implementation-grounded and reflects the **current working copy**.
 
----
+## Module boundaries
 
-## Purpose and boundaries
+Statistics currently spans two kinds of behavior:
 
-The Statistics module is a read-only analytics layer over workouts, body measurements, and nutrition/fluid logs.
+1. Workout/body analytics (core statistics domains)
+2. Integration cards for Steps and Sleep inside the hub
 
-- No analytics data is persisted as its own storage entity.
-- Screens load from database helpers/adapters and render derived payloads.
-- Hub and drill-down screens are intentionally separate views.
+Boundaries in code:
 
----
+- Statistics owns workout/body analytics composition and drill-down navigation.
+- Steps logic is owned by the Steps feature and services.
+- Sleep logic is owned by the Sleep feature and services.
 
-## Architecture (implementation facts)
+## Entry points and navigation
 
-### Layering in use
+Primary entry point:
 
-| Layer | Current components |
-| :--- | :--- |
-| Presentation | `lib/screens/statistics_hub_screen.dart`, `lib/screens/analytics/*`, shared widgets (`AnalyticsSectionHeader`, `AnalyticsChartDefaults`, `MuscleRadarChart`, `SummaryCard`) |
-| Feature domain | `lib/features/statistics/domain/*` (range policy, quality policy, payloads, domain services, analytics state envelope) |
-| Feature data adapters | `lib/features/statistics/data/*` (`StatisticsHubDataAdapter`, `BodyNutritionAnalyticsDataAdapter`) |
-| Core persistence | `lib/data/workout_database_helper.dart`, `lib/data/database_helper.dart`, `lib/data/product_database_helper.dart` |
+- Main tab index 2 in `lib/screens/main_screen.dart` -> `StatisticsHubScreen`
 
-### Core flow
+Hub screen:
 
-`StatisticsHubScreen` delegates hub loading to `StatisticsHubDataAdapter.fetch()`, which composes parallel queries and returns:
+- `lib/screens/statistics_hub_screen.dart`
 
-- `StatisticsHubPayload` (typed hub aggregate + remaining map-backed slices)
-- `BodyNutritionAnalyticsResult`
+Drill-down routes pushed from hub:
 
-Drill-down screens still load independently (no shared provider cache yet).
+- Consistency -> `lib/screens/analytics/consistency_tracker_screen.dart`
+- PR dashboard -> `lib/screens/analytics/pr_dashboard_screen.dart`
+- Muscle analytics -> `lib/screens/analytics/muscle_group_analytics_screen.dart`
+- Recovery tracker -> `lib/screens/analytics/recovery_tracker_screen.dart`
+- Body/nutrition correlation -> `lib/screens/analytics/body_nutrition_correlation_screen.dart`
 
----
+Cross-feature links from hub:
 
-## Screen responsibilities (implementation facts)
+- Steps card tap -> `StepsModuleScreen` (`lib/features/steps/presentation/steps_module_screen.dart`)
+- Sleep card tap -> `SleepNavigation.openDay(context)` -> `/sleep/day`
 
-| Screen | File | Responsibility |
-| :--- | :--- | :--- |
-| Statistics Hub | `lib/screens/statistics_hub_screen.dart` | Entry portal with compact summaries for consistency, performance, muscle volume, recovery, and body/nutrition + drill-down navigation |
-| PR Dashboard | `lib/screens/analytics/pr_dashboard_screen.dart` | Recent PRs, all-time PRs, rep-bracket PRs, notable e1RM improvements |
-| Consistency Tracker | `lib/screens/analytics/consistency_tracker_screen.dart` | KPI cards, weekly metric bars (volume/duration/frequency), fixed-window calendar density |
-| Muscle Group Analytics | `lib/screens/analytics/muscle_group_analytics_screen.dart` | Equivalent-set distribution/frequency/weekly breakdown and guidance text |
-| Body/Nutrition Correlation | `lib/screens/analytics/body_nutrition_correlation_screen.dart` | Weight + calories trend, KPI summary, insight labeling, confidence gating |
-| Recovery Tracker | `lib/screens/analytics/recovery_tracker_screen.dart` | Overall readiness state, per-muscle recovery cards, recovery pressure radar |
+## Hub sections currently implemented
 
-### Hub philosophy and drill-down roles (UX intent)
+`StatisticsHubScreen` renders sections in this order:
 
-- **Hub:** fast orientation and navigation (compact signals, no full analytical depth).
-- **Drill-downs:** metric-specific analysis and context.
-- The same analytics domain appears at two depths: quick scan on hub, detailed reading on dedicated screens.
+1. Time-range chips (`7d`, `30d`, `3m`, `6m`, `All`)
+2. Steps (only if steps tracking enabled)
+3. Recovery
+4. Sleep (only if sleep tracking enabled)
+5. Consistency
+6. Performance records
+7. Volume/muscles
+8. Body/nutrition
 
----
+## Data sources actually used
 
-## Shared range policy semantics
+### Core statistics payloads
 
-Range behavior is centralized in `StatisticsRangePolicyService` (`lib/features/statistics/domain/statistics_range_policy.dart`).
+- Adapter: `lib/features/statistics/data/statistics_hub_data_adapter.dart`
+- Primary persistence source: `lib/data/workout_database_helper.dart`
+- Body/nutrition builder path: `BodyNutritionAnalyticsUtils.build(...)` in `lib/util/body_nutrition_analytics_utils.dart`
 
-### Supported semantics
+### Steps card integration
 
-| Semantic | Behavior |
-| :--- | :--- |
-| `selected` | Uses user-selected range |
-| `fixed` | Uses fixed window regardless of chip selection |
-| `capped` | Uses selected range capped by metric maximum |
-| `dynamicAll` | Uses selected range except “All”, where range expands to earliest data → today |
+- Repo: `lib/features/steps/data/steps_aggregation_repository.dart`
+- Tracking/provider settings: `lib/services/health/steps_sync_service.dart`
+- Daily goal source: `DatabaseHelper.getCurrentTargetStepsOrDefault()` in `lib/data/database_helper.dart`
 
-### Metric windows currently implemented
+### Sleep card integration
 
-| Metric ID | Effective behavior |
-| :--- | :--- |
-| `hubWeeklyVolume` | fixed 6 weeks |
-| `hubWorkoutsPerWeek` | fixed 6 weeks |
-| `hubConsistencyMetrics` | fixed 6 weeks |
-| `consistencyWeeklyMetrics` | fixed 12 weeks |
-| `consistencyCalendar` | fixed 120 days |
-| `hubNotablePrImprovements` | capped 90 days |
-| `prNotableImprovements` | selected 7/30/90 days |
-| `hubMuscleAnalytics` | selected days + fixed 8-week context |
-| `muscleAnalytics` | selected days, with weeks resolved from days and clamped `4..16` |
-| `bodyNutritionTrend` / `bodyNutritionInsightKpi` | `dynamicAll` semantics |
+- Summary repo: `lib/features/sleep/data/sleep_hub_summary_repository.dart`
+- Tracking setting source: `SleepSyncService.isTrackingEnabled()`
 
-**Contributor note:** this mixed policy is intentional and should be disclosed in UX text where needed (for example fixed 6-week/12-week chips shown in consistency sections).
+## Range handling (implemented)
 
----
+Policy service:
 
-## Data quality semantics (heuristics/rules)
+- `lib/features/statistics/domain/statistics_range_policy.dart`
 
-Data sufficiency logic is centralized in `StatisticsDataQualityPolicy` (`lib/features/statistics/domain/statistics_data_quality_policy.dart`).
+Supported semantics:
 
-### Body/Nutrition insight quality
+- `selected`, `fixed`, `capped`, `dynamicAll`
 
-Insight confidence is sufficient only when all are true:
+Metric windows currently configured:
 
-- `spanDays >= 14`
-- `totalDays >= 14`
-- `weightDays >= 5`
-- `loggedCalorieDays >= 7`
+- Hub weekly volume: fixed 6 weeks
+- Hub workouts/week: fixed 6 weeks
+- Hub consistency metrics: fixed 6 weeks
+- Consistency weekly metrics: fixed 12 weeks
+- Consistency calendar: fixed 120 days
+- Hub notable PR improvements: capped to 90 days
+- PR notable improvements: selected range (`7/30/90` in PR screen)
+- Muscle analytics: selected days; weeks resolved via policy (`4..16` clamp)
+- Body/nutrition trend + insight KPI: `dynamicAll`
 
-Used by `BodyNutritionAnalyticsEngine` and surfaced via `BodyNutritionAnalyticsResult.insightDataQuality`.
+### Steps + Sleep hub range behavior
 
-### Muscle distribution quality
+Implemented behavior in `StatisticsHubScreen._loadHubAnalytics()`:
 
-Quality is sufficient when:
+- Selected chip index is resolved with `StatisticsMetricId.bodyNutritionTrend`.
+- `earliestAvailableDay` passed to that resolve call comes from **steps** repository (`_stepsRepository.getEarliestAvailableDate()`).
+- Resulting `daysBack` is used for both:
+  - steps range aggregation
+  - sleep hub summary fetch
 
-- `dataPointDays >= 3`
-- `spanDays >= 14`
+Implication:
 
-Used to soften guidance copy when data is sparse.
+- For `All`, Steps and Sleep cards currently use a range length anchored by Steps earliest date, not Sleep earliest date.
+- This is **implemented behavior**, not inferred design intent.
 
----
+## Steps coverage inside Statistics
 
-## Typed payload/model usage (implementation facts)
+Current Steps support in Statistics includes:
 
-Current typed models in active use:
+- Optional section gated by steps tracking flag
+- Fallback summary card when no data
+- Trend card with per-day bars and goal line when data exists
+- Provider label rendering (`All/Apple/Health Connect` mapped to display names)
+- Tap-through into dedicated Steps module screen
 
-- `TrainingStatsPayload`
-- `WeeklyConsistencyMetricPayload`
-- `RecoveryTotalsPayload`
-- `RecoveryMusclePayload`
-- `RecoveryAnalyticsPayload`
-- `StatisticsHubPayload`
-- `DailyValuePoint`
-- `BodyNutritionAnalyticsResult`
-- `AnalyticsState<T>` (state envelope type)
+No Steps drill-down is implemented inside `lib/screens/analytics/*`; it is delegated to `StepsModuleScreen`.
 
-Remaining map-backed slices are still present for some analytics collections (notably PR and muscle rows), but typed payloads now cover the core consistency/recovery/body-nutrition paths and hub aggregate contract.
+## Sleep coverage inside Statistics
 
----
+Current Sleep support in Statistics includes:
 
-## Shared presentation and chart conventions
+- Optional section gated by sleep tracking flag
+- Hub summary card showing:
+  - mean score
+  - average duration
+  - average bedtime
+  - average interruptions + wake duration summary when available
+- Tap-through to Sleep day route (`/sleep/day`)
 
-### Shared formatter contract
+No Sleep calculations are performed in Statistics UI; values come from `SleepHubSummaryRepository`.
+Score values consumed by Statistics are produced in the Sleep pipeline (`Sleep Health Score V2` in current implementation).
 
-`StatisticsPresentationFormatter` provides consistent display behavior for:
+## Integration boundaries (explicit)
 
-- weight formatting
-- compact number formatting
-- recovery labels/colors
-- body/nutrition insight labels
-- muscle guidance labels
-- filtering of synthetic “Other” category labels for user-facing views
+Statistics does **not** own or compute:
 
-### Chart conventions in current implementation
+- Sleep timeline repair
+- Sleep nightly metrics
+- Sleep score algorithm
+- Sleep permission/import orchestration
+- Steps sync/import orchestration
 
-- `fl_chart` for line/bar charts
-- `table_calendar` for consistency calendar
-- `MuscleRadarChart` for radar visualizations
-- horizontal progress bars for distribution summaries
-- sparse x-axis labeling and compact y-axis formatting for dense weekly views
+Those are owned by feature modules/services under:
 
-Body/nutrition smoothing currently follows:
+- Sleep: `lib/features/sleep/**`
+- Steps: `lib/features/steps/**` and `lib/services/health/**`
 
-- weight trend: 5-point moving average when enough data, otherwise 3-point
-- calories trend: 7-point moving average when enough data, otherwise 3-point
+## Current limitations and ambiguities
 
----
+### Implemented limitations
 
-## Known current limitations (implementation facts)
+- Hub and drill-down analytics screens fetch separately; no shared runtime cache is wired.
+- `StatisticsStateContainer` exists but is currently a structural stub (`lib/features/statistics/statistics_state_container.dart`).
+- Sleep integration in Statistics is hub-card-only; no dedicated Sleep analytics drill-down inside `lib/screens/analytics/*`.
 
-- Hub and drill-down screens still perform independent fetches.
-- `StatisticsStateContainer` exists as phase-1 structure, but is not yet wired as shared runtime state.
-- Recovery pressure scoring is domain-service driven and presentation-integrated, separate from persistence.
-- Some hub mini-views intentionally summarize data differently from full drill-down charts.
+### Currently ambiguous from code
 
----
+- `StatisticsHubScreen` contains provider display-name branches for `withings`, `garmin`, and `fitbit`, but the active `StepsProviderFilter` enum currently exposes only `all`, `apple`, `google`. This appears transitional and is ambiguous as settled architecture.
 
 ## File map
 
 - Hub: `lib/screens/statistics_hub_screen.dart`
-- Drill-downs: `lib/screens/analytics/*`
-- Feature data: `lib/features/statistics/data/*`
-- Feature domain: `lib/features/statistics/domain/*`
-- Feature presentation formatter: `lib/features/statistics/presentation/statistics_formatter.dart`
-
----
-
-*Last updated: 2026-03-21 (post-refactor implementation sync).*
+- Drill-down analytics: `lib/screens/analytics/*`
+- Range policy: `lib/features/statistics/domain/statistics_range_policy.dart`
+- Hub adapter: `lib/features/statistics/data/statistics_hub_data_adapter.dart`
+- Steps integration repo: `lib/features/steps/data/steps_aggregation_repository.dart`
+- Sleep integration repo: `lib/features/sleep/data/sleep_hub_summary_repository.dart`

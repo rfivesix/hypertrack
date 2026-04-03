@@ -45,6 +45,7 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
     return SummaryCard(
       // Padding wird von der ListTile übernommen
       padding: EdgeInsets.zero,
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(

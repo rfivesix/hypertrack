@@ -5,20 +5,22 @@ void main() {
   group('InMemoryStepsAggregationRepository', () {
     const repository = InMemoryStepsAggregationRepository();
 
-    test('day aggregation returns 24 hourly buckets and correct total',
-        () async {
-      final targetDate = DateTime(2026, 3, 26, 14, 30);
-      final day = await repository.getDayAggregation(targetDate);
+    test(
+      'day aggregation returns 24 hourly buckets and correct total',
+      () async {
+        final targetDate = DateTime(2026, 3, 26, 14, 30);
+        final day = await repository.getDayAggregation(targetDate);
 
-      expect(day.hourlyBuckets.length, 24);
-      expect(day.date, DateTime(2026, 3, 26));
-      expect(
-        day.totalSteps,
-        day.hourlyBuckets.fold<int>(0, (sum, bucket) => sum + bucket.steps),
-      );
-      expect(day.hourlyBuckets.first.start, DateTime(2026, 3, 26, 0));
-      expect(day.hourlyBuckets.last.start, DateTime(2026, 3, 26, 23));
-    });
+        expect(day.hourlyBuckets.length, 24);
+        expect(day.date, DateTime(2026, 3, 26));
+        expect(
+          day.totalSteps,
+          day.hourlyBuckets.fold<int>(0, (sum, bucket) => sum + bucket.steps),
+        );
+        expect(day.hourlyBuckets.first.start, DateTime(2026, 3, 26, 0));
+        expect(day.hourlyBuckets.last.start, DateTime(2026, 3, 26, 23));
+      },
+    );
 
     test('week aggregation starts on Monday and returns 7 days', () async {
       final targetDate = DateTime(2026, 3, 26); // Thursday

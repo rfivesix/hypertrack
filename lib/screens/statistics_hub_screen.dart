@@ -9,6 +9,9 @@ import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/hub_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
+import '../features/sleep/data/sleep_hub_summary_repository.dart';
+import '../features/sleep/presentation/sleep_navigation.dart';
+import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/steps/data/steps_aggregation_repository.dart';
 import '../features/steps/domain/steps_models.dart';
 import '../generated/app_localizations.dart';
@@ -33,12 +36,15 @@ class StatisticsHubScreen extends StatefulWidget {
     super.key,
     StatisticsHubDataAdapter? hubDataAdapter,
     StepsAggregationRepository? stepsRepository,
+    SleepHubSummaryRepository? sleepSummaryRepository,
     this.fetchHubAnalytics,
   })  : _hubDataAdapter = hubDataAdapter,
-        _stepsRepository = stepsRepository;
+        _stepsRepository = stepsRepository,
+        _sleepSummaryRepository = sleepSummaryRepository;
 
   final StatisticsHubDataAdapter? _hubDataAdapter;
   final StepsAggregationRepository? _stepsRepository;
+  final SleepHubSummaryRepository? _sleepSummaryRepository;
   final Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(
     int selectedTimeRangeIndex,
   )? fetchHubAnalytics;
@@ -57,12 +63,15 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   static const _bodyTrendPoints = 10;
   static const _chipBackgroundOpacity = 0.14;
   static const _miniBarOpacity = 0.75;
+  static const Duration _sleepSyncInterval = Duration(hours: 6);
 
   late final l10n = AppLocalizations.of(context)!;
   late final StatisticsHubDataAdapter _hubDataAdapter;
   final _rangePolicy = StatisticsRangePolicyService.instance;
   late final StepsAggregationRepository _stepsRepository;
+  late final SleepHubSummaryRepository _sleepSummaryRepository;
   final StepsSyncService _stepsSyncService = StepsSyncService();
+  final SleepSyncService _sleepSyncService = SleepSyncService();
 
   int _selectedTimeRangeIndex = 1;
 
@@ -89,7 +98,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   );
   BodyNutritionAnalyticsResult? _bodyNutrition;
   RangeStepsAggregation? _stepsRange;
+  SleepHubSummary? _sleepSummary;
   bool _stepsTrackingEnabled = false;
+  bool _sleepTrackingEnabled = false;
   int _targetSteps = 8000;
   String _stepsProviderName = '';
   @override
@@ -97,19 +108,25 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     super.initState();
     _hubDataAdapter = widget._hubDataAdapter ??
         StatisticsHubDataAdapter(
-            workoutDatabaseHelper: WorkoutDatabaseHelper.instance);
+          workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
+        );
     _stepsRepository =
         widget._stepsRepository ?? HealthStepsAggregationRepository();
-    StepsSyncService.trackingEnabledListenable
-        .addListener(_onTrackingEnabledChanged);
+    _sleepSummaryRepository =
+        widget._sleepSummaryRepository ?? SleepHubSummaryRepository();
+    StepsSyncService.trackingEnabledListenable.addListener(
+      _onTrackingEnabledChanged,
+    );
     _syncTrackingEnabledFromSettings();
     _loadHubAnalytics();
   }
 
   @override
   void dispose() {
-    StepsSyncService.trackingEnabledListenable
-        .removeListener(_onTrackingEnabledChanged);
+    StepsSyncService.trackingEnabledListenable.removeListener(
+      _onTrackingEnabledChanged,
+    );
+    _sleepSummaryRepository.dispose();
     super.dispose();
   }
 
@@ -136,8 +153,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
-    final selectedDays =
-        _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex);
+    await _sleepSyncService.importRecentIfDue(
+      minInterval: _sleepSyncInterval,
+    );
+    final selectedDays = _rangePolicy.selectedDaysFromIndex(
+      _selectedTimeRangeIndex,
+    );
     final earliest = await _stepsRepository.getEarliestAvailableDate();
     final resolvedRange = _rangePolicy.resolve(
       metricId: StatisticsMetricId.bodyNutritionTrend,
@@ -145,6 +166,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       selectedDays: selectedDays,
       earliestAvailableDay: earliest,
     );
+    // Keep Steps and Sleep cards on the same effective hub window.
     final daysBack = resolvedRange.effectiveDays ?? selectedDays;
     final hubFuture = _fetchHubAnalytics(
       selectedTimeRangeIndex: _selectedTimeRangeIndex,
@@ -153,14 +175,21 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       endDate: DateTime.now(),
       daysBack: daysBack,
     );
+    final sleepSummaryFuture = _sleepSummaryRepository.fetchSummary(
+      endDate: DateTime.now(),
+      daysBack: daysBack,
+    );
     final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
+    final sleepTrackingFuture = _sleepSyncService.isTrackingEnabled();
     final targetStepsFuture =
         DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
     final providerFuture = _stepsSyncService.getProviderFilter();
 
     final tuple = await hubFuture;
     final stepsRange = await stepsRangeFuture;
+    final sleepSummary = await sleepSummaryFuture;
     final stepsTrackingEnabled = await stepsTrackingFuture;
+    final sleepTrackingEnabled = await sleepTrackingFuture;
     final targetSteps = await targetStepsFuture;
     final providerFilter = await providerFuture;
     final providerRaw = StepsSyncService.providerFilterToRaw(providerFilter);
@@ -192,7 +221,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _notableImprovements = hub.notableImprovements;
       _bodyNutrition = bodyNutrition;
       _stepsRange = stepsRange;
+      _sleepSummary = sleepSummary;
       _stepsTrackingEnabled = effectiveStepsTrackingEnabled;
+      _sleepTrackingEnabled = sleepTrackingEnabled;
       _targetSteps = targetSteps;
       _stepsProviderName = providerName;
       _isLoadingStats = false;
@@ -200,15 +231,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)>
-      _fetchHubAnalytics({
-    required int selectedTimeRangeIndex,
-  }) {
+      _fetchHubAnalytics({required int selectedTimeRangeIndex}) {
     final override = widget.fetchHubAnalytics;
     if (override != null) {
       return override(selectedTimeRangeIndex);
     }
     return _hubDataAdapter.fetch(
-        selectedTimeRangeIndex: selectedTimeRangeIndex);
+      selectedTimeRangeIndex: selectedTimeRangeIndex,
+    );
   }
 
   List<String> get _timeRanges => [
@@ -237,12 +267,18 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
                 if (_stepsTrackingEnabled) ...[
+                  _buildSectionTitle(context, "Steps"),
                   _buildStepsCard(),
                   const SizedBox(height: DesignConstants.spacingL),
                 ],
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
                 const SizedBox(height: DesignConstants.spacingL),
+                if (_sleepTrackingEnabled) ...[
+                  _buildSectionTitle(context, l10n.sleepSectionTitle),
+                  _buildSleepSection(),
+                  const SizedBox(height: DesignConstants.spacingL),
+                ],
                 _buildSectionTitle(context, l10n.sectionConsistency),
                 _buildConsistencySection(),
                 const SizedBox(height: DesignConstants.spacingL),
@@ -299,11 +335,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final range = _stepsRange;
     final hasData =
         (range?.dailyTotals.any((bucket) => bucket.steps > 0) ?? false);
-    final selectedDays =
-        _rangePolicy.selectedDaysFromIndex(_selectedTimeRangeIndex);
+    final selectedDays = _rangePolicy.selectedDaysFromIndex(
+      _selectedTimeRangeIndex,
+    );
     final subtitleRange = _rangeSubtitle(selectedDays, range);
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     final stepsTitle = localeCode == 'de' ? 'Schritte' : 'Steps';
     final noDataText = !_stepsTrackingEnabled
         ? (localeCode == 'de'
@@ -315,9 +353,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     if (!_stepsTrackingEnabled || !hasData) {
       return SummaryCard(
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const StepsModuleScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const StepsModuleScreen()));
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -325,7 +363,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeaderWithChevron(
-                  label: stepsTitle, chipText: subtitleRange),
+                label: stepsTitle,
+                chipText: subtitleRange,
+              ),
               const SizedBox(height: 8),
               Text(
                 noDataText,
@@ -339,8 +379,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       );
     }
 
-    // In Screenshot 4, if period is "Letzte 7 Tage", today steps are displayed.
-    // Otherwise, typically the total steps of the entire period.
+    // In 7-day mode we show today's steps; in longer ranges we show total steps.
     final bool isSevenDays = _selectedTimeRangeIndex == 0;
 
     int currentSteps = 0;
@@ -362,9 +401,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
     return StatisticsStepsCard(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const StepsModuleScreen()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const StepsModuleScreen()));
       },
       title: stepsTitle,
       subtitle: subtitle,
@@ -376,8 +415,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   String _rangeSubtitle(int selectedDays, RangeStepsAggregation? range) {
-    final localeCode =
-        Localizations.localeOf(context).languageCode.toLowerCase();
+    final localeCode = Localizations.localeOf(
+      context,
+    ).languageCode.toLowerCase();
     if (range == null) {
       return localeCode == 'de' ? '$selectedDays Tage' : '$selectedDays days';
     }
@@ -716,6 +756,242 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildSleepSection() {
+    final l10n = AppLocalizations.of(context)!;
+    final rangeLabel = _timeRanges[_selectedTimeRangeIndex];
+    final summary = _sleepSummary;
+    final score = summary?.averageScore;
+    final scoreText = score == null ? '--' : score.round().toString();
+    final scoreValue =
+        score == null ? 0.0 : (score.clamp(0.0, 100.0) / 100.0).toDouble();
+    final durationText = _formatSleepDuration(summary?.averageDuration);
+    final bedtimeText = _formatBedtime(summary?.averageBedtimeMinutes);
+    final interruptionsCount = summary?.averageInterruptions?.round();
+    final interruptionsValue =
+        interruptionsCount == null ? '--' : interruptionsCount.toString();
+    final interruptionsSubtitle =
+        (interruptionsCount == null || summary?.averageWakeDuration == null)
+            ? l10n.sleepHubAverageLabel
+            : l10n.sleepHubInterruptionsSummary(
+                interruptionsCount,
+                _formatSleepDuration(summary!.averageWakeDuration),
+              );
+    return SummaryCard(
+      onTap: () => SleepNavigation.openDay(context),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Spacer(),
+                _buildRangeChip(rangeLabel),
+                const SizedBox(width: 8),
+                _buildDrillDownHint(),
+                if (_isLoadingStats)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: SizedBox(
+                      height: 14,
+                      width: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildSleepScoreRing(
+                  context,
+                  scoreValue: scoreValue,
+                  scoreText: scoreText,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.sleepHubScoreLabel,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.sleepMeanScoreLabel(scoreText),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildSleepMetricRow(
+              context,
+              color: Theme.of(context).colorScheme.primary,
+              label: l10n.durationLabel,
+              value: durationText,
+              subtitle: l10n.sleepHubAverageLabel,
+            ),
+            const Divider(height: 20),
+            _buildSleepMetricRow(
+              context,
+              color: Theme.of(context).colorScheme.tertiary,
+              label: l10n.sleepHubBedtimeLabel,
+              value: bedtimeText,
+              subtitle: l10n.sleepHubAverageLabel,
+            ),
+            const Divider(height: 20),
+            _buildSleepMetricRow(
+              context,
+              color: Theme.of(context).colorScheme.error,
+              label: l10n.sleepHubInterruptionsLabel,
+              value: interruptionsValue,
+              subtitle: interruptionsSubtitle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSleepScoreRing(
+    BuildContext context, {
+    required double scoreValue,
+    required String scoreText,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 72,
+      width: 72,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            height: 72,
+            width: 72,
+            child: CircularProgressIndicator(
+              value: 1,
+              strokeWidth: 8,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                colorScheme.surfaceVariant,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 72,
+            width: 72,
+            child: CircularProgressIndicator(
+              value: scoreValue,
+              strokeWidth: 8,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                colorScheme.primary,
+              ),
+              backgroundColor: Colors.transparent,
+            ),
+          ),
+          Text(
+            scoreText,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSleepMetricRow(
+    BuildContext context, {
+    required Color color,
+    required String label,
+    required String value,
+    String? subtitle,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 4),
+          height: 10,
+          width: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              if (subtitle != null)
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+            ],
+          ),
+        ),
+        Text(
+          value,
+          textAlign: TextAlign.right,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRangeChip(String label) {
+    final chipColor = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignConstants.spacingS,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: _chipBackgroundOpacity),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: chipColor,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+
+  String _formatSleepDuration(Duration? value) {
+    if (value == null) return '--';
+    final hours = value.inHours;
+    final minutes = value.inMinutes.remainder(60);
+    return '${hours}h ${minutes}m';
+  }
+
+  String _formatBedtime(int? minutes) {
+    if (minutes == null) return '--';
+    final normalized = minutes % 1440;
+    final dateTime = DateTime(2020, 1, 1, normalized ~/ 60, normalized % 60);
+    return DateFormat.Hm().format(dateTime);
   }
 
   Widget _buildRecoveryDistributionBar({

@@ -2362,4 +2362,481 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finishWorkoutNotesHint => 'How did the workout go?';
+
+  @override
+  String get sleepSectionTitle => 'Sleep';
+
+  @override
+  String get sleepSectionSubtitleDayEntry =>
+      'Day overview and detail drill-downs';
+
+  @override
+  String get sleepSectionSubtitleAllEntry =>
+      'Sleep day, week, and month views are available from this entry';
+
+  @override
+  String get sleepScopeDay => 'Day';
+
+  @override
+  String get sleepScopeWeek => 'Week';
+
+  @override
+  String get sleepScopeMonth => 'Month';
+
+  @override
+  String get sleepWeekSummaryTitle => 'Week summary';
+
+  @override
+  String get sleepMonthSummaryTitle => 'Month summary';
+
+  @override
+  String get sleepSleepWindowTitle => 'Sleep window';
+
+  @override
+  String get sleepDailyScoreTitle => 'Daily score';
+
+  @override
+  String get sleepMonthDailyScoreStatesTitle => 'Daily score states';
+
+  @override
+  String sleepMeanScoreLabel(String value) {
+    return 'Mean score: $value';
+  }
+
+  @override
+  String get sleepHubScoreLabel => 'Sleep score';
+
+  @override
+  String get sleepHubAverageLabel => 'Average';
+
+  @override
+  String get sleepHubBedtimeLabel => 'Bedtime';
+
+  @override
+  String get sleepHubInterruptionsLabel => 'Interruptions';
+
+  @override
+  String sleepHubInterruptionsSummary(int count, String duration) {
+    return '$count wake-ups, $duration total';
+  }
+
+  @override
+  String sleepWeekdayAvgDurationLabel(String value) {
+    return 'Weekday avg duration: $value';
+  }
+
+  @override
+  String sleepWeekendAvgDurationLabel(String value) {
+    return 'Weekend avg duration: $value';
+  }
+
+  @override
+  String get sleepWeekNoScoredNights =>
+      'No scored sleep nights available in this week yet.';
+
+  @override
+  String get sleepMonthNoScoredNights =>
+      'No scored sleep nights available this month yet.';
+
+  @override
+  String get sleepSettingsSectionTitle => 'Sleep';
+
+  @override
+  String get sleepEnableTrackingTitle => 'Enable sleep tracking';
+
+  @override
+  String get sleepEnableTrackingSubtitle =>
+      'Read sleep and overnight heart rate from Health Connect / HealthKit';
+
+  @override
+  String get sleepHealthConnectionStatusTitle => 'Health connection status';
+
+  @override
+  String get sleepRequestAccessTitle => 'Request access';
+
+  @override
+  String get sleepRequestAccessSubtitle =>
+      'Request or re-request sleep/heart-rate permissions';
+
+  @override
+  String get sleepImportNowTitle => 'Import sleep data now';
+
+  @override
+  String get sleepImportNowSubtitle =>
+      'Import all available sleep data (all time)';
+
+  @override
+  String get sleepRawImportsTitle => 'View raw sleep imports';
+
+  @override
+  String get sleepRawImportsSubtitle => 'Show recent Health Connect payloads';
+
+  @override
+  String get sleepDataStatusTitle => 'Data status';
+
+  @override
+  String get sleepDataStatusSubtitle =>
+      'Permissions granted. If no sleep appears yet, run a manual import below.';
+
+  @override
+  String get sleepNoPermissionTitle => 'No permission';
+
+  @override
+  String get sleepNoPermissionSubtitle =>
+      'Sleep and heart-rate permissions are required to import sleep data.';
+
+  @override
+  String get sleepFeatureUnavailableTitle => 'Feature unavailable';
+
+  @override
+  String get sleepFeatureUnavailableSubtitle =>
+      'Sleep import is unavailable on this device or Health Connect is not installed.';
+
+  @override
+  String get sleepNoRawImportsFound => 'No raw sleep imports found yet.';
+
+  @override
+  String get sleepRawImportsSheetTitle => 'Raw sleep imports (latest)';
+
+  @override
+  String sleepImportFinishedSessions(int count) {
+    return 'Sleep import finished ($count sessions).';
+  }
+
+  @override
+  String get sleepImportUnavailableCheckPermissions =>
+      'Sleep import unavailable. Check permissions.';
+
+  @override
+  String get sleepStatusChecking => 'Checking permission status…';
+
+  @override
+  String get sleepStatusReady => 'Ready';
+
+  @override
+  String get sleepStatusDenied => 'Denied';
+
+  @override
+  String get sleepStatusPartial => 'Partial access';
+
+  @override
+  String get sleepStatusUnavailable => 'Unavailable on this device';
+
+  @override
+  String get sleepStatusNotInstalled => 'Health Connect not installed';
+
+  @override
+  String get sleepStatusTechnicalError => 'Technical error';
+
+  @override
+  String get sleepConnectHealthDataTitle => 'Connect health data';
+
+  @override
+  String get sleepConnectHealthDataMessage =>
+      'Connect HealthKit or Health Connect to import sleep records.';
+
+  @override
+  String get sleepPermissionDeniedTitle => 'Permission denied';
+
+  @override
+  String get sleepPermissionDeniedMessage =>
+      'Sleep permissions are denied. Open settings to grant access.';
+
+  @override
+  String get sleepSourceUnavailableTitle => 'Source unavailable';
+
+  @override
+  String get sleepSourceUnavailableMessage =>
+      'Sleep data source is unavailable or not installed on this device.';
+
+  @override
+  String get sleepEmptyDayNoData => 'No sleep data available for this day.';
+
+  @override
+  String get sleepEmptyDayConnectMessage =>
+      'Connect Health Connect/HealthKit in Settings and import recent sleep data.';
+
+  @override
+  String get sleepOpenSettingsButton => 'Open settings';
+
+  @override
+  String get sleepImportNowButton => 'Import now';
+
+  @override
+  String get sleepImportFinishedRefreshing =>
+      'Sleep import finished. Refreshing...';
+
+  @override
+  String get sleepImportUnavailableSettingsHint =>
+      'Sleep import not available. Check permissions in Settings.';
+
+  @override
+  String get sleepTimelineTitle => 'Timeline';
+
+  @override
+  String get sleepTimelineUnavailable =>
+      'No stage timeline available for this night.';
+
+  @override
+  String get sleepStageDeepLabel => 'Deep';
+
+  @override
+  String get sleepStageLightLabel => 'Light';
+
+  @override
+  String get sleepStageRemLabel => 'REM';
+
+  @override
+  String get sleepStageAwakeLabel => 'Awake';
+
+  @override
+  String get sleepScoreCardTitle => 'Sleep quality';
+
+  @override
+  String get sleepScoreUnavailableForNight =>
+      'Score unavailable for this night.';
+
+  @override
+  String sleepScoreCompletenessLabel(String value) {
+    return 'Score completeness: $value';
+  }
+
+  @override
+  String get sleepQualityGood => 'Good';
+
+  @override
+  String get sleepQualityAverage => 'Average';
+
+  @override
+  String get sleepQualityPoor => 'Poor';
+
+  @override
+  String get sleepQualityUnavailable => 'Unavailable';
+
+  @override
+  String get sleepQualitySubtitleGood => 'Recovery looked strong overnight.';
+
+  @override
+  String get sleepQualitySubtitleAverage =>
+      'Sleep was okay with room for improvement.';
+
+  @override
+  String get sleepQualitySubtitlePoor => 'Recovery signals were weak tonight.';
+
+  @override
+  String get sleepQualitySubtitleUnavailable =>
+      'Not enough data to score this night.';
+
+  @override
+  String get sleepQualityRegularityNotContributing =>
+      'Regularity did not contribute (<5 valid days).';
+
+  @override
+  String get sleepQualityRegularityPreliminary =>
+      'Regularity is preliminary (5-6 valid days).';
+
+  @override
+  String sleepQualityRegularityStable(int days) {
+    return 'Regularity is stable ($days days).';
+  }
+
+  @override
+  String sleepRegularityNightView(int count) {
+    return '$count-night view';
+  }
+
+  @override
+  String get sleepMetricUnavailable => 'Unavailable';
+
+  @override
+  String get sleepMetricDurationTitle => 'Duration';
+
+  @override
+  String get sleepMetricHeartRateTitle => 'Heart rate';
+
+  @override
+  String get sleepMetricRegularityTitle => 'Regularity';
+
+  @override
+  String get sleepMetricDepthTitle => 'Depth';
+
+  @override
+  String get sleepMetricInterruptionsTitle => 'Interruptions';
+
+  @override
+  String get sleepMetricDepthLowConfidence => 'Low confidence';
+
+  @override
+  String get sleepMetricDepthStagesAvailable => 'Stages available';
+
+  @override
+  String get sleepDurationUnavailable => 'Duration data is unavailable.';
+
+  @override
+  String get sleepDurationStatusWithinTarget => 'Within target';
+
+  @override
+  String get sleepDurationStatusBelowTarget => 'Below target';
+
+  @override
+  String get sleepDurationSubtitle =>
+      'Your total sleep duration for this night.';
+
+  @override
+  String get sleepDurationBenchmarkHint =>
+      'Adults often do best with roughly 7–9 hours. This benchmark helps you see where your night sits in that range.';
+
+  @override
+  String get sleepDepthUnavailable => 'Depth data is unavailable.';
+
+  @override
+  String get sleepDepthConfidenceTooLow =>
+      'Stage confidence is too low for a reliable depth breakdown.';
+
+  @override
+  String get sleepDepthBreakdownUnavailable =>
+      'Stage duration breakdown is unavailable for this night.';
+
+  @override
+  String get sleepDepthRatingRestorative => 'Restorative';
+
+  @override
+  String get sleepDepthRatingLightLeaning => 'Light-leaning';
+
+  @override
+  String sleepDepthStageConfidenceLabel(String value) {
+    return 'Stage confidence: $value';
+  }
+
+  @override
+  String get sleepDepthSubtitle =>
+      'Stage distribution based on derived timeline segments.';
+
+  @override
+  String get sleepInterruptionsUnavailable =>
+      'Interruptions data is unavailable.';
+
+  @override
+  String get sleepInterruptionsStatusNoneDetected => 'None detected';
+
+  @override
+  String get sleepInterruptionsStatusDetected => 'Detected';
+
+  @override
+  String get sleepInterruptionsSubtitle =>
+      'Qualifying wake interruptions overnight.';
+
+  @override
+  String get sleepInterruptionsTotalWakeDuration => 'Total wake duration';
+
+  @override
+  String get sleepInterruptionsFootnote =>
+      'This view includes only qualifying interruptions from derived analysis outputs.';
+
+  @override
+  String get sleepRegularityUnavailable => 'Regularity data is unavailable.';
+
+  @override
+  String sleepRegularityNightRange(int count) {
+    return '$count-night range';
+  }
+
+  @override
+  String get sleepRegularityStatusSufficientTrend => 'Sufficient trend data';
+
+  @override
+  String get sleepRegularityStatusLimitedTrend => 'Limited trend data';
+
+  @override
+  String get sleepRegularitySubtitle =>
+      'Bedtime and wake windows for recent nights.';
+
+  @override
+  String get sleepRegularityAverageBedtime => 'Average bedtime';
+
+  @override
+  String get sleepRegularityAverageWake => 'Average wake';
+
+  @override
+  String get sleepHeartRateUnavailable =>
+      'Sleep heart-rate data is unavailable.';
+
+  @override
+  String get sleepHeartRateStatusNoSampleSeries =>
+      'No sample series for this night';
+
+  @override
+  String get sleepHeartRateStatusBaselineNotEstablished =>
+      'Baseline not established';
+
+  @override
+  String get sleepHeartRateStatusComparisonUnavailable =>
+      'Baseline comparison unavailable';
+
+  @override
+  String get sleepHeartRateStatusBelowBaseline => 'Below baseline';
+
+  @override
+  String get sleepHeartRateStatusAboveBaseline => 'Above baseline';
+
+  @override
+  String get sleepHeartRateNoSamplesText =>
+      'No persisted sleep heart-rate samples are available for this night.';
+
+  @override
+  String get sleepHeartRateBaselineNotEstablishedText =>
+      'Baseline not established yet. This is neutral and expected early on.';
+
+  @override
+  String get sleepHeartRateComparisonUnavailableText =>
+      'Baseline comparison is currently unavailable for this night.';
+
+  @override
+  String sleepHeartRateDeltaText(String direction, String delta, String unit) {
+    return 'Your sleep HR is $direction baseline by $delta $unit.';
+  }
+
+  @override
+  String get sleepHeartRateDirectionBelow => 'below';
+
+  @override
+  String get sleepHeartRateDirectionAbove => 'above';
+
+  @override
+  String get sleepHeartRateComparedBaselineSubtitle =>
+      'Compared with your established sleep baseline.';
+
+  @override
+  String get sleepHeartRateNoBaselineSubtitle =>
+      'Baseline is not established yet. This is neutral.';
+
+  @override
+  String get sleepHeartRateSamplesUnavailable =>
+      'No heart-rate samples were stored for this night. Trend chart is unavailable.';
+
+  @override
+  String sleepHeartRateDashedLineHint(String value, String unit) {
+    return 'Dashed line shows baseline ($value $unit).';
+  }
+
+  @override
+  String get sleepBpmUnit => 'bpm';
+
+  @override
+  String get sleepRawImportImportedAt => 'Imported at';
+
+  @override
+  String get sleepRawImportStatus => 'Status';
+
+  @override
+  String get sleepRawImportSource => 'Source';
+
+  @override
+  String get sleepRawImportApp => 'App';
+
+  @override
+  String get sleepRawImportConfidence => 'Confidence';
+
+  @override
+  String get sleepRawImportPayload => 'Payload';
 }

@@ -1,10 +1,7 @@
 import 'package:flutter/services.dart';
 
 class SafPickedDirectory {
-  const SafPickedDirectory({
-    required this.treeUri,
-    required this.displayPath,
-  });
+  const SafPickedDirectory({required this.treeUri, required this.displayPath});
 
   final String treeUri;
   final String displayPath;

@@ -10,6 +10,8 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -25,20 +27,28 @@ import java.time.Instant
 
 class MainActivity : FlutterFragmentActivity() {
     private val healthChannelName = "hypertrack.health/steps"
+    private val sleepHealthConnectChannelName = "hypertrack.health/sleep_health_connect"
     private val storageChannelName = "hypertrack.storage/saf"
     private var pendingPermissionResult: MethodChannel.Result? = null
+    private var pendingPermissionRequestSet: Set<String>? = null
     private var pendingDirectoryPickerResult: MethodChannel.Result? = null
     private val requiredPermissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
+    )
+    private val requiredSleepPermissions = setOf(
+        HealthPermission.getReadPermission(SleepSessionRecord::class),
+        HealthPermission.getReadPermission(HeartRateRecord::class),
     )
 
     private val permissionLauncher = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract(),
     ) { _: Set<String> ->
         val result = pendingPermissionResult ?: return@registerForActivityResult
+        val requestedPermissions = pendingPermissionRequestSet ?: requiredPermissions
         pendingPermissionResult = null
+        pendingPermissionRequestSet = null
         CoroutineScope(Dispatchers.IO).launch {
-            val granted = hasAllPermissions()
+            val granted = hasPermissions(requestedPermissions)
             withContext(Dispatchers.Main) {
                 result.success(granted)
             }
@@ -83,6 +93,18 @@ class MainActivity : FlutterFragmentActivity() {
                 else -> result.notImplemented()
             }
         }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            sleepHealthConnectChannelName,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getAvailability" -> handleSleepAvailability(result)
+                "checkPermissions" -> handleSleepCheckPermissions(result)
+                "requestPermissions" -> handleSleepRequestPermissions(result)
+                "readSleepAndHeartRate" -> handleReadSleepAndHeartRate(call, result)
+                else -> result.notImplemented()
+            }
+        }
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -110,7 +132,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            val alreadyGranted = hasAllPermissions()
+            val alreadyGranted = hasPermissions(requiredPermissions)
             if (alreadyGranted) {
                 withContext(Dispatchers.Main) { result.success(true) }
                 return@launch
@@ -118,8 +140,242 @@ class MainActivity : FlutterFragmentActivity() {
 
             withContext(Dispatchers.Main) {
                 pendingPermissionResult = result
+                pendingPermissionRequestSet = requiredPermissions
                 permissionLauncher.launch(requiredPermissions)
             }
+        }
+    }
+
+    private fun handleSleepAvailability(result: MethodChannel.Result) {
+        val status = HealthConnectClient.getSdkStatus(this)
+        val mapped = when (status) {
+            HealthConnectClient.SDK_AVAILABLE -> "available"
+            HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> "not_installed"
+            else -> "unavailable"
+        }
+        result.success(mapped)
+    }
+
+    private fun handleSleepCheckPermissions(result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val status = HealthConnectClient.getSdkStatus(this@MainActivity)
+            if (status != HealthConnectClient.SDK_AVAILABLE) {
+                withContext(Dispatchers.Main) {
+                    result.success(
+                        mapOf(
+                            "sleepGranted" to false,
+                            "heartRateGranted" to false,
+                        ),
+                    )
+                }
+                return@launch
+            }
+            val granted = HealthConnectClient.getOrCreate(this@MainActivity)
+                .permissionController
+                .getGrantedPermissions()
+            withContext(Dispatchers.Main) {
+                result.success(
+                    mapOf(
+                        "sleepGranted" to granted.contains(
+                            HealthPermission.getReadPermission(SleepSessionRecord::class),
+                        ),
+                        "heartRateGranted" to granted.contains(
+                            HealthPermission.getReadPermission(HeartRateRecord::class),
+                        ),
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun handleSleepRequestPermissions(result: MethodChannel.Result) {
+        val status = HealthConnectClient.getSdkStatus(this)
+        if (status != HealthConnectClient.SDK_AVAILABLE) {
+            result.error("not_available", "Health Connect not available", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            val granted = HealthConnectClient.getOrCreate(this@MainActivity)
+                .permissionController
+                .getGrantedPermissions()
+            if (granted.containsAll(requiredSleepPermissions)) {
+                withContext(Dispatchers.Main) {
+                    result.success(
+                        mapOf(
+                            "sleepGranted" to true,
+                            "heartRateGranted" to true,
+                        ),
+                    )
+                }
+                return@launch
+            }
+            withContext(Dispatchers.Main) {
+                pendingPermissionResult = object : MethodChannel.Result {
+                    override fun success(res: Any?) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val current = HealthConnectClient.getOrCreate(this@MainActivity)
+                                .permissionController
+                                .getGrantedPermissions()
+                            withContext(Dispatchers.Main) {
+                                result.success(
+                                    mapOf(
+                                        "sleepGranted" to current.contains(
+                                            HealthPermission.getReadPermission(SleepSessionRecord::class),
+                                        ),
+                                        "heartRateGranted" to current.contains(
+                                            HealthPermission.getReadPermission(HeartRateRecord::class),
+                                        ),
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                    override fun error(code: String, message: String?, details: Any?) {
+                        result.error(code, message, details)
+                    }
+                    override fun notImplemented() {
+                        result.notImplemented()
+                    }
+                }
+                pendingPermissionRequestSet = requiredSleepPermissions
+                permissionLauncher.launch(requiredSleepPermissions)
+            }
+        }
+    }
+
+    private fun handleReadSleepAndHeartRate(call: MethodCall, result: MethodChannel.Result) {
+        val status = HealthConnectClient.getSdkStatus(this)
+        if (status != HealthConnectClient.SDK_AVAILABLE) {
+            result.error("not_available", "Health Connect not available", null)
+            return
+        }
+
+        val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
+        val fromIso = args["fromUtcIso"] as? String
+        val toIso = args["toUtcIso"] as? String
+        if (fromIso == null || toIso == null) {
+            result.success(
+                mapOf(
+                    "sessions" to emptyList<Map<String, Any?>>(),
+                    "stageSegments" to emptyList<Map<String, Any?>>(),
+                    "heartRateSamples" to emptyList<Map<String, Any?>>(),
+                ),
+            )
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val hasPermission = hasPermissions(requiredSleepPermissions)
+            if (!hasPermission) {
+                withContext(Dispatchers.Main) {
+                    result.error("permission_denied", "Permissions not granted", null)
+                }
+                return@launch
+            }
+
+            try {
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                val from = Instant.parse(fromIso)
+                val to = Instant.parse(toIso)
+
+                val sessionsRecords = mutableListOf<SleepSessionRecord>()
+                var sessionsPageToken: String? = null
+                do {
+                    val sessionsResponse = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = SleepSessionRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(from, to),
+                            pageToken = sessionsPageToken,
+                        ),
+                    )
+                    sessionsRecords.addAll(sessionsResponse.records)
+                    sessionsPageToken = sessionsResponse.pageToken
+                } while (sessionsPageToken != null)
+
+                val hrRecords = mutableListOf<HeartRateRecord>()
+                var hrPageToken: String? = null
+                do {
+                    val hrResponse = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = HeartRateRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(from, to),
+                            pageToken = hrPageToken,
+                        ),
+                    )
+                    hrRecords.addAll(hrResponse.records)
+                    hrPageToken = hrResponse.pageToken
+                } while (hrPageToken != null)
+
+                val sessions = sessionsRecords.map { record ->
+                    mapOf(
+                        "recordId" to record.metadata.id,
+                        "startAtUtcIso" to record.startTime.toString(),
+                        "endAtUtcIso" to record.endTime.toString(),
+                        "platformSessionType" to "sleep",
+                        "sourcePlatform" to "google_health_connect",
+                        "sourceAppId" to record.metadata.dataOrigin.packageName,
+                        "sourceRecordHash" to record.metadata.id,
+                    )
+                }
+
+                val stageSegments = sessionsRecords.flatMap { record ->
+                    record.stages.mapIndexed { index, stage ->
+                        mapOf(
+                            "recordId" to "${record.metadata.id}-$index",
+                            "sessionRecordId" to record.metadata.id,
+                            "startAtUtcIso" to stage.startTime.toString(),
+                            "endAtUtcIso" to stage.endTime.toString(),
+                            "platformStage" to mapSleepStage(stage.stage),
+                            "sourcePlatform" to "google_health_connect",
+                            "sourceAppId" to record.metadata.dataOrigin.packageName,
+                            "sourceRecordHash" to "${record.metadata.id}-$index",
+                        )
+                    }
+                }
+
+                val hrRows = hrRecords.flatMap { record ->
+                    record.samples.mapIndexedNotNull { index, sample ->
+                        val sessionId = sessionsRecords.firstOrNull {
+                            sample.time in it.startTime..it.endTime
+                        }?.metadata?.id ?: return@mapIndexedNotNull null
+                        mapOf(
+                            "recordId" to "${record.metadata.id}-$index",
+                            "sessionRecordId" to sessionId,
+                            "sampledAtUtcIso" to sample.time.toString(),
+                            "bpm" to sample.beatsPerMinute.toDouble(),
+                            "sourcePlatform" to "google_health_connect",
+                            "sourceAppId" to record.metadata.dataOrigin.packageName,
+                            "sourceRecordHash" to "${record.metadata.id}-$index",
+                        )
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    result.success(
+                        mapOf(
+                            "sessions" to sessions,
+                            "stageSegments" to stageSegments,
+                            "heartRateSamples" to hrRows,
+                        ),
+                    )
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("query_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun mapSleepStage(stage: Int): String {
+        return when (stage) {
+            SleepSessionRecord.STAGE_TYPE_AWAKE -> "awake"
+            SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED -> "awake_in_bed"
+            SleepSessionRecord.STAGE_TYPE_DEEP -> "deep"
+            SleepSessionRecord.STAGE_TYPE_LIGHT -> "light"
+            SleepSessionRecord.STAGE_TYPE_REM -> "rem"
+            SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> "out_of_bed"
+            else -> "asleep"
         }
     }
 
@@ -139,7 +395,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            val hasPermission = hasAllPermissions()
+            val hasPermission = hasPermissions(requiredPermissions)
             if (!hasPermission) {
                 withContext(Dispatchers.Main) {
                     result.error("permission_denied", "Permissions not granted", null)
@@ -185,7 +441,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private suspend fun hasAllPermissions(): Boolean {
+    private suspend fun hasPermissions(requiredPermissions: Set<String>): Boolean {
         val status = HealthConnectClient.getSdkStatus(this)
         if (status != HealthConnectClient.SDK_AVAILABLE) return false
         val granted = HealthConnectClient.getOrCreate(this)
