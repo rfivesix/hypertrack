@@ -75,7 +75,10 @@ void main() {
           idempotencyKey: 'w1',
           startUtc: DateTime.utc(2026, 1, 1, 10),
           endUtc: DateTime.utc(2026, 1, 1, 11),
+          startZoneOffsetMinutes: 120,
+          endZoneOffsetMinutes: 120,
           workoutType: ExportWorkoutType.strength,
+          notes: 'Workout summary',
         ),
       );
 
@@ -118,6 +121,90 @@ void main() {
       final args = measurementCall.arguments as Map;
       expect(args['idempotencyKey'], 'm1');
       expect(args['type'], 'bmi');
+      expect(args['zoneOffsetMinutes'], isNotNull);
+    });
+
+    test('health connect workout payload forwards notes and zone offsets',
+        () async {
+      final adapter = HealthConnectExportAdapter();
+      await adapter.writeWorkout(
+        ExportWorkoutRecord(
+          idempotencyKey: 'w-zone',
+          startUtc: DateTime.utc(2026, 1, 2, 9),
+          endUtc: DateTime.utc(2026, 1, 2, 10),
+          startZoneOffsetMinutes: -60,
+          endZoneOffsetMinutes: -60,
+          workoutType: ExportWorkoutType.running,
+          title: 'Morning Run',
+          notes: 'Felt good',
+        ),
+      );
+
+      final workoutCall =
+          connectCalls.firstWhere((call) => call.method == 'writeWorkout');
+      final args = workoutCall.arguments as Map;
+      expect(args['notes'], 'Felt good');
+      expect(args['startZoneOffsetMinutes'], -60);
+      expect(args['endZoneOffsetMinutes'], -60);
+    });
+
+    test('health connect adapter forwards batch writes as list payloads',
+        () async {
+      final adapter = HealthConnectExportAdapter();
+      await adapter.writeMeasurementsBatch([
+        ExportMeasurementRecord(
+          idempotencyKey: 'm-b1',
+          timestampUtc: DateTime.utc(2026, 1, 3),
+          type: ExportMeasurementType.weight,
+          value: 81,
+        ),
+        ExportMeasurementRecord(
+          idempotencyKey: 'm-b2',
+          timestampUtc: DateTime.utc(2026, 1, 4),
+          type: ExportMeasurementType.bodyFatPercentage,
+          value: 18,
+        ),
+      ]);
+      await adapter.writeNutritionBatch([
+        ExportNutritionRecord(
+          idempotencyKey: 'n-b1',
+          timestampUtc: DateTime.utc(2026, 1, 3),
+          caloriesKcal: 200,
+        ),
+      ]);
+      await adapter.writeHydrationBatch([
+        ExportHydrationRecord(
+          idempotencyKey: 'h-b1',
+          timestampUtc: DateTime.utc(2026, 1, 3),
+          volumeLiters: 0.5,
+        ),
+      ]);
+      await adapter.writeWorkoutsBatch([
+        ExportWorkoutRecord(
+          idempotencyKey: 'w-b1',
+          startUtc: DateTime.utc(2026, 1, 3, 8),
+          endUtc: DateTime.utc(2026, 1, 3, 9),
+          workoutType: ExportWorkoutType.walking,
+        ),
+      ]);
+
+      final measurementsBatch = connectCalls
+          .firstWhere((call) => call.method == 'writeMeasurementsBatch')
+          .arguments as Map;
+      final nutritionBatch = connectCalls
+          .firstWhere((call) => call.method == 'writeNutritionBatch')
+          .arguments as Map;
+      final hydrationBatch = connectCalls
+          .firstWhere((call) => call.method == 'writeHydrationBatch')
+          .arguments as Map;
+      final workoutsBatch = connectCalls
+          .firstWhere((call) => call.method == 'writeWorkoutsBatch')
+          .arguments as Map;
+
+      expect((measurementsBatch['records'] as List).length, 2);
+      expect((nutritionBatch['records'] as List).length, 1);
+      expect((hydrationBatch['records'] as List).length, 1);
+      expect((workoutsBatch['records'] as List).length, 1);
     });
   });
 }

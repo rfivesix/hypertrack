@@ -31,6 +31,9 @@ class FluidEntry {
   /// Optional identifier linking this fluid entry to a food entry.
   final int? linked_food_entry_id; // *** NEU ***
 
+  /// Last modification timestamp from persistence when available.
+  final DateTime? updatedAt;
+
   /// Creates a new [FluidEntry] instance.
   FluidEntry({
     this.id,
@@ -42,6 +45,7 @@ class FluidEntry {
     this.carbsPer100ml,
     this.caffeinePer100ml,
     this.linked_food_entry_id, // *** NEU ***
+    this.updatedAt,
   });
 
   /// Converts the [FluidEntry] instance to a Map for database storage.

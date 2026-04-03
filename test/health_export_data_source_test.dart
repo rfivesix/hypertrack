@@ -56,8 +56,11 @@ void main() {
       final workout = payload.workouts.first;
       expect(workout.workoutType.name, 'strength');
       expect(workout.idempotencyKey, startsWith('workout_session:'));
+      expect(workout.startZoneOffsetMinutes, isNotNull);
+      expect(workout.endZoneOffsetMinutes, isNotNull);
       expect(
         workout.notes,
+        'Session note\n\n'
         'Kurzhantelbankdrücken — W 20kg x 20, W 30kg x 8, W 40kg x 3, S 45kg x 8, F 45kg x 8\n'
         'Brustpresse — S 80kg x 12, S 90kg x 10, D 70kg x 8\n'
         'Seitheben — S 12kg x 15, S 12kg x 14, F 10kg x 16',
@@ -125,6 +128,7 @@ Future<void> _seed(AppDatabase db) async {
           endTime: drift.Value(now.subtract(const Duration(hours: 1))),
           status: const drift.Value('completed'),
           routineNameSnapshot: const drift.Value('Gym Strength'),
+          notes: const drift.Value('Session note'),
         ),
       );
   await db.batch((batch) {

@@ -28,8 +28,24 @@ class AppleHealthExportAdapter implements HealthExportAdapter {
   }
 
   @override
+  Future<void> writeMeasurementsBatch(
+    List<ExportMeasurementRecord> records,
+  ) async {
+    for (final record in records) {
+      await writeMeasurement(record);
+    }
+  }
+
+  @override
   Future<void> writeNutrition(ExportNutritionRecord record) {
     return _platform.writeNutrition(record.toMap());
+  }
+
+  @override
+  Future<void> writeNutritionBatch(List<ExportNutritionRecord> records) async {
+    for (final record in records) {
+      await writeNutrition(record);
+    }
   }
 
   @override
@@ -38,7 +54,21 @@ class AppleHealthExportAdapter implements HealthExportAdapter {
   }
 
   @override
+  Future<void> writeHydrationBatch(List<ExportHydrationRecord> records) async {
+    for (final record in records) {
+      await writeHydration(record);
+    }
+  }
+
+  @override
   Future<void> writeWorkout(ExportWorkoutRecord record) {
     return _platform.writeWorkout(record.toMap());
+  }
+
+  @override
+  Future<void> writeWorkoutsBatch(List<ExportWorkoutRecord> records) async {
+    for (final record in records) {
+      await writeWorkout(record);
+    }
   }
 }

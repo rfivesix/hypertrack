@@ -14,18 +14,21 @@ class ExportMeasurementRecord {
   const ExportMeasurementRecord({
     required this.idempotencyKey,
     required this.timestampUtc,
+    this.zoneOffsetMinutes,
     required this.type,
     required this.value,
   });
 
   final String idempotencyKey;
   final DateTime timestampUtc;
+  final int? zoneOffsetMinutes;
   final ExportMeasurementType type;
   final double value;
 
   Map<String, dynamic> toMap() => {
         'idempotencyKey': idempotencyKey,
         'timestampUtcIso': timestampUtc.toUtc().toIso8601String(),
+        'zoneOffsetMinutes': zoneOffsetMinutes,
         'type': type.name,
         'value': value,
       };
@@ -35,6 +38,7 @@ class ExportNutritionRecord {
   const ExportNutritionRecord({
     required this.idempotencyKey,
     required this.timestampUtc,
+    this.zoneOffsetMinutes,
     this.caloriesKcal,
     this.proteinGrams,
     this.carbsGrams,
@@ -46,6 +50,7 @@ class ExportNutritionRecord {
 
   final String idempotencyKey;
   final DateTime timestampUtc;
+  final int? zoneOffsetMinutes;
   final double? caloriesKcal;
   final double? proteinGrams;
   final double? carbsGrams;
@@ -66,6 +71,7 @@ class ExportNutritionRecord {
   Map<String, dynamic> toMap() => {
         'idempotencyKey': idempotencyKey,
         'timestampUtcIso': timestampUtc.toUtc().toIso8601String(),
+        'zoneOffsetMinutes': zoneOffsetMinutes,
         'caloriesKcal': caloriesKcal,
         'proteinGrams': proteinGrams,
         'carbsGrams': carbsGrams,
@@ -80,16 +86,19 @@ class ExportHydrationRecord {
   const ExportHydrationRecord({
     required this.idempotencyKey,
     required this.timestampUtc,
+    this.zoneOffsetMinutes,
     required this.volumeLiters,
   });
 
   final String idempotencyKey;
   final DateTime timestampUtc;
+  final int? zoneOffsetMinutes;
   final double volumeLiters;
 
   Map<String, dynamic> toMap() => {
         'idempotencyKey': idempotencyKey,
         'timestampUtcIso': timestampUtc.toUtc().toIso8601String(),
+        'zoneOffsetMinutes': zoneOffsetMinutes,
         'volumeLiters': volumeLiters,
       };
 }
@@ -99,6 +108,8 @@ class ExportWorkoutRecord {
     required this.idempotencyKey,
     required this.startUtc,
     required this.endUtc,
+    this.startZoneOffsetMinutes,
+    this.endZoneOffsetMinutes,
     required this.workoutType,
     this.caloriesBurnedKcal,
     this.title,
@@ -108,6 +119,8 @@ class ExportWorkoutRecord {
   final String idempotencyKey;
   final DateTime startUtc;
   final DateTime endUtc;
+  final int? startZoneOffsetMinutes;
+  final int? endZoneOffsetMinutes;
   final ExportWorkoutType workoutType;
   final double? caloriesBurnedKcal;
   final String? title;
@@ -117,6 +130,8 @@ class ExportWorkoutRecord {
         'idempotencyKey': idempotencyKey,
         'startUtcIso': startUtc.toUtc().toIso8601String(),
         'endUtcIso': endUtc.toUtc().toIso8601String(),
+        'startZoneOffsetMinutes': startZoneOffsetMinutes,
+        'endZoneOffsetMinutes': endZoneOffsetMinutes,
         'workoutType': workoutType.name,
         'caloriesBurnedKcal': caloriesBurnedKcal,
         'title': title,

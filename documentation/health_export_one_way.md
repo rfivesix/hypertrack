@@ -14,7 +14,7 @@ Export domains:
 - Measurements: weight, body fat %, BMI (if present)
 - Nutrition/Hydration: aggregate nutrient values per timestamped nutrition entry and hydration entries
 - Workouts: session-level start/end with coarse workout type fallback to strength/resistance
-  - Includes a plain-text set summary in workout notes/metadata when supported by platform APIs
+  - Includes workout description text plus a plain-text set summary in workout notes/metadata when supported by platform APIs
 
 ## Explicit non-goals
 
@@ -55,6 +55,13 @@ Export domains:
 Note:
 - Android Health Connect export currently writes weight and body-fat measurements.
 - BMI stays available in the shared model for Apple Health, but is skipped for Android Health Connect.
+- Health Connect writes use zone offsets from source event timestamps when available (instead of forcing UTC).
+
+## Backfill vs incremental sync behavior
+
+- Initial manual export now performs an all-time backfill (no 30-day cap).
+- Follow-up exports are incremental and load only records updated since the most recent successful full-domain export checkpoint.
+- Export remains one-way and scoped to Hypertrack-owned local records.
 
 ## Idempotency and retry safety
 
@@ -75,6 +82,7 @@ Behavior:
 - Repeated exports skip already exported keys.
 - Domain failures only mark that domain as failed, preserving others.
 - Retrying after transient failure is safe and does not duplicate prior successful writes.
+- Writes execute in chunks of up to 1,000 records per batch per domain to reduce fragile large-history writes.
 
 ## Status model
 
@@ -103,4 +111,6 @@ Stored in shared preferences (status payload) and shown in Settings.
 
 - This batch intentionally exports only data that maps cleanly from existing model fields.
 - Workout calories are only exported if already present in payload.
-- Health platform write metadata is kept minimal for safety and compatibility.
+- Health platform write metadata is still conservative (`manualEntry`) and does not yet set richer client/device metadata fields such as `clientRecordId`/`clientRecordVersion`.
+- Google Fit presentation is external to Hypertrack: if `title`/`notes` are written into Health Connect but not displayed in Google Fit UI, this is a downstream display limitation rather than a Hypertrack write-path failure.
+- Android background/periodic export scheduling via WorkManager is not implemented in this module yet; export remains user-triggered foreground flow.
