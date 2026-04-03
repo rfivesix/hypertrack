@@ -290,6 +290,8 @@ class HealthExportDataSource {
         .where(
           (workout) =>
               workout.endTime != null &&
+              // Keep source-level invariant strict: exported workouts must have a
+              // positive duration window; zero-length sessions are dropped.
               workout.endTime!.toUtc().isAfter(workout.startTime.toUtc()),
         )
         .map(_mapWorkout)
@@ -482,7 +484,7 @@ class HealthExportDataSource {
     if (hasDescription && hasSummary) {
       return '$description\n\n$summary';
     }
-    return hasDescription ? description : summary;
+    return description ?? summary;
   }
 
   String _setTypeAbbreviation(String rawSetType) {
