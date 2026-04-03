@@ -351,6 +351,12 @@ import UIKit
     let calories = (args["caloriesBurnedKcal"] as? NSNumber).map {
       HKQuantity(unit: HKUnit.kilocalorie(), doubleValue: $0.doubleValue)
     }
+    let summaryNotes = (args["notes"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let metadata: [String: Any]? = {
+      guard let summaryNotes, !summaryNotes.isEmpty else { return nil }
+      // HealthKit workout has no dedicated notes field; persist summary in metadata.
+      return ["hypertrack_workout_summary": summaryNotes]
+    }()
     let duration = end.timeIntervalSince(start)
     let workout = HKWorkout(
       activityType: workoutType,
@@ -359,7 +365,7 @@ import UIKit
       duration: duration,
       totalEnergyBurned: calories,
       totalDistance: nil,
-      metadata: nil
+      metadata: metadata
     )
     healthStore.save(workout) { success, error in
       if let error = error {

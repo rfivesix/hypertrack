@@ -5,6 +5,7 @@ package com.rfivesix.hypertrack
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import androidx.health.connect.client.HealthConnectClient
@@ -18,6 +19,7 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Energy
@@ -36,6 +38,11 @@ import java.time.Instant
 import java.time.ZoneOffset
 
 class MainActivity : FlutterFragmentActivity() {
+    private companion object {
+        private const val exportDebugTag = "HealthExportHC"
+        private const val exportIntervalSeconds = 1L
+    }
+
     private val healthChannelName = "hypertrack.health/steps"
     private val sleepHealthConnectChannelName = "hypertrack.health/sleep_health_connect"
     private val exportHealthConnectChannelName = "hypertrack.health/export_health_connect"
@@ -456,18 +463,32 @@ class MainActivity : FlutterFragmentActivity() {
                         time = at,
                         zoneOffset = ZoneOffset.UTC,
                         weight = Mass.kilograms(value),
+                        metadata = Metadata.manualEntry(),
                     )
                     "bodyFatPercentage" -> BodyFatRecord(
                         time = at,
                         zoneOffset = ZoneOffset.UTC,
-                        percentage = Percentage(value),
+                        // Health Connect BodyFatRecord expects 0..100 as percent units.
+                        percentage = Percentage(normalizeBodyFatPercent(value)),
+                        metadata = Metadata.manualEntry(),
                     )
                     "bmi" -> null
                     else -> null
                 }
                 if (typeRaw == "bmi") {
-                    withContext(Dispatchers.Main) { result.success(true) }
+                    withContext(Dispatchers.Main) {
+                        result.error(
+                            "unsupported_type",
+                            "BMI export is not supported by Android Health Connect writer",
+                            null,
+                        )
+                    }
                     return@launch
+                }
+                if (typeRaw == "bodyFatPercentage") {
+                    logExportDebug(
+                        "BodyFat write sourceType=$typeRaw rawValue=$value normalizedPercent=${normalizeBodyFatPercent(value)}",
+                    )
                 }
                 if (record == null) {
                     withContext(Dispatchers.Main) {
@@ -496,21 +517,110 @@ class MainActivity : FlutterFragmentActivity() {
             try {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val at = Instant.parse(timestampIso)
+                val end = at.plusSeconds(exportIntervalSeconds)
+
+                val calories = sanitizeNutritionField(args, "caloriesKcal", max = 100_000.0)
+                val protein = sanitizeNutritionField(args, "proteinGrams", max = 100_000.0)
+                val carbs = sanitizeNutritionField(args, "carbsGrams", max = 100_000.0)
+                val fat = sanitizeNutritionField(args, "fatGrams", max = 100_000.0)
+                val fiber = sanitizeNutritionField(args, "fiberGrams", max = 100_000.0)
+                val sugar = sanitizeNutritionField(args, "sugarGrams", max = 100_000.0)
+                val sodium = sanitizeNutritionField(args, "sodiumGrams", max = 100.0)
+
+                val attemptedPayload = linkedMapOf<String, Double>()
+                calories?.let { attemptedPayload["caloriesKcal"] = it }
+                protein?.let { attemptedPayload["proteinGrams"] = it }
+                carbs?.let { attemptedPayload["carbsGrams"] = it }
+                fat?.let { attemptedPayload["fatGrams"] = it }
+                fiber?.let { attemptedPayload["fiberGrams"] = it }
+                sugar?.let { attemptedPayload["sugarGrams"] = it }
+                sodium?.let { attemptedPayload["sodiumGrams"] = it }
+
+                if (attemptedPayload.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error(
+                            "invalid_args",
+                            "Nutrition payload has no valid fields after sanitization",
+                            null,
+                        )
+                    }
+                    return@launch
+                }
+
+                logExportDebug("Nutrition attempt payload=$attemptedPayload at=$timestampIso")
+
                 val record = NutritionRecord(
                     startTime = at,
                     startZoneOffset = ZoneOffset.UTC,
-                    endTime = at,
+                    endTime = end,
                     endZoneOffset = ZoneOffset.UTC,
-                    energy = (args["caloriesKcal"] as? Number)?.toDouble()?.let(Energy::kilocalories),
-                    protein = (args["proteinGrams"] as? Number)?.toDouble()?.let(Mass::grams),
-                    totalCarbohydrate = (args["carbsGrams"] as? Number)?.toDouble()?.let(Mass::grams),
-                    totalFat = (args["fatGrams"] as? Number)?.toDouble()?.let(Mass::grams),
-                    dietaryFiber = (args["fiberGrams"] as? Number)?.toDouble()?.let(Mass::grams),
-                    sugar = (args["sugarGrams"] as? Number)?.toDouble()?.let(Mass::grams),
-                    sodium = (args["sodiumGrams"] as? Number)?.toDouble()?.let(Mass::grams),
+                    metadata = Metadata.manualEntry(),
+                    energy = calories?.let(Energy::kilocalories),
+                    protein = protein?.let(Mass::grams),
+                    totalCarbohydrate = carbs?.let(Mass::grams),
+                    totalFat = fat?.let(Mass::grams),
+                    dietaryFiber = fiber?.let(Mass::grams),
+                    sugar = sugar?.let(Mass::grams),
+                    sodium = sodium?.let(Mass::grams),
                 )
-                client.insertRecords(listOf(record))
-                withContext(Dispatchers.Main) { result.success(true) }
+                try {
+                    client.insertRecords(listOf(record))
+                    withContext(Dispatchers.Main) { result.success(true) }
+                } catch (e: Exception) {
+                    val hasOptionalFields = fiber != null || sugar != null || sodium != null
+                    logExportError("Nutrition write failed payload=$attemptedPayload", e)
+                    if (!hasOptionalFields) {
+                        withContext(Dispatchers.Main) {
+                            result.error("write_failed", e.message, null)
+                        }
+                        return@launch
+                    }
+
+                    val fallbackPayload = linkedMapOf<String, Double>()
+                    calories?.let { fallbackPayload["caloriesKcal"] = it }
+                    protein?.let { fallbackPayload["proteinGrams"] = it }
+                    carbs?.let { fallbackPayload["carbsGrams"] = it }
+                    fat?.let { fallbackPayload["fatGrams"] = it }
+
+                    if (fallbackPayload.isEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            result.error("write_failed", e.message, null)
+                        }
+                        return@launch
+                    }
+
+                    logExportDebug(
+                        "Nutrition retry macros-only payload=$fallbackPayload dropped=[fiberGrams,sugarGrams,sodiumGrams]",
+                    )
+                    try {
+                        val fallbackRecord = NutritionRecord(
+                            startTime = at,
+                            startZoneOffset = ZoneOffset.UTC,
+                            endTime = end,
+                            endZoneOffset = ZoneOffset.UTC,
+                            metadata = Metadata.manualEntry(),
+                            energy = calories?.let(Energy::kilocalories),
+                            protein = protein?.let(Mass::grams),
+                            totalCarbohydrate = carbs?.let(Mass::grams),
+                            totalFat = fat?.let(Mass::grams),
+                        )
+                        client.insertRecords(listOf(fallbackRecord))
+                        logExportDebug(
+                            "Nutrition retry succeeded with macros-only payload; optional fields likely caused validation failure",
+                        )
+                        withContext(Dispatchers.Main) { result.success(true) }
+                    } catch (fallbackError: Exception) {
+                        logExportError(
+                            "Nutrition retry failed payload=$fallbackPayload",
+                            fallbackError,
+                        )
+                        val combined =
+                            "initial=${e.message ?: "unknown"}; fallback=${fallbackError.message ?: "unknown"}"
+                        withContext(Dispatchers.Main) {
+                            result.error("write_failed", combined, null)
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     result.error("write_failed", e.message, null)
@@ -527,25 +637,70 @@ class MainActivity : FlutterFragmentActivity() {
             result.error("invalid_args", "Invalid hydration payload", null)
             return
         }
+        if (!liters.isFinite() || liters < 0.0 || liters > 100.0) {
+            result.error("invalid_args", "Hydration volume out of supported range", null)
+            return
+        }
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val at = Instant.parse(timestampIso)
+                val end = at.plusSeconds(exportIntervalSeconds)
                 val record = HydrationRecord(
                     startTime = at,
                     startZoneOffset = ZoneOffset.UTC,
-                    endTime = at,
+                    endTime = end,
                     endZoneOffset = ZoneOffset.UTC,
+                    metadata = Metadata.manualEntry(),
                     volume = Volume.liters(liters),
                 )
+                logExportDebug("Hydration attempt liters=$liters at=$timestampIso")
                 client.insertRecords(listOf(record))
                 withContext(Dispatchers.Main) { result.success(true) }
             } catch (e: Exception) {
+                logExportError("Hydration write failed liters=$liters at=$timestampIso", e)
                 withContext(Dispatchers.Main) {
                     result.error("write_failed", e.message, null)
                 }
             }
         }
+    }
+
+    private fun sanitizeNutritionField(
+        payload: Map<*, *>,
+        key: String,
+        max: Double,
+    ): Double? {
+        val raw = payload[key] as? Number ?: return null
+        val value = raw.toDouble()
+        if (!value.isFinite()) {
+            logExportDebug("Nutrition field omitted $key (non-finite)")
+            return null
+        }
+        if (value < 0.0 || value > max) {
+            logExportDebug("Nutrition field omitted $key=$value (out-of-range 0..$max)")
+            return null
+        }
+        return value
+    }
+
+    private fun normalizeBodyFatPercent(value: Double): Double {
+        if (!value.isFinite()) {
+            throw IllegalArgumentException("Body fat percentage must be finite")
+        }
+        val normalized = if (value in 0.0..1.0) value * 100.0 else value
+        if (normalized < 0.0 || normalized > 100.0) {
+            throw IllegalArgumentException("Body fat percentage must be in 0..100")
+        }
+        return normalized
+    }
+
+    private fun logExportDebug(message: String) {
+        Log.d(exportDebugTag, message)
+    }
+
+    private fun logExportError(message: String, error: Throwable) {
+        Log.e(exportDebugTag, "$message error=${error.message}", error)
     }
 
     private fun handleWriteWorkout(call: MethodCall, result: MethodChannel.Result) {
@@ -574,8 +729,10 @@ class MainActivity : FlutterFragmentActivity() {
                     startZoneOffset = ZoneOffset.UTC,
                     endTime = end,
                     endZoneOffset = ZoneOffset.UTC,
+                    metadata = Metadata.manualEntry(),
                     exerciseType = exerciseType,
                     title = args["title"] as? String,
+                    notes = args["notes"] as? String,
                 )
                 client.insertRecords(listOf(record))
                 withContext(Dispatchers.Main) { result.success(true) }

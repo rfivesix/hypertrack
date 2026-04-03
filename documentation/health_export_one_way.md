@@ -14,6 +14,7 @@ Export domains:
 - Measurements: weight, body fat %, BMI (if present)
 - Nutrition/Hydration: aggregate nutrient values per timestamped nutrition entry and hydration entries
 - Workouts: session-level start/end with coarse workout type fallback to strength/resistance
+  - Includes a plain-text set summary in workout notes/metadata when supported by platform APIs
 
 ## Explicit non-goals
 
@@ -50,6 +51,10 @@ Export domains:
 
 - iOS: `ios/Runner/AppDelegate.swift` channel `hypertrack.health/export_apple_health`
 - Android: `android/app/src/main/kotlin/com/rfivesix/hypertrack/MainActivity.kt` channel `hypertrack.health/export_health_connect`
+
+Note:
+- Android Health Connect export currently writes weight and body-fat measurements.
+- BMI stays available in the shared model for Apple Health, but is skipped for Android Health Connect.
 
 ## Idempotency and retry safety
 

@@ -11,12 +11,17 @@ import 'package:hypertrack/health_export/models/export_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeAdapter implements HealthExportAdapter {
-  _FakeAdapter(this.platform, {this.failWorkout = false});
+  _FakeAdapter(
+    this.platform, {
+    this.failWorkout = false,
+    this.failNutrition = false,
+  });
 
   @override
   final HealthExportPlatform platform;
 
   final bool failWorkout;
+  final bool failNutrition;
 
   int measurementWrites = 0;
   int nutritionWrites = 0;
@@ -43,6 +48,9 @@ class _FakeAdapter implements HealthExportAdapter {
   @override
   Future<void> writeNutrition(ExportNutritionRecord record) async {
     nutritionWrites += 1;
+    if (failNutrition) {
+      throw Exception('nutrition failure');
+    }
   }
 
   @override
@@ -191,6 +199,66 @@ void main() {
         isNotNull,
       );
     });
+
+    test('keeps hydration writes running and reports split diagnostics',
+        () async {
+      final adapter = _FakeAdapter(
+        HealthExportPlatform.healthConnect,
+        failNutrition: true,
+      );
+      final service = HealthExportService(
+        adapters: [adapter],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+
+      await service.requestPermissions(HealthExportPlatform.healthConnect);
+      final result = await service.exportNow(
+        HealthExportPlatform.healthConnect,
+        lookbackDays: 1,
+      );
+
+      expect(result.success, isFalse);
+      expect(adapter.nutritionWrites, greaterThan(0));
+      expect(adapter.hydrationWrites, greaterThan(0));
+
+      final statuses = await service.getStatuses();
+      final platformStatus = statuses[HealthExportPlatform.healthConnect]!;
+      final grouped =
+          platformStatus.statusFor(HealthExportDomain.nutritionHydration);
+      expect(grouped.state, HealthExportState.failed);
+      expect(grouped.lastError, contains('nutrition=failed'));
+      expect(grouped.lastError, contains('hydration=success'));
+    });
+
+    test('skips BMI writes for Health Connect measurement export', () async {
+      final now = DateTime.now().toUtc();
+      await db.into(db.measurements).insert(
+            MeasurementsCompanion(
+              date: drift.Value(now.subtract(const Duration(hours: 3))),
+              type: const drift.Value('bmi'),
+              value: const drift.Value(25),
+              unit: const drift.Value('kg/m2'),
+              legacySessionId: const drift.Value(1002),
+            ),
+          );
+
+      final adapter = _FakeAdapter(HealthExportPlatform.healthConnect);
+      final service = HealthExportService(
+        adapters: [adapter],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+
+      await service.requestPermissions(HealthExportPlatform.healthConnect);
+      final result = await service.exportNow(
+        HealthExportPlatform.healthConnect,
+        lookbackDays: 1,
+      );
+
+      expect(result.success, isTrue);
+      expect(adapter.measurementWrites, 1);
+    });
   });
 }
 
@@ -203,17 +271,17 @@ Future<void> _seedExportData(AppDatabase db) async {
   final workoutEnd = now.subtract(const Duration(minutes: 15));
 
   await db.into(db.products).insert(
-        ProductsCompanion(
-          barcode: const drift.Value('export-product-1'),
-          name: const drift.Value('Export Product'),
-          calories: const drift.Value(200),
-          protein: const drift.Value(20),
-          carbs: const drift.Value(30),
-          fat: const drift.Value(10),
-          fiber: const drift.Value(5),
-          sugar: const drift.Value(7),
-          salt: const drift.Value(2),
-          source: const drift.Value('user'),
+        const ProductsCompanion(
+          barcode: drift.Value('export-product-1'),
+          name: drift.Value('Export Product'),
+          calories: drift.Value(200),
+          protein: drift.Value(20),
+          carbs: drift.Value(30),
+          fat: drift.Value(10),
+          fiber: drift.Value(5),
+          sugar: drift.Value(7),
+          salt: drift.Value(2),
+          source: drift.Value('user'),
         ),
       );
 

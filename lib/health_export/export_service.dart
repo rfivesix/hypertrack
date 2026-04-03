@@ -15,6 +15,16 @@ class HealthExportResult {
   final String? message;
 }
 
+class _DomainExportOutcome {
+  const _DomainExportOutcome({
+    required this.success,
+    this.error,
+  });
+
+  final bool success;
+  final String? error;
+}
+
 class HealthExportService {
   HealthExportService({
     required List<HealthExportAdapter> adapters,
@@ -51,7 +61,8 @@ class HealthExportService {
     return _statusStore.readStatuses();
   }
 
-  Future<HealthExportResult> requestPermissions(HealthExportPlatform platform) async {
+  Future<HealthExportResult> requestPermissions(
+      HealthExportPlatform platform) async {
     final adapter = _adapters[platform];
     if (adapter == null) {
       return HealthExportResult(
@@ -123,7 +134,7 @@ class HealthExportService {
 
     final payload = await _dataSource.loadPayload(lookbackDays: lookbackDays);
 
-    final domainOutcomes = <HealthExportDomain, bool>{};
+    final domainOutcomes = <HealthExportDomain, _DomainExportOutcome>{};
 
     domainOutcomes[HealthExportDomain.measurements] = await _exportDomain(
       platform: platform,
@@ -133,13 +144,19 @@ class HealthExportService {
         final pending = payload.measurements
             .where((record) => !alreadyExported.contains(record.idempotencyKey))
             .toList(growable: false);
-        for (final record in pending) {
+        final writeable = platform == HealthExportPlatform.healthConnect
+            ? pending
+                .where((record) => record.type != ExportMeasurementType.bmi)
+                .toList(growable: false)
+            : pending;
+        // Android Health Connect currently does not support BMI in this writer path.
+        for (final record in writeable) {
           await adapter.writeMeasurement(record);
         }
         await _statusStore.markExported(
           platform: platform,
           domain: HealthExportDomain.measurements,
-          idempotencyKeys: pending.map((record) => record.idempotencyKey),
+          idempotencyKeys: writeable.map((record) => record.idempotencyKey),
         );
       },
     );
@@ -159,21 +176,48 @@ class HealthExportService {
             .where((record) => !alreadyExported.contains(record.idempotencyKey))
             .toList(growable: false);
 
+        final nutritionExportedKeys = <String>[];
+        final hydrationExportedKeys = <String>[];
+        final nutritionFailures = <String>[];
+        final hydrationFailures = <String>[];
+
         for (final record in pendingNutrition) {
-          await adapter.writeNutrition(record);
+          try {
+            await adapter.writeNutrition(record);
+            nutritionExportedKeys.add(record.idempotencyKey);
+          } catch (error) {
+            nutritionFailures.add('${record.idempotencyKey}: $error');
+          }
         }
         for (final record in pendingHydration) {
-          await adapter.writeHydration(record);
+          try {
+            await adapter.writeHydration(record);
+            hydrationExportedKeys.add(record.idempotencyKey);
+          } catch (error) {
+            hydrationFailures.add('${record.idempotencyKey}: $error');
+          }
         }
 
         await _statusStore.markExported(
           platform: platform,
           domain: HealthExportDomain.nutritionHydration,
           idempotencyKeys: [
-            ...pendingNutrition.map((record) => record.idempotencyKey),
-            ...pendingHydration.map((record) => record.idempotencyKey),
+            ...nutritionExportedKeys,
+            ...hydrationExportedKeys,
           ],
         );
+
+        if (nutritionFailures.isNotEmpty || hydrationFailures.isNotEmpty) {
+          final nutritionSummary = nutritionFailures.isEmpty
+              ? 'nutrition=success(${nutritionExportedKeys.length}/${pendingNutrition.length})'
+              : 'nutrition=failed(${pendingNutrition.length - nutritionFailures.length}/${pendingNutrition.length}, first=${nutritionFailures.first})';
+          final hydrationSummary = hydrationFailures.isEmpty
+              ? 'hydration=success(${hydrationExportedKeys.length}/${pendingHydration.length})'
+              : 'hydration=failed(${pendingHydration.length - hydrationFailures.length}/${pendingHydration.length}, first=${hydrationFailures.first})';
+          throw StateError(
+            'Nutrition/Hydration export details: $nutritionSummary; $hydrationSummary',
+          );
+        }
       },
     );
 
@@ -196,15 +240,24 @@ class HealthExportService {
       },
     );
 
-    final success = domainOutcomes.values.every((value) => value);
+    final success = domainOutcomes.values.every((value) => value.success);
+    final message = success
+        ? null
+        : domainOutcomes.entries
+            .where((entry) => !entry.value.success)
+            .map(
+              (entry) =>
+                  '${entry.key.name} failed${entry.value.error == null ? '' : ': ${entry.value.error}'}',
+            )
+            .join(' | ');
     return HealthExportResult(
       platform: platform,
       success: success,
-      message: success ? null : 'One or more domains failed',
+      message: message,
     );
   }
 
-  Future<bool> _exportDomain({
+  Future<_DomainExportOutcome> _exportDomain({
     required HealthExportPlatform platform,
     required HealthExportDomain domain,
     required Iterable<String> keys,
@@ -231,7 +284,7 @@ class HealthExportService {
         lastError: null,
         lastSuccessUtc: DateTime.now().toUtc(),
       );
-      return true;
+      return const _DomainExportOutcome(success: true);
     } catch (error) {
       await _statusStore.markDomainState(
         platform: platform,
@@ -239,7 +292,10 @@ class HealthExportService {
         state: HealthExportState.failed,
         lastError: error.toString(),
       );
-      return false;
+      return _DomainExportOutcome(
+        success: false,
+        error: error.toString(),
+      );
     }
   }
 }

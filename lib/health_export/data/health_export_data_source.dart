@@ -1,13 +1,21 @@
+import 'dart:developer' as developer;
+
+import 'package:drift/drift.dart';
+
 import '../../data/database_helper.dart';
 import '../../data/drift_database.dart' as db;
 import '../../models/fluid_entry.dart';
 import '../../models/measurement_session.dart';
+import '../../models/set_log.dart';
 import '../../models/workout_log.dart';
 import '../models/export_models.dart';
 
 // Nutrition labels often provide salt (NaCl) while platform schemas expect
 // sodium; sodium is approximately salt / 2.5 by mass.
 const double _saltToSodiumFactor = 2.5;
+const bool _debugAndroidHealthExport = true;
+const double _bodyFatMinPercent = 0;
+const double _bodyFatMaxPercent = 100;
 const List<String> _strengthWorkoutKeywords = <String>[
   'strength',
   'push',
@@ -79,6 +87,14 @@ class HealthExportDataSource {
         unit: measurement.unit,
         value: measurement.value,
       );
+      if (mappedType == ExportMeasurementType.bodyFatPercentage) {
+        _logBodyFatExport(
+          sourceMeasurementType: measurement.type,
+          rawValue: measurement.value,
+          rawUnit: measurement.unit,
+          normalizedValue: normalizedValue,
+        );
+      }
       if (normalizedValue == null) continue;
       final localId = measurement.id;
       if (localId == null) continue;
@@ -95,12 +111,14 @@ class HealthExportDataSource {
   }
 
   ExportMeasurementType? _mapMeasurementType(String raw) {
-    final normalized = raw.trim().toLowerCase();
-    if (normalized == 'weight') return ExportMeasurementType.weight;
-    if (normalized == 'body fat' ||
-        normalized == 'body_fat' ||
-        normalized == 'body fat %' ||
-        normalized == 'bodyfat') {
+    final normalized = _normalizeMeasurementType(raw);
+    if (normalized == 'weight' || normalized == 'bodyweight') {
+      return ExportMeasurementType.weight;
+    }
+    if (normalized == 'bodyfat' ||
+        normalized == 'bodyfatpercent' ||
+        normalized == 'bodyfatpercentage' ||
+        normalized == 'fatpercent') {
       return ExportMeasurementType.bodyFatPercentage;
     }
     if (normalized == 'bmi') return ExportMeasurementType.bmi;
@@ -123,8 +141,18 @@ class HealthExportDataSource {
 
     if (type == ExportMeasurementType.bodyFatPercentage) {
       final normalizedUnit = unit.trim().toLowerCase();
-      if (normalizedUnit == '%' || normalizedUnit == 'percent') {
-        return value;
+      if (normalizedUnit == '%' ||
+          normalizedUnit == 'percent' ||
+          normalizedUnit == 'percentage') {
+        return (value >= _bodyFatMinPercent && value <= _bodyFatMaxPercent)
+            ? value
+            : null;
+      }
+      if (normalizedUnit == 'fraction' || normalizedUnit == 'ratio') {
+        final percent = value * 100;
+        return (percent >= _bodyFatMinPercent && percent <= _bodyFatMaxPercent)
+            ? percent
+            : null;
       }
       return null;
     }
@@ -145,7 +173,9 @@ class HealthExportDataSource {
 
     final barcodes = entries.map((entry) => entry.barcode).toSet().toList();
     final products = await _loadProductsByBarcode(barcodes);
-    final byBarcode = {for (final product in products) product.barcode: product};
+    final byBarcode = {
+      for (final product in products) product.barcode: product
+    };
 
     final records = <ExportNutritionRecord>[];
     for (final entry in entries) {
@@ -208,8 +238,8 @@ class HealthExportDataSource {
           (workout) =>
               workout.endTime != null &&
               !(workout.endTime!.toUtc().isAtSameMomentAs(
-                workout.startTime.toUtc(),
-              )),
+                    workout.startTime.toUtc(),
+                  )),
         )
         .map(_mapWorkout)
         .toList(growable: false);
@@ -226,6 +256,7 @@ class HealthExportDataSource {
       endUtc: (workout.endTime ?? workout.startTime).toUtc(),
       workoutType: _mapWorkoutType(workout),
       title: workout.routineName,
+      notes: _buildWorkoutSummaryNotes(workout),
     );
   }
 
@@ -254,6 +285,23 @@ class HealthExportDataSource {
     return rows;
   }
 
+  String _normalizeMeasurementType(String raw) {
+    return raw.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
+  }
+
+  void _logBodyFatExport({
+    required String sourceMeasurementType,
+    required double rawValue,
+    required String rawUnit,
+    required double? normalizedValue,
+  }) {
+    if (!_debugAndroidHealthExport) return;
+    developer.log(
+      'BodyFat sourceType=$sourceMeasurementType raw=$rawValue$rawUnit normalizedPercent=$normalizedValue',
+      name: 'HealthExport.Android',
+    );
+  }
+
   Future<List<WorkoutLog>> _loadCompletedWorkoutLogs({
     required DateTime start,
     required DateTime end,
@@ -268,6 +316,48 @@ class HealthExportDataSource {
                 tbl.status.equals('completed'),
           ))
         .get();
+
+    if (rows.isEmpty) return const <WorkoutLog>[];
+
+    final workoutIds = rows.map((row) => row.id).toList(growable: false);
+    final setRows = await (dbInstance.select(dbInstance.setLogs)
+          ..where((tbl) => tbl.workoutLogId.isIn(workoutIds))
+          ..orderBy([
+            (tbl) => OrderingTerm(expression: tbl.logOrder),
+            (tbl) => OrderingTerm(expression: tbl.localId),
+          ]))
+        .get();
+
+    final setsByWorkoutId = <String, List<SetLog>>{};
+    final workoutLocalIdByUuid = <String, int>{
+      for (final row in rows) row.id: row.localId,
+    };
+    for (final setRow in setRows) {
+      final localWorkoutId = workoutLocalIdByUuid[setRow.workoutLogId];
+      if (localWorkoutId == null) continue;
+      final setLog = SetLog(
+        id: setRow.localId,
+        workoutLogId: localWorkoutId,
+        exerciseName: (setRow.exerciseNameSnapshot ?? '').trim().isEmpty
+            ? 'Unknown'
+            : setRow.exerciseNameSnapshot!.trim(),
+        setType: setRow.setType,
+        weightKg: setRow.weight,
+        reps: setRow.reps,
+        restTimeSeconds: setRow.restTimeSeconds,
+        isCompleted: setRow.isCompleted,
+        log_order: setRow.logOrder,
+        notes: setRow.notes,
+        distanceKm: setRow.distance,
+        durationSeconds: setRow.durationSeconds,
+        rpe: setRow.rpe,
+        rir: setRow.rir,
+      );
+      setsByWorkoutId
+          .putIfAbsent(setRow.workoutLogId, () => <SetLog>[])
+          .add(setLog);
+    }
+
     return rows
         .map(
           (row) => WorkoutLog(
@@ -276,8 +366,59 @@ class HealthExportDataSource {
             startTime: row.startTime,
             endTime: row.endTime,
             notes: row.notes,
+            sets: setsByWorkoutId[row.id] ?? const <SetLog>[],
           ),
         )
         .toList(growable: false);
+  }
+
+  String? _buildWorkoutSummaryNotes(WorkoutLog workout) {
+    if (workout.sets.isEmpty) return null;
+    final linesByExercise = <String, List<String>>{};
+    final exerciseOrder = <String>[];
+
+    for (final set in workout.sets) {
+      final name = set.exerciseName.trim();
+      if (name.isEmpty) continue;
+      final weight = set.weightKg;
+      final reps = set.reps;
+      if (weight == null || reps == null) continue;
+      final setText =
+          '${_setTypeAbbreviation(set.setType)} ${_formatWeightKg(weight)}kg x $reps';
+      final exerciseSets = linesByExercise.putIfAbsent(name, () {
+        exerciseOrder.add(name);
+        return <String>[];
+      });
+      exerciseSets.add(setText);
+    }
+
+    final lines = <String>[];
+    for (final exerciseName in exerciseOrder) {
+      final sets = linesByExercise[exerciseName];
+      if (sets == null || sets.isEmpty) continue;
+      lines.add('$exerciseName — ${sets.join(', ')}');
+    }
+
+    if (lines.isEmpty) return null;
+    return lines.join('\n');
+  }
+
+  String _setTypeAbbreviation(String rawSetType) {
+    final normalized = rawSetType.trim().toLowerCase();
+    if (normalized == 'warmup') return 'W';
+    if (normalized == 'failure') return 'F';
+    if (normalized == 'dropset' || normalized == 'drop_set') return 'D';
+    return 'S';
+  }
+
+  String _formatWeightKg(double weightKg) {
+    final rounded = double.parse(weightKg.toStringAsFixed(3));
+    if ((rounded - rounded.roundToDouble()).abs() < 0.0001) {
+      return rounded.round().toString();
+    }
+    return rounded
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
   }
 }

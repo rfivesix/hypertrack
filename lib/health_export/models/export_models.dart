@@ -102,6 +102,7 @@ class ExportWorkoutRecord {
     required this.workoutType,
     this.caloriesBurnedKcal,
     this.title,
+    this.notes,
   });
 
   final String idempotencyKey;
@@ -110,6 +111,7 @@ class ExportWorkoutRecord {
   final ExportWorkoutType workoutType;
   final double? caloriesBurnedKcal;
   final String? title;
+  final String? notes;
 
   Map<String, dynamic> toMap() => {
         'idempotencyKey': idempotencyKey,
@@ -118,6 +120,7 @@ class ExportWorkoutRecord {
         'workoutType': workoutType.name,
         'caloriesBurnedKcal': caloriesBurnedKcal,
         'title': title,
+        'notes': notes,
       };
 }
 
@@ -173,7 +176,8 @@ class HealthExportPlatformStatus {
   Map<String, dynamic> toMap() => {
         'platform': platform.name,
         'byDomain': {
-          for (final entry in byDomain.entries) entry.key.name: entry.value.toMap(),
+          for (final entry in byDomain.entries)
+            entry.key.name: entry.value.toMap(),
         },
       };
 
