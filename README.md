@@ -10,7 +10,6 @@ This README is intentionally implementation-focused and reflects the **current w
 - [Statistics Module (Current Implementation)](documentation/statistics_module.md)
 - [Sleep Module (Current Source of Truth)](documentation/sleep/sleep_current_state.md)
 - [Sleep Health Score V2 (Current Canonical)](documentation/sleep/sleep_health_score_v2.md)
-- [Release Notes 0.7.3](documentation/release_notes_0.7.3.md)
 - [System Architecture](documentation/architecture.md)
 - [Data Models & Storage](documentation/data_models_and_storage.md)
 - [UI & Widgets](documentation/ui_and_widgets.md)
