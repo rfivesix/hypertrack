@@ -15,6 +15,7 @@ class _FakeAdapter implements HealthExportAdapter {
     this.platform, {
     this.failWorkout = false,
     this.failNutrition = false,
+    this.failMeasurementAtWriteCount,
   });
 
   @override
@@ -22,6 +23,7 @@ class _FakeAdapter implements HealthExportAdapter {
 
   final bool failWorkout;
   final bool failNutrition;
+  int? failMeasurementAtWriteCount;
 
   int measurementWrites = 0;
   int nutritionWrites = 0;
@@ -43,6 +45,10 @@ class _FakeAdapter implements HealthExportAdapter {
   @override
   Future<void> writeMeasurement(ExportMeasurementRecord record) async {
     measurementWrites += 1;
+    final failAt = failMeasurementAtWriteCount;
+    if (failAt != null && measurementWrites == failAt) {
+      throw Exception('measurement failure at $failAt');
+    }
   }
 
   @override
@@ -160,6 +166,97 @@ void main() {
           HealthExportState.success,
         );
       }
+    });
+
+    test('manual export defaults to full-history backfill', () async {
+      final oldTimestamp = DateTime.now().toUtc().subtract(const Duration(days: 120));
+      await db.into(db.measurements).insert(
+            MeasurementsCompanion(
+              date: drift.Value(oldTimestamp),
+              type: const drift.Value('weight'),
+              value: const drift.Value(70),
+              unit: const drift.Value('kg'),
+              legacySessionId: const drift.Value(9999),
+            ),
+          );
+
+      final adapter = _FakeAdapter(HealthExportPlatform.appleHealth);
+      final service = HealthExportService(
+        adapters: [adapter],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+
+      await service.requestPermissions(HealthExportPlatform.appleHealth);
+      final result = await service.exportNow(HealthExportPlatform.appleHealth);
+
+      expect(result.success, isTrue);
+      expect(adapter.measurementWrites, 2);
+    });
+
+    test('after initial backfill, later export is incremental for new records',
+        () async {
+      final adapter = _FakeAdapter(HealthExportPlatform.appleHealth);
+      final service = HealthExportService(
+        adapters: [adapter],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+
+      await service.requestPermissions(HealthExportPlatform.appleHealth);
+      final first = await service.exportNow(HealthExportPlatform.appleHealth);
+      expect(first.success, isTrue);
+      final firstMeasurementWrites = adapter.measurementWrites;
+
+      await db.into(db.measurements).insert(
+            MeasurementsCompanion(
+              date: drift.Value(DateTime.now().toUtc()),
+              type: const drift.Value('weight'),
+              value: const drift.Value(81),
+              unit: const drift.Value('kg'),
+              legacySessionId: const drift.Value(3001),
+            ),
+          );
+
+      final second = await service.exportNow(HealthExportPlatform.appleHealth);
+      expect(second.success, isTrue);
+      expect(adapter.measurementWrites, firstMeasurementWrites + 1);
+    });
+
+    test('chunked export marks progress and retry resumes after 1000 writes',
+        () async {
+      final now = DateTime.now().toUtc();
+      for (var i = 0; i < 1500; i++) {
+        await db.into(db.measurements).insert(
+              MeasurementsCompanion(
+                date: drift.Value(now.subtract(Duration(minutes: i))),
+                type: const drift.Value('weight'),
+                value: drift.Value(60 + (i % 30).toDouble()),
+                unit: const drift.Value('kg'),
+                legacySessionId: drift.Value(5000 + i),
+              ),
+            );
+      }
+
+      final adapter = _FakeAdapter(
+        HealthExportPlatform.appleHealth,
+        failMeasurementAtWriteCount: 1001,
+      );
+      final service = HealthExportService(
+        adapters: [adapter],
+        dataSource: HealthExportDataSource(databaseHelper: dbHelper),
+        statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
+      );
+
+      await service.requestPermissions(HealthExportPlatform.appleHealth);
+      final first = await service.exportNow(HealthExportPlatform.appleHealth);
+      expect(first.success, isFalse);
+      expect(adapter.measurementWrites, 1001);
+
+      adapter.failMeasurementAtWriteCount = null;
+      final second = await service.exportNow(HealthExportPlatform.appleHealth);
+      expect(second.success, isTrue);
+      expect(adapter.measurementWrites, 1502);
     });
 
     test('marks failed domain while keeping others successful', () async {

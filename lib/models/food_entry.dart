@@ -19,6 +19,9 @@ class FoodEntry {
   /// The type of meal (e.g., "Breakfast", "Lunch", "Dinner", "Snack").
   final String mealType;
 
+  /// Last modification timestamp from persistence when available.
+  final DateTime? updatedAt;
+
   /// Creates a new [FoodEntry] instance.
   FoodEntry({
     this.id,
@@ -26,6 +29,7 @@ class FoodEntry {
     required this.timestamp,
     required this.quantityInGrams,
     required this.mealType,
+    this.updatedAt,
   });
 
   /// Converts the [FoodEntry] instance to a Map for database storage.

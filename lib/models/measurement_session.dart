@@ -14,10 +14,14 @@ class MeasurementSession {
   /// The list of individual [Measurement] entries associated with this session.
   final List<Measurement> measurements; // Hält die Detailwerte
 
+  /// Last modification timestamp of the newest member measurement when available.
+  final DateTime? updatedAt;
+
   /// Creates a new [MeasurementSession] instance.
   MeasurementSession({
     this.id,
     required this.timestamp,
     this.measurements = const [],
+    this.updatedAt,
   });
 }

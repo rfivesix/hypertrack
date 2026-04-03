@@ -19,6 +19,9 @@ class Measurement {
   /// The unit of measurement (e.g., "kg", "%", "cm").
   final String unit;
 
+  /// Last modification timestamp from persistence when available.
+  final DateTime? updatedAt;
+
   /// Creates a new [Measurement] instance.
   Measurement({
     this.id,
@@ -26,6 +29,7 @@ class Measurement {
     required this.type,
     required this.value,
     required this.unit,
+    this.updatedAt,
   });
 
   /// Creates a [Measurement] instance from a Map, typically from a database row.

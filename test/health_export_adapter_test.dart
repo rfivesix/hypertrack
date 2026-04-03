@@ -75,7 +75,10 @@ void main() {
           idempotencyKey: 'w1',
           startUtc: DateTime.utc(2026, 1, 1, 10),
           endUtc: DateTime.utc(2026, 1, 1, 11),
+          startZoneOffsetMinutes: 120,
+          endZoneOffsetMinutes: 120,
           workoutType: ExportWorkoutType.strength,
+          notes: 'Workout summary',
         ),
       );
 
@@ -118,6 +121,31 @@ void main() {
       final args = measurementCall.arguments as Map;
       expect(args['idempotencyKey'], 'm1');
       expect(args['type'], 'bmi');
+      expect(args['zoneOffsetMinutes'], isNotNull);
+    });
+
+    test('health connect workout payload forwards notes and zone offsets',
+        () async {
+      final adapter = HealthConnectExportAdapter();
+      await adapter.writeWorkout(
+        ExportWorkoutRecord(
+          idempotencyKey: 'w-zone',
+          startUtc: DateTime.utc(2026, 1, 2, 9),
+          endUtc: DateTime.utc(2026, 1, 2, 10),
+          startZoneOffsetMinutes: -60,
+          endZoneOffsetMinutes: -60,
+          workoutType: ExportWorkoutType.running,
+          title: 'Morning Run',
+          notes: 'Felt good',
+        ),
+      );
+
+      final workoutCall =
+          connectCalls.firstWhere((call) => call.method == 'writeWorkout');
+      final args = workoutCall.arguments as Map;
+      expect(args['notes'], 'Felt good');
+      expect(args['startZoneOffsetMinutes'], -60);
+      expect(args['endZoneOffsetMinutes'], -60);
     });
   });
 }

@@ -290,9 +290,7 @@ class HealthExportDataSource {
         .where(
           (workout) =>
               workout.endTime != null &&
-              !(workout.endTime!.toUtc().isAtSameMomentAs(
-                    workout.startTime.toUtc(),
-                  )),
+              workout.endTime!.toUtc().isAfter(workout.startTime.toUtc()),
         )
         .map(_mapWorkout)
         .toList(growable: false);
@@ -311,7 +309,7 @@ class HealthExportDataSource {
       endZoneOffsetMinutes: workout.endZoneOffsetMinutes,
       workoutType: _mapWorkoutType(workout),
       title: workout.routineName,
-      notes: _buildWorkoutSummaryNotes(workout),
+      notes: _buildWorkoutExportNotes(workout),
     );
   }
 
@@ -369,12 +367,7 @@ class HealthExportDataSource {
           final inRange =
               tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd);
           final completed = tbl.status.equals('completed');
-          if (updatedSinceUtc == null) {
-            return inRange & completed;
-          }
-          return inRange &
-              completed &
-              (tbl.updatedAt.isBiggerOrEqualValue(updatedSinceUtc));
+          return inRange & completed;
         }))
         .get();
 
@@ -388,6 +381,14 @@ class HealthExportDataSource {
             (tbl) => OrderingTerm(expression: tbl.localId),
           ]))
         .get();
+    final changedWorkoutIdsBySet = <String>{};
+    if (updatedSinceUtc != null) {
+      for (final setRow in setRows) {
+        if (!setRow.updatedAt.isBefore(updatedSinceUtc)) {
+          changedWorkoutIdsBySet.add(setRow.workoutLogId);
+        }
+      }
+    }
 
     final setsByWorkoutId = <String, List<SetLog>>{};
     final workoutLocalIdByUuid = <String, int>{
@@ -420,6 +421,11 @@ class HealthExportDataSource {
     }
 
     return rows
+        .where((row) {
+          if (updatedSinceUtc == null) return true;
+          return !row.updatedAt.isBefore(updatedSinceUtc) ||
+              changedWorkoutIdsBySet.contains(row.id);
+        })
         .map(
           (row) => WorkoutLog(
             id: row.localId,
@@ -465,6 +471,18 @@ class HealthExportDataSource {
 
     if (lines.isEmpty) return null;
     return lines.join('\n');
+  }
+
+  String? _buildWorkoutExportNotes(WorkoutLog workout) {
+    final description = workout.notes?.trim();
+    final summary = _buildWorkoutSummaryNotes(workout)?.trim();
+    final hasDescription = description != null && description.isNotEmpty;
+    final hasSummary = summary != null && summary.isNotEmpty;
+    if (!hasDescription && !hasSummary) return null;
+    if (hasDescription && hasSummary) {
+      return '$description\n\n$summary';
+    }
+    return hasDescription ? description : summary;
   }
 
   String _setTypeAbbreviation(String rawSetType) {

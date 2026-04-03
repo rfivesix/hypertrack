@@ -280,6 +280,7 @@ class DatabaseHelper {
         timestamp: row.consumedAt,
         quantityInGrams: row.amount.toInt(),
         mealType: row.mealType,
+        updatedAt: row.updatedAt,
       );
     }).toList();
   }
@@ -311,6 +312,7 @@ class DatabaseHelper {
         timestamp: row.consumedAt,
         quantityInGrams: row.amount.toInt(),
         mealType: row.mealType,
+        updatedAt: row.updatedAt,
       );
     }).toList();
   }
@@ -334,6 +336,7 @@ class DatabaseHelper {
             timestamp: row.consumedAt,
             quantityInGrams: row.amount.toInt(),
             mealType: row.mealType,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
@@ -385,6 +388,7 @@ class DatabaseHelper {
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
             linked_food_entry_id: null,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
@@ -422,6 +426,7 @@ class DatabaseHelper {
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
             linked_food_entry_id: null,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
@@ -484,6 +489,7 @@ class DatabaseHelper {
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
             linked_food_entry_id: null,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
@@ -534,6 +540,7 @@ class DatabaseHelper {
     final Map<String, List<Measurement>> grouped = {};
     final Map<String, DateTime> timestamps = {};
     final Map<String, int> ids = {};
+    final Map<String, DateTime> lastUpdatedAt = {};
 
     for (final row in rows) {
       final key = row.legacySessionId?.toString() ?? row.date.toIso8601String();
@@ -542,6 +549,10 @@ class DatabaseHelper {
         grouped[key] = [];
         timestamps[key] = row.date;
         ids[key] = row.legacySessionId ?? row.localId;
+        lastUpdatedAt[key] = row.updatedAt;
+      }
+      if (row.updatedAt.isAfter(lastUpdatedAt[key]!)) {
+        lastUpdatedAt[key] = row.updatedAt;
       }
 
       grouped[key]!.add(
@@ -551,6 +562,7 @@ class DatabaseHelper {
           type: row.type,
           value: row.value,
           unit: row.unit,
+          updatedAt: row.updatedAt,
         ),
       );
     }
@@ -560,6 +572,7 @@ class DatabaseHelper {
         id: ids[entry.key],
         timestamp: timestamps[entry.key]!,
         measurements: entry.value,
+        updatedAt: lastUpdatedAt[entry.key],
       );
     }).toList();
   }
