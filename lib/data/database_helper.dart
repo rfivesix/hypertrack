@@ -27,6 +27,7 @@ class DatabaseHelper {
 
   static db.AppDatabase? _driftDb;
   final db.AppDatabase? _injectedDb;
+  static const int _msPerSecond = 1000;
 
   DatabaseHelper._init() : _injectedDb = null;
   DatabaseHelper.forTesting(db.AppDatabase database) : _injectedDb = database;
@@ -81,6 +82,7 @@ class DatabaseHelper {
       await dbInstance.delete(dbInstance.dailyGoalsHistory).go();
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
       await dbInstance.customStatement('DELETE FROM health_step_segments');
+      await dbInstance.customStatement('DELETE FROM health_export_records');
 
       // 2. Child tables (Logs) first
       await dbInstance.delete(dbInstance.supplementLogs).go();
@@ -278,14 +280,13 @@ class DatabaseHelper {
         timestamp: row.consumedAt,
         quantityInGrams: row.amount.toInt(),
         mealType: row.mealType,
+        updatedAt: row.updatedAt,
       );
     }).toList();
   }
 
-  Future<List<FoodEntry>> getEntriesForDateRange(
-    DateTime start,
-    DateTime end,
-  ) async {
+  Future<List<FoodEntry>> getEntriesForDateRange(DateTime start, DateTime end,
+      {DateTime? updatedSince}) async {
     final dbInstance = await database;
 
     final effectiveStart = DateTime(start.year, start.month, start.day);
@@ -295,6 +296,9 @@ class DatabaseHelper {
       ..where(
         (tbl) => tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
       );
+    if (updatedSince != null) {
+      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
+    }
 
     final rows = await query.get();
 
@@ -305,6 +309,7 @@ class DatabaseHelper {
         timestamp: row.consumedAt,
         quantityInGrams: row.amount.toInt(),
         mealType: row.mealType,
+        updatedAt: row.updatedAt,
       );
     }).toList();
   }
@@ -328,6 +333,7 @@ class DatabaseHelper {
             timestamp: row.consumedAt,
             quantityInGrams: row.amount.toInt(),
             mealType: row.mealType,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
@@ -379,25 +385,28 @@ class DatabaseHelper {
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
             linked_food_entry_id: null,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
   }
 
   Future<List<FluidEntry>> getFluidEntriesForDateRange(
-    DateTime start,
-    DateTime end,
-  ) async {
+      DateTime start, DateTime end,
+      {DateTime? updatedSince}) async {
     final dbInstance = await database;
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-    final rows = await (dbInstance.select(dbInstance.fluidLogs)
-          ..where(
-            (tbl) =>
-                tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
-          ))
-        .get();
+    final query = dbInstance.select(dbInstance.fluidLogs)
+      ..where(
+        (tbl) => tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
+      );
+    if (updatedSince != null) {
+      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
+    }
+
+    final rows = await query.get();
 
     return rows
         .map(
@@ -411,6 +420,7 @@ class DatabaseHelper {
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
             linked_food_entry_id: null,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
@@ -473,6 +483,7 @@ class DatabaseHelper {
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
             linked_food_entry_id: null,
+            updatedAt: row.updatedAt,
           ),
         )
         .toList();
@@ -502,21 +513,27 @@ class DatabaseHelper {
     });
   }
 
-  Future<List<MeasurementSession>> getMeasurementSessions() async {
+  Future<List<MeasurementSession>> getMeasurementSessions({
+    DateTime? updatedSince,
+  }) async {
     final dbInstance = await database;
+    final query = dbInstance.select(dbInstance.measurements)
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+              expression: t.date,
+              mode: drift.OrderingMode.desc,
+            ),
+      ]);
+    if (updatedSince != null) {
+      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
+    }
 
-    final rows = await (dbInstance.select(dbInstance.measurements)
-          ..orderBy([
-            (t) => drift.OrderingTerm(
-                  expression: t.date,
-                  mode: drift.OrderingMode.desc,
-                ),
-          ]))
-        .get();
+    final rows = await query.get();
 
     final Map<String, List<Measurement>> grouped = {};
     final Map<String, DateTime> timestamps = {};
     final Map<String, int> ids = {};
+    final Map<String, DateTime> lastUpdatedAt = {};
 
     for (final row in rows) {
       final key = row.legacySessionId?.toString() ?? row.date.toIso8601String();
@@ -525,6 +542,10 @@ class DatabaseHelper {
         grouped[key] = [];
         timestamps[key] = row.date;
         ids[key] = row.legacySessionId ?? row.localId;
+        lastUpdatedAt[key] = row.updatedAt;
+      }
+      if (row.updatedAt.isAfter(lastUpdatedAt[key]!)) {
+        lastUpdatedAt[key] = row.updatedAt;
       }
 
       grouped[key]!.add(
@@ -534,6 +555,7 @@ class DatabaseHelper {
           type: row.type,
           value: row.value,
           unit: row.unit,
+          updatedAt: row.updatedAt,
         ),
       );
     }
@@ -543,6 +565,7 @@ class DatabaseHelper {
         id: ids[entry.key],
         timestamp: timestamps[entry.key]!,
         measurements: entry.value,
+        updatedAt: lastUpdatedAt[entry.key],
       );
     }).toList();
   }
@@ -1361,11 +1384,11 @@ class DatabaseHelper {
         final startSeconds = DateTime.parse(
               segment['startAt'] as String,
             ).toUtc().millisecondsSinceEpoch ~/
-            1000;
+            _msPerSecond;
         final endSeconds = DateTime.parse(
               segment['endAt'] as String,
             ).toUtc().millisecondsSinceEpoch ~/
-            1000;
+            _msPerSecond;
         final externalKey = segment['externalKey'] as String;
         batch.customStatement(
           '''
@@ -1398,8 +1421,8 @@ class DatabaseHelper {
     required DateTime toUtc,
   }) async {
     final dbInstance = await database;
-    final fromSeconds = fromUtc.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final toSeconds = toUtc.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final fromSeconds = fromUtc.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final toSeconds = toUtc.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
     await dbInstance.customStatement(
       '''
       DELETE FROM health_step_segments
@@ -1417,8 +1440,10 @@ class DatabaseHelper {
     final dbInstance = await database;
     final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
-    final dayStartUtcMs = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final dayEndUtcMs = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final dayStartUtcMs =
+        dayStartLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final dayEndUtcMs =
+        dayEndLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
     var sql = sourcePolicy == 'max_per_hour'
         ? '''
       WITH source_hour AS (
@@ -1492,8 +1517,8 @@ class DatabaseHelper {
     final dbInstance = await database;
     final startLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final endLocal = startLocal.add(const Duration(days: 1));
-    final startUtc = startLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final endUtc = endLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final startUtc = startLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final endUtc = endLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
 
     var sql = sourcePolicy == 'max_per_hour'
         ? '''
@@ -1606,8 +1631,9 @@ class DatabaseHelper {
             .add(const Duration(days: 1))
             .toUtc()
             .millisecondsSinceEpoch ~/
-        1000;
-    final startUtc = normalizedStart.toUtc().millisecondsSinceEpoch ~/ 1000;
+        _msPerSecond;
+    final startUtc =
+        normalizedStart.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
     final vars = <int>[endExclusiveUtc, startUtc];
 
     if (providerFilter == 'apple') {
@@ -1681,8 +1707,10 @@ class DatabaseHelper {
     final dbInstance = await database;
     final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
-    final dayStartUtc = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final dayEndUtc = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final dayStartUtc =
+        dayStartLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final dayEndUtc =
+        dayEndLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
 
     var sql = '''
       SELECT
@@ -1719,6 +1747,61 @@ class DatabaseHelper {
         .toList(growable: false);
   }
 
+  Future<void> markHealthExported({
+    required String platform,
+    required String domain,
+    required List<String> idempotencyKeys,
+  }) async {
+    if (idempotencyKeys.isEmpty) return;
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final key in idempotencyKeys) {
+        batch.customStatement(
+          '''
+          INSERT INTO health_export_records
+          (id, platform, domain, idempotency_key, exported_at)
+          VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)
+          ON CONFLICT(platform, domain, idempotency_key) DO UPDATE SET
+            exported_at = excluded.exported_at
+          ''',
+          [
+            platform,
+            domain,
+            key,
+            DateTime.now().toUtc().millisecondsSinceEpoch ~/ _msPerSecond,
+          ],
+        );
+      }
+    });
+  }
+
+  Future<List<String>> getExportedHealthKeys({
+    required String platform,
+    required String domain,
+    required List<String> idempotencyKeys,
+  }) async {
+    if (idempotencyKeys.isEmpty) return const <String>[];
+    final dbInstance = await database;
+    final placeholders = List.filled(idempotencyKeys.length, '?').join(',');
+    final rows = await dbInstance.customSelect(
+      '''
+      SELECT idempotency_key
+      FROM health_export_records
+      WHERE platform = ?
+        AND domain = ?
+        AND idempotency_key IN ($placeholders)
+      ''',
+      variables: [
+        drift.Variable.withString(platform),
+        drift.Variable.withString(domain),
+        for (final key in idempotencyKeys) drift.Variable.withString(key),
+      ],
+    ).get();
+    return rows
+        .map((row) => row.read<String>('idempotency_key'))
+        .toList(growable: false);
+  }
+
   Future<int> getCurrentTargetStepsOrDefault() async {
     final dbInstance = await database;
     final rows = await (dbInstance.select(
@@ -1747,7 +1830,7 @@ class DatabaseHelper {
     final minEpoch = rows.first.read<int?>('min_start_at');
     if (minEpoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(
-      minEpoch * 1000,
+      minEpoch * _msPerSecond,
       isUtc: true,
     ).toLocal();
   }

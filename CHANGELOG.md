@@ -3,6 +3,188 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.7.4] - 2026-04-04
+
+This release completes the main **sleep module rollout** and adds the first full version of **one-way health platform export**.
+
+### Added
+
+- **Sleep module** integrated across the app
+  - day / week / month sleep views
+  - sleep detail screens
+  - sleep timeline visualization
+  - sleep score overview
+  - sleep statistics integration
+- **Sleep Health Score V2**
+  - duration
+  - continuity
+  - regularity
+  - more conservative and better documented scoring model
+- **Sleep localization pass**
+  - localized sleep UI strings
+  - cleaned up remaining hardcoded sleep text
+- **One-way health export** from Hypertrack to:
+  - **Apple Health (HealthKit)**
+  - **Google Health Connect**
+- Export support for:
+  - **body measurements**
+  - **nutrition aggregates**
+  - **hydration**
+  - **workout sessions**
+- New **Health Export** settings surface with:
+  - platform toggles
+  - permission handling
+  - export status visibility
+  - manual export trigger
+
+### Improved
+
+- **Sleep scoring**
+  - better weighting and calibration toward duration / continuity / regularity
+  - clearer documentation of evidence-based vs heuristic parts
+  - cleaner handling of missing data and score completeness
+- **Sleep pipeline / persistence**
+  - improved nightly analysis flow
+  - explicit scoring versioning
+  - regularity calculation support
+  - more robust persistence and repository integration
+- **Sleep documentation**
+  - canonical sleep current-state documentation
+  - canonical sleep health score documentation
+  - cleaned and consolidated sleep docs
+- **Sleep UX**
+  - better empty states
+  - more consistent detail pages
+  - improved score/state wording
+  - better navigation coverage
+- **Workout export quality**
+  - workout export now includes title plus notes/summary text where supported
+  - improved session-level export payload quality
+- **Health export reliability**
+  - full-history initial export
+  - incremental follow-up export
+  - per-domain checkpoint behavior
+  - retry-safe idempotent export bookkeeping
+  - chunked export handling for larger histories
+- **Timezone handling**
+  - export uses source event offsets where available instead of forcing UTC everywhere
+- **Diagnostics**
+  - clearer export failure summaries
+  - better distinction between app-side write problems and downstream platform display limitations
+
+### Fixed
+
+- Removed the previous effective **30-day export cap** for initial health export flows
+- Fixed multiple **Health Connect write-path issues**, including:
+  - invalid equal start/end intervals
+  - body-fat export handling
+  - nutrition/hydration write stability
+  - quota-related write behavior through safer batching
+- Fixed incremental export behavior so a failed domain does not unnecessarily force all other domains back into broad reload behavior
+- Fixed remaining sleep-module localization gaps
+- Fixed several sleep navigation / presentation rough edges found during beta testing
+
+### Documentation
+
+- Added / updated:
+  - sleep current-state documentation
+  - sleep health score v2 documentation
+  - one-way health export documentation
+  - overview / architecture / storage references
+  - README links and module references
+- Reduced outdated or duplicate sleep documentation in favor of clearer canonical sources
+
+### Notes
+
+- **Sleep export/import scope remains unchanged**: the sleep module is about processing and analytics inside Hypertrack, not external sleep write-back.
+- **Health export is one-way only**. Hypertrack remains the source of truth.
+- **Nutrition export is aggregate-based only**. No ingredient or individual food-item reconstruction is exported.
+- **Workout export is session-level only**. Internal workout structure is not exported as structured native workout data.
+- Some downstream behavior, especially in **Google Fit**, may differ from what is actually stored in **Health Connect**. If a field is written correctly but not surfaced there, that is a downstream display limitation rather than a Hypertrack write failure.
+
+## [0.7.4-beta.1] - 2026-04-04
+
+This beta focuses on **one-way health platform export** and the final stabilization work around that integration.
+
+### Added
+- **One-way health export** from Hypertrack to:
+  - **Apple Health (HealthKit)**
+  - **Google Health Connect**
+- Export support for:
+  - **Body measurements** (for example weight, body fat where supported)
+  - **Nutrition aggregates** (calories, protein, carbs, fat, fiber, sugar, salt/sodium mapping)
+  - **Hydration**
+  - **Workout sessions**
+- New **Health Export** settings section with:
+  - per-platform enable/disable
+  - permission handling
+  - export status visibility
+  - manual export trigger
+
+### Improved
+- **Health export reliability**
+  - initial export can backfill the full history
+  - follow-up exports are incremental
+  - idempotent export tracking prevents duplicate writes
+  - export runs are chunked for safer large-history syncs
+- **Workout export quality**
+  - improved workout title handling
+  - workout export now includes description text plus a compact plain-text set summary where supported
+- **Timezone handling**
+  - export now uses source event offsets where available instead of forcing UTC in all cases
+- **Diagnostics**
+  - more accurate domain-level export failure summaries
+  - better distinction between app-side export problems and downstream platform display limitations
+
+### Fixed
+- Removed the previous effective **30-day export limit** for initial export flows
+- Fixed multiple **Health Connect write-path issues** around:
+  - invalid record intervals
+  - body-fat export handling
+  - nutrition/hydration export stability
+  - quota-related write behavior via safer batching
+- Fixed incremental export behavior so one failed domain does not force unnecessary full-history reloads for all other domains
+
+### Notes
+- Export remains **one-way only**. Hypertrack is the source of truth.
+- Nutrition export remains **aggregate-based only**. No ingredient- or food-item reconstruction is exported.
+- Workout export remains **session-level only**. Internal workout structure is not exported as native structured workout content.
+- Some downstream display behavior, especially in **Google Fit**, may differ from what is stored in Health Connect. If a field is written correctly but not shown in Google Fit, this is a platform display limitation rather than a Hypertrack write failure.
+
+### Documentation
+- Added and updated implementation-focused documentation for the one-way health export module
+- Updated project docs and overview references to reflect the current health export behavior
+## [0.7.4-alpha.1] - 2026-04-03
+
+This alpha focuses on one-way health export hardening for Android Health Connect and adds richer session context for workout exports without expanding structured workout scope.
+
+### Added
+- Workout export note-summary text built from logged exercises/sets and attached to exported workout sessions.
+- Standardized set-line note formatting for export summaries:
+  - one line per exercise,
+  - set entries as `<setType> <weight>kg x <reps>`,
+  - set-type abbreviations `W` (warm-up), `S` (standard), `F` (failure), `D` (dropset).
+- Android Health Connect workout export now writes the summary to `ExerciseSessionRecord.notes`.
+- Apple Health workout export now persists the summary in workout metadata (`hypertrack_workout_summary`).
+
+### Changed
+- Health export workout payload model now includes an optional notes field for platform writers.
+- Workout export data loading now includes associated set logs to build ordered note summaries.
+- Nutrition/Hydration grouped export flow now records split diagnostics so failures can indicate whether nutrition and hydration failed independently.
+
+### Fixed
+- Android body-fat export mapping now recognizes real stored measurement type variants (including `fat_percent`) so body-fat entries are no longer dropped before write.
+- Android body-fat export normalization/range handling aligned to Health Connect `BodyFatRecord` percent expectations (`0..100`).
+- Android nutrition export reliability improved:
+  - strict interval validation now respected (`startTime < endTime`),
+  - defensive per-field sanitization for calories/macros/fiber/sugar/sodium,
+  - optional-field fallback retry to isolate problematic nutrition fields.
+- Android hydration export interval validation fixed (`startTime < endTime`) to prevent rejected writes.
+- Android BMI export no longer reports false-success when unsupported by the current Health Connect writer path.
+
+### Tests
+- Expanded health-export data source tests to validate workout summary note formatting and ordering across multiple exercises/sets.
+- Maintained passing targeted export tests for data source, service orchestration, and adapters.
 
 ## [0.7.3] - 2026-04-03
 

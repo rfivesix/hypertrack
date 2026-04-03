@@ -23,6 +23,12 @@ class WorkoutLog {
   /// Optional notes or reflections on the workout session.
   final String? notes;
 
+  /// Original start zone offset in minutes when available.
+  final int? startZoneOffsetMinutes;
+
+  /// Original end zone offset in minutes when available.
+  final int? endZoneOffsetMinutes;
+
   /// A list of all [SetLog] entries recorded during this workout.
   final List<SetLog> sets;
 
@@ -33,6 +39,8 @@ class WorkoutLog {
     required this.startTime,
     this.endTime,
     this.notes,
+    this.startZoneOffsetMinutes,
+    this.endZoneOffsetMinutes,
     this.sets = const [],
   });
 
