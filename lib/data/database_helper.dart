@@ -287,6 +287,7 @@ class DatabaseHelper {
   Future<List<FoodEntry>> getEntriesForDateRange(
     DateTime start,
     DateTime end,
+    {DateTime? updatedSince}
   ) async {
     final dbInstance = await database;
 
@@ -297,6 +298,9 @@ class DatabaseHelper {
       ..where(
         (tbl) => tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
       );
+    if (updatedSince != null) {
+      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
+    }
 
     final rows = await query.get();
 
@@ -389,16 +393,21 @@ class DatabaseHelper {
   Future<List<FluidEntry>> getFluidEntriesForDateRange(
     DateTime start,
     DateTime end,
+    {DateTime? updatedSince}
   ) async {
     final dbInstance = await database;
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-    final rows = await (dbInstance.select(dbInstance.fluidLogs)
-          ..where(
-            (tbl) =>
-                tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
-          ))
+    final query = dbInstance.select(dbInstance.fluidLogs)
+      ..where(
+        (tbl) => tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
+      );
+    if (updatedSince != null) {
+      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
+    }
+
+    final rows = await query
         .get();
 
     return rows
@@ -504,16 +513,22 @@ class DatabaseHelper {
     });
   }
 
-  Future<List<MeasurementSession>> getMeasurementSessions() async {
+  Future<List<MeasurementSession>> getMeasurementSessions({
+    DateTime? updatedSince,
+  }) async {
     final dbInstance = await database;
+    final query = dbInstance.select(dbInstance.measurements)
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+              expression: t.date,
+              mode: drift.OrderingMode.desc,
+            ),
+      ]);
+    if (updatedSince != null) {
+      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
+    }
 
-    final rows = await (dbInstance.select(dbInstance.measurements)
-          ..orderBy([
-            (t) => drift.OrderingTerm(
-                  expression: t.date,
-                  mode: drift.OrderingMode.desc,
-                ),
-          ]))
+    final rows = await query
         .get();
 
     final Map<String, List<Measurement>> grouped = {};

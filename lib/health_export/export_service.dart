@@ -26,6 +26,8 @@ class _DomainExportOutcome {
 }
 
 class HealthExportService {
+  static const int maxWriteBatchSize = 1000;
+
   HealthExportService({
     required List<HealthExportAdapter> adapters,
     HealthExportDataSource? dataSource,
@@ -100,7 +102,7 @@ class HealthExportService {
 
   Future<HealthExportResult> exportNow(
     HealthExportPlatform platform, {
-    int lookbackDays = 30,
+    int? lookbackDays,
   }) async {
     final adapter = _adapters[platform];
     if (adapter == null) {
@@ -132,7 +134,21 @@ class HealthExportService {
       );
     }
 
-    final payload = await _dataSource.loadPayload(lookbackDays: lookbackDays);
+    final statuses = await _statusStore.readStatuses();
+    final platformStatus =
+        statuses[platform] ?? HealthExportPlatformStatus.initial(platform);
+    final didBackfillBefore = HealthExportDomain.values.every(
+      (domain) => platformStatus.statusFor(domain).lastSuccessfulExportAtUtc != null,
+    );
+    final payload = await _dataSource.loadPayload(
+      options: HealthExportLoadOptions(
+        // Initial manual export: full-history backfill.
+        // Later exports: incremental from last successful domain sync checkpoint.
+        lookbackDays: didBackfillBefore ? lookbackDays : null,
+        updatedSinceUtc:
+            didBackfillBefore ? _incrementalSinceUtc(platformStatus) : null,
+      ),
+    );
 
     final domainOutcomes = <HealthExportDomain, _DomainExportOutcome>{};
 
@@ -150,14 +166,16 @@ class HealthExportService {
                 .toList(growable: false)
             : pending;
         // Android Health Connect currently does not support BMI in this writer path.
-        for (final record in writeable) {
-          await adapter.writeMeasurement(record);
+        for (final batch in _chunkRecords(writeable)) {
+          for (final record in batch) {
+            await adapter.writeMeasurement(record);
+          }
+          await _statusStore.markExported(
+            platform: platform,
+            domain: HealthExportDomain.measurements,
+            idempotencyKeys: batch.map((record) => record.idempotencyKey),
+          );
         }
-        await _statusStore.markExported(
-          platform: platform,
-          domain: HealthExportDomain.measurements,
-          idempotencyKeys: writeable.map((record) => record.idempotencyKey),
-        );
       },
     );
 
@@ -181,31 +199,46 @@ class HealthExportService {
         final nutritionFailures = <String>[];
         final hydrationFailures = <String>[];
 
-        for (final record in pendingNutrition) {
-          try {
-            await adapter.writeNutrition(record);
-            nutritionExportedKeys.add(record.idempotencyKey);
-          } catch (error) {
-            nutritionFailures.add('${record.idempotencyKey}: $error');
+        for (final batch in _chunkRecords(pendingNutrition)) {
+          for (final record in batch) {
+            try {
+              await adapter.writeNutrition(record);
+              nutritionExportedKeys.add(record.idempotencyKey);
+            } catch (error) {
+              nutritionFailures.add('${record.idempotencyKey}: $error');
+            }
           }
+          await _statusStore.markExported(
+            platform: platform,
+            domain: HealthExportDomain.nutritionHydration,
+            idempotencyKeys: [
+              ...nutritionExportedKeys,
+              ...hydrationExportedKeys,
+            ],
+          );
+          nutritionExportedKeys.clear();
+          hydrationExportedKeys.clear();
         }
-        for (final record in pendingHydration) {
-          try {
-            await adapter.writeHydration(record);
-            hydrationExportedKeys.add(record.idempotencyKey);
-          } catch (error) {
-            hydrationFailures.add('${record.idempotencyKey}: $error');
+        for (final batch in _chunkRecords(pendingHydration)) {
+          for (final record in batch) {
+            try {
+              await adapter.writeHydration(record);
+              hydrationExportedKeys.add(record.idempotencyKey);
+            } catch (error) {
+              hydrationFailures.add('${record.idempotencyKey}: $error');
+            }
           }
+          await _statusStore.markExported(
+            platform: platform,
+            domain: HealthExportDomain.nutritionHydration,
+            idempotencyKeys: [
+              ...nutritionExportedKeys,
+              ...hydrationExportedKeys,
+            ],
+          );
+          nutritionExportedKeys.clear();
+          hydrationExportedKeys.clear();
         }
-
-        await _statusStore.markExported(
-          platform: platform,
-          domain: HealthExportDomain.nutritionHydration,
-          idempotencyKeys: [
-            ...nutritionExportedKeys,
-            ...hydrationExportedKeys,
-          ],
-        );
 
         if (nutritionFailures.isNotEmpty || hydrationFailures.isNotEmpty) {
           final nutritionSummary = nutritionFailures.isEmpty
@@ -229,14 +262,16 @@ class HealthExportService {
         final pending = payload.workouts
             .where((record) => !alreadyExported.contains(record.idempotencyKey))
             .toList(growable: false);
-        for (final record in pending) {
-          await adapter.writeWorkout(record);
+        for (final batch in _chunkRecords(pending)) {
+          for (final record in batch) {
+            await adapter.writeWorkout(record);
+          }
+          await _statusStore.markExported(
+            platform: platform,
+            domain: HealthExportDomain.workouts,
+            idempotencyKeys: batch.map((record) => record.idempotencyKey),
+          );
         }
-        await _statusStore.markExported(
-          platform: platform,
-          domain: HealthExportDomain.workouts,
-          idempotencyKeys: pending.map((record) => record.idempotencyKey),
-        );
       },
     );
 
@@ -297,5 +332,31 @@ class HealthExportService {
         error: error.toString(),
       );
     }
+  }
+
+  DateTime? _incrementalSinceUtc(HealthExportPlatformStatus status) {
+    DateTime? since;
+    for (final domain in HealthExportDomain.values) {
+      final candidate = status.statusFor(domain).lastSuccessfulExportAtUtc;
+      if (candidate == null) {
+        return null;
+      }
+      if (since == null || candidate.isBefore(since)) {
+        since = candidate;
+      }
+    }
+    return since;
+  }
+
+  List<List<T>> _chunkRecords<T>(List<T> records) {
+    if (records.isEmpty) return <List<T>>[];
+    final chunks = <List<T>>[];
+    for (var i = 0; i < records.length; i += maxWriteBatchSize) {
+      final end = (i + maxWriteBatchSize) > records.length
+          ? records.length
+          : (i + maxWriteBatchSize);
+      chunks.add(records.sublist(i, end));
+    }
+    return chunks;
   }
 }

@@ -448,6 +448,7 @@ class MainActivity : FlutterFragmentActivity() {
     private fun handleWriteMeasurement(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
         val timestampIso = args["timestampUtcIso"] as? String
+        val zoneOffsetMinutes = (args["zoneOffsetMinutes"] as? Number)?.toInt()
         val typeRaw = args["type"] as? String
         val value = (args["value"] as? Number)?.toDouble()
         if (timestampIso == null || typeRaw == null || value == null) {
@@ -458,16 +459,17 @@ class MainActivity : FlutterFragmentActivity() {
             try {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val at = Instant.parse(timestampIso)
+                val zoneOffset = toZoneOffset(zoneOffsetMinutes)
                 val record = when (typeRaw) {
                     "weight" -> WeightRecord(
                         time = at,
-                        zoneOffset = ZoneOffset.UTC,
+                        zoneOffset = zoneOffset,
                         weight = Mass.kilograms(value),
                         metadata = Metadata.manualEntry(),
                     )
                     "bodyFatPercentage" -> BodyFatRecord(
                         time = at,
-                        zoneOffset = ZoneOffset.UTC,
+                        zoneOffset = zoneOffset,
                         // Health Connect BodyFatRecord expects 0..100 as percent units.
                         percentage = Percentage(normalizeBodyFatPercent(value)),
                         metadata = Metadata.manualEntry(),
@@ -509,6 +511,7 @@ class MainActivity : FlutterFragmentActivity() {
     private fun handleWriteNutrition(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
         val timestampIso = args["timestampUtcIso"] as? String
+        val zoneOffsetMinutes = (args["zoneOffsetMinutes"] as? Number)?.toInt()
         if (timestampIso == null) {
             result.error("invalid_args", "Invalid nutrition payload", null)
             return
@@ -518,6 +521,7 @@ class MainActivity : FlutterFragmentActivity() {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val at = Instant.parse(timestampIso)
                 val end = at.plusSeconds(exportIntervalSeconds)
+                val zoneOffset = toZoneOffset(zoneOffsetMinutes)
 
                 val calories = sanitizeNutritionField(args, "caloriesKcal", max = 100_000.0)
                 val protein = sanitizeNutritionField(args, "proteinGrams", max = 100_000.0)
@@ -551,9 +555,9 @@ class MainActivity : FlutterFragmentActivity() {
 
                 val record = NutritionRecord(
                     startTime = at,
-                    startZoneOffset = ZoneOffset.UTC,
+                    startZoneOffset = zoneOffset,
                     endTime = end,
-                    endZoneOffset = ZoneOffset.UTC,
+                    endZoneOffset = zoneOffset,
                     metadata = Metadata.manualEntry(),
                     energy = calories?.let(Energy::kilocalories),
                     protein = protein?.let(Mass::grams),
@@ -595,9 +599,9 @@ class MainActivity : FlutterFragmentActivity() {
                     try {
                         val fallbackRecord = NutritionRecord(
                             startTime = at,
-                            startZoneOffset = ZoneOffset.UTC,
+                            startZoneOffset = zoneOffset,
                             endTime = end,
-                            endZoneOffset = ZoneOffset.UTC,
+                            endZoneOffset = zoneOffset,
                             metadata = Metadata.manualEntry(),
                             energy = calories?.let(Energy::kilocalories),
                             protein = protein?.let(Mass::grams),
@@ -632,6 +636,7 @@ class MainActivity : FlutterFragmentActivity() {
     private fun handleWriteHydration(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
         val timestampIso = args["timestampUtcIso"] as? String
+        val zoneOffsetMinutes = (args["zoneOffsetMinutes"] as? Number)?.toInt()
         val liters = (args["volumeLiters"] as? Number)?.toDouble()
         if (timestampIso == null || liters == null) {
             result.error("invalid_args", "Invalid hydration payload", null)
@@ -646,11 +651,12 @@ class MainActivity : FlutterFragmentActivity() {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val at = Instant.parse(timestampIso)
                 val end = at.plusSeconds(exportIntervalSeconds)
+                val zoneOffset = toZoneOffset(zoneOffsetMinutes)
                 val record = HydrationRecord(
                     startTime = at,
-                    startZoneOffset = ZoneOffset.UTC,
+                    startZoneOffset = zoneOffset,
                     endTime = end,
-                    endZoneOffset = ZoneOffset.UTC,
+                    endZoneOffset = zoneOffset,
                     metadata = Metadata.manualEntry(),
                     volume = Volume.liters(liters),
                 )
@@ -707,6 +713,8 @@ class MainActivity : FlutterFragmentActivity() {
         val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
         val startIso = args["startUtcIso"] as? String
         val endIso = args["endUtcIso"] as? String
+        val startZoneOffsetMinutes = (args["startZoneOffsetMinutes"] as? Number)?.toInt()
+        val endZoneOffsetMinutes = (args["endZoneOffsetMinutes"] as? Number)?.toInt()
         if (startIso == null || endIso == null) {
             result.error("invalid_args", "Invalid workout payload", null)
             return
@@ -716,6 +724,12 @@ class MainActivity : FlutterFragmentActivity() {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val start = Instant.parse(startIso)
                 val end = Instant.parse(endIso)
+                if (!start.isBefore(end)) {
+                    withContext(Dispatchers.Main) {
+                        result.error("invalid_args", "Workout start must be before end", null)
+                    }
+                    return@launch
+                }
                 val typeRaw = (args["workoutType"] as? String) ?: "strength"
                 val exerciseType = when (typeRaw) {
                     "running" -> ExerciseSessionRecord.EXERCISE_TYPE_RUNNING
@@ -726,9 +740,9 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 val record = ExerciseSessionRecord(
                     startTime = start,
-                    startZoneOffset = ZoneOffset.UTC,
+                    startZoneOffset = toZoneOffset(startZoneOffsetMinutes),
                     endTime = end,
-                    endZoneOffset = ZoneOffset.UTC,
+                    endZoneOffset = toZoneOffset(endZoneOffsetMinutes),
                     metadata = Metadata.manualEntry(),
                     exerciseType = exerciseType,
                     title = args["title"] as? String,
@@ -742,6 +756,12 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             }
         }
+    }
+
+    private fun toZoneOffset(minutes: Int?): ZoneOffset {
+        val safeMinutes = minutes ?: 0
+        val clamped = safeMinutes.coerceIn(-18 * 60, 18 * 60)
+        return ZoneOffset.ofTotalSeconds(clamped * 60)
     }
 
     private fun mapSleepStage(stage: Int): String {

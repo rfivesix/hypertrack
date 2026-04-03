@@ -38,6 +38,16 @@ class HealthExportPayload {
   final List<ExportWorkoutRecord> workouts;
 }
 
+class HealthExportLoadOptions {
+  const HealthExportLoadOptions({
+    this.lookbackDays,
+    this.updatedSinceUtc,
+  });
+
+  final int? lookbackDays;
+  final DateTime? updatedSinceUtc;
+}
+
 class HealthExportDataSource {
   HealthExportDataSource({
     DatabaseHelper? databaseHelper,
@@ -45,14 +55,36 @@ class HealthExportDataSource {
 
   final DatabaseHelper _db;
 
-  Future<HealthExportPayload> loadPayload({int lookbackDays = 30}) async {
+  Future<HealthExportPayload> loadPayload({
+    HealthExportLoadOptions options = const HealthExportLoadOptions(),
+    int? lookbackDays,
+  }) async {
+    final resolvedLookbackDays = lookbackDays ?? options.lookbackDays;
     final now = DateTime.now();
-    final start = now.subtract(Duration(days: lookbackDays));
+    final start = resolvedLookbackDays == null
+        ? DateTime.fromMillisecondsSinceEpoch(0)
+        : now.subtract(Duration(days: resolvedLookbackDays));
 
-    final measurements = await _buildMeasurements(start: start, end: now);
-    final nutrition = await _buildNutrition(start: start, end: now);
-    final hydration = await _buildHydration(start: start, end: now);
-    final workouts = await _buildWorkouts(start: start, end: now);
+    final measurements = await _buildMeasurements(
+      start: start,
+      end: now,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
+    final nutrition = await _buildNutrition(
+      start: start,
+      end: now,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
+    final hydration = await _buildHydration(
+      start: start,
+      end: now,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
+    final workouts = await _buildWorkouts(
+      start: start,
+      end: now,
+      updatedSinceUtc: options.updatedSinceUtc,
+    );
 
     return HealthExportPayload(
       measurements: measurements,
@@ -65,8 +97,11 @@ class HealthExportDataSource {
   Future<List<ExportMeasurementRecord>> _buildMeasurements({
     required DateTime start,
     required DateTime end,
+    required DateTime? updatedSinceUtc,
   }) async {
-    final sessions = await _db.getMeasurementSessions();
+    final sessions = await _db.getMeasurementSessions(
+      updatedSince: updatedSinceUtc,
+    );
     final records = <ExportMeasurementRecord>[];
     for (final session in sessions) {
       if (session.timestamp.isBefore(start) || session.timestamp.isAfter(end)) {
@@ -102,6 +137,7 @@ class HealthExportDataSource {
         ExportMeasurementRecord(
           idempotencyKey: 'measurement:$localId',
           timestampUtc: s.timestamp.toUtc(),
+          zoneOffsetMinutes: s.timestamp.timeZoneOffset.inMinutes,
           type: mappedType,
           value: normalizedValue,
         ),
@@ -167,8 +203,13 @@ class HealthExportDataSource {
   Future<List<ExportNutritionRecord>> _buildNutrition({
     required DateTime start,
     required DateTime end,
+    required DateTime? updatedSinceUtc,
   }) async {
-    final entries = await _db.getEntriesForDateRange(start, end);
+    final entries = await _db.getEntriesForDateRange(
+      start,
+      end,
+      updatedSince: updatedSinceUtc,
+    );
     if (entries.isEmpty) return const <ExportNutritionRecord>[];
 
     final barcodes = entries.map((entry) => entry.barcode).toSet().toList();
@@ -190,6 +231,7 @@ class HealthExportDataSource {
       final record = ExportNutritionRecord(
         idempotencyKey: 'nutrition_entry:${entry.id}',
         timestampUtc: entry.timestamp.toUtc(),
+        zoneOffsetMinutes: entry.timestamp.timeZoneOffset.inMinutes,
         caloriesKcal: product.calories * factor,
         proteinGrams: product.protein * factor,
         carbsGrams: product.carbs * factor,
@@ -208,8 +250,13 @@ class HealthExportDataSource {
   Future<List<ExportHydrationRecord>> _buildHydration({
     required DateTime start,
     required DateTime end,
+    required DateTime? updatedSinceUtc,
   }) async {
-    final entries = await _db.getFluidEntriesForDateRange(start, end);
+    final entries = await _db.getFluidEntriesForDateRange(
+      start,
+      end,
+      updatedSince: updatedSinceUtc,
+    );
     return entries
         .where((entry) => entry.id != null)
         .map(_mapHydration)
@@ -224,6 +271,7 @@ class HealthExportDataSource {
     return ExportHydrationRecord(
       idempotencyKey: 'hydration_entry:$id',
       timestampUtc: entry.timestamp.toUtc(),
+      zoneOffsetMinutes: entry.timestamp.timeZoneOffset.inMinutes,
       volumeLiters: entry.quantityInMl / 1000.0,
     );
   }
@@ -231,8 +279,13 @@ class HealthExportDataSource {
   Future<List<ExportWorkoutRecord>> _buildWorkouts({
     required DateTime start,
     required DateTime end,
+    required DateTime? updatedSinceUtc,
   }) async {
-    final workouts = await _loadCompletedWorkoutLogs(start: start, end: end);
+    final workouts = await _loadCompletedWorkoutLogs(
+      start: start,
+      end: end,
+      updatedSinceUtc: updatedSinceUtc,
+    );
     return workouts
         .where(
           (workout) =>
@@ -254,6 +307,8 @@ class HealthExportDataSource {
       idempotencyKey: 'workout_session:$id',
       startUtc: workout.startTime.toUtc(),
       endUtc: (workout.endTime ?? workout.startTime).toUtc(),
+      startZoneOffsetMinutes: workout.startZoneOffsetMinutes,
+      endZoneOffsetMinutes: workout.endZoneOffsetMinutes,
       workoutType: _mapWorkoutType(workout),
       title: workout.routineName,
       notes: _buildWorkoutSummaryNotes(workout),
@@ -305,16 +360,22 @@ class HealthExportDataSource {
   Future<List<WorkoutLog>> _loadCompletedWorkoutLogs({
     required DateTime start,
     required DateTime end,
+    required DateTime? updatedSinceUtc,
   }) async {
     final dbInstance = await _db.database;
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final rows = await (dbInstance.select(dbInstance.workoutLogs)
-          ..where(
-            (tbl) =>
-                tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd) &
-                tbl.status.equals('completed'),
-          ))
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)..where((tbl) {
+          final inRange =
+              tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd);
+          final completed = tbl.status.equals('completed');
+          if (updatedSinceUtc == null) {
+            return inRange & completed;
+          }
+          return inRange &
+              completed &
+              (tbl.updatedAt.isBiggerOrEqualValue(updatedSinceUtc));
+        }))
         .get();
 
     if (rows.isEmpty) return const <WorkoutLog>[];
@@ -366,6 +427,9 @@ class HealthExportDataSource {
             startTime: row.startTime,
             endTime: row.endTime,
             notes: row.notes,
+            startZoneOffsetMinutes: row.startTime.timeZoneOffset.inMinutes,
+            endZoneOffsetMinutes:
+                (row.endTime ?? row.startTime).timeZoneOffset.inMinutes,
             sets: setsByWorkoutId[row.id] ?? const <SetLog>[],
           ),
         )
