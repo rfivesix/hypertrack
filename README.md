@@ -13,12 +13,7 @@ This README is intentionally implementation-focused and reflects the **current w
 - [System Architecture](documentation/architecture.md)
 - [Data Models & Storage](documentation/data_models_and_storage.md)
 - [UI & Widgets](documentation/ui_and_widgets.md)
-
-Historical sleep implementation notes (not canonical for current behavior):
-- [Sleep Foundation Batch](documentation/sleep/sleep_foundation_batch.md)
-- [Sleep Day Batch 2](documentation/sleep/sleep_day_batch_2.md)
-- [Sleep Final Product Batch](documentation/sleep/sleep_final_product_batch.md)
-- [Sleep Issue Audit #156–#175](documentation/sleep/sleep_issue_audit_156_175.md)
+- [Health Steps Alpha](documentation/health_steps_alpha.md)
 
 ## Current app shell (implemented)
 
