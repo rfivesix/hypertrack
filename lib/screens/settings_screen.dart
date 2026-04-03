@@ -263,14 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          result.success
-              ? (_isGerman(context) ? 'Export abgeschlossen' : 'Export complete')
-              : (result.message ??
-                  (_isGerman(context)
-                      ? 'Export fehlgeschlagen'
-                      : 'Export failed')),
-        ),
+        content: Text(_healthExportResultMessage(result, context)),
       ),
     );
     hasStepsSettingsChanged = true;
@@ -328,6 +321,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       HealthExportState.disabled => scheme.outline,
       HealthExportState.idle => scheme.outline,
     };
+  }
+
+  String _healthExportResultMessage(
+    HealthExportResult result,
+    BuildContext context,
+  ) {
+    if (result.success) {
+      return _isGerman(context) ? 'Export abgeschlossen' : 'Export complete';
+    }
+    return result.message ??
+        (_isGerman(context) ? 'Export fehlgeschlagen' : 'Export failed');
   }
 
   @override

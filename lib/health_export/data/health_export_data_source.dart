@@ -5,6 +5,17 @@ import '../../models/measurement_session.dart';
 import '../../models/workout_log.dart';
 import '../models/export_models.dart';
 
+// Nutrition labels often provide salt (NaCl) while platform schemas expect
+// sodium; sodium is approximately salt / 2.5 by mass.
+const double _saltToSodiumFactor = 2.5;
+const List<String> _strengthWorkoutKeywords = <String>[
+  'strength',
+  'push',
+  'pull',
+  'leg',
+  'gym',
+];
+
 class HealthExportPayload {
   const HealthExportPayload({
     required this.measurements,
@@ -142,7 +153,10 @@ class HealthExportDataSource {
       if (product == null) continue;
       if (entry.id == null) continue;
       final factor = entry.quantityInGrams / 100.0;
-      final sodium = ((product.salt ?? 0) > 0 ? (product.salt! / 2.5) : null);
+      // Nutritional labeling commonly uses salt; sodium = salt / 2.5.
+      final sodium = ((product.salt ?? 0) > 0
+          ? (product.salt! / _saltToSodiumFactor)
+          : null);
       final record = ExportNutritionRecord(
         idempotencyKey: 'nutrition_entry:${entry.id}',
         timestampUtc: entry.timestamp.toUtc(),
@@ -224,7 +238,7 @@ class HealthExportDataSource {
       return ExportWorkoutType.cycling;
     }
     if (text.contains('yoga')) return ExportWorkoutType.yoga;
-    if (text.contains('strength') || text.contains('push') || text.contains('pull') || text.contains('leg') || text.contains('gym')) {
+    if (_strengthWorkoutKeywords.any(text.contains)) {
       return ExportWorkoutType.strength;
     }
     return ExportWorkoutType.strength;
