@@ -34,6 +34,11 @@ class SleepSyncResult {
 
 abstract class SleepImportService {
   Future<SleepSyncResult> importRecent({int lookbackDays = 30});
+  Future<SleepSyncResult?> importRecentIfDue({
+    int lookbackDays = 30,
+    Duration minInterval = const Duration(hours: 6),
+    bool force = false,
+  });
   Future<void> dispose();
 }
 
@@ -45,8 +50,11 @@ abstract class SleepSettingsService implements SleepImportService {
 
 class SleepSyncService implements SleepSettingsService {
   static const String trackingEnabledKey = 'sleep_tracking_enabled';
+  static const String lastAutoImportAttemptAtIsoKey =
+      'sleep_last_auto_import_attempt_at_iso';
   static final ValueNotifier<DateTime?> lastImportAtListenable =
       ValueNotifier<DateTime?>(null);
+  static bool _autoImportInFlight = false;
 
   SleepSyncService({
     AppDatabase? database,
@@ -153,6 +161,30 @@ class SleepSyncService implements SleepSettingsService {
       lastImportAtListenable.value = DateTime.now().toUtc();
     }
     return result;
+  }
+
+  @override
+  Future<SleepSyncResult?> importRecentIfDue({
+    int lookbackDays = 30,
+    Duration minInterval = const Duration(hours: 6),
+    bool force = false,
+  }) async {
+    if (_autoImportInFlight) return null;
+    if (!force) {
+      final lastAttempt = await _getLastAutoImportAttemptAt();
+      if (lastAttempt != null &&
+          DateTime.now().toUtc().difference(lastAttempt) < minInterval) {
+        return null;
+      }
+    }
+
+    _autoImportInFlight = true;
+    try {
+      await _setLastAutoImportAttemptAt(DateTime.now().toUtc());
+      return importRecent(lookbackDays: lookbackDays);
+    } finally {
+      _autoImportInFlight = false;
+    }
   }
 
   Future<List<SleepRawImportRecord>> fetchRecentRawImports({
@@ -266,5 +298,20 @@ class SleepSyncService implements SleepSettingsService {
     if (_rawDao != null) return;
     final db = _database ??= await _databaseFuture;
     _rawDao = SleepRawImportsDao(db);
+  }
+
+  Future<DateTime?> _getLastAutoImportAttemptAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final iso = prefs.getString(lastAutoImportAttemptAtIsoKey);
+    if (iso == null || iso.isEmpty) return null;
+    return DateTime.tryParse(iso)?.toUtc();
+  }
+
+  Future<void> _setLastAutoImportAttemptAt(DateTime valueUtc) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      lastAutoImportAttemptAtIsoKey,
+      valueUtc.toUtc().toIso8601String(),
+    );
   }
 }

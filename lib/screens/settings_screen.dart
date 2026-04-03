@@ -190,6 +190,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final isGerman = localeCode.toLowerCase() == 'de';
     final themeService = Provider.of<ThemeService>(context);
     // profileService wird hier aktuell nicht genutzt, aber stört auch nicht
     // final profileService = Provider.of<ProfileService>(context);
@@ -297,18 +299,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, 'Health Steps (Alpha)'),
+            _buildSectionTitle(context, isGerman ? 'Schritte' : 'Steps'),
             SummaryCard(
               child: Column(
                 children: [
                   SwitchListTile(
                     secondary: const Icon(Icons.directions_walk_rounded),
-                    title: const Text(
-                      'Enable steps tracking',
+                    title: Text(
+                      isGerman
+                          ? 'Schritte-Tracking aktivieren'
+                          : 'Enable steps tracking',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: const Text(
-                      'Read step data from Apple Health / Health Connect',
+                    subtitle: Text(
+                      isGerman
+                          ? 'Schrittdaten aus Apple Health / Health Connect lesen'
+                          : 'Read step data from Apple Health / Health Connect',
                     ),
                     value: _stepsTrackingEnabled,
                     onChanged: (value) async {
@@ -330,20 +336,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                   const Divider(height: 1),
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Source policy',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        isGerman ? 'Quellenrichtlinie' : 'Source policy',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
                   RadioListTile<StepsSourcePolicy>(
-                    title: const Text('Auto (dominant source)'),
-                    subtitle: const Text(
-                      'Recommended: use one source per day to avoid overlap inflation.',
+                    title: Text(
+                      isGerman
+                          ? 'Auto (dominante Quelle)'
+                          : 'Auto (dominant source)',
+                    ),
+                    subtitle: Text(
+                      isGerman
+                          ? 'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.'
+                          : 'Recommended: use one source per day to avoid overlap inflation.',
                     ),
                     value: StepsSourcePolicy.autoDominant,
                     groupValue: _stepsSourcePolicy,
@@ -356,9 +368,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                   RadioListTile<StepsSourcePolicy>(
-                    title: const Text('Merge (max per hour)'),
-                    subtitle: const Text(
-                      'Combine sources by taking the highest hourly bucket.',
+                    title: Text(
+                      isGerman
+                          ? 'Zusammenführen (max pro Stunde)'
+                          : 'Merge (max per hour)',
+                    ),
+                    subtitle: Text(
+                      isGerman
+                          ? 'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.'
+                          : 'Combine sources by taking the highest hourly bucket.',
                     ),
                     value: StepsSourcePolicy.maxPerHour,
                     groupValue: _stepsSourcePolicy,
@@ -371,18 +389,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                   const Divider(height: 1),
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Provider filter',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        isGerman ? 'Provider-Filter' : 'Provider filter',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
                   RadioListTile<StepsProviderFilter>(
-                    title: const Text('All'),
+                    title: Text(isGerman ? 'Alle' : 'All'),
                     value: StepsProviderFilter.all,
                     groupValue: _stepsProviderFilter,
                     onChanged: (value) async {
@@ -527,7 +545,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             : () async {
                                 setState(() => _isSleepImporting = true);
                                 final result =
-                                    await _sleepSyncService.importRecent();
+                                    await _sleepSyncService.importRecent(
+                                  // Manual import should backfill full history.
+                                  // Auto/periodic import remains 30 days.
+                                  lookbackDays: 36500,
+                                );
                                 if (!mounted) return;
                                 setState(() => _isSleepImporting = false);
                                 ScaffoldMessenger.of(context).showSnackBar(

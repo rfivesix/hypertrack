@@ -4583,7 +4583,7 @@ abstract class AppLocalizations {
   /// No description provided for @sleepSettingsSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sleep (Batch 2)'**
+  /// **'Sleep'**
   String get sleepSettingsSectionTitle;
 
   /// No description provided for @sleepEnableTrackingTitle.
@@ -4625,7 +4625,7 @@ abstract class AppLocalizations {
   /// No description provided for @sleepImportNowSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Import the last 30 days for testing'**
+  /// **'Import all available sleep data (all time)'**
   String get sleepImportNowSubtitle;
 
   /// No description provided for @sleepRawImportsTitle.

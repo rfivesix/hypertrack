@@ -55,6 +55,7 @@ class DiaryScreen extends StatefulWidget {
 
 class DiaryScreenState extends State<DiaryScreen> {
   static const Duration _stepsSyncInterval = Duration(hours: 6);
+  static const Duration _sleepSyncInterval = Duration(hours: 6);
   bool _isLoading = true;
   final ValueNotifier<DateTime> selectedDateNotifier = ValueNotifier(
     DateTime.now(),
@@ -288,6 +289,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       });
     }
     await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
+    await _syncSleepIfDue(force: forceStepsRefresh);
     await _loadSleepForDate(date);
     await _syncStepsIfDue(date, force: forceStepsRefresh);
   }
@@ -361,6 +363,13 @@ class DiaryScreenState extends State<DiaryScreen> {
       providerFilter,
     );
     await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
+  }
+
+  Future<void> _syncSleepIfDue({bool force = false}) async {
+    await _sleepSyncService.importRecentIfDue(
+      minInterval: _sleepSyncInterval,
+      force: force,
+    );
   }
 
   Future<void> _deleteFoodEntry(int id) async {

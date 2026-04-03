@@ -77,6 +77,7 @@ void main() {
     final analysis = await db.customSelect(
       '''
       SELECT
+        analysis_version,
         score,
         interruptions_count,
         interruptions_wake_minutes,
@@ -88,12 +89,16 @@ void main() {
       LIMIT 1
       ''',
     ).getSingle();
+    expect(
+      analysis.read<String>('analysis_version'),
+      'sleep-health-score-v2',
+    );
     expect(analysis.readNullable<double>('score'), isNotNull);
     expect(analysis.readNullable<int>('interruptions_count'), 1);
     expect(analysis.readNullable<int>('interruptions_wake_minutes'), 5);
     expect(
       analysis.readNullable<double>('score_completeness'),
-      closeTo(0.70, 0.0001),
+      closeTo(0.75, 0.0001),
     );
     expect(analysis.readNullable<double>('regularity_sri'), isNull);
     expect(analysis.readNullable<int>('regularity_valid_days'), lessThan(5));

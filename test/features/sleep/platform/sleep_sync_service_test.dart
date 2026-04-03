@@ -156,4 +156,41 @@ void main() {
     expect(result.permissionState, SleepPermissionState.denied);
     await db.close();
   });
+
+  test('importRecentIfDue throttles repeated automatic imports', () async {
+    final db = AppDatabase(
+      NativeDatabase.memory(
+        setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+      ),
+    );
+    final service = SleepSyncService.withOverrides(
+      iosPermissionsService: const _PermissionService(
+        SleepPermissionOutcome.ready(),
+      ),
+      androidPermissionsService: const _PermissionService(
+        SleepPermissionOutcome.ready(),
+      ),
+      iosDataSource: _HealthKitSource(_batch()),
+      androidDataSource: _HealthConnectSource(_batch()),
+      database: db,
+    );
+    await service.setTrackingEnabled(true);
+
+    final first = await service.importRecentIfDue(
+      minInterval: const Duration(hours: 6),
+    );
+    expect(first, isNotNull);
+    expect(first!.success, isTrue);
+
+    final second = await service.importRecentIfDue(
+      minInterval: const Duration(hours: 6),
+    );
+    expect(second, isNull);
+
+    final analysesCount = await db
+        .customSelect('SELECT COUNT(*) c FROM sleep_nightly_analyses')
+        .getSingle();
+    expect(analysesCount.read<int>('c'), 1);
+    await db.close();
+  });
 }

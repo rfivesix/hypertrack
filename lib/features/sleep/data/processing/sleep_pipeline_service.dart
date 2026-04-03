@@ -51,7 +51,7 @@ class SleepPipelineService {
   Future<SleepPipelineRunResult> runImport({
     required SleepRawIngestionBatch batch,
     String normalizationVersion = 'sleep-import-v1',
-    String analysisVersion = 'sleep-health-score-v1',
+    String analysisVersion = 'sleep-health-score-v2',
     bool forceRecompute = false,
     DateTime? recomputeFromInclusive,
     DateTime? recomputeToExclusive,

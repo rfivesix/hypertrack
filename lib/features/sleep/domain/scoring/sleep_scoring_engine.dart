@@ -22,9 +22,9 @@ class SleepScoringInput {
 class SleepScoringConfig {
   const SleepScoringConfig({
     required this.analysisVersion,
-    this.weightDuration = 0.35,
+    this.weightDuration = 0.40,
     this.weightContinuity = 0.35,
-    this.weightRegularity = 0.30,
+    this.weightRegularity = 0.25,
     this.weightSeWithinContinuity = 0.50,
     this.weightWasoWithinContinuity = 0.50,
     this.regularityMinDays = 5,
@@ -80,12 +80,12 @@ class SleepScoringResult {
 SleepScoringResult calculateSleepScore(
   SleepScoringInput input, {
   SleepScoringConfig config = const SleepScoringConfig(
-    analysisVersion: 'sleep-health-score-v1',
+    analysisVersion: 'sleep-health-score-v2',
   ),
 }) {
   final durationScore = input.durationMinutes == null
       ? null
-      : scoreDurationV1(input.durationMinutes!);
+      : scoreDurationV2(input.durationMinutes!);
   final seScore = input.sleepEfficiencyPct == null
       ? null
       : scoreSleepEfficiencyV1(input.sleepEfficiencyPct!);
@@ -154,29 +154,31 @@ SleepScoringResult calculateSleepScore(
   );
 }
 
-/// Duration component for Sleep Health Score V1 (0..100).
+/// Duration component for Sleep Health Score V2 (0..100).
 ///
 /// Evidence-backed direction:
 /// - Short sleep is associated with worse outcomes.
 /// - Very long sleep can also be associated with higher risk (U-shaped trend).
 ///
 /// Product/heuristic mapping:
-/// - Exact breakpoints and slopes in this piecewise function are conservative
+/// - Exact breakpoints and slopes in this piecewise function are explicit
 ///   product design choices, not direct clinical thresholds.
-double scoreDurationV1(int durationMinutes) {
+double scoreDurationV2(int durationMinutes) {
   if (durationMinutes <= 0) return 0;
   final hours = durationMinutes / 60.0;
-  if (hours < 4.0) return 0;
-  if (hours < 5.0) return _linear(hours, 4.0, 5.0, 0, 30);
-  if (hours < 6.0) return _linear(hours, 5.0, 6.0, 30, 70);
-  if (hours < 7.0) return _linear(hours, 6.0, 7.0, 70, 100);
+  if (hours <= 4.0) return 0;
+  if (hours < 5.0) return _linear(hours, 4.0, 5.0, 0, 5);
+  if (hours < 5.5) return _linear(hours, 5.0, 5.5, 5, 20);
+  if (hours < 6.0) return _linear(hours, 5.5, 6.0, 20, 50);
+  if (hours < 6.5) return _linear(hours, 6.0, 6.5, 50, 80);
+  if (hours < 7.0) return _linear(hours, 6.5, 7.0, 80, 100);
   if (hours <= 9.0) return 100;
-  if (hours <= 10.0) return _linear(hours, 9.0, 10.0, 100, 85);
-  if (hours <= 11.0) return _linear(hours, 10.0, 11.0, 85, 60);
-  return 60;
+  if (hours <= 10.0) return _linear(hours, 9.0, 10.0, 100, 90);
+  if (hours <= 11.0) return _linear(hours, 10.0, 11.0, 90, 70);
+  return 50;
 }
 
-/// Sleep efficiency component for Sleep Health Score V1 (0..100).
+/// Sleep efficiency component for Sleep Health Score V2 (0..100).
 ///
 /// Evidence-backed direction:
 /// - Lower sleep efficiency reflects more fragmented/incomplete sleep and is
@@ -193,7 +195,7 @@ double scoreSleepEfficiencyV1(double sleepEfficiencyPct) {
   return _linear(se, 0, 70, 0, 25).clamp(0, 25).toDouble();
 }
 
-/// WASO component for Sleep Health Score V1 (0..100).
+/// WASO component for Sleep Health Score V2 (0..100).
 ///
 /// Evidence-backed direction:
 /// - Higher wake-after-sleep-onset is generally worse for continuity.

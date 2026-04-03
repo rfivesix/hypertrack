@@ -1,6 +1,6 @@
-# Sleep Health Score V1 (Current Implementation)
+# Sleep Health Score V2 (Current Canonical Implementation)
 
-This document describes the implemented V1 Sleep Health Score in the current working copy.
+This document describes the implemented V2 Sleep Health Score in the current working copy.
 
 ## Scope
 
@@ -14,13 +14,17 @@ Persisted in:
 
 - `sleep_nightly_analyses` (`lib/data/drift_database.dart`)
 
+Analysis version string:
+
+- `sleep-health-score-v2`
+
 ## Top-level formula
 
-V1 uses only three top-level components:
+V2 uses only three top-level components:
 
-- Duration (TST): `35%`
+- Duration (TST): `40%`
 - Continuity (SE + WASO): `35%`
-- Regularity (SRI): `30%`
+- Regularity (SRI): `25%`
 
 Top-level renormalization over available components:
 
@@ -46,18 +50,27 @@ Internal renormalization is applied if one subcomponent is missing.
 
 ## Component scoring rules
 
-### Duration score (TST)
+### Duration score (TST) — V2 exact mapping
 
 Input: hours of sleep (`durationMinutes / 60`)
 
 - `7.0 .. 9.0` => `100`
-- `6.0 .. <7.0` => linear `70 -> 100`
-- `5.0 .. <6.0` => linear `30 -> 70`
-- `4.0 .. <5.0` => linear `0 -> 30`
-- `<4.0` => `0`
-- `>9.0 .. 10.0` => linear `100 -> 85`
-- `>10.0 .. 11.0` => linear `85 -> 60`
-- `>11.0` => clamped `60` (conservative)
+- `6.5 .. <7.0` => linear `80 -> 100`
+- `6.0 .. <6.5` => linear `50 -> 80`
+- `5.5 .. <6.0` => linear `20 -> 50`
+- `5.0 .. <5.5` => linear `5 -> 20`
+- `4.0 .. <5.0` => linear `0 -> 5`
+- `<=4.0` => `0`
+- `>9.0 .. 10.0` => linear `100 -> 90`
+- `>10.0 .. 11.0` => linear `90 -> 70`
+- `>11.0` => clamped `50`
+
+Interpretation goals encoded by this mapping:
+
+- Broad near-perfect plateau from `7h` to `9h`
+- Clearly lower scores for `6h..7h`
+- Strong penalty below `6h`
+- Milder long-sleep penalty than short-sleep penalty
 
 ### Sleep efficiency score (SE)
 
@@ -104,25 +117,26 @@ If regularity is unavailable, top-level score renormalizes across Duration and C
 `score_completeness` is persisted as active top-level weight before renormalization:
 
 - all components available: `1.0`
-- regularity missing: `0.70`
+- regularity missing: `0.75`
 - continuity missing: `0.65`
 - no components: `0.0` (score unavailable)
 
 This is a data completeness indicator, not a certainty metric.
 
-## Explicit exclusions from V1 main score
+## Explicit exclusions from V2 main score
 
-The following are not used in V1 score computation:
+The following are not used in V2 score computation:
 
 - sleep stage percentages/depth as direct score input
 - SOL
 - heart-rate and HRV metrics/deltas
 - interruption count as a standalone component (continuity uses WASO directly)
 
-## Persistence fields used by V1
+## Persistence fields used by V2
 
 From `sleep_nightly_analyses`:
 
+- `analysis_version` (`sleep-health-score-v2`)
 - `score`
 - `score_completeness`
 - `total_sleep_minutes`
@@ -134,7 +148,7 @@ From `sleep_nightly_analyses`:
 
 ## Evidence-backed vs heuristic
 
-Evidence-backed directions:
+Evidence-backed design direction:
 
 - insufficient sleep is unfavorable
 - very long sleep can correlate with risk (U-shape direction)
@@ -142,11 +156,22 @@ Evidence-backed directions:
 - higher WASO is worse
 - SRI concept as 24h-apart sleep/wake matching probability
 
-Heuristic/product mapping:
+Heuristic/product choices (explicit and transparent):
 
-- exact piecewise breakpoints and score slopes for Duration/SE/WASO
-- clamping choice for very long sleep (`>11h -> 60`)
-- continuity subweighting at 50/50
+- top-level weights (`40/35/25`)
+- exact piecewise breakpoints and slopes for Duration/SE/WASO
+- clamping choice for very long sleep (`>11h -> 50`)
+- continuity subweighting at `50/50`
+
+## Why stages/HR/HRV remain excluded from main score
+
+V2 intentionally keeps the main score limited to Duration + Continuity + Regularity to preserve:
+
+- clear interpretability
+- robust behavior with partial data
+- comparability across devices where stage/HR/HRV quality differs
+
+Stage depth and HR signals remain available for detailed drill-down and future model iterations, but are not direct top-level V2 score inputs.
 
 ## Known limitations
 

@@ -46,6 +46,15 @@ class _FakeSleepImportService implements SleepImportService {
   }
 
   @override
+  Future<SleepSyncResult?> importRecentIfDue({
+    int lookbackDays = 30,
+    Duration minInterval = const Duration(hours: 6),
+    bool force = false,
+  }) async {
+    return null;
+  }
+
+  @override
   Future<void> dispose() async {}
 }
 

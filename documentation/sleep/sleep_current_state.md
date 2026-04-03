@@ -212,10 +212,10 @@ Force recompute support exists in service signature, but `SleepSyncService.impor
 
 Current score model:
 
-- `Sleep Health Score V1` with top-level components:
-  - Duration (TST): 35%
+- `Sleep Health Score V2` with top-level components:
+  - Duration (TST): 40%
   - Continuity (SE + WASO): 35%
-  - Regularity (SRI): 30%
+  - Regularity (SRI): 25%
 - Component renormalization is implemented when components are missing.
 - Continuity internally renormalizes 50/50 between SE and WASO when one is missing.
 
@@ -227,7 +227,7 @@ Current scoring inputs provided by pipeline:
 - `regularitySri` from 1-minute sleep/wake state matching across true 24h pairs (consecutive calendar days only)
 - `regularityValidDays` for availability/stability thresholds
 
-Explicitly excluded from V1 main score:
+Explicitly excluded from V2 main score:
 
 - stage/depth composition
 - SOL
@@ -236,7 +236,7 @@ Explicitly excluded from V1 main score:
 
 Detailed formula and scoring bands:
 
-- `documentation/sleep/sleep_health_score_v1.md`
+- `documentation/sleep/sleep_health_score_v2.md`
 
 ### Score persistence and consumption
 

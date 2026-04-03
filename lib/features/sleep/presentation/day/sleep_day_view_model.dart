@@ -52,6 +52,7 @@ class SleepDayViewModel extends ChangeNotifier {
       return;
     }
     try {
+      await _syncService.importRecentIfDue();
       _overview = await _repository.fetchOverview(_period.anchorDate);
     } catch (_) {
       _errorMessage = 'Unable to load sleep day.';

@@ -2454,7 +2454,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'In diesem Monat sind noch keine bewerteten Schlafnächte verfügbar.';
 
   @override
-  String get sleepSettingsSectionTitle => 'Schlaf (Batch 2)';
+  String get sleepSettingsSectionTitle => 'Schlaf';
 
   @override
   String get sleepEnableTrackingTitle => 'Schlaf-Tracking aktivieren';
@@ -2479,7 +2479,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sleepImportNowSubtitle =>
-      'Importiert die letzten 30 Tage zum Testen';
+      'Importiert alle verfuegbaren Schlafdaten (alle Zeiten)';
 
   @override
   String get sleepRawImportsTitle => 'Rohimporte anzeigen';

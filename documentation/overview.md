@@ -97,7 +97,7 @@ Current entry points:
 Canonical source-of-truth for Sleep implementation details:
 
 - `documentation/sleep/sleep_current_state.md`
-- `documentation/sleep/sleep_health_score_v1.md`
+- `documentation/sleep/sleep_health_score_v2.md`
 
 ## Settings integration (implemented)
 

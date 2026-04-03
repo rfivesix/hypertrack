@@ -2439,7 +2439,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No scored sleep nights available this month yet.';
 
   @override
-  String get sleepSettingsSectionTitle => 'Sleep (Batch 2)';
+  String get sleepSettingsSectionTitle => 'Sleep';
 
   @override
   String get sleepEnableTrackingTitle => 'Enable sleep tracking';
@@ -2462,7 +2462,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepImportNowTitle => 'Import sleep data now';
 
   @override
-  String get sleepImportNowSubtitle => 'Import the last 30 days for testing';
+  String get sleepImportNowSubtitle =>
+      'Import all available sleep data (all time)';
 
   @override
   String get sleepRawImportsTitle => 'View raw sleep imports';

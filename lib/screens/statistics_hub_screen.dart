@@ -63,6 +63,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   static const _bodyTrendPoints = 10;
   static const _chipBackgroundOpacity = 0.14;
   static const _miniBarOpacity = 0.75;
+  static const Duration _sleepSyncInterval = Duration(hours: 6);
 
   late final l10n = AppLocalizations.of(context)!;
   late final StatisticsHubDataAdapter _hubDataAdapter;
@@ -152,6 +153,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
+    await _sleepSyncService.importRecentIfDue(
+      minInterval: _sleepSyncInterval,
+    );
     final selectedDays = _rangePolicy.selectedDaysFromIndex(
       _selectedTimeRangeIndex,
     );

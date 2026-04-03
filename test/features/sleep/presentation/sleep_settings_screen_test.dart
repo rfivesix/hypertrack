@@ -52,6 +52,15 @@ class _FakeSleepSettingsService implements SleepSettingsService {
   }
 
   @override
+  Future<SleepSyncResult?> importRecentIfDue({
+    int lookbackDays = 30,
+    Duration minInterval = const Duration(hours: 6),
+    bool force = false,
+  }) async {
+    return null;
+  }
+
+  @override
   Future<void> dispose() async {}
 }
 
@@ -104,11 +113,11 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('SLEEP (BATCH 2)'),
+      find.text('SLEEP'),
       500,
       scrollable: find.byType(Scrollable),
     );
-    expect(find.text('SLEEP (BATCH 2)'), findsOneWidget);
+    expect(find.text('SLEEP'), findsOneWidget);
     expect(find.text('Enable sleep tracking'), findsOneWidget);
     expect(find.text('Health connection status'), findsOneWidget);
     expect(find.text('Partial access'), findsOneWidget);

@@ -132,7 +132,7 @@ Current Sleep support in Statistics includes:
 - Tap-through to Sleep day route (`/sleep/day`)
 
 No Sleep calculations are performed in Statistics UI; values come from `SleepHubSummaryRepository`.
-Score values consumed by Statistics are produced in the Sleep pipeline (`Sleep Health Score V1` in current implementation).
+Score values consumed by Statistics are produced in the Sleep pipeline (`Sleep Health Score V2` in current implementation).
 
 ## Integration boundaries (explicit)
 

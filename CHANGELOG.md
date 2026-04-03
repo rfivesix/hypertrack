@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.3-beta.1] - 2026-04-03
+
+This release promotes the current Sleep feature set from alpha toward beta by finalizing score behavior, settings labeling, timeline presentation, and import orchestration. Sleep scoring is now stricter for short duration nights (V2), settings labels are language-correct and no longer marked as alpha/batch, and sleep import now supports both all-time manual backfill and recurring incremental sync behavior.
+
+### Added
+- Sleep Health Score V2 as the new canonical scoring model (`sleep-health-score-v2`) with updated documentation and regression coverage.
+- Automatic throttled sleep import orchestration (`importRecentIfDue`) to check for new data regularly without excessive repeated imports.
+- New sync-service test coverage for automatic import throttling behavior.
+
+### Changed
+- Sleep score model updated from V1 to V2:
+  - top-level weights now Duration `40%`, Continuity `35%`, Regularity `25%`
+  - stricter duration piecewise mapping with stronger penalties below 7h (especially below 6h)
+  - continuity remains SE + WASO only, with internal renormalization
+  - regularity remains SRI, with reduced top-level compensation weight
+- Sleep pipeline default analysis version changed to `sleep-health-score-v2`.
+- Sleep settings section title changed from `Sleep/Schlaf (Batch 2)` to `Sleep/Schlaf`.
+- Steps settings section title changed from `Health Steps (Alpha)` to `Steps/Schritte` based on selected language.
+- Sleep timeline card was redesigned to a staged bar-style timeline with cleaner legend and axis behavior.
+- Sleep benchmark bars (duration/heart-rate details) received contrast adjustments for dark and light mode readability.
+
+### Fixed
+- Manual `Import sleep data now` now performs all-time backfill import instead of a 30-day test-only import.
+- Automatic/sequential sleep import remains incremental (30-day lookback), preserving previously imported historical data while adding/updating newer records.
+- Diary and Statistics refresh flows now trigger periodic sleep sync checks similarly to existing steps refresh behavior.
+- Removed temporary hardcoded sleep debug data from day overview presentation.
+
 ## [0.7.3-alpha.4] - 2026-04-02
 
 This alpha finalizes the current Sleep health-score pass in the working copy. It documents and ships the implemented V1 scoring model, persists additional nightly analysis fields for score completeness and regularity, expands Sleep day/detail messaging and localization, and refreshes core documentation so release notes and docs align with the current source of truth.

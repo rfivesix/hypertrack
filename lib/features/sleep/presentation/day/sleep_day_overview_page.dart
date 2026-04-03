@@ -9,8 +9,7 @@ import '../../../../widgets/summary_card.dart';
 import '../../data/repository/sleep_query_repository.dart';
 import '../../data/sleep_day_repository.dart';
 import '../../domain/aggregation/sleep_period_aggregations.dart';
-import '../../domain/sleep_enums.dart';
-import '../../domain/sleep_stage_segment.dart';
+import '../../domain/sleep_domain.dart';
 import '../../platform/sleep_sync_service.dart';
 import '../details/sleep_data_unavailable_card.dart';
 import '../month/sleep_month_overview_page.dart';
@@ -381,8 +380,8 @@ class _SleepTimelineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final segments = overview.timelineSegments;
-    if (segments.isEmpty) {
+    final chartSegments = _toChartSegments(overview.timelineSegments);
+    if (chartSegments.isEmpty) {
       return SummaryCard(
         margin: EdgeInsets.zero,
         child: Padding(
@@ -401,64 +400,11 @@ class _SleepTimelineCard extends StatelessWidget {
         ),
       );
     }
-
-    final duration = overview.session.endAtUtc.difference(
-      overview.session.startAtUtc,
-    );
-    final totalMinutes = duration.inMinutes <= 0 ? 1 : duration.inMinutes;
-    final stageRows = <_StageRowData>[
-      _StageRowData(
-        label: l10n.sleepStageDeepLabel,
-        stages: const {CanonicalSleepStage.deep},
-        color: Colors.indigo,
-      ),
-      _StageRowData(
-        label: l10n.sleepStageLightLabel,
-        stages: const {
-          CanonicalSleepStage.light,
-          CanonicalSleepStage.asleepUnspecified,
-        },
-        color: Colors.blue,
-      ),
-      _StageRowData(
-        label: l10n.sleepStageRemLabel,
-        stages: const {CanonicalSleepStage.rem},
-        color: Colors.purple,
-      ),
-      _StageRowData(
-        label: l10n.sleepStageAwakeLabel,
-        stages: const {
-          CanonicalSleepStage.awake,
-          CanonicalSleepStage.outOfBed,
-        },
-        color: Theme.of(context).colorScheme.outline,
-      ),
-    ];
-    final visibleRows = stageRows
-        .where(
-          (row) =>
-              segments.any((segment) => row.stages.contains(segment.stage)),
-        )
-        .toList(growable: false);
-    if (visibleRows.isEmpty) {
-      return SummaryCard(
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.sleepTimelineTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(l10n.sleepTimelineUnavailable),
-            ],
-          ),
-        ),
-      );
-    }
+    final chartStart = chartSegments.first.startAtUtc;
+    final chartEnd = chartSegments.last.endAtUtc;
+    final labels = _timelineLegend(chartSegments, l10n);
+    final colors = _sleepStageColors();
+    final use24h = MediaQuery.of(context).alwaysUse24HourFormat;
     return SummaryCard(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -470,17 +416,28 @@ class _SleepTimelineCard extends StatelessWidget {
               l10n.sleepTimelineTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 10),
-            for (final row in visibleRows) ...[
-              _StageTimelineRow(
-                label: row.label,
-                segments: segments,
-                totalMinutes: totalMinutes,
-                stages: row.stages,
-                color: row.color,
+            const SizedBox(height: 12),
+            _SleepTimelineLegend(labels: labels),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 108,
+              width: double.infinity,
+              child: CustomPaint(
+                painter: _SleepStagesPainter(
+                  segments: chartSegments,
+                  startAtUtc: chartStart,
+                  endAtUtc: chartEnd,
+                  colors: colors,
+                  gridColor: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
-              const SizedBox(height: 6),
-            ],
+            ),
+            const SizedBox(height: 8),
+            _SleepTimelineAxis(
+              start: chartStart.toLocal(),
+              end: chartEnd.toLocal(),
+              use24HourFormat: use24h,
+            ),
           ],
         ),
       ),
@@ -488,73 +445,256 @@ class _SleepTimelineCard extends StatelessWidget {
   }
 }
 
-class _StageTimelineRow extends StatelessWidget {
-  const _StageTimelineRow({
-    required this.label,
-    required this.segments,
-    required this.totalMinutes,
-    required this.stages,
-    required this.color,
+class _SleepTimelineAxis extends StatelessWidget {
+  const _SleepTimelineAxis({
+    required this.start,
+    required this.end,
+    required this.use24HourFormat,
   });
 
-  final String label;
-  final List<SleepStageSegment> segments;
-  final int totalMinutes;
-  final Set<CanonicalSleepStage> stages;
-  final Color color;
+  final DateTime start;
+  final DateTime end;
+  final bool use24HourFormat;
 
   @override
   Widget build(BuildContext context) {
-    final background = Theme.of(context).colorScheme.surfaceContainerHighest;
+    final duration = end.difference(start);
+    const tickCount = 6;
+    final ticks = List<DateTime>.generate(tickCount, (index) {
+      if (index == tickCount - 1) return end;
+      final ratio = index / (tickCount - 1);
+      final tickOffset = (duration.inMinutes * ratio).round();
+      return start.add(Duration(minutes: tickOffset));
+    });
     return Row(
-      children: [
-        SizedBox(
-          width: 56,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SizedBox(
-            height: 12,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: Row(
-                children: [
-                  for (final segment in segments)
-                    Expanded(
-                      flex: (segment.endAtUtc
-                              .difference(segment.startAtUtc)
-                              .inMinutes
-                              .clamp(1, totalMinutes))
-                          .toInt(),
-                      child: Container(
-                        color:
-                            stages.contains(segment.stage) ? color : background,
-                      ),
-                    ),
-                ],
-              ),
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: ticks
+          .map((tick) => Text(_formatTick(tick, use24HourFormat)))
+          .toList(growable: false),
+    );
+  }
+
+  String _formatTick(DateTime value, bool use24h) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    if (use24h) {
+      return '$hour:00';
+    }
+    final suffix = value.hour >= 12 ? 'pm' : 'am';
+    final twelveHour = value.hour % 12 == 0 ? 12 : value.hour % 12;
+    return '$twelveHour$suffix';
+  }
+}
+
+class _SleepTimelineLegend extends StatelessWidget {
+  const _SleepTimelineLegend({required this.labels});
+
+  final List<(_SleepChartStage, String, Color)> labels;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 18,
+      runSpacing: 6,
+      children: labels
+          .map(
+            (item) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: item.$3,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(item.$2),
+              ],
             ),
-          ),
-        ),
-      ],
+          )
+          .toList(growable: false),
     );
   }
 }
 
-class _StageRowData {
-  const _StageRowData({
-    required this.label,
-    required this.stages,
-    required this.color,
+class _SleepStagesPainter extends CustomPainter {
+  _SleepStagesPainter({
+    required this.segments,
+    required this.startAtUtc,
+    required this.endAtUtc,
+    required this.colors,
+    required this.gridColor,
   });
 
-  final String label;
-  final Set<CanonicalSleepStage> stages;
-  final Color color;
+  final List<_ChartStageSegment> segments;
+  final DateTime startAtUtc;
+  final DateTime endAtUtc;
+  final Map<_SleepChartStage, Color> colors;
+  final Color gridColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final totalMs =
+        endAtUtc.millisecondsSinceEpoch - startAtUtc.millisecondsSinceEpoch;
+    if (totalMs <= 0) return;
+
+    const chartTop = 6.0;
+    final chartBottom = size.height - 10.0;
+    final chartHeight = chartBottom - chartTop;
+    const stageCount = 4;
+    final barThickness = chartHeight / stageCount;
+    final segmentPaint = Paint()..style = PaintingStyle.fill;
+
+    final gridPaint = Paint()
+      ..color = gridColor.withValues(alpha: 0.35)
+      ..strokeWidth = 1;
+
+    for (var i = 0; i < 4; i++) {
+      final y = chartTop + ((i + 1) * barThickness);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    double xFor(DateTime value) {
+      final elapsed =
+          value.millisecondsSinceEpoch - startAtUtc.millisecondsSinceEpoch;
+      return (elapsed / totalMs) * size.width;
+    }
+
+    double yFor(_SleepChartStage stage) {
+      final centerOffset = barThickness / 2;
+      return switch (stage) {
+        _SleepChartStage.awake => chartTop + centerOffset,
+        _SleepChartStage.rem => chartTop + centerOffset + barThickness,
+        _SleepChartStage.light => chartTop + centerOffset + (barThickness * 2),
+        _SleepChartStage.deep => chartTop + centerOffset + (barThickness * 3),
+      };
+    }
+
+    for (var i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      final x1 = xFor(segment.startAtUtc);
+      final x2 = xFor(segment.endAtUtc);
+      final yCenter = yFor(segment.stage);
+      final yTop = yCenter - (barThickness / 2);
+      segmentPaint.color = colors[segment.stage] ?? const Color(0xFF3F6FD8);
+      canvas.drawRect(
+        Rect.fromLTRB(x1, yTop, x2, yTop + barThickness),
+        segmentPaint,
+      );
+
+      if (i + 1 < segments.length) {
+        final next = segments[i + 1];
+        final transitionX = xFor(segment.endAtUtc);
+        final nextYCenter = yFor(next.stage);
+        final minCenter = yCenter < nextYCenter ? yCenter : nextYCenter;
+        final maxCenter = yCenter > nextYCenter ? yCenter : nextYCenter;
+        final connectorWidth = (barThickness * 0.08).clamp(1.0, 2.0);
+        final connectorLeft = transitionX - (connectorWidth / 2);
+        final connectorRight = transitionX + (connectorWidth / 2);
+        final connectorTop = minCenter - (barThickness / 2);
+        final connectorBottom = maxCenter + (barThickness / 2);
+        segmentPaint.color = colors[next.stage] ?? const Color(0xFF3F6FD8);
+        canvas.drawRect(
+          Rect.fromLTRB(
+            connectorLeft,
+            connectorTop,
+            connectorRight,
+            connectorBottom,
+          ),
+          segmentPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SleepStagesPainter oldDelegate) {
+    return oldDelegate.segments != segments ||
+        oldDelegate.startAtUtc != startAtUtc ||
+        oldDelegate.endAtUtc != endAtUtc ||
+        oldDelegate.colors != colors ||
+        oldDelegate.gridColor != gridColor;
+  }
+}
+
+enum _SleepChartStage { awake, rem, light, deep }
+
+class _ChartStageSegment {
+  const _ChartStageSegment({
+    required this.startAtUtc,
+    required this.endAtUtc,
+    required this.stage,
+  });
+
+  final DateTime startAtUtc;
+  final DateTime endAtUtc;
+  final _SleepChartStage stage;
+}
+
+List<_ChartStageSegment> _toChartSegments(List<SleepStageSegment> segments) {
+  final sorted = [...segments]
+    ..sort((a, b) => a.startAtUtc.compareTo(b.startAtUtc));
+  final result = <_ChartStageSegment>[];
+  for (final segment in sorted) {
+    final chartStage = switch (segment.stage) {
+      CanonicalSleepStage.awake ||
+      CanonicalSleepStage.outOfBed =>
+        _SleepChartStage.awake,
+      CanonicalSleepStage.rem => _SleepChartStage.rem,
+      CanonicalSleepStage.light ||
+      CanonicalSleepStage.asleepUnspecified =>
+        _SleepChartStage.light,
+      CanonicalSleepStage.deep => _SleepChartStage.deep,
+      _ => null,
+    };
+    if (chartStage == null) continue;
+    if (segment.endAtUtc.isBefore(segment.startAtUtc) ||
+        segment.endAtUtc.isAtSameMomentAs(segment.startAtUtc)) {
+      continue;
+    }
+    result.add(
+      _ChartStageSegment(
+        startAtUtc: segment.startAtUtc,
+        endAtUtc: segment.endAtUtc,
+        stage: chartStage,
+      ),
+    );
+  }
+  return result;
+}
+
+List<(_SleepChartStage, String, Color)> _timelineLegend(
+  List<_ChartStageSegment> chartSegments,
+  AppLocalizations l10n,
+) {
+  final usedStages = chartSegments.map((segment) => segment.stage).toSet();
+  final allLabels = [
+    (
+      _SleepChartStage.awake,
+      l10n.sleepStageAwakeLabel,
+      const Color(0xFFB8C7E0)
+    ),
+    (_SleepChartStage.rem, l10n.sleepStageRemLabel, const Color(0xFF85A8FF)),
+    (
+      _SleepChartStage.light,
+      l10n.sleepStageLightLabel,
+      const Color(0xFF3F6FD8)
+    ),
+    (_SleepChartStage.deep, l10n.sleepStageDeepLabel, const Color(0xFF2A5AF3)),
+  ];
+  return allLabels
+      .where((entry) => usedStages.contains(entry.$1))
+      .toList(growable: false);
+}
+
+Map<_SleepChartStage, Color> _sleepStageColors() {
+  return {
+    _SleepChartStage.awake: const Color(0xFFB8C7E0),
+    _SleepChartStage.rem: const Color(0xFF85A8FF),
+    _SleepChartStage.light: const Color(0xFF3F6FD8),
+    _SleepChartStage.deep: const Color(0xFF2A5AF3),
+  };
 }
 
 class _SleepScoreCard extends StatelessWidget {
