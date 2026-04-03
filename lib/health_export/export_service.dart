@@ -197,9 +197,7 @@ class HealthExportService {
             : pending;
         // Android Health Connect currently does not support BMI in this writer path.
         for (final batch in _chunkRecords(writeable)) {
-          for (final record in batch) {
-            await adapter.writeMeasurement(record);
-          }
+          await adapter.writeMeasurementsBatch(batch);
           await _statusStore.markExported(
             platform: platform,
             domain: HealthExportDomain.measurements,
@@ -232,13 +230,20 @@ class HealthExportService {
         final hydrationFailures = <String>[];
 
         for (final batch in _chunkRecords(pendingNutrition)) {
-          for (final record in batch) {
-            try {
-              await adapter.writeNutrition(record);
-              nutritionChunkExportedKeys.add(record.idempotencyKey);
-              nutritionExportedCount += 1;
-            } catch (error) {
-              nutritionFailures.add('${record.idempotencyKey}: $error');
+          try {
+            await adapter.writeNutritionBatch(batch);
+            nutritionChunkExportedKeys
+                .addAll(batch.map((record) => record.idempotencyKey));
+            nutritionExportedCount += batch.length;
+          } catch (error) {
+            for (final record in batch) {
+              try {
+                await adapter.writeNutrition(record);
+                nutritionChunkExportedKeys.add(record.idempotencyKey);
+                nutritionExportedCount += 1;
+              } catch (recordError) {
+                nutritionFailures.add('${record.idempotencyKey}: $recordError');
+              }
             }
           }
           await _statusStore.markExported(
@@ -253,13 +258,20 @@ class HealthExportService {
           hydrationChunkExportedKeys.clear();
         }
         for (final batch in _chunkRecords(pendingHydration)) {
-          for (final record in batch) {
-            try {
-              await adapter.writeHydration(record);
-              hydrationChunkExportedKeys.add(record.idempotencyKey);
-              hydrationExportedCount += 1;
-            } catch (error) {
-              hydrationFailures.add('${record.idempotencyKey}: $error');
+          try {
+            await adapter.writeHydrationBatch(batch);
+            hydrationChunkExportedKeys
+                .addAll(batch.map((record) => record.idempotencyKey));
+            hydrationExportedCount += batch.length;
+          } catch (error) {
+            for (final record in batch) {
+              try {
+                await adapter.writeHydration(record);
+                hydrationChunkExportedKeys.add(record.idempotencyKey);
+                hydrationExportedCount += 1;
+              } catch (recordError) {
+                hydrationFailures.add('${record.idempotencyKey}: $recordError');
+              }
             }
           }
           await _statusStore.markExported(
@@ -297,9 +309,7 @@ class HealthExportService {
             .where((record) => !alreadyExported.contains(record.idempotencyKey))
             .toList(growable: false);
         for (final batch in _chunkRecords(pending)) {
-          for (final record in batch) {
-            await adapter.writeWorkout(record);
-          }
+          await adapter.writeWorkoutsBatch(batch);
           await _statusStore.markExported(
             platform: platform,
             domain: HealthExportDomain.workouts,

@@ -19,6 +19,7 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -32,6 +33,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -41,6 +43,9 @@ class MainActivity : FlutterFragmentActivity() {
     private companion object {
         private const val exportDebugTag = "HealthExportHC"
         private const val exportIntervalSeconds = 1L
+        private const val maxExportBatchSize = 1000
+        private const val quotaRetryAttempts = 2
+        private const val quotaRetryBackoffMs = 300L
     }
 
     private val healthChannelName = "hypertrack.health/steps"
@@ -138,9 +143,13 @@ class MainActivity : FlutterFragmentActivity() {
                 "getAvailability" -> handleSleepAvailability(result)
                 "requestPermissions" -> handleExportRequestPermissions(result)
                 "writeMeasurement" -> handleWriteMeasurement(call, result)
+                "writeMeasurementsBatch" -> handleWriteMeasurementsBatch(call, result)
                 "writeNutrition" -> handleWriteNutrition(call, result)
+                "writeNutritionBatch" -> handleWriteNutritionBatch(call, result)
                 "writeHydration" -> handleWriteHydration(call, result)
+                "writeHydrationBatch" -> handleWriteHydrationBatch(call, result)
                 "writeWorkout" -> handleWriteWorkout(call, result)
+                "writeWorkoutsBatch" -> handleWriteWorkoutsBatch(call, result)
                 else -> result.notImplemented()
             }
         }
@@ -498,7 +507,35 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     return@launch
                 }
-                client.insertRecords(listOf(record))
+                insertRecordsWithQuotaBackoff(client, listOf(record), "measurement")
+                withContext(Dispatchers.Main) { result.success(true) }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleWriteMeasurementsBatch(call: MethodCall, result: MethodChannel.Result) {
+        val recordsRaw = extractBatchPayloadRecords(call)
+        if (recordsRaw == null) {
+            result.error("invalid_args", "Invalid measurement batch payload", null)
+            return
+        }
+        if (recordsRaw.size > maxExportBatchSize) {
+            result.error("invalid_args", "Measurement batch exceeds $maxExportBatchSize", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val mapped = recordsRaw.mapIndexed { index, payload ->
+                    buildMeasurementRecord(payload) ?: throw IllegalArgumentException(
+                        "Unsupported measurement payload at index $index",
+                    )
+                }
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                insertRecordsWithQuotaBackoff(client, mapped, "measurement_batch")
                 withContext(Dispatchers.Main) { result.success(true) }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -568,7 +605,7 @@ class MainActivity : FlutterFragmentActivity() {
                     sodium = sodium?.let(Mass::grams),
                 )
                 try {
-                    client.insertRecords(listOf(record))
+                    insertRecordsWithQuotaBackoff(client, listOf(record), "nutrition")
                     withContext(Dispatchers.Main) { result.success(true) }
                 } catch (e: Exception) {
                     val hasOptionalFields = fiber != null || sugar != null || sodium != null
@@ -608,7 +645,7 @@ class MainActivity : FlutterFragmentActivity() {
                             totalCarbohydrate = carbs?.let(Mass::grams),
                             totalFat = fat?.let(Mass::grams),
                         )
-                        client.insertRecords(listOf(fallbackRecord))
+                        insertRecordsWithQuotaBackoff(client, listOf(fallbackRecord), "nutrition_fallback")
                         logExportDebug(
                             "Nutrition retry succeeded with macros-only payload; optional fields likely caused validation failure",
                         )
@@ -625,6 +662,43 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                     }
                 }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleWriteNutritionBatch(call: MethodCall, result: MethodChannel.Result) {
+        val recordsRaw = extractBatchPayloadRecords(call)
+        if (recordsRaw == null) {
+            result.error("invalid_args", "Invalid nutrition batch payload", null)
+            return
+        }
+        if (recordsRaw.size > maxExportBatchSize) {
+            result.error("invalid_args", "Nutrition batch exceeds $maxExportBatchSize", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val primaryRecords = recordsRaw.mapIndexed { index, payload ->
+                    buildNutritionRecord(payload, includeOptionalFields = true) ?: throw IllegalArgumentException(
+                        "Invalid nutrition payload at index $index",
+                    )
+                }
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                try {
+                    insertRecordsWithQuotaBackoff(client, primaryRecords, "nutrition_batch")
+                } catch (e: Exception) {
+                    val fallbackRecords = recordsRaw.mapIndexed { index, payload ->
+                        buildNutritionRecord(payload, includeOptionalFields = false) ?: throw IllegalArgumentException(
+                            "Invalid nutrition fallback payload at index $index",
+                        )
+                    }
+                    insertRecordsWithQuotaBackoff(client, fallbackRecords, "nutrition_batch_fallback")
+                }
+                withContext(Dispatchers.Main) { result.success(true) }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     result.error("write_failed", e.message, null)
@@ -661,10 +735,38 @@ class MainActivity : FlutterFragmentActivity() {
                     volume = Volume.liters(liters),
                 )
                 logExportDebug("Hydration attempt liters=$liters at=$timestampIso")
-                client.insertRecords(listOf(record))
+                insertRecordsWithQuotaBackoff(client, listOf(record), "hydration")
                 withContext(Dispatchers.Main) { result.success(true) }
             } catch (e: Exception) {
                 logExportError("Hydration write failed liters=$liters at=$timestampIso", e)
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleWriteHydrationBatch(call: MethodCall, result: MethodChannel.Result) {
+        val recordsRaw = extractBatchPayloadRecords(call)
+        if (recordsRaw == null) {
+            result.error("invalid_args", "Invalid hydration batch payload", null)
+            return
+        }
+        if (recordsRaw.size > maxExportBatchSize) {
+            result.error("invalid_args", "Hydration batch exceeds $maxExportBatchSize", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val mapped = recordsRaw.mapIndexed { index, payload ->
+                    buildHydrationRecord(payload) ?: throw IllegalArgumentException(
+                        "Invalid hydration payload at index $index",
+                    )
+                }
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                insertRecordsWithQuotaBackoff(client, mapped, "hydration_batch")
+                withContext(Dispatchers.Main) { result.success(true) }
+            } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     result.error("write_failed", e.message, null)
                 }
@@ -748,7 +850,7 @@ class MainActivity : FlutterFragmentActivity() {
                     title = args["title"] as? String,
                     notes = args["notes"] as? String,
                 )
-                client.insertRecords(listOf(record))
+                insertRecordsWithQuotaBackoff(client, listOf(record), "workout")
                 withContext(Dispatchers.Main) { result.success(true) }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -756,6 +858,186 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             }
         }
+    }
+
+    private fun handleWriteWorkoutsBatch(call: MethodCall, result: MethodChannel.Result) {
+        val recordsRaw = extractBatchPayloadRecords(call)
+        if (recordsRaw == null) {
+            result.error("invalid_args", "Invalid workout batch payload", null)
+            return
+        }
+        if (recordsRaw.size > maxExportBatchSize) {
+            result.error("invalid_args", "Workout batch exceeds $maxExportBatchSize", null)
+            return
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val mapped = recordsRaw.mapIndexed { index, payload ->
+                    buildWorkoutRecord(payload) ?: throw IllegalArgumentException(
+                        "Invalid workout payload at index $index",
+                    )
+                }
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                insertRecordsWithQuotaBackoff(client, mapped, "workout_batch")
+                withContext(Dispatchers.Main) { result.success(true) }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("write_failed", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun extractBatchPayloadRecords(call: MethodCall): List<Map<*, *>>? {
+        val args = call.arguments as? Map<*, *> ?: return null
+        val records = args["records"] as? List<*> ?: return null
+        val mapped = mutableListOf<Map<*, *>>()
+        for (entry in records) {
+            val payload = entry as? Map<*, *> ?: return null
+            mapped.add(payload)
+        }
+        return mapped
+    }
+
+    private fun buildMeasurementRecord(args: Map<*, *>): Record? {
+        val timestampIso = args["timestampUtcIso"] as? String ?: return null
+        val zoneOffsetMinutes = (args["zoneOffsetMinutes"] as? Number)?.toInt()
+        val typeRaw = args["type"] as? String ?: return null
+        val value = (args["value"] as? Number)?.toDouble() ?: return null
+        val at = Instant.parse(timestampIso)
+        val zoneOffset = toZoneOffset(zoneOffsetMinutes)
+        return when (typeRaw) {
+            "weight" -> WeightRecord(
+                time = at,
+                zoneOffset = zoneOffset,
+                weight = Mass.kilograms(value),
+                metadata = Metadata.manualEntry(),
+            )
+            "bodyFatPercentage" -> BodyFatRecord(
+                time = at,
+                zoneOffset = zoneOffset,
+                percentage = Percentage(normalizeBodyFatPercent(value)),
+                metadata = Metadata.manualEntry(),
+            )
+            else -> null
+        }
+    }
+
+    private fun buildNutritionRecord(
+        args: Map<*, *>,
+        includeOptionalFields: Boolean,
+    ): NutritionRecord? {
+        val timestampIso = args["timestampUtcIso"] as? String ?: return null
+        val zoneOffsetMinutes = (args["zoneOffsetMinutes"] as? Number)?.toInt()
+        val at = Instant.parse(timestampIso)
+        val end = at.plusSeconds(exportIntervalSeconds)
+        val zoneOffset = toZoneOffset(zoneOffsetMinutes)
+        val calories = sanitizeNutritionField(args, "caloriesKcal", max = 100_000.0)
+        val protein = sanitizeNutritionField(args, "proteinGrams", max = 100_000.0)
+        val carbs = sanitizeNutritionField(args, "carbsGrams", max = 100_000.0)
+        val fat = sanitizeNutritionField(args, "fatGrams", max = 100_000.0)
+        val fiber = sanitizeNutritionField(args, "fiberGrams", max = 100_000.0)
+        val sugar = sanitizeNutritionField(args, "sugarGrams", max = 100_000.0)
+        val sodium = sanitizeNutritionField(args, "sodiumGrams", max = 100.0)
+        val hasAnyCore = calories != null || protein != null || carbs != null || fat != null
+        val hasAnyOptional = fiber != null || sugar != null || sodium != null
+        if (!hasAnyCore && (!includeOptionalFields || !hasAnyOptional)) {
+            return null
+        }
+        return NutritionRecord(
+            startTime = at,
+            startZoneOffset = zoneOffset,
+            endTime = end,
+            endZoneOffset = zoneOffset,
+            metadata = Metadata.manualEntry(),
+            energy = calories?.let(Energy::kilocalories),
+            protein = protein?.let(Mass::grams),
+            totalCarbohydrate = carbs?.let(Mass::grams),
+            totalFat = fat?.let(Mass::grams),
+            dietaryFiber = if (includeOptionalFields) fiber?.let(Mass::grams) else null,
+            sugar = if (includeOptionalFields) sugar?.let(Mass::grams) else null,
+            sodium = if (includeOptionalFields) sodium?.let(Mass::grams) else null,
+        )
+    }
+
+    private fun buildHydrationRecord(args: Map<*, *>): HydrationRecord? {
+        val timestampIso = args["timestampUtcIso"] as? String ?: return null
+        val zoneOffsetMinutes = (args["zoneOffsetMinutes"] as? Number)?.toInt()
+        val liters = (args["volumeLiters"] as? Number)?.toDouble() ?: return null
+        if (!liters.isFinite() || liters < 0.0 || liters > 100.0) {
+            return null
+        }
+        val at = Instant.parse(timestampIso)
+        val end = at.plusSeconds(exportIntervalSeconds)
+        val zoneOffset = toZoneOffset(zoneOffsetMinutes)
+        return HydrationRecord(
+            startTime = at,
+            startZoneOffset = zoneOffset,
+            endTime = end,
+            endZoneOffset = zoneOffset,
+            metadata = Metadata.manualEntry(),
+            volume = Volume.liters(liters),
+        )
+    }
+
+    private fun buildWorkoutRecord(args: Map<*, *>): ExerciseSessionRecord? {
+        val startIso = args["startUtcIso"] as? String ?: return null
+        val endIso = args["endUtcIso"] as? String ?: return null
+        val startZoneOffsetMinutes = (args["startZoneOffsetMinutes"] as? Number)?.toInt()
+        val endZoneOffsetMinutes = (args["endZoneOffsetMinutes"] as? Number)?.toInt()
+        val start = Instant.parse(startIso)
+        val end = Instant.parse(endIso)
+        if (!start.isBefore(end)) {
+            return null
+        }
+        val typeRaw = (args["workoutType"] as? String) ?: "strength"
+        val exerciseType = when (typeRaw) {
+            "running" -> ExerciseSessionRecord.EXERCISE_TYPE_RUNNING
+            "walking" -> ExerciseSessionRecord.EXERCISE_TYPE_WALKING
+            "cycling" -> ExerciseSessionRecord.EXERCISE_TYPE_BIKING
+            "yoga" -> ExerciseSessionRecord.EXERCISE_TYPE_YOGA
+            else -> ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING
+        }
+        return ExerciseSessionRecord(
+            startTime = start,
+            startZoneOffset = toZoneOffset(startZoneOffsetMinutes),
+            endTime = end,
+            endZoneOffset = toZoneOffset(endZoneOffsetMinutes),
+            metadata = Metadata.manualEntry(),
+            exerciseType = exerciseType,
+            title = args["title"] as? String,
+            notes = args["notes"] as? String,
+        )
+    }
+
+    private suspend fun insertRecordsWithQuotaBackoff(
+        client: HealthConnectClient,
+        records: List<Record>,
+        operation: String,
+    ) {
+        var attempt = 0
+        while (true) {
+            try {
+                client.insertRecords(records)
+                return
+            } catch (e: Exception) {
+                val retryable = isQuotaExceededError(e)
+                if (!retryable || attempt >= quotaRetryAttempts) {
+                    throw e
+                }
+                attempt += 1
+                val backoff = quotaRetryBackoffMs * attempt
+                logExportDebug(
+                    "Retrying $operation after quota error attempt=$attempt backoffMs=$backoff size=${records.size}",
+                )
+                delay(backoff)
+            }
+        }
+    }
+
+    private fun isQuotaExceededError(error: Exception): Boolean {
+        val message = (error.message ?: "").lowercase()
+        return message.contains("quota")
     }
 
     private fun toZoneOffset(minutes: Int?): ZoneOffset {
