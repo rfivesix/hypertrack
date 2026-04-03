@@ -228,7 +228,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required bool enabled,
   }) async {
     if (enabled) {
-      final permission = await _healthExportService.requestPermissions(platform);
+      final permission =
+          await _healthExportService.requestPermissions(platform);
       if (!permission.success) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -276,9 +277,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return switch (platform) {
       HealthExportPlatform.appleHealth =>
         isGerman ? 'Apple Health Export' : 'Apple Health export',
-      HealthExportPlatform.healthConnect => isGerman
-          ? 'Health Connect Export'
-          : 'Health Connect export',
+      HealthExportPlatform.healthConnect =>
+        isGerman ? 'Health Connect Export' : 'Health Connect export',
     };
   }
 
@@ -784,9 +784,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     subtitle: Text(
                       HealthExportDomain.values.map((domain) {
-                        final status = _exportStatuses[
-                                HealthExportPlatform.appleHealth]
-                            ?.statusFor(domain);
+                        final status =
+                            _exportStatuses[HealthExportPlatform.appleHealth]
+                                ?.statusFor(domain);
                         return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
                       }).join(' · '),
                     ),
@@ -845,9 +845,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     subtitle: Text(
                       HealthExportDomain.values.map((domain) {
-                        final status = _exportStatuses[
-                                HealthExportPlatform.healthConnect]
-                            ?.statusFor(domain);
+                        final status =
+                            _exportStatuses[HealthExportPlatform.healthConnect]
+                                ?.statusFor(domain);
                         return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
                       }).join(' · '),
                     ),

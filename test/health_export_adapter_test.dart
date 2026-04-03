@@ -92,7 +92,8 @@ void main() {
       );
     });
 
-    test('health connect adapter maps availability and forwards writes', () async {
+    test('health connect adapter maps availability and forwards writes',
+        () async {
       final adapter = HealthConnectExportAdapter();
       final availability = await adapter.getAvailability();
       expect(availability, HealthExportAvailability.available);
@@ -109,7 +110,8 @@ void main() {
 
       expect(
         connectCalls.map((call) => call.method),
-        containsAll(['getAvailability', 'requestPermissions', 'writeMeasurement']),
+        containsAll(
+            ['getAvailability', 'requestPermissions', 'writeMeasurement']),
       );
       final measurementCall =
           connectCalls.firstWhere((call) => call.method == 'writeMeasurement');

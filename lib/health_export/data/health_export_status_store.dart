@@ -49,8 +49,8 @@ class HealthExportStatusStore {
     DateTime? lastSuccessUtc,
   }) async {
     final statuses = await readStatuses();
-    final current = statuses[platform] ??
-        HealthExportPlatformStatus.initial(platform);
+    final current =
+        statuses[platform] ?? HealthExportPlatformStatus.initial(platform);
     final byDomain = Map<HealthExportDomain, HealthExportDomainStatus>.from(
       current.byDomain,
     );
@@ -58,7 +58,8 @@ class HealthExportStatusStore {
     byDomain[domain] = HealthExportDomainStatus(
       state: state,
       lastError: lastError,
-      lastSuccessfulExportAtUtc: lastSuccessUtc ?? previous.lastSuccessfulExportAtUtc,
+      lastSuccessfulExportAtUtc:
+          lastSuccessUtc ?? previous.lastSuccessfulExportAtUtc,
     );
     statuses[platform] = HealthExportPlatformStatus(
       platform: platform,

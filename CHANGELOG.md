@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.4-alpha.1] - 2026-04-03
+
+This alpha focuses on one-way health export hardening for Android Health Connect and adds richer session context for workout exports without expanding structured workout scope.
+
+### Added
+- Workout export note-summary text built from logged exercises/sets and attached to exported workout sessions.
+- Standardized set-line note formatting for export summaries:
+  - one line per exercise,
+  - set entries as `<setType> <weight>kg x <reps>`,
+  - set-type abbreviations `W` (warm-up), `S` (standard), `F` (failure), `D` (dropset).
+- Android Health Connect workout export now writes the summary to `ExerciseSessionRecord.notes`.
+- Apple Health workout export now persists the summary in workout metadata (`hypertrack_workout_summary`).
+
+### Changed
+- Health export workout payload model now includes an optional notes field for platform writers.
+- Workout export data loading now includes associated set logs to build ordered note summaries.
+- Nutrition/Hydration grouped export flow now records split diagnostics so failures can indicate whether nutrition and hydration failed independently.
+
+### Fixed
+- Android body-fat export mapping now recognizes real stored measurement type variants (including `fat_percent`) so body-fat entries are no longer dropped before write.
+- Android body-fat export normalization/range handling aligned to Health Connect `BodyFatRecord` percent expectations (`0..100`).
+- Android nutrition export reliability improved:
+  - strict interval validation now respected (`startTime < endTime`),
+  - defensive per-field sanitization for calories/macros/fiber/sugar/sodium,
+  - optional-field fallback retry to isolate problematic nutrition fields.
+- Android hydration export interval validation fixed (`startTime < endTime`) to prevent rejected writes.
+- Android BMI export no longer reports false-success when unsupported by the current Health Connect writer path.
+
+### Tests
+- Expanded health-export data source tests to validate workout summary note formatting and ordering across multiple exercises/sets.
+- Maintained passing targeted export tests for data source, service orchestration, and adapters.
+
 ## [0.7.3] - 2026-04-03
 
 This stable release includes all `0.7.3-alpha.*` and `0.7.3-beta.1` changes since `0.7.2`, with Sleep moved from early alpha foundations to a release-ready implementation baseline.
