@@ -27,6 +27,7 @@ class DatabaseHelper {
 
   static db.AppDatabase? _driftDb;
   final db.AppDatabase? _injectedDb;
+  static const int _msPerSecond = 1000;
 
   DatabaseHelper._init() : _injectedDb = null;
   DatabaseHelper.forTesting(db.AppDatabase database) : _injectedDb = database;
@@ -81,6 +82,7 @@ class DatabaseHelper {
       await dbInstance.delete(dbInstance.dailyGoalsHistory).go();
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
       await dbInstance.customStatement('DELETE FROM health_step_segments');
+      await dbInstance.customStatement('DELETE FROM health_export_records');
 
       // 2. Child tables (Logs) first
       await dbInstance.delete(dbInstance.supplementLogs).go();
@@ -1361,11 +1363,11 @@ class DatabaseHelper {
         final startSeconds = DateTime.parse(
               segment['startAt'] as String,
             ).toUtc().millisecondsSinceEpoch ~/
-            1000;
+            _msPerSecond;
         final endSeconds = DateTime.parse(
               segment['endAt'] as String,
             ).toUtc().millisecondsSinceEpoch ~/
-            1000;
+            _msPerSecond;
         final externalKey = segment['externalKey'] as String;
         batch.customStatement(
           '''
@@ -1398,8 +1400,8 @@ class DatabaseHelper {
     required DateTime toUtc,
   }) async {
     final dbInstance = await database;
-    final fromSeconds = fromUtc.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final toSeconds = toUtc.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final fromSeconds = fromUtc.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final toSeconds = toUtc.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
     await dbInstance.customStatement(
       '''
       DELETE FROM health_step_segments
@@ -1417,8 +1419,10 @@ class DatabaseHelper {
     final dbInstance = await database;
     final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
-    final dayStartUtcMs = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final dayEndUtcMs = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final dayStartUtcMs =
+        dayStartLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final dayEndUtcMs =
+        dayEndLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
     var sql = sourcePolicy == 'max_per_hour'
         ? '''
       WITH source_hour AS (
@@ -1492,8 +1496,8 @@ class DatabaseHelper {
     final dbInstance = await database;
     final startLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final endLocal = startLocal.add(const Duration(days: 1));
-    final startUtc = startLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final endUtc = endLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final startUtc = startLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final endUtc = endLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
 
     var sql = sourcePolicy == 'max_per_hour'
         ? '''
@@ -1606,8 +1610,9 @@ class DatabaseHelper {
             .add(const Duration(days: 1))
             .toUtc()
             .millisecondsSinceEpoch ~/
-        1000;
-    final startUtc = normalizedStart.toUtc().millisecondsSinceEpoch ~/ 1000;
+        _msPerSecond;
+    final startUtc =
+        normalizedStart.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
     final vars = <int>[endExclusiveUtc, startUtc];
 
     if (providerFilter == 'apple') {
@@ -1681,8 +1686,10 @@ class DatabaseHelper {
     final dbInstance = await database;
     final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
-    final dayStartUtc = dayStartLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
-    final dayEndUtc = dayEndLocal.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final dayStartUtc =
+        dayStartLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
+    final dayEndUtc =
+        dayEndLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
 
     var sql = '''
       SELECT
@@ -1719,6 +1726,61 @@ class DatabaseHelper {
         .toList(growable: false);
   }
 
+  Future<void> markHealthExported({
+    required String platform,
+    required String domain,
+    required List<String> idempotencyKeys,
+  }) async {
+    if (idempotencyKeys.isEmpty) return;
+    final dbInstance = await database;
+    await dbInstance.batch((batch) {
+      for (final key in idempotencyKeys) {
+        batch.customStatement(
+          '''
+          INSERT INTO health_export_records
+          (id, platform, domain, idempotency_key, exported_at)
+          VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)
+          ON CONFLICT(platform, domain, idempotency_key) DO UPDATE SET
+            exported_at = excluded.exported_at
+          ''',
+          [
+            platform,
+            domain,
+            key,
+            DateTime.now().toUtc().millisecondsSinceEpoch ~/ _msPerSecond,
+          ],
+        );
+      }
+    });
+  }
+
+  Future<List<String>> getExportedHealthKeys({
+    required String platform,
+    required String domain,
+    required List<String> idempotencyKeys,
+  }) async {
+    if (idempotencyKeys.isEmpty) return const <String>[];
+    final dbInstance = await database;
+    final placeholders = List.filled(idempotencyKeys.length, '?').join(',');
+    final rows = await dbInstance.customSelect(
+      '''
+      SELECT idempotency_key
+      FROM health_export_records
+      WHERE platform = ?
+        AND domain = ?
+        AND idempotency_key IN ($placeholders)
+      ''',
+      variables: [
+        drift.Variable.withString(platform),
+        drift.Variable.withString(domain),
+        for (final key in idempotencyKeys) drift.Variable.withString(key),
+      ],
+    ).get();
+    return rows
+        .map((row) => row.read<String>('idempotency_key'))
+        .toList(growable: false);
+  }
+
   Future<int> getCurrentTargetStepsOrDefault() async {
     final dbInstance = await database;
     final rows = await (dbInstance.select(
@@ -1747,7 +1809,7 @@ class DatabaseHelper {
     final minEpoch = rows.first.read<int?>('min_start_at');
     if (minEpoch == null) return null;
     return DateTime.fromMillisecondsSinceEpoch(
-      minEpoch * 1000,
+      minEpoch * _msPerSecond,
       isUtc: true,
     ).toLocal();
   }

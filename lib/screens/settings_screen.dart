@@ -19,6 +19,10 @@ import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/sleep/platform/permissions/sleep_permission_controller.dart';
 import '../features/sleep/platform/permissions/sleep_permission_models.dart';
 import '../features/sleep/data/persistence/sleep_persistence_models.dart';
+import '../health_export/adapters/apple_health/apple_health_export_adapter.dart';
+import '../health_export/adapters/health_connect/health_connect_export_adapter.dart';
+import '../health_export/export_service.dart';
+import '../health_export/models/export_models.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -52,6 +56,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final bool _ownsSleepPermissionController;
   bool _isSleepImporting = false;
   bool _isSleepRawLoading = false;
+  late final HealthExportService _healthExportService;
+  Map<HealthExportPlatform, HealthExportPlatformStatus> _exportStatuses = {
+    for (final platform in HealthExportPlatform.values)
+      platform: HealthExportPlatformStatus.initial(platform),
+  };
+  bool _appleExportEnabled = false;
+  bool _healthConnectExportEnabled = false;
+  bool _isAppleExporting = false;
+  bool _isHealthConnectExporting = false;
 
   /// Flag for parent screens to know steps settings changed and data should be refreshed.
   bool hasStepsSettingsChanged = false;
@@ -64,9 +77,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _ownsSleepPermissionController = widget._sleepPermissionController == null;
     _sleepPermissionController = widget._sleepPermissionController ??
         _sleepSyncService.buildPermissionController();
+    _healthExportService = HealthExportService(
+      adapters: [
+        AppleHealthExportAdapter(),
+        HealthConnectExportAdapter(),
+      ],
+    );
     _loadAppVersion();
     _loadStepsSettings();
     _loadSleepSettings();
+    _loadHealthExportSettings();
   }
 
   Future<void> _loadAppVersion() async {
@@ -95,6 +115,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() => _sleepTrackingEnabled = enabled);
     await _sleepPermissionController.refresh();
+  }
+
+  Future<void> _loadHealthExportSettings() async {
+    final appleEnabled = await _healthExportService.isPlatformEnabled(
+      HealthExportPlatform.appleHealth,
+    );
+    final healthConnectEnabled = await _healthExportService.isPlatformEnabled(
+      HealthExportPlatform.healthConnect,
+    );
+    final statuses = await _healthExportService.getStatuses();
+    if (!mounted) return;
+    setState(() {
+      _appleExportEnabled = appleEnabled;
+      _healthConnectExportEnabled = healthConnectEnabled;
+      _exportStatuses = statuses;
+    });
   }
 
   @override
@@ -185,6 +221,117 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _toggleHealthExport({
+    required HealthExportPlatform platform,
+    required bool enabled,
+  }) async {
+    if (enabled) {
+      final permission = await _healthExportService.requestPermissions(platform);
+      if (!permission.success) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(permission.message ?? 'Permission denied')),
+        );
+      }
+    } else {
+      await _healthExportService.setPlatformEnabled(platform, false);
+    }
+    await _loadHealthExportSettings();
+    hasStepsSettingsChanged = true;
+  }
+
+  Future<void> _exportNow(HealthExportPlatform platform) async {
+    if (!mounted) return;
+    setState(() {
+      if (platform == HealthExportPlatform.appleHealth) {
+        _isAppleExporting = true;
+      } else {
+        _isHealthConnectExporting = true;
+      }
+    });
+    final result = await _healthExportService.exportNow(platform);
+    await _loadHealthExportSettings();
+    if (!mounted) return;
+    setState(() {
+      if (platform == HealthExportPlatform.appleHealth) {
+        _isAppleExporting = false;
+      } else {
+        _isHealthConnectExporting = false;
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_healthExportResultMessage(result, context)),
+      ),
+    );
+    hasStepsSettingsChanged = true;
+  }
+
+  bool _isGerman(BuildContext context) =>
+      Localizations.localeOf(context).languageCode.toLowerCase() == 'de';
+
+  String _exportPlatformTitle(HealthExportPlatform platform, bool isGerman) {
+    return switch (platform) {
+      HealthExportPlatform.appleHealth =>
+        isGerman ? 'Apple Health Export' : 'Apple Health export',
+      HealthExportPlatform.healthConnect => isGerman
+          ? 'Health Connect Export'
+          : 'Health Connect export',
+    };
+  }
+
+  String _domainLabel(HealthExportDomain domain, bool isGerman) {
+    return switch (domain) {
+      HealthExportDomain.measurements =>
+        isGerman ? 'Messwerte' : 'Measurements',
+      HealthExportDomain.nutritionHydration =>
+        isGerman ? 'Ernährung & Hydration' : 'Nutrition & hydration',
+      HealthExportDomain.workouts => isGerman ? 'Workouts' : 'Workouts',
+    };
+  }
+
+  String _stateLabel(HealthExportState state, bool isGerman) {
+    return switch (state) {
+      HealthExportState.idle => isGerman ? 'Leerlauf' : 'Idle',
+      HealthExportState.exporting => isGerman ? 'Export läuft' : 'Exporting',
+      HealthExportState.success => isGerman ? 'Erfolgreich' : 'Success',
+      HealthExportState.failed => isGerman ? 'Fehlgeschlagen' : 'Failed',
+      HealthExportState.disabled => isGerman ? 'Deaktiviert' : 'Disabled',
+    };
+  }
+
+  IconData _exportStateIcon(HealthExportState state) {
+    return switch (state) {
+      HealthExportState.success => Icons.check_circle_outline,
+      HealthExportState.exporting => Icons.sync,
+      HealthExportState.failed => Icons.error_outline,
+      HealthExportState.disabled => Icons.toggle_off_outlined,
+      HealthExportState.idle => Icons.hourglass_empty,
+    };
+  }
+
+  Color _exportStateColor(BuildContext context, HealthExportState state) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (state) {
+      HealthExportState.success => Colors.green,
+      HealthExportState.exporting => scheme.primary,
+      HealthExportState.failed => scheme.error,
+      HealthExportState.disabled => scheme.outline,
+      HealthExportState.idle => scheme.outline,
+    };
+  }
+
+  String _healthExportResultMessage(
+    HealthExportResult result,
+    BuildContext context,
+  ) {
+    if (result.success) {
+      return _isGerman(context) ? 'Export abgeschlossen' : 'Export complete';
+    }
+    return result.message ??
+        (_isGerman(context) ? 'Export fehlgeschlagen' : 'Export failed');
   }
 
   @override
@@ -585,6 +732,138 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 );
               },
+            ),
+            const SizedBox(height: DesignConstants.spacingXL),
+            _buildSectionTitle(
+              context,
+              _isGerman(context) ? 'Health Export' : 'Health export',
+            ),
+            SummaryCard(
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    secondary: const Icon(Icons.favorite_outline),
+                    title: Text(
+                      _exportPlatformTitle(
+                        HealthExportPlatform.appleHealth,
+                        _isGerman(context),
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      _isGerman(context)
+                          ? 'Einweg-Export von Hypertrack nach Apple Health'
+                          : 'One-way export from Hypertrack to Apple Health',
+                    ),
+                    value: _appleExportEnabled,
+                    onChanged: (value) => _toggleHealthExport(
+                      platform: HealthExportPlatform.appleHealth,
+                      enabled: value,
+                    ),
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      _exportStateIcon(
+                        _exportStatuses[HealthExportPlatform.appleHealth]
+                                ?.statusFor(HealthExportDomain.measurements)
+                                .state ??
+                            HealthExportState.idle,
+                      ),
+                      color: _exportStateColor(
+                        context,
+                        _exportStatuses[HealthExportPlatform.appleHealth]
+                                ?.statusFor(HealthExportDomain.measurements)
+                                .state ??
+                            HealthExportState.idle,
+                      ),
+                    ),
+                    title: Text(
+                      _isGerman(context)
+                          ? 'Export-Status Apple Health'
+                          : 'Apple Health export status',
+                    ),
+                    subtitle: Text(
+                      HealthExportDomain.values.map((domain) {
+                        final status = _exportStatuses[
+                                HealthExportPlatform.appleHealth]
+                            ?.statusFor(domain);
+                        return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
+                      }).join(' · '),
+                    ),
+                    trailing: _isAppleExporting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.chevron_right),
+                    onTap: _appleExportEnabled
+                        ? () => _exportNow(HealthExportPlatform.appleHealth)
+                        : null,
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.favorite_border),
+                    title: Text(
+                      _exportPlatformTitle(
+                        HealthExportPlatform.healthConnect,
+                        _isGerman(context),
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      _isGerman(context)
+                          ? 'Einweg-Export von Hypertrack nach Health Connect'
+                          : 'One-way export from Hypertrack to Health Connect',
+                    ),
+                    value: _healthConnectExportEnabled,
+                    onChanged: (value) => _toggleHealthExport(
+                      platform: HealthExportPlatform.healthConnect,
+                      enabled: value,
+                    ),
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      _exportStateIcon(
+                        _exportStatuses[HealthExportPlatform.healthConnect]
+                                ?.statusFor(HealthExportDomain.measurements)
+                                .state ??
+                            HealthExportState.idle,
+                      ),
+                      color: _exportStateColor(
+                        context,
+                        _exportStatuses[HealthExportPlatform.healthConnect]
+                                ?.statusFor(HealthExportDomain.measurements)
+                                .state ??
+                            HealthExportState.idle,
+                      ),
+                    ),
+                    title: Text(
+                      _isGerman(context)
+                          ? 'Export-Status Health Connect'
+                          : 'Health Connect export status',
+                    ),
+                    subtitle: Text(
+                      HealthExportDomain.values.map((domain) {
+                        final status = _exportStatuses[
+                                HealthExportPlatform.healthConnect]
+                            ?.statusFor(domain);
+                        return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
+                      }).join(' · '),
+                    ),
+                    trailing: _isHealthConnectExporting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.chevron_right),
+                    onTap: _healthConnectExportEnabled
+                        ? () => _exportNow(HealthExportPlatform.healthConnect)
+                        : null,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: DesignConstants.spacingXL),
             _buildSectionTitle(context, l10n.aiSettingsTitle),
