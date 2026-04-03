@@ -13,7 +13,8 @@ abstract class HealthExportAdapter {
   Future<void> writeHydration(ExportHydrationRecord record);
   Future<void> writeWorkout(ExportWorkoutRecord record);
 
-  Future<void> writeMeasurementsBatch(List<ExportMeasurementRecord> records) async {
+  Future<void> writeMeasurementsBatch(
+      List<ExportMeasurementRecord> records) async {
     for (final record in records) {
       await writeMeasurement(record);
     }

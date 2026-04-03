@@ -419,12 +419,13 @@ class HealthExportDataSource {
     final dbInstance = await _db.database;
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final rows = await (dbInstance.select(dbInstance.workoutLogs)..where((tbl) {
-          final inRange =
-              tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd);
-          final completed = tbl.status.equals('completed');
-          return inRange & completed;
-        }))
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) {
+            final inRange =
+                tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd);
+            final completed = tbl.status.equals('completed');
+            return inRange & completed;
+          }))
         .get();
 
     if (rows.isEmpty) return const <WorkoutLog>[];

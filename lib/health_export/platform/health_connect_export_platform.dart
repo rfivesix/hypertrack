@@ -21,7 +21,8 @@ class HealthConnectExportPlatform {
     await _channel.invokeMethod<void>('writeMeasurement', payload);
   }
 
-  Future<void> writeMeasurementsBatch(List<Map<String, dynamic>> payloads) async {
+  Future<void> writeMeasurementsBatch(
+      List<Map<String, dynamic>> payloads) async {
     await _channel.invokeMethod<void>(
       'writeMeasurementsBatch',
       {'records': payloads},

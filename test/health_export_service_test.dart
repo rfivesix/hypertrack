@@ -77,7 +77,8 @@ class _FakeAdapter implements HealthExportAdapter {
   }
 
   @override
-  Future<void> writeMeasurementsBatch(List<ExportMeasurementRecord> records) async {
+  Future<void> writeMeasurementsBatch(
+      List<ExportMeasurementRecord> records) async {
     measurementBatchWrites += 1;
     for (final record in records) {
       await writeMeasurement(record);
@@ -210,7 +211,8 @@ void main() {
     });
 
     test('manual export defaults to full-history backfill', () async {
-      final oldTimestamp = DateTime.now().toUtc().subtract(const Duration(days: 120));
+      final oldTimestamp =
+          DateTime.now().toUtc().subtract(const Duration(days: 120));
       await db.into(db.measurements).insert(
             MeasurementsCompanion(
               date: drift.Value(oldTimestamp),
@@ -377,7 +379,8 @@ void main() {
       expect(grouped.lastError, contains('1/1'));
     });
 
-    test('split diagnostics keep truthful counts for opposite failure direction',
+    test(
+        'split diagnostics keep truthful counts for opposite failure direction',
         () async {
       final adapter = _FakeAdapter(
         HealthExportPlatform.healthConnect,
@@ -415,7 +418,8 @@ void main() {
         statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
       );
 
-      await serviceWithFailure.requestPermissions(HealthExportPlatform.healthConnect);
+      await serviceWithFailure
+          .requestPermissions(HealthExportPlatform.healthConnect);
       final first = await serviceWithFailure.exportNow(
         HealthExportPlatform.healthConnect,
       );
@@ -430,7 +434,8 @@ void main() {
         dataSource: HealthExportDataSource(databaseHelper: dbHelper),
         statusStore: HealthExportStatusStore(databaseHelper: dbHelper),
       );
-      await serviceAfterFailure.requestPermissions(HealthExportPlatform.healthConnect);
+      await serviceAfterFailure
+          .requestPermissions(HealthExportPlatform.healthConnect);
       final second = await serviceAfterFailure.exportNow(
         HealthExportPlatform.healthConnect,
       );
