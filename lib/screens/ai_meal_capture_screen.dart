@@ -98,6 +98,29 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     return _speechAvailable;
   }
 
+  void _showSpeechSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  Future<void> _showSpeechUnavailableFeedback() async {
+    final hasPermission = await _speech.hasPermission;
+    final message = Platform.isAndroid
+        ? (hasPermission
+            ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
+            : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den Android-Einstellungen erlauben.')
+        : (hasPermission
+            ? 'Spracherkennung ist auf diesem iOS-Gerät aktuell nicht verfügbar.'
+            : 'Mikrofonzugriff verweigert. Bitte Mikrofon in den iOS-Einstellungen erlauben.');
+    _showSpeechSnackBar(message);
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
@@ -152,56 +175,58 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     } else {
       final available = await _ensureSpeechAvailable();
       if (!available) {
-        final hasPermission = await _speech.hasPermission;
-        final message = Platform.isAndroid
-            ? (hasPermission
-                ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
-                : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den Android-Einstellungen erlauben.')
-            : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.';
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        await _showSpeechUnavailableFeedback();
         return;
       }
 
       _initialTextBeforeSpeech = _textController.text;
+      try {
+        final started = await _speech.listen(
+          onResult: (result) {
+            debugPrint(
+              'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})',
+            );
+            if (mounted) {
+              setState(() {
+                final separator = _initialTextBeforeSpeech.endsWith(' ') ||
+                        _initialTextBeforeSpeech.isEmpty
+                    ? ''
+                    : ' ';
+                _textController.text =
+                    '$_initialTextBeforeSpeech$separator${result.recognizedWords}'
+                        .trimLeft();
+                _textController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textController.text.length),
+                );
+              });
+            }
+          },
+          listenFor: const Duration(seconds: 60),
+          pauseFor: const Duration(seconds: 10),
+          localeId: _speechLocaleId,
+          listenOptions: stt.SpeechListenOptions(
+            partialResults: true,
+            cancelOnError: false,
+            listenMode: stt.ListenMode.dictation,
+          ),
+        );
 
-      _speech.listen(
-        onResult: (result) {
-          debugPrint(
-            'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})',
+        if (!started) {
+          if (mounted) setState(() => _isListening = false);
+          _showSpeechSnackBar(
+            'Sprachaufnahme konnte nicht gestartet werden. Bitte versuche es erneut.',
           );
-          if (mounted) {
-            setState(() {
-              final separator = _initialTextBeforeSpeech.endsWith(' ') ||
-                      _initialTextBeforeSpeech.isEmpty
-                  ? ''
-                  : ' ';
-              _textController.text =
-                  '$_initialTextBeforeSpeech$separator${result.recognizedWords}'
-                      .trimLeft();
-              _textController.selection = TextSelection.fromPosition(
-                TextPosition(offset: _textController.text.length),
-              );
-            });
-          }
-        },
-        listenFor: const Duration(seconds: 60),
-        pauseFor: const Duration(seconds: 10),
-        localeId: _speechLocaleId,
-        listenOptions: stt.SpeechListenOptions(
-          partialResults: true,
-          cancelOnError: false,
-          listenMode: stt.ListenMode.dictation,
-        ),
-      );
-      setState(() => _isListening = true);
+          return;
+        }
+
+        if (mounted) setState(() => _isListening = true);
+      } catch (e) {
+        debugPrint('speech_to_text listen failed: $e');
+        if (mounted) setState(() => _isListening = false);
+        _showSpeechSnackBar(
+          'Sprachaufnahme konnte nicht gestartet werden. Bitte versuche es erneut.',
+        );
+      }
     }
   }
 
