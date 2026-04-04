@@ -388,9 +388,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         builder: (context) => const SettingsScreen(),
                       ),
                     );
-                    // If steps settings changed, reload profile screen data
-                    // and signal main screen to refresh diary
-                    if (result == true && mounted) {
+                    // Reload after settings return; iOS swipe-back may not
+                    // propagate a bool result.
+                    if (result != false && mounted) {
                       _loadProfileData();
                     }
                   },

@@ -343,11 +343,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        Navigator.of(context).pop(hasStepsSettingsChanged);
-      },
+      canPop: true,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: GlobalAppBar(title: l10n.settingsTitle),

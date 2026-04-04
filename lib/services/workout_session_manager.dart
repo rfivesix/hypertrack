@@ -241,8 +241,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
           SetTemplate(
             id: templateId,
             setType: s.setType,
-            targetWeight: s.weightKg ?? 0.0,
-            targetReps: s.reps?.toString() ?? '0',
+            targetWeight: s.weightKg,
+            targetReps: s.reps?.toString(),
             targetRir: s.rir,
           ),
         );
@@ -397,8 +397,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     final newTemplate = SetTemplate(
       id: tempTemplateId,
       setType: 'normal',
-      targetReps: '0',
-      targetWeight: 0.0,
+      targetReps: null,
+      targetWeight: null,
       targetRir: null,
     );
 
@@ -420,8 +420,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       workoutLogId: _workoutLog!.id!,
       exerciseName: re.exercise.nameEn,
       setType: 'normal',
-      weightKg: prevSet?.weightKg ?? 0,
-      reps: prevSet?.reps ?? 0,
+      weightKg: prevSet?.weightKg,
+      reps: prevSet?.reps,
       restTimeSeconds: re.pauseSeconds,
       isCompleted: false,
       log_order: _setLogs.length,
@@ -490,7 +490,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         id: tempReId + index + 1,
         setType: 'normal',
         targetReps: initialReps,
-        targetWeight: 0,
+        targetWeight: null,
       ),
     );
 
@@ -510,8 +510,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         workoutLogId: _workoutLog!.id!,
         exerciseName: exercise.nameEn,
         setType: 'normal',
-        weightKg: 0,
-        reps: 0,
+        weightKg: null,
+        reps: null,
         restTimeSeconds: 90,
         isCompleted: false,
         // Optional: logOrder hier schon setzen, aber Manager macht das nicht explizit bisher
@@ -636,6 +636,9 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
             LocalNotificationService.instance.cancelRestTimerNotification();
             FlutterRingtonePlayer().playNotification();
             Vibration.vibrate(duration: 500);
+          } else {
+            LocalNotificationService.instance.cancelRestTimerNotification();
+            LocalNotificationService.instance.showRestTimerDoneNotification();
           }
         }
         notifyListeners();

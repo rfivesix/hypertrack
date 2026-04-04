@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../generated/app_localizations.dart';
 import '../services/ai_service.dart';
 import '../widgets/global_app_bar.dart';
@@ -38,19 +37,10 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   final List<File> _images = [];
   static const int _maxImages = 4;
 
-  // Voice state
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  bool _speechAvailable = false;
-  bool _isListening = false;
-  String _initialTextBeforeSpeech = '';
-  String? _speechLocaleId;
-  static const String _speechStartFailureMessage =
-      'Sprachaufnahme konnte nicht gestartet werden. Bitte Mikrofonberechtigung prüfen und erneut versuchen.';
-
   // Analysis state
   bool _isAnalyzing = false;
 
-  // Single animation controller for pulse (mic) and shimmer (button loading)
+  // Single animation controller for shimmer loading
   late AnimationController _pulseController;
 
   @override
@@ -60,80 +50,12 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
-    _initSpeech();
-  }
-
-  Future<void> _initSpeech() async {
-    final available = await _speech.initialize(
-      onError: (e) {
-        debugPrint('speech_to_text error: ${e.errorMsg}');
-        if (mounted) setState(() => _isListening = false);
-      },
-      onStatus: (status) {
-        debugPrint('speech_to_text status: $status');
-        if (!mounted) return;
-        if (status == stt.SpeechToText.listeningStatus) {
-          setState(() => _isListening = true);
-          return;
-        }
-        if (status == stt.SpeechToText.doneStatus ||
-            status == stt.SpeechToText.notListeningStatus) {
-          setState(() => _isListening = false);
-        }
-      },
-      options: Platform.isAndroid
-          ? <stt.SpeechConfigOption>[stt.SpeechToText.androidNoBluetooth]
-          : null,
-    );
-    if (available) {
-      // Cache the best matching locale for the app language
-      final appLang =
-          WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-      final locales = await _speech.locales();
-      final match =
-          locales.where((l) => l.localeId.startsWith(appLang)).firstOrNull;
-      _speechLocaleId = match?.localeId;
-      debugPrint(
-        'speech_to_text: available=true, localeId=$_speechLocaleId, all=${locales.map((l) => l.localeId).toList()}',
-      );
-    }
-    if (mounted) setState(() => _speechAvailable = available);
-  }
-
-  Future<bool> _ensureSpeechAvailable() async {
-    if (_speechAvailable) return true;
-    await _initSpeech();
-    return _speechAvailable;
-  }
-
-  void _showSpeechSnackBar(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  Future<void> _showSpeechUnavailableFeedback() async {
-    final hasPermission = await _speech.hasPermission;
-    final message = hasPermission
-        ? (Platform.isAndroid
-            ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
-            : 'Spracherkennung ist auf diesem iOS-Gerät aktuell nicht verfügbar.')
-        : (Platform.isAndroid
-            ? 'Mikrofonzugriff verweigert. Bitte Mikrofon in den Android-Einstellungen erlauben.'
-            : 'Mikrofonzugriff verweigert. Bitte Mikrofon in den iOS-Einstellungen erlauben.');
-    _showSpeechSnackBar(message);
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _textController.dispose();
-    _speech.stop();
     super.dispose();
   }
 
@@ -170,65 +92,6 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   void _removeImage(int index) {
     setState(() => _images.removeAt(index));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Voice actions
-  // ---------------------------------------------------------------------------
-
-  Future<void> _toggleListening() async {
-    if (_isListening) {
-      await _speech.stop();
-      if (mounted) setState(() => _isListening = false);
-    } else {
-      final available = await _ensureSpeechAvailable();
-      if (!available) {
-        await _showSpeechUnavailableFeedback();
-        return;
-      }
-
-      _initialTextBeforeSpeech = _textController.text;
-      try {
-        await _speech.listen(
-          onResult: (result) {
-            debugPrint(
-              'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})',
-            );
-            if (mounted) {
-              setState(() {
-                final separator = _initialTextBeforeSpeech.endsWith(' ') ||
-                        _initialTextBeforeSpeech.isEmpty
-                    ? ''
-                    : ' ';
-                _textController.text =
-                    '$_initialTextBeforeSpeech$separator${result.recognizedWords}'
-                        .trimLeft();
-                _textController.selection = TextSelection.fromPosition(
-                  TextPosition(offset: _textController.text.length),
-                );
-              });
-            }
-          },
-          listenFor: const Duration(seconds: 60),
-          pauseFor: const Duration(seconds: 10),
-          localeId: _speechLocaleId,
-          listenOptions: stt.SpeechListenOptions(
-            partialResults: true,
-            cancelOnError: false,
-            listenMode: stt.ListenMode.dictation,
-          ),
-        );
-        // `listen` no longer returns a bool in the current speech_to_text API.
-        // Show recording state immediately, then keep it synced via onStatus.
-        if (mounted) {
-          setState(() => _isListening = true);
-        }
-      } catch (e) {
-        debugPrint('speech_to_text listen failed: $e');
-        if (mounted) setState(() => _isListening = false);
-        _showSpeechSnackBar(_speechStartFailureMessage);
-      }
-    }
   }
 
   // ---------------------------------------------------------------------------
@@ -328,7 +191,6 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: GlobalAppBar(title: l10n.aiCaptureTitle),
@@ -350,7 +212,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           ),
 
           // Unified Input Area
-          _buildUnifiedInputArea(l10n, theme, isDark),
+          _buildUnifiedInputArea(l10n, theme),
 
           // Analyze button — AI gradient CTA with inline loading
           Padding(
@@ -439,7 +301,6 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   Widget _buildUnifiedInputArea(
     AppLocalizations l10n,
     ThemeData theme,
-    bool isDark,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -476,50 +337,25 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                   width: 1.5,
                 ),
               ),
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: _images.length < _maxImages ? _takePhoto : null,
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    color: theme.colorScheme.primary,
+                    tooltip: l10n.aiCaptureTabPhoto,
+                  ),
+                  IconButton(
+                    onPressed:
+                        _images.length < _maxImages ? _pickFromGallery : null,
+                    icon: const Icon(Icons.photo_library_rounded),
+                    color: theme.colorScheme.primary,
+                    tooltip: l10n.tabFavorites,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              IconButton(
-                onPressed: _images.length < _maxImages ? _takePhoto : null,
-                icon: const Icon(Icons.camera_alt_rounded),
-                color: theme.colorScheme.primary,
-                tooltip: l10n.aiCaptureTabPhoto,
-              ),
-              IconButton(
-                onPressed:
-                    _images.length < _maxImages ? _pickFromGallery : null,
-                icon: const Icon(Icons.photo_library_rounded),
-                color: theme.colorScheme.primary,
-                tooltip: l10n.tabFavorites,
-              ),
-              const Spacer(),
-              AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) {
-                  final scale =
-                      _isListening ? 1.0 + (_pulseController.value * 0.1) : 1.0;
-                  return Transform.scale(
-                    scale: scale,
-                    child: IconButton(
-                      style: IconButton.styleFrom(
-                        backgroundColor: _isListening
-                            ? theme.colorScheme.errorContainer
-                            : theme.colorScheme.primaryContainer,
-                      ),
-                      onPressed: _toggleListening,
-                      icon: Icon(
-                        _isListening ? Icons.stop_rounded : Icons.mic_rounded,
-                        color: _isListening
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.primary,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
           ),
         ],
       ),
