@@ -1470,6 +1470,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsVisualStyleLiquidDesc => 'Runde, schwebende UI-Elemente';
 
   @override
+  String get settingsMaterialColorsTitle => 'Material-Farben';
+
+  @override
+  String get settingsMaterialColorsSubtitle =>
+      'Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents';
+
+  @override
   String get searchBaseFoodHint => 'Suche Grundnahrungsmittel';
 
   @override

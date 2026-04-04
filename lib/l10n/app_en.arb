@@ -623,6 +623,8 @@
   "settingsVisualStyleStandard": "Standard (Glass)",
   "settingsVisualStyleLiquid": "Fluid (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Rounded, floating UI elements",
+  "settingsMaterialColorsTitle": "Material colors",
+  "settingsMaterialColorsSubtitle": "Use Android dynamic colors (Material You) instead of the Hypertrack brand accent",
   "searchBaseFoodHint": "Search base foods",
   "searchNoHits": "No hits.",
   "onbSubtitleWelcome": "Your central tool for fitness, nutrition & progress.",

@@ -37,7 +37,8 @@ class RegularityMetrics {
 }
 
 RegularityMetrics calculateRegularityMetrics(
-    List<RegularityNightInput> nights) {
+  List<RegularityNightInput> nights,
+) {
   final sorted = List<RegularityNightInput>.from(nights)
     ..sort((a, b) => a.nightDate.compareTo(b.nightDate));
   final window =

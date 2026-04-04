@@ -26,14 +26,26 @@ void main() {
   test('returns unavailable with fewer than five valid days', () {
     final result = calculateSleepRegularityIndex(
       dailyStates: [
-        dayState(DateTime.utc(2026, 3, 1),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 2),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 3),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 4),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
+        dayState(
+          DateTime.utc(2026, 3, 1),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 2),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 3),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 4),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
       ],
     );
     expect(result.available, isFalse);
@@ -45,16 +57,31 @@ void main() {
   test('returns 100 for identical schedules across five days', () {
     final result = calculateSleepRegularityIndex(
       dailyStates: [
-        dayState(DateTime.utc(2026, 3, 1),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 2),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 3),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 4),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 5),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
+        dayState(
+          DateTime.utc(2026, 3, 1),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 2),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 3),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 4),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 5),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
       ],
     );
     expect(result.available, isTrue);
@@ -66,20 +93,41 @@ void main() {
   test('marks >=7 valid days as stable and yields bounded 0..100 score', () {
     final result = calculateSleepRegularityIndex(
       dailyStates: [
-        dayState(DateTime.utc(2026, 3, 1),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 2),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 3),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 4),
-            sleepStartMinute: 1290, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 5),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 6),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 7),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
+        dayState(
+          DateTime.utc(2026, 3, 1),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 2),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 3),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 4),
+          sleepStartMinute: 1290,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 5),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 6),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 7),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
       ],
     );
     expect(result.available, isTrue);
@@ -93,16 +141,31 @@ void main() {
   test('requires true 24h pairs and skips non-consecutive days', () {
     final result = calculateSleepRegularityIndex(
       dailyStates: [
-        dayState(DateTime.utc(2026, 3, 1),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 3),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 5),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 7),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
-        dayState(DateTime.utc(2026, 3, 9),
-            sleepStartMinute: 1320, sleepEndMinuteExclusive: 1440),
+        dayState(
+          DateTime.utc(2026, 3, 1),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 3),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 5),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 7),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 9),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
       ],
     );
     expect(result.validDays, 5);

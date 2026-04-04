@@ -628,6 +628,8 @@
   "settingsVisualStyleStandard": "Standard (Glas)",
   "settingsVisualStyleLiquid": "Flüssig (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Runde, schwebende UI-Elemente",
+  "settingsMaterialColorsTitle": "Material-Farben",
+  "settingsMaterialColorsSubtitle": "Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents",
   "searchBaseFoodHint": "Suche Grundnahrungsmittel",
   "searchNoHits": "Keine Treffer.",
   "onbSubtitleWelcome": "Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.",

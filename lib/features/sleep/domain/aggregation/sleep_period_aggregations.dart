@@ -189,11 +189,8 @@ class SleepPeriodAggregationEngine {
     return Duration(minutes: (sum / durations.length).round());
   }
 
-  DateTime _normalizeDate(DateTime value) => DateTime(
-        value.year,
-        value.month,
-        value.day,
-      );
+  DateTime _normalizeDate(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 }
 
 extension SleepWindowSegmentX on SleepWindowSegment {

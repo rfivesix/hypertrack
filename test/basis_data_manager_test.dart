@@ -14,19 +14,16 @@ void main() {
       expect(shouldImport, isTrue);
     });
 
-    test(
-      'skips re-import for versionless asset when data already exists',
-      () {
-        final shouldImport = BasisDataManager.shouldImportAsset(
-          forceImport: false,
-          assetVersion: '0',
-          installedVersion: '0',
-          hasExistingDataForVersionlessAsset: true,
-        );
+    test('skips re-import for versionless asset when data already exists', () {
+      final shouldImport = BasisDataManager.shouldImportAsset(
+        forceImport: false,
+        assetVersion: '0',
+        installedVersion: '0',
+        hasExistingDataForVersionlessAsset: true,
+      );
 
-        expect(shouldImport, isFalse);
-      },
-    );
+      expect(shouldImport, isFalse);
+    });
 
     test('imports when asset version is newer than installed version', () {
       final shouldImport = BasisDataManager.shouldImportAsset(
@@ -53,7 +50,9 @@ void main() {
 
   group('BasisDataManager.storedVersionAfterImport', () {
     test('stores fallback version for versionless assets', () {
-      final stored = BasisDataManager.storedVersionAfterImport(assetVersion: '0');
+      final stored = BasisDataManager.storedVersionAfterImport(
+        assetVersion: '0',
+      );
       expect(stored, '000000000001');
     });
 

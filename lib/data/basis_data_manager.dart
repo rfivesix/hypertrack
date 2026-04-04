@@ -176,8 +176,10 @@ class BasisDataManager {
 
       final String installedVersion = prefs.getString(prefKey) ?? '0';
       final mainDb = await DatabaseHelper.instance.database;
-      final hasExistingData =
-          await _hasInitializedData(mainDb: mainDb, prefKey: prefKey);
+      final hasExistingData = await _hasInitializedData(
+        mainDb: mainDb,
+        prefKey: prefKey,
+      );
 
       final shouldImport = shouldImportAsset(
         forceImport: forceImport,
@@ -251,9 +253,9 @@ class BasisDataManager {
   }) async {
     switch (prefKey) {
       case _keyVersionTraining:
-        final row = await mainDb.customSelect(
-          'SELECT 1 FROM exercises LIMIT 1',
-        ).getSingleOrNull();
+        final row = await mainDb
+            .customSelect('SELECT 1 FROM exercises LIMIT 1')
+            .getSingleOrNull();
         return row != null;
       case _keyVersionFood:
         final row = await mainDb.customSelect(
@@ -268,9 +270,9 @@ class BasisDataManager {
         ).getSingleOrNull();
         return row != null;
       case _keyVersionCats:
-        final row = await mainDb.customSelect(
-          'SELECT 1 FROM food_categories LIMIT 1',
-        ).getSingleOrNull();
+        final row = await mainDb
+            .customSelect('SELECT 1 FROM food_categories LIMIT 1')
+            .getSingleOrNull();
         return row != null;
       default:
         return false;

@@ -80,8 +80,10 @@ NightlySleepMetrics calculateNightlySleepMetrics({
     }
   }
 
-  final interruptions =
-      _countInterruptions(segments, sleepOnsetAt: sleepOnsetAt);
+  final interruptions = _countInterruptions(
+    segments,
+    sleepOnsetAt: sleepOnsetAt,
+  );
   final stagePercentages = <CanonicalSleepStage, double>{};
   if (tst > Duration.zero) {
     for (final entry in stageDurations.entries) {

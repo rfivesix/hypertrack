@@ -71,12 +71,9 @@ class SleepPeriodScopeLayout extends StatelessWidget {
                     _periodLabel(localeCode),
                     key: const Key('sleep-period-label'),
                     textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    )
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                 ),
                 IconButton(
@@ -95,8 +92,11 @@ class SleepPeriodScopeLayout extends StatelessWidget {
   }
 
   String _periodLabel(String localeCode) {
-    final normalized =
-        DateTime(anchorDate.year, anchorDate.month, anchorDate.day);
+    final normalized = DateTime(
+      anchorDate.year,
+      anchorDate.month,
+      anchorDate.day,
+    );
     switch (selectedScope) {
       case SleepPeriodScope.day:
         return DateFormat.yMMMd(localeCode).format(normalized);
@@ -107,9 +107,9 @@ class SleepPeriodScopeLayout extends StatelessWidget {
         final end = start.add(const Duration(days: 6));
         return '${DateFormat.MMMd(localeCode).format(start)} - ${DateFormat.MMMd(localeCode).format(end)}';
       case SleepPeriodScope.month:
-        return DateFormat.yMMMM(localeCode).format(
-          DateTime(normalized.year, normalized.month, 1),
-        );
+        return DateFormat.yMMMM(
+          localeCode,
+        ).format(DateTime(normalized.year, normalized.month, 1));
     }
   }
 }

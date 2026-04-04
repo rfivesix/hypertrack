@@ -1,6 +1,7 @@
 // lib/main.dart
 
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'data/database_helper.dart';
@@ -75,12 +76,23 @@ class MyApp extends StatelessWidget {
 
     const cardDark = Color(0xFF171717);
     const cardLight = Color(0xFFF3F3F3);
+    const brandAccentColor = Color(0xFFDDFF00);
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        // === Akzent/Seed aus Dynamic Color (Android 12+) oder Fallback ===
-        final Color lightSeed = lightDynamic?.primary ?? Colors.blue;
-        final Color darkSeed = darkDynamic?.primary ?? lightSeed;
+        final themeService = context.watch<ThemeService>();
+        final isAndroid =
+            !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+        final useDynamicMaterialColors =
+            isAndroid && themeService.materialColorsEnabled;
+
+        // Use brand accent by default; optional Android toggle enables dynamic Material colors.
+        final Color lightSeed = useDynamicMaterialColors
+            ? (lightDynamic?.primary ?? brandAccentColor)
+            : brandAccentColor;
+        final Color darkSeed = useDynamicMaterialColors
+            ? (darkDynamic?.primary ?? lightSeed)
+            : brandAccentColor;
 
         // --- Light Scheme aus Seed, aber ohne Material You UI ---
         final lightScheme = ColorScheme.fromSeed(
@@ -335,25 +347,19 @@ class MyApp extends StatelessWidget {
           ),
         );
 
-        return Consumer<ThemeService>(
-          builder: (context, themeService, child) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              scrollBehavior: NoGlowScrollBehavior(),
-              onGenerateTitle: (context) =>
-                  AppLocalizations.of(context)!.appTitle,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              title: "Hypertrack",
-              theme: baseLightTheme,
-              darkTheme: baseDarkTheme,
-              themeMode: themeService.themeMode,
-              onGenerateRoute: SleepNavigation.onGenerateRoute,
-              // FIX: Hier wird nun der ausgelagerte Screen verwendet
-              home: const AppInitializerScreen(),
-            );
-          },
-          // FIX: Das 'child' hier war überflüssig, da wir 'home' nutzen.
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          scrollBehavior: NoGlowScrollBehavior(),
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          title: "Hypertrack",
+          theme: baseLightTheme,
+          darkTheme: baseDarkTheme,
+          themeMode: themeService.themeMode,
+          onGenerateRoute: SleepNavigation.onGenerateRoute,
+          // FIX: Hier wird nun der ausgelagerte Screen verwendet
+          home: const AppInitializerScreen(),
         );
       },
     );

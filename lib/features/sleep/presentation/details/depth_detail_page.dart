@@ -54,8 +54,9 @@ class DepthDetailPage extends StatelessWidget {
     return SleepDetailPageShell(
       title: l10n.sleepMetricDepthTitle,
       value: rating,
-      statusLabel: l10n
-          .sleepDepthStageConfidenceLabel(overview.stageDataConfidence.name),
+      statusLabel: l10n.sleepDepthStageConfidenceLabel(
+        overview.stageDataConfidence.name,
+      ),
       subtitle: l10n.sleepDepthSubtitle,
       children: [
         SizedBox(

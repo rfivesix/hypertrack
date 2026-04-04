@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.7.5] - 2026-04-04
+### added
+- [#200](https://github.com/rfivesix/hypertrack/issues/200) added a consistend app color. Changed the iOS App icon (The white mode icon got the same color as the dark mode icon) for consistency
+
+### fixed
+- [#143](https://github.com/rfivesix/hypertrack/issues/143) fixed audio recording in ai_meal_capture_screen.dart. 
+- [#203](https://github.com/rfivesix/hypertrack/issues/203) fixed OFF database re-initialization
+- [#205](https://github.com/rfivesix/hypertrack/issues/205) fixed german translation
+
 ## [0.7.4] - 2026-04-04
 
 This release completes the main **sleep module rollout** and adds the first full version of **one-way health platform export**.

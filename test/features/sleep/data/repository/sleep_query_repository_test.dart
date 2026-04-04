@@ -78,20 +78,22 @@ void main() {
     expect(analysis!.score, 80);
   });
 
-  test('reads analyses in date range and returns empty for missing data',
-      () async {
-    await seed();
-    final repo = DriftSleepQueryRepository(database: db);
-    final rows = await repo.getAnalysesInRange(
-      fromInclusive: DateTime(2026, 2, 28),
-      toInclusive: DateTime(2026, 3, 2),
-    );
-    expect(rows.length, 1);
+  test(
+    'reads analyses in date range and returns empty for missing data',
+    () async {
+      await seed();
+      final repo = DriftSleepQueryRepository(database: db);
+      final rows = await repo.getAnalysesInRange(
+        fromInclusive: DateTime(2026, 2, 28),
+        toInclusive: DateTime(2026, 3, 2),
+      );
+      expect(rows.length, 1);
 
-    final empty = await repo.getAnalysesInRange(
-      fromInclusive: DateTime(2026, 4, 1),
-      toInclusive: DateTime(2026, 4, 2),
-    );
-    expect(empty, isEmpty);
-  });
+      final empty = await repo.getAnalysesInRange(
+        fromInclusive: DateTime(2026, 4, 1),
+        toInclusive: DateTime(2026, 4, 2),
+      );
+      expect(empty, isEmpty);
+    },
+  );
 }

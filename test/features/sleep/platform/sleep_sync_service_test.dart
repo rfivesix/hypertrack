@@ -117,13 +117,11 @@ void main() {
           'SELECT COUNT(*) c FROM sleep_canonical_heart_rate_samples',
         )
         .getSingle();
-    final analyses = await db.customSelect(
-      '''
+    final analyses = await db.customSelect('''
       SELECT score, interruptions_count
       FROM sleep_nightly_analyses
       LIMIT 1
-      ''',
-    ).getSingle();
+      ''').getSingle();
 
     expect(sessions.read<int>('c'), greaterThan(0));
     expect(segments.read<int>('c'), greaterThan(0));

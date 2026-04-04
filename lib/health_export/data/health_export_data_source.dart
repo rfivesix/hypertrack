@@ -39,19 +39,15 @@ class HealthExportPayload {
 }
 
 class HealthExportLoadOptions {
-  const HealthExportLoadOptions({
-    this.lookbackDays,
-    this.updatedSinceUtc,
-  });
+  const HealthExportLoadOptions({this.lookbackDays, this.updatedSinceUtc});
 
   final int? lookbackDays;
   final DateTime? updatedSinceUtc;
 }
 
 class HealthExportDataSource {
-  HealthExportDataSource({
-    DatabaseHelper? databaseHelper,
-  }) : _db = databaseHelper ?? DatabaseHelper.instance;
+  HealthExportDataSource({DatabaseHelper? databaseHelper})
+      : _db = databaseHelper ?? DatabaseHelper.instance;
 
   final DatabaseHelper _db;
 
@@ -88,8 +84,10 @@ class HealthExportDataSource {
     HealthExportLoadOptions options = const HealthExportLoadOptions(),
     int? lookbackDays,
   }) async {
-    final (start, end) =
-        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    final (start, end) = _resolveWindow(
+      lookbackDays: lookbackDays,
+      options: options,
+    );
     return _buildMeasurements(
       start: start,
       end: end,
@@ -101,8 +99,10 @@ class HealthExportDataSource {
     HealthExportLoadOptions options = const HealthExportLoadOptions(),
     int? lookbackDays,
   }) async {
-    final (start, end) =
-        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    final (start, end) = _resolveWindow(
+      lookbackDays: lookbackDays,
+      options: options,
+    );
     return _buildNutrition(
       start: start,
       end: end,
@@ -114,8 +114,10 @@ class HealthExportDataSource {
     HealthExportLoadOptions options = const HealthExportLoadOptions(),
     int? lookbackDays,
   }) async {
-    final (start, end) =
-        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    final (start, end) = _resolveWindow(
+      lookbackDays: lookbackDays,
+      options: options,
+    );
     return _buildHydration(
       start: start,
       end: end,
@@ -127,8 +129,10 @@ class HealthExportDataSource {
     HealthExportLoadOptions options = const HealthExportLoadOptions(),
     int? lookbackDays,
   }) async {
-    final (start, end) =
-        _resolveWindow(lookbackDays: lookbackDays, options: options);
+    final (start, end) = _resolveWindow(
+      lookbackDays: lookbackDays,
+      options: options,
+    );
     return _buildWorkouts(
       start: start,
       end: end,
@@ -269,7 +273,7 @@ class HealthExportDataSource {
     final barcodes = entries.map((entry) => entry.barcode).toSet().toList();
     final products = await _loadProductsByBarcode(barcodes);
     final byBarcode = {
-      for (final product in products) product.barcode: product
+      for (final product in products) product.barcode: product,
     };
 
     final records = <ExportNutritionRecord>[];
@@ -421,8 +425,10 @@ class HealthExportDataSource {
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final rows = await (dbInstance.select(dbInstance.workoutLogs)
           ..where((tbl) {
-            final inRange =
-                tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd);
+            final inRange = tbl.startTime.isBetweenValues(
+              effectiveStart,
+              effectiveEnd,
+            );
             final completed = tbl.status.equals('completed');
             return inRange & completed;
           }))

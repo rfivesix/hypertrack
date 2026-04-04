@@ -146,10 +146,9 @@ class SleepNavigation {
     bool replace = false,
   }) {
     if (replace) {
-      return Navigator.of(context).pushReplacementNamed(
-        SleepRouteNames.day,
-        arguments: day,
-      );
+      return Navigator.of(
+        context,
+      ).pushReplacementNamed(SleepRouteNames.day, arguments: day);
     }
     return Navigator.of(context).pushNamed(SleepRouteNames.day, arguments: day);
   }
@@ -164,10 +163,9 @@ class SleepNavigation {
     bool replace = false,
   }) {
     if (replace) {
-      return Navigator.of(context).pushReplacementNamed(
-        SleepRouteNames.week,
-        arguments: anchorDay,
-      );
+      return Navigator.of(
+        context,
+      ).pushReplacementNamed(SleepRouteNames.week, arguments: anchorDay);
     }
     return Navigator.of(
       context,
@@ -184,10 +182,9 @@ class SleepNavigation {
     bool replace = false,
   }) {
     if (replace) {
-      return Navigator.of(context).pushReplacementNamed(
-        SleepRouteNames.month,
-        arguments: anchorDay,
-      );
+      return Navigator.of(
+        context,
+      ).pushReplacementNamed(SleepRouteNames.month, arguments: anchorDay);
     }
     return Navigator.of(
       context,

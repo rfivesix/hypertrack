@@ -16,10 +16,7 @@ class HealthExportResult {
 }
 
 class _DomainExportOutcome {
-  const _DomainExportOutcome({
-    required this.success,
-    this.error,
-  });
+  const _DomainExportOutcome({required this.success, this.error});
 
   final bool success;
   final String? error;
@@ -64,7 +61,8 @@ class HealthExportService {
   }
 
   Future<HealthExportResult> requestPermissions(
-      HealthExportPlatform platform) async {
+    HealthExportPlatform platform,
+  ) async {
     final adapter = _adapters[platform];
     if (adapter == null) {
       return HealthExportResult(
@@ -232,8 +230,9 @@ class HealthExportService {
         for (final batch in _chunkRecords(pendingNutrition)) {
           try {
             await adapter.writeNutritionBatch(batch);
-            nutritionChunkExportedKeys
-                .addAll(batch.map((record) => record.idempotencyKey));
+            nutritionChunkExportedKeys.addAll(
+              batch.map((record) => record.idempotencyKey),
+            );
             nutritionExportedCount += batch.length;
           } catch (error) {
             for (final record in batch) {
@@ -260,8 +259,9 @@ class HealthExportService {
         for (final batch in _chunkRecords(pendingHydration)) {
           try {
             await adapter.writeHydrationBatch(batch);
-            hydrationChunkExportedKeys
-                .addAll(batch.map((record) => record.idempotencyKey));
+            hydrationChunkExportedKeys.addAll(
+              batch.map((record) => record.idempotencyKey),
+            );
             hydrationExportedCount += batch.length;
           } catch (error) {
             for (final record in batch) {
@@ -371,10 +371,7 @@ class HealthExportService {
         state: HealthExportState.failed,
         lastError: error.toString(),
       );
-      return _DomainExportOutcome(
-        success: false,
-        error: error.toString(),
-      );
+      return _DomainExportOutcome(success: false, error: error.toString());
     }
   }
 

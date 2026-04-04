@@ -100,9 +100,15 @@ void main() {
         monthStart: monthStart,
         analyses: [
           _analysis(
-              date: DateTime(2026, 2, 3), score: 78, totalSleepMinutes: 430),
+            date: DateTime(2026, 2, 3),
+            score: 78,
+            totalSleepMinutes: 430,
+          ),
           _analysis(
-              date: DateTime(2026, 2, 28), score: 88, totalSleepMinutes: 470),
+            date: DateTime(2026, 2, 28),
+            score: 88,
+            totalSleepMinutes: 470,
+          ),
         ],
       );
       expect(sparse.days.length, 28);
@@ -119,8 +125,9 @@ void main() {
       expect(empty.weekdayAverageDuration, isNull);
       expect(empty.weekendAverageDuration, isNull);
       expect(
-        empty.days
-            .every((day) => day.sleepQuality == SleepQualityBucket.unavailable),
+        empty.days.every(
+          (day) => day.sleepQuality == SleepQualityBucket.unavailable,
+        ),
         isTrue,
       );
     });

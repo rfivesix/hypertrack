@@ -104,11 +104,7 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
 
   Future<void> _onScopeChanged(SleepPeriodScope scope) async {
     if (scope == SleepPeriodScope.day) {
-      await SleepNavigation.openDayForDate(
-        context,
-        _anchorDay,
-        replace: true,
-      );
+      await SleepNavigation.openDayForDate(context, _anchorDay, replace: true);
       return;
     }
     if (scope == SleepPeriodScope.month) {
@@ -291,7 +287,9 @@ class _WeekWindowChart extends StatelessWidget {
                         );
                         return Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 2,
+                            ),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 final maxHeight = constraints.maxHeight;
@@ -315,12 +313,15 @@ class _WeekWindowChart extends StatelessWidget {
                                         top: barTop,
                                         left: 0,
                                         right: 0,
-                                        height: barHeight.clamp(4, maxHeight),
+                                        height: barHeight.clamp(
+                                          4,
+                                          maxHeight,
+                                        ),
                                         child: Container(
                                           decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                           ),
@@ -342,10 +343,9 @@ class _WeekWindowChart extends StatelessWidget {
                           tickMinutes: tickMinutes,
                           minMinutes: minMinutes,
                           maxMinutes: maxMinutes,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outlineVariant
-                              .withOpacity(0.6),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outlineVariant.withOpacity(0.6),
                         ),
                       ),
                     ),
@@ -451,12 +451,7 @@ class _TimeGridPainter extends CustomPainter {
     }
   }
 
-  void _drawDashedLine(
-    Canvas canvas,
-    Paint paint,
-    Offset start,
-    Offset end,
-  ) {
+  void _drawDashedLine(Canvas canvas, Paint paint, Offset start, Offset end) {
     const dashWidth = 4.0;
     const dashSpace = 3.0;
     final dx = end.dx - start.dx;
@@ -466,10 +461,7 @@ class _TimeGridPainter extends CustomPainter {
     while (progress < distance) {
       final current = progress / distance;
       final next = (progress + dashWidth) / distance;
-      final from = Offset(
-        start.dx + dx * current,
-        start.dy + dy * current,
-      );
+      final from = Offset(start.dx + dx * current, start.dy + dy * current);
       final to = Offset(
         start.dx + dx * next.clamp(0.0, 1.0),
         start.dy + dy * next.clamp(0.0, 1.0),
@@ -540,9 +532,9 @@ class WeekScoreStrip extends StatelessWidget {
                                   .textTheme
                                   .labelMedium
                                   ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer,
                                   ),
                             ),
                           ),

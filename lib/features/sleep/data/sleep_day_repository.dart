@@ -181,8 +181,10 @@ class SleepDayRepository implements SleepDayDataRepository {
       repairedSegments: repaired,
     );
 
-    final (interruptionsCount, interruptionsWakeMinutes) =
-        _resolveInterruptions(
+    final (
+      interruptionsCount,
+      interruptionsWakeMinutes,
+    ) = _resolveInterruptions(
       record: record,
       repairedSegments: repaired,
       metrics: nightlyMetrics,

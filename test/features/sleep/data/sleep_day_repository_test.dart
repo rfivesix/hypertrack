@@ -62,71 +62,74 @@ SleepRawIngestionBatch _batchForNight({
 }
 
 void main() {
-  test('fetchOverview surfaces score, interruptions, and HR baseline/delta',
-      () async {
-    final db = AppDatabase(
-      NativeDatabase.memory(
-        setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
-      ),
-    );
-    final pipeline = SleepPipelineService(database: db);
-
-    for (var i = 0; i < 11; i += 1) {
-      await pipeline.runImport(
-        batch: _batchForNight(index: i, bpm: 50 + (i % 3)),
+  test(
+    'fetchOverview surfaces score, interruptions, and HR baseline/delta',
+    () async {
+      final db = AppDatabase(
+        NativeDatabase.memory(
+          setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+        ),
       );
-    }
+      final pipeline = SleepPipelineService(database: db);
 
-    final repository = SleepDayRepository(database: db);
-    final overview = await repository.fetchOverview(DateTime.utc(2026, 3, 12));
+      for (var i = 0; i < 11; i += 1) {
+        await pipeline.runImport(
+          batch: _batchForNight(index: i, bpm: 50 + (i % 3)),
+        );
+      }
 
-    expect(overview, isNotNull);
-    expect(overview!.analysis.score, isNotNull);
-    expect(overview.interruptionsCount, 1);
-    expect(overview.interruptionsWakeDuration, const Duration(minutes: 5));
-    expect(overview.sleepHrAvg, isNotNull);
-    expect(overview.baselineSleepHr, isNotNull);
-    expect(overview.deltaSleepHr, isNotNull);
-    expect(overview.heartRateSamples, isNotEmpty);
-    expect(overview.heartRateSamples.length, 6);
-    expect(overview.heartRateSamples.first.bpm, closeTo(51, 0.001));
-    expect(
-      overview.heartRateSamples.first.sampledAtUtc.isBefore(
-        overview.heartRateSamples.last.sampledAtUtc,
-      ),
-      isTrue,
-    );
+      final repository = SleepDayRepository(database: db);
+      final overview = await repository.fetchOverview(
+        DateTime.utc(2026, 3, 12),
+      );
 
-    await db.close();
-  });
+      expect(overview, isNotNull);
+      expect(overview!.analysis.score, isNotNull);
+      expect(overview.interruptionsCount, 1);
+      expect(overview.interruptionsWakeDuration, const Duration(minutes: 5));
+      expect(overview.sleepHrAvg, isNotNull);
+      expect(overview.baselineSleepHr, isNotNull);
+      expect(overview.deltaSleepHr, isNotNull);
+      expect(overview.heartRateSamples, isNotEmpty);
+      expect(overview.heartRateSamples.length, 6);
+      expect(overview.heartRateSamples.first.bpm, closeTo(51, 0.001));
+      expect(
+        overview.heartRateSamples.first.sampledAtUtc.isBefore(
+          overview.heartRateSamples.last.sampledAtUtc,
+        ),
+        isTrue,
+      );
+
+      await db.close();
+    },
+  );
 
   test(
-      'fetchOverview computes interruption fallback when persisted fields null',
-      () async {
-    final db = AppDatabase(
-      NativeDatabase.memory(
-        setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
-      ),
-    );
-    final pipeline = SleepPipelineService(database: db);
-    await pipeline.runImport(batch: _batchForNight(index: 0, bpm: 52));
+    'fetchOverview computes interruption fallback when persisted fields null',
+    () async {
+      final db = AppDatabase(
+        NativeDatabase.memory(
+          setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+        ),
+      );
+      final pipeline = SleepPipelineService(database: db);
+      await pipeline.runImport(batch: _batchForNight(index: 0, bpm: 52));
 
-    await db.customStatement(
-      '''
+      await db.customStatement('''
       UPDATE sleep_nightly_analyses
       SET interruptions_count = NULL,
           interruptions_wake_minutes = NULL
       WHERE session_id = 'session-0'
-      ''',
-    );
+      ''');
 
-    final repository = SleepDayRepository(database: db);
-    final overview = await repository.fetchOverview(DateTime.utc(2026, 3, 2));
+      final repository = SleepDayRepository(database: db);
+      final overview = await repository.fetchOverview(DateTime.utc(2026, 3, 2));
 
-    expect(overview, isNotNull);
-    expect(overview!.interruptionsCount, 1);
-    expect(overview.interruptionsWakeDuration, const Duration(minutes: 5));
+      expect(overview, isNotNull);
+      expect(overview!.interruptionsCount, 1);
+      expect(overview.interruptionsWakeDuration, const Duration(minutes: 5));
 
-    await db.close();
-  });
+      await db.close();
+    },
+  );
 }

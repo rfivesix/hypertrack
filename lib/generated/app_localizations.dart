@@ -2828,6 +2828,18 @@ abstract class AppLocalizations {
   /// **'Rounded, floating UI elements'**
   String get settingsVisualStyleLiquidDesc;
 
+  /// No description provided for @settingsMaterialColorsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Material colors'**
+  String get settingsMaterialColorsTitle;
+
+  /// No description provided for @settingsMaterialColorsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent'**
+  String get settingsMaterialColorsSubtitle;
+
   /// No description provided for @searchBaseFoodHint.
   ///
   /// In en, this message translates to:
