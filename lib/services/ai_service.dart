@@ -17,9 +17,7 @@ enum AiProvider {
   gemini,
   anthropic,
   mistral,
-  deepseek,
   xai,
-  cohere,
 }
 
 /// Provider registry metadata.
@@ -161,7 +159,7 @@ class AiService {
       displayName: 'OpenAI',
       keyHint: 'sk-...',
       defaultModel: 'gpt-4o',
-      fallbackModels: ['gpt-4o', 'gpt-4.1-mini'],
+      fallbackModels: ['gpt-4o', 'gpt-4.1-mini', 'o4-mini'],
       supportsVision: true,
       supportsDynamicModelLoading: true,
     ),
@@ -170,7 +168,7 @@ class AiService {
       displayName: 'Google Gemini',
       keyHint: 'AIza...',
       defaultModel: 'gemini-2.5-flash',
-      fallbackModels: ['gemini-2.5-flash', 'gemini-1.5-flash'],
+      fallbackModels: ['gemini-2.5-flash', 'gemini-2.5-pro'],
       supportsVision: true,
       supportsDynamicModelLoading: true,
     ),
@@ -195,15 +193,6 @@ class AiService {
       supportsVision: true,
       supportsDynamicModelLoading: true,
     ),
-    AiProvider.deepseek: AiProviderMetadata(
-      provider: AiProvider.deepseek,
-      displayName: 'DeepSeek',
-      keyHint: 'sk-...',
-      defaultModel: 'deepseek-chat',
-      fallbackModels: ['deepseek-chat'],
-      supportsVision: false,
-      supportsDynamicModelLoading: false,
-    ),
     AiProvider.xai: AiProviderMetadata(
       provider: AiProvider.xai,
       displayName: 'xAI Grok',
@@ -212,15 +201,6 @@ class AiService {
       fallbackModels: ['grok-2-vision-latest', 'grok-2-latest'],
       supportsVision: true,
       supportsDynamicModelLoading: true,
-    ),
-    AiProvider.cohere: AiProviderMetadata(
-      provider: AiProvider.cohere,
-      displayName: 'Cohere',
-      keyHint: 'co-...',
-      defaultModel: 'command-r-plus',
-      fallbackModels: ['command-r-plus', 'command-r'],
-      supportsVision: false,
-      supportsDynamicModelLoading: false,
     ),
   };
 
@@ -386,24 +366,8 @@ Example response:
           imageDataList,
           systemPrompt: prompt,
         );
-      case AiProvider.deepseek:
-        return _callDeepSeek(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
       case AiProvider.xai:
         return _callXai(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.cohere:
-        return _callCohere(
           apiKey,
           model,
           userContent,
@@ -441,18 +405,8 @@ Example response:
         );
       case AiProvider.mistral:
         return _callMistral(apiKey, model, description, [], systemPrompt: prompt);
-      case AiProvider.deepseek:
-        return _callDeepSeek(
-          apiKey,
-          model,
-          description,
-          [],
-          systemPrompt: prompt,
-        );
       case AiProvider.xai:
         return _callXai(apiKey, model, description, [], systemPrompt: prompt);
-      case AiProvider.cohere:
-        return _callCohere(apiKey, model, description, [], systemPrompt: prompt);
     }
   }
 
@@ -524,24 +478,8 @@ Please provide an updated analysis incorporating the user's feedback. Return the
           imageDataList,
           systemPrompt: prompt,
         );
-      case AiProvider.deepseek:
-        return _callDeepSeek(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
       case AiProvider.xai:
         return _callXai(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.cohere:
-        return _callCohere(
           apiKey,
           model,
           userContent,
@@ -827,46 +765,6 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     );
   }
 
-  Future<List<AiSuggestedItem>> _callDeepSeek(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    if (imagesBase64.isNotEmpty) {
-      throw const AiUnsupportedFeatureException(
-        'Selected DeepSeek model does not support image analysis in this integration.',
-      );
-    }
-    final raw = await _callOpenAiCompatibleRaw(
-      endpoint: 'https://api.deepseek.com/v1/chat/completions',
-      authHeader: 'Bearer $apiKey',
-      model: model,
-      userContent: userContent,
-      imagesBase64: const [],
-      systemPrompt: systemPrompt,
-    );
-    return _parseItemsFromContent(raw);
-  }
-
-  Future<String> _callDeepSeekRaw(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) {
-    return _callOpenAiCompatibleRaw(
-      endpoint: 'https://api.deepseek.com/v1/chat/completions',
-      authHeader: 'Bearer $apiKey',
-      model: model,
-      userContent: userContent,
-      imagesBase64: const [],
-      systemPrompt: systemPrompt,
-    );
-  }
-
   Future<List<AiSuggestedItem>> _callXai(
     String apiKey,
     String model,
@@ -900,70 +798,6 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       imagesBase64: imagesBase64,
       systemPrompt: systemPrompt,
     );
-  }
-
-  Future<List<AiSuggestedItem>> _callCohere(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    if (imagesBase64.isNotEmpty) {
-      throw const AiUnsupportedFeatureException(
-        'Selected Cohere model does not support image analysis in this integration.',
-      );
-    }
-    final raw = await _callCohereRaw(
-      apiKey,
-      model,
-      userContent,
-      imagesBase64,
-      systemPrompt: systemPrompt,
-    );
-    return _parseItemsFromContent(raw);
-  }
-
-  Future<String> _callCohereRaw(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    final body = jsonEncode({
-      'model': model,
-      'message': '$systemPrompt\n\n$userContent',
-      'temperature': 0.3,
-    });
-    try {
-      final response = await http
-          .post(
-            Uri.parse('https://api.cohere.com/v1/chat'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
-            },
-            body: body,
-          )
-          .timeout(const Duration(seconds: 60));
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        throw const AiAuthException();
-      }
-      if (response.statusCode == 429) throw const AiRateLimitException();
-      if (response.statusCode != 200) {
-        throw AiNetworkException('API returned status ${response.statusCode}');
-      }
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final text = json['text'] as String? ?? json['response'] as String?;
-      if (text == null || text.isEmpty) throw const AiParseException();
-      return text;
-    } on SocketException {
-      throw const AiNetworkException();
-    } catch (e) {
-      if (e is AiServiceException) rethrow;
-      throw AiNetworkException('Request failed: $e');
-    }
   }
 
   Future<String> _callOpenAiCompatibleRaw({
@@ -1039,8 +873,6 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       case AiProvider.xai:
         return _loadXaiModels(apiKey);
       case AiProvider.anthropic:
-      case AiProvider.deepseek:
-      case AiProvider.cohere:
         return const [];
     }
   }
@@ -1058,7 +890,22 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       final data = json['data'] as List<dynamic>? ?? const [];
       final ids = data
           .map((e) => (e as Map<String, dynamic>)['id'] as String? ?? '')
-          .where((id) => id.startsWith('gpt-'))
+          .where(
+            (id) =>
+                id.startsWith('gpt-') ||
+                RegExp(r'^o[0-9]').hasMatch(id) ||
+                id.startsWith('o1-') ||
+                id.startsWith('o3-') ||
+                id.startsWith('o4-'),
+          )
+          .where((id) => !id.contains('audio'))
+          .where((id) => !id.contains('realtime'))
+          .where((id) => !id.contains('transcribe'))
+          .where((id) => !id.contains('search'))
+          .where((id) => !id.contains('moderation'))
+          .where((id) => !id.contains('embedding'))
+          .where((id) => !id.contains('tts'))
+          .where((id) => !id.contains('whisper'))
           .toList()
         ..sort();
       return ids
@@ -1082,10 +929,21 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['models'] as List<dynamic>? ?? const [];
       final ids = data
-          .map((e) => (e as Map<String, dynamic>)['name'] as String? ?? '')
-          .where((n) => n.contains('/'))
-          .map((n) => n.split('/').last)
+          .map((e) => e as Map<String, dynamic>)
+          .where(
+            (model) =>
+                (model['supportedGenerationMethods'] as List<dynamic>? ?? const [])
+                    .contains('generateContent'),
+          )
+          .map((model) => model['name'] as String? ?? '')
+          .where((n) => n.startsWith('models/'))
+          .map((n) => n.substring('models/'.length))
           .where((id) => id.contains('gemini'))
+          .where((id) => !id.contains('embedding'))
+          .where((id) => !id.contains('aqa'))
+          .where((id) => !id.contains('tts'))
+          .where((id) => !id.contains('image'))
+          .where((id) => !id.contains('learnlm'))
           .toList()
         ..sort();
       return ids
@@ -1270,26 +1128,8 @@ Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the
           systemPrompt: systemPrompt,
         );
         break;
-      case AiProvider.deepseek:
-        rawContent = await _callDeepSeekRaw(
-          apiKey,
-          model,
-          userContent,
-          [],
-          systemPrompt: systemPrompt,
-        );
-        break;
       case AiProvider.xai:
         rawContent = await _callXaiRaw(
-          apiKey,
-          model,
-          userContent,
-          [],
-          systemPrompt: systemPrompt,
-        );
-        break;
-      case AiProvider.cohere:
-        rawContent = await _callCohereRaw(
           apiKey,
           model,
           userContent,

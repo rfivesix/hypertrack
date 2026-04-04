@@ -11,7 +11,7 @@ class ThemeService extends ChangeNotifier {
   static const _materialColorsEnabledKey = 'material_colors_enabled';
   ThemeMode _themeMode = ThemeMode.system;
   int _visualStyle = 0; // 0 = Standard, 1 = Liquid
-  bool _isAiEnabled = true;
+  bool _isAiEnabled = false;
   bool _materialColorsEnabled = false;
 
   /// The current theme mode (light, dark, or system).
@@ -68,7 +68,7 @@ class ThemeService extends ChangeNotifier {
 
   Future<void> _loadAiEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    _isAiEnabled = prefs.getBool(_aiEnabledKey) ?? true;
+    _isAiEnabled = prefs.getBool(_aiEnabledKey) ?? false;
     notifyListeners();
   }
 

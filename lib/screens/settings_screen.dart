@@ -910,43 +910,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.aiSettingsTitle),
-          SummaryCard(
-            child: SwitchListTile(
-              secondary: ShaderMask(
-                blendMode: BlendMode.srcIn,
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: _aiGradientColors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ).createShader(bounds),
-                child: const Icon(Icons.auto_awesome, size: 28),
-              ),
-              title: Text(
-                l10n.aiEnableTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(l10n.aiEnableSubtitle),
-              value: themeService.isAiEnabled,
-              onChanged: (value) => themeService.setAiEnabled(value),
-            ),
+          _buildNavigationCard(
+            context: context,
+            icon: Icons.auto_awesome,
+            title: l10n.aiSettingsTitle,
+            subtitle: l10n.aiSettingsDescription,
+            useGradientIcon: true,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AiSettingsScreen(),
+                ),
+              );
+            },
           ),
-          if (themeService.isAiEnabled) ...[
-            const SizedBox(height: DesignConstants.spacingM),
-            _buildNavigationCard(
-              context: context,
-              icon: Icons.auto_awesome,
-              title: l10n.aiSettingsTitle,
-              subtitle: l10n.aiSettingsDescription,
-              useGradientIcon: true,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const AiSettingsScreen(),
-                  ),
-                );
-              },
-            ),
-          ],
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.about_and_legal_capslock),
           _buildNavigationCard(

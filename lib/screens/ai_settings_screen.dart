@@ -1,8 +1,10 @@
 // lib/screens/ai_settings_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
 import '../services/ai_service.dart';
+import '../services/theme_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -199,6 +201,8 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final themeService = context.watch<ThemeService>();
+    final aiEnabled = themeService.isAiEnabled;
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
@@ -210,172 +214,152 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
               padding: DesignConstants.cardPadding.copyWith(
                 top: DesignConstants.cardPadding.top + topPadding,
               ),
-              children: [
-                // --- Provider Selection ---
-                _buildSectionTitle(context, l10n.aiProviderSection),
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.cloud_outlined,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: DropdownButtonFormField<AiProvider>(
-                            initialValue: _selectedProvider,
-                            decoration: InputDecoration(
-                              labelText: l10n.aiProviderLabel,
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            items: AiService.instance
-                                .getSupportedProviders()
-                                .map(
-                                  (providerMeta) => DropdownMenuItem(
-                                    value: providerMeta.provider,
-                                    child: Text(providerMeta.displayName),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: _onProviderChanged,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+               children: [
+                 _buildSectionTitle(context, l10n.aiSettingsTitle),
+                 SummaryCard(
+                   child: Padding(
+                     padding: const EdgeInsets.all(14),
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         SwitchListTile(
+                           contentPadding: EdgeInsets.zero,
+                           secondary: Icon(
+                             Icons.auto_awesome,
+                             color: theme.colorScheme.primary,
+                           ),
+                           title: Text(
+                             l10n.aiEnableTitle,
+                             style: const TextStyle(fontWeight: FontWeight.bold),
+                           ),
+                           subtitle: Text(l10n.aiEnableSubtitle),
+                           value: aiEnabled,
+                           onChanged: (value) => themeService.setAiEnabled(value),
+                         ),
+                         if (aiEnabled) ...[
+                           const SizedBox(height: 8),
+                           DropdownButtonFormField<AiProvider>(
+                             initialValue: _selectedProvider,
+                             decoration: InputDecoration(
+                               labelText: l10n.aiProviderLabel,
+                               border: const OutlineInputBorder(),
+                               contentPadding: const EdgeInsets.symmetric(
+                                 horizontal: 12,
+                                 vertical: 8,
+                               ),
+                             ),
+                             items: AiService.instance
+                                 .getSupportedProviders()
+                                 .map(
+                                   (providerMeta) => DropdownMenuItem(
+                                     value: providerMeta.provider,
+                                     child: Text(providerMeta.displayName),
+                                   ),
+                                 )
+                                 .toList(),
+                             onChanged: _onProviderChanged,
+                           ),
+                           const SizedBox(height: 10),
+                           _isLoadingModels
+                               ? const Center(child: CircularProgressIndicator())
+                               : DropdownButtonFormField<String>(
+                                   initialValue: _selectedModel,
+                                   decoration: const InputDecoration(
+                                     labelText: 'Model',
+                                     border: OutlineInputBorder(),
+                                     contentPadding: EdgeInsets.symmetric(
+                                       horizontal: 12,
+                                       vertical: 8,
+                                     ),
+                                   ),
+                                   items: _modelOptions
+                                       .map(
+                                         (model) => DropdownMenuItem(
+                                           value: model.id,
+                                           child: Text(model.label),
+                                         ),
+                                       )
+                                       .toList(),
+                                   onChanged: _onModelChanged,
+                                 ),
+                           const SizedBox(height: 10),
+                           TextField(
+                             controller: _keyController,
+                             obscureText: _obscureKey,
+                             onTap: () {
+                               if (_keyController.text.startsWith('••')) {
+                                 _keyController.clear();
+                                 setState(() => _obscureKey = false);
+                               }
+                             },
+                             decoration: InputDecoration(
+                               labelText: l10n.aiApiKeyLabel,
+                               hintText: AiService.instance
+                                   .getProviderMetadata(_selectedProvider)
+                                   .keyHint,
+                               border: const OutlineInputBorder(),
+                               suffixIcon: Row(
+                                 mainAxisSize: MainAxisSize.min,
+                                 children: [
+                                   IconButton(
+                                     icon: Icon(
+                                       _obscureKey
+                                           ? Icons.visibility_off
+                                           : Icons.visibility,
+                                     ),
+                                     onPressed: () {
+                                       setState(() => _obscureKey = !_obscureKey);
+                                     },
+                                   ),
+                                   if (_hasKey)
+                                     IconButton(
+                                       icon: const Icon(
+                                         Icons.delete_outline,
+                                         color: Colors.red,
+                                       ),
+                                       onPressed: _deleteApiKey,
+                                     ),
+                                 ],
+                               ),
+                             ),
+                           ),
+                           const SizedBox(height: 10),
+                           Row(
+                             children: [
+                               Expanded(
+                                 child: FilledButton.icon(
+                                   onPressed: _saveApiKey,
+                                   icon: const Icon(Icons.save_outlined),
+                                   label: Text(l10n.aiSaveKey),
+                                 ),
+                               ),
+                               const SizedBox(width: 10),
+                               Expanded(
+                                 child: OutlinedButton.icon(
+                                   onPressed: (_hasKey && !_isTesting)
+                                       ? _testConnection
+                                       : null,
+                                   icon: _isTesting
+                                       ? const SizedBox(
+                                           width: 16,
+                                           height: 16,
+                                           child: CircularProgressIndicator(
+                                             strokeWidth: 2,
+                                           ),
+                                         )
+                                       : const Icon(Icons.wifi_tethering),
+                                   label: Text(l10n.aiTestConnection),
+                                 ),
+                               ),
+                             ],
+                           ),
+                         ],
+                       ],
+                     ),
+                   ),
+                 ),
 
-                const SizedBox(height: DesignConstants.spacingXL),
-
-                // --- Model Selection ---
-                _buildSectionTitle(context, 'Model'),
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: _isLoadingModels
-                        ? const Center(child: CircularProgressIndicator())
-                        : DropdownButtonFormField<String>(
-                            initialValue: _selectedModel,
-                            decoration: const InputDecoration(
-                              labelText: 'Model',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            items: _modelOptions
-                                .map(
-                                  (model) => DropdownMenuItem(
-                                    value: model.id,
-                                    child: Text(model.label),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: _onModelChanged,
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: DesignConstants.spacingXL),
-
-                // --- API Key ---
-                _buildSectionTitle(context, l10n.aiApiKeySection),
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextField(
-                          controller: _keyController,
-                          obscureText: _obscureKey,
-                          onTap: () {
-                            // Clear masked placeholder when user taps to edit
-                            if (_keyController.text.startsWith('••')) {
-                              _keyController.clear();
-                              setState(() => _obscureKey = false);
-                            }
-                          },
-                          decoration: InputDecoration(
-                            labelText: l10n.aiApiKeyLabel,
-                            hintText: AiService.instance
-                                .getProviderMetadata(_selectedProvider)
-                                .keyHint,
-                            border: const OutlineInputBorder(),
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    _obscureKey
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                  ),
-                                  onPressed: () {
-                                    setState(() => _obscureKey = !_obscureKey);
-                                  },
-                                ),
-                                if (_hasKey)
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed: _deleteApiKey,
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: FilledButton.icon(
-                                onPressed: _saveApiKey,
-                                icon: const Icon(Icons.save_outlined),
-                                label: Text(l10n.aiSaveKey),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: (_hasKey && !_isTesting)
-                                    ? _testConnection
-                                    : null,
-                                icon: _isTesting
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.wifi_tethering),
-                                label: Text(l10n.aiTestConnection),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: DesignConstants.spacingXL),
+                 const SizedBox(height: DesignConstants.spacingXL),
 
                 // --- Privacy Disclosure ---
                 _buildSectionTitle(context, l10n.aiPrivacySection),
