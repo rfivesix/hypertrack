@@ -46,7 +46,8 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
 
   Future<void> _loadSettings() async {
     final provider = await AiService.instance.getSelectedProvider();
-    final model = await AiService.instance.getSelectedModel(provider);
+    final model =
+        await AiService.instance.resolveAndPersistSelectedModel(provider);
     final key = await AiService.instance.getApiKey(provider);
     final models = await AiService.instance.getModelOptions(provider);
     final resolvedModel = _resolveModelSelection(model, models, provider);
@@ -54,7 +55,11 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
       setState(() {
         _selectedProvider = provider;
         _selectedModel = resolvedModel;
-        _modelOptions = _buildModelOptionsWithSelection(models, resolvedModel);
+        _modelOptions = _buildModelOptionsWithSelection(
+          models,
+          resolvedModel,
+          provider,
+        );
         _hasKey = key != null && key.isNotEmpty;
         if (_hasKey) {
           // Show masked placeholder — never display the real key
@@ -69,16 +74,22 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     if (provider == null) return;
     setState(() => _isLoading = true);
     await AiService.instance.setSelectedProvider(provider);
-    final selectedModel = await AiService.instance.getSelectedModel(provider);
+    final selectedModel =
+        await AiService.instance.resolveAndPersistSelectedModel(provider);
     final models = await AiService.instance.getModelOptions(provider);
-    final resolvedModel = _resolveModelSelection(selectedModel, models, provider);
+    final resolvedModel =
+        _resolveModelSelection(selectedModel, models, provider);
     await AiService.instance.setSelectedModel(provider, resolvedModel);
     final key = await AiService.instance.getApiKey(provider);
     if (mounted) {
       setState(() {
         _selectedProvider = provider;
         _selectedModel = resolvedModel;
-        _modelOptions = _buildModelOptionsWithSelection(models, resolvedModel);
+        _modelOptions = _buildModelOptionsWithSelection(
+          models,
+          resolvedModel,
+          provider,
+        );
         _hasKey = key != null && key.isNotEmpty;
         _keyController.text = _hasKey ? '••••••••••••••••••••' : '';
         _isLoading = false;
@@ -131,8 +142,12 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     if (!mounted) return;
     setState(() => _isLoadingModels = true);
     final models = await AiService.instance.getModelOptions(_selectedProvider);
+    final selectedModel =
+        await AiService.instance.resolveAndPersistSelectedModel(
+      _selectedProvider,
+    );
     final resolvedModel = _resolveModelSelection(
-      _selectedModel,
+      selectedModel,
       models,
       _selectedProvider,
     );
@@ -140,7 +155,11 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     if (!mounted) return;
     setState(() {
       _selectedModel = resolvedModel;
-      _modelOptions = _buildModelOptionsWithSelection(models, resolvedModel);
+      _modelOptions = _buildModelOptionsWithSelection(
+        models,
+        resolvedModel,
+        _selectedProvider,
+      );
       _isLoadingModels = false;
     });
   }
@@ -151,21 +170,23 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     AiProvider provider,
   ) {
     if (models.any((m) => m.id == currentSelection)) return currentSelection;
+    if (models.isNotEmpty) return models.first.id;
     return AiService.instance.getProviderMetadata(provider).defaultModel;
   }
 
   List<AiModelOption> _buildModelOptionsWithSelection(
     List<AiModelOption> models,
     String selectedModel,
+    AiProvider provider,
   ) {
     if (models.isEmpty) {
-      return [AiModelOption(id: selectedModel, label: selectedModel, isFallback: true)];
+      final defaultModel =
+          AiService.instance.getProviderMetadata(provider).defaultModel;
+      return [
+        AiModelOption(id: defaultModel, label: defaultModel, isFallback: true),
+      ];
     }
-    if (models.any((m) => m.id == selectedModel)) return models;
-    return [
-      AiModelOption(id: selectedModel, label: selectedModel, isFallback: true),
-      ...models,
-    ];
+    return models;
   }
 
   Future<void> _testConnection() async {
@@ -214,152 +235,154 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
               padding: DesignConstants.cardPadding.copyWith(
                 top: DesignConstants.cardPadding.top + topPadding,
               ),
-               children: [
-                 _buildSectionTitle(context, l10n.aiSettingsTitle),
-                 SummaryCard(
-                   child: Padding(
-                     padding: const EdgeInsets.all(14),
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                         SwitchListTile(
-                           contentPadding: EdgeInsets.zero,
-                           secondary: Icon(
-                             Icons.auto_awesome,
-                             color: theme.colorScheme.primary,
-                           ),
-                           title: Text(
-                             l10n.aiEnableTitle,
-                             style: const TextStyle(fontWeight: FontWeight.bold),
-                           ),
-                           subtitle: Text(l10n.aiEnableSubtitle),
-                           value: aiEnabled,
-                           onChanged: (value) => themeService.setAiEnabled(value),
-                         ),
-                         if (aiEnabled) ...[
-                           const SizedBox(height: 8),
-                           DropdownButtonFormField<AiProvider>(
-                             initialValue: _selectedProvider,
-                             decoration: InputDecoration(
-                               labelText: l10n.aiProviderLabel,
-                               border: const OutlineInputBorder(),
-                               contentPadding: const EdgeInsets.symmetric(
-                                 horizontal: 12,
-                                 vertical: 8,
-                               ),
-                             ),
-                             items: AiService.instance
-                                 .getSupportedProviders()
-                                 .map(
-                                   (providerMeta) => DropdownMenuItem(
-                                     value: providerMeta.provider,
-                                     child: Text(providerMeta.displayName),
-                                   ),
-                                 )
-                                 .toList(),
-                             onChanged: _onProviderChanged,
-                           ),
-                           const SizedBox(height: 10),
-                           _isLoadingModels
-                               ? const Center(child: CircularProgressIndicator())
-                               : DropdownButtonFormField<String>(
-                                   initialValue: _selectedModel,
-                                   decoration: const InputDecoration(
-                                     labelText: 'Model',
-                                     border: OutlineInputBorder(),
-                                     contentPadding: EdgeInsets.symmetric(
-                                       horizontal: 12,
-                                       vertical: 8,
-                                     ),
-                                   ),
-                                   items: _modelOptions
-                                       .map(
-                                         (model) => DropdownMenuItem(
-                                           value: model.id,
-                                           child: Text(model.label),
-                                         ),
-                                       )
-                                       .toList(),
-                                   onChanged: _onModelChanged,
-                                 ),
-                           const SizedBox(height: 10),
-                           TextField(
-                             controller: _keyController,
-                             obscureText: _obscureKey,
-                             onTap: () {
-                               if (_keyController.text.startsWith('••')) {
-                                 _keyController.clear();
-                                 setState(() => _obscureKey = false);
-                               }
-                             },
-                             decoration: InputDecoration(
-                               labelText: l10n.aiApiKeyLabel,
-                               hintText: AiService.instance
-                                   .getProviderMetadata(_selectedProvider)
-                                   .keyHint,
-                               border: const OutlineInputBorder(),
-                               suffixIcon: Row(
-                                 mainAxisSize: MainAxisSize.min,
-                                 children: [
-                                   IconButton(
-                                     icon: Icon(
-                                       _obscureKey
-                                           ? Icons.visibility_off
-                                           : Icons.visibility,
-                                     ),
-                                     onPressed: () {
-                                       setState(() => _obscureKey = !_obscureKey);
-                                     },
-                                   ),
-                                   if (_hasKey)
-                                     IconButton(
-                                       icon: const Icon(
-                                         Icons.delete_outline,
-                                         color: Colors.red,
-                                       ),
-                                       onPressed: _deleteApiKey,
-                                     ),
-                                 ],
-                               ),
-                             ),
-                           ),
-                           const SizedBox(height: 10),
-                           Row(
-                             children: [
-                               Expanded(
-                                 child: FilledButton.icon(
-                                   onPressed: _saveApiKey,
-                                   icon: const Icon(Icons.save_outlined),
-                                   label: Text(l10n.aiSaveKey),
-                                 ),
-                               ),
-                               const SizedBox(width: 10),
-                               Expanded(
-                                 child: OutlinedButton.icon(
-                                   onPressed: (_hasKey && !_isTesting)
-                                       ? _testConnection
-                                       : null,
-                                   icon: _isTesting
-                                       ? const SizedBox(
-                                           width: 16,
-                                           height: 16,
-                                           child: CircularProgressIndicator(
-                                             strokeWidth: 2,
-                                           ),
-                                         )
-                                       : const Icon(Icons.wifi_tethering),
-                                   label: Text(l10n.aiTestConnection),
-                                 ),
-                               ),
-                             ],
-                           ),
-                         ],
-                       ],
-                     ),
-                   ),
-                 ),
+              children: [
+                _buildSectionTitle(context, l10n.aiSettingsTitle),
+                SummaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          secondary: Icon(
+                            Icons.auto_awesome,
+                            color: theme.colorScheme.primary,
+                          ),
+                          title: Text(
+                            l10n.aiEnableTitle,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(l10n.aiEnableSubtitle),
+                          value: aiEnabled,
+                          onChanged: (value) =>
+                              themeService.setAiEnabled(value),
+                        ),
+                        if (aiEnabled) ...[
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<AiProvider>(
+                            initialValue: _selectedProvider,
+                            decoration: InputDecoration(
+                              labelText: l10n.aiProviderLabel,
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: AiService.instance
+                                .getSupportedProviders()
+                                .map(
+                                  (providerMeta) => DropdownMenuItem(
+                                    value: providerMeta.provider,
+                                    child: Text(providerMeta.displayName),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: _onProviderChanged,
+                          ),
+                          const SizedBox(height: 10),
+                          _isLoadingModels
+                              ? const Center(child: CircularProgressIndicator())
+                              : DropdownButtonFormField<String>(
+                                  initialValue: _selectedModel,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Model',
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  items: _modelOptions
+                                      .map(
+                                        (model) => DropdownMenuItem(
+                                          value: model.id,
+                                          child: Text(model.label),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: _onModelChanged,
+                                ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _keyController,
+                            obscureText: _obscureKey,
+                            onTap: () {
+                              if (_keyController.text.startsWith('••')) {
+                                _keyController.clear();
+                                setState(() => _obscureKey = false);
+                              }
+                            },
+                            decoration: InputDecoration(
+                              labelText: l10n.aiApiKeyLabel,
+                              hintText: AiService.instance
+                                  .getProviderMetadata(_selectedProvider)
+                                  .keyHint,
+                              border: const OutlineInputBorder(),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      _obscureKey
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                    ),
+                                    onPressed: () {
+                                      setState(
+                                          () => _obscureKey = !_obscureKey);
+                                    },
+                                  ),
+                                  if (_hasKey)
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: _deleteApiKey,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: FilledButton.icon(
+                                  onPressed: _saveApiKey,
+                                  icon: const Icon(Icons.save_outlined),
+                                  label: Text(l10n.aiSaveKey),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: (_hasKey && !_isTesting)
+                                      ? _testConnection
+                                      : null,
+                                  icon: _isTesting
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.wifi_tethering),
+                                  label: Text(l10n.aiTestConnection),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
 
-                 const SizedBox(height: DesignConstants.spacingXL),
+                const SizedBox(height: DesignConstants.spacingXL),
 
                 // --- Privacy Disclosure ---
                 _buildSectionTitle(context, l10n.aiPrivacySection),

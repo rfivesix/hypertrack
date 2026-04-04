@@ -37,6 +37,7 @@ This README is intentionally implementation-focused and reflects the **current w
   - BYOK (bring your own API key) only
   - user-controlled provider + model setup
   - providers: OpenAI, Gemini, Anthropic/Claude, Mistral, xAI/Grok
+  - test status in current working copy: OpenAI + Gemini tested; Anthropic, Mistral, and xAI not yet end-to-end verified in this environment
   - provider-native login/billing is intentionally not implemented
 - Aggregate nutrition export to Apple Health and Google Health Connect
 

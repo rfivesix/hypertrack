@@ -183,7 +183,8 @@ class DiaryScreenState extends State<DiaryScreen> {
             (foodItem.protein / 100 * entry.quantityInGrams).round();
         summary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
         summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
-        summary.sugar += (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
+        summary.sugar +=
+            (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
 
         final trackedItem = TrackedFoodItem(entry: entry, item: foodItem);
         groupedEntries[entry.mealType]?.add(trackedItem);
