@@ -30,7 +30,7 @@ class LocalNotificationService {
       macOS: darwinSettings,
     );
 
-    await _plugin.initialize(settings);
+    await _plugin.initialize(settings: settings);
     await _requestPermissions();
     tz.initializeTimeZones();
     _isInitialized = true;
@@ -99,25 +99,21 @@ class LocalNotificationService {
 
     try {
       await _plugin.zonedSchedule(
-        restTimerNotificationId,
-        texts.title,
-        texts.body,
-        when,
-        _restNotificationDetails(),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        id: restTimerNotificationId,
+        title: texts.title,
+        body: texts.body,
+        scheduledDate: when,
+        notificationDetails: _restNotificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     } catch (_) {
       // Fallback for devices that do not allow exact alarms.
       await _plugin.zonedSchedule(
-        restTimerNotificationId,
-        texts.title,
-        texts.body,
-        when,
-        _restNotificationDetails(),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        id: restTimerNotificationId,
+        title: texts.title,
+        body: texts.body,
+        scheduledDate: when,
+        notificationDetails: _restNotificationDetails(),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     }
@@ -128,15 +124,15 @@ class LocalNotificationService {
     final texts = _localizedRestTexts();
 
     await _plugin.show(
-      restTimerNotificationId,
-      texts.title,
-      texts.body,
-      _restNotificationDetails(),
+      id: restTimerNotificationId,
+      title: texts.title,
+      body: texts.body,
+      notificationDetails: _restNotificationDetails(),
     );
   }
 
   Future<void> cancelRestTimerNotification() async {
     if (!_isInitialized) return;
-    await _plugin.cancel(restTimerNotificationId);
+    await _plugin.cancel(id: restTimerNotificationId);
   }
 }

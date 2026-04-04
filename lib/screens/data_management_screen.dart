@@ -78,7 +78,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   void _performFullImport() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
@@ -641,7 +641,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
 
     // Non-Android fallback: directory path picker.
-    final path = await FilePicker.platform.getDirectoryPath();
+    final path = await FilePicker.getDirectoryPath();
     if (path == null) return;
     await prefs.setString('auto_backup_dir', path);
     await prefs.remove('auto_backup_tree_uri');

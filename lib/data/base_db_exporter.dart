@@ -16,8 +16,11 @@ class BaseDbExporter {
       mimeType: lookupMimeType(path) ?? 'application/octet-stream',
       name: basename(path),
     );
-    await Share.shareXFiles([
-      file,
-    ], subject: subject ?? 'hypertrack_base_foods.db');
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [file],
+        subject: subject ?? 'hypertrack_base_foods.db',
+      ),
+    );
   }
 }

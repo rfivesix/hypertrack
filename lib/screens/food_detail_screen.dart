@@ -182,9 +182,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     try {
       final path = await _getBaseDbPath();
       final file = XFile(path, name: p.basename(path));
-      await Share.shareXFiles([
-        file,
-      ], subject: 'Export: hypertrack_base_foods.db');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [file],
+          subject: 'Export: hypertrack_base_foods.db',
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

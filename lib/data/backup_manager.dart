@@ -2,6 +2,8 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
@@ -37,6 +39,22 @@ class BackupManager {
   final _workoutDb = WorkoutDatabaseHelper.instance;
 
   static const int currentSchemaVersion = 3;
+
+  ui.Rect _sharePositionOrigin() {
+    final views = ui.PlatformDispatcher.instance.views;
+    if (views.isEmpty) {
+      return const ui.Rect.fromLTWH(0, 0, 1, 1);
+    }
+
+    final view = views.first;
+    final logicalSize = view.physicalSize / view.devicePixelRatio;
+    return ui.Rect.fromLTWH(
+      0,
+      0,
+      math.max(1, logicalSize.width),
+      math.max(1, logicalSize.height),
+    );
+  }
 
   @visibleForTesting
   static Future<Directory> resolveWritableBackupDirectory({
@@ -281,10 +299,15 @@ class BackupManager {
     );
     await tempFile.writeAsString(content);
 
-    // Use the modern share_plus API (`shareXFiles`) for file sharing.
-    final result = await Share.shareXFiles([
-      XFile(tempFile.path, mimeType: 'application/json'),
-    ], subject: 'Hypertrack Backup $timestamp');
+    final result = await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile(tempFile.path, mimeType: 'application/json'),
+        ],
+        subject: 'Hypertrack Backup $timestamp',
+        sharePositionOrigin: _sharePositionOrigin(),
+      ),
+    );
 
     if (await tempFile.exists()) await tempFile.delete();
     return result.status == ShareResultStatus.success;
@@ -789,15 +812,19 @@ class BackupManager {
     List<List<dynamic>> rows,
     String baseName,
   ) async {
-    final String csvData = const ListToCsvConverter().convert(rows);
+    final String csvData = Csv().encode(rows);
     final tempDir = await getTemporaryDirectory();
     final timestamp = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final tempFile = File('${tempDir.path}/$baseName-$timestamp.csv');
     await tempFile.writeAsString(csvData);
 
-    final result = await Share.shareXFiles([
-      XFile(tempFile.path, mimeType: 'text/csv'),
-    ], subject: baseName);
+    final result = await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(tempFile.path, mimeType: 'text/csv')],
+        subject: baseName,
+        sharePositionOrigin: _sharePositionOrigin(),
+      ),
+    );
 
     await tempFile.delete();
     return result.status == ShareResultStatus.success;
