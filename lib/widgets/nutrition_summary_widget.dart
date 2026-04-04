@@ -270,7 +270,6 @@ class NutritionSummaryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showSugarTile = !isExpandedView && showSugarInOverview;
-    final rightColumnFlex = showSugarTile ? 5 : 4;
 
     return IntrinsicHeight(
       child: Row(
@@ -299,12 +298,24 @@ class NutritionSummaryWidget extends StatelessWidget {
                     color: Colors.blue,
                   ),
                 ),
+                if (showSugarTile) ...[
+                  const SizedBox(height: DesignConstants.spacingS),
+                  Expanded(
+                    child: GlassProgressBar(
+                      label: l10n.sugar,
+                      unit: 'g',
+                      value: nutritionData.sugar,
+                      target: nutritionData.targetSugar.toDouble(),
+                      color: Colors.pink.shade200,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            flex: rightColumnFlex,
+            flex: 4,
             child: Column(
               children: [
                 Expanded(
@@ -336,18 +347,6 @@ class NutritionSummaryWidget extends StatelessWidget {
                     color: Colors.purple.shade300,
                   ),
                 ),
-                if (showSugarTile) ...[
-                  const SizedBox(height: DesignConstants.spacingS),
-                  Expanded(
-                    child: GlassProgressBar(
-                      label: l10n.sugar,
-                      unit: 'g',
-                      value: nutritionData.sugar,
-                      target: nutritionData.targetSugar.toDouble(),
-                      color: Colors.pink.shade200,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
