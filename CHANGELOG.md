@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6] - 2026-04-04
+
+This release focuses on a small set of quality-of-life improvements across AI meal capture, measurements, workout logging, iOS navigation behavior, and rest timer alerts.
+
+### Improved
+
+- **AI meal capture UI**
+  - Removed the dedicated in-app microphone button from the AI meal recognition screen
+  - Moved camera and gallery actions directly into the main text input area for a cleaner and more focused layout
+  - Preserved the existing prompt + image-based analysis flow
+
+- **Measurements screen defaults**
+  - The measurements chart now defaults to **weight** when weight data is available
+  - Existing fallback behavior remains unchanged when weight is not present
+
+- **Workout logging inputs**
+  - Reps, weight, and related workout input fields are no longer prefilled with `0`, `0kg`, or similar zero-value defaults when unset
+  - Empty fields now remain truly empty until the user enters data, while existing hint/subtext behavior is preserved
+
+- **iOS navigation consistency**
+  - Improved swipe-back behavior on iOS for settings-related navigation paths
+  - Preserved explicit settings result propagation for cases where values actually changed
+
+- **Pause timer completion alerts**
+  - Foreground timer completion continues to trigger an audible/vibration alert
+  - Background timer completion now more reliably triggers a notification instead of silently finishing
+
+### Fixed
+
+- Fixed AI meal capture layout/actions so media input controls are placed where users expect them
+- Fixed measurement chart default selection logic
+- Fixed workout field initialization so unset values are not rendered as actual entered values
+- Fixed a settings/navigation path that interfered with native iOS back-swipe behavior
+- Fixed the Android/background timer completion path so users are still alerted when the app is not in the foreground
 ## [0.7.5] - 2026-04-04
 ### added
 - [#200](https://github.com/rfivesix/hypertrack/issues/200) added a consistend app color. Changed the iOS App icon (The white mode icon got the same color as the dark mode icon) for consistency
