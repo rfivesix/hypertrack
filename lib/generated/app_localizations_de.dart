@@ -2479,7 +2479,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sleepImportNowSubtitle =>
-      'Importiert alle verfuegbaren Schlafdaten (alle Zeiten)';
+      'Importiert alle verfügbaren Schlafdaten (alle Zeiten)';
 
   @override
   String get sleepRawImportsTitle => 'Rohimporte anzeigen';
