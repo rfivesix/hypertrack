@@ -111,12 +111,12 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   Future<void> _showSpeechUnavailableFeedback() async {
     final hasPermission = await _speech.hasPermission;
-    final message = Platform.isAndroid
-        ? (hasPermission
+    final message = hasPermission
+        ? (Platform.isAndroid
             ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
-            : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den Android-Einstellungen erlauben.')
-        : (hasPermission
-            ? 'Spracherkennung ist auf diesem iOS-Gerät aktuell nicht verfügbar.'
+            : 'Spracherkennung ist auf diesem iOS-Gerät aktuell nicht verfügbar.')
+        : (Platform.isAndroid
+            ? 'Mikrofonzugriff verweigert. Bitte Mikrofon in den Android-Einstellungen erlauben.'
             : 'Mikrofonzugriff verweigert. Bitte Mikrofon in den iOS-Einstellungen erlauben.');
     _showSpeechSnackBar(message);
   }
@@ -214,7 +214,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
         if (!started) {
           if (mounted) setState(() => _isListening = false);
           _showSpeechSnackBar(
-            'Sprachaufnahme konnte nicht gestartet werden. Bitte versuche es erneut.',
+            'Sprachaufnahme konnte nicht gestartet werden. Bitte Mikrofonberechtigung prüfen und erneut versuchen.',
           );
           return;
         }
@@ -224,7 +224,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
         debugPrint('speech_to_text listen failed: $e');
         if (mounted) setState(() => _isListening = false);
         _showSpeechSnackBar(
-          'Sprachaufnahme konnte nicht gestartet werden. Bitte versuche es erneut.',
+          'Sprachaufnahme konnte nicht gestartet werden. Bitte Mikrofonberechtigung prüfen und erneut versuchen.',
         );
       }
     }
