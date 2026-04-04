@@ -24,6 +24,7 @@ import '../health_export/adapters/apple_health/apple_health_export_adapter.dart'
 import '../health_export/adapters/health_connect/health_connect_export_adapter.dart';
 import '../health_export/export_service.dart';
 import '../health_export/models/export_models.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -45,6 +46,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static const String _showSugarInDiaryOverviewPrefKey =
+      'showSugarInDiaryOverview';
   String _appVersion = '';
   final StepsSyncService _stepsSyncService = StepsSyncService();
   late final SleepSettingsService _sleepSyncService;
@@ -66,6 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _healthConnectExportEnabled = false;
   bool _isAppleExporting = false;
   bool _isHealthConnectExporting = false;
+  bool _showSugarInDiaryOverview = false;
 
   /// Flag for parent screens to know steps settings changed and data should be refreshed.
   bool hasStepsSettingsChanged = false;
@@ -85,6 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadStepsSettings();
     _loadSleepSettings();
     _loadHealthExportSettings();
+    _loadDiaryOverviewSettings();
   }
 
   Future<void> _loadAppVersion() async {
@@ -128,6 +133,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _appleExportEnabled = appleEnabled;
       _healthConnectExportEnabled = healthConnectEnabled;
       _exportStatuses = statuses;
+    });
+  }
+
+  Future<void> _loadDiaryOverviewSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _showSugarInDiaryOverview =
+          prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
     });
   }
 
@@ -591,6 +605,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, isGerman ? 'Tagebuch' : 'Diary'),
+          SummaryCard(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.monitor_heart_outlined),
+              title: Text(
+                isGerman
+                    ? 'Zucker in Tagebuch-Übersicht anzeigen'
+                    : 'Show sugar in Diary overview',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                isGerman
+                    ? 'Blendet Zucker in der oberen Tagesübersicht ein'
+                    : 'Shows sugar in the top daily overview section',
+              ),
+              value: _showSugarInDiaryOverview,
+              onChanged: (value) async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool(_showSugarInDiaryOverviewPrefKey, value);
+                hasStepsSettingsChanged = true;
+                if (!mounted) return;
+                setState(() => _showSugarInDiaryOverview = value);
+              },
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),

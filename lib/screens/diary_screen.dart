@@ -56,6 +56,8 @@ class DiaryScreen extends StatefulWidget {
 class DiaryScreenState extends State<DiaryScreen> {
   static const Duration _stepsSyncInterval = Duration(hours: 6);
   static const Duration _sleepSyncInterval = Duration(hours: 6);
+  static const String _showSugarInDiaryOverviewPrefKey =
+      'showSugarInDiaryOverview';
   bool _isLoading = true;
   final ValueNotifier<DateTime> selectedDateNotifier = ValueNotifier(
     DateTime.now(),
@@ -77,6 +79,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   SleepDayOverviewData? _sleepOverview;
   bool _isSleepWidgetLoading = false;
   bool _sleepTrackingEnabled = false;
+  bool _showSugarInOverview = false;
 
   // Workout summary state used by the daily overview card.
   Map<String, dynamic>? _workoutSummary;
@@ -129,6 +132,9 @@ class DiaryScreenState extends State<DiaryScreen> {
     final targetCarbs = goals?.targetCarbs ?? 250;
     final targetFat = goals?.targetFat ?? 80;
     final targetWater = goals?.targetWater ?? 3000;
+    final targetSugar = prefs.getInt('targetSugar') ?? 50;
+    final showSugarInOverview =
+        prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
 
     // Caffeine and related targets still come from prefs (not in AppSettings yet).
     final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
@@ -147,6 +153,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       targetCarbs: targetCarbs,
       targetFat: targetFat,
       targetWater: targetWater,
+      targetSugar: targetSugar,
       targetCaffeine: targetCaffeine,
     );
     summary.water = waterIntake;
@@ -176,6 +183,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             (foodItem.protein / 100 * entry.quantityInGrams).round();
         summary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
         summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
+        summary.sugar += (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
 
         final trackedItem = TrackedFoodItem(entry: entry, item: foodItem);
         groupedEntries[entry.mealType]?.add(trackedItem);
@@ -285,6 +293,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         _workoutSummary = workoutSummary;
         _stepsTrackingEnabled = stepsEnabled;
         _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
+        _showSugarInOverview = showSugarInOverview;
         _isLoading = false;
       });
     }
@@ -835,6 +844,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                     nutritionData: _dailyNutrition!,
                     l10n: l10n,
                     isExpandedView: false,
+                    showSugarInOverview: _showSugarInOverview,
                   ),
 
                 const SizedBox(height: DesignConstants.spacingXS),

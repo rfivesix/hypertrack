@@ -254,6 +254,7 @@ class NutritionSummaryWidget extends StatelessWidget {
 
   /// Whether to show the expanded set of macros (e.g., sugar, fiber, salt, caffeine).
   final bool isExpandedView;
+  final bool showSugarInOverview;
 
   /// Localization instance for labels.
   final AppLocalizations l10n;
@@ -262,11 +263,14 @@ class NutritionSummaryWidget extends StatelessWidget {
     super.key,
     required this.nutritionData,
     this.isExpandedView = false,
+    this.showSugarInOverview = false,
     required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
+    final showSugarTile = !isExpandedView && showSugarInOverview;
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -294,6 +298,18 @@ class NutritionSummaryWidget extends StatelessWidget {
                     color: Colors.blue,
                   ),
                 ),
+                if (showSugarTile) ...[
+                  const SizedBox(height: DesignConstants.spacingS),
+                  Expanded(
+                    child: GlassProgressBar(
+                      label: l10n.sugar,
+                      unit: 'g',
+                      value: nutritionData.sugar,
+                      target: nutritionData.targetSugar.toDouble(),
+                      color: Colors.pink.shade200,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
