@@ -44,6 +44,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   bool _isListening = false;
   String _initialTextBeforeSpeech = '';
   String? _speechLocaleId;
+  static const String _speechStartFailureMessage =
+      'Sprachaufnahme konnte nicht gestartet werden. Bitte Mikrofonberechtigung prüfen und erneut versuchen.';
 
   // Analysis state
   bool _isAnalyzing = false;
@@ -69,8 +71,14 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       },
       onStatus: (status) {
         debugPrint('speech_to_text status: $status');
-        if (status == 'done' || status == 'notListening') {
-          if (mounted) setState(() => _isListening = false);
+        if (!mounted) return;
+        if (status == stt.SpeechToText.listeningStatus) {
+          setState(() => _isListening = true);
+          return;
+        }
+        if (status == stt.SpeechToText.doneStatus ||
+            status == stt.SpeechToText.notListeningStatus) {
+          setState(() => _isListening = false);
         }
       },
       options: Platform.isAndroid
@@ -96,6 +104,29 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     if (_speechAvailable) return true;
     await _initSpeech();
     return _speechAvailable;
+  }
+
+  void _showSpeechSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  Future<void> _showSpeechUnavailableFeedback() async {
+    final hasPermission = await _speech.hasPermission;
+    final message = hasPermission
+        ? (Platform.isAndroid
+            ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
+            : 'Spracherkennung ist auf diesem iOS-Gerät aktuell nicht verfügbar.')
+        : (Platform.isAndroid
+            ? 'Mikrofonzugriff verweigert. Bitte Mikrofon in den Android-Einstellungen erlauben.'
+            : 'Mikrofonzugriff verweigert. Bitte Mikrofon in den iOS-Einstellungen erlauben.');
+    _showSpeechSnackBar(message);
   }
 
   @override
@@ -152,56 +183,51 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     } else {
       final available = await _ensureSpeechAvailable();
       if (!available) {
-        final hasPermission = await _speech.hasPermission;
-        final message = Platform.isAndroid
-            ? (hasPermission
-                ? 'Spracherkennung auf diesem Android-Gerät aktuell nicht verfügbar.'
-                : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den Android-Einstellungen erlauben.')
-            : 'Spracherkennung nicht verfügbar. Bitte Mikrofon in den iOS-Einstellungen erlauben.';
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        await _showSpeechUnavailableFeedback();
         return;
       }
 
       _initialTextBeforeSpeech = _textController.text;
-
-      _speech.listen(
-        onResult: (result) {
-          debugPrint(
-            'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})',
-          );
-          if (mounted) {
-            setState(() {
-              final separator = _initialTextBeforeSpeech.endsWith(' ') ||
-                      _initialTextBeforeSpeech.isEmpty
-                  ? ''
-                  : ' ';
-              _textController.text =
-                  '$_initialTextBeforeSpeech$separator${result.recognizedWords}'
-                      .trimLeft();
-              _textController.selection = TextSelection.fromPosition(
-                TextPosition(offset: _textController.text.length),
-              );
-            });
-          }
-        },
-        listenFor: const Duration(seconds: 60),
-        pauseFor: const Duration(seconds: 10),
-        localeId: _speechLocaleId,
-        listenOptions: stt.SpeechListenOptions(
-          partialResults: true,
-          cancelOnError: false,
-          listenMode: stt.ListenMode.dictation,
-        ),
-      );
-      setState(() => _isListening = true);
+      try {
+        await _speech.listen(
+          onResult: (result) {
+            debugPrint(
+              'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})',
+            );
+            if (mounted) {
+              setState(() {
+                final separator = _initialTextBeforeSpeech.endsWith(' ') ||
+                        _initialTextBeforeSpeech.isEmpty
+                    ? ''
+                    : ' ';
+                _textController.text =
+                    '$_initialTextBeforeSpeech$separator${result.recognizedWords}'
+                        .trimLeft();
+                _textController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textController.text.length),
+                );
+              });
+            }
+          },
+          listenFor: const Duration(seconds: 60),
+          pauseFor: const Duration(seconds: 10),
+          localeId: _speechLocaleId,
+          listenOptions: stt.SpeechListenOptions(
+            partialResults: true,
+            cancelOnError: false,
+            listenMode: stt.ListenMode.dictation,
+          ),
+        );
+        // `listen` no longer returns a bool in the current speech_to_text API.
+        // Show recording state immediately, then keep it synced via onStatus.
+        if (mounted) {
+          setState(() => _isListening = true);
+        }
+      } catch (e) {
+        debugPrint('speech_to_text listen failed: $e');
+        if (mounted) setState(() => _isListening = false);
+        _showSpeechSnackBar(_speechStartFailureMessage);
+      }
     }
   }
 
