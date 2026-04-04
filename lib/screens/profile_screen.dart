@@ -32,6 +32,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   db.Profile? _userProfile;
   bool _isLoading = true;
 
+  bool _shouldReloadAfterSettings(bool? result) {
+    return result == true || (result == null && Platform.isIOS);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -388,9 +392,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         builder: (context) => const SettingsScreen(),
                       ),
                     );
-                    // Reload after settings return; iOS swipe-back may not
-                    // propagate a bool result and returns null.
-                    if ((result == true || result == null) && mounted) {
+                    // Reload after explicit settings changes, and on iOS swipe
+                    // back where no pop result is propagated.
+                    if (_shouldReloadAfterSettings(result) && mounted) {
                       _loadProfileData();
                     }
                   },

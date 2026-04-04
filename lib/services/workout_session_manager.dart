@@ -637,7 +637,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
             FlutterRingtonePlayer().playNotification();
             Vibration.vibrate(duration: 500);
           } else {
-            LocalNotificationService.instance.cancelRestTimerNotification();
             LocalNotificationService.instance.showRestTimerDoneNotification();
           }
         }

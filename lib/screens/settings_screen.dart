@@ -342,12 +342,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    return PopScope(
-      canPop: true,
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: GlobalAppBar(title: l10n.settingsTitle),
-        body: ListView(
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.settingsTitle,
+        automaticallyImplyLeading: false,
+        leading: BackButton(
+          onPressed: () => Navigator.of(context).pop(hasStepsSettingsChanged),
+        ),
+      ),
+      body: ListView(
           padding: DesignConstants.cardPadding.copyWith(
             top: DesignConstants.cardPadding.top + topPadding,
           ),
@@ -945,7 +949,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
         ),
-      ), // closes PopScope
     );
   }
 
