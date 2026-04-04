@@ -24,21 +24,32 @@ import '../services/health/steps_sync_service.dart';
 import '../services/storage/saf_storage_service.dart';
 import '../util/encryption_util.dart';
 
+typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
+
 /// Manager responsible for application backup, restoration, and data export.
 ///
 /// Supports full JSON backups with optional encryption and CSV exports for
 /// nutrition, workouts, and measurements.
 class BackupManager {
-  // Singleton pattern
   /// Singleton instance of [BackupManager].
-  static final BackupManager instance = BackupManager._init();
-  BackupManager._init();
+  static final BackupManager instance = BackupManager();
 
-  final _userDb = DatabaseHelper.instance;
-  final _productDb = ProductDatabaseHelper.instance;
-  final _workoutDb = WorkoutDatabaseHelper.instance;
+  final DatabaseHelper _userDb;
+  final ProductDatabaseHelper _productDb;
+  final WorkoutDatabaseHelper _workoutDb;
+  final SharedPreferencesLoader _prefsLoader;
 
-  static const int currentSchemaVersion = 3;
+  static const int currentSchemaVersion = 4;
+
+  BackupManager({
+    DatabaseHelper? userDb,
+    ProductDatabaseHelper? productDb,
+    WorkoutDatabaseHelper? workoutDb,
+    SharedPreferencesLoader? prefsLoader,
+  })  : _userDb = userDb ?? DatabaseHelper.instance,
+        _productDb = productDb ?? ProductDatabaseHelper.instance,
+        _workoutDb = workoutDb ?? WorkoutDatabaseHelper.instance,
+        _prefsLoader = prefsLoader ?? SharedPreferences.getInstance;
 
   ui.Rect _sharePositionOrigin() {
     final views = ui.PlatformDispatcher.instance.views;
@@ -131,7 +142,8 @@ class BackupManager {
   /// Helper method that collects all persisted entities and builds backup JSON.
   Future<String> _generateBackupJson() async {
     // 1) Collect data from helper layers.
-    final foodEntries = await _userDb.getAllFoodEntries();
+    final foodEntries = await _userDb.getAllFoodEntriesForBackup();
+    final mealTemplates = await _userDb.getMealTemplatesForBackup();
     final fluidEntries = await _userDb.getAllFluidEntries();
     final favoriteBarcodes = await _userDb.getFavoriteBarcodes();
     final measurementSessions = await _userDb.getMeasurementSessions();
@@ -189,16 +201,27 @@ class BackupManager {
         )
         .toList();
 
-    final suppHistoryRows = await db.select(db.supplementSettingsHistory).get();
+    final suppHistoryRows = await db.select(db.supplementSettingsHistory).join([
+      drift.leftOuterJoin(
+        db.supplements,
+        db.supplements.id.equalsExp(db.supplementSettingsHistory.supplementId),
+      ),
+    ]).get();
     final supplementSettingsHistory = suppHistoryRows
         .map(
           (r) => {
-            'supplementId': r.supplementId,
-            'isTracked': r.isTracked,
-            'dose': r.dose,
-            'dailyGoal': r.dailyGoal,
-            'dailyLimit': r.dailyLimit,
-            'createdAt': r.createdAt.toIso8601String(),
+            'supplementId':
+                r.readTable(db.supplementSettingsHistory).supplementId,
+            'supplementLegacyLocalId':
+                r.readTableOrNull(db.supplements)?.localId,
+            'isTracked': r.readTable(db.supplementSettingsHistory).isTracked,
+            'dose': r.readTable(db.supplementSettingsHistory).dose,
+            'dailyGoal': r.readTable(db.supplementSettingsHistory).dailyGoal,
+            'dailyLimit': r.readTable(db.supplementSettingsHistory).dailyLimit,
+            'createdAt': r
+                .readTable(db.supplementSettingsHistory)
+                .createdAt
+                .toIso8601String(),
           },
         )
         .toList();
@@ -261,7 +284,7 @@ class BackupManager {
         : null;
 
     // 5) Collect shared preferences.
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefsLoader();
     final userPrefs = <String, dynamic>{};
     for (String key in prefs.getKeys()) {
       userPrefs[key] = prefs.get(key);
@@ -271,6 +294,7 @@ class BackupManager {
     final backup = HypertrackBackup(
       schemaVersion: currentSchemaVersion,
       foodEntries: foodEntries,
+      mealTemplates: mealTemplates,
       fluidEntries: fluidEntries,
       favoriteBarcodes: favoriteBarcodes,
       customFoodItems: customFoodItems,
@@ -289,6 +313,11 @@ class BackupManager {
     );
 
     return jsonEncode(backup.toJson());
+  }
+
+  @visibleForTesting
+  Future<Map<String, dynamic>> generateBackupPayloadForTesting() async {
+    return jsonDecode(await _generateBackupJson()) as Map<String, dynamic>;
   }
 
   Future<bool> _writeAndShareFile(String content, String baseName) async {
@@ -354,131 +383,116 @@ class BackupManager {
         payload = (jsonMapRaw as Map).cast<String, dynamic>();
       }
 
-      final backup = HypertrackBackup.fromJson(payload);
+      return await _importBackupPayload(payload);
+    } catch (e) {
+      debugPrint("Backup import failed: $e");
+      return false;
+    }
+  }
 
-      if (backup.schemaVersion > currentSchemaVersion) {
-        debugPrint("Backup version is newer than supported schema.");
-        return false;
+  @visibleForTesting
+  Future<bool> importBackupPayloadForTesting(
+    Map<String, dynamic> payload,
+  ) async {
+    return _importBackupPayload(payload);
+  }
+
+  Future<bool> _importBackupPayload(Map<String, dynamic> payload) async {
+    final backup = HypertrackBackup.fromJson(payload);
+
+    if (backup.schemaVersion > currentSchemaVersion) {
+      debugPrint("Backup version is newer than supported schema.");
+      return false;
+    }
+
+    final prefs = await _prefsLoader();
+    await prefs.clear();
+    await _userDb.clearAllUserData();
+    await _workoutDb.clearAllWorkoutData();
+
+    final db = await _userDb.database;
+    await (db.delete(
+      db.products,
+    )..where((t) => t.source.equals('user')))
+        .go();
+
+    for (final entry in backup.userPreferences.entries) {
+      final key = entry.key;
+      final val = entry.value;
+      if (val is bool) {
+        await prefs.setBool(key, val);
+      } else if (val is int) {
+        await prefs.setInt(key, val);
+      } else if (val is double) {
+        await prefs.setDouble(key, val);
+      } else if (val is String) {
+        await prefs.setString(key, val);
+      } else if (val is List && val.every((e) => e is String)) {
+        await prefs.setStringList(key, val.cast<String>());
       }
+    }
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      await _userDb.clearAllUserData();
-      await _workoutDb.clearAllWorkoutData();
+    await _userDb.importUserData(
+      foodEntries: backup.foodEntries,
+      fluidEntries: backup.fluidEntries,
+      favoriteBarcodes: backup.favoriteBarcodes,
+      measurementSessions: backup.measurementSessions,
+      supplements: backup.supplements,
+      supplementLogs: backup.supplementLogs,
+    );
 
-      final db = await _userDb.database;
-      await (db.delete(
-        db.products,
-      )..where((t) => t.source.equals('user')))
-          .go();
-
-      for (final entry in backup.userPreferences.entries) {
-        final key = entry.key;
-        final val = entry.value;
-        if (val is bool) {
-          await prefs.setBool(key, val);
-        } else if (val is int) {
-          await prefs.setInt(key, val);
-        } else if (val is double) {
-          await prefs.setDouble(key, val);
-        } else if (val is String) {
-          await prefs.setString(key, val);
-        } else if (val is List) {
-          await prefs.setStringList(key, val.cast<String>());
-        }
-      }
-
-      await _userDb.importUserData(
-        foodEntries: backup.foodEntries,
-        fluidEntries: backup.fluidEntries,
-        favoriteBarcodes: backup.favoriteBarcodes,
-        measurementSessions: backup.measurementSessions,
-        supplements: backup.supplements,
-        supplementLogs: backup.supplementLogs,
-      );
-
-      await db.batch((batch) {
-        for (final item in backup.customFoodItems) {
-          batch.insert(
-            db.products,
-            ProductsCompanion(
-              barcode: drift.Value(item.barcode),
-              name: drift.Value(item.name),
-              brand: drift.Value(item.brand),
-              calories: drift.Value(item.calories),
-              protein: drift.Value(item.protein),
-              carbs: drift.Value(item.carbs),
-              fat: drift.Value(item.fat),
-              sugar: drift.Value(item.sugar),
-              fiber: drift.Value(item.fiber),
-              salt: drift.Value(item.salt),
-              source: const drift.Value('user'),
-              // Guard against nullable legacy values in older backups.
-              isLiquid: drift.Value(item.isLiquid ?? false),
-              category: drift.Value(item.category),
-              id: drift.Value(
-                item.barcode.startsWith('user_')
-                    ? item.barcode
-                    : 'user_${item.barcode}',
-              ),
+    await db.batch((batch) {
+      for (final item in backup.customFoodItems) {
+        batch.insert(
+          db.products,
+          ProductsCompanion(
+            barcode: drift.Value(item.barcode),
+            name: drift.Value(item.name),
+            brand: drift.Value(item.brand),
+            calories: drift.Value(item.calories),
+            protein: drift.Value(item.protein),
+            carbs: drift.Value(item.carbs),
+            fat: drift.Value(item.fat),
+            sugar: drift.Value(item.sugar),
+            fiber: drift.Value(item.fiber),
+            salt: drift.Value(item.salt),
+            source: const drift.Value('user'),
+            // Guard against nullable legacy values in older backups.
+            isLiquid: drift.Value(item.isLiquid ?? false),
+            category: drift.Value(item.category),
+            id: drift.Value(
+              item.barcode.startsWith('user_')
+                  ? item.barcode
+                  : 'user_${item.barcode}',
             ),
-            mode: drift.InsertMode.insertOrReplace,
-          );
-        }
-      });
-
-      await _workoutDb.importWorkoutData(
-        routines: backup.routines,
-        workoutLogs: backup.workoutLogs,
-      );
-
-      await _workoutDb.importCustomExercises(backup.customExercises);
-
-      // Import DailyGoalsHistory
-      if (backup.dailyGoalsHistory.isNotEmpty) {
-        for (final row in backup.dailyGoalsHistory) {
-          final inserted = await db.into(db.dailyGoalsHistory).insertReturning(
-                DailyGoalsHistoryCompanion(
-                  targetCalories: drift.Value(row['targetCalories'] as int),
-                  targetProtein: drift.Value(row['targetProtein'] as int),
-                  targetCarbs: drift.Value(row['targetCarbs'] as int),
-                  targetFat: drift.Value(row['targetFat'] as int),
-                  targetWater: drift.Value(row['targetWater'] as int),
-                  createdAt: drift.Value(
-                    DateTime.parse(row['createdAt'] as String),
-                  ),
-                ),
-                mode: drift.InsertMode.insertOrReplace,
-              );
-          await db.customStatement(
-            'UPDATE daily_goals_history SET target_steps = ? WHERE local_id = ?',
-            [
-              (row['targetSteps'] as int?) ?? StepsSyncService.defaultStepsGoal,
-              inserted.localId,
-            ],
-          );
-        }
+          ),
+          mode: drift.InsertMode.insertOrReplace,
+        );
       }
+    });
 
-      // Import SupplementSettingsHistory
-      if (backup.supplementSettingsHistory.isNotEmpty) {
-        await db.batch((batch) {
-          for (final row in backup.supplementSettingsHistory) {
-            batch.insert(
-              db.supplementSettingsHistory,
-              SupplementSettingsHistoryCompanion(
-                supplementId: drift.Value(row['supplementId'] as String),
-                isTracked: drift.Value(row['isTracked'] as bool),
-                dose: drift.Value((row['dose'] as num).toDouble()),
-                dailyGoal: drift.Value(
-                  row['dailyGoal'] != null
-                      ? (row['dailyGoal'] as num).toDouble()
-                      : null,
-                ),
-                dailyLimit: drift.Value(
-                  row['dailyLimit'] != null
-                      ? (row['dailyLimit'] as num).toDouble()
-                      : null,
+    await _userDb.importMealTemplates(backup.mealTemplates);
+
+    await _workoutDb.importWorkoutData(
+      routines: backup.routines,
+      workoutLogs: backup.workoutLogs,
+    );
+
+    await _workoutDb.importCustomExercises(backup.customExercises);
+
+    // Import DailyGoalsHistory
+    if (backup.dailyGoalsHistory.isNotEmpty) {
+      for (final row in backup.dailyGoalsHistory) {
+        await db.into(db.dailyGoalsHistory).insert(
+              DailyGoalsHistoryCompanion(
+                targetCalories: drift.Value(row['targetCalories'] as int),
+                targetProtein: drift.Value(row['targetProtein'] as int),
+                targetCarbs: drift.Value(row['targetCarbs'] as int),
+                targetFat: drift.Value(row['targetFat'] as int),
+                targetWater: drift.Value(row['targetWater'] as int),
+                targetSteps: drift.Value(
+                  row['targetSteps'] as int? ??
+                      StepsSyncService.defaultStepsGoal,
                 ),
                 createdAt: drift.Value(
                   DateTime.parse(row['createdAt'] as String),
@@ -486,16 +500,58 @@ class BackupManager {
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
-          }
-        });
       }
+    }
 
-      // Import Profile
-      if (backup.profile != null) {
-        final p = backup.profile!;
+    // Import SupplementSettingsHistory
+    if (backup.supplementSettingsHistory.isNotEmpty) {
+      final validSupplementIds =
+          (await db.select(db.supplements).get()).map((s) => s.id).toSet();
+      await db.batch((batch) {
+        for (final row in backup.supplementSettingsHistory) {
+          final mappedId = row['supplementLegacyLocalId'] != null
+              ? row['supplementLegacyLocalId'].toString()
+              : (row['supplementId'] as String?);
+          if (mappedId == null || !validSupplementIds.contains(mappedId)) {
+            continue;
+          }
+          batch.insert(
+            db.supplementSettingsHistory,
+            SupplementSettingsHistoryCompanion(
+              supplementId: drift.Value(mappedId),
+              isTracked: drift.Value(row['isTracked'] as bool),
+              dose: drift.Value((row['dose'] as num).toDouble()),
+              dailyGoal: drift.Value(
+                row['dailyGoal'] != null
+                    ? (row['dailyGoal'] as num).toDouble()
+                    : null,
+              ),
+              dailyLimit: drift.Value(
+                row['dailyLimit'] != null
+                    ? (row['dailyLimit'] as num).toDouble()
+                    : null,
+              ),
+              createdAt: drift.Value(
+                DateTime.parse(row['createdAt'] as String),
+              ),
+            ),
+            mode: drift.InsertMode.insertOrReplace,
+          );
+        }
+      });
+    }
+
+    String? restoredUserId;
+
+    // Import Profile
+    if (backup.profile != null) {
+      final p = backup.profile!;
+      final profileId = p['id'] as String?;
+      if (profileId != null && profileId.isNotEmpty) {
+        restoredUserId = profileId;
         await db.into(db.profiles).insert(
               ProfilesCompanion(
-                id: drift.Value(p['id'] as String),
+                id: drift.Value(profileId),
                 username: drift.Value(p['username'] as String?),
                 isCoach: drift.Value(p['isCoach'] as bool? ?? false),
                 visibility: drift.Value(
@@ -508,18 +564,42 @@ class BackupManager {
                 ),
                 height: drift.Value(p['height'] as int?),
                 gender: drift.Value(p['gender'] as String?),
-                profileImagePath: drift.Value(p['profileImagePath'] as String?),
+                profileImagePath: drift.Value(
+                  p['profileImagePath'] as String?,
+                ),
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
       }
+    }
 
-      // Import AppSettings
-      if (backup.appSettings != null && backup.profile != null) {
-        final s = backup.appSettings!;
+    // Import AppSettings
+    if (backup.appSettings != null) {
+      final s = backup.appSettings!;
+      restoredUserId ??= s['userId'] as String?;
+
+      if (restoredUserId != null) {
+        final userId = restoredUserId;
+        final existingProfile = await (db.select(
+          db.profiles,
+        )..where((t) => t.id.equals(userId)))
+            .getSingleOrNull();
+
+        // Ensure FK target exists even when profile payload is absent.
+        if (existingProfile == null) {
+          await db.into(db.profiles).insert(
+                ProfilesCompanion(
+                  id: drift.Value(userId),
+                  visibility: const drift.Value('private'),
+                  isCoach: const drift.Value(false),
+                ),
+                mode: drift.InsertMode.insertOrReplace,
+              );
+        }
+
         await db.into(db.appSettings).insert(
               AppSettingsCompanion(
-                userId: drift.Value(backup.profile!['id'] as String),
+                userId: drift.Value(userId),
                 themeMode: drift.Value(s['themeMode'] as String? ?? 'system'),
                 unitSystem: drift.Value(s['unitSystem'] as String? ?? 'metric'),
                 targetCalories: drift.Value(
@@ -529,28 +609,21 @@ class BackupManager {
                 targetCarbs: drift.Value(s['targetCarbs'] as int? ?? 250),
                 targetFat: drift.Value(s['targetFat'] as int? ?? 80),
                 targetWater: drift.Value(s['targetWater'] as int? ?? 3000),
+                targetSteps: drift.Value(
+                  s['targetSteps'] as int? ?? StepsSyncService.defaultStepsGoal,
+                ),
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
-        await db.customStatement(
-          'UPDATE app_settings SET target_steps = ? WHERE user_id = ?',
-          [
-            s['targetSteps'] as int? ?? StepsSyncService.defaultStepsGoal,
-            backup.profile!['id'] as String,
-          ],
-        );
       }
-
-      if (backup.healthStepSegments.isNotEmpty) {
-        await _userDb.upsertHealthStepSegments(backup.healthStepSegments);
-      }
-
-      debugPrint("Backup import succeeded.");
-      return true;
-    } catch (e) {
-      debugPrint("Backup import failed: $e");
-      return false;
     }
+
+    if (backup.healthStepSegments.isNotEmpty) {
+      await _userDb.upsertHealthStepSegments(backup.healthStepSegments);
+    }
+
+    debugPrint("Backup import succeeded.");
+    return true;
   }
 
   // ---------------------------------------------------------------------------
@@ -569,7 +642,7 @@ class BackupManager {
     bool force = false,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _prefsLoader();
       final lastMs = prefs.getInt('auto_backup_last_ms') ?? 0;
       final nowMs = DateTime.now().millisecondsSinceEpoch;
 
@@ -676,7 +749,7 @@ class BackupManager {
     } catch (e, st) {
       debugPrint("Auto-backup failed: $e");
       debugPrint('$st');
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _prefsLoader();
       await prefs.setString('auto_backup_last_error', e.toString());
       return false;
     }

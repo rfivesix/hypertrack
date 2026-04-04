@@ -20,10 +20,14 @@ class WorkoutDatabaseHelper {
   /// Singleton instance of [WorkoutDatabaseHelper].
   static final WorkoutDatabaseHelper instance = WorkoutDatabaseHelper._init();
 
-  WorkoutDatabaseHelper._init();
+  final DatabaseHelper _databaseHelper;
+
+  WorkoutDatabaseHelper._init() : _databaseHelper = DatabaseHelper.instance;
+  WorkoutDatabaseHelper.forTesting({required DatabaseHelper databaseHelper})
+      : _databaseHelper = databaseHelper;
 
   // Access the central Drift instance from DatabaseHelper.
-  Future<db.AppDatabase> get database async => DatabaseHelper.instance.database;
+  Future<db.AppDatabase> get database async => _databaseHelper.database;
 
   // ===========================================================================
   // HELPER METHODS (Mapping & IDs)
@@ -883,7 +887,10 @@ class WorkoutDatabaseHelper {
             .insertReturning(db.RoutinesCompanion(name: drift.Value(r.name)));
         final newRoutineId = rRow.id; // UUID
 
-        for (final re in r.exercises) {
+        for (int orderIndex = 0;
+            orderIndex < r.exercises.length;
+            orderIndex++) {
+          final re = r.exercises[orderIndex];
           // Exercise Mapping checken (Name -> UUID)
           // Wir suchen die Übung in der DB. Falls custom und im Backup vorhanden, sollte sie bereits importiert sein.
           final exModel = re.exercise;
@@ -904,9 +911,7 @@ class WorkoutDatabaseHelper {
                 db.RoutineExercisesCompanion(
                   routineId: drift.Value(newRoutineId),
                   exerciseId: drift.Value(exRow.id),
-                  orderIndex: const drift.Value(
-                    0,
-                  ), // Einfachheitshalber, korrekter Index wäre besser
+                  orderIndex: drift.Value(orderIndex),
                   pauseSeconds: drift.Value(re.pauseSeconds),
                 ),
               );
@@ -919,6 +924,7 @@ class WorkoutDatabaseHelper {
                     setType: drift.Value(t.setType),
                     targetReps: drift.Value(t.targetReps),
                     targetWeight: drift.Value(t.targetWeight),
+                    targetRir: drift.Value(t.targetRir),
                   ),
                 );
           }
@@ -956,8 +962,14 @@ class WorkoutDatabaseHelper {
                   weight: drift.Value(s.weightKg),
                   reps: drift.Value(s.reps),
                   setType: drift.Value(s.setType),
-                  isCompleted: const drift.Value(true),
+                  restTimeSeconds: drift.Value(s.restTimeSeconds),
+                  isCompleted: drift.Value(s.isCompleted ?? true),
                   logOrder: drift.Value(s.log_order ?? 0),
+                  notes: drift.Value(s.notes),
+                  distance: drift.Value(s.distanceKm),
+                  durationSeconds: drift.Value(s.durationSeconds),
+                  rpe: drift.Value(s.rpe),
+                  rir: drift.Value(s.rir),
                 ),
               );
         }

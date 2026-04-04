@@ -14,10 +14,14 @@ class ProductDatabaseHelper {
   /// Singleton instance of [ProductDatabaseHelper].
   static final ProductDatabaseHelper instance = ProductDatabaseHelper._init();
 
-  ProductDatabaseHelper._init();
+  final DatabaseHelper _databaseHelper;
+
+  ProductDatabaseHelper._init() : _databaseHelper = DatabaseHelper.instance;
+  ProductDatabaseHelper.forTesting({required DatabaseHelper databaseHelper})
+      : _databaseHelper = databaseHelper;
 
   // Zugriff auf die zentrale Drift-Instanz
-  Future<db.AppDatabase> get database async => DatabaseHelper.instance.database;
+  Future<db.AppDatabase> get database async => _databaseHelper.database;
 
   // --- MAPPING HELPER ---
 
