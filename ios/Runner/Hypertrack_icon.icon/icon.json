@@ -16,7 +16,20 @@
           "fill-specializations" : [
             {
               "value" : {
-                "solid" : "extended-srgb:0.20392,0.78039,0.34902,1.00000"
+                "linear-gradient" : [
+                  "display-p3:0.71099,0.83191,0.04606,1.00000",
+                  "display-p3:0.79711,0.90908,0.18144,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 1
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.3
+                  }
+                }
               }
             },
             {
