@@ -44,6 +44,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   bool _isListening = false;
   String _initialTextBeforeSpeech = '';
   String? _speechLocaleId;
+  static const String _speechStartFailedMessage =
+      'Sprachaufnahme konnte nicht gestartet werden. Bitte Mikrofonberechtigung prüfen und erneut versuchen.';
 
   // Analysis state
   bool _isAnalyzing = false;
@@ -213,9 +215,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
         if (!started) {
           if (mounted) setState(() => _isListening = false);
-          _showSpeechSnackBar(
-            'Sprachaufnahme konnte nicht gestartet werden. Bitte Mikrofonberechtigung prüfen und erneut versuchen.',
-          );
+          _showSpeechSnackBar(_speechStartFailedMessage);
           return;
         }
 
@@ -223,9 +223,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       } catch (e) {
         debugPrint('speech_to_text listen failed: $e');
         if (mounted) setState(() => _isListening = false);
-        _showSpeechSnackBar(
-          'Sprachaufnahme konnte nicht gestartet werden. Bitte Mikrofonberechtigung prüfen und erneut versuchen.',
-        );
+        _showSpeechSnackBar(_speechStartFailedMessage);
       }
     }
   }
