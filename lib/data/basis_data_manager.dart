@@ -28,6 +28,7 @@ class BasisDataManager {
   static const String _keyVersionFood = 'installed_food_version';
   static const String _keyVersionOff = 'installed_off_version';
   static const String _keyVersionCats = 'installed_cats_version';
+  static const String _fallbackInstalledVersion = '000000000001';
 
   int _parseInt(dynamic value) => (value as num?)?.toInt() ?? 0;
   double _parseDouble(dynamic value) => (value as num?)?.toDouble() ?? 0.0;
@@ -68,6 +69,7 @@ class BasisDataManager {
         mapFunction: mapper,
         taskLabel: label,
         onProgress: onProgress,
+        forceImport: force,
       );
     }
 
@@ -118,6 +120,7 @@ class BasisDataManager {
     required Function(Map<String, dynamic>) mapFunction,
     required String taskLabel,
     ProgressCallback? onProgress,
+    required bool forceImport,
   }) async {
     File? tempFile;
     sqflite.Database? assetDb;
@@ -167,15 +170,24 @@ class BasisDataManager {
           whereArgs: ['version'],
         );
         if (metaRows.isNotEmpty) {
-          assetVersion = metaRows.first['value'] as String;
+          assetVersion = _normalizeVersion(metaRows.first['value']);
         }
       } catch (_) {}
 
       final String installedVersion = prefs.getString(prefKey) ?? '0';
+      final mainDb = await DatabaseHelper.instance.database;
+      final hasExistingData =
+          await _hasInitializedData(mainDb: mainDb, prefKey: prefKey);
+
+      final shouldImport = shouldImportAsset(
+        forceImport: forceImport,
+        assetVersion: assetVersion,
+        installedVersion: installedVersion,
+        hasExistingDataForVersionlessAsset: hasExistingData,
+      );
 
       // Wenn Update nötig ist:
-      if (assetVersion.compareTo(installedVersion) > 0 ||
-          installedVersion == '0') {
+      if (shouldImport) {
         onProgress?.call("Update $taskLabel", "Vorbereitung...", 0.05);
 
         await _performBatchImport(
@@ -186,14 +198,82 @@ class BasisDataManager {
           taskLabel,
         );
 
-        await prefs.setString(prefKey, assetVersion);
+        await prefs.setString(
+          prefKey,
+          storedVersionAfterImport(assetVersion: assetVersion),
+        );
       } else {
         // Falls aktuell, kurz 100% anzeigen, damit es nicht hängt
+        if (installedVersion == '0' &&
+            assetVersion == '0' &&
+            hasExistingData &&
+            !forceImport) {
+          await prefs.setString(prefKey, _fallbackInstalledVersion);
+        }
         onProgress?.call("$taskLabel aktuell", "Bereit", 1.0);
       }
     } finally {
       await assetDb?.close();
       if (tempFile != null && await tempFile.exists()) await tempFile.delete();
+    }
+  }
+
+  static bool shouldImportAsset({
+    required bool forceImport,
+    required String assetVersion,
+    required String installedVersion,
+    required bool hasExistingDataForVersionlessAsset,
+  }) {
+    if (forceImport) return true;
+    if (assetVersion.compareTo(installedVersion) > 0) return true;
+    if (installedVersion != '0') return false;
+
+    // Guard: Wenn Asset keine Version liefert, aber Daten bereits vorhanden sind,
+    // nicht bei jedem Start erneut importieren.
+    if (assetVersion == '0' && hasExistingDataForVersionlessAsset) {
+      return false;
+    }
+    return true;
+  }
+
+  static String storedVersionAfterImport({required String assetVersion}) {
+    return assetVersion == '0' ? _fallbackInstalledVersion : assetVersion;
+  }
+
+  String _normalizeVersion(dynamic value) {
+    final normalized = value?.toString().trim() ?? '';
+    return normalized.isEmpty ? '0' : normalized;
+  }
+
+  Future<bool> _hasInitializedData({
+    required AppDatabase mainDb,
+    required String prefKey,
+  }) async {
+    switch (prefKey) {
+      case _keyVersionTraining:
+        final row = await mainDb.customSelect(
+          'SELECT 1 FROM exercises LIMIT 1',
+        ).getSingleOrNull();
+        return row != null;
+      case _keyVersionFood:
+        final row = await mainDb.customSelect(
+          'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+          variables: [drift.Variable.withString('base')],
+        ).getSingleOrNull();
+        return row != null;
+      case _keyVersionOff:
+        final row = await mainDb.customSelect(
+          'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+          variables: [drift.Variable.withString('off')],
+        ).getSingleOrNull();
+        return row != null;
+      case _keyVersionCats:
+        final row = await mainDb.customSelect(
+          'SELECT 1 FROM food_categories LIMIT 1',
+        ).getSingleOrNull();
+        return row != null;
+      default:
+        return false;
     }
   }
 
