@@ -34,8 +34,10 @@ This README is intentionally implementation-focused and reflects the **current w
 - Tracking calories and core macros
 - Tracking additional nutrition fields such as fiber, sugar, and salt/sodium where available
 - Optional AI-assisted meal tracking
-  - bring your own API key
-  - user-controlled provider setup
+  - BYOK (bring your own API key) only
+  - user-controlled provider + model setup
+  - providers: OpenAI, Gemini, Anthropic/Claude, Mistral, DeepSeek, xAI/Grok, Cohere
+  - provider-native login/billing is intentionally not implemented
 - Aggregate nutrition export to Apple Health and Google Health Connect
 
 ### Measurements

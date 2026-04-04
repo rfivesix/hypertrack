@@ -9,7 +9,7 @@ import '../widgets/summary_card.dart';
 
 /// Settings page for configuring the AI Meal Capture feature.
 ///
-/// Allows users to select an AI provider (OpenAI / Gemini), enter their API key
+/// Allows users to select an AI provider + model, enter their API key
 /// (stored securely in native Keychain/Keystore), test the connection, and read
 /// a privacy disclosure.
 class AiSettingsScreen extends StatefulWidget {
@@ -22,7 +22,10 @@ class AiSettingsScreen extends StatefulWidget {
 class _AiSettingsScreenState extends State<AiSettingsScreen> {
   final _keyController = TextEditingController();
   AiProvider _selectedProvider = AiProvider.openai;
+  String _selectedModel = '';
+  List<AiModelOption> _modelOptions = const [];
   bool _isLoading = true;
+  bool _isLoadingModels = false;
   bool _isTesting = false;
   bool _obscureKey = true;
   bool _hasKey = false;
@@ -41,10 +44,15 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
 
   Future<void> _loadSettings() async {
     final provider = await AiService.instance.getSelectedProvider();
+    final model = await AiService.instance.getSelectedModel(provider);
     final key = await AiService.instance.getApiKey(provider);
+    final models = await AiService.instance.getModelOptions(provider);
+    final resolvedModel = _resolveModelSelection(model, models, provider);
     if (mounted) {
       setState(() {
         _selectedProvider = provider;
+        _selectedModel = resolvedModel;
+        _modelOptions = _buildModelOptionsWithSelection(models, resolvedModel);
         _hasKey = key != null && key.isNotEmpty;
         if (_hasKey) {
           // Show masked placeholder — never display the real key
@@ -59,14 +67,28 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     if (provider == null) return;
     setState(() => _isLoading = true);
     await AiService.instance.setSelectedProvider(provider);
+    final selectedModel = await AiService.instance.getSelectedModel(provider);
+    final models = await AiService.instance.getModelOptions(provider);
+    final resolvedModel = _resolveModelSelection(selectedModel, models, provider);
+    await AiService.instance.setSelectedModel(provider, resolvedModel);
     final key = await AiService.instance.getApiKey(provider);
     if (mounted) {
       setState(() {
         _selectedProvider = provider;
+        _selectedModel = resolvedModel;
+        _modelOptions = _buildModelOptionsWithSelection(models, resolvedModel);
         _hasKey = key != null && key.isNotEmpty;
         _keyController.text = _hasKey ? '••••••••••••••••••••' : '';
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _onModelChanged(String? model) async {
+    if (model == null || model.isEmpty) return;
+    await AiService.instance.setSelectedModel(_selectedProvider, model);
+    if (mounted) {
+      setState(() => _selectedModel = model);
     }
   }
 
@@ -76,6 +98,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     if (key.isEmpty || key.startsWith('••')) return;
 
     await AiService.instance.setApiKey(_selectedProvider, key);
+    await _refreshModels();
     if (mounted) {
       setState(() {
         _hasKey = true;
@@ -93,12 +116,54 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
 
   Future<void> _deleteApiKey() async {
     await AiService.instance.deleteApiKey(_selectedProvider);
+    await _refreshModels();
     if (mounted) {
       setState(() {
         _hasKey = false;
         _keyController.clear();
       });
     }
+  }
+
+  Future<void> _refreshModels() async {
+    if (!mounted) return;
+    setState(() => _isLoadingModels = true);
+    final models = await AiService.instance.getModelOptions(_selectedProvider);
+    final resolvedModel = _resolveModelSelection(
+      _selectedModel,
+      models,
+      _selectedProvider,
+    );
+    await AiService.instance.setSelectedModel(_selectedProvider, resolvedModel);
+    if (!mounted) return;
+    setState(() {
+      _selectedModel = resolvedModel;
+      _modelOptions = _buildModelOptionsWithSelection(models, resolvedModel);
+      _isLoadingModels = false;
+    });
+  }
+
+  String _resolveModelSelection(
+    String currentSelection,
+    List<AiModelOption> models,
+    AiProvider provider,
+  ) {
+    if (models.any((m) => m.id == currentSelection)) return currentSelection;
+    return AiService.instance.getProviderMetadata(provider).defaultModel;
+  }
+
+  List<AiModelOption> _buildModelOptionsWithSelection(
+    List<AiModelOption> models,
+    String selectedModel,
+  ) {
+    if (models.isEmpty) {
+      return [AiModelOption(id: selectedModel, label: selectedModel, isFallback: true)];
+    }
+    if (models.any((m) => m.id == selectedModel)) return models;
+    return [
+      AiModelOption(id: selectedModel, label: selectedModel, isFallback: true),
+      ...models,
+    ];
   }
 
   Future<void> _testConnection() async {
@@ -172,21 +237,55 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                                 vertical: 8,
                               ),
                             ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: AiProvider.openai,
-                                child: Text('OpenAI (GPT-4o)'),
-                              ),
-                              DropdownMenuItem(
-                                value: AiProvider.gemini,
-                                child: Text('Google Gemini'),
-                              ),
-                            ],
+                            items: AiService.instance
+                                .getSupportedProviders()
+                                .map(
+                                  (providerMeta) => DropdownMenuItem(
+                                    value: providerMeta.provider,
+                                    child: Text(providerMeta.displayName),
+                                  ),
+                                )
+                                .toList(),
                             onChanged: _onProviderChanged,
                           ),
                         ),
                       ],
                     ),
+                  ),
+                ),
+
+                const SizedBox(height: DesignConstants.spacingXL),
+
+                // --- Model Selection ---
+                _buildSectionTitle(context, 'Model'),
+                SummaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: _isLoadingModels
+                        ? const Center(child: CircularProgressIndicator())
+                        : DropdownButtonFormField<String>(
+                            initialValue: _selectedModel,
+                            decoration: const InputDecoration(
+                              labelText: 'Model',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: _modelOptions
+                                .map(
+                                  (model) => DropdownMenuItem(
+                                    value: model.id,
+                                    child: Text(model.label),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: _onModelChanged,
+                          ),
                   ),
                 ),
 
@@ -212,7 +311,9 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                           },
                           decoration: InputDecoration(
                             labelText: l10n.aiApiKeyLabel,
-                            hintText: l10n.aiApiKeyHint,
+                            hintText: AiService.instance
+                                .getProviderMetadata(_selectedProvider)
+                                .keyHint,
                             border: const OutlineInputBorder(),
                             suffixIcon: Row(
                               mainAxisSize: MainAxisSize.min,

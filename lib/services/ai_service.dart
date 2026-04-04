@@ -12,7 +12,49 @@ import 'package:http/http.dart' as http;
 // ---------------------------------------------------------------------------
 
 /// Supported AI providers for meal analysis.
-enum AiProvider { openai, gemini }
+enum AiProvider {
+  openai,
+  gemini,
+  anthropic,
+  mistral,
+  deepseek,
+  xai,
+  cohere,
+}
+
+/// Provider registry metadata.
+class AiProviderMetadata {
+  final AiProvider provider;
+  final String displayName;
+  final String keyHint;
+  final String defaultModel;
+  final List<String> fallbackModels;
+  final bool supportsVision;
+  final bool supportsDynamicModelLoading;
+
+  const AiProviderMetadata({
+    required this.provider,
+    required this.displayName,
+    required this.keyHint,
+    required this.defaultModel,
+    required this.fallbackModels,
+    required this.supportsVision,
+    required this.supportsDynamicModelLoading,
+  });
+}
+
+/// Model option for settings selection.
+class AiModelOption {
+  final String id;
+  final String label;
+  final bool isFallback;
+
+  const AiModelOption({
+    required this.id,
+    required this.label,
+    this.isFallback = false,
+  });
+}
 
 /// A single food component suggested by the AI.
 class AiSuggestedItem {
@@ -90,13 +132,17 @@ class AiRateLimitException extends AiServiceException {
   ]);
 }
 
+class AiUnsupportedFeatureException extends AiServiceException {
+  const AiUnsupportedFeatureException([super.msg = 'Feature not supported.']);
+}
+
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
 
 /// Provider-agnostic AI service for meal analysis.
 ///
-/// Supports OpenAI GPT-4o and Google Gemini. Stores API keys in native
+/// Uses a BYOK architecture with per-provider API keys stored in native
 /// encrypted storage (Keychain / Keystore) via [FlutterSecureStorage].
 class AiService {
   AiService._();
@@ -107,6 +153,76 @@ class AiService {
   // Secure storage keys per provider
   static const _keyPrefix = 'ai_api_key_';
   static const _providerKey = 'ai_selected_provider';
+  static const _modelPrefix = 'ai_selected_model_';
+
+  static const Map<AiProvider, AiProviderMetadata> _providerRegistry = {
+    AiProvider.openai: AiProviderMetadata(
+      provider: AiProvider.openai,
+      displayName: 'OpenAI',
+      keyHint: 'sk-...',
+      defaultModel: 'gpt-4o',
+      fallbackModels: ['gpt-4o', 'gpt-4.1-mini'],
+      supportsVision: true,
+      supportsDynamicModelLoading: true,
+    ),
+    AiProvider.gemini: AiProviderMetadata(
+      provider: AiProvider.gemini,
+      displayName: 'Google Gemini',
+      keyHint: 'AIza...',
+      defaultModel: 'gemini-2.5-flash',
+      fallbackModels: ['gemini-2.5-flash', 'gemini-1.5-flash'],
+      supportsVision: true,
+      supportsDynamicModelLoading: true,
+    ),
+    AiProvider.anthropic: AiProviderMetadata(
+      provider: AiProvider.anthropic,
+      displayName: 'Anthropic Claude',
+      keyHint: 'sk-ant-...',
+      defaultModel: 'claude-3-5-sonnet-latest',
+      fallbackModels: [
+        'claude-3-5-sonnet-latest',
+        'claude-3-5-haiku-latest',
+      ],
+      supportsVision: true,
+      supportsDynamicModelLoading: false,
+    ),
+    AiProvider.mistral: AiProviderMetadata(
+      provider: AiProvider.mistral,
+      displayName: 'Mistral',
+      keyHint: 'mistral-...',
+      defaultModel: 'pixtral-12b-2409',
+      fallbackModels: ['pixtral-12b-2409', 'mistral-large-latest'],
+      supportsVision: true,
+      supportsDynamicModelLoading: true,
+    ),
+    AiProvider.deepseek: AiProviderMetadata(
+      provider: AiProvider.deepseek,
+      displayName: 'DeepSeek',
+      keyHint: 'sk-...',
+      defaultModel: 'deepseek-chat',
+      fallbackModels: ['deepseek-chat'],
+      supportsVision: false,
+      supportsDynamicModelLoading: false,
+    ),
+    AiProvider.xai: AiProviderMetadata(
+      provider: AiProvider.xai,
+      displayName: 'xAI Grok',
+      keyHint: 'xai-...',
+      defaultModel: 'grok-2-vision-latest',
+      fallbackModels: ['grok-2-vision-latest', 'grok-2-latest'],
+      supportsVision: true,
+      supportsDynamicModelLoading: true,
+    ),
+    AiProvider.cohere: AiProviderMetadata(
+      provider: AiProvider.cohere,
+      displayName: 'Cohere',
+      keyHint: 'co-...',
+      defaultModel: 'command-r-plus',
+      fallbackModels: ['command-r-plus', 'command-r'],
+      supportsVision: false,
+      supportsDynamicModelLoading: false,
+    ),
+  };
 
   /// Builds the system prompt, optionally localised to [languageCode].
   static String _buildSystemPrompt({String? languageCode}) {
@@ -159,16 +275,53 @@ Example response:
     await _secureStorage.delete(key: '$_keyPrefix${provider.name}');
   }
 
+  List<AiProviderMetadata> getSupportedProviders() =>
+      _providerRegistry.values.toList(growable: false);
+
+  AiProviderMetadata getProviderMetadata(AiProvider provider) =>
+      _providerRegistry[provider]!;
+
   /// Returns the currently selected provider (default: OpenAI).
   Future<AiProvider> getSelectedProvider() async {
     final value = await _secureStorage.read(key: _providerKey);
-    if (value == 'gemini') return AiProvider.gemini;
+    if (value == null || value.isEmpty) return AiProvider.openai;
+    for (final provider in AiProvider.values) {
+      if (provider.name == value) return provider;
+    }
     return AiProvider.openai;
   }
 
   /// Persists the selected provider.
   Future<void> setSelectedProvider(AiProvider provider) async {
     await _secureStorage.write(key: _providerKey, value: provider.name);
+  }
+
+  Future<String> getSelectedModel(AiProvider provider) async {
+    final selected = await _secureStorage.read(
+      key: '$_modelPrefix${provider.name}',
+    );
+    final meta = getProviderMetadata(provider);
+    if (selected == null || selected.isEmpty) return meta.defaultModel;
+    return selected;
+  }
+
+  Future<void> setSelectedModel(AiProvider provider, String model) async {
+    await _secureStorage.write(key: '$_modelPrefix${provider.name}', value: model);
+  }
+
+  Future<List<AiModelOption>> getModelOptions(AiProvider provider) async {
+    final meta = getProviderMetadata(provider);
+    final dynamicModels = await _loadDynamicModels(provider);
+    if (dynamicModels.isNotEmpty) return dynamicModels;
+    return meta.fallbackModels
+        .map(
+          (m) => AiModelOption(
+            id: m,
+            label: m,
+            isFallback: true,
+          ),
+        )
+        .toList(growable: false);
   }
 
   // ---------------------------------------------------------------------------
@@ -187,6 +340,7 @@ Example response:
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
+    final model = await getSelectedModel(provider);
 
     // Encode images to base64
     final imageDataList = <String>[];
@@ -203,6 +357,7 @@ Example response:
       case AiProvider.openai:
         return _callOpenAi(
           apiKey,
+          model,
           userContent,
           imageDataList,
           systemPrompt: prompt,
@@ -210,6 +365,47 @@ Example response:
       case AiProvider.gemini:
         return _callGemini(
           apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.anthropic:
+        return _callAnthropic(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.mistral:
+        return _callMistral(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.deepseek:
+        return _callDeepSeek(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.xai:
+        return _callXai(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.cohere:
+        return _callCohere(
+          apiKey,
+          model,
           userContent,
           imageDataList,
           systemPrompt: prompt,
@@ -227,13 +423,36 @@ Example response:
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
+    final model = await getSelectedModel(provider);
     final prompt = _buildSystemPrompt(languageCode: languageCode);
 
     switch (provider) {
       case AiProvider.openai:
-        return _callOpenAi(apiKey, description, [], systemPrompt: prompt);
+        return _callOpenAi(apiKey, model, description, [], systemPrompt: prompt);
       case AiProvider.gemini:
-        return _callGemini(apiKey, description, [], systemPrompt: prompt);
+        return _callGemini(apiKey, model, description, [], systemPrompt: prompt);
+      case AiProvider.anthropic:
+        return _callAnthropic(
+          apiKey,
+          model,
+          description,
+          [],
+          systemPrompt: prompt,
+        );
+      case AiProvider.mistral:
+        return _callMistral(apiKey, model, description, [], systemPrompt: prompt);
+      case AiProvider.deepseek:
+        return _callDeepSeek(
+          apiKey,
+          model,
+          description,
+          [],
+          systemPrompt: prompt,
+        );
+      case AiProvider.xai:
+        return _callXai(apiKey, model, description, [], systemPrompt: prompt);
+      case AiProvider.cohere:
+        return _callCohere(apiKey, model, description, [], systemPrompt: prompt);
     }
   }
 
@@ -249,6 +468,7 @@ Example response:
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
+    final model = await getSelectedModel(provider);
 
     final previousJson = jsonEncode(
       previousResults.map((e) => e.toJson()).toList(),
@@ -275,6 +495,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       case AiProvider.openai:
         return _callOpenAi(
           apiKey,
+          model,
           userContent,
           imageDataList,
           systemPrompt: prompt,
@@ -282,6 +503,47 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       case AiProvider.gemini:
         return _callGemini(
           apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.anthropic:
+        return _callAnthropic(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.mistral:
+        return _callMistral(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.deepseek:
+        return _callDeepSeek(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.xai:
+        return _callXai(
+          apiKey,
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: prompt,
+        );
+      case AiProvider.cohere:
+        return _callCohere(
+          apiKey,
+          model,
           userContent,
           imageDataList,
           systemPrompt: prompt,
@@ -309,6 +571,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
   Future<List<AiSuggestedItem>> _callOpenAi(
     String apiKey,
+    String model,
     String userContent,
     List<String> imagesBase64, {
     required String systemPrompt,
@@ -327,7 +590,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     contentParts.add({'type': 'text', 'text': userContent});
 
     final body = jsonEncode({
-      'model': 'gpt-4o',
+      'model': model,
       'messages': [
         {'role': 'system', 'content': systemPrompt},
         {'role': 'user', 'content': contentParts},
@@ -379,6 +642,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
   Future<List<AiSuggestedItem>> _callGemini(
     String apiKey,
+    String model,
     String userContent,
     List<String> imagesBase64, {
     required String systemPrompt,
@@ -406,7 +670,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       final response = await http
           .post(
             Uri.parse(
-              'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey',
+              'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
             ),
             headers: {'Content-Type': 'application/json'},
             body: body,
@@ -447,6 +711,436 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     } catch (e) {
       if (e is AiServiceException) rethrow;
       throw const AiParseException();
+    }
+  }
+
+  Future<List<AiSuggestedItem>> _callAnthropic(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    final raw = await _callAnthropicRaw(
+      apiKey,
+      model,
+      userContent,
+      imagesBase64,
+      systemPrompt: systemPrompt,
+    );
+    return _parseItemsFromContent(raw);
+  }
+
+  Future<String> _callAnthropicRaw(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    final content = <Map<String, dynamic>>[];
+    for (final img64 in imagesBase64) {
+      content.add({
+        'type': 'image',
+        'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': img64},
+      });
+    }
+    content.add({'type': 'text', 'text': userContent});
+
+    final body = jsonEncode({
+      'model': model,
+      'system': systemPrompt,
+      'max_tokens': 2000,
+      'messages': [
+        {'role': 'user', 'content': content},
+      ],
+    });
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('https://api.anthropic.com/v1/messages'),
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 60));
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw const AiAuthException();
+      }
+      if (response.statusCode == 429) throw const AiRateLimitException();
+      if (response.statusCode != 200) {
+        throw AiNetworkException('API returned status ${response.statusCode}');
+      }
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final contentList = json['content'] as List<dynamic>?;
+      if (contentList == null || contentList.isEmpty) throw const AiParseException();
+      final textPart = contentList
+          .cast<Map<String, dynamic>>()
+          .firstWhere((e) => e['type'] == 'text', orElse: () => <String, dynamic>{});
+      final text = textPart['text'] as String?;
+      if (text == null || text.isEmpty) throw const AiParseException();
+      return text;
+    } on SocketException {
+      throw const AiNetworkException();
+    } catch (e) {
+      if (e is AiServiceException) rethrow;
+      throw AiNetworkException('Request failed: $e');
+    }
+  }
+
+  Future<List<AiSuggestedItem>> _callMistral(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    final raw = await _callOpenAiCompatibleRaw(
+      endpoint: 'https://api.mistral.ai/v1/chat/completions',
+      authHeader: 'Bearer $apiKey',
+      model: model,
+      userContent: userContent,
+      imagesBase64: imagesBase64,
+      systemPrompt: systemPrompt,
+    );
+    return _parseItemsFromContent(raw);
+  }
+
+  Future<String> _callMistralRaw(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) {
+    return _callOpenAiCompatibleRaw(
+      endpoint: 'https://api.mistral.ai/v1/chat/completions',
+      authHeader: 'Bearer $apiKey',
+      model: model,
+      userContent: userContent,
+      imagesBase64: imagesBase64,
+      systemPrompt: systemPrompt,
+    );
+  }
+
+  Future<List<AiSuggestedItem>> _callDeepSeek(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    if (imagesBase64.isNotEmpty) {
+      throw const AiUnsupportedFeatureException(
+        'Selected DeepSeek model does not support image analysis in this integration.',
+      );
+    }
+    final raw = await _callOpenAiCompatibleRaw(
+      endpoint: 'https://api.deepseek.com/v1/chat/completions',
+      authHeader: 'Bearer $apiKey',
+      model: model,
+      userContent: userContent,
+      imagesBase64: const [],
+      systemPrompt: systemPrompt,
+    );
+    return _parseItemsFromContent(raw);
+  }
+
+  Future<String> _callDeepSeekRaw(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) {
+    return _callOpenAiCompatibleRaw(
+      endpoint: 'https://api.deepseek.com/v1/chat/completions',
+      authHeader: 'Bearer $apiKey',
+      model: model,
+      userContent: userContent,
+      imagesBase64: const [],
+      systemPrompt: systemPrompt,
+    );
+  }
+
+  Future<List<AiSuggestedItem>> _callXai(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    final raw = await _callOpenAiCompatibleRaw(
+      endpoint: 'https://api.x.ai/v1/chat/completions',
+      authHeader: 'Bearer $apiKey',
+      model: model,
+      userContent: userContent,
+      imagesBase64: imagesBase64,
+      systemPrompt: systemPrompt,
+    );
+    return _parseItemsFromContent(raw);
+  }
+
+  Future<String> _callXaiRaw(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) {
+    return _callOpenAiCompatibleRaw(
+      endpoint: 'https://api.x.ai/v1/chat/completions',
+      authHeader: 'Bearer $apiKey',
+      model: model,
+      userContent: userContent,
+      imagesBase64: imagesBase64,
+      systemPrompt: systemPrompt,
+    );
+  }
+
+  Future<List<AiSuggestedItem>> _callCohere(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    if (imagesBase64.isNotEmpty) {
+      throw const AiUnsupportedFeatureException(
+        'Selected Cohere model does not support image analysis in this integration.',
+      );
+    }
+    final raw = await _callCohereRaw(
+      apiKey,
+      model,
+      userContent,
+      imagesBase64,
+      systemPrompt: systemPrompt,
+    );
+    return _parseItemsFromContent(raw);
+  }
+
+  Future<String> _callCohereRaw(
+    String apiKey,
+    String model,
+    String userContent,
+    List<String> imagesBase64, {
+    required String systemPrompt,
+  }) async {
+    final body = jsonEncode({
+      'model': model,
+      'message': '$systemPrompt\n\n$userContent',
+      'temperature': 0.3,
+    });
+    try {
+      final response = await http
+          .post(
+            Uri.parse('https://api.cohere.com/v1/chat'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $apiKey',
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 60));
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw const AiAuthException();
+      }
+      if (response.statusCode == 429) throw const AiRateLimitException();
+      if (response.statusCode != 200) {
+        throw AiNetworkException('API returned status ${response.statusCode}');
+      }
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final text = json['text'] as String? ?? json['response'] as String?;
+      if (text == null || text.isEmpty) throw const AiParseException();
+      return text;
+    } on SocketException {
+      throw const AiNetworkException();
+    } catch (e) {
+      if (e is AiServiceException) rethrow;
+      throw AiNetworkException('Request failed: $e');
+    }
+  }
+
+  Future<String> _callOpenAiCompatibleRaw({
+    required String endpoint,
+    required String authHeader,
+    required String model,
+    required String userContent,
+    required List<String> imagesBase64,
+    required String systemPrompt,
+  }) async {
+    final contentParts = <Map<String, dynamic>>[];
+    for (final img64 in imagesBase64) {
+      contentParts.add({
+        'type': 'image_url',
+        'image_url': {'url': 'data:image/jpeg;base64,$img64', 'detail': 'low'},
+      });
+    }
+    contentParts.add({'type': 'text', 'text': userContent});
+
+    final body = jsonEncode({
+      'model': model,
+      'messages': [
+        {'role': 'system', 'content': systemPrompt},
+        {'role': 'user', 'content': contentParts},
+      ],
+      'max_tokens': 2000,
+      'temperature': 0.3,
+    });
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse(endpoint),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': authHeader,
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 60));
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw const AiAuthException();
+      }
+      if (response.statusCode == 429) throw const AiRateLimitException();
+      if (response.statusCode != 200) {
+        throw AiNetworkException('API returned status ${response.statusCode}');
+      }
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final choices = json['choices'] as List<dynamic>?;
+      if (choices == null || choices.isEmpty) throw const AiParseException();
+      return choices[0]['message']['content'] as String? ?? '';
+    } on SocketException {
+      throw const AiNetworkException();
+    } catch (e) {
+      if (e is AiServiceException) rethrow;
+      throw AiNetworkException('Request failed: $e');
+    }
+  }
+
+  Future<List<AiModelOption>> _loadDynamicModels(AiProvider provider) async {
+    final meta = getProviderMetadata(provider);
+    if (!meta.supportsDynamicModelLoading) return const [];
+    final apiKey = await getApiKey(provider);
+    if (apiKey == null || apiKey.isEmpty) return const [];
+
+    switch (provider) {
+      case AiProvider.openai:
+        return _loadOpenAiModels(apiKey);
+      case AiProvider.gemini:
+        return _loadGeminiModels(apiKey);
+      case AiProvider.mistral:
+        return _loadMistralModels(apiKey);
+      case AiProvider.xai:
+        return _loadXaiModels(apiKey);
+      case AiProvider.anthropic:
+      case AiProvider.deepseek:
+      case AiProvider.cohere:
+        return const [];
+    }
+  }
+
+  Future<List<AiModelOption>> _loadOpenAiModels(String apiKey) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('https://api.openai.com/v1/models'),
+            headers: {'Authorization': 'Bearer $apiKey'},
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) return const [];
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as List<dynamic>? ?? const [];
+      final ids = data
+          .map((e) => (e as Map<String, dynamic>)['id'] as String? ?? '')
+          .where((id) => id.startsWith('gpt-'))
+          .toList()
+        ..sort();
+      return ids
+          .map((id) => AiModelOption(id: id, label: id))
+          .toList(growable: false);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<List<AiModelOption>> _loadGeminiModels(String apiKey) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey',
+            ),
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) return const [];
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['models'] as List<dynamic>? ?? const [];
+      final ids = data
+          .map((e) => (e as Map<String, dynamic>)['name'] as String? ?? '')
+          .where((n) => n.contains('/'))
+          .map((n) => n.split('/').last)
+          .where((id) => id.contains('gemini'))
+          .toList()
+        ..sort();
+      return ids
+          .map((id) => AiModelOption(id: id, label: id))
+          .toList(growable: false);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<List<AiModelOption>> _loadMistralModels(String apiKey) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('https://api.mistral.ai/v1/models'),
+            headers: {'Authorization': 'Bearer $apiKey'},
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) return const [];
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as List<dynamic>? ?? const [];
+      final ids = data
+          .map((e) => (e as Map<String, dynamic>)['id'] as String? ?? '')
+          .where((id) => id.isNotEmpty)
+          .toList()
+        ..sort();
+      return ids
+          .map((id) => AiModelOption(id: id, label: id))
+          .toList(growable: false);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<List<AiModelOption>> _loadXaiModels(String apiKey) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('https://api.x.ai/v1/models'),
+            headers: {'Authorization': 'Bearer $apiKey'},
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) return const [];
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as List<dynamic>? ?? const [];
+      final ids = data
+          .map((e) => (e as Map<String, dynamic>)['id'] as String? ?? '')
+          .where((id) => id.isNotEmpty)
+          .toList()
+        ..sort();
+      return ids
+          .map((id) => AiModelOption(id: id, label: id))
+          .toList(growable: false);
+    } catch (_) {
+      return const [];
     }
   }
 
@@ -505,6 +1199,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
+    final model = await getSelectedModel(provider);
 
     final systemPrompt = _buildRecommendationPrompt(languageCode: languageCode);
 
@@ -542,6 +1237,7 @@ Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the
       case AiProvider.openai:
         rawContent = await _callOpenAiRaw(
           apiKey,
+          model,
           userContent,
           [],
           systemPrompt: systemPrompt,
@@ -550,6 +1246,52 @@ Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the
       case AiProvider.gemini:
         rawContent = await _callGeminiRaw(
           apiKey,
+          model,
+          userContent,
+          [],
+          systemPrompt: systemPrompt,
+        );
+        break;
+      case AiProvider.anthropic:
+        rawContent = await _callAnthropicRaw(
+          apiKey,
+          model,
+          userContent,
+          [],
+          systemPrompt: systemPrompt,
+        );
+        break;
+      case AiProvider.mistral:
+        rawContent = await _callMistralRaw(
+          apiKey,
+          model,
+          userContent,
+          [],
+          systemPrompt: systemPrompt,
+        );
+        break;
+      case AiProvider.deepseek:
+        rawContent = await _callDeepSeekRaw(
+          apiKey,
+          model,
+          userContent,
+          [],
+          systemPrompt: systemPrompt,
+        );
+        break;
+      case AiProvider.xai:
+        rawContent = await _callXaiRaw(
+          apiKey,
+          model,
+          userContent,
+          [],
+          systemPrompt: systemPrompt,
+        );
+        break;
+      case AiProvider.cohere:
+        rawContent = await _callCohereRaw(
+          apiKey,
+          model,
           userContent,
           [],
           systemPrompt: systemPrompt,
@@ -593,6 +1335,7 @@ Example:
   /// Calls OpenAI and returns the raw content string (for recommendation parsing).
   Future<String> _callOpenAiRaw(
     String apiKey,
+    String model,
     String userContent,
     List<String> imagesBase64, {
     required String systemPrompt,
@@ -607,7 +1350,7 @@ Example:
     contentParts.add({'type': 'text', 'text': userContent});
 
     final body = jsonEncode({
-      'model': 'gpt-4o',
+      'model': model,
       'messages': [
         {'role': 'system', 'content': systemPrompt},
         {'role': 'user', 'content': contentParts},
@@ -649,6 +1392,7 @@ Example:
   /// Calls Gemini and returns the raw content string (for recommendation parsing).
   Future<String> _callGeminiRaw(
     String apiKey,
+    String model,
     String userContent,
     List<String> imagesBase64, {
     required String systemPrompt,
@@ -672,7 +1416,7 @@ Example:
       final response = await http
           .post(
             Uri.parse(
-              'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey',
+              'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
             ),
             headers: {'Content-Type': 'application/json'},
             body: body,
