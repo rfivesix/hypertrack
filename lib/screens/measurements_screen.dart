@@ -63,7 +63,9 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         _availableMeasurementTypes = types.toList()..sort();
         if (_selectedChartType == null &&
             _availableMeasurementTypes.isNotEmpty) {
-          _selectedChartType = _availableMeasurementTypes.first;
+          _selectedChartType = _availableMeasurementTypes.contains('weight')
+              ? 'weight'
+              : _availableMeasurementTypes.first;
         }
         _isLoading = false;
       });
