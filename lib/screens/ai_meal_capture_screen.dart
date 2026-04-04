@@ -53,8 +53,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   @override
   void dispose() {
-    _analyzeButtonAnimationController.dispose();
     _textController.dispose();
+    _analyzeButtonAnimationController.dispose();
     super.dispose();
   }
 
