@@ -32,6 +32,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   db.Profile? _userProfile;
   bool _isLoading = true;
 
+  /// Returns true when Settings changed explicitly (`true`) or when iOS back-swipe
+  /// returns `null` without an explicit pop result.
   bool _shouldReloadAfterSettings(bool? result) {
     return result == true || (result == null && Platform.isIOS);
   }

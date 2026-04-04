@@ -40,13 +40,12 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   // Analysis state
   bool _isAnalyzing = false;
 
-  // Single animation controller for analyze button loading animation
-  late AnimationController _pulseController;
+  late AnimationController _analyzeButtonAnimationController;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
+    _analyzeButtonAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
@@ -54,7 +53,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   @override
   void dispose() {
-    _pulseController.dispose();
+    _analyzeButtonAnimationController.dispose();
     _textController.dispose();
     super.dispose();
   }
@@ -221,7 +220,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
               onPressed: (_hasInput && !_isAnalyzing) ? _analyze : null,
               isAnalyzing: _isAnalyzing,
               l10n: l10n,
-              pulseController: _pulseController,
+              pulseController: _analyzeButtonAnimationController,
             ),
           ),
         ],

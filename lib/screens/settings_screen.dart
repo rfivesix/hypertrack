@@ -346,7 +346,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(
         title: l10n.settingsTitle,
-        automaticallyImplyLeading: false,
         leading: BackButton(
           onPressed: () => Navigator.of(context).pop(hasStepsSettingsChanged),
         ),
