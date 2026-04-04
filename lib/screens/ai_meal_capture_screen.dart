@@ -71,8 +71,14 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       },
       onStatus: (status) {
         debugPrint('speech_to_text status: $status');
-        if (status == 'done' || status == 'notListening') {
-          if (mounted) setState(() => _isListening = false);
+        if (!mounted) return;
+        if (status == stt.SpeechToText.listeningStatus) {
+          setState(() => _isListening = true);
+          return;
+        }
+        if (status == stt.SpeechToText.doneStatus ||
+            status == stt.SpeechToText.notListeningStatus) {
+          setState(() => _isListening = false);
         }
       },
       options: Platform.isAndroid
@@ -183,7 +189,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
       _initialTextBeforeSpeech = _textController.text;
       try {
-        final started = await _speech.listen(
+        await _speech.listen(
           onResult: (result) {
             debugPrint(
               'speech_to_text result: ${result.recognizedWords} (final=${result.finalResult})',
@@ -212,14 +218,11 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
             listenMode: stt.ListenMode.dictation,
           ),
         );
-
-        if (!started) {
-          if (mounted) setState(() => _isListening = false);
-          _showSpeechSnackBar(_speechStartFailureMessage);
-          return;
+        // `listen` no longer returns a bool in the current speech_to_text API.
+        // Show recording state immediately, then keep it synced via onStatus.
+        if (mounted) {
+          setState(() => _isListening = true);
         }
-
-        if (mounted) setState(() => _isListening = true);
       } catch (e) {
         debugPrint('speech_to_text listen failed: $e');
         if (mounted) setState(() => _isListening = false);
