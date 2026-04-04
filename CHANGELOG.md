@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 This release focuses on AI provider expansion, AI settings cleanup, and a small Diary improvement.
 
+### Maintenance
+- Post-0.7.7 conservative maintenance pass:
+  - pinned previously floating `pubspec.yaml` dependencies (`mime`, `archive`) to explicit semver constraints
+  - updated Android Health Connect dependency from `1.1.0-rc02` to stable `1.1.0`
+- Deferred higher-risk dependency movement for a separate 0.8-focused pass (for example `drift` / `drift_dev`, broader Flutter plugin major/minor jumps)
+
 ### Added
 - Optional **Sugar** tile for the Diary overview
   - can be enabled in Settings

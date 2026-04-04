@@ -37,8 +37,8 @@ dependencies:
   cryptography: ^2.7.0
   table_calendar: ^3.2.0
 
-  mime: any
-  archive: any
+  mime: ^2.0.0
+  archive: ^4.0.9
   rename_app: ^1.6.5
   liquid_glass_renderer: ^0.2.0-dev.3
   soft_edge_blur: ^0.1.3
