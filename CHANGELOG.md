@@ -4,6 +4,61 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7] - 2026-04-04
+
+This release focuses on AI provider expansion, AI settings cleanup, and a small Diary improvement.
+
+### Added
+- Optional **Sugar** tile for the Diary overview
+  - can be enabled in Settings
+  - disabled by default
+  - uses existing sugar tracking + existing sugar target
+  - rendered inside the existing top Diary overview section
+
+- Expanded **AI provider support** for:
+  - OpenAI
+  - Google Gemini
+  - Anthropic / Claude
+  - Mistral
+  - xAI / Grok
+
+- AI settings improvements
+  - dedicated grouped AI settings section
+  - master **Enable AI features** toggle
+  - AI features now default to **off**
+  - provider, model, and API key configuration hidden unless AI is enabled
+
+### Changed
+- Reworked AI model selection logic for meal analysis
+  - provider-specific curated model handling
+  - live provider model APIs used as availability source
+  - better ranking of newer/current models
+  - improved provider-specific filtering
+  - more robust selected-model resolution
+
+- OpenAI integration improvements
+  - better handling of model names / aliases
+  - fixes for OpenAI request parameter handling
+  - improved error reporting
+
+- Gemini integration improvements
+  - more robust model normalization and fallback handling
+  - improved error reporting
+  - better compatibility across Gemini model variants
+
+- Diary overview layout updated
+  - optional Sugar tile now appears in the same existing overview area
+  - placed at the bottom of the left column when enabled
+
+### Notes
+- End-to-end tested providers in this release:
+  - OpenAI
+  - Gemini
+
+- Implemented but not fully end-to-end verified in this release:
+  - Anthropic
+  - Mistral
+  - xAI
 ## [0.7.6] - 2026-04-04
 
 This release focuses on a small set of quality-of-life improvements across AI meal capture, measurements, workout logging, iOS navigation behavior, and rest timer alerts.
