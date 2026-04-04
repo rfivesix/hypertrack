@@ -40,7 +40,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   // Analysis state
   bool _isAnalyzing = false;
 
-  // Single animation controller for analyze-button loading animation
+  // Single animation controller for analyze button loading animation
   late AnimationController _pulseController;
 
   @override
@@ -337,23 +337,31 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                   width: 1.5,
                 ),
               ),
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: _images.length < _maxImages ? _takePhoto : null,
-                    icon: const Icon(Icons.camera_alt_rounded),
-                    color: theme.colorScheme.primary,
-                    tooltip: l10n.aiCaptureTabPhoto,
-                  ),
-                  IconButton(
-                    onPressed:
-                        _images.length < _maxImages ? _pickFromGallery : null,
-                    icon: const Icon(Icons.photo_library_rounded),
-                    color: theme.colorScheme.primary,
-                    tooltip: l10n.tabFavorites,
-                  ),
-                ],
+              suffixIconConstraints: const BoxConstraints(
+                minWidth: 96,
+                maxWidth: 96,
+                minHeight: 40,
+              ),
+              suffixIcon: SizedBox(
+                width: 96,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: _images.length < _maxImages ? _takePhoto : null,
+                      icon: const Icon(Icons.camera_alt_rounded),
+                      color: theme.colorScheme.primary,
+                      tooltip: l10n.aiCaptureTabPhoto,
+                    ),
+                    IconButton(
+                      onPressed:
+                          _images.length < _maxImages ? _pickFromGallery : null,
+                      icon: const Icon(Icons.photo_library_rounded),
+                      color: theme.colorScheme.primary,
+                      tooltip: l10n.tabFavorites,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
