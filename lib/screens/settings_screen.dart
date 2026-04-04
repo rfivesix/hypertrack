@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
 import 'ai_settings_screen.dart';
@@ -78,10 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _sleepPermissionController = widget._sleepPermissionController ??
         _sleepSyncService.buildPermissionController();
     _healthExportService = HealthExportService(
-      adapters: [
-        AppleHealthExportAdapter(),
-        HealthConnectExportAdapter(),
-      ],
+      adapters: [AppleHealthExportAdapter(), HealthConnectExportAdapter()],
     );
     _loadAppVersion();
     _loadStepsSettings();
@@ -181,9 +179,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isSleepRawLoading = false);
 
     if (records.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.sleepNoRawImportsFound)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.sleepNoRawImportsFound)));
       return;
     }
 
@@ -228,8 +226,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required bool enabled,
   }) async {
     if (enabled) {
-      final permission =
-          await _healthExportService.requestPermissions(platform);
+      final permission = await _healthExportService.requestPermissions(
+        platform,
+      );
       if (!permission.success) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -263,9 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_healthExportResultMessage(result, context)),
-      ),
+      SnackBar(content: Text(_healthExportResultMessage(result, context))),
     );
     hasStepsSettingsChanged = true;
   }
@@ -339,6 +336,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final localeCode = Localizations.localeOf(context).languageCode;
     final isGerman = localeCode.toLowerCase() == 'de';
+    final isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
     final themeService = Provider.of<ThemeService>(context);
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
@@ -422,6 +421,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onChanged: (value) =>
                               themeService.setVisualStyle(value!),
                         ),
+                        if (isAndroid) ...[
+                          const Divider(height: 1),
+                          SwitchListTile(
+                            secondary: const Icon(Icons.palette_outlined),
+                            title: Text(
+                              l10n.settingsMaterialColorsTitle,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(l10n.settingsMaterialColorsSubtitle),
+                            value: themeService.materialColorsEnabled,
+                            onChanged: (value) =>
+                                themeService.setMaterialColorsEnabled(value),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -595,9 +610,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           l10n.sleepEnableTrackingTitle,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text(
-                          l10n.sleepEnableTrackingSubtitle,
-                        ),
+                        subtitle: Text(l10n.sleepEnableTrackingSubtitle),
                         value: _sleepTrackingEnabled,
                         onChanged: (value) async {
                           final wasEnabled = _sleepTrackingEnabled;
@@ -631,9 +644,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             l10n.sleepDataStatusTitle,
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(
-                            l10n.sleepDataStatusSubtitle,
-                          ),
+                          subtitle: Text(l10n.sleepDataStatusSubtitle),
                         ),
                       if (permission.state == SleepPermissionState.denied ||
                           permission.state == SleepPermissionState.partial)
@@ -643,9 +654,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             l10n.sleepNoPermissionTitle,
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(
-                            l10n.sleepNoPermissionSubtitle,
-                          ),
+                          subtitle: Text(l10n.sleepNoPermissionSubtitle),
                         ),
                       if (permission.state ==
                               SleepPermissionState.unavailable ||
@@ -656,9 +665,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             l10n.sleepFeatureUnavailableTitle,
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(
-                            l10n.sleepFeatureUnavailableSubtitle,
-                          ),
+                          subtitle: Text(l10n.sleepFeatureUnavailableSubtitle),
                         ),
                       const Divider(height: 1),
                       ListTile(

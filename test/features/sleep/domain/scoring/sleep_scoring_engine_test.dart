@@ -48,10 +48,7 @@ void main() {
   group('renormalization and availability', () {
     test('renormalizes continuity when only one subcomponent is available', () {
       final result = calculateSleepScore(
-        const SleepScoringInput(
-          sleepEfficiencyPct: 90,
-          wasoMinutes: null,
-        ),
+        const SleepScoringInput(sleepEfficiencyPct: 90, wasoMinutes: null),
       );
       expect(result.continuityScore, 100);
       expect(result.score, 100);
@@ -79,31 +76,33 @@ void main() {
       expect(result.completeness, 0);
     });
 
-    test('regularity thresholds: <5 unavailable, 5-6 available, >=7 stable',
-        () {
-      final noRegularity = calculateSleepScore(
-        const SleepScoringInput(regularitySri: 82, regularityValidDays: 4),
-      );
-      expect(noRegularity.regularityUsed, isFalse);
-      expect(noRegularity.regularityStable, isFalse);
-      expect(noRegularity.score, isNull);
+    test(
+      'regularity thresholds: <5 unavailable, 5-6 available, >=7 stable',
+      () {
+        final noRegularity = calculateSleepScore(
+          const SleepScoringInput(regularitySri: 82, regularityValidDays: 4),
+        );
+        expect(noRegularity.regularityUsed, isFalse);
+        expect(noRegularity.regularityStable, isFalse);
+        expect(noRegularity.score, isNull);
 
-      final available = calculateSleepScore(
-        const SleepScoringInput(regularitySri: 82, regularityValidDays: 5),
-      );
-      expect(available.regularityUsed, isTrue);
-      expect(available.regularityStable, isFalse);
-      expect(available.score, closeTo(82, 0.01));
-      expect(available.completeness, closeTo(0.25, 0.0001));
+        final available = calculateSleepScore(
+          const SleepScoringInput(regularitySri: 82, regularityValidDays: 5),
+        );
+        expect(available.regularityUsed, isTrue);
+        expect(available.regularityStable, isFalse);
+        expect(available.score, closeTo(82, 0.01));
+        expect(available.completeness, closeTo(0.25, 0.0001));
 
-      final stable = calculateSleepScore(
-        const SleepScoringInput(regularitySri: 82, regularityValidDays: 7),
-      );
-      expect(stable.regularityUsed, isTrue);
-      expect(stable.regularityStable, isTrue);
-      expect(stable.score, closeTo(82, 0.01));
-      expect(stable.completeness, closeTo(0.25, 0.0001));
-    });
+        final stable = calculateSleepScore(
+          const SleepScoringInput(regularitySri: 82, regularityValidDays: 7),
+        );
+        expect(stable.regularityUsed, isTrue);
+        expect(stable.regularityStable, isTrue);
+        expect(stable.score, closeTo(82, 0.01));
+        expect(stable.completeness, closeTo(0.25, 0.0001));
+      },
+    );
 
     test('~5h56m night scores meaningfully lower than legacy v1 profile', () {
       const input = SleepScoringInput(

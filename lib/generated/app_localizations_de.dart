@@ -1470,6 +1470,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsVisualStyleLiquidDesc => 'Runde, schwebende UI-Elemente';
 
   @override
+  String get settingsMaterialColorsTitle => 'Material-Farben';
+
+  @override
+  String get settingsMaterialColorsSubtitle =>
+      'Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents';
+
+  @override
   String get searchBaseFoodHint => 'Suche Grundnahrungsmittel';
 
   @override
@@ -2479,7 +2486,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sleepImportNowSubtitle =>
-      'Importiert alle verfuegbaren Schlafdaten (alle Zeiten)';
+      'Importiert alle verfügbaren Schlafdaten (alle Zeiten)';
 
   @override
   String get sleepRawImportsTitle => 'Rohimporte anzeigen';

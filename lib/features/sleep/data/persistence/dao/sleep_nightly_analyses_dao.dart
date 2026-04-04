@@ -141,13 +141,15 @@ class SleepNightlyAnalysesDao {
       sleepEfficiencyPct: row.readNullable<double>('sleep_efficiency_pct'),
       restingHeartRateBpm: row.readNullable<double>('resting_heart_rate_bpm'),
       interruptionsCount: row.readNullable<int>('interruptions_count'),
-      interruptionsWakeMinutes:
-          row.readNullable<int>('interruptions_wake_minutes'),
+      interruptionsWakeMinutes: row.readNullable<int>(
+        'interruptions_wake_minutes',
+      ),
       scoreCompleteness: row.readNullable<double>('score_completeness'),
       regularitySri: row.readNullable<double>('regularity_sri'),
       regularityValidDays: row.readNullable<int>('regularity_valid_days'),
-      regularityIsStable: switch (
-          row.readNullable<int>('regularity_is_stable')) {
+      regularityIsStable: switch (row.readNullable<int>(
+        'regularity_is_stable',
+      )) {
         1 => true,
         0 => false,
         _ => null,

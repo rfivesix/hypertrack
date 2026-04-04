@@ -628,6 +628,8 @@
   "settingsVisualStyleStandard": "Standard (Glas)",
   "settingsVisualStyleLiquid": "Flüssig (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Runde, schwebende UI-Elemente",
+  "settingsMaterialColorsTitle": "Material-Farben",
+  "settingsMaterialColorsSubtitle": "Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents",
   "searchBaseFoodHint": "Suche Grundnahrungsmittel",
   "searchNoHits": "Keine Treffer.",
   "onbSubtitleWelcome": "Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.",
@@ -1041,7 +1043,7 @@
   ,"sleepRequestAccessTitle": "Zugriff anfordern"
   ,"sleepRequestAccessSubtitle": "Schlaf-/Herzfrequenz-Berechtigungen anfordern oder erneut anfordern"
   ,"sleepImportNowTitle": "Schlafdaten jetzt importieren"
-  ,"sleepImportNowSubtitle": "Importiert alle verfuegbaren Schlafdaten (alle Zeiten)"
+  ,"sleepImportNowSubtitle": "Importiert alle verfügbaren Schlafdaten (alle Zeiten)"
   ,"sleepRawImportsTitle": "Rohimporte anzeigen"
   ,"sleepRawImportsSubtitle": "Zeigt aktuelle Health-Connect-Payloads"
   ,"sleepDataStatusTitle": "Datenstatus"

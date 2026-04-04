@@ -25,9 +25,7 @@ class _StubPermissionService implements SleepPermissionsService {
 }
 
 class _FakeSleepSettingsService implements SleepSettingsService {
-  _FakeSleepSettingsService({
-    required this.controller,
-  });
+  _FakeSleepSettingsService({required this.controller});
 
   final SleepPermissionController controller;
   bool enabled = false;

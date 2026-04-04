@@ -213,15 +213,12 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         : lastIdx;
 
     final ChartDataPoint displayPoint = _dataPoints[shownIdx];
-    final String displayValue = widget.valueLabelBuilder?.call(
-          displayPoint.value,
-          widget.unit,
-        ) ??
+    final String displayValue = widget.valueLabelBuilder
+            ?.call(displayPoint.value, widget.unit) ??
         '${displayPoint.value.toStringAsFixed(widget.valueFractionDigits)} ${widget.unit}';
-    final String displayDate = widget.selectedDateLabelBuilder?.call(
-          displayPoint.date,
-        ) ??
-        _defaultSelectedDateLabel(context, displayPoint.date);
+    final String displayDate =
+        widget.selectedDateLabelBuilder?.call(displayPoint.date) ??
+            _defaultSelectedDateLabel(context, displayPoint.date);
 
     final DateTime firstDate = widget.axisMode == MeasurementChartAxisMode.day
         ? _atStartOfDay(_dataPoints.first.date)
@@ -238,10 +235,9 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
 
     double xForPoint(ChartDataPoint point) {
       if (widget.axisMode == MeasurementChartAxisMode.day) {
-        return _atStartOfDay(point.date)
-            .difference(firstDate)
-            .inDays
-            .toDouble();
+        return _atStartOfDay(
+          point.date,
+        ).difference(firstDate).inDays.toDouble();
       }
       return point.date.difference(firstDate).inMinutes.toDouble();
     }

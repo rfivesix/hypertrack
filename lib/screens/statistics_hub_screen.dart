@@ -153,9 +153,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
-    await _sleepSyncService.importRecentIfDue(
-      minInterval: _sleepSyncInterval,
-    );
+    await _sleepSyncService.importRecentIfDue(minInterval: _sleepSyncInterval);
     final selectedDays = _rangePolicy.selectedDaysFromIndex(
       _selectedTimeRangeIndex,
     );
@@ -891,17 +889,15 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             child: CircularProgressIndicator(
               value: scoreValue,
               strokeWidth: 8,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                colorScheme.primary,
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
               backgroundColor: Colors.transparent,
             ),
           ),
           Text(
             scoreText,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -922,10 +918,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           margin: const EdgeInsets.only(top: 4),
           height: 10,
           width: 10,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -934,9 +927,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             children: [
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               if (subtitle != null)
                 Text(
@@ -951,9 +944,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         Text(
           value,
           textAlign: TextAlign.right,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

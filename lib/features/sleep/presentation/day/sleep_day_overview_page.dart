@@ -128,10 +128,7 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
             const SizedBox(height: _sleepOverviewSectionSpacing),
             WeekWindowCard(aggregation: aggregation),
             const SizedBox(height: _sleepOverviewSectionSpacing),
-            WeekScoreStrip(
-              aggregation: aggregation,
-              onTapDay: _selectDay,
-            ),
+            WeekScoreStrip(aggregation: aggregation, onTapDay: _selectDay),
             if (aggregation.days.every((day) => day.score == null)) ...[
               const SizedBox(height: _sleepOverviewSectionSpacing),
               SleepDataUnavailableCard(
@@ -151,10 +148,7 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
           children: [
             MonthSummaryCard(aggregation: aggregation),
             const SizedBox(height: _sleepOverviewSectionSpacing),
-            MonthCalendarGrid(
-              aggregation: aggregation,
-              onTapDay: _selectDay,
-            ),
+            MonthCalendarGrid(aggregation: aggregation, onTapDay: _selectDay),
             if (aggregation.days.every((day) => day.score == null)) ...[
               const SizedBox(height: _sleepOverviewSectionSpacing),
               SleepDataUnavailableCard(
@@ -184,8 +178,11 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
           _anchorDay = _anchorDay.add(Duration(days: 7 * direction));
           break;
         case SleepPeriodScope.month:
-          _anchorDay =
-              DateTime(_anchorDay.year, _anchorDay.month + direction, 1);
+          _anchorDay = DateTime(
+            _anchorDay.year,
+            _anchorDay.month + direction,
+            1,
+          );
           break;
       }
     });
@@ -292,9 +289,9 @@ class _SleepDayOverviewContent extends StatelessWidget {
     if (overview == null) {
       return _SleepEmptyStateCard(
         onOpenSettings: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SettingsScreen()),
-          );
+          await Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
           if (!context.mounted) return;
           await context.read<SleepDayViewModel>().load();
         },
@@ -673,13 +670,13 @@ List<(_SleepChartStage, String, Color)> _timelineLegend(
     (
       _SleepChartStage.awake,
       l10n.sleepStageAwakeLabel,
-      const Color(0xFFB8C7E0)
+      const Color(0xFFB8C7E0),
     ),
     (_SleepChartStage.rem, l10n.sleepStageRemLabel, const Color(0xFF85A8FF)),
     (
       _SleepChartStage.light,
       l10n.sleepStageLightLabel,
-      const Color(0xFF3F6FD8)
+      const Color(0xFF3F6FD8),
     ),
     (_SleepChartStage.deep, l10n.sleepStageDeepLabel, const Color(0xFF2A5AF3)),
   ];

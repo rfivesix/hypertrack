@@ -285,8 +285,11 @@ class DatabaseHelper {
     }).toList();
   }
 
-  Future<List<FoodEntry>> getEntriesForDateRange(DateTime start, DateTime end,
-      {DateTime? updatedSince}) async {
+  Future<List<FoodEntry>> getEntriesForDateRange(
+    DateTime start,
+    DateTime end, {
+    DateTime? updatedSince,
+  }) async {
     final dbInstance = await database;
 
     final effectiveStart = DateTime(start.year, start.month, start.day);
@@ -392,8 +395,10 @@ class DatabaseHelper {
   }
 
   Future<List<FluidEntry>> getFluidEntriesForDateRange(
-      DateTime start, DateTime end,
-      {DateTime? updatedSince}) async {
+    DateTime start,
+    DateTime end, {
+    DateTime? updatedSince,
+  }) async {
     final dbInstance = await database;
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);

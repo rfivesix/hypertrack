@@ -67,9 +67,7 @@ class SleepHubSummaryRepository {
       fromInclusive: startLocal,
       toExclusive: endLocal.add(const Duration(days: 1)),
     );
-    final sessionsById = {
-      for (final session in sessions) session.id: session,
-    };
+    final sessionsById = {for (final session in sessions) session.id: session};
 
     final scoreValues = <double>[];
     final durationMinutes = <int>[];
@@ -173,8 +171,10 @@ class SleepHubSummaryRepository {
       sumCos += math.cos(angle);
     }
     if (sumSin.abs() < 1e-6 && sumCos.abs() < 1e-6) return null;
-    final avgAngle =
-        math.atan2(sumSin / minutes.length, sumCos / minutes.length);
+    final avgAngle = math.atan2(
+      sumSin / minutes.length,
+      sumCos / minutes.length,
+    );
     final normalized = avgAngle < 0 ? avgAngle + 2 * math.pi : avgAngle;
     final avgMinutes = (normalized / (2 * math.pi) * 1440).round() % 1440;
     return avgMinutes;
@@ -243,11 +243,8 @@ class SleepHubSummaryRepository {
     };
   }
 
-  DateTime _normalizeDate(DateTime value) => DateTime(
-        value.year,
-        value.month,
-        value.day,
-      );
+  DateTime _normalizeDate(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 
   String _nightKey(DateTime date) {
     final normalized = _normalizeDate(date);

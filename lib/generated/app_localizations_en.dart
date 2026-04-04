@@ -1462,6 +1462,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVisualStyleLiquidDesc => 'Rounded, floating UI elements';
 
   @override
+  String get settingsMaterialColorsTitle => 'Material colors';
+
+  @override
+  String get settingsMaterialColorsSubtitle =>
+      'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent';
+
+  @override
   String get searchBaseFoodHint => 'Search base foods';
 
   @override

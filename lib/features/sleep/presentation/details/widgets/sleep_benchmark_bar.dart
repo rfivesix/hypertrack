@@ -43,10 +43,7 @@ class SleepBenchmarkBar extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: trackRadius,
-            child: Container(
-              height: 10,
-              color: trackColor,
-            ),
+            child: Container(height: 10, color: trackColor),
           ),
           Positioned.fill(
             child: LayoutBuilder(

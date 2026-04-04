@@ -58,8 +58,11 @@ class SleepDerivedProvider extends ChangeNotifier {
   Future<void> loadWeek(DateTime anchorDay) async {
     _week = const SleepRangeState(isLoading: true, items: []);
     notifyListeners();
-    final start = DateTime(anchorDay.year, anchorDay.month, anchorDay.day)
-        .subtract(Duration(days: anchorDay.weekday - DateTime.monday));
+    final start = DateTime(
+      anchorDay.year,
+      anchorDay.month,
+      anchorDay.day,
+    ).subtract(Duration(days: anchorDay.weekday - DateTime.monday));
     final end = start.add(const Duration(days: 6));
     await _loadRange(start, end, isWeek: true);
   }

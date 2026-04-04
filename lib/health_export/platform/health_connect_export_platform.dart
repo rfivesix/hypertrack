@@ -22,11 +22,11 @@ class HealthConnectExportPlatform {
   }
 
   Future<void> writeMeasurementsBatch(
-      List<Map<String, dynamic>> payloads) async {
-    await _channel.invokeMethod<void>(
-      'writeMeasurementsBatch',
-      {'records': payloads},
-    );
+    List<Map<String, dynamic>> payloads,
+  ) async {
+    await _channel.invokeMethod<void>('writeMeasurementsBatch', {
+      'records': payloads,
+    });
   }
 
   Future<void> writeNutrition(Map<String, dynamic> payload) async {
@@ -34,10 +34,9 @@ class HealthConnectExportPlatform {
   }
 
   Future<void> writeNutritionBatch(List<Map<String, dynamic>> payloads) async {
-    await _channel.invokeMethod<void>(
-      'writeNutritionBatch',
-      {'records': payloads},
-    );
+    await _channel.invokeMethod<void>('writeNutritionBatch', {
+      'records': payloads,
+    });
   }
 
   Future<void> writeHydration(Map<String, dynamic> payload) async {
@@ -45,10 +44,9 @@ class HealthConnectExportPlatform {
   }
 
   Future<void> writeHydrationBatch(List<Map<String, dynamic>> payloads) async {
-    await _channel.invokeMethod<void>(
-      'writeHydrationBatch',
-      {'records': payloads},
-    );
+    await _channel.invokeMethod<void>('writeHydrationBatch', {
+      'records': payloads,
+    });
   }
 
   Future<void> writeWorkout(Map<String, dynamic> payload) async {
@@ -56,9 +54,8 @@ class HealthConnectExportPlatform {
   }
 
   Future<void> writeWorkoutsBatch(List<Map<String, dynamic>> payloads) async {
-    await _channel.invokeMethod<void>(
-      'writeWorkoutsBatch',
-      {'records': payloads},
-    );
+    await _channel.invokeMethod<void>('writeWorkoutsBatch', {
+      'records': payloads,
+    });
   }
 }

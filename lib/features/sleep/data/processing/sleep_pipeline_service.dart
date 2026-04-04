@@ -58,7 +58,9 @@ class SleepPipelineService {
   }) async {
     if (batch.sessions.isEmpty) {
       return const SleepPipelineRunResult(
-          importedSessions: 0, analyzedNights: 0);
+        importedSessions: 0,
+        analyzedNights: 0,
+      );
     }
 
     final importedAt = DateTime.now().toUtc();
@@ -115,9 +117,9 @@ class SleepPipelineService {
     }
     final hrBySession = <String, List<HeartRateSample>>{};
     for (final sample in mapped.heartRateSamples) {
-      hrBySession.putIfAbsent(sample.sessionId, () => <HeartRateSample>[]).add(
-            sample,
-          );
+      hrBySession
+          .putIfAbsent(sample.sessionId, () => <HeartRateSample>[])
+          .add(sample);
     }
 
     await _database.transaction(() async {
@@ -331,8 +333,10 @@ class SleepPipelineService {
       final session = _toDomainSession(sessionRow);
       final segments =
           segmentRows.map(_toDomainStageSegment).toList(growable: false);
-      final repaired =
-          repairSleepTimeline(session: session, segments: segments);
+      final repaired = repairSleepTimeline(
+        session: session,
+        segments: segments,
+      );
       for (final segment in repaired) {
         if (!_isSleepStage(segment.stage)) continue;
         _markSleepSegmentAcrossDays(segment, dayBuilders);
@@ -370,7 +374,8 @@ class SleepPipelineService {
   }
 
   SleepStageSegment _toDomainStageSegment(
-      SleepCanonicalStageSegmentRecord row) {
+    SleepCanonicalStageSegmentRecord row,
+  ) {
     return SleepStageSegment(
       id: row.id,
       sessionId: row.sessionId,
@@ -444,13 +449,19 @@ class SleepPipelineService {
           segment.endAtUtc.isBefore(dayEnd) ? segment.endAtUtc : dayEnd;
       if (overlapEnd.isAfter(overlapStart)) {
         final builder = dayBuilders.putIfAbsent(
-            _dayKey(dayStart), () => _RegularityDayBuilder(dayStart));
+          _dayKey(dayStart),
+          () => _RegularityDayBuilder(dayStart),
+        );
         final startMinute = overlapStart.difference(dayStart).inMinutes;
         final endSeconds = overlapEnd.difference(dayStart).inSeconds;
-        final endMinute =
-            ((endSeconds + 59) ~/ 60).clamp(0, sleepRegularityMinutesPerDay);
+        final endMinute = ((endSeconds + 59) ~/ 60).clamp(
+          0,
+          sleepRegularityMinutesPerDay,
+        );
         builder.markSleep(
-            startMinute: startMinute, endMinuteExclusive: endMinute);
+          startMinute: startMinute,
+          endMinuteExclusive: endMinute,
+        );
       }
       day = day.add(const Duration(days: 1));
     }
@@ -483,10 +494,7 @@ class _RegularityDayBuilder {
   final Uint8List _sleepByMinute = Uint8List(sleepRegularityMinutesPerDay);
   bool _hasSleepData = false;
 
-  void markSleep({
-    required int startMinute,
-    required int endMinuteExclusive,
-  }) {
+  void markSleep({required int startMinute, required int endMinuteExclusive}) {
     final start = startMinute.clamp(0, sleepRegularityMinutesPerDay - 1);
     final end = endMinuteExclusive.clamp(0, sleepRegularityMinutesPerDay);
     if (end <= start) return;

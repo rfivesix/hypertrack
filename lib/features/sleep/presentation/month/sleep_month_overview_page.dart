@@ -98,19 +98,11 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
 
   Future<void> _onScopeChanged(SleepPeriodScope scope) async {
     if (scope == SleepPeriodScope.day) {
-      await SleepNavigation.openDayForDate(
-        context,
-        _anchorDay,
-        replace: true,
-      );
+      await SleepNavigation.openDayForDate(context, _anchorDay, replace: true);
       return;
     }
     if (scope == SleepPeriodScope.week) {
-      await SleepNavigation.openWeekForDate(
-        context,
-        _anchorDay,
-        replace: true,
-      );
+      await SleepNavigation.openWeekForDate(context, _anchorDay, replace: true);
       return;
     }
   }
@@ -172,10 +164,7 @@ class MonthSummaryCard extends StatelessWidget {
 }
 
 class MonthCalendarGrid extends StatelessWidget {
-  const MonthCalendarGrid({
-    required this.aggregation,
-    required this.onTapDay,
-  });
+  const MonthCalendarGrid({required this.aggregation, required this.onTapDay});
 
   final MonthSleepAggregation aggregation;
   final ValueChanged<DateTime> onTapDay;
