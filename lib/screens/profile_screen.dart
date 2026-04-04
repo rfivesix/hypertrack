@@ -389,8 +389,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     );
                     // Reload after settings return; iOS swipe-back may not
-                    // propagate a bool result.
-                    if (result != false && mounted) {
+                    // propagate a bool result and returns null.
+                    if ((result == true || result == null) && mounted) {
                       _loadProfileData();
                     }
                   },

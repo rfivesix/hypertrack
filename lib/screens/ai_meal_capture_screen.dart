@@ -40,7 +40,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   // Analysis state
   bool _isAnalyzing = false;
 
-  // Single animation controller for shimmer loading
+  // Single animation controller for analyze-button loading animation
   late AnimationController _pulseController;
 
   @override
