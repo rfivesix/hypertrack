@@ -351,603 +351,600 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
       body: ListView(
-          padding: DesignConstants.cardPadding.copyWith(
-            top: DesignConstants.cardPadding.top + topPadding,
-          ),
-          children: [
-            _buildSectionTitle(context, l10n.settingsAppearance),
-            SummaryCard(
-              child: Column(
-                children: [
-                  RadioListTile<ThemeMode>(
-                    title: Text(l10n.themeSystem),
-                    value: ThemeMode.system,
-                    groupValue: themeService.themeMode,
-                    onChanged: (value) => themeService.setThemeMode(value!),
-                  ),
-                  RadioListTile<ThemeMode>(
-                    title: Text(l10n.themeLight),
-                    value: ThemeMode.light,
-                    groupValue: themeService.themeMode,
-                    onChanged: (value) => themeService.setThemeMode(value!),
-                  ),
-                  RadioListTile<ThemeMode>(
-                    title: Text(l10n.themeDark),
-                    value: ThemeMode.dark,
-                    groupValue: themeService.themeMode,
-                    onChanged: (value) => themeService.setThemeMode(value!),
-                  ),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: Text(
-                            l10n.settingsVisualStyleTitle,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelLarge
-                                ?.copyWith(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
+        children: [
+          _buildSectionTitle(context, l10n.settingsAppearance),
+          SummaryCard(
+            child: Column(
+              children: [
+                RadioListTile<ThemeMode>(
+                  title: Text(l10n.themeSystem),
+                  value: ThemeMode.system,
+                  groupValue: themeService.themeMode,
+                  onChanged: (value) => themeService.setThemeMode(value!),
+                ),
+                RadioListTile<ThemeMode>(
+                  title: Text(l10n.themeLight),
+                  value: ThemeMode.light,
+                  groupValue: themeService.themeMode,
+                  onChanged: (value) => themeService.setThemeMode(value!),
+                ),
+                RadioListTile<ThemeMode>(
+                  title: Text(l10n.themeDark),
+                  value: ThemeMode.dark,
+                  groupValue: themeService.themeMode,
+                  onChanged: (value) => themeService.setThemeMode(value!),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                        RadioListTile<int>(
+                        child: Text(
+                          l10n.settingsVisualStyleTitle,
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                      ),
+                      RadioListTile<int>(
+                        title: Text(
+                          l10n.settingsVisualStyleStandard,
+                        ), // LOKALISIERT
+                        value: 0,
+                        groupValue: themeService.visualStyle,
+                        onChanged: (value) =>
+                            themeService.setVisualStyle(value!),
+                      ),
+                      RadioListTile<int>(
+                        title: Text(
+                          l10n.settingsVisualStyleLiquid,
+                        ), // LOKALISIERT
+                        subtitle: Text(
+                          l10n.settingsVisualStyleLiquidDesc,
+                        ), // LOKALISIERT
+                        value: 1,
+                        groupValue: themeService.visualStyle,
+                        onChanged: (value) =>
+                            themeService.setVisualStyle(value!),
+                      ),
+                      if (isAndroid) ...[
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          secondary: const Icon(Icons.palette_outlined),
                           title: Text(
-                            l10n.settingsVisualStyleStandard,
-                          ), // LOKALISIERT
-                          value: 0,
-                          groupValue: themeService.visualStyle,
-                          onChanged: (value) =>
-                              themeService.setVisualStyle(value!),
-                        ),
-                        RadioListTile<int>(
-                          title: Text(
-                            l10n.settingsVisualStyleLiquid,
-                          ), // LOKALISIERT
-                          subtitle: Text(
-                            l10n.settingsVisualStyleLiquidDesc,
-                          ), // LOKALISIERT
-                          value: 1,
-                          groupValue: themeService.visualStyle,
-                          onChanged: (value) =>
-                              themeService.setVisualStyle(value!),
-                        ),
-                        if (isAndroid) ...[
-                          const Divider(height: 1),
-                          SwitchListTile(
-                            secondary: const Icon(Icons.palette_outlined),
-                            title: Text(
-                              l10n.settingsMaterialColorsTitle,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            l10n.settingsMaterialColorsTitle,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
                             ),
-                            subtitle: Text(l10n.settingsMaterialColorsSubtitle),
-                            value: themeService.materialColorsEnabled,
-                            onChanged: (value) =>
-                                themeService.setMaterialColorsEnabled(value),
                           ),
-                        ],
+                          subtitle: Text(l10n.settingsMaterialColorsSubtitle),
+                          value: themeService.materialColorsEnabled,
+                          onChanged: (value) =>
+                              themeService.setMaterialColorsEnabled(value),
+                        ),
                       ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.backup_and_import),
+          _buildNavigationCard(
+            context: context,
+            icon: Icons.import_export_rounded,
+            title: l10n.backup_and_import,
+            subtitle: l10n.backup_and_import_description,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const DataManagementScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, isGerman ? 'Schritte' : 'Steps'),
+          SummaryCard(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.directions_walk_rounded),
+                  title: Text(
+                    isGerman
+                        ? 'Schritte-Tracking aktivieren'
+                        : 'Enable steps tracking',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    isGerman
+                        ? 'Schrittdaten aus Apple Health / Health Connect lesen'
+                        : 'Read step data from Apple Health / Health Connect',
+                  ),
+                  value: _stepsTrackingEnabled,
+                  onChanged: (value) async {
+                    await _stepsSyncService.setTrackingEnabled(value);
+                    hasStepsSettingsChanged = true;
+                    if (!mounted) return;
+                    setState(() => _stepsTrackingEnabled = value);
+
+                    // Kick off permission prompt and first sync when enabling.
+                    if (value) {
+                      const platform = HealthPlatformSteps();
+                      final availability = await platform.getAvailability();
+                      if (availability == StepsAvailability.available) {
+                        await platform.requestPermissions();
+                        // Trigger first sync in background.
+                        _stepsSyncService.sync();
+                      }
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      isGerman ? 'Quellenrichtlinie' : 'Source policy',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                ],
-              ),
+                ),
+                RadioListTile<StepsSourcePolicy>(
+                  title: Text(
+                    isGerman
+                        ? 'Auto (dominante Quelle)'
+                        : 'Auto (dominant source)',
+                  ),
+                  subtitle: Text(
+                    isGerman
+                        ? 'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.'
+                        : 'Recommended: use one source per day to avoid overlap inflation.',
+                  ),
+                  value: StepsSourcePolicy.autoDominant,
+                  groupValue: _stepsSourcePolicy,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setSourcePolicy(value);
+                    hasStepsSettingsChanged = true;
+                    if (!mounted) return;
+                    setState(() => _stepsSourcePolicy = value);
+                  },
+                ),
+                RadioListTile<StepsSourcePolicy>(
+                  title: Text(
+                    isGerman
+                        ? 'Zusammenführen (max pro Stunde)'
+                        : 'Merge (max per hour)',
+                  ),
+                  subtitle: Text(
+                    isGerman
+                        ? 'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.'
+                        : 'Combine sources by taking the highest hourly bucket.',
+                  ),
+                  value: StepsSourcePolicy.maxPerHour,
+                  groupValue: _stepsSourcePolicy,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setSourcePolicy(value);
+                    hasStepsSettingsChanged = true;
+                    if (!mounted) return;
+                    setState(() => _stepsSourcePolicy = value);
+                  },
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      isGerman ? 'Provider-Filter' : 'Provider filter',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                RadioListTile<StepsProviderFilter>(
+                  title: Text(isGerman ? 'Alle' : 'All'),
+                  value: StepsProviderFilter.all,
+                  groupValue: _stepsProviderFilter,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setProviderFilter(value);
+                    hasStepsSettingsChanged = true;
+                    if (!mounted) return;
+                    setState(() => _stepsProviderFilter = value);
+                  },
+                ),
+                RadioListTile<StepsProviderFilter>(
+                  title: const Text('Apple Health'),
+                  value: StepsProviderFilter.apple,
+                  groupValue: _stepsProviderFilter,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setProviderFilter(value);
+                    if (!mounted) return;
+                    setState(() => _stepsProviderFilter = value);
+                  },
+                ),
+                RadioListTile<StepsProviderFilter>(
+                  title: const Text('Health Connect'),
+                  value: StepsProviderFilter.google,
+                  groupValue: _stepsProviderFilter,
+                  onChanged: (value) async {
+                    if (value == null) return;
+                    await _stepsSyncService.setProviderFilter(value);
+                    if (!mounted) return;
+                    setState(() => _stepsProviderFilter = value);
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, l10n.backup_and_import),
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
+          ValueListenableBuilder<SleepPermissionStatus>(
+            valueListenable: _sleepPermissionController.state,
+            builder: (context, permission, _) {
+              return SummaryCard(
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      secondary: const Icon(Icons.bedtime_outlined),
+                      title: Text(
+                        l10n.sleepEnableTrackingTitle,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(l10n.sleepEnableTrackingSubtitle),
+                      value: _sleepTrackingEnabled,
+                      onChanged: (value) async {
+                        final wasEnabled = _sleepTrackingEnabled;
+                        await _sleepSyncService.setTrackingEnabled(value);
+                        hasStepsSettingsChanged = true;
+                        if (value && !wasEnabled) {
+                          await _sleepPermissionController.requestAccess();
+                        }
+                        await _sleepPermissionController.refresh();
+                        if (!mounted) return;
+                        setState(() => _sleepTrackingEnabled = value);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.health_and_safety_outlined),
+                      title: Text(
+                        l10n.sleepHealthConnectionStatusTitle,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(_sleepStatusSubtitle(permission, l10n)),
+                      trailing: Icon(
+                        _sleepStatusIcon(permission.state),
+                        color: _sleepStatusColor(context, permission.state),
+                      ),
+                    ),
+                    if (permission.state == SleepPermissionState.ready)
+                      ListTile(
+                        leading: const Icon(Icons.info_outline),
+                        title: Text(
+                          l10n.sleepDataStatusTitle,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(l10n.sleepDataStatusSubtitle),
+                      ),
+                    if (permission.state == SleepPermissionState.denied ||
+                        permission.state == SleepPermissionState.partial)
+                      ListTile(
+                        leading: const Icon(Icons.lock_outline),
+                        title: Text(
+                          l10n.sleepNoPermissionTitle,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(l10n.sleepNoPermissionSubtitle),
+                      ),
+                    if (permission.state == SleepPermissionState.unavailable ||
+                        permission.state == SleepPermissionState.notInstalled)
+                      ListTile(
+                        leading: const Icon(Icons.mobiledata_off_outlined),
+                        title: Text(
+                          l10n.sleepFeatureUnavailableTitle,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(l10n.sleepFeatureUnavailableSubtitle),
+                      ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.lock_open_outlined),
+                      title: Text(l10n.sleepRequestAccessTitle),
+                      subtitle: Text(l10n.sleepRequestAccessSubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await _sleepPermissionController.requestAccess();
+                        if (!mounted) return;
+                        setState(() {});
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.sync),
+                      title: Text(l10n.sleepImportNowTitle),
+                      subtitle: Text(l10n.sleepImportNowSubtitle),
+                      trailing: _isSleepImporting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.chevron_right),
+                      onTap: _isSleepImporting
+                          ? null
+                          : () async {
+                              setState(() => _isSleepImporting = true);
+                              final result =
+                                  await _sleepSyncService.importRecent(
+                                // Manual import should backfill full history.
+                                // Auto/periodic import remains 30 days.
+                                lookbackDays: 36500,
+                              );
+                              if (!mounted) return;
+                              setState(() => _isSleepImporting = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    result.success
+                                        ? l10n.sleepImportFinishedSessions(
+                                            result.importedSessions,
+                                          )
+                                        : (result.message ??
+                                            l10n.sleepImportUnavailableCheckPermissions),
+                                  ),
+                                ),
+                              );
+                              await _sleepPermissionController.refresh();
+                              hasStepsSettingsChanged = true;
+                            },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.data_object_outlined),
+                      title: Text(l10n.sleepRawImportsTitle),
+                      subtitle: Text(l10n.sleepRawImportsSubtitle),
+                      trailing: _isSleepRawLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.chevron_right),
+                      onTap: _isSleepRawLoading ? null : _showRawSleepImports,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(
+            context,
+            _isGerman(context) ? 'Health Export' : 'Health export',
+          ),
+          SummaryCard(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.favorite_outline),
+                  title: Text(
+                    _exportPlatformTitle(
+                      HealthExportPlatform.appleHealth,
+                      _isGerman(context),
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    _isGerman(context)
+                        ? 'Einweg-Export von Hypertrack nach Apple Health'
+                        : 'One-way export from Hypertrack to Apple Health',
+                  ),
+                  value: _appleExportEnabled,
+                  onChanged: (value) => _toggleHealthExport(
+                    platform: HealthExportPlatform.appleHealth,
+                    enabled: value,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(
+                    _exportStateIcon(
+                      _exportStatuses[HealthExportPlatform.appleHealth]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                    color: _exportStateColor(
+                      context,
+                      _exportStatuses[HealthExportPlatform.appleHealth]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                  ),
+                  title: Text(
+                    _isGerman(context)
+                        ? 'Export-Status Apple Health'
+                        : 'Apple Health export status',
+                  ),
+                  subtitle: Text(
+                    HealthExportDomain.values.map((domain) {
+                      final status =
+                          _exportStatuses[HealthExportPlatform.appleHealth]
+                              ?.statusFor(domain);
+                      return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
+                    }).join(' · '),
+                  ),
+                  trailing: _isAppleExporting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: _appleExportEnabled
+                      ? () => _exportNow(HealthExportPlatform.appleHealth)
+                      : null,
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: const Icon(Icons.favorite_border),
+                  title: Text(
+                    _exportPlatformTitle(
+                      HealthExportPlatform.healthConnect,
+                      _isGerman(context),
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    _isGerman(context)
+                        ? 'Einweg-Export von Hypertrack nach Health Connect'
+                        : 'One-way export from Hypertrack to Health Connect',
+                  ),
+                  value: _healthConnectExportEnabled,
+                  onChanged: (value) => _toggleHealthExport(
+                    platform: HealthExportPlatform.healthConnect,
+                    enabled: value,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(
+                    _exportStateIcon(
+                      _exportStatuses[HealthExportPlatform.healthConnect]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                    color: _exportStateColor(
+                      context,
+                      _exportStatuses[HealthExportPlatform.healthConnect]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                  ),
+                  title: Text(
+                    _isGerman(context)
+                        ? 'Export-Status Health Connect'
+                        : 'Health Connect export status',
+                  ),
+                  subtitle: Text(
+                    HealthExportDomain.values.map((domain) {
+                      final status =
+                          _exportStatuses[HealthExportPlatform.healthConnect]
+                              ?.statusFor(domain);
+                      return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
+                    }).join(' · '),
+                  ),
+                  trailing: _isHealthConnectExporting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: _healthConnectExportEnabled
+                      ? () => _exportNow(HealthExportPlatform.healthConnect)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.aiSettingsTitle),
+          SummaryCard(
+            child: SwitchListTile(
+              secondary: ShaderMask(
+                blendMode: BlendMode.srcIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: _aiGradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: const Icon(Icons.auto_awesome, size: 28),
+              ),
+              title: Text(
+                l10n.aiEnableTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(l10n.aiEnableSubtitle),
+              value: themeService.isAiEnabled,
+              onChanged: (value) => themeService.setAiEnabled(value),
+            ),
+          ),
+          if (themeService.isAiEnabled) ...[
+            const SizedBox(height: DesignConstants.spacingM),
             _buildNavigationCard(
               context: context,
-              icon: Icons.import_export_rounded,
-              title: l10n.backup_and_import,
-              subtitle: l10n.backup_and_import_description,
+              icon: Icons.auto_awesome,
+              title: l10n.aiSettingsTitle,
+              subtitle: l10n.aiSettingsDescription,
+              useGradientIcon: true,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => const DataManagementScreen(),
+                    builder: (context) => const AiSettingsScreen(),
                   ),
                 );
               },
-            ),
-            const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, isGerman ? 'Schritte' : 'Steps'),
-            SummaryCard(
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    secondary: const Icon(Icons.directions_walk_rounded),
-                    title: Text(
-                      isGerman
-                          ? 'Schritte-Tracking aktivieren'
-                          : 'Enable steps tracking',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      isGerman
-                          ? 'Schrittdaten aus Apple Health / Health Connect lesen'
-                          : 'Read step data from Apple Health / Health Connect',
-                    ),
-                    value: _stepsTrackingEnabled,
-                    onChanged: (value) async {
-                      await _stepsSyncService.setTrackingEnabled(value);
-                      hasStepsSettingsChanged = true;
-                      if (!mounted) return;
-                      setState(() => _stepsTrackingEnabled = value);
-
-                      // Kick off permission prompt and first sync when enabling.
-                      if (value) {
-                        const platform = HealthPlatformSteps();
-                        final availability = await platform.getAvailability();
-                        if (availability == StepsAvailability.available) {
-                          await platform.requestPermissions();
-                          // Trigger first sync in background.
-                          _stepsSyncService.sync();
-                        }
-                      }
-                    },
-                  ),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        isGerman ? 'Quellenrichtlinie' : 'Source policy',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  RadioListTile<StepsSourcePolicy>(
-                    title: Text(
-                      isGerman
-                          ? 'Auto (dominante Quelle)'
-                          : 'Auto (dominant source)',
-                    ),
-                    subtitle: Text(
-                      isGerman
-                          ? 'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.'
-                          : 'Recommended: use one source per day to avoid overlap inflation.',
-                    ),
-                    value: StepsSourcePolicy.autoDominant,
-                    groupValue: _stepsSourcePolicy,
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      await _stepsSyncService.setSourcePolicy(value);
-                      hasStepsSettingsChanged = true;
-                      if (!mounted) return;
-                      setState(() => _stepsSourcePolicy = value);
-                    },
-                  ),
-                  RadioListTile<StepsSourcePolicy>(
-                    title: Text(
-                      isGerman
-                          ? 'Zusammenführen (max pro Stunde)'
-                          : 'Merge (max per hour)',
-                    ),
-                    subtitle: Text(
-                      isGerman
-                          ? 'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.'
-                          : 'Combine sources by taking the highest hourly bucket.',
-                    ),
-                    value: StepsSourcePolicy.maxPerHour,
-                    groupValue: _stepsSourcePolicy,
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      await _stepsSyncService.setSourcePolicy(value);
-                      hasStepsSettingsChanged = true;
-                      if (!mounted) return;
-                      setState(() => _stepsSourcePolicy = value);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        isGerman ? 'Provider-Filter' : 'Provider filter',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  RadioListTile<StepsProviderFilter>(
-                    title: Text(isGerman ? 'Alle' : 'All'),
-                    value: StepsProviderFilter.all,
-                    groupValue: _stepsProviderFilter,
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      await _stepsSyncService.setProviderFilter(value);
-                      hasStepsSettingsChanged = true;
-                      if (!mounted) return;
-                      setState(() => _stepsProviderFilter = value);
-                    },
-                  ),
-                  RadioListTile<StepsProviderFilter>(
-                    title: const Text('Apple Health'),
-                    value: StepsProviderFilter.apple,
-                    groupValue: _stepsProviderFilter,
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      await _stepsSyncService.setProviderFilter(value);
-                      if (!mounted) return;
-                      setState(() => _stepsProviderFilter = value);
-                    },
-                  ),
-                  RadioListTile<StepsProviderFilter>(
-                    title: const Text('Health Connect'),
-                    value: StepsProviderFilter.google,
-                    groupValue: _stepsProviderFilter,
-                    onChanged: (value) async {
-                      if (value == null) return;
-                      await _stepsSyncService.setProviderFilter(value);
-                      if (!mounted) return;
-                      setState(() => _stepsProviderFilter = value);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
-            ValueListenableBuilder<SleepPermissionStatus>(
-              valueListenable: _sleepPermissionController.state,
-              builder: (context, permission, _) {
-                return SummaryCard(
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        secondary: const Icon(Icons.bedtime_outlined),
-                        title: Text(
-                          l10n.sleepEnableTrackingTitle,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(l10n.sleepEnableTrackingSubtitle),
-                        value: _sleepTrackingEnabled,
-                        onChanged: (value) async {
-                          final wasEnabled = _sleepTrackingEnabled;
-                          await _sleepSyncService.setTrackingEnabled(value);
-                          hasStepsSettingsChanged = true;
-                          if (value && !wasEnabled) {
-                            await _sleepPermissionController.requestAccess();
-                          }
-                          await _sleepPermissionController.refresh();
-                          if (!mounted) return;
-                          setState(() => _sleepTrackingEnabled = value);
-                        },
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.health_and_safety_outlined),
-                        title: Text(
-                          l10n.sleepHealthConnectionStatusTitle,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(_sleepStatusSubtitle(permission, l10n)),
-                        trailing: Icon(
-                          _sleepStatusIcon(permission.state),
-                          color: _sleepStatusColor(context, permission.state),
-                        ),
-                      ),
-                      if (permission.state == SleepPermissionState.ready)
-                        ListTile(
-                          leading: const Icon(Icons.info_outline),
-                          title: Text(
-                            l10n.sleepDataStatusTitle,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.sleepDataStatusSubtitle),
-                        ),
-                      if (permission.state == SleepPermissionState.denied ||
-                          permission.state == SleepPermissionState.partial)
-                        ListTile(
-                          leading: const Icon(Icons.lock_outline),
-                          title: Text(
-                            l10n.sleepNoPermissionTitle,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.sleepNoPermissionSubtitle),
-                        ),
-                      if (permission.state ==
-                              SleepPermissionState.unavailable ||
-                          permission.state == SleepPermissionState.notInstalled)
-                        ListTile(
-                          leading: const Icon(Icons.mobiledata_off_outlined),
-                          title: Text(
-                            l10n.sleepFeatureUnavailableTitle,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.sleepFeatureUnavailableSubtitle),
-                        ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.lock_open_outlined),
-                        title: Text(l10n.sleepRequestAccessTitle),
-                        subtitle: Text(l10n.sleepRequestAccessSubtitle),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () async {
-                          await _sleepPermissionController.requestAccess();
-                          if (!mounted) return;
-                          setState(() {});
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.sync),
-                        title: Text(l10n.sleepImportNowTitle),
-                        subtitle: Text(l10n.sleepImportNowSubtitle),
-                        trailing: _isSleepImporting
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.chevron_right),
-                        onTap: _isSleepImporting
-                            ? null
-                            : () async {
-                                setState(() => _isSleepImporting = true);
-                                final result =
-                                    await _sleepSyncService.importRecent(
-                                  // Manual import should backfill full history.
-                                  // Auto/periodic import remains 30 days.
-                                  lookbackDays: 36500,
-                                );
-                                if (!mounted) return;
-                                setState(() => _isSleepImporting = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      result.success
-                                          ? l10n.sleepImportFinishedSessions(
-                                              result.importedSessions,
-                                            )
-                                          : (result.message ??
-                                              l10n.sleepImportUnavailableCheckPermissions),
-                                    ),
-                                  ),
-                                );
-                                await _sleepPermissionController.refresh();
-                                hasStepsSettingsChanged = true;
-                              },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.data_object_outlined),
-                        title: Text(l10n.sleepRawImportsTitle),
-                        subtitle: Text(l10n.sleepRawImportsSubtitle),
-                        trailing: _isSleepRawLoading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.chevron_right),
-                        onTap: _isSleepRawLoading ? null : _showRawSleepImports,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(
-              context,
-              _isGerman(context) ? 'Health Export' : 'Health export',
-            ),
-            SummaryCard(
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    secondary: const Icon(Icons.favorite_outline),
-                    title: Text(
-                      _exportPlatformTitle(
-                        HealthExportPlatform.appleHealth,
-                        _isGerman(context),
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      _isGerman(context)
-                          ? 'Einweg-Export von Hypertrack nach Apple Health'
-                          : 'One-way export from Hypertrack to Apple Health',
-                    ),
-                    value: _appleExportEnabled,
-                    onChanged: (value) => _toggleHealthExport(
-                      platform: HealthExportPlatform.appleHealth,
-                      enabled: value,
-                    ),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      _exportStateIcon(
-                        _exportStatuses[HealthExportPlatform.appleHealth]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                      color: _exportStateColor(
-                        context,
-                        _exportStatuses[HealthExportPlatform.appleHealth]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                    ),
-                    title: Text(
-                      _isGerman(context)
-                          ? 'Export-Status Apple Health'
-                          : 'Apple Health export status',
-                    ),
-                    subtitle: Text(
-                      HealthExportDomain.values.map((domain) {
-                        final status =
-                            _exportStatuses[HealthExportPlatform.appleHealth]
-                                ?.statusFor(domain);
-                        return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
-                      }).join(' · '),
-                    ),
-                    trailing: _isAppleExporting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.chevron_right),
-                    onTap: _appleExportEnabled
-                        ? () => _exportNow(HealthExportPlatform.appleHealth)
-                        : null,
-                  ),
-                  const Divider(height: 1),
-                  SwitchListTile(
-                    secondary: const Icon(Icons.favorite_border),
-                    title: Text(
-                      _exportPlatformTitle(
-                        HealthExportPlatform.healthConnect,
-                        _isGerman(context),
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      _isGerman(context)
-                          ? 'Einweg-Export von Hypertrack nach Health Connect'
-                          : 'One-way export from Hypertrack to Health Connect',
-                    ),
-                    value: _healthConnectExportEnabled,
-                    onChanged: (value) => _toggleHealthExport(
-                      platform: HealthExportPlatform.healthConnect,
-                      enabled: value,
-                    ),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      _exportStateIcon(
-                        _exportStatuses[HealthExportPlatform.healthConnect]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                      color: _exportStateColor(
-                        context,
-                        _exportStatuses[HealthExportPlatform.healthConnect]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                    ),
-                    title: Text(
-                      _isGerman(context)
-                          ? 'Export-Status Health Connect'
-                          : 'Health Connect export status',
-                    ),
-                    subtitle: Text(
-                      HealthExportDomain.values.map((domain) {
-                        final status =
-                            _exportStatuses[HealthExportPlatform.healthConnect]
-                                ?.statusFor(domain);
-                        return '${_domainLabel(domain, _isGerman(context))}: ${_stateLabel(status?.state ?? HealthExportState.idle, _isGerman(context))}';
-                      }).join(' · '),
-                    ),
-                    trailing: _isHealthConnectExporting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.chevron_right),
-                    onTap: _healthConnectExportEnabled
-                        ? () => _exportNow(HealthExportPlatform.healthConnect)
-                        : null,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, l10n.aiSettingsTitle),
-            SummaryCard(
-              child: SwitchListTile(
-                secondary: ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: _aiGradientColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(bounds),
-                  child: const Icon(Icons.auto_awesome, size: 28),
-                ),
-                title: Text(
-                  l10n.aiEnableTitle,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(l10n.aiEnableSubtitle),
-                value: themeService.isAiEnabled,
-                onChanged: (value) => themeService.setAiEnabled(value),
-              ),
-            ),
-            if (themeService.isAiEnabled) ...[
-              const SizedBox(height: DesignConstants.spacingM),
-              _buildNavigationCard(
-                context: context,
-                icon: Icons.auto_awesome,
-                title: l10n.aiSettingsTitle,
-                subtitle: l10n.aiSettingsDescription,
-                useGradientIcon: true,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AiSettingsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ],
-            const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, l10n.about_and_legal_capslock),
-            _buildNavigationCard(
-              context: context,
-              icon: Icons.info_outline_rounded,
-              title: l10n.attribution_and_license,
-              subtitle: l10n.data_from_off_and_wger,
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(l10n.attribution_title),
-                    content: SingleChildScrollView(
-                      child: Text(l10n.attributionText),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(l10n.snackbar_button_ok),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: DesignConstants.spacingM),
-            SummaryCard(
-              child: ListTile(
-                leading: const Icon(Icons.code_rounded),
-                title: Text(
-                  l10n.app_version,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(_appVersion),
-              ),
             ),
           ],
-        ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.about_and_legal_capslock),
+          _buildNavigationCard(
+            context: context,
+            icon: Icons.info_outline_rounded,
+            title: l10n.attribution_and_license,
+            subtitle: l10n.data_from_off_and_wger,
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(l10n.attribution_title),
+                  content: SingleChildScrollView(
+                    child: Text(l10n.attributionText),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.snackbar_button_ok),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: DesignConstants.spacingM),
+          SummaryCard(
+            child: ListTile(
+              leading: const Icon(Icons.code_rounded),
+              title: Text(
+                l10n.app_version,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(_appVersion),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

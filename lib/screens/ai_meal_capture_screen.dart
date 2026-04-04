@@ -347,7 +347,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      onPressed: _images.length < _maxImages ? _takePhoto : null,
+                      onPressed:
+                          _images.length < _maxImages ? _takePhoto : null,
                       icon: const Icon(Icons.camera_alt_rounded),
                       color: theme.colorScheme.primary,
                       tooltip: l10n.aiCaptureTabPhoto,
