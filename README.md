@@ -1,8 +1,10 @@
 # Hypertrack
 
-Hypertrack is an offline-first Flutter app for workout, nutrition, measurements, steps, sleep, and one-way health-platform export.
+Hypertrack is an offline-first Flutter app for workout, nutrition, measurements, steps, sleep, supplements, and one-way health-platform export.
 
 This README is intentionally implementation-focused and reflects the **current working copy** of the codebase. Planned work toward `1.0` is listed separately and is **not** described as implemented behavior.
+
+> **Note:** Hypertrack is built with heavy AI assistance across implementation, refactoring, and documentation. I’m very happy with the result, but as with any fast-moving AI-assisted codebase, I cannot guarantee that every detail is perfect.
 
 ## Documentation
 
@@ -17,68 +19,54 @@ This README is intentionally implementation-focused and reflects the **current w
 - [One-way Health Export (Current Implementation)](documentation/health_export_one_way.md)
 - [Shared Analytics Definitions (Legacy Reference)](documentation/analytics_definitions.md)
 
-## Current app shell (implemented)
+## What Hypertrack currently supports
 
-- Entry: `lib/main.dart` -> `AppInitializerScreen`
-- Main tabs (`lib/screens/main_screen.dart`):
-  1. Diary
-  2. Workout
-  3. Statistics
-  4. Nutrition
-- Sleep named routes are registered via `MaterialApp.onGenerateRoute = SleepNavigation.onGenerateRoute` in `lib/main.dart`.
+### Workout tracking
+- Logging full workout sessions
+- Exercise-by-exercise set tracking
+- Support for set types such as warm-up, normal, failure, and dropset
+- Tracking of reps, weight, and RIR
+- Workout history and session review
+- Session-level export to Apple Health and Google Health Connect
 
-## Current health integrations (implemented)
+### Nutrition tracking
+- Logging foods and nutrition entries
+- Tracking calories and core macros
+- Tracking additional nutrition fields such as fiber, sugar, and salt/sodium where available
+- Optional AI-assisted meal tracking
+  - bring your own API key
+  - user-controlled provider setup
+- Aggregate nutrition export to Apple Health and Google Health Connect
 
-### Steps
-- Settings + sync: `lib/services/health/steps_sync_service.dart`
-- Aggregation repo: `lib/features/steps/data/steps_aggregation_repository.dart`
-- UI:
-  - Statistics hub card
-  - Diary summary card
-  - Dedicated screen: `lib/features/steps/presentation/steps_module_screen.dart`
+### Measurements
+- Logging body measurements and body-weight-related entries
+- Tracking values over time in charts
+- Export of supported measurements to Apple Health and Google Health Connect
 
-### Sleep
-- Settings + permissions + sync: `lib/features/sleep/platform/sleep_sync_service.dart`
-- Pipeline: `lib/features/sleep/data/processing/sleep_pipeline_service.dart`
-- UI:
-  - Statistics hub sleep card
-  - Diary sleep summary card
-  - Sleep day/week/month scoped page
-  - Sleep detail pages
+### Supplements
+- Tracking caffeine and creatine
+- Support for user-defined custom supplements
+- Supplement logging over time
 
-### One-way health export
-- Export-only integration from Hypertrack to:
-  - Apple Health
-  - Google Health Connect
-- Current supported export domains:
-  - measurements
-  - aggregate nutrition
-  - hydration
-  - session-level workouts
-- Current module:
-  - shared export orchestration: `lib/health_export/`
-  - platform bridges:
-    - iOS HealthKit export
-    - Android Health Connect export
-- Current UX:
-  - settings toggles
-  - permission flows
-  - per-domain export status
-  - manual export trigger
+### Steps and sleep
+- Step data import and aggregation
+- Sleep data import, processing, scoring, and visualization
+- Sleep day/week/month views and detail screens
+- Sleep statistics integration
 
-## Statistics / Sleep integration (implemented)
+### Statistics and analysis
+- Workout and body analytics
+- Performance and consistency views
+- Muscle-volume-related analysis
+- Body/nutrition analysis
+- Sleep and steps integration in the statistics area
 
-- Statistics hub (`lib/screens/statistics_hub_screen.dart`) includes:
-  - Steps section (gated by steps tracking enabled)
-  - Sleep section (gated by sleep tracking enabled)
-  - Core workout/body analytics sections:
-    - recovery
-    - consistency
-    - performance
-    - muscle volume
-    - body/nutrition
-- Sleep card in Statistics opens `/sleep/day`
-- Steps card in Statistics opens `StepsModuleScreen`
+### Sync, export, and safety
+- One-way health-platform sync/export to Apple Health and Google Health Connect
+- Export of app-recorded measurements, aggregate nutrition, hydration, and session-level workouts
+- CSV export
+- Automatic backups
+- Offline-first local data handling
 
 ## Current product boundaries
 
@@ -86,15 +74,31 @@ This README is intentionally implementation-focused and reflects the **current w
 - Workout tracking
 - Nutrition tracking
 - Measurement tracking
+- Supplement tracking
 - Steps import and aggregation
 - Sleep import, processing, and scoring
-- One-way export to Apple Health / Health Connect
+- One-way export to Apple Health / Google Health Connect
+- Automatic backups
+- CSV export
+- Export/sync of supported app-recorded health data
+- Optional AI-assisted meal tracking with user-provided API key
 
 ### Explicit non-goals of the current health-platform integration
-- No back-sync/import from Apple Health or Health Connect into Hypertrack
+- No back-sync/import from Apple Health or Google Health Connect into Hypertrack
 - No bidirectional merge/conflict handling
 - No ingredient-level meal export
 - No detailed workout-structure export (sets/exercises/RIR/supersets as structured health-platform data)
+
+## Statistics / Sleep integration (implemented)
+
+- Statistics hub includes:
+  - steps
+  - sleep
+  - recovery
+  - consistency
+  - performance
+  - muscle volume
+  - body/nutrition analytics
 
 ## Current defaults
 
@@ -107,9 +111,16 @@ This README is intentionally implementation-focused and reflects the **current w
   - goal selection
   - weekly target rate
   - recommendation from intake + weight trend
-- Further health export hardening / refinement where needed
-- Additional nutrition guidance polish and MVP completion work
+- Onboarding (including TDEE guidance) and tutorial
 - Widgets
+- App Store release
+- Google Play release
+
+## Credits
+
+- **[Open Food Facts](https://openfoodfacts.org/)** for food database coverage
+- **[wger](https://github.com/wger-project/wger)** for the workout database foundation
+
 ## License
 
 [MIT](LICENSE)
