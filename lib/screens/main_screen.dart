@@ -401,6 +401,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ),
     );
 
+    if (!mounted) return;
+
     if (addFoodResult == true) {
       _refreshHomeScreen();
       return;
@@ -408,7 +410,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
     final selectedFoodItem =
         addFoodResult is FoodItem ? addFoodResult : null;
-    if (selectedFoodItem == null || !mounted) return;
+    if (selectedFoodItem == null) return;
 
     // FIX: Datum übergeben (Signatur unten anpassen!)
     final result = await _showQuantityMenu(
