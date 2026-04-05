@@ -200,6 +200,7 @@ class DatabaseHelper {
             dailyLimit: drift.Value(s.dailyLimit),
             notes: drift.Value(s.notes),
             isBuiltin: drift.Value(s.isBuiltin),
+            isTracked: drift.Value(s.isTracked),
           ),
           mode: drift.InsertMode.insertOrReplace,
         );
@@ -340,6 +341,39 @@ class DatabaseHelper {
           ),
         )
         .toList();
+  }
+
+  /// Returns all food entries with a robust barcode fallback for backup export.
+  ///
+  /// Prefers `legacyBarcode`, and falls back to the linked product barcode
+  /// when available (for newer records that may only store `productId`).
+  Future<List<FoodEntry>> getAllFoodEntriesForBackup() async {
+    final dbInstance = await database;
+    final query = dbInstance.select(dbInstance.nutritionLogs).join([
+      drift.leftOuterJoin(
+        dbInstance.products,
+        dbInstance.products.id.equalsExp(dbInstance.nutritionLogs.productId),
+      ),
+    ]);
+
+    final rows = await query.get();
+    return rows.map((row) {
+      final log = row.readTable(dbInstance.nutritionLogs);
+      final product = row.readTableOrNull(dbInstance.products);
+      final barcode =
+          (log.legacyBarcode != null && log.legacyBarcode!.isNotEmpty)
+              ? log.legacyBarcode!
+              : (product?.barcode ?? 'UNKNOWN');
+
+      return FoodEntry(
+        id: log.localId,
+        barcode: barcode,
+        timestamp: log.consumedAt,
+        quantityInGrams: log.amount.toInt(),
+        mealType: log.mealType,
+        updatedAt: log.updatedAt,
+      );
+    }).toList();
   }
 
   // ===========================================================================
@@ -1018,6 +1052,99 @@ class DatabaseHelper {
           },
         )
         .toList();
+  }
+
+  /// Collects meal templates with items for backup export.
+  Future<List<Map<String, dynamic>>> getMealTemplatesForBackup() async {
+    final dbInstance = await database;
+    final mealRows = await (dbInstance.select(dbInstance.meals)
+          ..orderBy([(t) => drift.OrderingTerm(expression: t.localId)]))
+        .get();
+
+    final result = <Map<String, dynamic>>[];
+    for (final meal in mealRows) {
+      final itemQuery = dbInstance.select(dbInstance.mealItems).join([
+        drift.leftOuterJoin(
+          dbInstance.products,
+          dbInstance.products.id.equalsExp(dbInstance.mealItems.productId),
+        ),
+      ])
+        ..where(dbInstance.mealItems.mealId.equals(meal.id))
+        ..orderBy(
+            [drift.OrderingTerm(expression: dbInstance.mealItems.localId)]);
+      final itemRows = await itemQuery.get();
+
+      final items = itemRows
+          .map((row) {
+            final item = row.readTable(dbInstance.mealItems);
+            final product = row.readTableOrNull(dbInstance.products);
+            final barcode =
+                (item.productBarcode != null && item.productBarcode!.isNotEmpty)
+                    ? item.productBarcode!
+                    : product?.barcode;
+            return <String, dynamic>{
+              'barcode': barcode,
+              'quantityInGrams': item.quantityInGrams,
+            };
+          })
+          .where((row) => row['barcode'] != null)
+          .toList();
+
+      result.add(<String, dynamic>{
+        'name': meal.name,
+        'notes': meal.notes,
+        'items': items,
+      });
+    }
+    return result;
+  }
+
+  /// Restores meal templates with all items from backup payload maps.
+  Future<void> importMealTemplates(
+    List<Map<String, dynamic>> mealTemplates,
+  ) async {
+    if (mealTemplates.isEmpty) return;
+    final dbInstance = await database;
+
+    await dbInstance.transaction(() async {
+      for (final template in mealTemplates) {
+        final name = (template['name'] as String?)?.trim();
+        if (name == null || name.isEmpty) continue;
+        final notes = template['notes'] as String?;
+
+        final mealRow = await dbInstance.into(dbInstance.meals).insertReturning(
+              db.MealsCompanion(
+                name: drift.Value(name),
+                notes: drift.Value(notes),
+              ),
+            );
+
+        final itemsRaw = template['items'];
+        if (itemsRaw is! List) continue;
+        for (final raw in itemsRaw) {
+          if (raw is! Map) continue;
+          final item = Map<String, dynamic>.from(raw);
+          final barcode = (item['barcode'] as String?)?.trim();
+          final gramsRaw = item['quantityInGrams'] ?? item['quantity_in_grams'];
+          final grams = (gramsRaw is num) ? gramsRaw.toInt() : null;
+          if (barcode == null ||
+              barcode.isEmpty ||
+              grams == null ||
+              grams <= 0) {
+            continue;
+          }
+
+          await dbInstance.into(dbInstance.mealItems).insert(
+                db.MealItemsCompanion(
+                  mealId: drift.Value(mealRow.id),
+                  productBarcode: drift.Value(barcode),
+                  quantityInGrams: drift.Value(grams),
+                ),
+                mode: drift.InsertMode.insertOrReplace,
+              );
+        }
+      }
+    });
   }
 
   Future<void> removeMealItem(int itemLocalId) async {

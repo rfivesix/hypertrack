@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.8] - 2026-04-05
+
+
 ## [0.7.7] - 2026-04-04
 
 This release focuses on AI provider expansion, AI settings cleanup, and a small Diary improvement.
@@ -59,6 +62,7 @@ This release focuses on AI provider expansion, AI settings cleanup, and a small 
   - Anthropic
   - Mistral
   - xAI
+
 ## [0.7.6] - 2026-04-04
 
 This release focuses on a small set of quality-of-life improvements across AI meal capture, measurements, workout logging, iOS navigation behavior, and rest timer alerts.
@@ -93,6 +97,7 @@ This release focuses on a small set of quality-of-life improvements across AI me
 - Fixed workout field initialization so unset values are not rendered as actual entered values
 - Fixed a settings/navigation path that interfered with native iOS back-swipe behavior
 - Fixed the Android/background timer completion path so users are still alerted when the app is not in the foreground
+
 ## [0.7.5] - 2026-04-04
 ### added
 - [#200](https://github.com/rfivesix/hypertrack/issues/200) added a consistend app color. Changed the iOS App icon (The white mode icon got the same color as the dark mode icon) for consistency

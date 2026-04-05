@@ -25,6 +25,9 @@ class HypertrackBackup {
   /// A list of all recorded food intake events.
   final List<FoodEntry> foodEntries;
 
+  /// Saved meal templates and their items.
+  final List<Map<String, dynamic>> mealTemplates;
+
   /// A list of all recorded fluid intake events.
   final List<FluidEntry> fluidEntries;
 
@@ -74,6 +77,7 @@ class HypertrackBackup {
   HypertrackBackup({
     required this.schemaVersion,
     required this.foodEntries,
+    this.mealTemplates = const [],
     required this.fluidEntries,
     required this.favoriteBarcodes,
     required this.customFoodItems,
@@ -107,6 +111,10 @@ class HypertrackBackup {
                   mealType: e['meal_type'],
                 ),
               )
+              .toList() ??
+          [],
+      mealTemplates: (json['mealTemplates'] as List<dynamic>?)
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ??
           [],
       fluidEntries: (json['fluidEntries'] as List<dynamic>?)
@@ -217,6 +225,7 @@ class HypertrackBackup {
     return {
       'schemaVersion': schemaVersion,
       'foodEntries': foodEntries.map((e) => e.toMap()).toList(),
+      'mealTemplates': mealTemplates,
       'fluidEntries': fluidEntries.map((e) => e.toMap()).toList(),
       'favoriteBarcodes': favoriteBarcodes,
       'customFoodItems': customFoodItems.map((e) => e.toMap()).toList(),

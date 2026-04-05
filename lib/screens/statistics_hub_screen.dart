@@ -38,6 +38,10 @@ class StatisticsHubScreen extends StatefulWidget {
     StepsAggregationRepository? stepsRepository,
     SleepHubSummaryRepository? sleepSummaryRepository,
     this.fetchHubAnalytics,
+    this.importSleepIfDue,
+    this.isSleepTrackingEnabled,
+    this.targetStepsLoader,
+    this.stepsProviderNameLoader,
   })  : _hubDataAdapter = hubDataAdapter,
         _stepsRepository = stepsRepository,
         _sleepSummaryRepository = sleepSummaryRepository;
@@ -48,6 +52,14 @@ class StatisticsHubScreen extends StatefulWidget {
   final Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(
     int selectedTimeRangeIndex,
   )? fetchHubAnalytics;
+  final Future<SleepSyncResult?> Function({
+    int lookbackDays,
+    Duration minInterval,
+    bool force,
+  })? importSleepIfDue;
+  final Future<bool> Function()? isSleepTrackingEnabled;
+  final Future<int> Function()? targetStepsLoader;
+  final Future<String> Function()? stepsProviderNameLoader;
 
   @override
   State<StatisticsHubScreen> createState() => _StatisticsHubScreenState();
@@ -153,7 +165,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Future<void> _loadHubAnalytics() async {
     setState(() => _isLoadingStats = true);
-    await _sleepSyncService.importRecentIfDue(minInterval: _sleepSyncInterval);
+    await (widget.importSleepIfDue?.call(minInterval: _sleepSyncInterval) ??
+        _sleepSyncService.importRecentIfDue(minInterval: _sleepSyncInterval));
     final selectedDays = _rangePolicy.selectedDaysFromIndex(
       _selectedTimeRangeIndex,
     );
@@ -178,10 +191,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       daysBack: daysBack,
     );
     final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
-    final sleepTrackingFuture = _sleepSyncService.isTrackingEnabled();
+    final sleepTrackingFuture =
+        widget.isSleepTrackingEnabled?.call() ??
+            _sleepSyncService.isTrackingEnabled();
     final targetStepsFuture =
-        DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
-    final providerFuture = _stepsSyncService.getProviderFilter();
+        widget.targetStepsLoader?.call() ??
+            DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
+    final providerNameFuture =
+        widget.stepsProviderNameLoader?.call() ?? _loadStepsProviderName();
 
     final tuple = await hubFuture;
     final stepsRange = await stepsRangeFuture;
@@ -189,20 +206,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final stepsTrackingEnabled = await stepsTrackingFuture;
     final sleepTrackingEnabled = await sleepTrackingFuture;
     final targetSteps = await targetStepsFuture;
-    final providerFilter = await providerFuture;
-    final providerRaw = StepsSyncService.providerFilterToRaw(providerFilter);
-    String providerName = 'Local';
-    if (providerRaw == 'appleHealth') {
-      providerName = 'Apple Health';
-    } else if (providerRaw == 'healthConnect') {
-      providerName = 'Health Connect';
-    } else if (providerRaw == 'withings') {
-      providerName = 'Withings';
-    } else if (providerRaw == 'garmin') {
-      providerName = 'Garmin';
-    } else if (providerRaw == 'fitbit') {
-      providerName = 'Fitbit';
-    }
+    final providerName = await providerNameFuture;
 
     final hub = tuple.$1;
     final bodyNutrition = tuple.$2;
@@ -237,6 +241,17 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return _hubDataAdapter.fetch(
       selectedTimeRangeIndex: selectedTimeRangeIndex,
     );
+  }
+
+  Future<String> _loadStepsProviderName() async {
+    final providerFilter = await _stepsSyncService.getProviderFilter();
+    final providerRaw = StepsSyncService.providerFilterToRaw(providerFilter);
+    if (providerRaw == 'appleHealth') return 'Apple Health';
+    if (providerRaw == 'healthConnect') return 'Health Connect';
+    if (providerRaw == 'withings') return 'Withings';
+    if (providerRaw == 'garmin') return 'Garmin';
+    if (providerRaw == 'fitbit') return 'Fitbit';
+    return 'Local';
   }
 
   List<String> get _timeRanges => [

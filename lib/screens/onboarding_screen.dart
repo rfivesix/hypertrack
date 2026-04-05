@@ -132,7 +132,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _restoreFromBackup() async {
     final l10n = AppLocalizations.of(context)!;
 
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
