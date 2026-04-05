@@ -7,6 +7,7 @@
   "protein": "Protein",
   "carbs": "Carbs",
   "fat": "Fat",
+  "steps": "Steps",
   "daily": "Daily",
   "today": "Today",
   "workoutSection": "Workout section - not yet implemented",

@@ -197,7 +197,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     ),
                     _buildSettingsField(
                       controller: _stepsController,
-                      label: 'Steps', // TODO(alpha): localize steps label
+                      label: l10n.steps,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
                     _buildSectionTitle(context, l10n.detailedNutrientGoalsCL),
@@ -214,8 +214,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       controller: _saltController,
                       label: l10n.salt,
                     ),
-
-                    // KORREKTUR: Der untere Button wurde entfernt
                   ],
                 ),
               ),

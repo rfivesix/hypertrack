@@ -30,6 +30,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fat => 'Fett';
 
   @override
+  String get steps => 'Schritte';
+
+  @override
   String get daily => 'Täglich';
 
   @override

@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Fat'**
   String get fat;
 
+  /// No description provided for @steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get steps;
+
   /// No description provided for @daily.
   ///
   /// In en, this message translates to:

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.9] - 2026-04-07
+
+small fixes
 ## [0.7.8] - 2026-04-05
 
 This release is a maintenance and stability update that prepares Hypertrack for the upcoming 0.8 / TDEE cycle.
