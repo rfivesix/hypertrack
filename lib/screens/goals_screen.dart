@@ -214,8 +214,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       controller: _saltController,
                       label: l10n.salt,
                     ),
-
-                    // KORREKTUR: Der untere Button wurde entfernt
                   ],
                 ),
               ),
