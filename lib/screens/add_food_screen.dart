@@ -625,7 +625,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   ),
                 );
                 if (result == true && mounted) {
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(true);
                 }
               },
             ),
