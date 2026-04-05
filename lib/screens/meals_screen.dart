@@ -1,20 +1,43 @@
 import 'package:flutter/material.dart';
+import '../data/database_helper.dart';
 import 'meal_editor_screen.dart';
 
 /// A screen that displays a list of the user's saved meals.
 ///
 /// Provides access to create new meals or edit existing ones.
-class MealsScreen extends StatelessWidget {
+class MealsScreen extends StatefulWidget {
   const MealsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Platzhalter-Liste – später mit echten Meals füllen
-    final meals = <String>[];
+  State<MealsScreen> createState() => _MealsScreenState();
+}
 
+class _MealsScreenState extends State<MealsScreen> {
+  List<Map<String, dynamic>> _meals = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _reloadMeals();
+  }
+
+  Future<void> _reloadMeals() async {
+    final meals = await DatabaseHelper.instance.getMeals();
+    if (!mounted) return;
+    setState(() {
+      _meals = meals;
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Meals')),
-      body: meals.isEmpty
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _meals.isEmpty
           ? const Center(
               child: Text(
                 'Noch keine Meals.\nTippe auf das +, um eines zu erstellen.',
@@ -22,19 +45,21 @@ class MealsScreen extends StatelessWidget {
               ),
             )
           : ListView.separated(
-              itemCount: meals.length,
+              itemCount: _meals.length,
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (context, i) => ListTile(
-                title: Text(meals[i]),
+                title: Text(_meals[i]['name'] as String? ?? ''),
                 onTap: () async {
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MealEditorScreen(initialName: meals[i]),
+                      builder: (_) => MealEditorScreen(
+                        initialName: _meals[i]['name'] as String?,
+                      ),
                     ),
                   );
                   if (result == true && context.mounted) {
-                    // TODO: Liste neu laden (später)
+                    await _reloadMeals();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Meal gespeichert')),
                     );
@@ -49,7 +74,7 @@ class MealsScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const MealEditorScreen()),
           );
           if (result == true && context.mounted) {
-            // TODO: Liste neu laden (später)
+            await _reloadMeals();
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('Meal gespeichert')));
