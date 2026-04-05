@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.10] - 2026-04-05
+
+This release includes a fix for Diary refresh behavior after saving meals through the AI meal-recognition flow.
+
+### Fixed
+- Fixed a Diary refresh issue after saving meals via the AI meal-recognition flow
+  - when a meal was recognized with AI and saved from the Add Food flow, the Diary screen did not always refresh automatically
+  - the save result is now propagated correctly so the Diary reloads immediately after the meal is saved
+  - no manual pull-to-refresh is needed in that flow anymore
+
+### Notes
+- This fix specifically addresses the Diary → Add Food → AI meal recognition path
+- The direct AI recommendation save flow already propagated refresh correctly
 ## [0.7.9] - 2026-04-07
 
 small fixes

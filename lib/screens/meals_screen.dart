@@ -38,35 +38,35 @@ class _MealsScreenState extends State<MealsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _meals.isEmpty
-          ? const Center(
-              child: Text(
-                'Noch keine Meals.\nTippe auf das +, um eines zu erstellen.',
-                textAlign: TextAlign.center,
-              ),
-            )
-          : ListView.separated(
-              itemCount: _meals.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, i) => ListTile(
-                title: Text(_meals[i]['name'] as String? ?? ''),
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MealEditorScreen(
-                        initialName: _meals[i]['name'] as String?,
-                      ),
-                    ),
-                  );
-                  if (result == true && context.mounted) {
-                    await _reloadMeals();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Meal gespeichert')),
-                    );
-                  }
-                },
-              ),
-            ),
+              ? const Center(
+                  child: Text(
+                    'Noch keine Meals.\nTippe auf das +, um eines zu erstellen.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : ListView.separated(
+                  itemCount: _meals.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) => ListTile(
+                    title: Text(_meals[i]['name'] as String? ?? ''),
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MealEditorScreen(
+                            initialName: _meals[i]['name'] as String?,
+                          ),
+                        ),
+                      );
+                      if (result == true && context.mounted) {
+                        await _reloadMeals();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Meal gespeichert')),
+                        );
+                      }
+                    },
+                  ),
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
