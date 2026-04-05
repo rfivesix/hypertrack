@@ -197,6 +197,39 @@ void main() {
 
       expect(missingBodyFat, invalidBodyFat);
     });
+
+    test('estimate prior increases with extra cardio hours option', () {
+      final profile = _profile(
+        birthday: DateTime(1992, 3, 10),
+        height: 180,
+        gender: 'male',
+      );
+
+      final baseline =
+          RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 82,
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        extraCardioHoursOption: ExtraCardioHoursOption.h0,
+        averageCompletedWorkoutsPerWeek: 2,
+        targetSteps: 8000,
+        now: DateTime(2026, 4, 5),
+      );
+      final higherCardio =
+          RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 82,
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        extraCardioHoursOption: ExtraCardioHoursOption.h7Plus,
+        averageCompletedWorkoutsPerWeek: 2,
+        targetSteps: 8000,
+        now: DateTime(2026, 4, 5),
+      );
+
+      expect(higherCardio, greaterThan(baseline));
+    });
   });
 }
 

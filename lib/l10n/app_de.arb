@@ -1196,4 +1196,144 @@
   ,"sleepRawImportApp": "App"
   ,"sleepRawImportConfidence": "Vertrauen"
   ,"sleepRawImportPayload": "Payload"
+  ,"adaptiveBodyweightTargetSectionTitle": "Adaptives Körperziel"
+  ,"adaptiveRecommendationSettingsSectionTitle": "Empfehlungs-Einstellungen"
+  ,"adaptiveGoalDirectionLabel": "Zielrichtung"
+  ,"adaptiveGoalLose": "Abnehmen"
+  ,"adaptiveGoalMaintain": "Gewicht halten"
+  ,"adaptiveGoalGain": "Zunehmen"
+  ,"adaptiveRatePerWeek": "{value} kg/Woche"
+  ,"@adaptiveRatePerWeek": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptivePriorActivityLabel": "Alltagsaktivität (Basis)"
+  ,"adaptivePriorActivityLow": "Niedrige Aktivität"
+  ,"adaptivePriorActivityModerate": "Moderate Aktivität"
+  ,"adaptivePriorActivityHigh": "Hohe Aktivität"
+  ,"adaptivePriorActivityHelp": "Beschreibt deine normale Alltagsbewegung (Sitzen, Gehen, Stehen), nicht zusätzliche Cardio-Einheiten."
+  ,"adaptiveExtraCardioLabel": "Zusätzliches Cardio/Ausdauer außerhalb der App"
+  ,"adaptiveExtraCardioOption0": "0 h/Woche"
+  ,"adaptiveExtraCardioOption1": "1 h/Woche"
+  ,"adaptiveExtraCardioOption2": "2 h/Woche"
+  ,"adaptiveExtraCardioOption3": "3 h/Woche"
+  ,"adaptiveExtraCardioOption5": "5 h/Woche"
+  ,"adaptiveExtraCardioOption7Plus": "7+ h/Woche"
+  ,"adaptiveExtraCardioHelp": "Berücksichtige Joggen, Laufen, Radfahren, Schwimmen oder andere Ausdauer-Einheiten, die nicht als Hypertrack-Workout erfasst sind."
+  ,"onboardingAdaptiveGoalTitle": "Adaptive Ernährungsempfehlung"
+  ,"onboardingAdaptiveGoalSubtitle": "Wähle Richtung und Wochenrate. Wir erstellen eine konservative Starteinschätzung und passen sie mit deinen Logs an."
+  ,"adaptiveRecommendationGenerating": "Wird erstellt..."
+  ,"adaptiveRecommendationRefresh": "Empfehlung aktualisieren"
+  ,"onboardingAdaptiveSummaryEmpty": "Stelle deine Zielwerte ein und tippe auf Aktualisieren, um eine Startempfehlung zu sehen."
+  ,"onboardingAdaptiveSummaryTitle": "Empfehlungsvorschau"
+  ,"onboardingAdaptiveSummaryCalories": "Kalorien: {value} kcal"
+  ,"@onboardingAdaptiveSummaryCalories": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryProtein": "Protein: {value} g"
+  ,"@onboardingAdaptiveSummaryProtein": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryCarbs": "Kohlenhydrate: {value} g"
+  ,"@onboardingAdaptiveSummaryCarbs": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryFat": "Fett: {value} g"
+  ,"@onboardingAdaptiveSummaryFat": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryConfidence": "Konfidenz: {value}"
+  ,"@onboardingAdaptiveSummaryConfidence": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryApply": "Auf Tagesziele anwenden"
+  ,"onboardingAdaptiveSummaryApplied": "Auf Tagesziele angewendet"
+  ,"onboardingBodyFatOptionalLabel": "Körperfett % (optional)"
+  ,"onboardingBodyFatOptionalHelper": "Optional: Nur eintragen, wenn du deinen Wert ungefähr kennst. Leer lassen ist völlig okay. Der Wert hilft, die Starteinschätzung besser zu personalisieren."
+  ,"onboardingBodyFatHelpAction": "Wie kann ich das schätzen?"
+  ,"onboardingBodyFatHelpDialogTitle": "Hilfe zu Körperfett %"
+  ,"onboardingBodyFatHelpDialogBody": "Wenn du unsicher bist, kannst du das Feld leer lassen. Eine grobe Schätzung reicht aus und verbessert nur die Starteinschätzung; die wöchentlichen Updates passen sich später an deine echten Logs an."
+  ,"onboardingBodyFatHelpDialogAction": "Verstanden"
+  ,"adaptiveRecommendationCardTitle": "Adaptive Empfehlung"
+  ,"adaptiveRecommendationEmptyBody": "Tracke Gewicht und Ernährung etwa eine Woche, um die erste wöchentliche Empfehlung freizuschalten."
+  ,"adaptiveRecommendationGoalLine": "Ziel: {goal} ({rate})"
+  ,"@adaptiveRecommendationGoalLine": {
+    "placeholders": {
+      "goal": { "type": "String" },
+      "rate": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationMaintenanceLine": "Erhaltungsschätzung: {value} kcal"
+  ,"@adaptiveRecommendationMaintenanceLine": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationCaloriesValue": "{value} kcal"
+  ,"@adaptiveRecommendationCaloriesValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationProteinValue": "{value} g"
+  ,"@adaptiveRecommendationProteinValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationCarbsValue": "{value} g"
+  ,"@adaptiveRecommendationCarbsValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationFatValue": "{value} g"
+  ,"@adaptiveRecommendationFatValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationConfidenceLine": "Konfidenz: {value}"
+  ,"@adaptiveRecommendationConfidenceLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationDataBasisLine": "Datengrundlage: {windowDays} Tage, {weightLogs} Gewichtseinträge, {intakeDays} Intake-Tage"
+  ,"@adaptiveRecommendationDataBasisLine": {
+    "placeholders": {
+      "windowDays": { "type": "int" },
+      "weightLogs": { "type": "int" },
+      "intakeDays": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationActiveCaloriesLine": "Aktuelle aktive Kalorien: {value} kcal"
+  ,"@adaptiveRecommendationActiveCaloriesLine": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationApplying": "Wird angewendet..."
+  ,"adaptiveRecommendationApplyAction": "Empfehlung auf aktive Ziele anwenden"
+  ,"adaptiveRecommendationWarningCalorieFloor": "Empfehlung wurde durch ein Mindest-Kalorien-Sicherheitslimit begrenzt. Bitte Profil und aktuelle Logs vor dem Anwenden prüfen."
+  ,"adaptiveRecommendationWarningUnresolvedFood": "Einige Ernährungseinträge konnten für die Kalorienschätzung nicht vollständig aufgelöst werden. Die Empfehlung ist konservativ."
+  ,"adaptiveRecommendationWarningLargeAdjustment": "Große Anpassung erkannt. Bitte prüfe vor dem Anwenden die Vollständigkeit deiner letzten Logs."
+  ,"adaptiveRecommendationWarningConservative": "Hinweis: Die Empfehlung wurde aufgrund von Datenschwankungen konservativ angepasst."
+  ,"adaptiveConfidenceNotEnoughData": "Nicht genug Daten"
+  ,"adaptiveConfidenceLow": "Niedrig"
+  ,"adaptiveConfidenceMedium": "Mittel"
+  ,"adaptiveConfidenceHigh": "Hoch"
+  ,"adaptiveRecommendationAppliedToGoalsSnack": "Empfehlung auf aktive Ziele angewendet."
+  ,"adaptiveRecommendationNotAvailableSnack": "Keine Empfehlung zum Anwenden verfügbar."
 }

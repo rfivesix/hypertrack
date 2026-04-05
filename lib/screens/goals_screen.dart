@@ -14,7 +14,14 @@ import '../features/nutrition_recommendation/domain/goal_models.dart';
 /// Users can set goals for calories, macronutrients (protein, carbs, fat),
 /// water intake, and other detailed metrics like sugar or fiber.
 class GoalsScreen extends StatefulWidget {
-  const GoalsScreen({super.key});
+  final AdaptiveNutritionRecommendationService? recommendationService;
+  final DatabaseHelper? databaseHelper;
+
+  const GoalsScreen({
+    super.key,
+    this.recommendationService,
+    this.databaseHelper,
+  });
 
   @override
   State<GoalsScreen> createState() => _GoalsScreenState();
@@ -23,12 +30,15 @@ class GoalsScreen extends StatefulWidget {
 class _GoalsScreenState extends State<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  final _recommendationService = AdaptiveNutritionRecommendationService();
+  late final AdaptiveNutritionRecommendationService _recommendationService;
+  late final DatabaseHelper _databaseHelper;
 
   BodyweightGoal _selectedGoal = BodyweightGoal.maintainWeight;
   double _selectedTargetRateKgPerWeek = 0;
   PriorActivityLevel _selectedPriorActivityLevel =
       PriorActivityLevelCatalog.defaultLevel;
+  ExtraCardioHoursOption _selectedExtraCardioHoursOption =
+      ExtraCardioHoursCatalog.defaultOption;
 
   final _caloriesController = TextEditingController();
   final _proteinController = TextEditingController();
@@ -44,6 +54,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
   @override
   void initState() {
     super.initState();
+    _databaseHelper = widget.databaseHelper ?? DatabaseHelper.instance;
+    _recommendationService = widget.recommendationService ??
+        AdaptiveNutritionRecommendationService(databaseHelper: _databaseHelper);
     _loadSettings();
   }
 
@@ -63,7 +76,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final dbHelper = DatabaseHelper.instance;
     final prefs = await SharedPreferences
         .getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
     final selectedGoal = await _recommendationService.getGoal();
@@ -71,10 +83,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
         await _recommendationService.getTargetRateKgPerWeek();
     final selectedPriorActivityLevel =
         await _recommendationService.getPriorActivityLevel();
+    final selectedExtraCardioHoursOption =
+        await _recommendationService.getExtraCardioHoursOption();
 
     // Lade Ziele aus der DB
-    final settings = await dbHelper.getAppSettings();
-    final targetSteps = await dbHelper.getCurrentTargetStepsOrDefault();
+    final settings = await _databaseHelper.getAppSettings();
+    final targetSteps = await _databaseHelper.getCurrentTargetStepsOrDefault();
     // Lade Profil für Größe
     // (Optional: Du könntest auch 'getProfile' im Helper bauen, aber prefs für Height ist ok als Übergang)
 
@@ -101,6 +115,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         kgPerWeek: selectedTargetRate,
       );
       _selectedPriorActivityLevel = selectedPriorActivityLevel;
+      _selectedExtraCardioHoursOption = selectedExtraCardioHoursOption;
 
       _isLoading = false;
     });
@@ -122,9 +137,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
     await _recommendationService.savePriorActivityLevel(
       _selectedPriorActivityLevel,
     );
+    await _recommendationService.saveExtraCardioHoursOption(
+      _selectedExtraCardioHoursOption,
+    );
 
     // 2. WICHTIG: Ziele in die Datenbank speichern
-    await DatabaseHelper.instance.saveUserGoals(
+    await _databaseHelper.saveUserGoals(
       calories: int.parse(_caloriesController.text),
       protein: int.parse(_proteinController.text),
       carbs: int.parse(_carbsController.text),
@@ -190,31 +208,23 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSectionTitle(context, l10n.personalDataCL),
-                    const SizedBox(height: DesignConstants.spacingM),
-                    _buildSettingsField(
-                      controller: _heightController,
-                      label: l10n.profileUserHeight,
-                    ),
-                    const SizedBox(height: DesignConstants.spacingXL),
-                    _buildSectionTitle(context, l10n.profileDailyGoalsCL),
-                    const SizedBox(height: DesignConstants.spacingM),
                     _buildSectionTitle(
                       context,
-                      'ADAPTIVE BODYWEIGHT TARGET',
+                      l10n.adaptiveBodyweightTargetSectionTitle,
+                      key: const Key('goals_adaptive_section_title'),
                     ),
                     const SizedBox(height: DesignConstants.spacingM),
                     DropdownButtonFormField<BodyweightGoal>(
                       initialValue: _selectedGoal,
-                      decoration: const InputDecoration(
-                        labelText: 'Goal Direction',
+                      decoration: InputDecoration(
+                        labelText: l10n.adaptiveGoalDirectionLabel,
                       ),
                       items: BodyweightGoal.values
                           .map(
                             (goal) => DropdownMenuItem<BodyweightGoal>(
                               value: goal,
                               child: Text(
-                                WeeklyTargetRateCatalog.goalLabel(goal),
+                                _goalLabel(l10n, goal),
                               ),
                             ),
                           )
@@ -240,9 +250,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             option.kgPerWeek == _selectedTargetRateKgPerWeek;
                         return ChoiceChip(
                           label: Text(
-                            WeeklyTargetRateCatalog.rateLabel(
-                              option.kgPerWeek,
-                            ),
+                            _rateLabel(l10n, option.kgPerWeek),
                           ),
                           selected: selected,
                           onSelected: (_) {
@@ -253,18 +261,27 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         );
                       }).toList(growable: false),
                     ),
+                    const SizedBox(height: DesignConstants.spacingXL),
+                    _buildSectionTitle(
+                      context,
+                      l10n.adaptiveRecommendationSettingsSectionTitle,
+                      key: const Key(
+                        'goals_recommendation_settings_section_title',
+                      ),
+                    ),
                     const SizedBox(height: DesignConstants.spacingM),
                     DropdownButtonFormField<PriorActivityLevel>(
+                      key: const Key('goals_prior_activity_dropdown'),
                       initialValue: _selectedPriorActivityLevel,
-                      decoration: const InputDecoration(
-                        labelText: 'Prior activity level',
+                      decoration: InputDecoration(
+                        labelText: l10n.adaptivePriorActivityLabel,
                       ),
                       items: PriorActivityLevel.values
                           .map(
                             (level) => DropdownMenuItem<PriorActivityLevel>(
                               value: level,
                               child: Text(
-                                PriorActivityLevelCatalog.label(level),
+                                _priorActivityLabel(l10n, level),
                               ),
                             ),
                           )
@@ -276,7 +293,51 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         });
                       },
                     ),
+                    const SizedBox(height: DesignConstants.spacingS),
+                    Text(
+                      l10n.adaptivePriorActivityHelp,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: DesignConstants.spacingM),
+                    DropdownButtonFormField<ExtraCardioHoursOption>(
+                      key: const Key('goals_extra_cardio_dropdown'),
+                      initialValue: _selectedExtraCardioHoursOption,
+                      decoration: InputDecoration(
+                        labelText: l10n.adaptiveExtraCardioLabel,
+                      ),
+                      items: ExtraCardioHoursCatalog.supportedOptions
+                          .map(
+                            (option) =>
+                                DropdownMenuItem<ExtraCardioHoursOption>(
+                              value: option,
+                              child: Text(_extraCardioLabel(l10n, option)),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (option) {
+                        if (option == null) return;
+                        setState(() {
+                          _selectedExtraCardioHoursOption = option;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: DesignConstants.spacingS),
+                    Text(
+                      l10n.adaptiveExtraCardioHelp,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: DesignConstants.spacingM),
+                    _buildSettingsField(
+                      controller: _heightController,
+                      label: l10n.profileUserHeight,
+                    ),
                     const SizedBox(height: DesignConstants.spacingXL),
+                    _buildSectionTitle(
+                      context,
+                      l10n.profileDailyGoalsCL,
+                      key: const Key('goals_daily_section_title'),
+                    ),
+                    const SizedBox(height: DesignConstants.spacingM),
                     _buildSettingsField(
                       controller: _caloriesController,
                       label: l10n.calories,
@@ -347,17 +408,72 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
+  Widget _buildSectionTitle(
+    BuildContext context,
+    String title, {
+    Key? key,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
       child: Text(
         title,
+        key: key,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: Colors.grey[600],
               fontWeight: FontWeight.bold,
             ),
       ),
     );
+  }
+
+  String _goalLabel(AppLocalizations l10n, BodyweightGoal goal) {
+    switch (goal) {
+      case BodyweightGoal.loseWeight:
+        return l10n.adaptiveGoalLose;
+      case BodyweightGoal.maintainWeight:
+        return l10n.adaptiveGoalMaintain;
+      case BodyweightGoal.gainWeight:
+        return l10n.adaptiveGoalGain;
+    }
+  }
+
+  String _rateLabel(AppLocalizations l10n, double kgPerWeek) {
+    final sign = kgPerWeek > 0 ? '+' : '';
+    return l10n.adaptiveRatePerWeek('$sign${kgPerWeek.toStringAsFixed(2)}');
+  }
+
+  String _priorActivityLabel(
+    AppLocalizations l10n,
+    PriorActivityLevel level,
+  ) {
+    switch (level) {
+      case PriorActivityLevel.low:
+        return l10n.adaptivePriorActivityLow;
+      case PriorActivityLevel.moderate:
+        return l10n.adaptivePriorActivityModerate;
+      case PriorActivityLevel.high:
+        return l10n.adaptivePriorActivityHigh;
+    }
+  }
+
+  String _extraCardioLabel(
+    AppLocalizations l10n,
+    ExtraCardioHoursOption option,
+  ) {
+    switch (option) {
+      case ExtraCardioHoursOption.h0:
+        return l10n.adaptiveExtraCardioOption0;
+      case ExtraCardioHoursOption.h1:
+        return l10n.adaptiveExtraCardioOption1;
+      case ExtraCardioHoursOption.h2:
+        return l10n.adaptiveExtraCardioOption2;
+      case ExtraCardioHoursOption.h3:
+        return l10n.adaptiveExtraCardioOption3;
+      case ExtraCardioHoursOption.h5:
+        return l10n.adaptiveExtraCardioOption5;
+      case ExtraCardioHoursOption.h7Plus:
+        return l10n.adaptiveExtraCardioOption7Plus;
+    }
   }
 }
 

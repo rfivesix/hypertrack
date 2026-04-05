@@ -65,6 +65,14 @@ class AdaptiveNutritionRecommendationService {
     return _repository.savePriorActivityLevel(level);
   }
 
+  Future<ExtraCardioHoursOption> getExtraCardioHoursOption() {
+    return _repository.getExtraCardioHoursOption();
+  }
+
+  Future<void> saveExtraCardioHoursOption(ExtraCardioHoursOption option) {
+    return _repository.saveExtraCardioHoursOption(option);
+  }
+
   Future<NutritionRecommendation?> getLatestGeneratedRecommendation() {
     return _repository.getLatestGeneratedRecommendation();
   }
@@ -115,6 +123,8 @@ class AdaptiveNutritionRecommendationService {
       return _repository.getLatestGeneratedRecommendation();
     }
     final priorActivityLevel = await _repository.getPriorActivityLevel();
+    final extraCardioHoursOption =
+        await _repository.getExtraCardioHoursOption();
 
     final results = await Future.wait<dynamic>([
       _repository.getGoal(),
@@ -123,6 +133,7 @@ class AdaptiveNutritionRecommendationService {
       _inputAdapter.buildInput(
         now: stableWindowEndDay,
         declaredActivityLevel: priorActivityLevel,
+        extraCardioHoursOption: extraCardioHoursOption,
       ),
     ]);
 
@@ -158,6 +169,7 @@ class AdaptiveNutritionRecommendationService {
     required String? gender,
     double? bodyFatPercent,
     PriorActivityLevel? declaredActivityLevel,
+    ExtraCardioHoursOption? extraCardioHoursOption,
     DateTime? now,
     bool persistGenerated = false,
     bool markAsApplied = false,
@@ -165,6 +177,8 @@ class AdaptiveNutritionRecommendationService {
     final effectiveNow = now ?? DateTime.now();
     final effectiveDeclaredActivityLevel =
         declaredActivityLevel ?? await _repository.getPriorActivityLevel();
+    final effectiveExtraCardioHoursOption =
+        extraCardioHoursOption ?? await _repository.getExtraCardioHoursOption();
 
     final virtualProfile = _VirtualProfile(
       birthday: birthday,
@@ -178,6 +192,7 @@ class AdaptiveNutritionRecommendationService {
       weightKg: weightKg,
       bodyFatPercent: bodyFatPercent,
       declaredActivityLevel: effectiveDeclaredActivityLevel,
+      extraCardioHoursOption: effectiveExtraCardioHoursOption,
       now: effectiveNow,
     );
 
@@ -272,6 +287,7 @@ class AdaptiveNutritionRecommendationService {
     required double? weightKg,
     required double? bodyFatPercent,
     required PriorActivityLevel declaredActivityLevel,
+    required ExtraCardioHoursOption extraCardioHoursOption,
     required DateTime now,
   }) async {
     final persistedProfile = await _databaseHelper.getUserProfile();
@@ -309,6 +325,7 @@ class AdaptiveNutritionRecommendationService {
       currentWeightKg: weightKg ?? 75,
       bodyFatPercent: effectiveBodyFatPercent,
       declaredActivityLevel: declaredActivityLevel,
+      extraCardioHoursOption: extraCardioHoursOption,
       averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
       targetSteps: targetSteps,
       now: now,

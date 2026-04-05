@@ -14,6 +14,8 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.target_rate_kg_per_week';
   static const String _priorActivityLevelKey =
       'adaptive_nutrition_recommendation.prior_activity_level';
+  static const String _extraCardioHoursKey =
+      'adaptive_nutrition_recommendation.extra_cardio_hours';
   static const String _latestGeneratedKey =
       'adaptive_nutrition_recommendation.latest_generated';
   static const String _latestAppliedKey =
@@ -72,6 +74,20 @@ class RecommendationRepository {
     await prefs.setString(_priorActivityLevelKey, level.name);
   }
 
+  Future<ExtraCardioHoursOption> getExtraCardioHoursOption() async {
+    final prefs = await _prefsLoader();
+    final raw = prefs.getString(_extraCardioHoursKey);
+    return ExtraCardioHoursOption.values.firstWhere(
+      (option) => option.name == raw,
+      orElse: () => ExtraCardioHoursCatalog.defaultOption,
+    );
+  }
+
+  Future<void> saveExtraCardioHoursOption(ExtraCardioHoursOption option) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(_extraCardioHoursKey, option.name);
+  }
+
   Future<NutritionRecommendation?> getLatestGeneratedRecommendation() async {
     return _loadRecommendation(_latestGeneratedKey);
   }
@@ -115,6 +131,7 @@ class RecommendationRepository {
     await prefs.remove(_goalKey);
     await prefs.remove(_targetRateKey);
     await prefs.remove(_priorActivityLevelKey);
+    await prefs.remove(_extraCardioHoursKey);
     await prefs.remove(_latestGeneratedKey);
     await prefs.remove(_latestAppliedKey);
     await prefs.remove(_lastGeneratedDueWeekKey);

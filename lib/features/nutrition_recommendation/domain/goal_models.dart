@@ -14,15 +14,45 @@ class PriorActivityLevelCatalog {
   const PriorActivityLevelCatalog._();
 
   static const PriorActivityLevel defaultLevel = PriorActivityLevel.moderate;
+}
 
-  static String label(PriorActivityLevel level) {
-    switch (level) {
-      case PriorActivityLevel.low:
-        return 'Low activity';
-      case PriorActivityLevel.moderate:
-        return 'Moderate activity';
-      case PriorActivityLevel.high:
-        return 'High activity';
+enum ExtraCardioHoursOption {
+  h0,
+  h1,
+  h2,
+  h3,
+  h5,
+  h7Plus,
+}
+
+class ExtraCardioHoursCatalog {
+  const ExtraCardioHoursCatalog._();
+
+  static const ExtraCardioHoursOption defaultOption = ExtraCardioHoursOption.h0;
+
+  static const List<ExtraCardioHoursOption> supportedOptions = [
+    ExtraCardioHoursOption.h0,
+    ExtraCardioHoursOption.h1,
+    ExtraCardioHoursOption.h2,
+    ExtraCardioHoursOption.h3,
+    ExtraCardioHoursOption.h5,
+    ExtraCardioHoursOption.h7Plus,
+  ];
+
+  static double hoursPerWeek(ExtraCardioHoursOption option) {
+    switch (option) {
+      case ExtraCardioHoursOption.h0:
+        return 0;
+      case ExtraCardioHoursOption.h1:
+        return 1;
+      case ExtraCardioHoursOption.h2:
+        return 2;
+      case ExtraCardioHoursOption.h3:
+        return 3;
+      case ExtraCardioHoursOption.h5:
+        return 5;
+      case ExtraCardioHoursOption.h7Plus:
+        return 7;
     }
   }
 }

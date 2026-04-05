@@ -247,6 +247,7 @@ void main() {
         gender: 'male',
         bodyFatPercent: null,
         declaredActivityLevel: PriorActivityLevel.low,
+        extraCardioHoursOption: ExtraCardioHoursOption.h0,
         now: DateTime(2026, 4, 5, 9, 0),
       );
       final highActivity = await service.generateOnboardingRecommendation(
@@ -258,6 +259,20 @@ void main() {
         gender: 'male',
         bodyFatPercent: null,
         declaredActivityLevel: PriorActivityLevel.high,
+        extraCardioHoursOption: ExtraCardioHoursOption.h0,
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
+      final lowActivityHighExtraCardio =
+          await service.generateOnboardingRecommendation(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: 80,
+        heightCm: 180,
+        birthday: DateTime(1994, 5, 12),
+        gender: 'male',
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.low,
+        extraCardioHoursOption: ExtraCardioHoursOption.h7Plus,
         now: DateTime(2026, 4, 5, 9, 0),
       );
 
@@ -269,6 +284,29 @@ void main() {
         highActivity.estimatedMaintenanceCalories,
         greaterThan(lowActivity.estimatedMaintenanceCalories),
       );
+      expect(
+        lowActivityHighExtraCardio.estimatedMaintenanceCalories,
+        greaterThan(lowActivity.estimatedMaintenanceCalories),
+      );
+    });
+
+    test('onboarding recommendation handles missing optional inputs safely',
+        () async {
+      final recommendation = await service.generateOnboardingRecommendation(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: null,
+        heightCm: null,
+        birthday: null,
+        gender: null,
+        bodyFatPercent: null,
+        declaredActivityLevel: null,
+        extraCardioHoursOption: null,
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
+
+      expect(recommendation.recommendedCalories, greaterThan(0));
+      expect(recommendation.estimatedMaintenanceCalories, greaterThan(0));
     });
   });
 }

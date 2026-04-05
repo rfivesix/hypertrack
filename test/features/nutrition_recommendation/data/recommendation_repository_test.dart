@@ -23,6 +23,10 @@ void main() {
         await repository.getPriorActivityLevel(),
         PriorActivityLevel.moderate,
       );
+      expect(
+        await repository.getExtraCardioHoursOption(),
+        ExtraCardioHoursOption.h0,
+      );
       expect(await repository.getLatestGeneratedRecommendation(), isNull);
     });
 
@@ -39,6 +43,7 @@ void main() {
     test('persists and restores generated/applied recommendations', () async {
       final recommendation = _recommendation();
       await repository.savePriorActivityLevel(PriorActivityLevel.high);
+      await repository.saveExtraCardioHoursOption(ExtraCardioHoursOption.h3);
 
       await repository.saveLatestGeneratedRecommendation(
         recommendation: recommendation,
@@ -57,6 +62,10 @@ void main() {
       expect(applied!.recommendedFatGrams, recommendation.recommendedFatGrams);
       expect(await repository.getLastGeneratedDueWeekKey(), '2026-03-30');
       expect(await repository.getPriorActivityLevel(), PriorActivityLevel.high);
+      expect(
+        await repository.getExtraCardioHoursOption(),
+        ExtraCardioHoursOption.h3,
+      );
     });
   });
 }

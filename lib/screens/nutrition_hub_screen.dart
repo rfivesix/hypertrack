@@ -69,8 +69,10 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
       SnackBar(
         content: Text(
           applied
-              ? 'Recommendation applied to active goals.'
-              : 'No recommendation available to apply.',
+              ? AppLocalizations.of(context)!
+                  .adaptiveRecommendationAppliedToGoalsSnack
+              : AppLocalizations.of(context)!
+                  .adaptiveRecommendationNotAvailableSnack,
         ),
       ),
     );

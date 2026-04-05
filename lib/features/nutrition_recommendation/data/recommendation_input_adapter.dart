@@ -28,6 +28,7 @@ class RecommendationInputAdapter {
     required DateTime now,
     int rollingWindowDays = 21,
     PriorActivityLevel declaredActivityLevel = PriorActivityLevel.moderate,
+    ExtraCardioHoursOption extraCardioHoursOption = ExtraCardioHoursOption.h0,
   }) async {
     final windowEndDay = normalizeDay(now);
     final windowStartDay = windowEndDay
@@ -94,6 +95,7 @@ class RecommendationInputAdapter {
       currentWeightKg: currentWeightKg,
       bodyFatPercent: bodyFatPercent,
       declaredActivityLevel: declaredActivityLevel,
+      extraCardioHoursOption: extraCardioHoursOption,
       averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
       targetSteps: appSettings?.targetSteps,
       now: now,
@@ -139,6 +141,7 @@ class RecommendationInputAdapter {
     required DateTime now,
     double? bodyFatPercent,
     PriorActivityLevel declaredActivityLevel = PriorActivityLevel.moderate,
+    ExtraCardioHoursOption extraCardioHoursOption = ExtraCardioHoursOption.h0,
     double? averageCompletedWorkoutsPerWeek,
     int? targetSteps,
     int fallbackHeightCm = 175,
@@ -172,6 +175,7 @@ class RecommendationInputAdapter {
 
     final activityFactor = _activityFactorFor(
       declaredActivityLevel: declaredActivityLevel,
+      extraCardioHoursOption: extraCardioHoursOption,
       averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
       targetSteps: targetSteps,
     );
@@ -182,6 +186,7 @@ class RecommendationInputAdapter {
 
   static double _activityFactorFor({
     required PriorActivityLevel declaredActivityLevel,
+    required ExtraCardioHoursOption extraCardioHoursOption,
     required double? averageCompletedWorkoutsPerWeek,
     required int? targetSteps,
   }) {
@@ -209,7 +214,28 @@ class RecommendationInputAdapter {
       factor -= 0.03;
     }
 
+    // Extra cardio/endurance hours are explicitly intended for sessions
+    // outside app-captured workouts, so we apply a small bounded uplift.
+    factor += _extraCardioFactorAdjustment(extraCardioHoursOption);
+
     return factor.clamp(1.20, 1.95);
+  }
+
+  static double _extraCardioFactorAdjustment(ExtraCardioHoursOption option) {
+    switch (option) {
+      case ExtraCardioHoursOption.h0:
+        return 0.00;
+      case ExtraCardioHoursOption.h1:
+        return 0.01;
+      case ExtraCardioHoursOption.h2:
+        return 0.02;
+      case ExtraCardioHoursOption.h3:
+        return 0.03;
+      case ExtraCardioHoursOption.h5:
+        return 0.05;
+      case ExtraCardioHoursOption.h7Plus:
+        return 0.07;
+    }
   }
 
   static int? _estimateAgeYears(DateTime? birthday, DateTime now) {

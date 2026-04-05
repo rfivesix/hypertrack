@@ -9,6 +9,7 @@ import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/domain/confidence_models.dart';
 import '../features/nutrition_recommendation/domain/goal_models.dart';
 import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 
@@ -17,7 +18,14 @@ import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 /// Collects user profile data (name, DOB, anthropometrics) and initial
 /// nutrition/health goals to populate the database and preferences.
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  final AdaptiveNutritionRecommendationService? recommendationService;
+  final DatabaseHelper? databaseHelper;
+
+  const OnboardingScreen({
+    super.key,
+    this.recommendationService,
+    this.databaseHelper,
+  });
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -30,7 +38,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isRestoring = false;
   bool _isGeneratingOnboardingRecommendation = false;
 
-  final _recommendationService = AdaptiveNutritionRecommendationService();
+  late final AdaptiveNutritionRecommendationService _recommendationService;
+  late final DatabaseHelper _databaseHelper;
   BodyweightGoal _selectedGoal = BodyweightGoal.maintainWeight;
   double _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.defaultForGoal(
     BodyweightGoal.maintainWeight,
@@ -48,6 +57,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       TextEditingController();
   PriorActivityLevel _selectedPriorActivityLevel =
       PriorActivityLevelCatalog.defaultLevel;
+  ExtraCardioHoursOption _selectedExtraCardioHoursOption =
+      ExtraCardioHoursCatalog.defaultOption;
 
   final TextEditingController _weightController = TextEditingController();
 
@@ -70,6 +81,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
+    _databaseHelper = widget.databaseHelper ?? DatabaseHelper.instance;
+    _recommendationService = widget.recommendationService ??
+        AdaptiveNutritionRecommendationService(databaseHelper: _databaseHelper);
     _loadAdaptiveGoalSettings();
   }
 
@@ -97,6 +111,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final rate = await _recommendationService.getTargetRateKgPerWeek();
     final priorActivityLevel =
         await _recommendationService.getPriorActivityLevel();
+    final extraCardioHoursOption =
+        await _recommendationService.getExtraCardioHoursOption();
     if (!mounted) return;
     setState(() {
       _selectedGoal = goal;
@@ -105,6 +121,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         kgPerWeek: rate,
       );
       _selectedPriorActivityLevel = priorActivityLevel;
+      _selectedExtraCardioHoursOption = extraCardioHoursOption;
     });
   }
 
@@ -127,6 +144,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         gender: _selectedGender,
         bodyFatPercent: bodyFatPercent,
         declaredActivityLevel: _selectedPriorActivityLevel,
+        extraCardioHoursOption: _selectedExtraCardioHoursOption,
         persistGenerated: false,
         markAsApplied: false,
       );
@@ -167,7 +185,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finishOnboarding() async {
-    final db = DatabaseHelper.instance;
+    final db = _databaseHelper;
     final prefs = await SharedPreferences.getInstance();
 
     final int calories = int.tryParse(_calController.text) ?? 2500;
@@ -193,6 +211,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           gender: _selectedGender,
           bodyFatPercent: bodyFatPercent,
           declaredActivityLevel: _selectedPriorActivityLevel,
+          extraCardioHoursOption: _selectedExtraCardioHoursOption,
           persistGenerated: false,
           markAsApplied: false,
         );
@@ -222,6 +241,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
     await _recommendationService.savePriorActivityLevel(
       _selectedPriorActivityLevel,
+    );
+    await _recommendationService.saveExtraCardioHoursOption(
+      _selectedExtraCardioHoursOption,
     );
 
     await _recommendationService.persistGeneratedRecommendation(
@@ -665,10 +687,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               }
             },
             decoration: InputDecoration(
-              labelText: 'Body fat % (optional)',
+              labelText: l10n.onboardingBodyFatOptionalLabel,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingBodyFatOptionalHelper,
+            key: const Key('onboarding_body_fat_helper_text'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const Key('onboarding_body_fat_help_button'),
+              onPressed: () => _showBodyFatHelpDialog(l10n),
+              child: Text(l10n.onboardingBodyFatHelpAction),
             ),
           ),
         ],
@@ -721,23 +757,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           const SizedBox(height: 12),
           _StepTitle(
-            title: 'Weekly bodyweight target',
+            title: l10n.onboardingAdaptiveGoalTitle,
             align: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Choose a goal direction and pace. Hypertrack will use this to generate your adaptive weekly recommendation.',
+            l10n.onboardingAdaptiveGoalSubtitle,
             style: TextStyle(color: Colors.grey[600], fontSize: 16),
           ),
           const SizedBox(height: 20),
           DropdownButtonFormField<BodyweightGoal>(
             initialValue: _selectedGoal,
-            decoration: const InputDecoration(labelText: 'Goal direction'),
+            decoration: InputDecoration(
+              labelText: l10n.adaptiveGoalDirectionLabel,
+            ),
             items: BodyweightGoal.values
                 .map(
                   (goal) => DropdownMenuItem<BodyweightGoal>(
                     value: goal,
-                    child: Text(WeeklyTargetRateCatalog.goalLabel(goal)),
+                    child: Text(_goalLabel(l10n, goal)),
                   ),
                 )
                 .toList(growable: false),
@@ -754,13 +792,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<PriorActivityLevel>(
+            key: const Key('onboarding_prior_activity_dropdown'),
             initialValue: _selectedPriorActivityLevel,
-            decoration: const InputDecoration(labelText: 'Activity level'),
+            decoration: InputDecoration(
+              labelText: l10n.adaptivePriorActivityLabel,
+            ),
             items: PriorActivityLevel.values
                 .map(
                   (level) => DropdownMenuItem<PriorActivityLevel>(
                     value: level,
-                    child: Text(PriorActivityLevelCatalog.label(level)),
+                    child: Text(_priorActivityLabel(l10n, level)),
                   ),
                 )
                 .toList(growable: false),
@@ -774,6 +815,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             },
           ),
           const SizedBox(height: 12),
+          Text(
+            l10n.adaptivePriorActivityHelp,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<ExtraCardioHoursOption>(
+            key: const Key('onboarding_extra_cardio_dropdown'),
+            initialValue: _selectedExtraCardioHoursOption,
+            decoration: InputDecoration(
+              labelText: l10n.adaptiveExtraCardioLabel,
+            ),
+            items: ExtraCardioHoursCatalog.supportedOptions
+                .map(
+                  (option) => DropdownMenuItem<ExtraCardioHoursOption>(
+                    value: option,
+                    child: Text(_extraCardioLabel(l10n, option)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (option) {
+              if (option == null) return;
+              setState(() {
+                _selectedExtraCardioHoursOption = option;
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              _refreshOnboardingRecommendationPreview();
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.adaptiveExtraCardioHelp,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -783,7 +858,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   option.kgPerWeek == _selectedTargetRateKgPerWeek;
               return ChoiceChip(
                 label: Text(
-                  WeeklyTargetRateCatalog.rateLabel(option.kgPerWeek),
+                  _rateLabel(l10n, option.kgPerWeek),
                 ),
                 selected: isSelected,
                 onSelected: (_) {
@@ -803,8 +878,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 : _refreshOnboardingRecommendationPreview,
             child: Text(
               _isGeneratingOnboardingRecommendation
-                  ? 'Generating...'
-                  : 'Refresh recommendation',
+                  ? l10n.adaptiveRecommendationGenerating
+                  : l10n.adaptiveRecommendationRefresh,
             ),
           ),
           const SizedBox(height: 12),
@@ -815,6 +890,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildOnboardingRecommendationSummary() {
+    final l10n = AppLocalizations.of(context)!;
     final recommendation = _onboardingRecommendation;
     if (recommendation == null) {
       return Container(
@@ -824,8 +900,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           borderRadius: BorderRadius.circular(12),
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
-        child: const Text(
-          'Add your profile and weight details, then refresh to see your initial recommendation.',
+        child: Text(
+          l10n.onboardingAdaptiveSummaryEmpty,
         ),
       );
     }
@@ -840,18 +916,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Initial adaptive recommendation',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            l10n.onboardingAdaptiveSummaryTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text('${recommendation.recommendedCalories} kcal'),
-          Text('Protein: ${recommendation.recommendedProteinGrams} g'),
-          Text('Carbs: ${recommendation.recommendedCarbsGrams} g'),
-          Text('Fat: ${recommendation.recommendedFatGrams} g'),
+          Text(
+            l10n.onboardingAdaptiveSummaryCalories(
+              recommendation.recommendedCalories,
+            ),
+          ),
+          Text(
+            l10n.onboardingAdaptiveSummaryProtein(
+              recommendation.recommendedProteinGrams,
+            ),
+          ),
+          Text(
+            l10n.onboardingAdaptiveSummaryCarbs(
+              recommendation.recommendedCarbsGrams,
+            ),
+          ),
+          Text(
+            l10n.onboardingAdaptiveSummaryFat(
+              recommendation.recommendedFatGrams,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
-            'Confidence: ${recommendation.confidence.name}',
+            l10n.onboardingAdaptiveSummaryConfidence(
+              _confidenceLabel(l10n, recommendation.confidence),
+            ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
@@ -859,13 +953,95 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             onPressed: _applyOnboardingRecommendationToGoals,
             child: Text(
               _hasAppliedOnboardingRecommendationToGoals
-                  ? 'Applied to goals'
-                  : 'Apply to calorie and macro goals',
+                  ? l10n.onboardingAdaptiveSummaryApplied
+                  : l10n.onboardingAdaptiveSummaryApply,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _showBodyFatHelpDialog(AppLocalizations l10n) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.onboardingBodyFatHelpDialogTitle),
+        content: Text(l10n.onboardingBodyFatHelpDialogBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.onboardingBodyFatHelpDialogAction),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _goalLabel(AppLocalizations l10n, BodyweightGoal goal) {
+    switch (goal) {
+      case BodyweightGoal.loseWeight:
+        return l10n.adaptiveGoalLose;
+      case BodyweightGoal.maintainWeight:
+        return l10n.adaptiveGoalMaintain;
+      case BodyweightGoal.gainWeight:
+        return l10n.adaptiveGoalGain;
+    }
+  }
+
+  String _rateLabel(AppLocalizations l10n, double kgPerWeek) {
+    final sign = kgPerWeek > 0 ? '+' : '';
+    return l10n.adaptiveRatePerWeek('$sign${kgPerWeek.toStringAsFixed(2)}');
+  }
+
+  String _priorActivityLabel(
+    AppLocalizations l10n,
+    PriorActivityLevel level,
+  ) {
+    switch (level) {
+      case PriorActivityLevel.low:
+        return l10n.adaptivePriorActivityLow;
+      case PriorActivityLevel.moderate:
+        return l10n.adaptivePriorActivityModerate;
+      case PriorActivityLevel.high:
+        return l10n.adaptivePriorActivityHigh;
+    }
+  }
+
+  String _extraCardioLabel(
+    AppLocalizations l10n,
+    ExtraCardioHoursOption option,
+  ) {
+    switch (option) {
+      case ExtraCardioHoursOption.h0:
+        return l10n.adaptiveExtraCardioOption0;
+      case ExtraCardioHoursOption.h1:
+        return l10n.adaptiveExtraCardioOption1;
+      case ExtraCardioHoursOption.h2:
+        return l10n.adaptiveExtraCardioOption2;
+      case ExtraCardioHoursOption.h3:
+        return l10n.adaptiveExtraCardioOption3;
+      case ExtraCardioHoursOption.h5:
+        return l10n.adaptiveExtraCardioOption5;
+      case ExtraCardioHoursOption.h7Plus:
+        return l10n.adaptiveExtraCardioOption7Plus;
+    }
+  }
+
+  String _confidenceLabel(
+    AppLocalizations l10n,
+    RecommendationConfidence confidence,
+  ) {
+    switch (confidence) {
+      case RecommendationConfidence.notEnoughData:
+        return l10n.adaptiveConfidenceNotEnoughData;
+      case RecommendationConfidence.low:
+        return l10n.adaptiveConfidenceLow;
+      case RecommendationConfidence.medium:
+        return l10n.adaptiveConfidenceMedium;
+      case RecommendationConfidence.high:
+        return l10n.adaptiveConfidenceHigh;
+    }
   }
 
   Widget _buildCaloriesPage(AppLocalizations l10n) {

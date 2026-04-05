@@ -37,19 +37,22 @@ class NutritionRecommendationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Adaptive recommendation',
+                    l10n.adaptiveRecommendationCardTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Track weight and nutrition for about a week to unlock the first weekly recommendation.',
+                    l10n.adaptiveRecommendationEmptyBody,
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Goal: ${WeeklyTargetRateCatalog.goalLabel(goal)} (${WeeklyTargetRateCatalog.rateLabel(targetRateKgPerWeek)})',
+                    l10n.adaptiveRecommendationGoalLine(
+                      _goalLabel(l10n, goal),
+                      _rateLabel(l10n, targetRateKgPerWeek),
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -58,51 +61,72 @@ class NutritionRecommendationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Adaptive recommendation',
+                    l10n.adaptiveRecommendationCardTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Goal: ${WeeklyTargetRateCatalog.goalLabel(recommendation!.goal)} (${WeeklyTargetRateCatalog.rateLabel(recommendation!.targetRateKgPerWeek)})',
+                    l10n.adaptiveRecommendationGoalLine(
+                      _goalLabel(l10n, recommendation!.goal),
+                      _rateLabel(l10n, recommendation!.targetRateKgPerWeek),
+                    ),
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Maintenance estimate: ${recommendation!.estimatedMaintenanceCalories} kcal',
+                    l10n.adaptiveRecommendationMaintenanceLine(
+                      recommendation!.estimatedMaintenanceCalories,
+                    ),
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 12),
                   _MacroRow(
                     label: l10n.calories,
-                    value: '${recommendation!.recommendedCalories} kcal',
+                    value: l10n.adaptiveRecommendationCaloriesValue(
+                      recommendation!.recommendedCalories,
+                    ),
                   ),
                   _MacroRow(
                     label: l10n.protein,
-                    value: '${recommendation!.recommendedProteinGrams} g',
+                    value: l10n.adaptiveRecommendationProteinValue(
+                      recommendation!.recommendedProteinGrams,
+                    ),
                   ),
                   _MacroRow(
                     label: l10n.carbs,
-                    value: '${recommendation!.recommendedCarbsGrams} g',
+                    value: l10n.adaptiveRecommendationCarbsValue(
+                      recommendation!.recommendedCarbsGrams,
+                    ),
                   ),
                   _MacroRow(
                     label: l10n.fat,
-                    value: '${recommendation!.recommendedFatGrams} g',
+                    value: l10n.adaptiveRecommendationFatValue(
+                      recommendation!.recommendedFatGrams,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Confidence: ${_confidenceLabel(recommendation!.confidence)}',
+                    l10n.adaptiveRecommendationConfidenceLine(
+                      _confidenceLabel(l10n, recommendation!.confidence),
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Data basis: ${recommendation!.inputSummary.windowDays} days, ${recommendation!.inputSummary.weightLogCount} weight logs, ${recommendation!.inputSummary.intakeLoggedDays} intake days',
+                    l10n.adaptiveRecommendationDataBasisLine(
+                      recommendation!.inputSummary.windowDays,
+                      recommendation!.inputSummary.weightLogCount,
+                      recommendation!.inputSummary.intakeLoggedDays,
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Current active calories: $activeTargetCalories kcal',
+                    l10n.adaptiveRecommendationActiveCaloriesLine(
+                      activeTargetCalories,
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                   if (recommendation!.warningState.warningLevel !=
@@ -118,7 +142,7 @@ class NutritionRecommendationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        _warningMessage(recommendation!),
+                        _warningMessage(l10n, recommendation!),
                         style: theme.textTheme.bodySmall,
                       ),
                     ),
@@ -129,8 +153,8 @@ class NutritionRecommendationCard extends StatelessWidget {
                       onPressed: isApplying ? null : onApply,
                       child: Text(
                         isApplying
-                            ? 'Applying...'
-                            : 'Apply recommendation to active goals',
+                            ? l10n.adaptiveRecommendationApplying
+                            : l10n.adaptiveRecommendationApplyAction,
                       ),
                     ),
                   ),
@@ -140,32 +164,54 @@ class NutritionRecommendationCard extends StatelessWidget {
     );
   }
 
-  static String _confidenceLabel(RecommendationConfidence confidence) {
-    switch (confidence) {
-      case RecommendationConfidence.notEnoughData:
-        return 'Not enough data';
-      case RecommendationConfidence.low:
-        return 'Low';
-      case RecommendationConfidence.medium:
-        return 'Medium';
-      case RecommendationConfidence.high:
-        return 'High';
+  String _goalLabel(AppLocalizations l10n, BodyweightGoal goal) {
+    switch (goal) {
+      case BodyweightGoal.loseWeight:
+        return l10n.adaptiveGoalLose;
+      case BodyweightGoal.maintainWeight:
+        return l10n.adaptiveGoalMaintain;
+      case BodyweightGoal.gainWeight:
+        return l10n.adaptiveGoalGain;
     }
   }
 
-  static String _warningMessage(NutritionRecommendation recommendation) {
+  String _rateLabel(AppLocalizations l10n, double kgPerWeek) {
+    final sign = kgPerWeek > 0 ? '+' : '';
+    return l10n.adaptiveRatePerWeek('$sign${kgPerWeek.toStringAsFixed(2)}');
+  }
+
+  String _confidenceLabel(
+    AppLocalizations l10n,
+    RecommendationConfidence confidence,
+  ) {
+    switch (confidence) {
+      case RecommendationConfidence.notEnoughData:
+        return l10n.adaptiveConfidenceNotEnoughData;
+      case RecommendationConfidence.low:
+        return l10n.adaptiveConfidenceLow;
+      case RecommendationConfidence.medium:
+        return l10n.adaptiveConfidenceMedium;
+      case RecommendationConfidence.high:
+        return l10n.adaptiveConfidenceHigh;
+    }
+  }
+
+  String _warningMessage(
+    AppLocalizations l10n,
+    NutritionRecommendation recommendation,
+  ) {
     final reasons = recommendation.warningState.warningReasons;
     if (reasons.contains('calorie_floor_applied')) {
-      return 'Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying.';
+      return l10n.adaptiveRecommendationWarningCalorieFloor;
     }
     if (reasons.contains('unresolved_food_calories')) {
-      return 'Some nutrition entries could not be fully resolved for calorie estimation. Recommendation is conservative.';
+      return l10n.adaptiveRecommendationWarningUnresolvedFood;
     }
     if (recommendation.warningState.warningLevel ==
         RecommendationWarningLevel.high) {
-      return 'Large adjustment detected. Please review your recent logging completeness before applying.';
+      return l10n.adaptiveRecommendationWarningLargeAdjustment;
     }
-    return 'Review suggested: recommendation was adjusted conservatively due to data variability.';
+    return l10n.adaptiveRecommendationWarningConservative;
   }
 }
 

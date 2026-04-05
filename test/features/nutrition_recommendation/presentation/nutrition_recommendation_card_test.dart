@@ -25,10 +25,11 @@ void main() {
       ),
     );
 
-    expect(find.text('Adaptive recommendation'), findsOneWidget);
-    expect(find.textContaining('unlock the first weekly recommendation'),
-        findsOneWidget);
-    expect(find.text('Apply recommendation to active goals'), findsNothing);
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
+    expect(find.text(l10n.adaptiveRecommendationCardTitle), findsOneWidget);
+    expect(find.text(l10n.adaptiveRecommendationEmptyBody), findsOneWidget);
+    expect(find.text(l10n.adaptiveRecommendationApplyAction), findsNothing);
   });
 
   testWidgets('renders recommendation details and apply action',
@@ -54,10 +55,13 @@ void main() {
       ),
     );
 
-    expect(find.text('2500 kcal'), findsOneWidget);
-    expect(find.text('Apply recommendation to active goals'), findsOneWidget);
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
 
-    await tester.tap(find.text('Apply recommendation to active goals'));
+    expect(find.text('2500 kcal'), findsOneWidget);
+    expect(find.text(l10n.adaptiveRecommendationApplyAction), findsOneWidget);
+
+    await tester.tap(find.text(l10n.adaptiveRecommendationApplyAction));
     await tester.pump();
 
     expect(applyTapped, isTrue);
@@ -90,7 +94,35 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('minimum calorie safety floor'), findsOneWidget);
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
+    expect(
+      find.text(l10n.adaptiveRecommendationWarningCalorieFloor),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('renders localized recommendation title for german locale',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('de'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: NutritionRecommendationCard(
+            goal: BodyweightGoal.maintainWeight,
+            targetRateKgPerWeek: 0,
+            recommendation: null,
+            activeTargetCalories: 2400,
+            isApplying: false,
+            onApply: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Adaptive Empfehlung'), findsOneWidget);
   });
 }
 
