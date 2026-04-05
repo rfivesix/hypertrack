@@ -523,16 +523,16 @@ class DiaryScreenState extends State<DiaryScreen> {
       ),
     );
 
+    if (!mounted) return;
+
     if (addFoodResult == true) {
-      if (mounted) {
-        loadDataForDate(_selectedDate);
-      }
+      loadDataForDate(_selectedDate);
       return;
     }
 
     final selectedFoodItem =
         addFoodResult is FoodItem ? addFoodResult : null;
-    if (selectedFoodItem == null || !mounted) return;
+    if (selectedFoodItem == null) return;
 
     // FIX: Datum an das Hilfs-Menü übergeben
     final result = await _showQuantityMenu(
