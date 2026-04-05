@@ -27,6 +27,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   BodyweightGoal _selectedGoal = BodyweightGoal.maintainWeight;
   double _selectedTargetRateKgPerWeek = 0;
+  PriorActivityLevel _selectedPriorActivityLevel =
+      PriorActivityLevelCatalog.defaultLevel;
 
   final _caloriesController = TextEditingController();
   final _proteinController = TextEditingController();
@@ -67,6 +69,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final selectedGoal = await _recommendationService.getGoal();
     final selectedTargetRate =
         await _recommendationService.getTargetRateKgPerWeek();
+    final selectedPriorActivityLevel =
+        await _recommendationService.getPriorActivityLevel();
 
     // Lade Ziele aus der DB
     final settings = await dbHelper.getAppSettings();
@@ -96,6 +100,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         goal: selectedGoal,
         kgPerWeek: selectedTargetRate,
       );
+      _selectedPriorActivityLevel = selectedPriorActivityLevel;
 
       _isLoading = false;
     });
@@ -113,6 +118,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
     await _recommendationService.saveGoalAndTargetRate(
       goal: _selectedGoal,
       targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+    );
+    await _recommendationService.savePriorActivityLevel(
+      _selectedPriorActivityLevel,
     );
 
     // 2. WICHTIG: Ziele in die Datenbank speichern
@@ -244,6 +252,29 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           },
                         );
                       }).toList(growable: false),
+                    ),
+                    const SizedBox(height: DesignConstants.spacingM),
+                    DropdownButtonFormField<PriorActivityLevel>(
+                      initialValue: _selectedPriorActivityLevel,
+                      decoration: const InputDecoration(
+                        labelText: 'Prior activity level',
+                      ),
+                      items: PriorActivityLevel.values
+                          .map(
+                            (level) => DropdownMenuItem<PriorActivityLevel>(
+                              value: level,
+                              child: Text(
+                                PriorActivityLevelCatalog.label(level),
+                              ),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (level) {
+                        if (level == null) return;
+                        setState(() {
+                          _selectedPriorActivityLevel = level;
+                        });
+                      },
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
                     _buildSettingsField(

@@ -211,5 +211,64 @@ void main() {
       expect(generated.targetRateKgPerWeek, 0.25);
       expect(applied!.recommendedCalories, generated.recommendedCalories);
     });
+
+    test(
+        'onboarding prior differentiates body-fat percentage and declared activity level',
+        () async {
+      final lowerBodyFat = await service.generateOnboardingRecommendation(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: 95,
+        heightCm: 180,
+        birthday: DateTime(1994, 5, 12),
+        gender: 'male',
+        bodyFatPercent: 15,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
+      final higherBodyFat = await service.generateOnboardingRecommendation(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: 95,
+        heightCm: 180,
+        birthday: DateTime(1994, 5, 12),
+        gender: 'male',
+        bodyFatPercent: 30,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
+
+      final lowActivity = await service.generateOnboardingRecommendation(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: 80,
+        heightCm: 180,
+        birthday: DateTime(1994, 5, 12),
+        gender: 'male',
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.low,
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
+      final highActivity = await service.generateOnboardingRecommendation(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: 80,
+        heightCm: 180,
+        birthday: DateTime(1994, 5, 12),
+        gender: 'male',
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.high,
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
+
+      expect(
+        lowerBodyFat.estimatedMaintenanceCalories,
+        greaterThan(higherBodyFat.estimatedMaintenanceCalories),
+      );
+      expect(
+        highActivity.estimatedMaintenanceCalories,
+        greaterThan(lowActivity.estimatedMaintenanceCalories),
+      );
+    });
   });
 }

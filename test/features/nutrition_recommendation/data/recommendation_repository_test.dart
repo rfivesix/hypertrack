@@ -19,6 +19,10 @@ void main() {
     test('returns maintain defaults when nothing persisted', () async {
       expect(await repository.getGoal(), BodyweightGoal.maintainWeight);
       expect(await repository.getTargetRateKgPerWeek(), 0);
+      expect(
+        await repository.getPriorActivityLevel(),
+        PriorActivityLevel.moderate,
+      );
       expect(await repository.getLatestGeneratedRecommendation(), isNull);
     });
 
@@ -34,6 +38,7 @@ void main() {
 
     test('persists and restores generated/applied recommendations', () async {
       final recommendation = _recommendation();
+      await repository.savePriorActivityLevel(PriorActivityLevel.high);
 
       await repository.saveLatestGeneratedRecommendation(
         recommendation: recommendation,
@@ -51,6 +56,7 @@ void main() {
           generated!.recommendedCalories, recommendation.recommendedCalories);
       expect(applied!.recommendedFatGrams, recommendation.recommendedFatGrams);
       expect(await repository.getLastGeneratedDueWeekKey(), '2026-03-30');
+      expect(await repository.getPriorActivityLevel(), PriorActivityLevel.high);
     });
   });
 }

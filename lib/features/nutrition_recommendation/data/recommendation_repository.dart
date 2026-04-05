@@ -12,6 +12,8 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.goal_direction';
   static const String _targetRateKey =
       'adaptive_nutrition_recommendation.target_rate_kg_per_week';
+  static const String _priorActivityLevelKey =
+      'adaptive_nutrition_recommendation.prior_activity_level';
   static const String _latestGeneratedKey =
       'adaptive_nutrition_recommendation.latest_generated';
   static const String _latestAppliedKey =
@@ -56,6 +58,20 @@ class RecommendationRepository {
     await prefs.setDouble(_targetRateKey, coerced);
   }
 
+  Future<PriorActivityLevel> getPriorActivityLevel() async {
+    final prefs = await _prefsLoader();
+    final raw = prefs.getString(_priorActivityLevelKey);
+    return PriorActivityLevel.values.firstWhere(
+      (level) => level.name == raw,
+      orElse: () => PriorActivityLevelCatalog.defaultLevel,
+    );
+  }
+
+  Future<void> savePriorActivityLevel(PriorActivityLevel level) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(_priorActivityLevelKey, level.name);
+  }
+
   Future<NutritionRecommendation?> getLatestGeneratedRecommendation() async {
     return _loadRecommendation(_latestGeneratedKey);
   }
@@ -98,6 +114,7 @@ class RecommendationRepository {
     final prefs = await _prefsLoader();
     await prefs.remove(_goalKey);
     await prefs.remove(_targetRateKey);
+    await prefs.remove(_priorActivityLevelKey);
     await prefs.remove(_latestGeneratedKey);
     await prefs.remove(_latestAppliedKey);
     await prefs.remove(_lastGeneratedDueWeekKey);

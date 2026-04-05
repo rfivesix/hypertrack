@@ -3,8 +3,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/data/database_helper.dart';
 import 'package:hypertrack/data/drift_database.dart'
-    show AppDatabase, NutritionLogsCompanion, ProductsCompanion;
+    show AppDatabase, NutritionLogsCompanion, ProductsCompanion, Profile;
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_input_adapter.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
 import 'package:hypertrack/models/fluid_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -104,5 +105,118 @@ void main() {
       expect(input.avgLoggedCalories, closeTo(670.0, 0.001));
       expect(input.qualityFlags, contains('unresolved_food_calories'));
     });
+
+    test('estimate prior differentiates same bodyweight by body-fat percent',
+        () {
+      final profile = _profile(
+        birthday: DateTime(1992, 3, 10),
+        height: 180,
+        gender: 'male',
+      );
+
+      final leaner =
+          RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 95,
+        bodyFatPercent: 15,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        averageCompletedWorkoutsPerWeek: 2,
+        targetSteps: 8000,
+        now: DateTime(2026, 4, 5),
+      );
+      final higherBodyFat =
+          RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 95,
+        bodyFatPercent: 30,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        averageCompletedWorkoutsPerWeek: 2,
+        targetSteps: 8000,
+        now: DateTime(2026, 4, 5),
+      );
+
+      expect(leaner, greaterThan(higherBodyFat));
+    });
+
+    test('estimate prior differentiates same profile by activity level', () {
+      final profile = _profile(
+        birthday: DateTime(1994, 7, 1),
+        height: 178,
+        gender: 'female',
+      );
+
+      final low = RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 75,
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.low,
+        averageCompletedWorkoutsPerWeek: 0.5,
+        targetSteps: 6000,
+        now: DateTime(2026, 4, 5),
+      );
+      final high = RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 75,
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.high,
+        averageCompletedWorkoutsPerWeek: 4,
+        targetSteps: 11000,
+        now: DateTime(2026, 4, 5),
+      );
+
+      expect(high, greaterThan(low));
+    });
+
+    test('estimate prior falls back stably when body-fat is missing', () {
+      final profile = _profile(
+        birthday: DateTime(1990, 1, 20),
+        height: 182,
+        gender: 'male',
+      );
+
+      final missingBodyFat =
+          RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 88,
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        averageCompletedWorkoutsPerWeek: 2,
+        targetSteps: 9000,
+        now: DateTime(2026, 4, 5),
+      );
+      final invalidBodyFat =
+          RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 88,
+        bodyFatPercent: 0,
+        declaredActivityLevel: PriorActivityLevel.moderate,
+        averageCompletedWorkoutsPerWeek: 2,
+        targetSteps: 9000,
+        now: DateTime(2026, 4, 5),
+      );
+
+      expect(missingBodyFat, invalidBodyFat);
+    });
   });
+}
+
+Profile _profile({
+  required DateTime birthday,
+  required int height,
+  required String gender,
+}) {
+  return Profile(
+    localId: 1,
+    id: 'p1',
+    username: 'User',
+    isCoach: false,
+    visibility: 'private',
+    birthday: birthday,
+    height: height,
+    gender: gender,
+    profileImagePath: null,
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+    deletedAt: null,
+  );
 }

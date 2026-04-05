@@ -2062,6 +2062,69 @@ class DatabaseHelper {
         );
   }
 
+  /// Stores an initial body-fat percentage measurement.
+  Future<void> saveInitialBodyFatPercentage(double bodyFatPercent) async {
+    final dbInstance = await database;
+    final now = DateTime.now();
+
+    await dbInstance.into(dbInstance.measurements).insert(
+          db.MeasurementsCompanion(
+            date: drift.Value(now),
+            type: const drift.Value('fat_percent'),
+            value: drift.Value(bodyFatPercent),
+            unit: const drift.Value('%'),
+            legacySessionId: drift.Value(now.millisecondsSinceEpoch),
+          ),
+        );
+  }
+
+  /// Returns the latest body-fat percentage before or at [before] if present.
+  Future<double?> getLatestBodyFatPercentageBefore(DateTime before) async {
+    final dbInstance = await database;
+    final query = dbInstance.select(dbInstance.measurements)
+      ..where((tbl) => tbl.date.isSmallerOrEqualValue(before))
+      ..where(
+        (tbl) => tbl.type.equals('fat_percent') | tbl.type.equals('body_fat'),
+      )
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+              expression: t.date,
+              mode: drift.OrderingMode.desc,
+            ),
+      ])
+      ..limit(1);
+
+    final latest = await query.getSingleOrNull();
+    final value = latest?.value;
+    if (value == null || value <= 0 || value > 100) {
+      return null;
+    }
+    return value;
+  }
+
+  /// Computes completed workouts per week over a trailing lookback window.
+  Future<double> getAverageCompletedWorkoutsPerWeek({
+    required DateTime now,
+    int lookbackDays = 28,
+  }) async {
+    final dbInstance = await database;
+    final windowDays = lookbackDays <= 0 ? 28 : lookbackDays;
+    final start = now.subtract(Duration(days: windowDays));
+
+    final countExpr = dbInstance.workoutLogs.id.count();
+    final query = dbInstance.selectOnly(dbInstance.workoutLogs)
+      ..addColumns([countExpr])
+      ..where(dbInstance.workoutLogs.status.equals('completed'))
+      ..where(dbInstance.workoutLogs.startTime.isBiggerOrEqualValue(start))
+      ..where(dbInstance.workoutLogs.startTime.isSmallerOrEqualValue(now));
+
+    final row = await query.getSingleOrNull();
+    final completedCount = row?.read(countExpr) ?? 0;
+    final weeks = windowDays / 7.0;
+    if (weeks <= 0) return 0;
+    return completedCount / weeks;
+  }
+
   // ===========================================================================
   // AI RECOMMENDATION HELPERS
   // ===========================================================================

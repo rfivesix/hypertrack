@@ -6,6 +6,7 @@ import '../../../data/database_helper.dart';
 import '../../../models/chart_data_point.dart';
 import '../../../models/fluid_entry.dart';
 import '../../../data/drift_database.dart' as db;
+import '../domain/goal_models.dart';
 import '../domain/recommendation_models.dart';
 
 class RecommendationInputAdapter {
@@ -26,6 +27,7 @@ class RecommendationInputAdapter {
   Future<RecommendationGenerationInput> buildInput({
     required DateTime now,
     int rollingWindowDays = 21,
+    PriorActivityLevel declaredActivityLevel = PriorActivityLevel.moderate,
   }) async {
     final windowEndDay = normalizeDay(now);
     final windowStartDay = windowEndDay
@@ -43,6 +45,9 @@ class RecommendationInputAdapter {
       _databaseHelper.getFluidEntriesForDateRange(rangeStart, rangeEnd),
       _databaseHelper.getUserProfile(),
       _databaseHelper.getGoalsForDate(now),
+      _databaseHelper.getLatestBodyFatPercentageBefore(rangeEnd),
+      _databaseHelper.getAverageCompletedWorkoutsPerWeek(now: rangeEnd),
+      _databaseHelper.getAppSettings(),
     ]);
 
     final weightPoints = results[0] as List<ChartDataPoint>;
@@ -50,6 +55,9 @@ class RecommendationInputAdapter {
     final fluidEntries = results[2] as List<FluidEntry>;
     final profile = results[3] as db.Profile?;
     final activeGoals = results[4] as db.DailyGoalsHistoryData?;
+    final bodyFatPercent = results[5] as double?;
+    final averageCompletedWorkoutsPerWeek = results[6] as double;
+    final appSettings = results[7] as db.AppSetting?;
 
     final caloriesByDay = _buildCaloriesByDay(
       foodCaloriesByDay: foodCaloriesResult.caloriesByDay,
@@ -84,6 +92,10 @@ class RecommendationInputAdapter {
     final priorMaintenanceCalories = estimatePriorMaintenanceCalories(
       profile: profile,
       currentWeightKg: currentWeightKg,
+      bodyFatPercent: bodyFatPercent,
+      declaredActivityLevel: declaredActivityLevel,
+      averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
+      targetSteps: appSettings?.targetSteps,
       now: now,
     );
 
@@ -125,6 +137,10 @@ class RecommendationInputAdapter {
     required db.Profile? profile,
     required double currentWeightKg,
     required DateTime now,
+    double? bodyFatPercent,
+    PriorActivityLevel declaredActivityLevel = PriorActivityLevel.moderate,
+    double? averageCompletedWorkoutsPerWeek,
+    int? targetSteps,
     int fallbackHeightCm = 175,
   }) {
     final weightKg = currentWeightKg > 0 ? currentWeightKg : 75.0;
@@ -132,19 +148,68 @@ class RecommendationInputAdapter {
     final ageYears = _estimateAgeYears(profile?.birthday, now) ?? 30;
     final gender = profile?.gender;
 
-    final baseMifflin = (10 * weightKg) + (6.25 * heightCm) - (5 * ageYears);
+    // If body-fat percentage is available, use a lean-mass-aware prior via
+    // Katch-McArdle; otherwise fall back to a profile-based Mifflin prior.
+    final validBodyFatPercent =
+        (bodyFatPercent != null && bodyFatPercent > 3 && bodyFatPercent < 70)
+            ? bodyFatPercent
+            : null;
 
-    double rmr;
-    if (gender == 'male') {
-      rmr = baseMifflin + 5;
-    } else if (gender == 'female') {
-      rmr = baseMifflin - 161;
+    late final double rmr;
+    if (validBodyFatPercent != null) {
+      final leanMassKg = weightKg * (1 - (validBodyFatPercent / 100.0));
+      rmr = 370 + (21.6 * leanMassKg);
     } else {
-      rmr = baseMifflin - 78;
+      final baseMifflin = (10 * weightKg) + (6.25 * heightCm) - (5 * ageYears);
+      if (gender == 'male') {
+        rmr = baseMifflin + 5;
+      } else if (gender == 'female') {
+        rmr = baseMifflin - 161;
+      } else {
+        rmr = baseMifflin - 78;
+      }
     }
 
-    final maintenance = rmr * 1.45;
+    final activityFactor = _activityFactorFor(
+      declaredActivityLevel: declaredActivityLevel,
+      averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
+      targetSteps: targetSteps,
+    );
+
+    final maintenance = rmr * activityFactor;
     return maintenance.round().clamp(1200, 5000);
+  }
+
+  static double _activityFactorFor({
+    required PriorActivityLevel declaredActivityLevel,
+    required double? averageCompletedWorkoutsPerWeek,
+    required int? targetSteps,
+  }) {
+    var factor = switch (declaredActivityLevel) {
+      PriorActivityLevel.low => 1.35,
+      PriorActivityLevel.moderate => 1.50,
+      PriorActivityLevel.high => 1.65,
+    };
+
+    final workoutsPerWeek = averageCompletedWorkoutsPerWeek ?? 0;
+    if (workoutsPerWeek >= 5) {
+      factor += 0.06;
+    } else if (workoutsPerWeek >= 3) {
+      factor += 0.04;
+    } else if (workoutsPerWeek >= 1) {
+      factor += 0.02;
+    }
+
+    final steps = targetSteps ?? 8000;
+    if (steps >= 13000) {
+      factor += 0.05;
+    } else if (steps >= 10000) {
+      factor += 0.03;
+    } else if (steps < 7000) {
+      factor -= 0.03;
+    }
+
+    return factor.clamp(1.20, 1.95);
   }
 
   static int? _estimateAgeYears(DateTime? birthday, DateTime now) {

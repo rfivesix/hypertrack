@@ -44,6 +44,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final TextEditingController _heightController =
       TextEditingController(); // NEU
   String? _selectedGender; // NEU (male, female, diverse)
+  final TextEditingController _bodyFatPercentController =
+      TextEditingController();
+  PriorActivityLevel _selectedPriorActivityLevel =
+      PriorActivityLevelCatalog.defaultLevel;
 
   final TextEditingController _weightController = TextEditingController();
 
@@ -74,6 +78,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _pageController.dispose();
     _nameController.dispose();
     _heightController.dispose();
+    _bodyFatPercentController.dispose();
     _weightController.dispose();
     _calController.dispose();
     _protController.dispose();
@@ -90,6 +95,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _loadAdaptiveGoalSettings() async {
     final goal = await _recommendationService.getGoal();
     final rate = await _recommendationService.getTargetRateKgPerWeek();
+    final priorActivityLevel =
+        await _recommendationService.getPriorActivityLevel();
     if (!mounted) return;
     setState(() {
       _selectedGoal = goal;
@@ -97,6 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         goal: goal,
         kgPerWeek: rate,
       );
+      _selectedPriorActivityLevel = priorActivityLevel;
     });
   }
 
@@ -106,6 +114,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
     final height = int.tryParse(_heightController.text);
+    final bodyFatPercent =
+        double.tryParse(_bodyFatPercentController.text.replaceAll(',', '.'));
     try {
       final recommendation =
           await _recommendationService.generateOnboardingRecommendation(
@@ -115,6 +125,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         heightCm: height,
         birthday: _selectedDate,
         gender: _selectedGender,
+        bodyFatPercent: bodyFatPercent,
+        declaredActivityLevel: _selectedPriorActivityLevel,
         persistGenerated: false,
         markAsApplied: false,
       );
@@ -167,6 +179,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final double? weight = double.tryParse(
       _weightController.text.replaceAll(',', '.'),
     );
+    final double? bodyFatPercent = double.tryParse(
+      _bodyFatPercentController.text.replaceAll(',', '.'),
+    );
 
     final onboardingRecommendation = _onboardingRecommendation ??
         await _recommendationService.generateOnboardingRecommendation(
@@ -176,6 +191,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           heightCm: height,
           birthday: _selectedDate,
           gender: _selectedGender,
+          bodyFatPercent: bodyFatPercent,
+          declaredActivityLevel: _selectedPriorActivityLevel,
           persistGenerated: false,
           markAsApplied: false,
         );
@@ -195,10 +212,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (weight != null) {
       await db.saveInitialWeight(weight);
     }
+    if (bodyFatPercent != null && bodyFatPercent > 0 && bodyFatPercent <= 100) {
+      await db.saveInitialBodyFatPercentage(bodyFatPercent);
+    }
 
     await _recommendationService.saveGoalAndTargetRate(
       goal: _selectedGoal,
       targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+    );
+    await _recommendationService.savePriorActivityLevel(
+      _selectedPriorActivityLevel,
     );
 
     await _recommendationService.persistGeneratedRecommendation(
@@ -629,6 +652,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _bodyFatPercentController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) {
+              setState(() {
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              if (_currentPage >= 3) {
+                _refreshOnboardingRecommendationPreview();
+              }
+            },
+            decoration: InputDecoration(
+              labelText: 'Body fat % (optional)',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -705,6 +747,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _selectedGoal = goal;
                 _selectedTargetRateKgPerWeek =
                     WeeklyTargetRateCatalog.defaultForGoal(goal).kgPerWeek;
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              _refreshOnboardingRecommendationPreview();
+            },
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<PriorActivityLevel>(
+            initialValue: _selectedPriorActivityLevel,
+            decoration: const InputDecoration(labelText: 'Activity level'),
+            items: PriorActivityLevel.values
+                .map(
+                  (level) => DropdownMenuItem<PriorActivityLevel>(
+                    value: level,
+                    child: Text(PriorActivityLevelCatalog.label(level)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (level) {
+              if (level == null) return;
+              setState(() {
+                _selectedPriorActivityLevel = level;
                 _hasAppliedOnboardingRecommendationToGoals = false;
               });
               _refreshOnboardingRecommendationPreview();

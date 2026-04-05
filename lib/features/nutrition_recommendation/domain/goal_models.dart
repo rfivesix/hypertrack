@@ -4,6 +4,29 @@ enum BodyweightGoal {
   gainWeight,
 }
 
+enum PriorActivityLevel {
+  low,
+  moderate,
+  high,
+}
+
+class PriorActivityLevelCatalog {
+  const PriorActivityLevelCatalog._();
+
+  static const PriorActivityLevel defaultLevel = PriorActivityLevel.moderate;
+
+  static String label(PriorActivityLevel level) {
+    switch (level) {
+      case PriorActivityLevel.low:
+        return 'Low activity';
+      case PriorActivityLevel.moderate:
+        return 'Moderate activity';
+      case PriorActivityLevel.high:
+        return 'High activity';
+    }
+  }
+}
+
 class WeeklyTargetRateOption {
   final BodyweightGoal goal;
   final double kgPerWeek;

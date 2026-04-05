@@ -57,6 +57,14 @@ class AdaptiveNutritionRecommendationService {
     return _repository.getTargetRateKgPerWeek();
   }
 
+  Future<PriorActivityLevel> getPriorActivityLevel() {
+    return _repository.getPriorActivityLevel();
+  }
+
+  Future<void> savePriorActivityLevel(PriorActivityLevel level) {
+    return _repository.savePriorActivityLevel(level);
+  }
+
   Future<NutritionRecommendation?> getLatestGeneratedRecommendation() {
     return _repository.getLatestGeneratedRecommendation();
   }
@@ -106,12 +114,16 @@ class AdaptiveNutritionRecommendationService {
         )) {
       return _repository.getLatestGeneratedRecommendation();
     }
+    final priorActivityLevel = await _repository.getPriorActivityLevel();
 
     final results = await Future.wait<dynamic>([
       _repository.getGoal(),
       _repository.getTargetRateKgPerWeek(),
       _repository.getLatestGeneratedRecommendation(),
-      _inputAdapter.buildInput(now: stableWindowEndDay),
+      _inputAdapter.buildInput(
+        now: stableWindowEndDay,
+        declaredActivityLevel: priorActivityLevel,
+      ),
     ]);
 
     final goal = results[0] as BodyweightGoal;
@@ -144,11 +156,15 @@ class AdaptiveNutritionRecommendationService {
     required int? heightCm,
     required DateTime? birthday,
     required String? gender,
+    double? bodyFatPercent,
+    PriorActivityLevel? declaredActivityLevel,
     DateTime? now,
     bool persistGenerated = false,
     bool markAsApplied = false,
   }) async {
     final effectiveNow = now ?? DateTime.now();
+    final effectiveDeclaredActivityLevel =
+        declaredActivityLevel ?? await _repository.getPriorActivityLevel();
 
     final virtualProfile = _VirtualProfile(
       birthday: birthday,
@@ -160,6 +176,8 @@ class AdaptiveNutritionRecommendationService {
         await _estimateMaintenanceForVirtualProfile(
       profile: virtualProfile,
       weightKg: weightKg,
+      bodyFatPercent: bodyFatPercent,
+      declaredActivityLevel: effectiveDeclaredActivityLevel,
       now: effectiveNow,
     );
 
@@ -252,9 +270,18 @@ class AdaptiveNutritionRecommendationService {
   Future<int> _estimateMaintenanceForVirtualProfile({
     required _VirtualProfile profile,
     required double? weightKg,
+    required double? bodyFatPercent,
+    required PriorActivityLevel declaredActivityLevel,
     required DateTime now,
   }) async {
     final persistedProfile = await _databaseHelper.getUserProfile();
+    final persistedBodyFatPercent =
+        await _databaseHelper.getLatestBodyFatPercentageBefore(now);
+    final effectiveBodyFatPercent = bodyFatPercent ?? persistedBodyFatPercent;
+    final averageCompletedWorkoutsPerWeek =
+        await _databaseHelper.getAverageCompletedWorkoutsPerWeek(now: now);
+    final targetSteps = (await _databaseHelper.getAppSettings())?.targetSteps ??
+        await _databaseHelper.getCurrentTargetStepsOrDefault();
 
     final mergedProfile = _VirtualProfile(
       birthday: profile.birthday ?? persistedProfile?.birthday,
@@ -280,6 +307,10 @@ class AdaptiveNutritionRecommendationService {
     return RecommendationInputAdapter.estimatePriorMaintenanceCalories(
       profile: asDbProfile,
       currentWeightKg: weightKg ?? 75,
+      bodyFatPercent: effectiveBodyFatPercent,
+      declaredActivityLevel: declaredActivityLevel,
+      averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
+      targetSteps: targetSteps,
       now: now,
     );
   }
