@@ -21,14 +21,13 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    final button = find.byType(ElevatedButton).first;
+    final button = find.byKey(const Key('onboarding_continue_setup_button'));
     expect(button, findsOneWidget);
 
-    print('Tapped button...');
     await tester.tap(button);
     await tester.pumpAndSettle();
 
     final textFields = find.byType(TextField);
-    print('Found TextFields: ${textFields.evaluate().length}');
+    expect(textFields, findsWidgets);
   });
 }

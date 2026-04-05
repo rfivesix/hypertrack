@@ -21,6 +21,16 @@ import 'product_database_helper.dart';
 ///
 /// Manages user favorites, nutrition logs, fluid intake, body measurements,
 /// supplements, and meal templates.
+class FoodCaloriesByDayResult {
+  final Map<DateTime, double> caloriesByDay;
+  final int unresolvedEntryCount;
+
+  const FoodCaloriesByDayResult({
+    required this.caloriesByDay,
+    required this.unresolvedEntryCount,
+  });
+}
+
 class DatabaseHelper {
   /// Singleton instance of [DatabaseHelper].
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -316,6 +326,75 @@ class DatabaseHelper {
         updatedAt: row.updatedAt,
       );
     }).toList();
+  }
+
+  /// Aggregates logged food calories per local day for a date range.
+  ///
+  /// Resolution order for calories-per-100g:
+  /// 1) `nutrition_logs.product_id -> products.id`
+  /// 2) `nutrition_logs.legacy_barcode -> products.barcode`
+  ///
+  /// Returns unresolved row count when neither relation can resolve.
+  Future<FoodCaloriesByDayResult> getFoodCaloriesByDayForDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final dbInstance = await database;
+    final effectiveStart = DateTime(start.year, start.month, start.day);
+    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final productsByBarcode = dbInstance.products.createAlias(
+      'products_by_barcode',
+    );
+
+    final query = dbInstance.select(dbInstance.nutritionLogs).join([
+      drift.leftOuterJoin(
+        dbInstance.products,
+        dbInstance.products.id.equalsExp(dbInstance.nutritionLogs.productId),
+      ),
+      drift.leftOuterJoin(
+        productsByBarcode,
+        productsByBarcode.barcode.equalsExp(
+          dbInstance.nutritionLogs.legacyBarcode,
+        ),
+      ),
+    ])
+      ..where(
+        dbInstance.nutritionLogs.consumedAt.isBetweenValues(
+          effectiveStart,
+          effectiveEnd,
+        ),
+      );
+
+    final rows = await query.get();
+    final caloriesByDay = <DateTime, double>{};
+    var unresolvedEntryCount = 0;
+
+    for (final row in rows) {
+      final log = row.readTable(dbInstance.nutritionLogs);
+      final productById = row.readTableOrNull(dbInstance.products);
+      final productByBarcode = row.readTableOrNull(productsByBarcode);
+      final resolvedProduct = productById ?? productByBarcode;
+
+      if (resolvedProduct == null) {
+        unresolvedEntryCount += 1;
+        continue;
+      }
+
+      final day = DateTime(
+        log.consumedAt.year,
+        log.consumedAt.month,
+        log.consumedAt.day,
+      );
+      final caloriesPer100 = resolvedProduct.calories.toDouble();
+      final addedCalories = caloriesPer100 * (log.amount / 100.0);
+      caloriesByDay[day] = (caloriesByDay[day] ?? 0.0) + addedCalories;
+    }
+
+    return FoodCaloriesByDayResult(
+      caloriesByDay: caloriesByDay,
+      unresolvedEntryCount: unresolvedEntryCount,
+    );
   }
 
   Future<void> deleteFoodEntry(int id) async {
@@ -1981,6 +2060,69 @@ class DatabaseHelper {
             legacySessionId: drift.Value(now.millisecondsSinceEpoch),
           ),
         );
+  }
+
+  /// Stores an initial body-fat percentage measurement.
+  Future<void> saveInitialBodyFatPercentage(double bodyFatPercent) async {
+    final dbInstance = await database;
+    final now = DateTime.now();
+
+    await dbInstance.into(dbInstance.measurements).insert(
+          db.MeasurementsCompanion(
+            date: drift.Value(now),
+            type: const drift.Value('fat_percent'),
+            value: drift.Value(bodyFatPercent),
+            unit: const drift.Value('%'),
+            legacySessionId: drift.Value(now.millisecondsSinceEpoch),
+          ),
+        );
+  }
+
+  /// Returns the latest body-fat percentage before or at [before] if present.
+  Future<double?> getLatestBodyFatPercentageBefore(DateTime before) async {
+    final dbInstance = await database;
+    final query = dbInstance.select(dbInstance.measurements)
+      ..where((tbl) => tbl.date.isSmallerOrEqualValue(before))
+      ..where(
+        (tbl) => tbl.type.equals('fat_percent') | tbl.type.equals('body_fat'),
+      )
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+              expression: t.date,
+              mode: drift.OrderingMode.desc,
+            ),
+      ])
+      ..limit(1);
+
+    final latest = await query.getSingleOrNull();
+    final value = latest?.value;
+    if (value == null || value <= 0 || value > 100) {
+      return null;
+    }
+    return value;
+  }
+
+  /// Computes completed workouts per week over a trailing lookback window.
+  Future<double> getAverageCompletedWorkoutsPerWeek({
+    required DateTime now,
+    int lookbackDays = 28,
+  }) async {
+    final dbInstance = await database;
+    final windowDays = lookbackDays <= 0 ? 28 : lookbackDays;
+    final start = now.subtract(Duration(days: windowDays));
+
+    final countExpr = dbInstance.workoutLogs.id.count();
+    final query = dbInstance.selectOnly(dbInstance.workoutLogs)
+      ..addColumns([countExpr])
+      ..where(dbInstance.workoutLogs.status.equals('completed'))
+      ..where(dbInstance.workoutLogs.startTime.isBiggerOrEqualValue(start))
+      ..where(dbInstance.workoutLogs.startTime.isSmallerOrEqualValue(now));
+
+    final row = await query.getSingleOrNull();
+    final completedCount = row?.read(countExpr) ?? 0;
+    final weeks = windowDays / 7.0;
+    if (weeks <= 0) return 0;
+    return completedCount / weeks;
   }
 
   // ===========================================================================

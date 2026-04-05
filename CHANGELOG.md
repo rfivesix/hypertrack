@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0-alpha.1] - 2026-04-06
+
+This alpha introduces the first end-to-end MVP of adaptive nutrition recommendations.
+
+### Added
+- Adaptive weekly nutrition recommendation foundation:
+  - repository persistence
+  - due-week scheduler
+  - recommendation input adapter
+  - recommendation engine
+  - orchestration service
+- Nutrition hub recommendation card integration with:
+  - confidence + warning display
+  - explicit apply action for active targets
+- Onboarding adaptive recommendation flow with:
+  - dedicated goal/rate/activity/cardio setup
+  - dedicated optional body-fat onboarding step
+  - body-fat guidance entry point with text-based male/female reference helper
+- Goals screen recommendation settings for:
+  - bodyweight goal direction
+  - weekly target rate
+  - baseline daily activity
+  - extra cardio/endurance outside the app
+- New adaptive recommendation persistence keys in `SharedPreferences` for settings/state snapshots.
+
+### Changed
+- Onboarding order is now:
+  - Welcome
+  - Profile
+  - Bodyweight
+  - Body fat %
+  - Adaptive goal/recommendation settings
+  - Calories
+  - Macros
+  - Water
+- Baseline activity model expanded from 3 to 4 levels:
+  - low
+  - moderate
+  - high
+  - very high
+- Activity-level helper UX is now structured and easier to scan (intro + one line per level), and remains separate from extra-cardio input.
+- Prior maintenance estimation is now more personalized for MVP:
+  - uses body-fat/lean-mass-aware path when body-fat % is available
+  - falls back safely when body-fat is missing
+  - applies declared baseline activity + extra-cardio influence conservatively
+- Recommendation generation is stable per due week (no in-week drift from Monday vs later-week app-open timing).
+- Recommendation-related EN/DE strings were moved/expanded in l10n and regenerated.
+
+### Fixed
+- Prevented implausible calorie outputs from being surfaced without explicit constrained/warning handling.
+- Hardened calorie-input aggregation paths to reduce systematic undercounting in common logging scenarios.
+- Ensured backup/restore explicitly covers adaptive recommendation settings:
+  - `adaptive_nutrition_recommendation.prior_activity_level`
+  - `adaptive_nutrition_recommendation.extra_cardio_hours`
+
+### Testing
+- Added and updated automated tests for:
+  - recommendation domain logic
+  - recommendation persistence/state behavior
+  - due-week stability behavior
+  - onboarding/goals recommendation flows
+  - backup/restore coverage for adaptive recommendation keys
+
 ## [0.7.10] - 2026-04-05
 
 This release includes a fix for Diary refresh behavior after saving meals through the AI meal-recognition flow.

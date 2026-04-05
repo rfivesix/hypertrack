@@ -8,23 +8,48 @@ import '../generated/app_localizations.dart';
 import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/presentation/body_fat_guidance_sheet.dart';
+import '../features/nutrition_recommendation/presentation/prior_activity_help_block.dart';
+import '../features/nutrition_recommendation/domain/confidence_models.dart';
+import '../features/nutrition_recommendation/domain/goal_models.dart';
+import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 
 /// The initial setup flow for new users.
 ///
 /// Collects user profile data (name, DOB, anthropometrics) and initial
 /// nutrition/health goals to populate the database and preferences.
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  final AdaptiveNutritionRecommendationService? recommendationService;
+  final DatabaseHelper? databaseHelper;
+
+  const OnboardingScreen({
+    super.key,
+    this.recommendationService,
+    this.databaseHelper,
+  });
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const int _adaptiveGoalPageIndex = 4;
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _totalPages = 6;
+  final int _totalPages = 8;
   bool _isRestoring = false;
+  bool _isGeneratingOnboardingRecommendation = false;
+
+  late final AdaptiveNutritionRecommendationService _recommendationService;
+  late final DatabaseHelper _databaseHelper;
+  BodyweightGoal _selectedGoal = BodyweightGoal.maintainWeight;
+  double _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.defaultForGoal(
+    BodyweightGoal.maintainWeight,
+  ).kgPerWeek;
+  NutritionRecommendation? _onboardingRecommendation;
+  bool _hasAppliedOnboardingRecommendationToGoals = false;
 
   // --- CONTROLLER ---
   final TextEditingController _nameController = TextEditingController();
@@ -32,6 +57,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final TextEditingController _heightController =
       TextEditingController(); // NEU
   String? _selectedGender; // NEU (male, female, diverse)
+  final TextEditingController _bodyFatPercentController =
+      TextEditingController();
+  PriorActivityLevel _selectedPriorActivityLevel =
+      PriorActivityLevelCatalog.defaultLevel;
+  ExtraCardioHoursOption _selectedExtraCardioHoursOption =
+      ExtraCardioHoursCatalog.defaultOption;
 
   final TextEditingController _weightController = TextEditingController();
 
@@ -52,10 +83,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _databaseHelper = widget.databaseHelper ?? DatabaseHelper.instance;
+    _recommendationService = widget.recommendationService ??
+        AdaptiveNutritionRecommendationService(databaseHelper: _databaseHelper);
+    _loadAdaptiveGoalSettings();
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
     _heightController.dispose();
+    _bodyFatPercentController.dispose();
     _weightController.dispose();
     _calController.dispose();
     _protController.dispose();
@@ -69,8 +110,86 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // lib/screens/onboarding_screen.dart
 
+  Future<void> _loadAdaptiveGoalSettings() async {
+    final goal = await _recommendationService.getGoal();
+    final rate = await _recommendationService.getTargetRateKgPerWeek();
+    final priorActivityLevel =
+        await _recommendationService.getPriorActivityLevel();
+    final extraCardioHoursOption =
+        await _recommendationService.getExtraCardioHoursOption();
+    if (!mounted) return;
+    setState(() {
+      _selectedGoal = goal;
+      _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.coerceTargetRate(
+        goal: goal,
+        kgPerWeek: rate,
+      );
+      _selectedPriorActivityLevel = priorActivityLevel;
+      _selectedExtraCardioHoursOption = extraCardioHoursOption;
+    });
+  }
+
+  Future<void> _refreshOnboardingRecommendationPreview() async {
+    if (_isGeneratingOnboardingRecommendation) return;
+    setState(() => _isGeneratingOnboardingRecommendation = true);
+
+    final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
+    final height = int.tryParse(_heightController.text);
+    final bodyFatPercent =
+        double.tryParse(_bodyFatPercentController.text.replaceAll(',', '.'));
+    try {
+      final recommendation =
+          await _recommendationService.generateOnboardingRecommendation(
+        goal: _selectedGoal,
+        targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+        weightKg: weight,
+        heightCm: height,
+        birthday: _selectedDate,
+        gender: _selectedGender,
+        bodyFatPercent: bodyFatPercent,
+        declaredActivityLevel: _selectedPriorActivityLevel,
+        extraCardioHoursOption: _selectedExtraCardioHoursOption,
+        persistGenerated: false,
+        markAsApplied: false,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _onboardingRecommendation = recommendation;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingOnboardingRecommendation = false);
+      }
+    }
+  }
+
+  void _applyOnboardingRecommendationToGoals() {
+    final recommendation = _onboardingRecommendation;
+    if (recommendation == null) return;
+    setState(() {
+      _calController.text = recommendation.recommendedCalories.toString();
+      _protController.text = recommendation.recommendedProteinGrams.toString();
+      _carbController.text = recommendation.recommendedCarbsGrams.toString();
+      _fatController.text = recommendation.recommendedFatGrams.toString();
+      _hasAppliedOnboardingRecommendationToGoals = true;
+    });
+  }
+
+  bool _activeGoalInputsMatchRecommendation(
+      NutritionRecommendation recommendation) {
+    return (int.tryParse(_calController.text) ?? -1) ==
+            recommendation.recommendedCalories &&
+        (int.tryParse(_protController.text) ?? -1) ==
+            recommendation.recommendedProteinGrams &&
+        (int.tryParse(_carbController.text) ?? -1) ==
+            recommendation.recommendedCarbsGrams &&
+        (int.tryParse(_fatController.text) ?? -1) ==
+            recommendation.recommendedFatGrams;
+  }
+
   Future<void> _finishOnboarding() async {
-    final db = DatabaseHelper.instance;
+    final db = _databaseHelper;
     final prefs = await SharedPreferences.getInstance();
 
     final int calories = int.tryParse(_calController.text) ?? 2500;
@@ -79,6 +198,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final int fat = int.tryParse(_fatController.text) ?? 80;
     final int water = int.tryParse(_waterController.text) ?? 3000;
     final int? height = int.tryParse(_heightController.text);
+    final double? weight = double.tryParse(
+      _weightController.text.replaceAll(',', '.'),
+    );
+    final double? bodyFatPercent = double.tryParse(
+      _bodyFatPercentController.text.replaceAll(',', '.'),
+    );
+
+    final onboardingRecommendation = _onboardingRecommendation ??
+        await _recommendationService.generateOnboardingRecommendation(
+          goal: _selectedGoal,
+          targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+          weightKg: weight,
+          heightCm: height,
+          birthday: _selectedDate,
+          gender: _selectedGender,
+          bodyFatPercent: bodyFatPercent,
+          declaredActivityLevel: _selectedPriorActivityLevel,
+          extraCardioHoursOption: _selectedExtraCardioHoursOption,
+          persistGenerated: false,
+          markAsApplied: false,
+        );
 
     // 1. Profil speichern (DB)
     await db.saveUserProfile(
@@ -92,12 +232,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (height != null) await prefs.setInt('userHeight', height);
 
     // 2. Startgewicht (DB)
-    final double? weight = double.tryParse(
-      _weightController.text.replaceAll(',', '.'),
-    );
     if (weight != null) {
       await db.saveInitialWeight(weight);
     }
+    if (bodyFatPercent != null && bodyFatPercent > 0 && bodyFatPercent <= 100) {
+      await db.saveInitialBodyFatPercentage(bodyFatPercent);
+    }
+
+    await _recommendationService.saveGoalAndTargetRate(
+      goal: _selectedGoal,
+      targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+    );
+    await _recommendationService.savePriorActivityLevel(
+      _selectedPriorActivityLevel,
+    );
+    await _recommendationService.saveExtraCardioHoursOption(
+      _selectedExtraCardioHoursOption,
+    );
+
+    await _recommendationService.persistGeneratedRecommendation(
+      recommendation: onboardingRecommendation,
+      markAsApplied: _activeGoalInputsMatchRecommendation(
+        onboardingRecommendation,
+      ),
+    );
 
     // 3. Ziele speichern (DB - DAS IST JETZT DIE QUELLE FÜR ALLES)
     await db.saveUserGoals(
@@ -252,15 +410,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (i) => setState(() => _currentPage = i),
+                onPageChanged: (i) {
+                  setState(() => _currentPage = i);
+                  if (i == _adaptiveGoalPageIndex) {
+                    _refreshOnboardingRecommendationPreview();
+                  }
+                },
                 children: [
                   _buildWelcomePage(l10n),
-                  _buildProfilePage(l10n), // <-- Hier ist das Update
+                  _buildProfilePage(l10n),
                   _buildWeightPage(l10n),
+                  _buildBodyFatPage(l10n),
+                  _buildAdaptiveGoalPage(l10n),
                   _buildCaloriesPage(l10n),
                   _buildMacrosPage(l10n),
                   _buildWaterPage(l10n),
-                  _buildFinishPage(l10n),
                 ],
               ),
             ),
@@ -276,6 +440,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const Spacer(),
                     ElevatedButton(
+                      key: const Key('onboarding_bottom_next_button'),
                       onPressed: _nextPage,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -333,6 +498,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
+              key: const Key('onboarding_continue_setup_button'),
               onPressed: _isRestoring ? null : _nextPage,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -377,9 +543,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // --- UPDATE: PROFILE PAGE MIT GRÖSSE & GESCHLECHT ---
   Widget _buildProfilePage(AppLocalizations l10n) {
     return SingleChildScrollView(
+      key: const Key('onboarding_profile_page'),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,6 +554,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _StepTitle(title: l10n.onboardingNameTitle),
           const SizedBox(height: 16),
           TextField(
+            key: const Key('onboarding_name_text_field'),
             controller: _nameController,
             decoration: InputDecoration(
               labelText: l10n.onboardingNameLabel,
@@ -398,9 +565,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             textCapitalization: TextCapitalization.words,
           ),
-
           const SizedBox(height: 32),
-
           _StepTitle(title: l10n.onboardingDobTitle),
           const SizedBox(height: 16),
           InkWell(
@@ -413,6 +578,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               );
               if (picked != null) {
                 setState(() => _selectedDate = picked);
+                if (_currentPage >= _adaptiveGoalPageIndex) {
+                  _refreshOnboardingRecommendationPreview();
+                }
               }
             },
             child: InputDecorator(
@@ -433,26 +601,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 32),
-
-          // GRÖSSE & GESCHLECHT NEBENEINANDER
           Row(
             children: [
-              // GRÖSSE
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _StepTitle(
-                      title: "Größe",
-                    ), // oder l10n.onboardingHeightLabel
+                    _StepTitle(
+                      title: l10n.onboardingHeightLabel,
+                    ),
                     const SizedBox(height: 8),
                     TextField(
+                      key: const Key('onboarding_height_text_field'),
                       controller: _heightController,
                       keyboardType: TextInputType.number,
+                      onChanged: (_) {
+                        setState(() {
+                          _hasAppliedOnboardingRecommendationToGoals = false;
+                        });
+                      },
                       decoration: InputDecoration(
-                        labelText: "cm",
+                        labelText: l10n.onboardingHeightLabel,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -462,16 +632,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              // GESCHLECHT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _StepTitle(
-                      title: "Geschlecht",
-                    ), // oder l10n.onboardingGenderLabel
+                    _StepTitle(
+                      title: l10n.onboardingGenderLabel,
+                    ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
+                      key: const Key('onboarding_gender_dropdown'),
                       initialValue: _selectedGender,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
@@ -496,7 +666,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: Text(l10n.genderDiverse),
                         ),
                       ],
-                      onChanged: (val) => setState(() => _selectedGender = val),
+                      onChanged: (val) => setState(() {
+                        _selectedGender = val;
+                        _hasAppliedOnboardingRecommendationToGoals = false;
+                      }),
                     ),
                   ],
                 ),
@@ -512,6 +685,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildWeightPage(AppLocalizations l10n) {
     return Padding(
+      key: const Key('onboarding_weight_page'),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -524,6 +698,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           TextField(
             controller: _weightController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) {
+              setState(() {
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+            },
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
@@ -538,6 +717,350 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildBodyFatPage(AppLocalizations l10n) {
+    return SingleChildScrollView(
+      key: const Key('onboarding_body_fat_page'),
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          _StepTitle(
+            title: l10n.onboardingBodyFatPageTitle,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingBodyFatPageSubtitle,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            key: const Key('onboarding_body_fat_text_field'),
+            controller: _bodyFatPercentController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) {
+              setState(() {
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              if (_currentPage >= _adaptiveGoalPageIndex) {
+                _refreshOnboardingRecommendationPreview();
+              }
+            },
+            decoration: InputDecoration(
+              labelText: l10n.onboardingBodyFatOptionalLabel,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingBodyFatOptionalHelper,
+            key: const Key('onboarding_body_fat_helper_text'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const Key('onboarding_body_fat_help_button'),
+              onPressed: _openBodyFatHelperEntryPoint,
+              child: Text(l10n.onboardingBodyFatHelpAction),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdaptiveGoalPage(AppLocalizations l10n) {
+    return SingleChildScrollView(
+      key: const Key('onboarding_adaptive_goal_page'),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          _StepTitle(
+            title: l10n.onboardingAdaptiveGoalTitle,
+            align: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingAdaptiveGoalSubtitle,
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+          ),
+          const SizedBox(height: 20),
+          DropdownButtonFormField<BodyweightGoal>(
+            initialValue: _selectedGoal,
+            decoration: InputDecoration(
+              labelText: l10n.adaptiveGoalDirectionLabel,
+            ),
+            items: BodyweightGoal.values
+                .map(
+                  (goal) => DropdownMenuItem<BodyweightGoal>(
+                    value: goal,
+                    child: Text(_goalLabel(l10n, goal)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (goal) {
+              if (goal == null) return;
+              setState(() {
+                _selectedGoal = goal;
+                _selectedTargetRateKgPerWeek =
+                    WeeklyTargetRateCatalog.defaultForGoal(goal).kgPerWeek;
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              _refreshOnboardingRecommendationPreview();
+            },
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<PriorActivityLevel>(
+            key: const Key('onboarding_prior_activity_dropdown'),
+            initialValue: _selectedPriorActivityLevel,
+            decoration: InputDecoration(
+              labelText: l10n.adaptivePriorActivityLabel,
+            ),
+            items: PriorActivityLevel.values
+                .map(
+                  (level) => DropdownMenuItem<PriorActivityLevel>(
+                    value: level,
+                    child: Text(_priorActivityLabel(l10n, level)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (level) {
+              if (level == null) return;
+              setState(() {
+                _selectedPriorActivityLevel = level;
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              _refreshOnboardingRecommendationPreview();
+            },
+          ),
+          const SizedBox(height: 12),
+          PriorActivityHelpBlock(
+            key: const Key('onboarding_prior_activity_help_block'),
+            l10n: l10n,
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<ExtraCardioHoursOption>(
+            key: const Key('onboarding_extra_cardio_dropdown'),
+            initialValue: _selectedExtraCardioHoursOption,
+            decoration: InputDecoration(
+              labelText: l10n.adaptiveExtraCardioLabel,
+            ),
+            items: ExtraCardioHoursCatalog.supportedOptions
+                .map(
+                  (option) => DropdownMenuItem<ExtraCardioHoursOption>(
+                    value: option,
+                    child: Text(_extraCardioLabel(l10n, option)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (option) {
+              if (option == null) return;
+              setState(() {
+                _selectedExtraCardioHoursOption = option;
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              _refreshOnboardingRecommendationPreview();
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.adaptiveExtraCardioHelp,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: WeeklyTargetRateCatalog.optionsForGoal(_selectedGoal)
+                .map((option) {
+              final isSelected =
+                  option.kgPerWeek == _selectedTargetRateKgPerWeek;
+              return ChoiceChip(
+                label: Text(
+                  _rateLabel(l10n, option.kgPerWeek),
+                ),
+                selected: isSelected,
+                onSelected: (_) {
+                  setState(() {
+                    _selectedTargetRateKgPerWeek = option.kgPerWeek;
+                    _hasAppliedOnboardingRecommendationToGoals = false;
+                  });
+                  _refreshOnboardingRecommendationPreview();
+                },
+              );
+            }).toList(growable: false),
+          ),
+          const SizedBox(height: 20),
+          FilledButton.tonal(
+            onPressed: _isGeneratingOnboardingRecommendation
+                ? null
+                : _refreshOnboardingRecommendationPreview,
+            child: Text(
+              _isGeneratingOnboardingRecommendation
+                  ? l10n.adaptiveRecommendationGenerating
+                  : l10n.adaptiveRecommendationRefresh,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildOnboardingRecommendationSummary(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOnboardingRecommendationSummary() {
+    final l10n = AppLocalizations.of(context)!;
+    final recommendation = _onboardingRecommendation;
+    if (recommendation == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
+        child: Text(
+          l10n.onboardingAdaptiveSummaryEmpty,
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.onboardingAdaptiveSummaryTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingAdaptiveSummaryCalories(
+              recommendation.recommendedCalories,
+            ),
+          ),
+          Text(
+            l10n.onboardingAdaptiveSummaryProtein(
+              recommendation.recommendedProteinGrams,
+            ),
+          ),
+          Text(
+            l10n.onboardingAdaptiveSummaryCarbs(
+              recommendation.recommendedCarbsGrams,
+            ),
+          ),
+          Text(
+            l10n.onboardingAdaptiveSummaryFat(
+              recommendation.recommendedFatGrams,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingAdaptiveSummaryConfidence(
+              _confidenceLabel(l10n, recommendation.confidence),
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: _applyOnboardingRecommendationToGoals,
+            child: Text(
+              _hasAppliedOnboardingRecommendationToGoals
+                  ? l10n.onboardingAdaptiveSummaryApplied
+                  : l10n.onboardingAdaptiveSummaryApply,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openBodyFatHelperEntryPoint() async {
+    await showBodyFatGuidanceSheet(context);
+  }
+
+  String _goalLabel(AppLocalizations l10n, BodyweightGoal goal) {
+    switch (goal) {
+      case BodyweightGoal.loseWeight:
+        return l10n.adaptiveGoalLose;
+      case BodyweightGoal.maintainWeight:
+        return l10n.adaptiveGoalMaintain;
+      case BodyweightGoal.gainWeight:
+        return l10n.adaptiveGoalGain;
+    }
+  }
+
+  String _rateLabel(AppLocalizations l10n, double kgPerWeek) {
+    final sign = kgPerWeek > 0 ? '+' : '';
+    return l10n.adaptiveRatePerWeek('$sign${kgPerWeek.toStringAsFixed(2)}');
+  }
+
+  String _priorActivityLabel(
+    AppLocalizations l10n,
+    PriorActivityLevel level,
+  ) {
+    switch (level) {
+      case PriorActivityLevel.low:
+        return l10n.adaptivePriorActivityLow;
+      case PriorActivityLevel.moderate:
+        return l10n.adaptivePriorActivityModerate;
+      case PriorActivityLevel.high:
+        return l10n.adaptivePriorActivityHigh;
+      case PriorActivityLevel.veryHigh:
+        return l10n.adaptivePriorActivityVeryHigh;
+    }
+  }
+
+  String _extraCardioLabel(
+    AppLocalizations l10n,
+    ExtraCardioHoursOption option,
+  ) {
+    switch (option) {
+      case ExtraCardioHoursOption.h0:
+        return l10n.adaptiveExtraCardioOption0;
+      case ExtraCardioHoursOption.h1:
+        return l10n.adaptiveExtraCardioOption1;
+      case ExtraCardioHoursOption.h2:
+        return l10n.adaptiveExtraCardioOption2;
+      case ExtraCardioHoursOption.h3:
+        return l10n.adaptiveExtraCardioOption3;
+      case ExtraCardioHoursOption.h5:
+        return l10n.adaptiveExtraCardioOption5;
+      case ExtraCardioHoursOption.h7Plus:
+        return l10n.adaptiveExtraCardioOption7Plus;
+    }
+  }
+
+  String _confidenceLabel(
+    AppLocalizations l10n,
+    RecommendationConfidence confidence,
+  ) {
+    switch (confidence) {
+      case RecommendationConfidence.notEnoughData:
+        return l10n.adaptiveConfidenceNotEnoughData;
+      case RecommendationConfidence.low:
+        return l10n.adaptiveConfidenceLow;
+      case RecommendationConfidence.medium:
+        return l10n.adaptiveConfidenceMedium;
+      case RecommendationConfidence.high:
+        return l10n.adaptiveConfidenceHigh;
+    }
   }
 
   Widget _buildCaloriesPage(AppLocalizations l10n) {
@@ -634,38 +1157,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               contentPadding: const EdgeInsets.symmetric(vertical: 24),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFinishPage(AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.check_circle_rounded,
-            size: 100,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: 32),
-          Text(
-            l10n.onboardingFinish,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.onboardingGoalsSubtitle,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

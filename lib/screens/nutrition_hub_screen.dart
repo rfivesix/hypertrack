@@ -1,8 +1,6 @@
 // lib/screens/nutrition_hub_screen.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../data/database_helper.dart';
-import '../data/product_database_helper.dart';
 import '../generated/app_localizations.dart';
 import 'add_food_screen.dart';
 import 'meal_screen.dart';
@@ -11,6 +9,8 @@ import 'supplement_track_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
+import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/presentation/nutrition_recommendation_card.dart';
 
 /// A portal for overviewing nutrition and meal planning.
 ///
@@ -25,6 +25,8 @@ class NutritionHubScreen extends StatefulWidget {
 
 class _NutritionHubScreenState extends State<NutritionHubScreen> {
   Future<Map<String, dynamic>>? _hubDataFuture;
+  final _recommendationService = AdaptiveNutritionRecommendationService();
+  bool _isApplyingRecommendation = false;
 
   @override
   void didChangeDependencies() {
@@ -41,69 +43,40 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   }
 
   Future<Map<String, dynamic>> _loadHubData() async {
-    final l10n = AppLocalizations.of(context)!;
     final today = DateTime.now();
     final goals = await DatabaseHelper.instance.getGoalsForDate(today);
     final targetCalories = goals?.targetCalories ?? 2500;
     final meals = await DatabaseHelper.instance.getMeals();
-    final sevenDaysAgo = today.subtract(const Duration(days: 6));
-    final recentEntries = await DatabaseHelper.instance.getEntriesForDateRange(
-      sevenDaysAgo,
-      today,
-    );
-
-    String recommendation;
-    if (recentEntries.isEmpty) {
-      recommendation = l10n.recommendationDefault;
-    } else {
-      final uniqueDaysTracked = recentEntries
-          .map((e) => DateFormat.yMd().format(e.timestamp))
-          .toSet();
-      final numberOfTrackedDays = uniqueDaysTracked.length;
-      int totalRecentCalories = 0;
-      for (final entry in recentEntries) {
-        final foodItem = await ProductDatabaseHelper.instance
-            .getProductByBarcode(entry.barcode);
-        if (foodItem != null) {
-          totalRecentCalories +=
-              (foodItem.calories / 100 * entry.quantityInGrams).round();
-        }
-      }
-
-      int totalTargetCalories = 0;
-      for (final dateString in uniqueDaysTracked) {
-        final d = DateFormat.yMd().parse(dateString);
-        final dGoals = await DatabaseHelper.instance.getGoalsForDate(d);
-        totalTargetCalories += dGoals?.targetCalories ?? 2500;
-      }
-
-      final difference = totalRecentCalories - totalTargetCalories;
-      final tolerance = totalTargetCalories * 0.05;
-
-      if (numberOfTrackedDays > 1) {
-        if (difference > tolerance) {
-          recommendation = l10n.recommendationOverTarget(
-            numberOfTrackedDays,
-            difference.round(),
-          );
-        } else if (difference < -tolerance) {
-          recommendation = l10n.recommendationUnderTarget(
-            numberOfTrackedDays,
-            (-difference).round(),
-          );
-        } else {
-          recommendation = l10n.recommendationOnTarget(numberOfTrackedDays);
-        }
-      } else {
-        recommendation = l10n.recommendationFirstEntry;
-      }
-    }
+    final recommendationState =
+        await _recommendationService.loadState(refreshIfDue: true);
 
     return {
       'meals': meals,
-      'recommendation': recommendation,
       'targetCalories': targetCalories,
+      'recommendationState': recommendationState,
     };
+  }
+
+  Future<void> _applyRecommendation() async {
+    if (_isApplyingRecommendation) return;
+    setState(() => _isApplyingRecommendation = true);
+    final applied =
+        await _recommendationService.applyLatestRecommendationToActiveTargets();
+    if (!mounted) return;
+    setState(() => _isApplyingRecommendation = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          applied
+              ? AppLocalizations.of(context)!
+                  .adaptiveRecommendationAppliedToGoalsSnack
+              : AppLocalizations.of(context)!
+                  .adaptiveRecommendationNotAvailableSnack,
+        ),
+      ),
+    );
+    await _refreshData();
   }
 
   Future<void> _createMealAndOpenEditor() async {
@@ -171,8 +144,9 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
           final data = snapshot.data!;
           final meals = data['meals'] as List<Map<String, dynamic>>;
-          final recommendationText = data['recommendation'] as String;
           final targetCalories = data['targetCalories'] as int;
+          final recommendationState = data['recommendationState']
+              as AdaptiveNutritionRecommendationState;
 
           return RefreshIndicator(
             onRefresh: _refreshData,
@@ -182,10 +156,8 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                 _buildSectionTitle(context, l10n.today_overview_text),
                 _buildGoalsAndRecommendationCard(
                   context,
-                  recommendationText,
+                  recommendationState,
                   targetCalories,
-                  theme,
-                  l10n,
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
                 _buildSectionTitle(context, l10n.myMealsCL),
@@ -262,42 +234,32 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
 
   Widget _buildGoalsAndRecommendationCard(
     BuildContext context,
-    String recommendationText,
+    AdaptiveNutritionRecommendationState recommendationState,
     int targetCalories,
-    ThemeData theme,
-    AppLocalizations l10n,
   ) {
-    return SummaryCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              recommendationText,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${l10n.profileDailyGoals}: $targetCalories kcal',
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const GoalsScreen()));
-              },
-              child: Text(l10n.my_goals),
-            ),
-          ],
+    return Column(
+      children: [
+        NutritionRecommendationCard(
+          goal: recommendationState.goal,
+          targetRateKgPerWeek: recommendationState.targetRateKgPerWeek,
+          recommendation: recommendationState.latestGeneratedRecommendation,
+          activeTargetCalories: targetCalories,
+          isApplying: _isApplyingRecommendation,
+          onApply: _applyRecommendation,
         ),
-      ),
+        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const GoalsScreen()));
+            },
+            child: Text(AppLocalizations.of(context)!.my_goals),
+          ),
+        ),
+      ],
     );
   }
 
