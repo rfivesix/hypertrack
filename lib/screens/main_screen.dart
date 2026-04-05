@@ -14,6 +14,7 @@ import '../models/routine.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
 import '../models/workout_log.dart';
+import 'add_food_navigation_result.dart';
 import 'add_food_screen.dart';
 import 'ai_meal_capture_screen.dart';
 import 'add_measurement_screen.dart';
@@ -392,8 +393,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     // FIX: Datum holen
     final targetDate = _currentActiveDate;
 
-    final FoodItem? selectedFoodItem =
-        await Navigator.of(context).push<FoodItem>(
+    final routeResult = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder: (context) => AddFoodScreen(
           initialDate: targetDate, // <--- ÜBERGABE
@@ -402,7 +402,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ),
     );
 
-    if (selectedFoodItem == null || !mounted) return;
+    if (!mounted) return;
+
+    final addFoodResult = AddFoodNavigationResult.fromRouteResult(routeResult);
+    if (addFoodResult.shouldRefresh) {
+      _refreshHomeScreen();
+      return;
+    }
+
+    final selectedFoodItem = addFoodResult.selectedFoodItem;
+    if (selectedFoodItem == null) return;
 
     // FIX: Datum übergeben (Signatur unten anpassen!)
     final result = await _showQuantityMenu(
