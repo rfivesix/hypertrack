@@ -1,338 +1,707 @@
 # Adaptive weekly calorie + macro recommendation (0.8 / issue #210)
 
-This document defines the intended implementation scope for Hypertrack’s upcoming adaptive nutrition recommendation feature from issue #210.
+This document defines the intended implementation scope for Hypertrack’s adaptive nutrition recommendation feature from issue #210.
 
-This is an **implementation-ready internal specification**, not shipped behavior in the current working copy.
+This is an internal implementation specification, not shipped behavior in the current working copy.
+
+---
 
 ## Overview
 
-Hypertrack should generate actionable nutrition recommendations by combining logged intake, smoothed bodyweight trend, and explicit user goal settings.
+This feature is a full adaptive weekly nutrition recommendation flow, not just a hidden TDEE formula.
 
-This feature covers:
+It includes:
 
-- persistent goal and weekly target-rate selection
-- onboarding-time initial recommendation
-- recurring weekly adaptive recommendation generation
-- maintenance/TDEE estimation intent
-- calorie and macro recommendation output
-- data-quality/confidence gating
+- goal selection (lose / maintain / gain)
+- weekly target-rate selection
+- onboarding initial recommendation
+- recurring weekly recommendation generation (planned Monday `00:00`)
+- recommended calories + macros (protein, carbs, fat)
+- confidence / data-quality state
 - large-adjustment warning behavior
-- manual apply/adopt flow (no silent overwrite)
-- recommendation persistence/lifecycle
-- UI integration surfaces
+- explicit manual apply/adopt flow
+- separation of active targets vs generated recommendation
 
-This feature is intended to move nutrition guidance from passive tracking toward transparent, conservative recommendations.
+The feature should be transparent, conservative under uncertainty, and useful early (including onboarding and early post-onboarding periods).
 
-## Goals
+---
 
-### Product goals
+## Product goal
 
-- Provide a practical calorie target recommendation grounded in user data.
-- Keep recommendation behavior transparent and confidence-aware.
-- Require explicit user adoption before changing active nutrition targets.
-- Reuse existing bodyweight/nutrition trend infrastructure where it fits.
+Hypertrack should move from pure nutrition tracking toward practical guidance by generating adaptive weekly calorie and macro recommendations anchored to observed intake and smoothed bodyweight trend.
 
-### Persistent goal model
+Primary product goals:
 
-The feature must support and persist:
+- provide actionable recommendations early, not only after long history accumulation
+- avoid overreaction to short-term bodyweight noise
+- expose confidence and warning states explicitly
+- preserve user control via manual apply/adopt
+- avoid false precision and hidden hard caps
 
-- `lose_weight`
-- `maintain_weight`
-- `gain_weight`
-
-### Weekly target-rate model
-
-Supported weekly target-rate options:
-
-#### Lose
-
-- `-0.25 kg/week`
-- `-0.50 kg/week`
-- `-0.75 kg/week`
-- `-1.00 kg/week`
-
-Default lose rate:
-
-- `-0.50 kg/week`
-
-#### Maintain
-
-- `0.00 kg/week`
-
-Default maintain rate:
-
-- `0.00 kg/week`
-
-#### Gain
-
-- `+0.10 kg/week`
-- `+0.25 kg/week`
-- `+0.50 kg/week`
-
-Default gain rate:
-
-- `+0.25 kg/week`
+---
 
 ## User flow
 
-### 1) Onboarding initial recommendation
+## 1) Onboarding initial recommendation
 
-After relevant onboarding inputs are completed and the user selects goal + weekly target rate, Hypertrack should generate an immediate initial recommendation containing:
+After user profile inputs and goal + weekly target-rate selection during onboarding, the app should generate an immediate recommendation:
 
-- recommended calories
-- recommended protein
-- recommended carbs
-- recommended fat
+- calories
+- protein
+- carbs
+- fat
 
-The onboarding flow should allow explicit user adoption of this recommendation during onboarding.
+The recommendation can be applied during onboarding, but should not be silently forced.
 
-Implementation intent:
+Onboarding recommendation uses stronger prior-based estimation with limited adaptation when history is sparse.
 
-- Initial onboarding recommendation may rely more on profile/basic data when historical adaptive data is insufficient.
+## 2) Early adaptive path (week 2+)
 
-### 2) Post-onboarding weekly adaptive recommendation
+The app should support adaptive recommendations as early as week 2 when minimum data thresholds are met, even if confidence is low/medium.
 
-After onboarding, Hypertrack should generate a fresh adaptive recommendation every 7 days, targeting Monday `00:00` cadence.
+This avoids a design where users wait months before the feature becomes useful.
 
-Weekly generation should consider:
+## 3) Weekly recommendation cadence
 
-- logged calorie intake
-- smoothed bodyweight trend
-- selected goal
-- selected weekly target rate
-- data-quality/confidence gating
+- Recommendation refresh cadence: every 7 days.
+- Planned refresh anchor: Monday `00:00`.
+- Internal estimation window: rolling multi-week data window (preferred MVP: 21 days).
 
-### 3) Manual apply/adopt behavior
+## 4) Manual apply/adopt flow
 
-Recommendations must not silently overwrite active targets.
+- New recommendation is displayed in nutrition surfaces.
+- Active targets remain unchanged until user explicitly applies/adopts.
+- Applied targets become current active goals for diary/nutrition usage.
 
-Expected interaction:
-
-- recommendation appears in Nutrition tab
-- user reviews context/confidence/warnings
-- user explicitly taps apply/adopt
-- only then active targets update
-
-## Data inputs
-
-Primary inputs:
-
-- logged calorie intake (observation window)
-- bodyweight logs (used as smoothed trend, not raw day-to-day noise)
-- selected goal
-- selected weekly target rate
-- historical recommendation state (for warning/change comparison)
-
-Secondary inputs (especially onboarding fallback path):
-
-- user profile/basic setup values as available in onboarding
-
-Input-quality expectations:
-
-- recommendation confidence must reflect sufficiency and consistency of available data
-- missing/noisy data should produce conservative output behavior (suppressed, downgraded, or low-confidence state)
+---
 
 ## Recommendation lifecycle
 
-Recommended lifecycle model:
+Conceptual lifecycle:
 
-1. Goal + target-rate are persisted.
-2. Initial recommendation may be generated during onboarding.
-3. User may adopt initial recommendation explicitly.
-4. Weekly adaptive job generates new recommendation on cadence.
-5. New recommendation is stored as latest generated recommendation.
-6. User may apply latest recommendation explicitly.
-7. Active targets remain unchanged until explicit apply.
+1. Persist goal and weekly target-rate.
+2. Generate onboarding recommendation (prior-heavy).
+3. Optional onboarding apply/adopt.
+4. Weekly scheduler attempts generation on cadence.
+5. System evaluates data quality/confidence.
+6. System generates recommendation payload (or not-enough-data state).
+7. Recommendation is stored as latest generated recommendation.
+8. User manually applies/adopts if desired.
+9. Active nutrition targets are updated only on apply/adopt.
 
-Lifecycle timestamps/state should include:
+Required lifecycle metadata:
 
-- latest recommendation generation timestamp
-- latest recommendation period/window metadata
-- latest accepted/applied recommendation timestamp (if tracked separately)
-- cadence anchor (weekly Monday 00:00 intent)
+- generation timestamp
+- effective window start/end
+- cadence anchor / due-week key
+- confidence state + quality summary
+- warning flags (including large-adjustment warning)
+- previous recommendation linkage/snapshot for explainability
 
-## Algorithm and design intent
+---
 
-## 1) Maintenance/TDEE estimation intent
+## Calculation model / design intent (MVP proposal)
 
-Design intent: estimate effective maintenance calories from observed intake and weight trend over a defined window with quality gating.
+## Scientific framing and approximation policy
 
-Core concept:
+MVP should treat body-mass change estimation as approximate dynamic energy balance, not an exact linear conversion.
 
-- if bodyweight trend is down at a given intake, inferred maintenance is higher than intake
-- if bodyweight trend is up at a given intake, inferred maintenance is lower than intake
+Design policy:
 
-Guardrails:
+- no claim of exact “true TDEE”
+- expose estimate + confidence
+- reflect uncertainty from intake logging noise and short-term weight variability
 
-- use smoothed weight trend, not raw daily fluctuations
-- reuse existing bodyweight/nutrition trend infrastructure where appropriate
-- prefer transparency over false precision
+Rationale references:
 
-This spec intentionally avoids overcommitting final formula details before scientific refinement.
+- Dynamic energy balance and limits of fixed linear conversion framing:  
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC3859816/  
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC3810417/  
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC6513301/  
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC4035446/  
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC2980958/  
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC3127505/
 
-## 2) Recommended calorie target derivation
+## Cadence + estimation window
+
+- Refresh cadence remains weekly (7-day).
+- Estimation should use a rolling multi-week window.
+- Preferred current MVP proposal: **21-day rolling window**.
+
+Reasoning:
+
+- weekly UX rhythm remains simple and understandable
+- multi-week window improves noise resistance and reduces overreaction
+
+Weight-variability and smoothing context:
+
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC10653631/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7519428/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7192384/
+
+## Smoothed weight trend
+
+Preferred MVP direction:
+
+- derive trend from **EWMA-based smoothed bodyweight** rather than raw daily values
+- reuse existing trend infrastructure where already available and compatible (for example body/nutrition analytics smoothing paths)
+
+Implementation note:
+
+- trend method and parameters are tunable assumptions in MVP, not immutable scientific constants
+
+## TDEE/maintenance estimate (MVP structure)
+
+Preferred MVP structure:
+
+1. Profile-based prior (onboarding / cold-start estimate).
+2. Data-informed update using logged intake + smoothed trend over rolling window.
+3. Adaptive estimate with shrinkage/damping toward prior or previous stable estimate when data quality is weak.
+
+Interpretation intent:
+
+- down-trending weight at given intake implies higher maintenance than intake
+- up-trending weight at given intake implies lower maintenance than intake
+
+Onboarding-prior context (RMR equation variability and practical use as starting priors):
+
+- https://linkinghub.elsevier.com/retrieve/pii/S2212267216301071
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7299486/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC9960966/
+- https://cdnsciencepub.com/doi/10.1139/apnm-2020-0887
+
+Intake misreporting and quality caveat context:
+
+- https://www.frontiersin.org/articles/10.3389/fendo.2019.00850/full
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC6928130/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC1662510/
+- https://www.scielo.br/j/csp/a/tZxsC44dwF8z7nJb6FQSNwP/?lang=en
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC2803049/
+
+## Calorie recommendation derivation
 
 High-level derivation:
 
-- estimate maintenance
-- map selected weekly target rate to calorie adjustment
-- `recommended_calories = estimated_maintenance + rate_adjustment`
+1. estimate maintenance/TDEE
+2. map selected weekly target-rate to approximate calorie adjustment
+3. compute final recommendation:
+   - `recommended_calories = estimated_maintenance + rate_adjustment`
 
 Direction semantics:
 
 - lose: maintenance minus deficit
-- maintain: maintenance (near-zero adjustment)
+- maintain: maintenance
 - gain: maintenance plus surplus
 
-## 3) Recommended macro target derivation (MVP intent)
+This mapping should remain explicit and auditable in-domain, not hidden in UI.
 
-MVP architecture assumption:
+---
 
-- calories are computed adaptively first
-- macros are then derived from calorie target via rule-based logic / existing target logic / conservative defaults
-- macros do not require a separate advanced adaptive engine in first implementation
+## Confidence and warning logic
 
-Recommendation output should include:
+## Confidence states (proposed MVP)
 
-- protein target
-- carbs target
-- fat target
+Proposed enum-like staged states:
 
-## Persistence and state model
+- `not_enough_data`
+- `low_confidence`
+- `medium_confidence`
+- `high_confidence`
 
-Conceptual persisted entities/state distinctions:
+These are proposed MVP thresholds and may be tuned later.
 
-- persisted bodyweight goal
-- persisted weekly target rate
-- active nutrition targets (currently in effect)
-- latest generated recommendation (pending user action unless applied)
-- latest applied/accepted recommendation (if tracked separately)
-- generation metadata (timestamp, observation window summary, confidence/warning state)
+## Proposed MVP gating thresholds
 
-Important boundary:
+Proposed practical thresholds:
 
-- active targets and latest recommendation are separate concepts
-- recommendation generation must be idempotent relative to cadence window and persistence rules
+- earliest adaptive generation attempt: from week 2 onward
+- minimum observation window for adaptive estimate:
+  - low confidence: ~7+ days usable data
+  - medium confidence: ~14+ days usable data
+  - high confidence target: ~21 days usable data
+- minimum weight logs:
+  - low: >= 3
+  - medium: >= 6
+  - high: >= 9
+- minimum intake-logged days:
+  - low: >= 5
+  - medium: >= 10
+  - high: >= 15
 
-## UI integration points
+If thresholds fail, return explicit `not_enough_data` or downgraded confidence output.
 
-Expected surfaces:
+## Stabilization / anti-overreaction design
 
-- onboarding recommendation step/screen (initial recommendation + apply/adopt action)
-- Nutrition tab recommendation card/section (latest weekly recommendation)
-- explicit apply/adopt control
-- confidence state display
-- large-adjustment warning display
-- concise explanation copy (goal, weekly target, estimated maintenance, recommended calories, macro summary)
+Proposed stabilization stack:
 
-UI intent:
+- weekly refresh cadence
+- 21-day rolling estimation window
+- shrinkage toward prior/previous estimate when quality weak
+- damping on weekly estimate movement (transparent, explainable)
+- warning state for unusually large recommendation changes
 
-- user can understand what changed and why
-- uncertainty is visible (not hidden)
-- warnings prompt manual review, not silent behavior changes
+Important:
 
-## Warnings and confidence behavior
+- stabilization must not be documented as silent hard cap behavior
+- user-facing messaging should indicate that uncertainty and data quality influenced the recommendation
 
-## Data-quality gating
+## Large-adjustment warning (proposed MVP)
 
-Recommendation should be suppressed, downgraded, or labeled low-confidence when data is insufficient.
+A warning should be triggered when recommendation change magnitude versus prior stable recommendation exceeds defined threshold(s).
 
-Likely gating dimensions:
+Proposed threshold framing (tunable):
 
-- minimum observation window length
-- minimum bodyweight logs
-- minimum calorie-logged days
-- completeness/consistency checks on the observation window
+- moderate warning band (review suggested)
+- high warning band (strong review suggested before apply)
 
-Low-data state should be explicit (for example: “not enough data yet”).
+Warning copy principles:
 
-## Large-adjustment warning
+- state that change is unusually large
+- recommend reviewing logging completeness and bodyweight entries
+- note short-term water/noise possibility
+- preserve user agency (manual apply)
 
-No silent hard cap should be applied to strong recommendation changes.
+Possible causes surfaced in explanatory copy:
 
-If recommendation shifts unusually strongly versus prior stable recommendation, show warning-oriented UX:
+- incomplete intake logging
+- transient water retention/drop
+- unusual week behavior
+- adherence shift
+- real change in energy needs
 
-- recommendation changed strongly
-- verify logging completeness/accuracy
-- recent bodyweight may reflect water/noise
-- review manually before applying
+General practical weekly-adjustment/coaching rationale:
 
-## Architecture and boundaries
+- https://www.mdpi.com/2227-9032/6/3/73/pdf
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC8017325/
 
-Intended module boundaries:
+---
 
-- domain engine/calculator (maintenance + calorie recommendation)
-- data-quality evaluator
-- recommendation model (domain + persistence representation)
-- persistence/state layer (goal, target rate, generated/applied recommendation state)
-- presentation model layer (confidence/warning/explanation copy payload)
-- UI surfaces (onboarding + nutrition tab)
+## Macro recommendation logic (training-oriented MVP defaults)
 
-Boundary rules:
+MVP should use training-oriented defaults appropriate for Hypertrack’s user base.
 
-- keep recommendation logic out of presentation widgets
-- keep platform/data-access concerns out of core recommendation calculations
-- reuse existing bodyweight/nutrition trend infrastructure rather than duplicating trend logic
+## Protein defaults (proposed)
 
-## Explicit non-goals (this batch)
+- cut: **~2.0 g/kg**
+- maintain: **~1.8 g/kg**
+- gain: **~1.8 g/kg**
+
+Rationale:
+
+- general-population guidance can support lower ranges
+- Hypertrack default should target active/lifting/body-composition users conservatively
+
+Training-oriented protein evidence context:
+
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5470183/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC10210857/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5867436/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC8978023/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7727026/
+- https://www.mdpi.com/2072-6643/13/9/3255/pdf
+- https://bjsm.bmj.com/lookup/doi/10.1136/bjsports-2017-097608
+
+Additional sports/body-composition context:
+
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5596471/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC11206787/
+
+## Fat floor and carbs remainder (proposed)
+
+Proposed macro sequence:
+
+1. set calorie target
+2. set protein from bodyweight + goal default
+3. enforce minimum fat floor
+4. assign remaining calories to carbs
+
+Rationale references:
+
+- https://foodandnutritionresearch.net/index.php/fnr/article/download/232/232
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC6033587/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC10661909/
+
+MVP notes:
+
+- exact fat floor value and fallback handling are tunable
+- if calculated remainder becomes too low/negative, recommendation should degrade with explicit warning/explanation rather than silently producing implausible macros
+
+---
+
+## Proposed models / state objects
+
+The following are proposed conceptual models for implementation planning.
+
+## Goal and target models
+
+- `BodyweightGoal`
+  - values: `loseWeight`, `maintainWeight`, `gainWeight`
+
+- `WeeklyTargetRate`
+  - fields: `goal`, `kgPerWeek`, `isDefault`
+  - supported values:
+    - lose: `-0.25`, `-0.50`, `-0.75`, `-1.00`
+    - maintain: `0.00`
+    - gain: `+0.10`, `+0.25`, `+0.50`
+
+## Confidence and warning models
+
+- `RecommendationConfidence`
+  - values: `notEnoughData`, `low`, `medium`, `high`
+
+- `RecommendationWarningState`
+  - fields:
+    - `hasLargeAdjustmentWarning`
+    - `warningLevel` (`none|moderate|high`)
+    - `warningReasons` (list of machine-readable reason codes)
+
+## Recommendation payload models
+
+- `NutritionRecommendation`
+  - fields:
+    - `recommendedCalories`
+    - `recommendedProteinGrams`
+    - `recommendedCarbsGrams`
+    - `recommendedFatGrams`
+    - `estimatedMaintenanceCalories`
+    - `goal`
+    - `targetRateKgPerWeek`
+    - `confidence`
+    - `warningState`
+    - `generatedAt`
+    - `windowStart`
+    - `windowEnd`
+    - `algorithmVersion`
+
+- `RecommendationInputSummary`
+  - fields:
+    - `windowDays`
+    - `weightLogCount`
+    - `intakeLoggedDays`
+    - `smoothedWeightSlopeKgPerWeek`
+    - `avgLoggedCalories`
+    - `qualityFlags`
+
+## Active vs generated target models
+
+- `ActiveNutritionTargets`
+  - currently effective calorie/macro targets used by nutrition flows
+
+- `LatestGeneratedRecommendationState`
+  - latest generated recommendation pending user apply/adopt
+
+- `LatestAppliedRecommendationSnapshot`
+  - recommendation snapshot last adopted into active targets
+
+- `RecommendationHistorySnapshot` (optional MVP+)
+  - historical generated recommendations for explainability/audit
+
+---
+
+## Proposed file/folder structure (implementation planning)
+
+This is a proposed target layout aligned with current repository style and boundaries.
+
+```text
+lib/features/nutrition_recommendation/
+  domain/
+    recommendation_models.dart
+    confidence_models.dart
+    goal_models.dart
+    tdee_estimator.dart
+    calorie_target_calculator.dart
+    macro_target_calculator.dart
+    recommendation_engine.dart
+    data_quality_evaluator.dart
+    recommendation_stabilizer.dart
+  data/
+    recommendation_repository.dart
+    recommendation_persistence_models.dart
+    recommendation_scheduler.dart
+    recommendation_input_adapter.dart
+  presentation/
+    nutrition_recommendation_card.dart
+    recommendation_explanation_sheet.dart
+    recommendation_confidence_badge.dart
+    recommendation_warning_banner.dart
+```
+
+Likely integration touchpoints in existing app structure:
+
+- `lib/screens/onboarding_screen.dart`
+- `lib/screens/nutrition_hub_screen.dart`
+- `lib/screens/goals_screen.dart`
+- `lib/screens/profile_screen.dart`
+- `lib/screens/settings_screen.dart`
+- `lib/features/statistics/domain/body_nutrition_analytics_models.dart` (for trend input reuse/interface alignment)
+
+Note:
+
+- exact folder name can be `nutrition_recommendation` or `nutrition` submodule depending on maintainability choice; keep recommendation domain logic isolated from widget screens.
+
+---
+
+## Proposed screen changes / UI integration points
+
+The following are implementation-planning proposals mapped to current screens.
+
+## Onboarding
+
+File: `lib/screens/onboarding_screen.dart`
+
+Proposed conceptual changes:
+
+- add goal + weekly target-rate selection step (or expand existing nutrition-goal step)
+- generate onboarding recommendation after profile + target-rate input
+- show recommendation summary (calories/protein/carbs/fat + confidence note)
+- add explicit apply/adopt action before onboarding completion
+
+## Nutrition hub
+
+File: `lib/screens/nutrition_hub_screen.dart`
+
+Proposed conceptual changes:
+
+- add recommendation card section for latest generated recommendation
+- show:
+  - goal + target rate
+  - estimated maintenance
+  - recommended calories/macros
+  - confidence badge
+  - warning banner when applicable
+- add explicit apply/adopt button
+- add “not enough data yet” / low-confidence states
+
+## Goals and profile surfaces
+
+Files:
+
+- `lib/screens/goals_screen.dart`
+- `lib/screens/profile_screen.dart`
+
+Proposed conceptual changes:
+
+- persist goal direction + weekly target rate alongside nutrition targets
+- optionally expose recommendation settings/help text
+- keep manual goals editable while preserving distinction from generated recommendation
+
+## Settings / operational controls
+
+File: `lib/screens/settings_screen.dart`
+
+Possible conceptual changes:
+
+- optional recommendation debug/status section (last generated at, confidence state, next due)
+- optional manual “refresh recommendation now” trigger for troubleshooting (if consistent with product direction)
+
+## Optional analytics surface
+
+File: `lib/screens/analytics/body_nutrition_correlation_screen.dart`
+
+Possible conceptual changes:
+
+- expose lightweight “recommendation basis” cues (window quality/trend context) if needed for explainability
+- keep recommendation decisioning in recommendation domain, not analytics UI
+
+---
+
+## Persistence / restore / lifecycle expectations
+
+Persistent entities (conceptual):
+
+- selected bodyweight goal
+- selected weekly target-rate
+- active nutrition targets (calories/macros)
+- latest generated recommendation payload
+- latest applied recommendation snapshot (if separate)
+- generation metadata (timestamps, window, confidence/warnings, algorithm version)
+- scheduler metadata (`lastGeneratedAt`, `lastDueWeekKey`)
+
+Behavior expectations:
+
+- recommendation generation is cadence-aware and idempotent per due window
+- generated recommendation never silently overwrites active targets
+- apply/adopt creates explicit state transition
+- restored backups should restore:
+  - selected goal/target-rate
+  - active targets
+  - latest recommendation state
+  - relevant generation timestamps and metadata needed for predictable next refresh
+
+Backup/restore note:
+
+- recommendation state should be restored consistently with existing backup model so post-restore UI does not show contradictory active vs latest recommendation state.
+
+---
+
+## Weekly scheduling / generation flow (proposed)
+
+Conceptual scheduler flow:
+
+1. Determine current weekly due key (Monday `00:00` anchored).
+2. If recommendation for due key already generated, skip (idempotent).
+3. Build rolling window (preferred 21 days).
+4. Gather and validate inputs (intake logs, weight logs, trend).
+5. Evaluate confidence/gating.
+6. Generate recommendation (or not-enough-data state payload).
+7. Compare to prior stable recommendation for warning logic.
+8. Persist latest generated recommendation + metadata.
+9. Surface update in nutrition UI for manual apply.
+
+---
+
+## Tests (implementation-phase plan)
+
+Proposed future test focus and likely test locations:
+
+## Domain tests
+
+Likely path:
+
+- `test/features/nutrition_recommendation/domain/*`
+
+Coverage:
+
+- TDEE estimate behavior under representative synthetic scenarios
+- EWMA trend handling and slope interpretation
+- rate-to-calorie adjustment mapping
+- stabilization/shrinkage behavior under weak data
+- confidence classification and gating thresholds
+- warning trigger behavior across recommendation deltas
+- macro derivation (protein defaults, fat floor, carbs remainder)
+
+## Data/persistence tests
+
+Likely path:
+
+- `test/features/nutrition_recommendation/data/*`
+
+Coverage:
+
+- recommendation persistence/read-back integrity
+- active vs generated recommendation separation
+- due-key idempotency / scheduler state handling
+- backup/restore serialization integrity for recommendation state
+
+## Presentation/UI flow tests
+
+Likely path:
+
+- `test/features/nutrition_recommendation/presentation/*`
+- and targeted tests around:
+  - `test/screens/onboarding_*`
+  - `test/screens/nutrition_hub_*`
+  - `test/screens/goals_*`
+
+Coverage:
+
+- onboarding recommendation generation and apply flow
+- nutrition hub recommendation rendering and apply action
+- confidence and warning display states
+- not-enough-data state rendering
+- no silent overwrite behavior across reload/navigation
+
+---
+
+## Non-goals (this batch)
 
 - no meal-plan generation
 - no macro periodization
-- no training/rest-day calorie cycling
+- no training/rest-day cycling
 - no diet break/refeed logic
-- no advanced ML/Bayesian forecasting system in first implementation
+- no advanced ML/Bayesian forecasting system in MVP
 - no silent hard cap on recommendation changes
+- no broad unrelated nutrition refactor
 
-## Planned tests for implementation phase
+---
 
-When implementation begins, planned coverage should include:
+## Open questions
 
-- maintenance estimation behavior under representative trend/intake scenarios
-- weekly target-rate to calorie-adjustment mapping correctness
-- calorie recommendation derivation correctness
-- macro derivation correctness for MVP rules/defaults
-- data-quality gating thresholds and low-confidence/suppressed states
-- large-adjustment warning trigger behavior
-- persistence/restore behavior for goal, target rate, recommendation state
-- onboarding initial recommendation generation and apply flow
-- weekly recommendation generation cadence flow
-- manual apply/adopt flow preserving separation from active targets
+Key open questions to finalize before coding:
 
-## Open questions and assumptions
+1. Exact EWMA parameterization and fallback when sparse daily weight points exist.
+2. Final numeric threshold values for confidence bands and warning tiers.
+3. Exact shrinkage/damping formula and explainability copy.
+4. Final mapping constants from weekly kg target-rate to calorie adjustment.
+5. Fat floor default and edge handling when calorie target is very low.
+6. Whether recommendation history snapshots ship in MVP or MVP+.
+7. Final scheduler trigger mechanism in app lifecycle (startup, foreground sync, periodic timer, explicit manual refresh).
+8. Localization/copy strategy for confidence and warning explanations.
+9. Exact placement and UX details of onboarding recommendation step in current 6-page onboarding flow.
 
-## Intended behavior (committed direction)
+---
 
-- Feature provides adaptive calorie + macro recommendation flow.
-- Weekly cadence target is Monday 00:00.
-- Apply/adopt is explicit; no silent overwrite of active targets.
-- Recommendation quality is data-quality-aware.
-- Large changes are warned, not silently capped.
+## Sources / references
 
-## Current assumptions (implementation placeholders)
+All links below are intentionally retained as direct source references for implementation planning and future scientific refinement.
 
-- Initial onboarding recommendation may depend more on profile/basic inputs before enough history exists.
-- MVP macro recommendation can be derived after calories via conservative rule-based logic.
-- Confidence can be modeled from observation sufficiency + consistency checks.
-- Existing weight/calorie trend infrastructure can provide most smoothing/trend primitives.
+## Dynamic energy balance / fixed-rule caveats
 
-## Open design questions (to finalize before coding)
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC3859816/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC3810417/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC6513301/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC4035446/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC2980958/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC3127505/
 
-- Final observation window length defaults and fallback windows.
-- Exact smoothing/trend method and parameterization for maintenance estimation.
-- Exact conversion/mapping constants from weekly rate to calorie adjustment.
-- Confidence scoring rubric and user-facing confidence tiers/copy.
-- Large-adjustment warning threshold definition and comparison baseline.
-- Recommendation versioning/schema decisions for future algorithm iteration.
-- Exact onboarding UI placement and copy details relative to current onboarding flow.
+## Intake misreporting / usual intake estimation
+
+- https://www.frontiersin.org/articles/10.3389/fendo.2019.00850/full
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC6928130/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC1662510/
+- https://www.scielo.br/j/csp/a/tZxsC44dwF8z7nJb6FQSNwP/?lang=en
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC2803049/
+
+## RMR prediction equations / onboarding priors
+
+- https://linkinghub.elsevier.com/retrieve/pii/S2212267216301071
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7299486/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC9960966/
+- https://cdnsciencepub.com/doi/10.1139/apnm-2020-0887
+
+## Weight variability / smoothing / rolling trend rationale
+
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC10653631/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7519428/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7192384/
+
+## Protein recommendations / training-oriented defaults
+
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5470183/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC10210857/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5867436/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC8978023/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC7727026/
+- https://www.mdpi.com/2072-6643/13/9/3255/pdf
+- https://bjsm.bmj.com/lookup/doi/10.1136/bjsports-2017-097608
+
+## Fat/macro-distribution guidance context
+
+- https://foodandnutritionresearch.net/index.php/fnr/article/download/232/232
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC6033587/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC10661909/
+
+## Practical weekly adjustment/coaching framing
+
+- https://www.mdpi.com/2227-9032/6/3/73/pdf
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC8017325/
+
+## Additional sports/body-composition context
+
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5596471/
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC11206787/
+
+---
 
 ## Scientific refinement and integration note
 
-Further scientific review/refinement of the exact recommendation approach is expected shortly.
+Further scientific refinement of thresholds and exact equation details is planned before implementation.
 
-The final integration plan may be adjusted before implementation.
+Accordingly, this document distinguishes:
 
-Accordingly, this document explicitly distinguishes:
-
-- intended product behavior
-- current assumptions used for MVP planning
-- open design questions requiring final alignment
+- intended MVP product behavior
+- scientific rationale and approximation limits
+- proposed implementation thresholds/models (tunable)
+- open questions pending final integration decisions
