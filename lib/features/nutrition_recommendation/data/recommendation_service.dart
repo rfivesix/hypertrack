@@ -1,5 +1,4 @@
 import '../../../data/database_helper.dart';
-import '../../../data/product_database_helper.dart';
 import '../../../data/drift_database.dart' as db;
 import '../domain/goal_models.dart';
 import '../domain/recommendation_engine.dart';
@@ -33,14 +32,11 @@ class AdaptiveNutritionRecommendationService {
     RecommendationRepository? repository,
     RecommendationInputAdapter? inputAdapter,
     DatabaseHelper? databaseHelper,
-    ProductDatabaseHelper? productDatabaseHelper,
   })  : _repository = repository ?? RecommendationRepository(),
         _databaseHelper = databaseHelper ?? DatabaseHelper.instance,
         _inputAdapter = inputAdapter ??
             RecommendationInputAdapter(
               databaseHelper: databaseHelper ?? DatabaseHelper.instance,
-              productDatabaseHelper:
-                  productDatabaseHelper ?? ProductDatabaseHelper.instance,
             );
 
   Future<void> saveGoalAndTargetRate({
@@ -98,6 +94,8 @@ class AdaptiveNutritionRecommendationService {
   }) async {
     final effectiveNow = now ?? DateTime.now();
     final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
+    final stableWindowEndDay =
+        RecommendationScheduler.stableWindowEndDayForDueWeek(effectiveNow);
     final lastGeneratedDueWeekKey =
         await _repository.getLastGeneratedDueWeekKey();
 
@@ -113,7 +111,7 @@ class AdaptiveNutritionRecommendationService {
       _repository.getGoal(),
       _repository.getTargetRateKgPerWeek(),
       _repository.getLatestGeneratedRecommendation(),
-      _inputAdapter.buildInput(now: effectiveNow),
+      _inputAdapter.buildInput(now: stableWindowEndDay),
     ]);
 
     final goal = results[0] as BodyweightGoal;

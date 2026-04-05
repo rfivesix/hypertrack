@@ -3,22 +3,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../data/database_helper.dart';
-import '../../../data/product_database_helper.dart';
 import '../../../models/chart_data_point.dart';
 import '../../../models/fluid_entry.dart';
-import '../../../models/food_entry.dart';
 import '../../../data/drift_database.dart' as db;
 import '../domain/recommendation_models.dart';
 
 class RecommendationInputAdapter {
   final DatabaseHelper _databaseHelper;
-  final ProductDatabaseHelper _productDatabaseHelper;
 
   const RecommendationInputAdapter({
     required DatabaseHelper databaseHelper,
-    required ProductDatabaseHelper productDatabaseHelper,
-  })  : _databaseHelper = databaseHelper,
-        _productDatabaseHelper = productDatabaseHelper;
+  }) : _databaseHelper = databaseHelper;
 
   static DateTime normalizeDay(DateTime date) {
     return DateTime(date.year, date.month, date.day);
@@ -44,20 +39,20 @@ class RecommendationInputAdapter {
         'weight',
         DateTimeRange(start: rangeStart, end: rangeEnd),
       ),
-      _databaseHelper.getEntriesForDateRange(rangeStart, rangeEnd),
+      _databaseHelper.getFoodCaloriesByDayForDateRange(rangeStart, rangeEnd),
       _databaseHelper.getFluidEntriesForDateRange(rangeStart, rangeEnd),
       _databaseHelper.getUserProfile(),
       _databaseHelper.getGoalsForDate(now),
     ]);
 
     final weightPoints = results[0] as List<ChartDataPoint>;
-    final foodEntries = results[1] as List<FoodEntry>;
+    final foodCaloriesResult = results[1] as FoodCaloriesByDayResult;
     final fluidEntries = results[2] as List<FluidEntry>;
     final profile = results[3] as db.Profile?;
     final activeGoals = results[4] as db.DailyGoalsHistoryData?;
 
-    final caloriesByDay = await _buildCaloriesByDay(
-      foodEntries: foodEntries,
+    final caloriesByDay = _buildCaloriesByDay(
+      foodCaloriesByDay: foodCaloriesResult.caloriesByDay,
       fluidEntries: fluidEntries,
     );
 
@@ -106,6 +101,9 @@ class RecommendationInputAdapter {
     }
     if (sortedWeightSeries.length < 3) {
       qualityFlags.add('sparse_weight_logs');
+    }
+    if (foodCaloriesResult.unresolvedEntryCount > 0) {
+      qualityFlags.add('unresolved_food_calories');
     }
 
     return RecommendationGenerationInput(
@@ -183,19 +181,11 @@ class RecommendationInputAdapter {
     return normalizeDay(last).difference(normalizeDay(first)).inDays + 1;
   }
 
-  Future<Map<DateTime, double>> _buildCaloriesByDay({
-    required List<FoodEntry> foodEntries,
+  Map<DateTime, double> _buildCaloriesByDay({
+    required Map<DateTime, double> foodCaloriesByDay,
     required List<FluidEntry> fluidEntries,
-  }) async {
-    final caloriesByDay = <DateTime, double>{};
-    final caloriesByBarcode = await _hydrateCaloriesByBarcode(foodEntries);
-
-    for (final entry in foodEntries) {
-      final day = normalizeDay(entry.timestamp);
-      final caloriesPer100g = caloriesByBarcode[entry.barcode] ?? 0;
-      final addedCalories = caloriesPer100g * (entry.quantityInGrams / 100);
-      caloriesByDay[day] = (caloriesByDay[day] ?? 0.0) + addedCalories;
-    }
+  }) {
+    final caloriesByDay = <DateTime, double>{...foodCaloriesByDay};
 
     for (final entry in fluidEntries) {
       final day = normalizeDay(entry.timestamp);
@@ -204,33 +194,6 @@ class RecommendationInputAdapter {
     }
 
     return caloriesByDay;
-  }
-
-  Future<Map<String, int>> _hydrateCaloriesByBarcode(
-    List<FoodEntry> foodEntries,
-  ) async {
-    final barcodes = foodEntries
-        .map((entry) => entry.barcode)
-        .where((barcode) => barcode.isNotEmpty)
-        .toSet()
-        .toList(growable: false);
-
-    if (barcodes.isEmpty) {
-      return const {};
-    }
-
-    final products =
-        await _productDatabaseHelper.getProductsByBarcodes(barcodes);
-
-    final byBarcode = <String, int>{
-      for (final product in products) product.barcode: product.calories,
-    };
-
-    for (final barcode in barcodes) {
-      byBarcode.putIfAbsent(barcode, () => 0);
-    }
-
-    return byBarcode;
   }
 
   Map<DateTime, double> _latestWeightByDay(List<ChartDataPoint> points) {

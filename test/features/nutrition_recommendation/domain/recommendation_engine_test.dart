@@ -87,8 +87,7 @@ void main() {
       );
     });
 
-    test('generate raises macro distribution warning for very low calories',
-        () {
+    test('generate applies a safety floor for implausibly low calories', () {
       final input = _input(
         priorMaintenanceCalories: 1200,
         avgLoggedCalories: 0,
@@ -108,11 +107,74 @@ void main() {
         algorithmVersion: 'test',
       );
 
-      expect(recommendation.recommendedCalories, 100);
+      expect(recommendation.recommendedCalories, 1200);
+      expect(
+        recommendation.warningState.warningReasons,
+        contains('calorie_floor_applied'),
+      );
+      expect(
+        recommendation.warningState.warningLevel,
+        RecommendationWarningLevel.high,
+      );
       expect(recommendation.recommendedCarbsGrams, 0);
       expect(
         recommendation.warningState.warningReasons,
         contains('macro_distribution_constrained'),
+      );
+    });
+
+    test('generate degrades confidence when safety floor is applied', () {
+      final input = _input(
+        priorMaintenanceCalories: 1400,
+        avgLoggedCalories: 1300,
+        smoothedWeightSlopeKgPerWeek: 0,
+        windowDays: 21,
+        weightLogCount: 9,
+        intakeLoggedDays: 15,
+      );
+
+      final recommendation = AdaptiveNutritionRecommendationEngine.generate(
+        input: input,
+        goal: BodyweightGoal.loseWeight,
+        targetRateKgPerWeek: -1.0,
+        generatedAt: DateTime(2026, 4, 5),
+        algorithmVersion: 'test',
+      );
+
+      expect(recommendation.recommendedCalories, 1200);
+      expect(recommendation.confidence, RecommendationConfidence.low);
+      expect(
+        recommendation.warningState.warningReasons,
+        contains('calorie_floor_applied'),
+      );
+    });
+
+    test('generate surfaces unresolved calorie inputs as warning reason', () {
+      final input = _input(
+        priorMaintenanceCalories: 2400,
+        avgLoggedCalories: 2200,
+        smoothedWeightSlopeKgPerWeek: -0.1,
+        windowDays: 14,
+        weightLogCount: 6,
+        intakeLoggedDays: 10,
+        qualityFlags: const ['unresolved_food_calories'],
+      );
+
+      final recommendation = AdaptiveNutritionRecommendationEngine.generate(
+        input: input,
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        generatedAt: DateTime(2026, 4, 5),
+        algorithmVersion: 'test',
+      );
+
+      expect(
+        recommendation.warningState.warningReasons,
+        contains('unresolved_food_calories'),
+      );
+      expect(
+        recommendation.warningState.warningLevel,
+        RecommendationWarningLevel.moderate,
       );
     });
 
@@ -177,6 +239,7 @@ RecommendationGenerationInput _input({
   required int weightLogCount,
   required int intakeLoggedDays,
   int? activeTargetCalories,
+  List<String> qualityFlags = const [],
   double currentWeightKg = 82,
 }) {
   return RecommendationGenerationInput(
@@ -190,5 +253,6 @@ RecommendationGenerationInput _input({
     currentWeightKg: currentWeightKg,
     priorMaintenanceCalories: priorMaintenanceCalories,
     activeTargetCalories: activeTargetCalories,
+    qualityFlags: qualityFlags,
   );
 }

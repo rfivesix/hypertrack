@@ -62,6 +62,36 @@ void main() {
 
     expect(applyTapped, isTrue);
   });
+
+  testWidgets('renders safety-floor warning message when reason is present',
+      (tester) async {
+    final recommendation = _recommendation().copyWith(
+      warningState: const RecommendationWarningState(
+        hasLargeAdjustmentWarning: false,
+        warningLevel: RecommendationWarningLevel.high,
+        warningReasons: ['calorie_floor_applied'],
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: NutritionRecommendationCard(
+            goal: BodyweightGoal.maintainWeight,
+            targetRateKgPerWeek: 0,
+            recommendation: recommendation,
+            activeTargetCalories: 2400,
+            isApplying: false,
+            onApply: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.textContaining('minimum calorie safety floor'), findsOneWidget);
+  });
 }
 
 NutritionRecommendation _recommendation() {
@@ -89,4 +119,47 @@ NutritionRecommendation _recommendation() {
     baselineCalories: 2400,
     dueWeekKey: '2026-03-30',
   );
+}
+
+extension on NutritionRecommendation {
+  NutritionRecommendation copyWith({
+    int? recommendedCalories,
+    int? recommendedProteinGrams,
+    int? recommendedCarbsGrams,
+    int? recommendedFatGrams,
+    int? estimatedMaintenanceCalories,
+    BodyweightGoal? goal,
+    double? targetRateKgPerWeek,
+    RecommendationConfidence? confidence,
+    RecommendationWarningState? warningState,
+    DateTime? generatedAt,
+    DateTime? windowStart,
+    DateTime? windowEnd,
+    String? algorithmVersion,
+    RecommendationInputSummary? inputSummary,
+    int? baselineCalories,
+    String? dueWeekKey,
+  }) {
+    return NutritionRecommendation(
+      recommendedCalories: recommendedCalories ?? this.recommendedCalories,
+      recommendedProteinGrams:
+          recommendedProteinGrams ?? this.recommendedProteinGrams,
+      recommendedCarbsGrams:
+          recommendedCarbsGrams ?? this.recommendedCarbsGrams,
+      recommendedFatGrams: recommendedFatGrams ?? this.recommendedFatGrams,
+      estimatedMaintenanceCalories:
+          estimatedMaintenanceCalories ?? this.estimatedMaintenanceCalories,
+      goal: goal ?? this.goal,
+      targetRateKgPerWeek: targetRateKgPerWeek ?? this.targetRateKgPerWeek,
+      confidence: confidence ?? this.confidence,
+      warningState: warningState ?? this.warningState,
+      generatedAt: generatedAt ?? this.generatedAt,
+      windowStart: windowStart ?? this.windowStart,
+      windowEnd: windowEnd ?? this.windowEnd,
+      algorithmVersion: algorithmVersion ?? this.algorithmVersion,
+      inputSummary: inputSummary ?? this.inputSummary,
+      baselineCalories: baselineCalories ?? this.baselineCalories,
+      dueWeekKey: dueWeekKey ?? this.dueWeekKey,
+    );
+  }
 }

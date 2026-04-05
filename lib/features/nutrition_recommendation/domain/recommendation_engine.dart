@@ -6,6 +6,7 @@ class AdaptiveNutritionRecommendationEngine {
   const AdaptiveNutritionRecommendationEngine._();
 
   static const double _kcalPerKgPerWeekToDay = 7700 / 7;
+  static const int _minimumRecommendedCalories = 1200;
 
   static NutritionRecommendation generate({
     required RecommendationGenerationInput input,
@@ -36,10 +37,22 @@ class AdaptiveNutritionRecommendationEngine {
           delta.clamp(-deltaLimit, deltaLimit);
     }
 
+    var effectiveConfidence = confidence;
     final estimatedMaintenanceCalories = maintenance.round();
     final calorieAdjustment = rateAdjustmentKcalPerDay(targetRateKgPerWeek);
-    final recommendedCalories =
+    final rawRecommendedCalories =
         estimatedMaintenanceCalories + calorieAdjustment;
+    var recommendedCalories = rawRecommendedCalories;
+    final safetyWarningReasons = <String>[];
+
+    if (recommendedCalories < _minimumRecommendedCalories) {
+      recommendedCalories = _minimumRecommendedCalories;
+      safetyWarningReasons.add('calorie_floor_applied');
+      if (effectiveConfidence == RecommendationConfidence.high ||
+          effectiveConfidence == RecommendationConfidence.medium) {
+        effectiveConfidence = RecommendationConfidence.low;
+      }
+    }
 
     final macroResult = _computeMacros(
       goal: goal,
@@ -52,7 +65,12 @@ class AdaptiveNutritionRecommendationEngine {
     final warningState = _buildWarningState(
       baselineCalories: baselineCalories,
       recommendedCalories: recommendedCalories,
-      extraReasons: macroResult.warningReasons,
+      extraReasons: [
+        ...macroResult.warningReasons,
+        ...safetyWarningReasons,
+        if (input.qualityFlags.contains('unresolved_food_calories'))
+          'unresolved_food_calories',
+      ],
     );
 
     return NutritionRecommendation(
@@ -63,7 +81,7 @@ class AdaptiveNutritionRecommendationEngine {
       estimatedMaintenanceCalories: estimatedMaintenanceCalories,
       goal: goal,
       targetRateKgPerWeek: targetRateKgPerWeek,
-      confidence: confidence,
+      confidence: effectiveConfidence,
       warningState: warningState,
       generatedAt: generatedAt,
       windowStart: input.windowStart,
@@ -210,7 +228,9 @@ class AdaptiveNutritionRecommendationEngine {
       }
     }
 
-    if (!hasLargeAdjustmentWarning && reasons.isNotEmpty) {
+    if (reasons.contains('calorie_floor_applied')) {
+      warningLevel = RecommendationWarningLevel.high;
+    } else if (!hasLargeAdjustmentWarning && reasons.isNotEmpty) {
       warningLevel = RecommendationWarningLevel.moderate;
     }
 

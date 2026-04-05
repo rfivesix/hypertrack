@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/data/database_helper.dart';
 import 'package:hypertrack/data/drift_database.dart'
     show AppDatabase, ProductsCompanion;
-import 'package:hypertrack/data/product_database_helper.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_service.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
@@ -19,7 +18,6 @@ void main() {
   group('AdaptiveNutritionRecommendationService', () {
     late AppDatabase database;
     late DatabaseHelper dbHelper;
-    late ProductDatabaseHelper productDb;
     late RecommendationRepository repository;
     late AdaptiveNutritionRecommendationService service;
 
@@ -27,12 +25,10 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
-      productDb = ProductDatabaseHelper.forTesting(databaseHelper: dbHelper);
       repository = RecommendationRepository();
       service = AdaptiveNutritionRecommendationService(
         repository: repository,
         databaseHelper: dbHelper,
-        productDatabaseHelper: productDb,
       );
 
       await dbHelper.saveUserProfile(
@@ -110,6 +106,53 @@ void main() {
       expect(first!.generatedAt, second!.generatedAt);
       expect(first.dueWeekKey, '2026-04-06');
       expect(await repository.getLastGeneratedDueWeekKey(), '2026-04-06');
+    });
+
+    test(
+        'forced regeneration stays stable within due week even with new in-week logs',
+        () async {
+      final monday = DateTime(2026, 4, 6, 10, 0);
+      final first =
+          await service.refreshRecommendationIfDue(now: monday, force: true);
+
+      await dbHelper.insertMeasurementSession(
+        MeasurementSession(
+          timestamp: DateTime(2026, 4, 7, 7, 0),
+          measurements: [
+            Measurement(
+              sessionId: 0,
+              type: 'weight',
+              value: 70,
+              unit: 'kg',
+            ),
+          ],
+        ),
+      );
+      await dbHelper.insertFoodEntry(
+        FoodEntry(
+          barcode: 'test-food',
+          timestamp: DateTime(2026, 4, 7, 12, 0),
+          quantityInGrams: 4000,
+          mealType: 'mealtypeLunch',
+        ),
+      );
+
+      final second = await service.refreshRecommendationIfDue(
+        now: DateTime(2026, 4, 8, 10, 0),
+        force: true,
+      );
+
+      expect(first, isNotNull);
+      expect(second, isNotNull);
+      expect(first!.dueWeekKey, '2026-04-06');
+      expect(second!.dueWeekKey, '2026-04-06');
+      expect(first.windowEnd, DateTime(2026, 4, 5, 23, 59, 59));
+      expect(second.windowEnd, DateTime(2026, 4, 5, 23, 59, 59));
+      expect(second.recommendedCalories, first.recommendedCalories);
+      expect(second.estimatedMaintenanceCalories,
+          first.estimatedMaintenanceCalories);
+      expect(second.inputSummary.intakeLoggedDays,
+          first.inputSummary.intakeLoggedDays);
     });
 
     test('refresh does not overwrite active goals until explicit apply',

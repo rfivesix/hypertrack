@@ -21,6 +21,16 @@ import 'product_database_helper.dart';
 ///
 /// Manages user favorites, nutrition logs, fluid intake, body measurements,
 /// supplements, and meal templates.
+class FoodCaloriesByDayResult {
+  final Map<DateTime, double> caloriesByDay;
+  final int unresolvedEntryCount;
+
+  const FoodCaloriesByDayResult({
+    required this.caloriesByDay,
+    required this.unresolvedEntryCount,
+  });
+}
+
 class DatabaseHelper {
   /// Singleton instance of [DatabaseHelper].
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -316,6 +326,75 @@ class DatabaseHelper {
         updatedAt: row.updatedAt,
       );
     }).toList();
+  }
+
+  /// Aggregates logged food calories per local day for a date range.
+  ///
+  /// Resolution order for calories-per-100g:
+  /// 1) `nutrition_logs.product_id -> products.id`
+  /// 2) `nutrition_logs.legacy_barcode -> products.barcode`
+  ///
+  /// Returns unresolved row count when neither relation can resolve.
+  Future<FoodCaloriesByDayResult> getFoodCaloriesByDayForDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final dbInstance = await database;
+    final effectiveStart = DateTime(start.year, start.month, start.day);
+    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final productsByBarcode = dbInstance.products.createAlias(
+      'products_by_barcode',
+    );
+
+    final query = dbInstance.select(dbInstance.nutritionLogs).join([
+      drift.leftOuterJoin(
+        dbInstance.products,
+        dbInstance.products.id.equalsExp(dbInstance.nutritionLogs.productId),
+      ),
+      drift.leftOuterJoin(
+        productsByBarcode,
+        productsByBarcode.barcode.equalsExp(
+          dbInstance.nutritionLogs.legacyBarcode,
+        ),
+      ),
+    ])
+      ..where(
+        dbInstance.nutritionLogs.consumedAt.isBetweenValues(
+          effectiveStart,
+          effectiveEnd,
+        ),
+      );
+
+    final rows = await query.get();
+    final caloriesByDay = <DateTime, double>{};
+    var unresolvedEntryCount = 0;
+
+    for (final row in rows) {
+      final log = row.readTable(dbInstance.nutritionLogs);
+      final productById = row.readTableOrNull(dbInstance.products);
+      final productByBarcode = row.readTableOrNull(productsByBarcode);
+      final resolvedProduct = productById ?? productByBarcode;
+
+      if (resolvedProduct == null) {
+        unresolvedEntryCount += 1;
+        continue;
+      }
+
+      final day = DateTime(
+        log.consumedAt.year,
+        log.consumedAt.month,
+        log.consumedAt.day,
+      );
+      final caloriesPer100 = resolvedProduct.calories.toDouble();
+      final addedCalories = caloriesPer100 * (log.amount / 100.0);
+      caloriesByDay[day] = (caloriesByDay[day] ?? 0.0) + addedCalories;
+    }
+
+    return FoodCaloriesByDayResult(
+      caloriesByDay: caloriesByDay,
+      unresolvedEntryCount: unresolvedEntryCount,
+    );
   }
 
   Future<void> deleteFoodEntry(int id) async {

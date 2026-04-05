@@ -118,10 +118,7 @@ class NutritionRecommendationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        recommendation!.warningState.warningLevel ==
-                                RecommendationWarningLevel.high
-                            ? 'Large adjustment detected. Please review your recent logging completeness before applying.'
-                            : 'Review suggested: recommendation was adjusted conservatively due to data variability.',
+                        _warningMessage(recommendation!),
                         style: theme.textTheme.bodySmall,
                       ),
                     ),
@@ -154,6 +151,21 @@ class NutritionRecommendationCard extends StatelessWidget {
       case RecommendationConfidence.high:
         return 'High';
     }
+  }
+
+  static String _warningMessage(NutritionRecommendation recommendation) {
+    final reasons = recommendation.warningState.warningReasons;
+    if (reasons.contains('calorie_floor_applied')) {
+      return 'Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying.';
+    }
+    if (reasons.contains('unresolved_food_calories')) {
+      return 'Some nutrition entries could not be fully resolved for calorie estimation. Recommendation is conservative.';
+    }
+    if (recommendation.warningState.warningLevel ==
+        RecommendationWarningLevel.high) {
+      return 'Large adjustment detected. Please review your recent logging completeness before applying.';
+    }
+    return 'Review suggested: recommendation was adjusted conservatively due to data variability.';
   }
 }
 
