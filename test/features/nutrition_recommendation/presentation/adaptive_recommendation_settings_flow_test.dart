@@ -56,24 +56,33 @@ void main() {
 
       final adaptiveSection =
           find.byKey(const Key('goals_adaptive_section_title'));
+      final personalSection =
+          find.byKey(const Key('goals_personal_section_title'));
       final recommendationSettingsSection = find.byKey(
         const Key('goals_recommendation_settings_section_title'),
       );
       final dailyGoalsSection =
           find.byKey(const Key('goals_daily_section_title'));
+      final heightField = find.byKey(const Key('goals_height_field'));
 
+      expect(personalSection, findsOneWidget);
       expect(adaptiveSection, findsOneWidget);
       expect(recommendationSettingsSection, findsOneWidget);
       expect(dailyGoalsSection, findsOneWidget);
+      expect(heightField, findsOneWidget);
       expect(find.byKey(const Key('goals_prior_activity_dropdown')),
           findsOneWidget);
       expect(
           find.byKey(const Key('goals_extra_cardio_dropdown')), findsOneWidget);
 
+      final personalTop = tester.getTopLeft(personalSection).dy;
+      final heightFieldTop = tester.getTopLeft(heightField).dy;
       final adaptiveTop = tester.getTopLeft(adaptiveSection).dy;
       final settingsTop = tester.getTopLeft(recommendationSettingsSection).dy;
       final dailyTop = tester.getTopLeft(dailyGoalsSection).dy;
 
+      expect(personalTop, lessThan(adaptiveTop));
+      expect(heightFieldTop, lessThan(adaptiveTop));
       expect(adaptiveTop, lessThan(settingsTop));
       expect(settingsTop, lessThan(dailyTop));
     });
@@ -92,7 +101,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(ElevatedButton).first);
+      await tester
+          .tap(find.byKey(const Key('onboarding_continue_setup_button')));
       await tester.pumpAndSettle();
 
       expect(
@@ -104,11 +114,14 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.enterText(find.byType(TextField).first, 'Alex');
-      await tester.tap(find.byType(ElevatedButton).last);
+      await tester.enterText(
+        find.byKey(const Key('onboarding_name_text_field')),
+        'Alex',
+      );
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(ElevatedButton).last);
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
       await tester.pumpAndSettle();
 
       expect(

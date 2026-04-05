@@ -436,6 +436,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const Spacer(),
                     ElevatedButton(
+                      key: const Key('onboarding_bottom_next_button'),
                       onPressed: _nextPage,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -493,6 +494,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
+              key: const Key('onboarding_continue_setup_button'),
               onPressed: _isRestoring ? null : _nextPage,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -548,6 +550,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _StepTitle(title: l10n.onboardingNameTitle),
           const SizedBox(height: 16),
           TextField(
+            key: const Key('onboarding_name_text_field'),
             controller: _nameController,
             decoration: InputDecoration(
               labelText: l10n.onboardingNameLabel,
@@ -703,7 +706,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton(
               key: const Key('onboarding_body_fat_help_button'),
-              onPressed: () => _showBodyFatHelpDialog(l10n),
+              onPressed: () => _openBodyFatHelperEntryPoint(l10n),
               child: Text(l10n.onboardingBodyFatHelpAction),
             ),
           ),
@@ -962,7 +965,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Future<void> _showBodyFatHelpDialog(AppLocalizations l10n) async {
+  Future<void> _openBodyFatHelperEntryPoint(AppLocalizations l10n) async {
+    // Placeholder entry point for the upcoming image/slider body-fat finder.
+    await _showBodyFatHelpPlaceholderDialog(l10n);
+  }
+
+  Future<void> _showBodyFatHelpPlaceholderDialog(AppLocalizations l10n) async {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(

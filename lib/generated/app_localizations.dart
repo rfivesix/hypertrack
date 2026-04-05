@@ -5363,7 +5363,7 @@ abstract class AppLocalizations {
   /// No description provided for @adaptivePriorActivityHelp.
   ///
   /// In en, this message translates to:
-  /// **'This reflects your normal day-to-day movement (sitting, walking, standing), not extra cardio sessions.'**
+  /// **'Baseline daily activity only (separate from extra cardio): Low = student/pupil/office, mostly sitting; Moderate = mixed walking/standing, somewhat active routine; High = lots of standing/walking or a physically active job.'**
   String get adaptivePriorActivityHelp;
 
   /// No description provided for @adaptiveExtraCardioLabel.

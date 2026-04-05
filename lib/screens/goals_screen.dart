@@ -210,6 +210,18 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   children: [
                     _buildSectionTitle(
                       context,
+                      l10n.personalDataCL,
+                      key: const Key('goals_personal_section_title'),
+                    ),
+                    const SizedBox(height: DesignConstants.spacingM),
+                    _buildSettingsField(
+                      controller: _heightController,
+                      label: l10n.profileUserHeight,
+                      fieldKey: const Key('goals_height_field'),
+                    ),
+                    const SizedBox(height: DesignConstants.spacingXL),
+                    _buildSectionTitle(
+                      context,
                       l10n.adaptiveBodyweightTargetSectionTitle,
                       key: const Key('goals_adaptive_section_title'),
                     ),
@@ -326,11 +338,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       l10n.adaptiveExtraCardioHelp,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const SizedBox(height: DesignConstants.spacingM),
-                    _buildSettingsField(
-                      controller: _heightController,
-                      label: l10n.profileUserHeight,
-                    ),
                     const SizedBox(height: DesignConstants.spacingXL),
                     _buildSectionTitle(
                       context,
@@ -390,11 +397,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
   Widget _buildSettingsField({
     required TextEditingController controller,
     required String label,
+    Key? fieldKey,
   }) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextFormField(
+        key: fieldKey,
         controller: controller,
         decoration: InputDecoration(labelText: label),
         keyboardType: TextInputType.number,

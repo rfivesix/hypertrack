@@ -2889,7 +2889,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptivePriorActivityHelp =>
-      'This reflects your normal day-to-day movement (sitting, walking, standing), not extra cardio sessions.';
+      'Baseline daily activity only (separate from extra cardio): Low = student/pupil/office, mostly sitting; Moderate = mixed walking/standing, somewhat active routine; High = lots of standing/walking or a physically active job.';
 
   @override
   String get adaptiveExtraCardioLabel =>

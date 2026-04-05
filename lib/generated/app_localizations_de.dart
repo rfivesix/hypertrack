@@ -2910,7 +2910,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adaptivePriorActivityHelp =>
-      'Beschreibt deine normale Alltagsbewegung (Sitzen, Gehen, Stehen), nicht zusätzliche Cardio-Einheiten.';
+      'Nur Alltagsaktivität (getrennt von Extra-Cardio): Niedrig = Schüler/Student/Büro, meist sitzend; Moderat = gemischter Alltag mit Gehen/Stehen; Hoch = viel Stehen/Gehen oder körperlich aktiver Beruf.';
 
   @override
   String get adaptiveExtraCardioLabel =>

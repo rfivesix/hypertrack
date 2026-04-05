@@ -138,20 +138,4 @@ class WeeklyTargetRateCatalog {
     }
     return defaultForGoal(goal).kgPerWeek;
   }
-
-  static String goalLabel(BodyweightGoal goal) {
-    switch (goal) {
-      case BodyweightGoal.loseWeight:
-        return 'Lose';
-      case BodyweightGoal.maintainWeight:
-        return 'Maintain';
-      case BodyweightGoal.gainWeight:
-        return 'Gain';
-    }
-  }
-
-  static String rateLabel(double kgPerWeek) {
-    final sign = kgPerWeek > 0 ? '+' : '';
-    return '$sign${kgPerWeek.toStringAsFixed(2)} kg/week';
-  }
 }

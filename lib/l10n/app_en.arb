@@ -1207,7 +1207,7 @@
   ,"adaptivePriorActivityLow": "Low activity"
   ,"adaptivePriorActivityModerate": "Moderate activity"
   ,"adaptivePriorActivityHigh": "High activity"
-  ,"adaptivePriorActivityHelp": "This reflects your normal day-to-day movement (sitting, walking, standing), not extra cardio sessions."
+  ,"adaptivePriorActivityHelp": "Baseline daily activity only (separate from extra cardio): Low = student/pupil/office, mostly sitting; Moderate = mixed walking/standing, somewhat active routine; High = lots of standing/walking or a physically active job."
   ,"adaptiveExtraCardioLabel": "Extra cardio/endurance outside the app"
   ,"adaptiveExtraCardioOption0": "0 h/week"
   ,"adaptiveExtraCardioOption1": "1 h/week"

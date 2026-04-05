@@ -175,12 +175,18 @@ void main() {
       const goalKey = 'adaptive_nutrition_recommendation.goal_direction';
       const rateKey =
           'adaptive_nutrition_recommendation.target_rate_kg_per_week';
+      const priorActivityLevelKey =
+          'adaptive_nutrition_recommendation.prior_activity_level';
+      const extraCardioHoursKey =
+          'adaptive_nutrition_recommendation.extra_cardio_hours';
       const generatedKey = 'adaptive_nutrition_recommendation.latest_generated';
       const dueWeekKey =
           'adaptive_nutrition_recommendation.last_generated_due_week_key';
 
       await prefs.setString(goalKey, 'loseWeight');
       await prefs.setDouble(rateKey, -0.5);
+      await prefs.setString(priorActivityLevelKey, 'high');
+      await prefs.setString(extraCardioHoursKey, 'h5');
       await prefs.setString(
         generatedKey,
         jsonEncode(<String, dynamic>{
@@ -192,9 +198,15 @@ void main() {
       await prefs.setString(dueWeekKey, '2026-03-30');
 
       final payload = await backupManager.generateBackupPayloadForTesting();
+      final userPreferences =
+          payload['userPreferences'] as Map<String, dynamic>;
+      expect(userPreferences[priorActivityLevelKey], 'high');
+      expect(userPreferences[extraCardioHoursKey], 'h5');
 
       await prefs.setString(goalKey, 'gainWeight');
       await prefs.setDouble(rateKey, 0.5);
+      await prefs.setString(priorActivityLevelKey, 'low');
+      await prefs.setString(extraCardioHoursKey, 'h0');
       await prefs.setString(generatedKey, '{}');
       await prefs.setString(dueWeekKey, '2026-04-06');
 
@@ -205,6 +217,8 @@ void main() {
       final restoredPrefs = await SharedPreferences.getInstance();
       expect(restoredPrefs.getString(goalKey), 'loseWeight');
       expect(restoredPrefs.getDouble(rateKey), -0.5);
+      expect(restoredPrefs.getString(priorActivityLevelKey), 'high');
+      expect(restoredPrefs.getString(extraCardioHoursKey), 'h5');
       expect(
         restoredPrefs.getString(generatedKey),
         jsonEncode(<String, dynamic>{

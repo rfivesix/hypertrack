@@ -1212,7 +1212,7 @@
   ,"adaptivePriorActivityLow": "Niedrige Aktivität"
   ,"adaptivePriorActivityModerate": "Moderate Aktivität"
   ,"adaptivePriorActivityHigh": "Hohe Aktivität"
-  ,"adaptivePriorActivityHelp": "Beschreibt deine normale Alltagsbewegung (Sitzen, Gehen, Stehen), nicht zusätzliche Cardio-Einheiten."
+  ,"adaptivePriorActivityHelp": "Nur Alltagsaktivität (getrennt von Extra-Cardio): Niedrig = Schüler/Student/Büro, meist sitzend; Moderat = gemischter Alltag mit Gehen/Stehen; Hoch = viel Stehen/Gehen oder körperlich aktiver Beruf."
   ,"adaptiveExtraCardioLabel": "Zusätzliches Cardio/Ausdauer außerhalb der App"
   ,"adaptiveExtraCardioOption0": "0 h/Woche"
   ,"adaptiveExtraCardioOption1": "1 h/Woche"
