@@ -14,6 +14,7 @@ import '../models/supplement.dart';
 import '../models/supplement_log.dart';
 import '../models/tracked_food_item.dart';
 import 'add_food_screen.dart';
+import 'add_food_navigation_result.dart';
 import 'food_detail_screen.dart';
 import 'supplement_track_screen.dart';
 import '../util/date_util.dart';
@@ -514,7 +515,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Future<void> _addFoodToMeal(String mealType) async {
-    final addFoodResult = await Navigator.of(context).push<Object?>(
+    final routeResult = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder: (context) => AddFoodScreen(
           initialDate: _selectedDate, // <--- ÜBERGABE
@@ -525,13 +526,13 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     if (!mounted) return;
 
-    if (addFoodResult == true) {
+    final addFoodResult = AddFoodNavigationResult.fromRouteResult(routeResult);
+    if (addFoodResult.shouldRefresh) {
       loadDataForDate(_selectedDate);
       return;
     }
 
-    final selectedFoodItem =
-        addFoodResult is FoodItem ? addFoodResult : null;
+    final selectedFoodItem = addFoodResult.selectedFoodItem;
     if (selectedFoodItem == null) return;
 
     // FIX: Datum an das Hilfs-Menü übergeben
