@@ -107,7 +107,8 @@ class _FakeSleepSummaryRepository extends SleepHubSummaryRepository {
   Future<void> dispose() async {}
 }
 
-const _sleepConnectChannel = MethodChannel('hypertrack.health/sleep_health_connect');
+const _sleepConnectChannel =
+    MethodChannel('hypertrack.health/sleep_health_connect');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

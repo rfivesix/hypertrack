@@ -6,6 +6,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.7.8] - 2026-04-05
 
+This release is a maintenance and stability update that prepares Hypertrack for the upcoming 0.8 / TDEE cycle.
+
+### Fixed
+- Fixed backup/restore integrity for meal-related data
+  - meal templates and meal items are now included in backups
+  - meal/nutrition restore behavior is more complete and reliable
+- Improved nutrition backup robustness when food entries rely on product references / barcode fallback
+- Improved goals/settings restore behavior
+  - changed targets are restored correctly
+  - fallback restore behavior no longer depends on profile payload always being present
+- Improved supplement restore integrity
+  - tracked-state and supplement history restore behavior are more reliable
+- Improved workout restore fidelity
+  - preserves more set metadata and ordering details during restore
+
+### Improved
+- Updated project dependencies to current resolvable versions
+- Resolved API breakages caused by dependency upgrades
+  - notifications
+  - file picker
+  - CSV handling
+- Stabilized the automated test suite
+  - fixed outdated expectations
+  - reduced brittle widget-test failures
+  - improved deterministic test behavior
+- Expanded automated test coverage in important low-level areas
+  - backup/restore
+  - goals and target persistence
+  - weight/history foundations
+  - statistics data
+  - storage/services
+
+### Internal / maintenance
+- Better regression protection for backup, restore, and persistence behavior
+- Better groundwork for future TDEE development in 0.8
+- General cleanup and hardening across data/services/test infrastructure
+
+### Notes
+- This is primarily a maintenance/stability release
+- The focus of this version is correctness, persistence integrity, and preparation for the next major feature cycle
 
 ## [0.7.7] - 2026-04-04
 

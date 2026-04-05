@@ -7,6 +7,8 @@ import 'package:hypertrack/data/drift_database.dart'
 import 'package:hypertrack/data/product_database_helper.dart';
 import 'package:hypertrack/data/workout_database_helper.dart';
 import 'package:hypertrack/models/food_entry.dart';
+import 'package:hypertrack/models/measurement.dart';
+import 'package:hypertrack/models/measurement_session.dart';
 import 'package:hypertrack/models/set_log.dart';
 import 'package:hypertrack/models/workout_log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -262,6 +264,154 @@ void main() {
       expect(set.durationSeconds, 75);
       expect(set.rpe, 9);
       expect(set.rir, 1);
+    });
+
+    test(
+        'backup payload contains critical persistence domains and changed values',
+        () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('targetSugar', 42);
+      await prefs.setInt('targetFiber', 28);
+      await prefs.setInt('targetSalt', 6);
+      await prefs.setBool('ai_enabled', true);
+      await prefs.setString('ai_selected_provider', 'openai');
+      await prefs.setString('ai_selected_model_openai', 'gpt-5.4');
+
+      await dbHelper.saveUserProfile(
+        name: 'Taylor',
+        birthday: DateTime(1994, 8, 12),
+        height: 176,
+        gender: 'female',
+      );
+      await dbHelper.saveUserGoals(
+        calories: 2300,
+        protein: 165,
+        carbs: 240,
+        fat: 72,
+        water: 2900,
+        steps: 9200,
+      );
+      await dbHelper.insertMeasurementSession(
+        MeasurementSession(
+          timestamp: DateTime(2026, 4, 3, 7, 45),
+          measurements: [
+            Measurement(
+              sessionId: 0,
+              type: 'weight',
+              value: 78.4,
+              unit: 'kg',
+            ),
+          ],
+        ),
+      );
+
+      final payload = await backupManager.generateBackupPayloadForTesting();
+
+      expect(payload['schemaVersion'], BackupManager.currentSchemaVersion);
+      expect(payload['foodEntries'], isA<List<dynamic>>());
+      expect(payload['mealTemplates'], isA<List<dynamic>>());
+      expect(payload['fluidEntries'], isA<List<dynamic>>());
+      expect(payload['favoriteBarcodes'], isA<List<dynamic>>());
+      expect(payload['customFoodItems'], isA<List<dynamic>>());
+      expect(payload['measurementSessions'], isA<List<dynamic>>());
+      expect(payload['dailyGoalsHistory'], isA<List<dynamic>>());
+      expect(payload['appSettings'], isA<Map<String, dynamic>>());
+      expect(payload['profile'], isA<Map<String, dynamic>>());
+      expect(payload['userPreferences'], isA<Map<String, dynamic>>());
+      expect(payload['healthStepSegments'], isA<List<dynamic>>());
+
+      final appSettings = payload['appSettings'] as Map<String, dynamic>;
+      expect(appSettings['targetCalories'], 2300);
+      expect(appSettings['targetProtein'], 165);
+      expect(appSettings['targetCarbs'], 240);
+      expect(appSettings['targetFat'], 72);
+      expect(appSettings['targetWater'], 2900);
+      expect(appSettings['targetSteps'], 9200);
+
+      final userPreferences =
+          payload['userPreferences'] as Map<String, dynamic>;
+      expect(userPreferences['targetSugar'], 42);
+      expect(userPreferences['targetFiber'], 28);
+      expect(userPreferences['targetSalt'], 6);
+      expect(userPreferences['ai_enabled'], isTrue);
+      expect(userPreferences['ai_selected_provider'], 'openai');
+      expect(userPreferences['ai_selected_model_openai'], 'gpt-5.4');
+    });
+
+    test('restore preserves daily goals history timestamps and target values',
+        () async {
+      final payload = <String, dynamic>{
+        'schemaVersion': BackupManager.currentSchemaVersion,
+        'foodEntries': const <dynamic>[],
+        'mealTemplates': const <dynamic>[],
+        'fluidEntries': const <dynamic>[],
+        'favoriteBarcodes': const <dynamic>[],
+        'customFoodItems': const <dynamic>[],
+        'measurementSessions': const <dynamic>[],
+        'routines': const <dynamic>[],
+        'workoutLogs': const <dynamic>[],
+        'userPreferences': const <String, dynamic>{},
+        'supplements': const <dynamic>[],
+        'supplementLogs': const <dynamic>[],
+        'customExercises': const <dynamic>[],
+        'supplementSettingsHistory': const <dynamic>[],
+        'dailyGoalsHistory': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'targetCalories': 2100,
+            'targetProtein': 155,
+            'targetCarbs': 210,
+            'targetFat': 68,
+            'targetWater': 2600,
+            'targetSteps': 7000,
+            'createdAt': '2026-01-10T08:30:00.000Z',
+          },
+          <String, dynamic>{
+            'targetCalories': 2400,
+            'targetProtein': 175,
+            'targetCarbs': 250,
+            'targetFat': 78,
+            'targetWater': 3100,
+            'targetSteps': 9500,
+            'createdAt': '2026-03-05T18:15:00.000Z',
+          },
+        ],
+        'appSettings': <String, dynamic>{
+          'userId': 'hist-user-1',
+          'themeMode': 'system',
+          'unitSystem': 'metric',
+          'targetCalories': 2400,
+          'targetProtein': 175,
+          'targetCarbs': 250,
+          'targetFat': 78,
+          'targetWater': 3100,
+          'targetSteps': 9500,
+        },
+        'profile': null,
+        'healthStepSegments': const <dynamic>[],
+      };
+
+      final imported =
+          await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
+
+      final historyRows = await (db.select(db.dailyGoalsHistory)
+            ..orderBy([(t) => drift.OrderingTerm.asc(t.createdAt)]))
+          .get();
+
+      expect(historyRows.length, 2);
+      expect(historyRows[0].targetCalories, 2100);
+      expect(historyRows[0].targetSteps, 7000);
+      expect(
+        historyRows[0].createdAt.toUtc(),
+        DateTime.parse('2026-01-10T08:30:00.000Z').toUtc(),
+      );
+
+      expect(historyRows[1].targetCalories, 2400);
+      expect(historyRows[1].targetSteps, 9500);
+      expect(
+        historyRows[1].createdAt.toUtc(),
+        DateTime.parse('2026-03-05T18:15:00.000Z').toUtc(),
+      );
     });
   });
 }
