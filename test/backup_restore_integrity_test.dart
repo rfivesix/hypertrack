@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/data/backup_manager.dart';
@@ -165,6 +167,53 @@ void main() {
       expect(restoredPrefs.getInt('targetSugar'), 37);
       expect(restoredPrefs.getInt('targetFiber'), 31);
       expect(restoredPrefs.getInt('targetSalt'), 5);
+    });
+
+    test('adaptive recommendation state in shared preferences survives restore',
+        () async {
+      final prefs = await SharedPreferences.getInstance();
+      const goalKey = 'adaptive_nutrition_recommendation.goal_direction';
+      const rateKey =
+          'adaptive_nutrition_recommendation.target_rate_kg_per_week';
+      const generatedKey = 'adaptive_nutrition_recommendation.latest_generated';
+      const dueWeekKey =
+          'adaptive_nutrition_recommendation.last_generated_due_week_key';
+
+      await prefs.setString(goalKey, 'loseWeight');
+      await prefs.setDouble(rateKey, -0.5);
+      await prefs.setString(
+        generatedKey,
+        jsonEncode(<String, dynamic>{
+          'recommendedCalories': 2100,
+          'goal': 'loseWeight',
+          'targetRateKgPerWeek': -0.5,
+        }),
+      );
+      await prefs.setString(dueWeekKey, '2026-03-30');
+
+      final payload = await backupManager.generateBackupPayloadForTesting();
+
+      await prefs.setString(goalKey, 'gainWeight');
+      await prefs.setDouble(rateKey, 0.5);
+      await prefs.setString(generatedKey, '{}');
+      await prefs.setString(dueWeekKey, '2026-04-06');
+
+      final imported =
+          await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
+
+      final restoredPrefs = await SharedPreferences.getInstance();
+      expect(restoredPrefs.getString(goalKey), 'loseWeight');
+      expect(restoredPrefs.getDouble(rateKey), -0.5);
+      expect(
+        restoredPrefs.getString(generatedKey),
+        jsonEncode(<String, dynamic>{
+          'recommendedCalories': 2100,
+          'goal': 'loseWeight',
+          'targetRateKgPerWeek': -0.5,
+        }),
+      );
+      expect(restoredPrefs.getString(dueWeekKey), '2026-03-30');
     });
 
     test('app settings restore even when profile payload is missing', () async {

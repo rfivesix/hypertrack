@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../generated/app_localizations.dart';
 import '../widgets/global_app_bar.dart';
 import '../data/database_helper.dart';
+import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/domain/goal_models.dart';
 
 /// A screen for defining daily health and nutrition targets.
 ///
@@ -21,6 +23,10 @@ class GoalsScreen extends StatefulWidget {
 class _GoalsScreenState extends State<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
+  final _recommendationService = AdaptiveNutritionRecommendationService();
+
+  BodyweightGoal _selectedGoal = BodyweightGoal.maintainWeight;
+  double _selectedTargetRateKgPerWeek = 0;
 
   final _caloriesController = TextEditingController();
   final _proteinController = TextEditingController();
@@ -58,6 +64,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final dbHelper = DatabaseHelper.instance;
     final prefs = await SharedPreferences
         .getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
+    final selectedGoal = await _recommendationService.getGoal();
+    final selectedTargetRate =
+        await _recommendationService.getTargetRateKgPerWeek();
 
     // Lade Ziele aus der DB
     final settings = await dbHelper.getAppSettings();
@@ -82,6 +91,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
       _sugarController.text = (prefs.getInt('targetSugar') ?? 50).toString();
       _fiberController.text = (prefs.getInt('targetFiber') ?? 30).toString();
       _saltController.text = (prefs.getInt('targetSalt') ?? 6).toString();
+      _selectedGoal = selectedGoal;
+      _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.coerceTargetRate(
+        goal: selectedGoal,
+        kgPerWeek: selectedTargetRate,
+      );
 
       _isLoading = false;
     });
@@ -95,6 +109,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
     // 1. Größe in Prefs (oder später DB Profile update)
     await prefs.setInt('userHeight', int.parse(_heightController.text));
+
+    await _recommendationService.saveGoalAndTargetRate(
+      goal: _selectedGoal,
+      targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+    );
 
     // 2. WICHTIG: Ziele in die Datenbank speichern
     await DatabaseHelper.instance.saveUserGoals(
@@ -172,6 +191,61 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     const SizedBox(height: DesignConstants.spacingXL),
                     _buildSectionTitle(context, l10n.profileDailyGoalsCL),
                     const SizedBox(height: DesignConstants.spacingM),
+                    _buildSectionTitle(
+                      context,
+                      'ADAPTIVE BODYWEIGHT TARGET',
+                    ),
+                    const SizedBox(height: DesignConstants.spacingM),
+                    DropdownButtonFormField<BodyweightGoal>(
+                      initialValue: _selectedGoal,
+                      decoration: const InputDecoration(
+                        labelText: 'Goal Direction',
+                      ),
+                      items: BodyweightGoal.values
+                          .map(
+                            (goal) => DropdownMenuItem<BodyweightGoal>(
+                              value: goal,
+                              child: Text(
+                                WeeklyTargetRateCatalog.goalLabel(goal),
+                              ),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (goal) {
+                        if (goal == null) return;
+                        setState(() {
+                          _selectedGoal = goal;
+                          _selectedTargetRateKgPerWeek =
+                              WeeklyTargetRateCatalog.defaultForGoal(goal)
+                                  .kgPerWeek;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: DesignConstants.spacingM),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: WeeklyTargetRateCatalog.optionsForGoal(
+                        _selectedGoal,
+                      ).map((option) {
+                        final selected =
+                            option.kgPerWeek == _selectedTargetRateKgPerWeek;
+                        return ChoiceChip(
+                          label: Text(
+                            WeeklyTargetRateCatalog.rateLabel(
+                              option.kgPerWeek,
+                            ),
+                          ),
+                          selected: selected,
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedTargetRateKgPerWeek = option.kgPerWeek;
+                            });
+                          },
+                        );
+                      }).toList(growable: false),
+                    ),
+                    const SizedBox(height: DesignConstants.spacingXL),
                     _buildSettingsField(
                       controller: _caloriesController,
                       label: l10n.calories,

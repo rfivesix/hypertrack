@@ -8,6 +8,9 @@ import '../generated/app_localizations.dart';
 import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/domain/goal_models.dart';
+import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 
 /// The initial setup flow for new users.
 ///
@@ -23,8 +26,17 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _totalPages = 6;
+  final int _totalPages = 7;
   bool _isRestoring = false;
+  bool _isGeneratingOnboardingRecommendation = false;
+
+  final _recommendationService = AdaptiveNutritionRecommendationService();
+  BodyweightGoal _selectedGoal = BodyweightGoal.maintainWeight;
+  double _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.defaultForGoal(
+    BodyweightGoal.maintainWeight,
+  ).kgPerWeek;
+  NutritionRecommendation? _onboardingRecommendation;
+  bool _hasAppliedOnboardingRecommendationToGoals = false;
 
   // --- CONTROLLER ---
   final TextEditingController _nameController = TextEditingController();
@@ -52,6 +64,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _loadAdaptiveGoalSettings();
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
@@ -69,6 +87,73 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // lib/screens/onboarding_screen.dart
 
+  Future<void> _loadAdaptiveGoalSettings() async {
+    final goal = await _recommendationService.getGoal();
+    final rate = await _recommendationService.getTargetRateKgPerWeek();
+    if (!mounted) return;
+    setState(() {
+      _selectedGoal = goal;
+      _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.coerceTargetRate(
+        goal: goal,
+        kgPerWeek: rate,
+      );
+    });
+  }
+
+  Future<void> _refreshOnboardingRecommendationPreview() async {
+    if (_isGeneratingOnboardingRecommendation) return;
+    setState(() => _isGeneratingOnboardingRecommendation = true);
+
+    final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
+    final height = int.tryParse(_heightController.text);
+    try {
+      final recommendation =
+          await _recommendationService.generateOnboardingRecommendation(
+        goal: _selectedGoal,
+        targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+        weightKg: weight,
+        heightCm: height,
+        birthday: _selectedDate,
+        gender: _selectedGender,
+        persistGenerated: false,
+        markAsApplied: false,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _onboardingRecommendation = recommendation;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingOnboardingRecommendation = false);
+      }
+    }
+  }
+
+  void _applyOnboardingRecommendationToGoals() {
+    final recommendation = _onboardingRecommendation;
+    if (recommendation == null) return;
+    setState(() {
+      _calController.text = recommendation.recommendedCalories.toString();
+      _protController.text = recommendation.recommendedProteinGrams.toString();
+      _carbController.text = recommendation.recommendedCarbsGrams.toString();
+      _fatController.text = recommendation.recommendedFatGrams.toString();
+      _hasAppliedOnboardingRecommendationToGoals = true;
+    });
+  }
+
+  bool _activeGoalInputsMatchRecommendation(
+      NutritionRecommendation recommendation) {
+    return (int.tryParse(_calController.text) ?? -1) ==
+            recommendation.recommendedCalories &&
+        (int.tryParse(_protController.text) ?? -1) ==
+            recommendation.recommendedProteinGrams &&
+        (int.tryParse(_carbController.text) ?? -1) ==
+            recommendation.recommendedCarbsGrams &&
+        (int.tryParse(_fatController.text) ?? -1) ==
+            recommendation.recommendedFatGrams;
+  }
+
   Future<void> _finishOnboarding() async {
     final db = DatabaseHelper.instance;
     final prefs = await SharedPreferences.getInstance();
@@ -79,6 +164,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final int fat = int.tryParse(_fatController.text) ?? 80;
     final int water = int.tryParse(_waterController.text) ?? 3000;
     final int? height = int.tryParse(_heightController.text);
+    final double? weight = double.tryParse(
+      _weightController.text.replaceAll(',', '.'),
+    );
+
+    final onboardingRecommendation = _onboardingRecommendation ??
+        await _recommendationService.generateOnboardingRecommendation(
+          goal: _selectedGoal,
+          targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+          weightKg: weight,
+          heightCm: height,
+          birthday: _selectedDate,
+          gender: _selectedGender,
+          persistGenerated: false,
+          markAsApplied: false,
+        );
 
     // 1. Profil speichern (DB)
     await db.saveUserProfile(
@@ -92,12 +192,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (height != null) await prefs.setInt('userHeight', height);
 
     // 2. Startgewicht (DB)
-    final double? weight = double.tryParse(
-      _weightController.text.replaceAll(',', '.'),
-    );
     if (weight != null) {
       await db.saveInitialWeight(weight);
     }
+
+    await _recommendationService.saveGoalAndTargetRate(
+      goal: _selectedGoal,
+      targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+    );
+
+    await _recommendationService.persistGeneratedRecommendation(
+      recommendation: onboardingRecommendation,
+      markAsApplied: _activeGoalInputsMatchRecommendation(
+        onboardingRecommendation,
+      ),
+    );
 
     // 3. Ziele speichern (DB - DAS IST JETZT DIE QUELLE FÜR ALLES)
     await db.saveUserGoals(
@@ -252,11 +361,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (i) => setState(() => _currentPage = i),
+                onPageChanged: (i) {
+                  setState(() => _currentPage = i);
+                  if (i == 3) {
+                    _refreshOnboardingRecommendationPreview();
+                  }
+                },
                 children: [
                   _buildWelcomePage(l10n),
                   _buildProfilePage(l10n), // <-- Hier ist das Update
                   _buildWeightPage(l10n),
+                  _buildAdaptiveGoalPage(l10n),
                   _buildCaloriesPage(l10n),
                   _buildMacrosPage(l10n),
                   _buildWaterPage(l10n),
@@ -413,6 +528,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               );
               if (picked != null) {
                 setState(() => _selectedDate = picked);
+                if (_currentPage >= 3) {
+                  _refreshOnboardingRecommendationPreview();
+                }
               }
             },
             child: InputDecorator(
@@ -451,6 +569,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     TextField(
                       controller: _heightController,
                       keyboardType: TextInputType.number,
+                      onChanged: (_) {
+                        setState(() {
+                          _hasAppliedOnboardingRecommendationToGoals = false;
+                        });
+                      },
                       decoration: InputDecoration(
                         labelText: "cm",
                         border: OutlineInputBorder(
@@ -496,7 +619,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: Text(l10n.genderDiverse),
                         ),
                       ],
-                      onChanged: (val) => setState(() => _selectedGender = val),
+                      onChanged: (val) => setState(() {
+                        _selectedGender = val;
+                        _hasAppliedOnboardingRecommendationToGoals = false;
+                      }),
                     ),
                   ],
                 ),
@@ -524,6 +650,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           TextField(
             controller: _weightController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) {
+              setState(() {
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+            },
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
@@ -533,6 +664,140 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               contentPadding: const EdgeInsets.symmetric(vertical: 24),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdaptiveGoalPage(AppLocalizations l10n) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          _StepTitle(
+            title: 'Weekly bodyweight target',
+            align: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choose a goal direction and pace. Hypertrack will use this to generate your adaptive weekly recommendation.',
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+          ),
+          const SizedBox(height: 20),
+          DropdownButtonFormField<BodyweightGoal>(
+            initialValue: _selectedGoal,
+            decoration: const InputDecoration(labelText: 'Goal direction'),
+            items: BodyweightGoal.values
+                .map(
+                  (goal) => DropdownMenuItem<BodyweightGoal>(
+                    value: goal,
+                    child: Text(WeeklyTargetRateCatalog.goalLabel(goal)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (goal) {
+              if (goal == null) return;
+              setState(() {
+                _selectedGoal = goal;
+                _selectedTargetRateKgPerWeek =
+                    WeeklyTargetRateCatalog.defaultForGoal(goal).kgPerWeek;
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              _refreshOnboardingRecommendationPreview();
+            },
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: WeeklyTargetRateCatalog.optionsForGoal(_selectedGoal)
+                .map((option) {
+              final isSelected =
+                  option.kgPerWeek == _selectedTargetRateKgPerWeek;
+              return ChoiceChip(
+                label: Text(
+                  WeeklyTargetRateCatalog.rateLabel(option.kgPerWeek),
+                ),
+                selected: isSelected,
+                onSelected: (_) {
+                  setState(() {
+                    _selectedTargetRateKgPerWeek = option.kgPerWeek;
+                    _hasAppliedOnboardingRecommendationToGoals = false;
+                  });
+                  _refreshOnboardingRecommendationPreview();
+                },
+              );
+            }).toList(growable: false),
+          ),
+          const SizedBox(height: 20),
+          FilledButton.tonal(
+            onPressed: _isGeneratingOnboardingRecommendation
+                ? null
+                : _refreshOnboardingRecommendationPreview,
+            child: Text(
+              _isGeneratingOnboardingRecommendation
+                  ? 'Generating...'
+                  : 'Refresh recommendation',
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildOnboardingRecommendationSummary(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOnboardingRecommendationSummary() {
+    final recommendation = _onboardingRecommendation;
+    if (recommendation == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
+        child: const Text(
+          'Add your profile and weight details, then refresh to see your initial recommendation.',
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Initial adaptive recommendation',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text('${recommendation.recommendedCalories} kcal'),
+          Text('Protein: ${recommendation.recommendedProteinGrams} g'),
+          Text('Carbs: ${recommendation.recommendedCarbsGrams} g'),
+          Text('Fat: ${recommendation.recommendedFatGrams} g'),
+          const SizedBox(height: 8),
+          Text(
+            'Confidence: ${recommendation.confidence.name}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: _applyOnboardingRecommendationToGoals,
+            child: Text(
+              _hasAppliedOnboardingRecommendationToGoals
+                  ? 'Applied to goals'
+                  : 'Apply to calorie and macro goals',
             ),
           ),
         ],
