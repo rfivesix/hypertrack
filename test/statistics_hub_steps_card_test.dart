@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/generated/app_localizations.dart';
 import 'package:hypertrack/features/statistics/domain/body_nutrition_analytics_models.dart';
@@ -9,8 +10,14 @@ import 'package:hypertrack/features/statistics/domain/statistics_data_quality_po
 import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
 import 'package:hypertrack/features/steps/domain/steps_models.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
+import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
+import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
+import 'package:hypertrack/features/sleep/data/sleep_hub_summary_repository.dart';
 import 'package:hypertrack/screens/statistics_hub_screen.dart';
 import 'package:hypertrack/services/health/steps_sync_service.dart';
+import 'package:hypertrack/services/workout_session_manager.dart';
+import 'package:hypertrack/widgets/analytics_section_header.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeStepsRepository implements StepsAggregationRepository {
@@ -83,18 +90,68 @@ class _FakeStepsRepository implements StepsAggregationRepository {
       );
 }
 
+class _FakeSleepSummaryRepository extends SleepHubSummaryRepository {
+  _FakeSleepSummaryRepository(this.summary);
+
+  final SleepHubSummary summary;
+
+  @override
+  Future<SleepHubSummary> fetchSummary({
+    required DateTime endDate,
+    required int daysBack,
+  }) async {
+    return summary;
+  }
+
+  @override
+  Future<void> dispose() async {}
+}
+
+const _sleepConnectChannel =
+    MethodChannel('hypertrack.health/sleep_health_connect');
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{
       StepsSyncService.trackingEnabledKey: true,
+      SleepSyncService.trackingEnabledKey: true,
     });
     StepsSyncService.trackingEnabledListenable.value = null;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_sleepConnectChannel, (call) async {
+      if (call.method == 'getAvailability') return 'unavailable';
+      if (call.method == 'checkPermissions') {
+        return <String, dynamic>{
+          'sleepGranted': false,
+          'heartRateGranted': false,
+        };
+      }
+      if (call.method == 'requestPermissions') {
+        return <String, dynamic>{
+          'sleepGranted': false,
+          'heartRateGranted': false,
+        };
+      }
+      if (call.method == 'readSleepAndHeartRate') {
+        return <String, dynamic>{
+          'sessions': const <dynamic>[],
+          'stageSegments': const <dynamic>[],
+          'heartRateSamples': const <dynamic>[],
+        };
+      }
+      return null;
+    });
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_sleepConnectChannel, null);
   });
 
   Future<void> pumpLoaded(WidgetTester tester) async {
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 80; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
   }
@@ -152,24 +209,66 @@ void main() {
     );
   }
 
+  Widget wrapWithSessionManager(Widget child) {
+    return ChangeNotifierProvider<WorkoutSessionManager>.value(
+      value: WorkoutSessionManager(),
+      child: child,
+    );
+  }
+
+  Finder stepsSectionHeader() {
+    return find.descendant(
+      of: find.byType(AnalyticsSectionHeader),
+      matching: find.text('Steps'),
+    );
+  }
+
+  StatisticsHubScreen buildHub({
+    required StepsAggregationRepository stepsRepository,
+  }) {
+    return StatisticsHubScreen(
+      stepsRepository: stepsRepository,
+      sleepSummaryRepository: _FakeSleepSummaryRepository(
+        const SleepHubSummary(
+          averageScore: 79,
+          averageDuration: Duration(hours: 7, minutes: 15),
+          averageBedtimeMinutes: 23 * 60,
+          averageInterruptions: 1.0,
+          averageWakeDuration: Duration(minutes: 12),
+          nightsCount: 5,
+        ),
+      ),
+      fetchHubAnalytics: fakeFetch,
+      importSleepIfDue: ({
+        int lookbackDays = 30,
+        Duration minInterval = const Duration(hours: 6),
+        bool force = false,
+      }) async {
+        return null;
+      },
+      isSleepTrackingEnabled: () async => true,
+      targetStepsLoader: () async => StepsSyncService.defaultStepsGoal,
+      stepsProviderNameLoader: () async => 'Local',
+    );
+  }
+
   testWidgets('statistics hub range switching updates steps card subtitle', (
     WidgetTester tester,
   ) async {
     await StepsSyncService().setTrackingEnabled(true);
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: StatisticsHubScreen(
-          stepsRepository: _FakeStepsRepository(),
-          fetchHubAnalytics: fakeFetch,
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(stepsRepository: _FakeStepsRepository()),
         ),
       ),
     );
     await pumpLoaded(tester);
 
-    expect(find.text('Steps'), findsOneWidget);
+    expect(stepsSectionHeader(), findsOneWidget);
     final initialChips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
     expect(initialChips.elementAt(1).selected, isTrue);
 
@@ -177,7 +276,7 @@ void main() {
     await pumpLoaded(tester);
     final changedChips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
     expect(changedChips.first.selected, isTrue);
-    expect(find.text('Steps'), findsOneWidget);
+    expect(stepsSectionHeader(), findsOneWidget);
   });
 
   testWidgets('statistics hub hides steps card when tracking is disabled', (
@@ -185,19 +284,20 @@ void main() {
   ) async {
     await StepsSyncService().setTrackingEnabled(false);
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: StatisticsHubScreen(
-          stepsRepository: _FakeStepsRepository(trackingEnabled: false),
-          fetchHubAnalytics: fakeFetch,
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(
+            stepsRepository: _FakeStepsRepository(trackingEnabled: false),
+          ),
         ),
       ),
     );
     await pumpLoaded(tester);
 
-    expect(find.text('Steps'), findsNothing);
+    expect(stepsSectionHeader(), findsNothing);
   });
 
   testWidgets('statistics hub updates steps visibility when setting toggles', (
@@ -205,49 +305,54 @@ void main() {
   ) async {
     await StepsSyncService().setTrackingEnabled(true);
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: StatisticsHubScreen(
-          stepsRepository: _FakeStepsRepository(trackingEnabled: true),
-          fetchHubAnalytics: fakeFetch,
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(
+            stepsRepository: _FakeStepsRepository(trackingEnabled: true),
+          ),
         ),
       ),
     );
     await pumpLoaded(tester);
-    expect(find.text('Steps'), findsOneWidget);
+    expect(stepsSectionHeader(), findsOneWidget);
 
     final stepsService = StepsSyncService();
     await stepsService.setTrackingEnabled(false);
     await pumpLoaded(tester);
-    expect(find.text('Steps'), findsNothing);
+    expect(stepsSectionHeader(), findsNothing);
 
     await stepsService.setTrackingEnabled(true);
     await pumpLoaded(tester);
-    expect(find.text('Steps'), findsOneWidget);
+    expect(stepsSectionHeader(), findsOneWidget);
   });
 
   testWidgets('statistics hub sleep card opens sleep day screen', (
     WidgetTester tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 2200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await StepsSyncService().setTrackingEnabled(true);
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: StatisticsHubScreen(
-          stepsRepository: _FakeStepsRepository(),
-          fetchHubAnalytics: fakeFetch,
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          onGenerateRoute: SleepNavigation.onGenerateRoute,
+          home: buildHub(stepsRepository: _FakeStepsRepository()),
         ),
       ),
     );
     await pumpLoaded(tester);
 
-    expect(find.text('Sleep'), findsOneWidget);
-    await tester.tap(find.text('Sleep'));
-    await tester.pumpAndSettle();
+    final sleepScoreLabel = find.text('Sleep score');
+    await tester.tap(sleepScoreLabel);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byType(SleepDayOverviewPage), findsOneWidget);
   });

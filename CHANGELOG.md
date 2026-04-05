@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.8] - 2026-04-05
+
+This release is a maintenance and stability update that prepares Hypertrack for the upcoming 0.8 / TDEE cycle.
+
+### Fixed
+- Fixed backup/restore integrity for meal-related data
+  - meal templates and meal items are now included in backups
+  - meal/nutrition restore behavior is more complete and reliable
+- Improved nutrition backup robustness when food entries rely on product references / barcode fallback
+- Improved goals/settings restore behavior
+  - changed targets are restored correctly
+  - fallback restore behavior no longer depends on profile payload always being present
+- Improved supplement restore integrity
+  - tracked-state and supplement history restore behavior are more reliable
+- Improved workout restore fidelity
+  - preserves more set metadata and ordering details during restore
+
+### Improved
+- Updated project dependencies to current resolvable versions
+- Resolved API breakages caused by dependency upgrades
+  - notifications
+  - file picker
+  - CSV handling
+- Stabilized the automated test suite
+  - fixed outdated expectations
+  - reduced brittle widget-test failures
+  - improved deterministic test behavior
+- Expanded automated test coverage in important low-level areas
+  - backup/restore
+  - goals and target persistence
+  - weight/history foundations
+  - statistics data
+  - storage/services
+
+### Internal / maintenance
+- Better regression protection for backup, restore, and persistence behavior
+- Better groundwork for future TDEE development in 0.8
+- General cleanup and hardening across data/services/test infrastructure
+
+### Notes
+- This is primarily a maintenance/stability release
+- The focus of this version is correctness, persistence integrity, and preparation for the next major feature cycle
+
 ## [0.7.7] - 2026-04-04
 
 This release focuses on AI provider expansion, AI settings cleanup, and a small Diary improvement.
@@ -59,6 +102,7 @@ This release focuses on AI provider expansion, AI settings cleanup, and a small 
   - Anthropic
   - Mistral
   - xAI
+
 ## [0.7.6] - 2026-04-04
 
 This release focuses on a small set of quality-of-life improvements across AI meal capture, measurements, workout logging, iOS navigation behavior, and rest timer alerts.
@@ -93,6 +137,7 @@ This release focuses on a small set of quality-of-life improvements across AI me
 - Fixed workout field initialization so unset values are not rendered as actual entered values
 - Fixed a settings/navigation path that interfered with native iOS back-swipe behavior
 - Fixed the Android/background timer completion path so users are still alerted when the app is not in the foreground
+
 ## [0.7.5] - 2026-04-04
 ### added
 - [#200](https://github.com/rfivesix/hypertrack/issues/200) added a consistend app color. Changed the iOS App icon (The white mode icon got the same color as the dark mode icon) for consistency

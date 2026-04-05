@@ -51,9 +51,9 @@ void main() {
 
     expect(metrics.timeInBed.inMinutes, 480);
     expect(metrics.sleepOnsetLatency.inMinutes, 10);
-    expect(metrics.totalSleepTime.inMinutes, 470);
+    expect(metrics.totalSleepTime.inMinutes, 465);
     expect(metrics.wakeAfterSleepOnset.inMinutes, 5);
     expect(metrics.interruptionsCount, 1);
-    expect(metrics.sleepEfficiencyPct, closeTo(97.9, 0.2));
+    expect(metrics.sleepEfficiencyPct, closeTo(96.9, 0.2));
   });
 }

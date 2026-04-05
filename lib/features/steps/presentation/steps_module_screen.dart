@@ -35,11 +35,15 @@ class StepsModuleScreen extends StatefulWidget {
     this.repository,
     this.initialScope = StepsScope.day,
     this.initialDate,
+    this.targetStepsLoader,
+    this.stepsProviderNameLoader,
   });
 
   final StepsAggregationRepository? repository;
   final StepsScope initialScope;
   final DateTime? initialDate;
+  final Future<int> Function()? targetStepsLoader;
+  final Future<String> Function()? stepsProviderNameLoader;
 
   @override
   State<StepsModuleScreen> createState() => _StepsModuleScreenState();
@@ -70,9 +74,10 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   Future<void> _loadScopeData() async {
     setState(() => _isLoading = true);
     final anchor = _anchorDate;
-    final targetStepsFuture =
+    final targetStepsFuture = widget.targetStepsLoader?.call() ??
         DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
-    final providerFuture = StepsSyncService().getProviderFilter();
+    final providerNameFuture =
+        widget.stepsProviderNameLoader?.call() ?? _loadProviderName();
     switch (_scope) {
       case StepsScope.day:
         _dayData = await _repository.getDayAggregation(anchor);
@@ -86,12 +91,16 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
     }
     _lastUpdatedAtUtc = await _repository.getLastUpdatedAt();
     _targetSteps = await targetStepsFuture;
-    final providerFilter = await providerFuture;
-    _stepsProviderName = _providerDisplayName(
-      StepsSyncService.providerFilterToRaw(providerFilter),
-    );
+    _stepsProviderName = await providerNameFuture;
     if (!mounted) return;
     setState(() => _isLoading = false);
+  }
+
+  Future<String> _loadProviderName() async {
+    final providerFilter = await StepsSyncService().getProviderFilter();
+    return _providerDisplayName(
+      StepsSyncService.providerFilterToRaw(providerFilter),
+    );
   }
 
   void _onScopeChanged(StepsScope nextScope) {

@@ -19,7 +19,7 @@ class ImportManager {
   Future<int> importHevyCsv() async {
     try {
       // 1. Datei auswählen
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
@@ -31,10 +31,9 @@ class ImportManager {
       final content = await file.readAsString();
 
       // 2. CSV parsen
-      final List<List<dynamic>> rows = const CsvToListConverter(
-        shouldParseNumbers: false,
-        eol: '\n',
-      ).convert(content);
+      final List<List<dynamic>> rows = Csv(
+        dynamicTyping: false,
+      ).decode(content);
 
       if (rows.length < 2) return 0; // Nur Header oder leer
 

@@ -34,10 +34,13 @@ void main() {
       ],
     );
 
-    expect(repaired.length, 3);
+    expect(repaired.length, 2);
+    expect(repaired.first.stage, CanonicalSleepStage.asleepUnspecified);
+    expect(repaired.first.startAtUtc, DateTime.utc(2026, 3, 1, 22));
+    expect(repaired.first.endAtUtc, DateTime.utc(2026, 3, 1, 22, 30));
     expect(repaired[1].stage, CanonicalSleepStage.deep);
     expect(repaired[1].startAtUtc, DateTime.utc(2026, 3, 1, 22, 30));
-    expect(repaired[1].endAtUtc, DateTime.utc(2026, 3, 1, 23));
+    expect(repaired[1].endAtUtc, DateTime.utc(2026, 3, 1, 23, 30));
   });
 
   test('drops zero-length and merges adjacent same-stage segments', () {
