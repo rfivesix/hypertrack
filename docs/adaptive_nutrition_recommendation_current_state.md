@@ -448,7 +448,7 @@
   - goal direction, target rate, prior activity, extra cardio
   - latest generated/applied recommendation JSON snapshots
   - last generated due week key
-- DB-side goal mutations caused by apply are also included through DB backup payload (`appSettings`, `dailyGoalsHistory`).
+- Apply-related goal changes are persisted in the normal DB goal/settings path and are expected to be covered by DB backup payloads, subject to the current backup_manager.dart table export set.
 
 ### Test-confirmed coverage
 - `backup_restore_integrity_test.dart` explicitly verifies restore for:
