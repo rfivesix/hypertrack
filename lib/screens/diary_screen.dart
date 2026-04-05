@@ -514,8 +514,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Future<void> _addFoodToMeal(String mealType) async {
-    final FoodItem? selectedFoodItem =
-        await Navigator.of(context).push<FoodItem>(
+    final addFoodResult = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder: (context) => AddFoodScreen(
           initialDate: _selectedDate, // <--- ÜBERGABE
@@ -524,6 +523,15 @@ class DiaryScreenState extends State<DiaryScreen> {
       ),
     );
 
+    if (addFoodResult == true) {
+      if (mounted) {
+        loadDataForDate(_selectedDate);
+      }
+      return;
+    }
+
+    final selectedFoodItem =
+        addFoodResult is FoodItem ? addFoodResult : null;
     if (selectedFoodItem == null || !mounted) return;
 
     // FIX: Datum an das Hilfs-Menü übergeben

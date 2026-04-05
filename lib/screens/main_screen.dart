@@ -392,8 +392,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     // FIX: Datum holen
     final targetDate = _currentActiveDate;
 
-    final FoodItem? selectedFoodItem =
-        await Navigator.of(context).push<FoodItem>(
+    final addFoodResult = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder: (context) => AddFoodScreen(
           initialDate: targetDate, // <--- ÜBERGABE
@@ -402,6 +401,13 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ),
     );
 
+    if (addFoodResult == true) {
+      _refreshHomeScreen();
+      return;
+    }
+
+    final selectedFoodItem =
+        addFoodResult is FoodItem ? addFoodResult : null;
     if (selectedFoodItem == null || !mounted) return;
 
     // FIX: Datum übergeben (Signatur unten anpassen!)
