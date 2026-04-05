@@ -197,7 +197,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     ),
                     _buildSettingsField(
                       controller: _stepsController,
-                      label: 'Steps', // TODO(alpha): localize steps label
+                      label: l10n.steps,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
                     _buildSectionTitle(context, l10n.detailedNutrientGoalsCL),
