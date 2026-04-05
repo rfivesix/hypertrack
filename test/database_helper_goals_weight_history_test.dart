@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/data/database_helper.dart';
 import 'package:hypertrack/data/drift_database.dart';
-import 'package:hypertrack/models/measurement.dart';
+import 'package:hypertrack/models/measurement.dart' as model;
 import 'package:hypertrack/models/measurement_session.dart';
 
 void main() {
@@ -144,13 +144,13 @@ void main() {
         MeasurementSession(
           timestamp: olderTs,
           measurements: [
-            Measurement(
+            model.Measurement(
               sessionId: 0,
               type: 'weight',
               value: 79.0,
               unit: 'kg',
             ),
-            Measurement(
+            model.Measurement(
               sessionId: 0,
               type: 'body_fat',
               value: 18.5,
@@ -163,7 +163,7 @@ void main() {
         MeasurementSession(
           timestamp: newerTs,
           measurements: [
-            Measurement(
+            model.Measurement(
               sessionId: 0,
               type: 'weight',
               value: 78.2,
@@ -189,7 +189,8 @@ void main() {
       );
     });
 
-    test('getChartDataForTypeAndRange returns ordered, inclusive points', () async {
+    test('getChartDataForTypeAndRange returns ordered, inclusive points',
+        () async {
       final day1 = DateTime(2026, 4, 1, 7, 0);
       final day2 = DateTime(2026, 4, 2, 7, 0);
       final day3 = DateTime(2026, 4, 3, 7, 0);
@@ -199,7 +200,7 @@ void main() {
         MeasurementSession(
           timestamp: day1,
           measurements: [
-            Measurement(
+            model.Measurement(
               sessionId: 0,
               type: 'weight',
               value: 79.4,
@@ -212,7 +213,7 @@ void main() {
         MeasurementSession(
           timestamp: day2,
           measurements: [
-            Measurement(
+            model.Measurement(
               sessionId: 0,
               type: 'weight',
               value: 79.0,
@@ -225,7 +226,7 @@ void main() {
         MeasurementSession(
           timestamp: day3,
           measurements: [
-            Measurement(
+            model.Measurement(
               sessionId: 0,
               type: 'weight',
               value: 78.7,
@@ -238,7 +239,7 @@ void main() {
         MeasurementSession(
           timestamp: day4,
           measurements: [
-            Measurement(
+            model.Measurement(
               sessionId: 0,
               type: 'weight',
               value: 78.4,

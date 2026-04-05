@@ -20,11 +20,29 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   static final WorkoutSessionManager _instance =
       WorkoutSessionManager._internal();
   AppLifecycleState _appLifecycleState = AppLifecycleState.resumed;
+  final WorkoutDatabaseHelper _workoutDb;
+  final bool _registerLifecycleObserver;
 
   /// Returns the singleton instance of [WorkoutSessionManager].
   factory WorkoutSessionManager() => _instance;
-  WorkoutSessionManager._internal() {
-    WidgetsBinding.instance.addObserver(this);
+  WorkoutSessionManager._internal({
+    WorkoutDatabaseHelper? workoutDb,
+    bool registerLifecycleObserver = true,
+  })  : _workoutDb = workoutDb ?? WorkoutDatabaseHelper.instance,
+        _registerLifecycleObserver = registerLifecycleObserver {
+    if (_registerLifecycleObserver) {
+      WidgetsBinding.instance.addObserver(this);
+    }
+  }
+
+  @visibleForTesting
+  factory WorkoutSessionManager.forTesting({
+    required WorkoutDatabaseHelper workoutDb,
+  }) {
+    return WorkoutSessionManager._internal(
+      workoutDb: workoutDb,
+      registerLifecycleObserver: false,
+    );
   }
 
   WorkoutLog? _workoutLog;
@@ -126,8 +144,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   ///
   /// This should be called during application initialization to resume an interrupted workout.
   Future<void> tryRestoreSession() async {
-    final db = WorkoutDatabaseHelper.instance;
-    final ongoingWorkout = await db.getOngoingWorkout();
+    final ongoingWorkout = await _workoutDb.getOngoingWorkout();
 
     if (ongoingWorkout != null) {
       // ignore: avoid_print
@@ -139,7 +156,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _createInitialSetLogs() async {
-    final db = WorkoutDatabaseHelper.instance;
     _totalVolume = 0;
     _totalSets = 0;
 
@@ -158,7 +174,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
           rir: null,
         );
 
-        final id = await db.insertSetLog(newSetLog);
+        final id = await _workoutDb.insertSetLog(newSetLog);
 
         _setLogs[template.id!] = newSetLog.copyWith(id: id);
         _totalSets++;
@@ -168,10 +184,9 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> restoreWorkoutSession(WorkoutLog log) async {
-    final db = WorkoutDatabaseHelper.instance;
     _workoutLog = log;
 
-    final savedSets = await db.getSetLogsForWorkout(log.id!);
+    final savedSets = await _workoutDb.getSetLogsForWorkout(log.id!);
 
     _setLogs.clear();
     _exercises.clear();
@@ -181,7 +196,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
 
     if (savedSets.isEmpty) {
       if (log.routineName != null) {
-        final routine = await db.getRoutineByName(log.routineName!);
+        final routine = await _workoutDb.getRoutineByName(log.routineName!);
         if (routine != null) {
           _exercises = routine.exercises;
           for (var re in _exercises) {
@@ -224,7 +239,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       if (block.isEmpty) continue;
 
       final exName = block.first.exerciseName;
-      final exercise = await db.getExerciseByName(exName);
+      final exercise = await _workoutDb.getExerciseByName(exName);
       if (exercise == null) continue; // Should not happen
 
       final syntheticReId = DateTime.now().millisecondsSinceEpoch + i;
@@ -294,7 +309,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     if (!_setLogs.containsKey(templateId)) return;
 
     final oldLog = _setLogs[templateId]!;
-    final db = WorkoutDatabaseHelper.instance;
 
     // Fallback logic for when a set is completed but empty
     bool newlyCompleted = isCompleted == true && oldLog.isCompleted != true;
@@ -363,7 +377,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     );
 
     _setLogs[templateId] = newLog;
-    await db.insertSetLog(newLog); // Update in DB
+    await _workoutDb.insertSetLog(newLog); // Update in DB
 
     // Timer Logik (unverändert)
     if (isCompleted == true && oldLog.isCompleted != true) {
@@ -386,8 +400,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   ///
   /// Creates a new [SetTemplate] and [SetLog], copying the weight/reps from the last set if available.
   Future<void> addSetToExercise(int routineExerciseId) async {
-    final db = WorkoutDatabaseHelper.instance;
-
     final reIndex = _exercises.indexWhere((e) => e.id == routineExerciseId);
     if (reIndex == -1) return;
     final re = _exercises[reIndex];
@@ -428,7 +440,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       rir: null,
     );
 
-    final dbId = await db.insertSetLog(newSetLog);
+    final dbId = await _workoutDb.insertSetLog(newSetLog);
     _setLogs[tempTemplateId] = newSetLog.copyWith(id: dbId);
     _totalSets++;
 
@@ -440,10 +452,9 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     if (!_setLogs.containsKey(templateId)) return;
 
     final log = _setLogs[templateId]!;
-    final db = WorkoutDatabaseHelper.instance;
 
     if (log.id != null) {
-      await db.deleteSetLogs([log.id!]);
+      await _workoutDb.deleteSetLogs([log.id!]);
     }
 
     _setLogs.remove(templateId);
@@ -504,7 +515,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     _exercises.add(re);
     pauseTimes[tempReId] = 90;
 
-    final db = WorkoutDatabaseHelper.instance;
     for (var t in templates) {
       final newSetLog = SetLog(
         workoutLogId: _workoutLog!.id!,
@@ -517,7 +527,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         // Optional: logOrder hier schon setzen, aber Manager macht das nicht explizit bisher
         log_order: _setLogs.length,
       );
-      final dbId = await db.insertSetLog(newSetLog);
+      final dbId = await _workoutDb.insertSetLog(newSetLog);
       _setLogs[t.id!] = newSetLog.copyWith(id: dbId);
       _totalSets++;
     }
@@ -531,7 +541,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     if (reIndex == -1) return;
 
     final re = _exercises[reIndex];
-    final db = WorkoutDatabaseHelper.instance;
 
     final idsToDelete = <int>[];
     for (var t in re.setTemplates) {
@@ -543,7 +552,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         _setLogs.remove(t.id);
       }
     }
-    await db.deleteSetLogs(idsToDelete);
+    await _workoutDb.deleteSetLogs(idsToDelete);
 
     _exercises.removeAt(reIndex);
     pauseTimes.remove(routineExerciseId);
@@ -569,7 +578,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   void _updateLogOrdersInDatabase() async {
     int globalOrderCounter = 0;
     final List<SetLog> setsToUpdate = [];
-    final db = WorkoutDatabaseHelper.instance;
 
     for (final routineExercise in _exercises) {
       for (final template in routineExercise.setTemplates) {
@@ -584,7 +592,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     if (setsToUpdate.isNotEmpty) {
-      db.updateSetLogs(setsToUpdate);
+      _workoutDb.updateSetLogs(setsToUpdate);
     }
   }
 
@@ -595,11 +603,10 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   /// Updates the rest duration for a specific exercise and its pending sets.
   void updatePauseTime(int routineExerciseId, int seconds) {
     pauseTimes[routineExerciseId] = seconds;
-    WorkoutDatabaseHelper.instance.updatePauseTime(routineExerciseId, seconds);
+    _workoutDb.updatePauseTime(routineExerciseId, seconds);
 
     // Lokale SetLogs updaten
     final exercise = _exercises.firstWhere((e) => e.id == routineExerciseId);
-    final db = WorkoutDatabaseHelper.instance;
 
     for (var t in exercise.setTemplates) {
       if (_setLogs.containsKey(t.id)) {
@@ -607,7 +614,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         if (log.isCompleted != true) {
           final updatedLog = log.copyWith(restTimeSeconds: seconds);
           _setLogs[t.id!] = updatedLog;
-          db.insertSetLog(updatedLog);
+          _workoutDb.insertSetLog(updatedLog);
         }
       }
     }
@@ -690,7 +697,6 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     await LocalNotificationService.instance.cancelRestTimerNotification();
 
     if (_workoutLog != null) {
-      final db = WorkoutDatabaseHelper.instance;
       final logId = _workoutLog!.id!;
 
       // 1. Unvollständige Sets identifizieren und löschen
@@ -701,7 +707,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
           .toList();
 
       if (incompleteSetIds.isNotEmpty) {
-        await db.deleteSetLogs(incompleteSetIds);
+        await _workoutDb.deleteSetLogs(incompleteSetIds);
       }
 
       // 2. Reihenfolge aktualisieren (Reordering Fix)
@@ -723,11 +729,11 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
 
       // Batch-Update der Reihenfolge in der DB
       if (setsToUpdate.isNotEmpty) {
-        await db.updateSetLogs(setsToUpdate);
+        await _workoutDb.updateSetLogs(setsToUpdate);
       }
 
       // 3. Workout abschließen
-      await db.finishWorkout(logId, title: title, notes: notes);
+      await _workoutDb.finishWorkout(logId, title: title, notes: notes);
 
       // Cleanup
       _workoutLog = null;
@@ -737,5 +743,16 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
 
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _restTimer?.cancel();
+    _restDoneBannerTimer?.cancel();
+    _workoutDurationTimer?.cancel();
+    if (_registerLifecycleObserver) {
+      WidgetsBinding.instance.removeObserver(this);
+    }
+    super.dispose();
   }
 }

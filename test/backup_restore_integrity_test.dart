@@ -266,7 +266,8 @@ void main() {
       expect(set.rir, 1);
     });
 
-    test('backup payload contains critical persistence domains and changed values',
+    test(
+        'backup payload contains critical persistence domains and changed values',
         () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('targetSugar', 42);
@@ -327,7 +328,8 @@ void main() {
       expect(appSettings['targetWater'], 2900);
       expect(appSettings['targetSteps'], 9200);
 
-      final userPreferences = payload['userPreferences'] as Map<String, dynamic>;
+      final userPreferences =
+          payload['userPreferences'] as Map<String, dynamic>;
       expect(userPreferences['targetSugar'], 42);
       expect(userPreferences['targetFiber'], 28);
       expect(userPreferences['targetSalt'], 6);

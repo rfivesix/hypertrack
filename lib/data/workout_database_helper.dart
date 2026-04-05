@@ -65,11 +65,11 @@ class WorkoutDatabaseHelper {
       if (decoded is List) {
         return decoded.map((e) => e.toString()).toList();
       }
-      // Fallback for legacy CSV-style muscle lists.
-      if (jsonStr.contains(',')) {
-        return jsonStr.split(',').map((e) => e.trim()).toList();
-      }
     } catch (_) {}
+    // Fallback for legacy CSV-style muscle lists.
+    if (jsonStr.contains(',')) {
+      return jsonStr.split(',').map((e) => e.trim()).toList();
+    }
     return [];
   }
 

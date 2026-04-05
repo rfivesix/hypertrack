@@ -74,9 +74,8 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   Future<void> _loadScopeData() async {
     setState(() => _isLoading = true);
     final anchor = _anchorDate;
-    final targetStepsFuture =
-        widget.targetStepsLoader?.call() ??
-            DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
+    final targetStepsFuture = widget.targetStepsLoader?.call() ??
+        DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
     final providerNameFuture =
         widget.stepsProviderNameLoader?.call() ?? _loadProviderName();
     switch (_scope) {

@@ -191,12 +191,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       daysBack: daysBack,
     );
     final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
-    final sleepTrackingFuture =
-        widget.isSleepTrackingEnabled?.call() ??
-            _sleepSyncService.isTrackingEnabled();
-    final targetStepsFuture =
-        widget.targetStepsLoader?.call() ??
-            DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
+    final sleepTrackingFuture = widget.isSleepTrackingEnabled?.call() ??
+        _sleepSyncService.isTrackingEnabled();
+    final targetStepsFuture = widget.targetStepsLoader?.call() ??
+        DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
     final providerNameFuture =
         widget.stepsProviderNameLoader?.call() ?? _loadStepsProviderName();
 

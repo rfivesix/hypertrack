@@ -56,6 +56,14 @@ class AiModelOption {
   });
 }
 
+typedef DynamicModelIdsLoader = Future<Set<String>?> Function(
+  AiProvider provider,
+);
+typedef AiHttpGet = Future<http.Response> Function(
+  Uri url, {
+  Map<String, String>? headers,
+});
+
 /// A single food component suggested by the AI.
 class AiSuggestedItem {
   /// Display name of the detected food component.
@@ -145,15 +153,44 @@ class AiUnsupportedFeatureException extends AiServiceException {
 /// Uses a BYOK architecture with per-provider API keys stored in native
 /// encrypted storage (Keychain / Keystore) via [FlutterSecureStorage].
 class AiService {
-  AiService._();
+  AiService._({
+    FlutterSecureStorage? secureStorage,
+    DynamicModelIdsLoader? dynamicModelIdsLoader,
+    AiHttpGet? httpGet,
+  })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+        _dynamicModelIdsLoader = dynamicModelIdsLoader,
+        _httpGet = httpGet ?? http.get;
   static final AiService instance = AiService._();
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  @visibleForTesting
+  factory AiService.forTesting({
+    FlutterSecureStorage? secureStorage,
+    DynamicModelIdsLoader? dynamicModelIdsLoader,
+    AiHttpGet? httpGet,
+  }) {
+    return AiService._(
+      secureStorage: secureStorage,
+      dynamicModelIdsLoader: dynamicModelIdsLoader,
+      httpGet: httpGet,
+    );
+  }
+
+  final FlutterSecureStorage _secureStorage;
+  final DynamicModelIdsLoader? _dynamicModelIdsLoader;
+  final AiHttpGet _httpGet;
 
   // Secure storage keys per provider
   static const _keyPrefix = 'ai_api_key_';
   static const _providerKey = 'ai_selected_provider';
   static const _modelPrefix = 'ai_selected_model_';
+
+  static const selectedProviderStorageKey = _providerKey;
+
+  static String selectedModelStorageKeyFor(AiProvider provider) =>
+      '$_modelPrefix${provider.name}';
+
+  static String apiKeyStorageKeyFor(AiProvider provider) =>
+      '$_keyPrefix${provider.name}';
 
   static const Map<AiProvider, AiProviderMetadata> _providerRegistry = {
     AiProvider.openai: AiProviderMetadata(
@@ -295,17 +332,17 @@ Example response:
 
   /// Reads the stored API key for the given [provider].
   Future<String?> getApiKey(AiProvider provider) async {
-    return _secureStorage.read(key: '$_keyPrefix${provider.name}');
+    return _secureStorage.read(key: apiKeyStorageKeyFor(provider));
   }
 
   /// Stores the API key for the given [provider] securely.
   Future<void> setApiKey(AiProvider provider, String key) async {
-    await _secureStorage.write(key: '$_keyPrefix${provider.name}', value: key);
+    await _secureStorage.write(key: apiKeyStorageKeyFor(provider), value: key);
   }
 
   /// Deletes the stored API key for the given [provider].
   Future<void> deleteApiKey(AiProvider provider) async {
-    await _secureStorage.delete(key: '$_keyPrefix${provider.name}');
+    await _secureStorage.delete(key: apiKeyStorageKeyFor(provider));
   }
 
   List<AiProviderMetadata> getSupportedProviders() =>
@@ -330,8 +367,9 @@ Example response:
   }
 
   Future<String> getSelectedModel(AiProvider provider) async {
-    final selected =
-        await _secureStorage.read(key: '$_modelPrefix${provider.name}');
+    final selected = await _secureStorage.read(
+      key: selectedModelStorageKeyFor(provider),
+    );
     final meta = getProviderMetadata(provider);
     if (selected == null || selected.isEmpty) return meta.defaultModel;
     return selected;
@@ -344,7 +382,7 @@ Example response:
       _ => model,
     };
     await _secureStorage.write(
-      key: '$_modelPrefix${provider.name}',
+      key: selectedModelStorageKeyFor(provider),
       value: resolvedModel,
     );
   }
@@ -1163,6 +1201,9 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   }
 
   Future<Set<String>?> _loadDynamicModelIds(AiProvider provider) async {
+    if (_dynamicModelIdsLoader != null) {
+      return _dynamicModelIdsLoader!(provider);
+    }
     final meta = getProviderMetadata(provider);
     if (!meta.supportsDynamicModelLoading) return null;
     final apiKey = await getApiKey(provider);
@@ -1184,7 +1225,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
   Future<Set<String>?> _loadOpenAiModels(String apiKey) async {
     try {
-      final response = await http.get(
+      final response = await _httpGet(
         Uri.parse('https://api.openai.com/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
       ).timeout(const Duration(seconds: 30));
@@ -1220,13 +1261,11 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
   Future<Set<String>?> _loadGeminiModels(String apiKey) async {
     try {
-      final response = await http
-          .get(
-            Uri.parse(
-              'https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey',
-            ),
-          )
-          .timeout(const Duration(seconds: 30));
+      final response = await _httpGet(
+        Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey',
+        ),
+      ).timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['models'] as List<dynamic>? ?? const [];
@@ -1259,7 +1298,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
   Future<Set<String>?> _loadMistralModels(String apiKey) async {
     try {
-      final response = await http.get(
+      final response = await _httpGet(
         Uri.parse('https://api.mistral.ai/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
       ).timeout(const Duration(seconds: 30));
@@ -1295,7 +1334,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
   Future<Set<String>?> _loadXaiModels(String apiKey) async {
     try {
-      final response = await http.get(
+      final response = await _httpGet(
         Uri.parse('https://api.x.ai/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
       ).timeout(const Duration(seconds: 30));
@@ -1321,7 +1360,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
 
   Future<Set<String>?> _loadAnthropicModels(String apiKey) async {
     try {
-      final response = await http.get(
+      final response = await _httpGet(
         Uri.parse('https://api.anthropic.com/v1/models'),
         headers: {
           'x-api-key': apiKey,
