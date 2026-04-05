@@ -8,6 +8,7 @@ enum PriorActivityLevel {
   low,
   moderate,
   high,
+  veryHigh,
 }
 
 class PriorActivityLevelCatalog {

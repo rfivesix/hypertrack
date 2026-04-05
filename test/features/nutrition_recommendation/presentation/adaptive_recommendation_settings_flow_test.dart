@@ -87,7 +87,61 @@ void main() {
       expect(settingsTop, lessThan(dailyTop));
     });
 
-    testWidgets('onboarding shows body-fat helper and cardio-hours selector',
+    testWidgets(
+        'onboarding flow includes dedicated body-fat page after bodyweight',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: OnboardingScreen(
+            recommendationService: recommendationService,
+            databaseHelper: dbHelper,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester
+          .tap(find.byKey(const Key('onboarding_continue_setup_button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('onboarding_name_text_field')),
+        'Alex',
+      );
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('onboarding_weight_page')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('onboarding_body_fat_page')), findsOneWidget);
+      expect(
+        find.byKey(const Key('onboarding_body_fat_helper_text')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('onboarding_body_fat_help_button')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('onboarding_adaptive_goal_page')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('onboarding_extra_cardio_dropdown')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        'onboarding body-fat help opens guidance and shows male/female texts',
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -105,29 +159,94 @@ void main() {
           .tap(find.byKey(const Key('onboarding_continue_setup_button')));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('onboarding_body_fat_helper_text')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('onboarding_body_fat_help_button')),
-        findsOneWidget,
-      );
-
       await tester.enterText(
         find.byKey(const Key('onboarding_name_text_field')),
         'Alex',
       );
       await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
       await tester.pumpAndSettle();
-
       await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('onboarding_extra_cardio_dropdown')),
-        findsOneWidget,
+      final bodyFatHelpButton =
+          find.byKey(const Key('onboarding_body_fat_help_button'));
+      await tester.tap(bodyFatHelpButton);
+      await tester.pumpAndSettle();
+
+      final sheet = find.byKey(const Key('body_fat_guidance_sheet'));
+      expect(sheet, findsOneWidget);
+
+      final context = tester.element(sheet);
+      final l10n = AppLocalizations.of(context)!;
+
+      expect(find.text(l10n.bodyFatGuidanceTitle), findsOneWidget);
+      expect(find.text(l10n.bodyFatGuidanceMale10), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('body_fat_guidance_sex_female')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.bodyFatGuidanceFemale15), findsOneWidget);
+    });
+
+    testWidgets(
+        'prior activity dropdowns include the very-high activity option',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: OnboardingScreen(
+            recommendationService: recommendationService,
+            databaseHelper: dbHelper,
+          ),
+        ),
       );
+      await tester.pumpAndSettle();
+
+      final onboardingContext = tester.element(find.byType(OnboardingScreen));
+      final l10n = AppLocalizations.of(onboardingContext)!;
+
+      await tester
+          .tap(find.byKey(const Key('onboarding_continue_setup_button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('onboarding_name_text_field')),
+        'Alex',
+      );
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+
+      final onboardingDropdown =
+          find.byKey(const Key('onboarding_prior_activity_dropdown'));
+      expect(onboardingDropdown, findsOneWidget);
+      await tester.tap(onboardingDropdown);
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.adaptivePriorActivityVeryHigh), findsOneWidget);
+      await tester.tap(find.text(l10n.adaptivePriorActivityVeryHigh).last);
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: GoalsScreen(
+            recommendationService: recommendationService,
+            databaseHelper: dbHelper,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final goalsDropdown =
+          find.byKey(const Key('goals_prior_activity_dropdown'));
+      expect(goalsDropdown, findsOneWidget);
+      await tester.tap(goalsDropdown);
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.adaptivePriorActivityVeryHigh), findsOneWidget);
     });
   });
 }

@@ -8,6 +8,7 @@ import '../widgets/global_app_bar.dart';
 import '../data/database_helper.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
 import '../features/nutrition_recommendation/domain/goal_models.dart';
+import '../features/nutrition_recommendation/presentation/prior_activity_help_block.dart';
 
 /// A screen for defining daily health and nutrition targets.
 ///
@@ -306,9 +307,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       },
                     ),
                     const SizedBox(height: DesignConstants.spacingS),
-                    Text(
-                      l10n.adaptivePriorActivityHelp,
-                      style: Theme.of(context).textTheme.bodySmall,
+                    PriorActivityHelpBlock(
+                      key: const Key('goals_prior_activity_help_block'),
+                      l10n: l10n,
                     ),
                     const SizedBox(height: DesignConstants.spacingM),
                     DropdownButtonFormField<ExtraCardioHoursOption>(
@@ -462,6 +463,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
         return l10n.adaptivePriorActivityModerate;
       case PriorActivityLevel.high:
         return l10n.adaptivePriorActivityHigh;
+      case PriorActivityLevel.veryHigh:
+        return l10n.adaptivePriorActivityVeryHigh;
     }
   }
 

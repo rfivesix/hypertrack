@@ -185,7 +185,7 @@ void main() {
 
       await prefs.setString(goalKey, 'loseWeight');
       await prefs.setDouble(rateKey, -0.5);
-      await prefs.setString(priorActivityLevelKey, 'high');
+      await prefs.setString(priorActivityLevelKey, 'veryHigh');
       await prefs.setString(extraCardioHoursKey, 'h5');
       await prefs.setString(
         generatedKey,
@@ -200,7 +200,7 @@ void main() {
       final payload = await backupManager.generateBackupPayloadForTesting();
       final userPreferences =
           payload['userPreferences'] as Map<String, dynamic>;
-      expect(userPreferences[priorActivityLevelKey], 'high');
+      expect(userPreferences[priorActivityLevelKey], 'veryHigh');
       expect(userPreferences[extraCardioHoursKey], 'h5');
 
       await prefs.setString(goalKey, 'gainWeight');
@@ -217,7 +217,7 @@ void main() {
       final restoredPrefs = await SharedPreferences.getInstance();
       expect(restoredPrefs.getString(goalKey), 'loseWeight');
       expect(restoredPrefs.getDouble(rateKey), -0.5);
-      expect(restoredPrefs.getString(priorActivityLevelKey), 'high');
+      expect(restoredPrefs.getString(priorActivityLevelKey), 'veryHigh');
       expect(restoredPrefs.getString(extraCardioHoursKey), 'h5');
       expect(
         restoredPrefs.getString(generatedKey),

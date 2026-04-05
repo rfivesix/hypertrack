@@ -194,6 +194,7 @@ class RecommendationInputAdapter {
       PriorActivityLevel.low => 1.35,
       PriorActivityLevel.moderate => 1.50,
       PriorActivityLevel.high => 1.65,
+      PriorActivityLevel.veryHigh => 1.75,
     };
 
     final workoutsPerWeek = averageCompletedWorkoutsPerWeek ?? 0;

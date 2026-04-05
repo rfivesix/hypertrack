@@ -5360,11 +5360,41 @@ abstract class AppLocalizations {
   /// **'High activity'**
   String get adaptivePriorActivityHigh;
 
-  /// No description provided for @adaptivePriorActivityHelp.
+  /// No description provided for @adaptivePriorActivityVeryHigh.
   ///
   /// In en, this message translates to:
-  /// **'Baseline daily activity only (separate from extra cardio): Low = student/pupil/office, mostly sitting; Moderate = mixed walking/standing, somewhat active routine; High = lots of standing/walking or a physically active job.'**
-  String get adaptivePriorActivityHelp;
+  /// **'Very high activity'**
+  String get adaptivePriorActivityVeryHigh;
+
+  /// No description provided for @adaptivePriorActivityHelpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline daily activity only (separate from extra cardio):'**
+  String get adaptivePriorActivityHelpIntro;
+
+  /// No description provided for @adaptivePriorActivityHelpLowLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Low: mostly sitting, student/pupil or office routine.'**
+  String get adaptivePriorActivityHelpLowLine;
+
+  /// No description provided for @adaptivePriorActivityHelpModerateLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate: mixed sitting, walking, and standing.'**
+  String get adaptivePriorActivityHelpModerateLine;
+
+  /// No description provided for @adaptivePriorActivityHelpHighLine.
+  ///
+  /// In en, this message translates to:
+  /// **'High: lots of standing/walking or a physically active job.'**
+  String get adaptivePriorActivityHelpHighLine;
+
+  /// No description provided for @adaptivePriorActivityHelpVeryHighLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Very high: very movement-heavy routine/job with consistently high daily activity.'**
+  String get adaptivePriorActivityHelpVeryHighLine;
 
   /// No description provided for @adaptiveExtraCardioLabel.
   ///
@@ -5492,6 +5522,18 @@ abstract class AppLocalizations {
   /// **'Applied to daily goals'**
   String get onboardingAdaptiveSummaryApplied;
 
+  /// No description provided for @onboardingBodyFatPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat %'**
+  String get onboardingBodyFatPageTitle;
+
+  /// No description provided for @onboardingBodyFatPageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional step: enter a rough estimate if you know it.'**
+  String get onboardingBodyFatPageSubtitle;
+
   /// No description provided for @onboardingBodyFatOptionalLabel.
   ///
   /// In en, this message translates to:
@@ -5510,23 +5552,113 @@ abstract class AppLocalizations {
   /// **'How do I estimate this?'**
   String get onboardingBodyFatHelpAction;
 
-  /// No description provided for @onboardingBodyFatHelpDialogTitle.
+  /// No description provided for @bodyFatGuidanceTitle.
   ///
   /// In en, this message translates to:
-  /// **'Body fat % help'**
-  String get onboardingBodyFatHelpDialogTitle;
+  /// **'Body fat % guidance'**
+  String get bodyFatGuidanceTitle;
 
-  /// No description provided for @onboardingBodyFatHelpDialogBody.
+  /// No description provided for @bodyFatGuidanceIntro.
   ///
   /// In en, this message translates to:
-  /// **'You can leave this empty if unsure. A rough estimate is enough and only helps the initial recommendation; weekly updates adapt from your real logs.'**
-  String get onboardingBodyFatHelpDialogBody;
+  /// **'Body-fat percentage can only be estimated roughly from appearance. This is orientation only, not a precise diagnosis.'**
+  String get bodyFatGuidanceIntro;
 
-  /// No description provided for @onboardingBodyFatHelpDialogAction.
+  /// No description provided for @bodyFatGuidanceDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Got it'**
-  String get onboardingBodyFatHelpDialogAction;
+  /// **'Appearance can vary strongly at the same body-fat level due to muscle mass, fat distribution, genetics, water retention, posture, and lighting.'**
+  String get bodyFatGuidanceDisclaimer;
+
+  /// No description provided for @bodyFatGuidanceSexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference sex'**
+  String get bodyFatGuidanceSexLabel;
+
+  /// No description provided for @bodyFatGuidancePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String bodyFatGuidancePercent(int percent);
+
+  /// No description provided for @bodyFatGuidanceMale10.
+  ///
+  /// In en, this message translates to:
+  /// **'Very lean, clear definition.'**
+  String get bodyFatGuidanceMale10;
+
+  /// No description provided for @bodyFatGuidanceMale15.
+  ///
+  /// In en, this message translates to:
+  /// **'Athletic, visibly defined.'**
+  String get bodyFatGuidanceMale15;
+
+  /// No description provided for @bodyFatGuidanceMale20.
+  ///
+  /// In en, this message translates to:
+  /// **'Sporty, slightly softer.'**
+  String get bodyFatGuidanceMale20;
+
+  /// No description provided for @bodyFatGuidanceMale25.
+  ///
+  /// In en, this message translates to:
+  /// **'Less definition, more waist and belly softness.'**
+  String get bodyFatGuidanceMale25;
+
+  /// No description provided for @bodyFatGuidanceMale30.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearly softer, rounder.'**
+  String get bodyFatGuidanceMale30;
+
+  /// No description provided for @bodyFatGuidanceMale35.
+  ///
+  /// In en, this message translates to:
+  /// **'Very soft, almost no visible definition.'**
+  String get bodyFatGuidanceMale35;
+
+  /// No description provided for @bodyFatGuidanceMale40.
+  ///
+  /// In en, this message translates to:
+  /// **'Strongly rounder appearance, no visible definition.'**
+  String get bodyFatGuidanceMale40;
+
+  /// No description provided for @bodyFatGuidanceFemale15.
+  ///
+  /// In en, this message translates to:
+  /// **'Very lean, very defined.'**
+  String get bodyFatGuidanceFemale15;
+
+  /// No description provided for @bodyFatGuidanceFemale20.
+  ///
+  /// In en, this message translates to:
+  /// **'Lean and athletic.'**
+  String get bodyFatGuidanceFemale20;
+
+  /// No description provided for @bodyFatGuidanceFemale25.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit, lightly soft.'**
+  String get bodyFatGuidanceFemale25;
+
+  /// No description provided for @bodyFatGuidanceFemale30.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft, healthy-looking average athletic-to-normal range.'**
+  String get bodyFatGuidanceFemale30;
+
+  /// No description provided for @bodyFatGuidanceFemale35.
+  ///
+  /// In en, this message translates to:
+  /// **'Noticeably softer.'**
+  String get bodyFatGuidanceFemale35;
+
+  /// No description provided for @bodyFatGuidanceFemale40.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearly softer, rounder overall appearance.'**
+  String get bodyFatGuidanceFemale40;
 
   /// No description provided for @adaptiveRecommendationCardTitle.
   ///

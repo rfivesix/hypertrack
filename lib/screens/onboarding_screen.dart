@@ -9,6 +9,8 @@ import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/presentation/body_fat_guidance_sheet.dart';
+import '../features/nutrition_recommendation/presentation/prior_activity_help_block.dart';
 import '../features/nutrition_recommendation/domain/confidence_models.dart';
 import '../features/nutrition_recommendation/domain/goal_models.dart';
 import '../features/nutrition_recommendation/domain/recommendation_models.dart';
@@ -32,6 +34,8 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const int _adaptiveGoalPageIndex = 4;
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final int _totalPages = 7;
@@ -408,19 +412,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (i) {
                   setState(() => _currentPage = i);
-                  if (i == 3) {
+                  if (i == _adaptiveGoalPageIndex) {
                     _refreshOnboardingRecommendationPreview();
                   }
                 },
                 children: [
                   _buildWelcomePage(l10n),
-                  _buildProfilePage(l10n), // <-- Hier ist das Update
+                  _buildProfilePage(l10n),
                   _buildWeightPage(l10n),
+                  _buildBodyFatPage(l10n),
                   _buildAdaptiveGoalPage(l10n),
                   _buildCaloriesPage(l10n),
                   _buildMacrosPage(l10n),
                   _buildWaterPage(l10n),
-                  _buildFinishPage(l10n),
                 ],
               ),
             ),
@@ -539,9 +543,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // --- UPDATE: PROFILE PAGE MIT GRÖSSE & GESCHLECHT ---
   Widget _buildProfilePage(AppLocalizations l10n) {
     return SingleChildScrollView(
+      key: const Key('onboarding_profile_page'),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,9 +565,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             textCapitalization: TextCapitalization.words,
           ),
-
           const SizedBox(height: 32),
-
           _StepTitle(title: l10n.onboardingDobTitle),
           const SizedBox(height: 16),
           InkWell(
@@ -576,7 +578,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               );
               if (picked != null) {
                 setState(() => _selectedDate = picked);
-                if (_currentPage >= 3) {
+                if (_currentPage >= _adaptiveGoalPageIndex) {
                   _refreshOnboardingRecommendationPreview();
                 }
               }
@@ -599,22 +601,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 32),
-
-          // GRÖSSE & GESCHLECHT NEBENEINANDER
           Row(
             children: [
-              // GRÖSSE
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _StepTitle(
-                      title: "Größe",
-                    ), // oder l10n.onboardingHeightLabel
+                    _StepTitle(
+                      title: l10n.onboardingHeightLabel,
+                    ),
                     const SizedBox(height: 8),
                     TextField(
+                      key: const Key('onboarding_height_text_field'),
                       controller: _heightController,
                       keyboardType: TextInputType.number,
                       onChanged: (_) {
@@ -623,7 +622,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         });
                       },
                       decoration: InputDecoration(
-                        labelText: "cm",
+                        labelText: l10n.onboardingHeightLabel,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -633,16 +632,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              // GESCHLECHT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _StepTitle(
-                      title: "Geschlecht",
-                    ), // oder l10n.onboardingGenderLabel
+                    _StepTitle(
+                      title: l10n.onboardingGenderLabel,
+                    ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
+                      key: const Key('onboarding_gender_dropdown'),
                       initialValue: _selectedGender,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
@@ -677,39 +676,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _bodyFatPercentController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) {
-              setState(() {
-                _hasAppliedOnboardingRecommendationToGoals = false;
-              });
-              if (_currentPage >= 3) {
-                _refreshOnboardingRecommendationPreview();
-              }
-            },
-            decoration: InputDecoration(
-              labelText: l10n.onboardingBodyFatOptionalLabel,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingBodyFatOptionalHelper,
-            key: const Key('onboarding_body_fat_helper_text'),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              key: const Key('onboarding_body_fat_help_button'),
-              onPressed: () => _openBodyFatHelperEntryPoint(l10n),
-              child: Text(l10n.onboardingBodyFatHelpAction),
-            ),
-          ),
         ],
       ),
     );
@@ -719,6 +685,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildWeightPage(AppLocalizations l10n) {
     return Padding(
+      key: const Key('onboarding_weight_page'),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -752,8 +719,67 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  Widget _buildBodyFatPage(AppLocalizations l10n) {
+    return SingleChildScrollView(
+      key: const Key('onboarding_body_fat_page'),
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          _StepTitle(
+            title: l10n.onboardingBodyFatPageTitle,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingBodyFatPageSubtitle,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            key: const Key('onboarding_body_fat_text_field'),
+            controller: _bodyFatPercentController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) {
+              setState(() {
+                _hasAppliedOnboardingRecommendationToGoals = false;
+              });
+              if (_currentPage >= _adaptiveGoalPageIndex) {
+                _refreshOnboardingRecommendationPreview();
+              }
+            },
+            decoration: InputDecoration(
+              labelText: l10n.onboardingBodyFatOptionalLabel,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingBodyFatOptionalHelper,
+            key: const Key('onboarding_body_fat_helper_text'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const Key('onboarding_body_fat_help_button'),
+              onPressed: _openBodyFatHelperEntryPoint,
+              child: Text(l10n.onboardingBodyFatHelpAction),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAdaptiveGoalPage(AppLocalizations l10n) {
     return SingleChildScrollView(
+      key: const Key('onboarding_adaptive_goal_page'),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -818,9 +844,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             },
           ),
           const SizedBox(height: 12),
-          Text(
-            l10n.adaptivePriorActivityHelp,
-            style: Theme.of(context).textTheme.bodySmall,
+          PriorActivityHelpBlock(
+            key: const Key('onboarding_prior_activity_help_block'),
+            l10n: l10n,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<ExtraCardioHoursOption>(
@@ -965,25 +991,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Future<void> _openBodyFatHelperEntryPoint(AppLocalizations l10n) async {
-    // Placeholder entry point for the upcoming image/slider body-fat finder.
-    await _showBodyFatHelpPlaceholderDialog(l10n);
-  }
-
-  Future<void> _showBodyFatHelpPlaceholderDialog(AppLocalizations l10n) async {
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.onboardingBodyFatHelpDialogTitle),
-        content: Text(l10n.onboardingBodyFatHelpDialogBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.onboardingBodyFatHelpDialogAction),
-          ),
-        ],
-      ),
-    );
+  Future<void> _openBodyFatHelperEntryPoint() async {
+    await showBodyFatGuidanceSheet(context);
   }
 
   String _goalLabel(AppLocalizations l10n, BodyweightGoal goal) {
@@ -1013,6 +1022,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         return l10n.adaptivePriorActivityModerate;
       case PriorActivityLevel.high:
         return l10n.adaptivePriorActivityHigh;
+      case PriorActivityLevel.veryHigh:
+        return l10n.adaptivePriorActivityVeryHigh;
     }
   }
 
@@ -1146,38 +1157,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               contentPadding: const EdgeInsets.symmetric(vertical: 24),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFinishPage(AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.check_circle_rounded,
-            size: 100,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: 32),
-          Text(
-            l10n.onboardingFinish,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.onboardingGoalsSubtitle,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

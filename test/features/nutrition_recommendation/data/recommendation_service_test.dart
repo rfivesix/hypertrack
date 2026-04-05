@@ -262,6 +262,18 @@ void main() {
         extraCardioHoursOption: ExtraCardioHoursOption.h0,
         now: DateTime(2026, 4, 5, 9, 0),
       );
+      final veryHighActivity = await service.generateOnboardingRecommendation(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: 80,
+        heightCm: 180,
+        birthday: DateTime(1994, 5, 12),
+        gender: 'male',
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.veryHigh,
+        extraCardioHoursOption: ExtraCardioHoursOption.h0,
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
       final lowActivityHighExtraCardio =
           await service.generateOnboardingRecommendation(
         goal: BodyweightGoal.maintainWeight,
@@ -283,6 +295,10 @@ void main() {
       expect(
         highActivity.estimatedMaintenanceCalories,
         greaterThan(lowActivity.estimatedMaintenanceCalories),
+      );
+      expect(
+        veryHighActivity.estimatedMaintenanceCalories,
+        greaterThan(highActivity.estimatedMaintenanceCalories),
       );
       expect(
         lowActivityHighExtraCardio.estimatedMaintenanceCalories,

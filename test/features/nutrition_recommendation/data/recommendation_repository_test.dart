@@ -42,7 +42,7 @@ void main() {
 
     test('persists and restores generated/applied recommendations', () async {
       final recommendation = _recommendation();
-      await repository.savePriorActivityLevel(PriorActivityLevel.high);
+      await repository.savePriorActivityLevel(PriorActivityLevel.veryHigh);
       await repository.saveExtraCardioHoursOption(ExtraCardioHoursOption.h3);
 
       await repository.saveLatestGeneratedRecommendation(
@@ -61,10 +61,26 @@ void main() {
           generated!.recommendedCalories, recommendation.recommendedCalories);
       expect(applied!.recommendedFatGrams, recommendation.recommendedFatGrams);
       expect(await repository.getLastGeneratedDueWeekKey(), '2026-03-30');
-      expect(await repository.getPriorActivityLevel(), PriorActivityLevel.high);
+      expect(
+        await repository.getPriorActivityLevel(),
+        PriorActivityLevel.veryHigh,
+      );
       expect(
         await repository.getExtraCardioHoursOption(),
         ExtraCardioHoursOption.h3,
+      );
+    });
+
+    test('falls back to default prior activity level on unknown raw value',
+        () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'adaptive_nutrition_recommendation.prior_activity_level': 'legacyValue',
+      });
+      repository = RecommendationRepository();
+
+      expect(
+        await repository.getPriorActivityLevel(),
+        PriorActivityLevel.moderate,
       );
     });
   });

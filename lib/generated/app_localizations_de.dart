@@ -2909,8 +2909,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adaptivePriorActivityHigh => 'Hohe Aktivität';
 
   @override
-  String get adaptivePriorActivityHelp =>
-      'Nur Alltagsaktivität (getrennt von Extra-Cardio): Niedrig = Schüler/Student/Büro, meist sitzend; Moderat = gemischter Alltag mit Gehen/Stehen; Hoch = viel Stehen/Gehen oder körperlich aktiver Beruf.';
+  String get adaptivePriorActivityVeryHigh => 'Sehr hohe Aktivität';
+
+  @override
+  String get adaptivePriorActivityHelpIntro =>
+      'Nur Alltagsaktivität (getrennt von Extra-Cardio):';
+
+  @override
+  String get adaptivePriorActivityHelpLowLine =>
+      'Niedrig: überwiegend sitzend, Schüler/Student oder Büro-Alltag.';
+
+  @override
+  String get adaptivePriorActivityHelpModerateLine =>
+      'Moderat: Mix aus Sitzen, Gehen und Stehen.';
+
+  @override
+  String get adaptivePriorActivityHelpHighLine =>
+      'Hoch: viel Gehen/Stehen oder körperlich aktiver Beruf.';
+
+  @override
+  String get adaptivePriorActivityHelpVeryHighLine =>
+      'Sehr hoch: sehr bewegungsreicher Alltag/Beruf mit dauerhaft hoher täglicher Aktivität.';
 
   @override
   String get adaptiveExtraCardioLabel =>
@@ -2990,6 +3009,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingAdaptiveSummaryApplied => 'Auf Tagesziele angewendet';
 
   @override
+  String get onboardingBodyFatPageTitle => 'Körperfett %';
+
+  @override
+  String get onboardingBodyFatPageSubtitle =>
+      'Optionaler Schritt: Trage einen groben Schätzwert ein, wenn du ihn kennst.';
+
+  @override
   String get onboardingBodyFatOptionalLabel => 'Körperfett % (optional)';
 
   @override
@@ -3000,14 +3026,67 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingBodyFatHelpAction => 'Wie kann ich das schätzen?';
 
   @override
-  String get onboardingBodyFatHelpDialogTitle => 'Hilfe zu Körperfett %';
+  String get bodyFatGuidanceTitle => 'Körperfett-% Orientierung';
 
   @override
-  String get onboardingBodyFatHelpDialogBody =>
-      'Wenn du unsicher bist, kannst du das Feld leer lassen. Eine grobe Schätzung reicht aus und verbessert nur die Starteinschätzung; die wöchentlichen Updates passen sich später an deine echten Logs an.';
+  String get bodyFatGuidanceIntro =>
+      'Körperfett-Prozente lassen sich über das Aussehen nur grob schätzen. Das ist nur eine Orientierung, keine präzise Diagnose.';
 
   @override
-  String get onboardingBodyFatHelpDialogAction => 'Verstanden';
+  String get bodyFatGuidanceDisclaimer =>
+      'Das Erscheinungsbild kann bei gleichem KFA stark variieren, z. B. durch Muskelmasse, Fettverteilung, Genetik, Wassereinlagerung, Haltung und Licht.';
+
+  @override
+  String get bodyFatGuidanceSexLabel => 'Bezugs-Geschlecht';
+
+  @override
+  String bodyFatGuidancePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get bodyFatGuidanceMale10 => 'Sehr lean, klare Definition.';
+
+  @override
+  String get bodyFatGuidanceMale15 => 'Athletisch, sichtbar definiert.';
+
+  @override
+  String get bodyFatGuidanceMale20 => 'Sportlich, leicht weicher.';
+
+  @override
+  String get bodyFatGuidanceMale25 =>
+      'Weniger Definition, mehr Weichheit an Taille und Bauch.';
+
+  @override
+  String get bodyFatGuidanceMale30 => 'Klar weicher, runder.';
+
+  @override
+  String get bodyFatGuidanceMale35 =>
+      'Sehr weich, fast keine sichtbare Definition.';
+
+  @override
+  String get bodyFatGuidanceMale40 =>
+      'Deutlich runderes Erscheinungsbild, keine sichtbare Definition.';
+
+  @override
+  String get bodyFatGuidanceFemale15 => 'Sehr lean, sehr definiert.';
+
+  @override
+  String get bodyFatGuidanceFemale20 => 'Lean und athletisch.';
+
+  @override
+  String get bodyFatGuidanceFemale25 => 'Fit, leicht weich.';
+
+  @override
+  String get bodyFatGuidanceFemale30 =>
+      'Weicher, gesund wirkender Durchschnitt zwischen athletisch und normal.';
+
+  @override
+  String get bodyFatGuidanceFemale35 => 'Merklich weicher.';
+
+  @override
+  String get bodyFatGuidanceFemale40 =>
+      'Deutlich weicher, insgesamt runderes Erscheinungsbild.';
 
   @override
   String get adaptiveRecommendationCardTitle => 'Adaptive Empfehlung';

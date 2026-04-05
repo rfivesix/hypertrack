@@ -2888,8 +2888,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adaptivePriorActivityHigh => 'High activity';
 
   @override
-  String get adaptivePriorActivityHelp =>
-      'Baseline daily activity only (separate from extra cardio): Low = student/pupil/office, mostly sitting; Moderate = mixed walking/standing, somewhat active routine; High = lots of standing/walking or a physically active job.';
+  String get adaptivePriorActivityVeryHigh => 'Very high activity';
+
+  @override
+  String get adaptivePriorActivityHelpIntro =>
+      'Baseline daily activity only (separate from extra cardio):';
+
+  @override
+  String get adaptivePriorActivityHelpLowLine =>
+      'Low: mostly sitting, student/pupil or office routine.';
+
+  @override
+  String get adaptivePriorActivityHelpModerateLine =>
+      'Moderate: mixed sitting, walking, and standing.';
+
+  @override
+  String get adaptivePriorActivityHelpHighLine =>
+      'High: lots of standing/walking or a physically active job.';
+
+  @override
+  String get adaptivePriorActivityHelpVeryHighLine =>
+      'Very high: very movement-heavy routine/job with consistently high daily activity.';
 
   @override
   String get adaptiveExtraCardioLabel =>
@@ -2969,6 +2988,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingAdaptiveSummaryApplied => 'Applied to daily goals';
 
   @override
+  String get onboardingBodyFatPageTitle => 'Body fat %';
+
+  @override
+  String get onboardingBodyFatPageSubtitle =>
+      'Optional step: enter a rough estimate if you know it.';
+
+  @override
   String get onboardingBodyFatOptionalLabel => 'Body fat % (optional)';
 
   @override
@@ -2979,14 +3005,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingBodyFatHelpAction => 'How do I estimate this?';
 
   @override
-  String get onboardingBodyFatHelpDialogTitle => 'Body fat % help';
+  String get bodyFatGuidanceTitle => 'Body fat % guidance';
 
   @override
-  String get onboardingBodyFatHelpDialogBody =>
-      'You can leave this empty if unsure. A rough estimate is enough and only helps the initial recommendation; weekly updates adapt from your real logs.';
+  String get bodyFatGuidanceIntro =>
+      'Body-fat percentage can only be estimated roughly from appearance. This is orientation only, not a precise diagnosis.';
 
   @override
-  String get onboardingBodyFatHelpDialogAction => 'Got it';
+  String get bodyFatGuidanceDisclaimer =>
+      'Appearance can vary strongly at the same body-fat level due to muscle mass, fat distribution, genetics, water retention, posture, and lighting.';
+
+  @override
+  String get bodyFatGuidanceSexLabel => 'Reference sex';
+
+  @override
+  String bodyFatGuidancePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get bodyFatGuidanceMale10 => 'Very lean, clear definition.';
+
+  @override
+  String get bodyFatGuidanceMale15 => 'Athletic, visibly defined.';
+
+  @override
+  String get bodyFatGuidanceMale20 => 'Sporty, slightly softer.';
+
+  @override
+  String get bodyFatGuidanceMale25 =>
+      'Less definition, more waist and belly softness.';
+
+  @override
+  String get bodyFatGuidanceMale30 => 'Clearly softer, rounder.';
+
+  @override
+  String get bodyFatGuidanceMale35 =>
+      'Very soft, almost no visible definition.';
+
+  @override
+  String get bodyFatGuidanceMale40 =>
+      'Strongly rounder appearance, no visible definition.';
+
+  @override
+  String get bodyFatGuidanceFemale15 => 'Very lean, very defined.';
+
+  @override
+  String get bodyFatGuidanceFemale20 => 'Lean and athletic.';
+
+  @override
+  String get bodyFatGuidanceFemale25 => 'Fit, lightly soft.';
+
+  @override
+  String get bodyFatGuidanceFemale30 =>
+      'Soft, healthy-looking average athletic-to-normal range.';
+
+  @override
+  String get bodyFatGuidanceFemale35 => 'Noticeably softer.';
+
+  @override
+  String get bodyFatGuidanceFemale40 =>
+      'Clearly softer, rounder overall appearance.';
 
   @override
   String get adaptiveRecommendationCardTitle => 'Adaptive recommendation';

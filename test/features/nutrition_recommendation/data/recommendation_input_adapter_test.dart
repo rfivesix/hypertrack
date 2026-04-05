@@ -163,8 +163,19 @@ void main() {
         targetSteps: 11000,
         now: DateTime(2026, 4, 5),
       );
+      final veryHigh =
+          RecommendationInputAdapter.estimatePriorMaintenanceCalories(
+        profile: profile,
+        currentWeightKg: 75,
+        bodyFatPercent: null,
+        declaredActivityLevel: PriorActivityLevel.veryHigh,
+        averageCompletedWorkoutsPerWeek: 4,
+        targetSteps: 11000,
+        now: DateTime(2026, 4, 5),
+      );
 
       expect(high, greaterThan(low));
+      expect(veryHigh, greaterThan(high));
     });
 
     test('estimate prior falls back stably when body-fat is missing', () {
