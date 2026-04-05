@@ -108,6 +108,7 @@ void main() {
           ExportMeasurementRecord(
             idempotencyKey: 'm1',
             timestampUtc: DateTime.utc(2026, 1, 1),
+            zoneOffsetMinutes: 120,
             type: ExportMeasurementType.bmi,
             value: 25,
           ),
@@ -127,7 +128,7 @@ void main() {
         final args = measurementCall.arguments as Map;
         expect(args['idempotencyKey'], 'm1');
         expect(args['type'], 'bmi');
-        expect(args['zoneOffsetMinutes'], isNotNull);
+        expect(args['zoneOffsetMinutes'], 120);
       },
     );
 

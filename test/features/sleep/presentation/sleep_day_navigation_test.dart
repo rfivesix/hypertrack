@@ -107,6 +107,23 @@ String _monthLabel(DateTime day, {String localeCode = 'en'}) {
   return DateFormat.yMMMM(localeCode).format(DateTime(day.year, day.month, 1));
 }
 
+Future<void> _pumpRouteTransition(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 350));
+}
+
+Future<void> _tapMetricTile(WidgetTester tester, String title) async {
+  final titleFinder = find.text(title);
+  await tester.scrollUntilVisible(
+    titleFinder,
+    240,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.ensureVisible(titleFinder);
+  await tester.tap(titleFinder);
+  await _pumpRouteTransition(tester);
+}
+
 Widget _testApp({
   RouteFactory? onGenerateRoute,
   Widget? home,
@@ -226,6 +243,7 @@ SleepDayOverviewData _baselineMissingOverview() {
     lightDuration: base.lightDuration,
     remDuration: base.remDuration,
     regularityNights: base.regularityNights,
+    heartRateSamples: base.heartRateSamples,
   );
 }
 
@@ -263,6 +281,9 @@ void main() {
   });
 
   testWidgets('navigates from day tiles to detail routes', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final overview = _sampleOverview();
     final model = SleepDayViewModel(
       repository: _FakeSleepDayRepository(overview),
@@ -276,8 +297,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Duration'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Duration');
     expect(find.text('Duration'), findsWidgets);
     expect(
       find.text(
@@ -289,27 +309,23 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Heart rate'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Heart rate');
     expect(find.text('Heart rate'), findsWidgets);
     expect(find.byType(MeasurementChartWidget), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Regularity'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Regularity');
     expect(find.text('Average bedtime'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Depth'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Depth');
     expect(find.text('Depth'), findsWidgets);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Interruptions'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Interruptions');
     expect(find.text('Interruptions'), findsWidgets);
   });
 
@@ -423,6 +439,9 @@ void main() {
   testWidgets('heart-rate detail shows neutral baseline-missing state', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final model = SleepDayViewModel(
       repository: _FakeSleepDayRepository(_baselineMissingOverview()),
     );
@@ -434,8 +453,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Heart rate'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Heart rate');
     expect(find.text('Baseline not established'), findsOneWidget);
     expect(find.byType(MeasurementChartWidget), findsOneWidget);
   });
@@ -443,6 +461,9 @@ void main() {
   testWidgets('heart-rate detail shows fallback when samples are missing', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final base = _sampleOverview();
     final noSamples = SleepDayOverviewData(
       analysis: base.analysis,
@@ -473,8 +494,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Heart rate'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Heart rate');
     expect(
       find.text(
         'No heart-rate samples were stored for this night. Trend chart is unavailable.',
@@ -485,6 +505,9 @@ void main() {
   });
 
   testWidgets('depth detail shows low-confidence fallback', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final model = SleepDayViewModel(
       repository: _FakeSleepDayRepository(_lowConfidenceDepthOverview()),
     );
@@ -496,8 +519,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Depth'));
-    await tester.pumpAndSettle();
+    await _tapMetricTile(tester, 'Depth');
     expect(
       find.text('Stage confidence is too low for a reliable depth breakdown.'),
       findsOneWidget,
@@ -534,22 +556,38 @@ void main() {
       repository: repository,
       selectedDay: DateTime(2026, 3, 31),
     );
+    final queryRepo = _FakeSleepQueryRepository([
+      NightlySleepAnalysis(
+        id: 'week-1',
+        sessionId: 's1',
+        nightDate: DateTime(2026, 3, 31),
+        analysisVersion: 'v1',
+        normalizationVersion: 'n1',
+        analyzedAtUtc: DateTime.utc(2026, 3, 31, 8),
+        score: 78,
+        totalSleepMinutes: 430,
+        sleepQuality: SleepQualityBucket.average,
+      ),
+    ]);
 
     await tester.pumpWidget(
-      _testApp(
-        onGenerateRoute: SleepNavigation.onGenerateRoute,
-        home: SleepDayOverviewPage(viewModel: model),
+      Provider<SleepQueryRepository>.value(
+        value: queryRepo,
+        child: _testApp(
+          onGenerateRoute: SleepNavigation.onGenerateRoute,
+          home: SleepDayOverviewPage(viewModel: model),
+        ),
       ),
     );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Week'));
-    await tester.pumpAndSettle();
+    await _pumpRouteTransition(tester);
 
     expect(find.text(_weekLabel(DateTime(2026, 3, 31))), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('sleep-period-prev')));
-    await tester.pumpAndSettle();
+    await _pumpRouteTransition(tester);
     expect(find.text(_weekLabel(DateTime(2026, 3, 24))), findsOneWidget);
   });
 
@@ -559,22 +597,38 @@ void main() {
       repository: repository,
       selectedDay: DateTime(2026, 3, 31),
     );
+    final queryRepo = _FakeSleepQueryRepository([
+      NightlySleepAnalysis(
+        id: 'month-1',
+        sessionId: 's1',
+        nightDate: DateTime(2026, 3, 31),
+        analysisVersion: 'v1',
+        normalizationVersion: 'n1',
+        analyzedAtUtc: DateTime.utc(2026, 3, 31, 8),
+        score: 78,
+        totalSleepMinutes: 430,
+        sleepQuality: SleepQualityBucket.average,
+      ),
+    ]);
 
     await tester.pumpWidget(
-      _testApp(
-        onGenerateRoute: SleepNavigation.onGenerateRoute,
-        home: SleepDayOverviewPage(viewModel: model),
+      Provider<SleepQueryRepository>.value(
+        value: queryRepo,
+        child: _testApp(
+          onGenerateRoute: SleepNavigation.onGenerateRoute,
+          home: SleepDayOverviewPage(viewModel: model),
+        ),
       ),
     );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Month'));
-    await tester.pumpAndSettle();
+    await _pumpRouteTransition(tester);
 
     expect(find.text(_monthLabel(DateTime(2026, 3, 31))), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('sleep-period-prev')));
-    await tester.pumpAndSettle();
+    await _pumpRouteTransition(tester);
     expect(find.text(_monthLabel(DateTime(2026, 2, 28))), findsOneWidget);
   });
 

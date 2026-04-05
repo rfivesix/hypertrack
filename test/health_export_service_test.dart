@@ -312,9 +312,9 @@ void main() {
         expect(adapter.measurementWrites, 1502);
         expect(
           adapter.measurementBatchWrites,
-          4,
+          3,
           reason:
-              'Two export attempts across >1000 records should split into chunked batch calls',
+              'First attempt splits into 2 chunks (1000 + partial failing chunk), retry flushes the remaining 501 records in 1 chunk',
         );
       },
     );

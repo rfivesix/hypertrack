@@ -124,6 +124,9 @@ void main() {
   testWidgets('tapping request access updates permission state label', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 2200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final controller = SleepPermissionController(
       _StubPermissionService(
         const SleepPermissionOutcome.state(SleepPermissionState.denied),
@@ -141,13 +144,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final requestAccessTile = find.widgetWithText(ListTile, 'Request access');
     await tester.scrollUntilVisible(
-      find.text('Request access'),
+      requestAccessTile,
       500,
-      scrollable: find.byType(Scrollable),
     );
     expect(find.text('Denied'), findsOneWidget);
-    await tester.tap(find.text('Request access'));
+    await tester.ensureVisible(requestAccessTile);
+    await tester.tap(requestAccessTile);
     await tester.pumpAndSettle();
     expect(find.text('Ready'), findsOneWidget);
   });
@@ -155,7 +159,7 @@ void main() {
   testWidgets('tapping import sleep data triggers orchestration', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    await tester.binding.setSurfaceSize(const Size(800, 2200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final controller = SleepPermissionController(
@@ -180,12 +184,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.text('Import sleep data now'),
-      500,
-      scrollable: find.byType(Scrollable).first,
-    );
     final importTile = find.widgetWithText(ListTile, 'Import sleep data now');
+    await tester.scrollUntilVisible(
+      importTile,
+      500,
+    );
     await tester.ensureVisible(importTile);
     await tester.tap(importTile);
     await tester.pumpAndSettle();
