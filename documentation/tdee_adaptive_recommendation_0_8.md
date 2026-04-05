@@ -75,7 +75,7 @@ The recommendation system should support a small, explicit set of user-selectabl
 
 ## User flow
 
-## 1) Onboarding initial recommendation
+### 1) Onboarding initial recommendation
 
 After user profile inputs and goal + weekly target-rate selection during onboarding, the app should generate an immediate recommendation:
 
@@ -88,19 +88,19 @@ The recommendation can be applied during onboarding, but should not be silently 
 
 Onboarding recommendation uses stronger prior-based estimation with limited adaptation when history is sparse.
 
-## 2) Early adaptive path (week 2+)
+### 2) Early adaptive path (week 2+)
 
 The app should support adaptive recommendations as early as week 2 when minimum data thresholds are met, even if confidence is low/medium.
 
 This avoids a design where users wait months before the feature becomes useful.
 
-## 3) Weekly recommendation cadence
+### 3) Weekly recommendation cadence
 
 - Recommendation refresh cadence: every 7 days.
 - Planned refresh anchor: Monday `00:00`.
 - Internal estimation window: rolling multi-week data window (preferred MVP: 21 days).
 
-## 4) Manual apply/adopt flow
+### 4) Manual apply/adopt flow
 
 - New recommendation is displayed in nutrition surfaces.
 - Active targets remain unchanged until user explicitly applies/adopts.
@@ -178,7 +178,7 @@ This should be reflected in both implementation and tests.
 
 ## Calculation model / design intent (MVP proposal)
 
-## Scientific framing and approximation policy
+### Scientific framing and approximation policy
 
 MVP should treat body-mass change estimation as approximate dynamic energy balance, not an exact linear conversion.
 
@@ -198,7 +198,7 @@ Rationale references:
   - https://pmc.ncbi.nlm.nih.gov/articles/PMC2980958/  
   - https://pmc.ncbi.nlm.nih.gov/articles/PMC3127505/
 
-## Cadence + estimation window
+### Cadence + estimation window
 
 - Refresh cadence remains weekly (7-day).
 - Estimation should use a rolling multi-week window.
@@ -215,7 +215,7 @@ Weight-variability and smoothing context:
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC7519428/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC7192384/
 
-## Smoothed weight trend
+### Smoothed weight trend
 
 Preferred MVP direction:
 
@@ -226,7 +226,7 @@ Implementation note:
 
 - trend method and parameters are tunable assumptions in MVP, not immutable scientific constants
 
-## TDEE/maintenance estimate (MVP structure)
+### TDEE/maintenance estimate (MVP structure)
 
 Preferred MVP structure:
 
@@ -254,7 +254,7 @@ Intake misreporting and quality caveat context:
 - https://www.scielo.br/j/csp/a/tZxsC44dwF8z7nJb6FQSNwP/?lang=en
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC2803049/
 
-## Calorie recommendation derivation
+### Calorie recommendation derivation
 
 High-level derivation:
 
@@ -270,12 +270,13 @@ Direction semantics:
 - gain: maintenance plus surplus
 
 This mapping should remain explicit and auditable in-domain, not hidden in UI.
+The weekly target-rate to kcal adjustment should be treated as approximate short-term guidance, not exact physiology.
 
 ---
 
 ## Confidence and warning logic
 
-## Confidence states (proposed MVP)
+### Confidence states (proposed MVP)
 
 Proposed enum-like staged states:
 
@@ -286,7 +287,7 @@ Proposed enum-like staged states:
 
 These are proposed MVP thresholds and may be tuned later.
 
-## Proposed MVP gating thresholds
+### Proposed MVP gating thresholds
 
 Proposed practical thresholds:
 
@@ -305,8 +306,9 @@ Proposed practical thresholds:
   - high: >= 15
 
 If thresholds fail, return explicit `not_enough_data` or downgraded confidence output.
+These thresholds are proposed MVP defaults, intentionally tunable, and expected to be refined after implementation with real-world usage data.
 
-## Stabilization / anti-overreaction design
+### Stabilization / anti-overreaction design
 
 Proposed stabilization stack:
 
@@ -321,7 +323,7 @@ Important:
 - stabilization must not be documented as silent hard cap behavior
 - user-facing messaging should indicate that uncertainty and data quality influenced the recommendation
 
-## Large-adjustment warning (proposed MVP)
+### Large-adjustment warning (proposed MVP)
 
 A warning should be triggered when recommendation change magnitude versus prior stable recommendation exceeds defined threshold(s).
 
@@ -356,7 +358,7 @@ General practical weekly-adjustment/coaching rationale:
 
 MVP should use training-oriented defaults appropriate for Hypertrack’s user base.
 
-## Protein defaults (proposed)
+### Protein defaults (proposed)
 
 - cut: **~2.0 g/kg**
 - maintain: **~1.8 g/kg**
@@ -383,7 +385,7 @@ Additional sports/body-composition context:
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC5596471/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC11206787/
 
-## Fat floor and carbs remainder (proposed)
+### Fat floor and carbs remainder (proposed)
 
 Proposed macro sequence:
 
@@ -409,7 +411,7 @@ MVP notes:
 
 The following are proposed conceptual models for implementation planning.
 
-## Goal and target models
+### Goal and target models
 
 - `BodyweightGoal`
   - values: `loseWeight`, `maintainWeight`, `gainWeight`
@@ -421,7 +423,7 @@ The following are proposed conceptual models for implementation planning.
     - maintain: `0.00`
     - gain: `+0.10`, `+0.25`, `+0.50`
 
-## Confidence and warning models
+### Confidence and warning models
 
 - `RecommendationConfidence`
   - values: `notEnoughData`, `low`, `medium`, `high`
@@ -432,7 +434,7 @@ The following are proposed conceptual models for implementation planning.
     - `warningLevel` (`none|moderate|high`)
     - `warningReasons` (list of machine-readable reason codes)
 
-## Recommendation payload models
+### Recommendation payload models
 
 - `NutritionRecommendation`
   - fields:
@@ -459,7 +461,7 @@ The following are proposed conceptual models for implementation planning.
     - `avgLoggedCalories`
     - `qualityFlags`
 
-## Active vs generated target models
+### Active vs generated target models
 
 - `ActiveNutritionTargets`
   - currently effective calorie/macro targets used by nutrition flows
@@ -522,9 +524,9 @@ Note:
 
 The following are implementation-planning proposals mapped to current screens.
 
-## Onboarding
+### Onboarding
 
-File: `lib/screens/onboarding_screen.dart`
+Likely file target: `lib/screens/onboarding_screen.dart`
 
 Proposed conceptual changes:
 
@@ -533,9 +535,9 @@ Proposed conceptual changes:
 - show recommendation summary (calories/protein/carbs/fat + confidence note)
 - add explicit apply/adopt action before onboarding completion
 
-## Nutrition hub
+### Nutrition hub
 
-File: `lib/screens/nutrition_hub_screen.dart`
+Likely file target: `lib/screens/nutrition_hub_screen.dart`
 
 Proposed conceptual changes:
 
@@ -549,7 +551,7 @@ Proposed conceptual changes:
 - add explicit apply/adopt button
 - add “not enough data yet” / low-confidence states
 
-## Goals and profile surfaces
+### Goals and profile surfaces
 
 Files:
 
@@ -562,18 +564,18 @@ Proposed conceptual changes:
 - optionally expose recommendation settings/help text
 - keep manual goals editable while preserving distinction from generated recommendation
 
-## Settings / operational controls
+### Settings / operational controls
 
-File: `lib/screens/settings_screen.dart`
+Likely file target: `lib/screens/settings_screen.dart`
 
 Possible conceptual changes:
 
 - optional recommendation debug/status section (last generated at, confidence state, next due)
 - optional manual “refresh recommendation now” trigger for troubleshooting (if consistent with product direction)
 
-## Optional analytics surface
+### Optional analytics surface
 
-File: `lib/screens/analytics/body_nutrition_correlation_screen.dart`
+Likely file target: `lib/screens/analytics/body_nutrition_correlation_screen.dart`
 
 Possible conceptual changes:
 
@@ -692,13 +694,15 @@ Conceptual scheduler flow:
 8. Persist latest generated recommendation + metadata.
 9. Surface update in nutrition UI for manual apply.
 
+Actual generation may run on app startup, on foreground resume, or via a supported background execution path, while still enforcing the one-generation-per-due-week invariant.
+
 ---
 
 ## Tests (implementation-phase plan)
 
 Proposed future test focus and likely test locations:
 
-## Domain tests
+### Domain tests
 
 Likely path:
 
@@ -714,7 +718,7 @@ Coverage:
 - warning trigger behavior across recommendation deltas
 - macro derivation (protein defaults, fat floor, carbs remainder)
 
-## Data/persistence tests
+### Data/persistence tests
 
 Likely path:
 
@@ -727,7 +731,7 @@ Coverage:
 - due-key idempotency / scheduler state handling
 - backup/restore serialization integrity for recommendation state
 
-## Presentation/UI flow tests
+### Presentation/UI flow tests
 
 Likely path:
 
@@ -779,7 +783,7 @@ Key open questions to finalize before coding:
 
 All links below are intentionally retained as direct source references for implementation planning and future scientific refinement.
 
-## Dynamic energy balance / fixed-rule caveats
+### Dynamic energy balance / fixed-rule caveats
 
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC3859816/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC3810417/
@@ -788,7 +792,7 @@ All links below are intentionally retained as direct source references for imple
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC2980958/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC3127505/
 
-## Intake misreporting / usual intake estimation
+### Intake misreporting / usual intake estimation
 
 - https://www.frontiersin.org/articles/10.3389/fendo.2019.00850/full
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC6928130/
@@ -796,20 +800,20 @@ All links below are intentionally retained as direct source references for imple
 - https://www.scielo.br/j/csp/a/tZxsC44dwF8z7nJb6FQSNwP/?lang=en
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC2803049/
 
-## RMR prediction equations / onboarding priors
+### RMR prediction equations / onboarding priors
 
 - https://linkinghub.elsevier.com/retrieve/pii/S2212267216301071
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC7299486/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC9960966/
 - https://cdnsciencepub.com/doi/10.1139/apnm-2020-0887
 
-## Weight variability / smoothing / rolling trend rationale
+### Weight variability / smoothing / rolling trend rationale
 
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC10653631/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC7519428/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC7192384/
 
-## Protein recommendations / training-oriented defaults
+### Protein recommendations / training-oriented defaults
 
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC5477153/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC5470183/
@@ -820,18 +824,18 @@ All links below are intentionally retained as direct source references for imple
 - https://www.mdpi.com/2072-6643/13/9/3255/pdf
 - https://bjsm.bmj.com/lookup/doi/10.1136/bjsports-2017-097608
 
-## Fat/macro-distribution guidance context
+### Fat/macro-distribution guidance context
 
 - https://foodandnutritionresearch.net/index.php/fnr/article/download/232/232
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC6033587/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC10661909/
 
-## Practical weekly adjustment/coaching framing
+### Practical weekly adjustment/coaching framing
 
 - https://www.mdpi.com/2227-9032/6/3/73/pdf
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC8017325/
 
-## Additional sports/body-composition context
+### Additional sports/body-composition context
 
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC5596471/
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC11206787/
