@@ -38,6 +38,39 @@ Primary product goals:
 - preserve user control via manual apply/adopt
 - avoid false precision and hidden hard caps
 
+## Weekly target-rate options and defaults
+
+The recommendation system should support a small, explicit set of user-selectable weekly target rates.
+
+### Supported options
+
+#### Lose
+- `-0.25 kg/week`
+- `-0.50 kg/week`
+- `-0.75 kg/week`
+- `-1.00 kg/week`
+
+#### Maintain
+- `0.00 kg/week`
+
+#### Gain
+- `+0.10 kg/week`
+- `+0.25 kg/week`
+- `+0.50 kg/week`
+
+### MVP defaults
+
+- lose default: `-0.50 kg/week`
+- maintain default: `0.00 kg/week`
+- gain default: `+0.25 kg/week`
+
+### Product notes
+
+- These values are intentional product options, not dynamically generated free-form inputs in MVP.
+- They should remain simple and understandable for onboarding and settings UX.
+- The underlying kcal/day mapping should be treated as an approximation, not as an exact physiological law.
+- Future versions may refine labels or present these rates additionally as `% bodyweight/week`, but MVP can keep `kg/week` as the primary user-facing format.
+
 ---
 
 ## User flow
@@ -97,6 +130,49 @@ Required lifecycle metadata:
 - confidence state + quality summary
 - warning flags (including large-adjustment warning)
 - previous recommendation linkage/snapshot for explainability
+
+---
+
+## Weekly scheduler / due-week semantics
+
+The recommendation feature is product-defined as a **weekly update system** with a planned user-facing anchor of **Monday `00:00`**.
+
+However, implementation should treat this as a **week-key / due-window concept**, not as a requirement for exact background execution at that precise timestamp.
+
+### Intended behavior
+
+- Each calendar week has one conceptual recommendation generation slot.
+- The planned anchor is Monday `00:00`.
+- The system should generate **at most one recommendation per due week**.
+- If the app is not running exactly at Monday `00:00`, generation should occur the next time the app has a valid opportunity (for example app startup, foreground resume, or another supported execution path).
+
+### Practical implementation intent
+
+The scheduler should be designed around something like:
+
+- `dueWeekKey`
+- `lastGeneratedWeekKey`
+
+Where:
+- `dueWeekKey` identifies the current recommendation week
+- generation runs only if `lastGeneratedWeekKey != dueWeekKey`
+
+### Why this matters
+
+This keeps behavior stable across platform limitations:
+
+- iOS and Android may not guarantee exact background execution timing
+- app lifecycle interruptions should not cause duplicate or missed recommendation states
+- recommendation cadence remains predictable without requiring exact scheduler precision
+
+### MVP expectation
+
+For MVP, the important invariant is:
+
+- **one recommendation per due week**
+- not exact millisecond execution at Monday `00:00`
+
+This should be reflected in both implementation and tests.
 
 ---
 
@@ -532,6 +608,73 @@ Behavior expectations:
 Backup/restore note:
 
 - recommendation state should be restored consistently with existing backup model so post-restore UI does not show contradictory active vs latest recommendation state.
+
+---
+## Manual override semantics and active-vs-generated target behavior
+
+The recommendation system must keep a strict conceptual distinction between:
+
+- **active nutrition targets**
+- **latest generated recommendation**
+- **latest applied/adopted recommendation**
+
+This distinction remains important even after the user has manually edited targets.
+
+### Core rule
+
+A generated recommendation must never silently overwrite the user’s active targets.
+
+Only an explicit user action should promote a recommendation into the active target set.
+
+### Manual override scenarios
+
+After a recommendation has been applied, the user may still manually edit calories/macros later.
+
+In that case:
+
+- active targets may diverge from the latest generated recommendation
+- the last generated recommendation remains part of recommendation state/history
+- the app must not assume that active targets always equal latest recommendation
+- the app should preserve this distinction across app restarts and backup/restore
+
+### Important conceptual states
+
+#### 1) Active targets
+The targets currently used by diary/nutrition flows.
+
+#### 2) Latest generated recommendation
+The newest recommendation computed by the recommendation engine, whether applied or not.
+
+#### 3) Latest applied recommendation snapshot
+The recommendation snapshot that was last explicitly adopted by the user, if tracked separately.
+
+### Comparison baseline for future updates
+
+This must be defined explicitly during implementation.
+
+A future weekly recommendation may need comparison against one or more of:
+
+- current active targets
+- previous generated recommendation
+- previous applied recommendation
+- previous stable recommendation baseline
+
+### Current MVP recommendation
+
+For MVP, document the intended comparison logic as:
+
+- **warning / delta-to-user impact** should primarily compare against **current active targets**
+- **historical explanation / recommendation drift** may compare against **previous generated recommendation** or **previous applied recommendation**, depending on implementation simplicity
+
+### Why this matters
+
+Without this distinction, the app can become confusing in cases where:
+
+- a recommendation is generated but not applied
+- a recommendation is applied and then manually edited
+- a later recommendation appears and the app needs to explain “what changed” and “relative to what”
+
+This behavior should be covered explicitly in persistence logic, backup/restore expectations, and future tests.
 
 ---
 
