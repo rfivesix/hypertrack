@@ -6,7 +6,6 @@ import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_exp
 import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -99,7 +98,6 @@ void main() {
         maintenanceEstimate: _estimate(dueWeekKey: '2026-04-06'),
         dueWeekKey: '2026-04-06',
         algorithmVersion: 'bayesian_test',
-        generatedAt: DateTime(2026, 4, 6, 10, 0),
       );
 
       await repository.saveLatestBayesianExperimentalSnapshot(
@@ -108,19 +106,34 @@ void main() {
 
       final restored = await repository.getLatestBayesianExperimentalSnapshot();
       final heuristic = await repository.getLatestGeneratedRecommendation();
+      final prefs = await SharedPreferences.getInstance();
+      final rawSnapshot = prefs.getString(
+        'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot',
+      );
+      final decodedSnapshot = jsonDecode(rawSnapshot!) as Map<String, dynamic>;
 
       expect(restored, isNotNull);
       expect(heuristic, isNull);
       expect(restored!.dueWeekKey, '2026-04-06');
+      expect(restored.generatedAt, restored.recommendation.generatedAt);
+      expect(
+        restored.generatedAt,
+        snapshot.recommendation.generatedAt,
+      );
+      expect(decodedSnapshot.containsKey('generatedAt'), isFalse);
+      expect(
+        (decodedSnapshot['recommendation'] as Map)['generatedAt'],
+        isNotNull,
+      );
       expect(
         restored.maintenanceEstimate.posteriorMaintenanceCalories,
         closeTo(2380, 0.001),
       );
       expect(
-        await repository.getLastGeneratedDueWeekKeyForMode(
-          mode: RecommendationEstimationMode.bayesianExperimental,
+        prefs.getString(
+          'adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental',
         ),
-        '2026-04-06',
+        isNull,
       );
     });
 
@@ -129,7 +142,6 @@ void main() {
       await prefs.setString(
         'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot',
         '{"dueWeekKey":"2026-04-06","algorithmVersion":"bayesian_test",'
-            '"generatedAt":"2026-04-06T10:00:00.000",'
             '"recommendation":{"dueWeekKey":"2026-04-06","algorithmVersion":"bayesian_test"},'
             '"maintenanceEstimate":{"dueWeekKey":"2026-04-13"}}',
       );

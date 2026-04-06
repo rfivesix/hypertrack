@@ -93,6 +93,7 @@
 - `adaptive_nutrition_recommendation.last_generated_due_week_key`: due-week string (`yyyy-MM-dd` Monday anchor)
 - `adaptive_nutrition_recommendation.last_due_notification_week_key`: last due week for which a due-notification was emitted
 - `adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot`: atomic JSON payload for experimental Bayesian recommendation + estimate + metadata
+  - snapshot generation time is sourced from `snapshot.recommendation.generatedAt` (no separate top-level snapshot timestamp field)
 - legacy experimental keys are still readable only for one-way migration/fallback safety:
   - `adaptive_nutrition_recommendation.latest_generated_bayesian_experimental`
   - `adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental`
@@ -470,8 +471,11 @@
 
 ### Notification support (first version)
 - A scheduler-based due notification seam is implemented:
-  - `notifyIfNewRecommendationDue(...)` emits at most once per due week key
-  - eligibility is based on due-week scheduling only (not model deltas)
+  - `notifyIfNewRecommendationDue(...)` emits only when all conditions hold:
+    - recommendation is currently due for this due week
+    - no recommendation has yet been generated for this due week
+    - no due-notification has yet been sent for this due week
+  - eligibility is scheduler-based only (not model deltas)
   - notification dispatch is abstracted via `AdaptiveRecommendationDueNotifier` (local-notification implementation + test noop/fake support)
 
 ## 11. Warnings, confidence, and data quality semantics
@@ -607,12 +611,14 @@
 ### Mode separation and persistence semantics (implemented)
 - Mode separation is explicit via `RecommendationEstimationMode`.
 - Experimental persistence is now an atomic snapshot model:
-  - `BayesianExperimentalRecommendationSnapshot` stores recommendation + maintenance estimate + due week key + algorithm version + generated-at metadata in one payload.
+  - `BayesianExperimentalRecommendationSnapshot` stores recommendation + maintenance estimate + due week key + algorithm version.
+  - generation time is read from `recommendation.generatedAt`.
 - Experimental retrieval no longer reconstructs state from fragmented recommendation/estimate keys.
 - Coherence is validated at snapshot decode time (due week key + algorithm alignment); incoherent payloads are treated as invalid and ignored.
 - Minimal legacy compatibility:
   - if no atomic snapshot exists, coherent legacy experimental payloads are migrated once into the atomic snapshot key
   - missing/corrupt/incoherent legacy payloads are ignored safely.
+- Legacy fragmented Bayesian keys are migration support only and are not used as normal active write paths.
 - Production keys (`latest_generated`, `latest_applied`, `last_generated_due_week_key`) are preserved and remain authoritative for current UI/apply flows.
 
 ### Comparison/debug tracing (implemented)

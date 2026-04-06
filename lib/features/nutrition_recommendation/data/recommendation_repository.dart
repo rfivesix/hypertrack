@@ -29,6 +29,8 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.last_due_notification_week_key';
   static const String _latestBayesianExperimentalSnapshotKey =
       'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot';
+  // Legacy fragmented Bayesian experimental keys.
+  // These remain readable for one-way migration only.
   static const String _latestGeneratedBayesianExperimentalKey =
       'adaptive_nutrition_recommendation.latest_generated_bayesian_experimental';
   static const String _lastGeneratedDueWeekBayesianExperimentalKey =
@@ -152,36 +154,74 @@ class RecommendationRepository {
   Future<NutritionRecommendation?> getLatestGeneratedRecommendationForMode({
     required RecommendationEstimationMode mode,
   }) async {
-    return _loadRecommendation(_latestGeneratedKeyForMode(mode));
+    switch (mode) {
+      case RecommendationEstimationMode.heuristic:
+        return _loadRecommendation(_latestGeneratedKey);
+      case RecommendationEstimationMode.bayesianExperimental:
+        // Bayesian experimental mode no longer uses fragmented persistence keys.
+        throw UnsupportedError(
+          'Bayesian experimental mode uses atomic snapshot persistence. '
+          'Legacy fragmented recommendation keys are migration-only.',
+        );
+    }
   }
 
   Future<void> saveLatestGeneratedRecommendationForMode({
     required RecommendationEstimationMode mode,
     required NutritionRecommendation recommendation,
   }) async {
-    await _saveRecommendation(_latestGeneratedKeyForMode(mode), recommendation);
-    if (recommendation.dueWeekKey != null &&
-        recommendation.dueWeekKey!.isNotEmpty) {
-      await setLastGeneratedDueWeekKeyForMode(
-        mode: mode,
-        dueWeekKey: recommendation.dueWeekKey!,
-      );
+    switch (mode) {
+      case RecommendationEstimationMode.heuristic:
+        await _saveRecommendation(_latestGeneratedKey, recommendation);
+        if (recommendation.dueWeekKey != null &&
+            recommendation.dueWeekKey!.isNotEmpty) {
+          await setLastGeneratedDueWeekKeyForMode(
+            mode: mode,
+            dueWeekKey: recommendation.dueWeekKey!,
+          );
+        }
+        return;
+      case RecommendationEstimationMode.bayesianExperimental:
+        // Bayesian experimental mode no longer uses fragmented persistence keys.
+        throw UnsupportedError(
+          'Bayesian experimental mode uses atomic snapshot persistence. '
+          'Legacy fragmented recommendation keys are migration-only.',
+        );
     }
   }
 
   Future<String?> getLastGeneratedDueWeekKeyForMode({
     required RecommendationEstimationMode mode,
   }) async {
-    final prefs = await _prefsLoader();
-    return prefs.getString(_lastGeneratedDueWeekKeyForMode(mode));
+    switch (mode) {
+      case RecommendationEstimationMode.heuristic:
+        final prefs = await _prefsLoader();
+        return prefs.getString(_lastGeneratedDueWeekKey);
+      case RecommendationEstimationMode.bayesianExperimental:
+        // Bayesian experimental mode no longer uses fragmented persistence keys.
+        throw UnsupportedError(
+          'Bayesian experimental mode uses atomic snapshot persistence. '
+          'Legacy fragmented due-week keys are migration-only.',
+        );
+    }
   }
 
   Future<void> setLastGeneratedDueWeekKeyForMode({
     required RecommendationEstimationMode mode,
     required String dueWeekKey,
   }) async {
-    final prefs = await _prefsLoader();
-    await prefs.setString(_lastGeneratedDueWeekKeyForMode(mode), dueWeekKey);
+    switch (mode) {
+      case RecommendationEstimationMode.heuristic:
+        final prefs = await _prefsLoader();
+        await prefs.setString(_lastGeneratedDueWeekKey, dueWeekKey);
+        return;
+      case RecommendationEstimationMode.bayesianExperimental:
+        // Bayesian experimental mode no longer uses fragmented persistence keys.
+        throw UnsupportedError(
+          'Bayesian experimental mode uses atomic snapshot persistence. '
+          'Legacy fragmented due-week keys are migration-only.',
+        );
+    }
   }
 
   Future<BayesianExperimentalRecommendationSnapshot?>
@@ -200,6 +240,9 @@ class RecommendationRepository {
       }
     }
 
+    // Legacy one-way migration fallback:
+    // only if no atomic snapshot exists, attempt to migrate coherent
+    // fragmented legacy keys into the snapshot key.
     return _migrateLegacyBayesianExperimentalSnapshot(prefs);
   }
 
@@ -219,40 +262,6 @@ class RecommendationRepository {
       _latestBayesianExperimentalSnapshotKey,
       jsonEncode(snapshot.toJson()),
     );
-    // Keep due-week tracking in sync for compatibility with older reads/tests.
-    await prefs.setString(
-      _lastGeneratedDueWeekBayesianExperimentalKey,
-      snapshot.dueWeekKey,
-    );
-  }
-
-  Future<BayesianMaintenanceEstimate?>
-      getLatestBayesianMaintenanceEstimate() async {
-    final prefs = await _prefsLoader();
-    final encoded = prefs.getString(_latestBayesianMaintenanceEstimateKey);
-    if (encoded == null || encoded.isEmpty) {
-      return null;
-    }
-
-    try {
-      final decoded = jsonDecode(encoded);
-      if (decoded is! Map<String, dynamic>) {
-        return null;
-      }
-      return BayesianMaintenanceEstimate.fromJson(decoded);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<void> saveLatestBayesianMaintenanceEstimate({
-    required BayesianMaintenanceEstimate estimate,
-  }) async {
-    final prefs = await _prefsLoader();
-    await prefs.setString(
-      _latestBayesianMaintenanceEstimateKey,
-      jsonEncode(estimate.toJson()),
-    );
   }
 
   Future<void> clearForTesting() async {
@@ -269,24 +278,6 @@ class RecommendationRepository {
     await prefs.remove(_latestGeneratedBayesianExperimentalKey);
     await prefs.remove(_lastGeneratedDueWeekBayesianExperimentalKey);
     await prefs.remove(_latestBayesianMaintenanceEstimateKey);
-  }
-
-  String _latestGeneratedKeyForMode(RecommendationEstimationMode mode) {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        return _latestGeneratedKey;
-      case RecommendationEstimationMode.bayesianExperimental:
-        return _latestGeneratedBayesianExperimentalKey;
-    }
-  }
-
-  String _lastGeneratedDueWeekKeyForMode(RecommendationEstimationMode mode) {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        return _lastGeneratedDueWeekKey;
-      case RecommendationEstimationMode.bayesianExperimental:
-        return _lastGeneratedDueWeekBayesianExperimentalKey;
-    }
   }
 
   Future<void> _saveRecommendation(
@@ -353,7 +344,6 @@ class RecommendationRepository {
       maintenanceEstimate: estimate,
       dueWeekKey: dueWeekKey,
       algorithmVersion: recommendation.algorithmVersion,
-      generatedAt: recommendation.generatedAt,
     );
     if (!snapshot.isCoherent) {
       return null;

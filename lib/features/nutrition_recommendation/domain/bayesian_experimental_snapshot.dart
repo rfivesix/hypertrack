@@ -8,7 +8,6 @@ class BayesianExperimentalRecommendationSnapshot {
   final BayesianMaintenanceEstimate maintenanceEstimate;
   final String dueWeekKey;
   final String algorithmVersion;
-  final DateTime generatedAt;
   final int snapshotVersion;
 
   const BayesianExperimentalRecommendationSnapshot({
@@ -16,9 +15,11 @@ class BayesianExperimentalRecommendationSnapshot {
     required this.maintenanceEstimate,
     required this.dueWeekKey,
     required this.algorithmVersion,
-    required this.generatedAt,
     this.snapshotVersion = currentSnapshotVersion,
   });
+
+  /// Single source of truth for snapshot generation time.
+  DateTime get generatedAt => recommendation.generatedAt;
 
   bool get isCoherent {
     final recommendationDueWeekKey = recommendation.dueWeekKey;
@@ -51,7 +52,6 @@ class BayesianExperimentalRecommendationSnapshot {
       'snapshotVersion': snapshotVersion,
       'dueWeekKey': dueWeekKey,
       'algorithmVersion': algorithmVersion,
-      'generatedAt': generatedAt.toIso8601String(),
       'recommendation': recommendation.toJson(),
       'maintenanceEstimate': maintenanceEstimate.toJson(),
     };
@@ -88,16 +88,11 @@ class BayesianExperimentalRecommendationSnapshot {
         ? explicitAlgorithmVersion!
         : recommendation.algorithmVersion;
 
-    final generatedAt =
-        DateTime.tryParse(json['generatedAt'] as String? ?? '') ??
-            recommendation.generatedAt;
-
     final snapshot = BayesianExperimentalRecommendationSnapshot(
       recommendation: recommendation,
       maintenanceEstimate: maintenanceEstimate,
       dueWeekKey: dueWeekKey,
       algorithmVersion: algorithmVersion,
-      generatedAt: generatedAt,
       snapshotVersion:
           (json['snapshotVersion'] as int?) ?? currentSnapshotVersion,
     );

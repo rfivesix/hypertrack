@@ -236,8 +236,13 @@ class AdaptiveNutritionRecommendationService {
 
   /// Scheduler-oriented notification hook (simple first version).
   ///
-  /// This is intentionally based only on due-week scheduling semantics:
-  /// it does not inspect model deltas and does not auto-apply goals.
+  /// Notification is sent only when all conditions are true:
+  /// 1. a recommendation is currently due for this due week,
+  /// 2. no recommendation has been generated for this due week yet,
+  /// 3. no due-notification has been sent for this due week yet.
+  ///
+  /// This remains strictly scheduler-based (no model-delta logic),
+  /// and does not auto-apply goals.
   Future<bool> notifyIfNewRecommendationDue({
     DateTime? now,
   }) async {
@@ -245,11 +250,23 @@ class AdaptiveNutritionRecommendationService {
     final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
     final lastGeneratedDueWeekKey =
         await _repository.getLastGeneratedDueWeekKey();
+    final latestGeneratedRecommendation =
+        await _repository.getLatestGeneratedRecommendation();
+    final generatedDueWeekFromSnapshot =
+        latestGeneratedRecommendation?.dueWeekKey;
 
-    if (!RecommendationScheduler.shouldGenerateForWeek(
+    final isDueForCurrentWeek = RecommendationScheduler.shouldGenerateForWeek(
       dueWeekKey: dueWeekKey,
       lastGeneratedDueWeekKey: lastGeneratedDueWeekKey,
-    )) {
+    );
+    if (!isDueForCurrentWeek) {
+      return false;
+    }
+
+    final hasGeneratedForCurrentDueWeek =
+        lastGeneratedDueWeekKey == dueWeekKey ||
+            generatedDueWeekFromSnapshot == dueWeekKey;
+    if (hasGeneratedForCurrentDueWeek) {
       return false;
     }
 
@@ -473,7 +490,6 @@ class AdaptiveNutritionRecommendationService {
       maintenanceEstimate: bayesianResult.maintenanceEstimate,
       dueWeekKey: dueWeekKey,
       algorithmVersion: bayesianExperimentalAlgorithmVersion,
-      generatedAt: bayesianResult.recommendation.generatedAt,
     );
 
     await _repository.saveLatestBayesianExperimentalSnapshot(
@@ -754,7 +770,6 @@ class AdaptiveNutritionRecommendationService {
           maintenanceEstimate: recommendation.maintenanceEstimate,
           dueWeekKey: dueWeekKey,
           algorithmVersion: bayesianExperimentalAlgorithmVersion,
-          generatedAt: recommendation.recommendation.generatedAt,
         ),
       );
     }

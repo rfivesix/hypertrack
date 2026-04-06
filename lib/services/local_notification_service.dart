@@ -112,9 +112,9 @@ class LocalNotificationService {
 
     if (languageCode == 'de') {
       return (
-        title: 'Neue adaptive Empfehlung verfuegbar',
+        title: 'Neue adaptive Empfehlung verfügbar',
         body:
-            'Deine neue woechentliche adaptive Ernaehrungsempfehlung ist jetzt faellig.',
+            'Deine neue wöchentliche adaptive Ernährungsempfehlung ist jetzt fällig.',
       );
     }
 
