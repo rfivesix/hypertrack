@@ -250,6 +250,12 @@ class AdaptiveNutritionRecommendationService {
     if (recommendation == null || estimate == null) {
       return null;
     }
+    if (!_isCoherentBayesianExperimentalState(
+      recommendation: recommendation,
+      estimate: estimate,
+    )) {
+      return null;
+    }
 
     return BayesianNutritionRecommendationResult(
       recommendation: recommendation,
@@ -266,6 +272,10 @@ class AdaptiveNutritionRecommendationService {
     final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
     final stableWindowEndDay =
         RecommendationScheduler.stableWindowEndDayForDueWeek(effectiveNow);
+    // Treat recommendation+estimate as a single coherent state pair.
+    // If they are mismatched/corrupt we intentionally fall back to
+    // regeneration instead of returning mixed payloads.
+    final coherentLatest = await getLatestBayesianExperimentalRecommendation();
     final lastGeneratedDueWeekKey =
         await _repository.getLastGeneratedDueWeekKeyForMode(
       mode: RecommendationEstimationMode.bayesianExperimental,
@@ -276,9 +286,9 @@ class AdaptiveNutritionRecommendationService {
           dueWeekKey: dueWeekKey,
           lastGeneratedDueWeekKey: lastGeneratedDueWeekKey,
         )) {
-      final existing = await getLatestBayesianExperimentalRecommendation();
-      if (existing != null) {
-        return existing;
+      // Same due week: return the already generated coherent snapshot.
+      if (coherentLatest != null) {
+        return coherentLatest;
       }
     }
 
@@ -289,11 +299,10 @@ class AdaptiveNutritionRecommendationService {
     final results = await Future.wait<dynamic>([
       _repository.getGoal(),
       _repository.getTargetRateKgPerWeek(),
-      _repository.getLatestGeneratedRecommendationForMode(
-        mode: RecommendationEstimationMode.bayesianExperimental,
-      ),
-      _repository.getLatestBayesianMaintenanceEstimate(),
       _inputAdapter.buildInput(
+        // Stable previous-Sunday boundary keeps in-week window data fixed.
+        // This is the first guard against in-week drift, independent of
+        // recursive-prior replay behavior.
         now: stableWindowEndDay,
         declaredActivityLevel: priorActivityLevel,
         extraCardioHoursOption: extraCardioHoursOption,
@@ -302,9 +311,9 @@ class AdaptiveNutritionRecommendationService {
 
     final goal = results[0] as BodyweightGoal;
     final targetRateKgPerWeek = results[1] as double;
-    final previousRecommendation = results[2] as NutritionRecommendation?;
-    final latestEstimate = results[3] as BayesianMaintenanceEstimate?;
-    final input = results[4] as RecommendationGenerationInput;
+    final previousRecommendation = coherentLatest?.recommendation;
+    final latestEstimate = coherentLatest?.maintenanceEstimate;
+    final input = results[2] as RecommendationGenerationInput;
     final chainedPrior = _resolveChainedBayesianPrior(
       input: input,
       latestEstimate: latestEstimate,
@@ -509,6 +518,14 @@ class AdaptiveNutritionRecommendationService {
           markAsApplied: markAsApplied,
         );
       case RecommendationEstimationMode.bayesianExperimental:
+        if (markAsApplied) {
+          throw ArgumentError.value(
+            markAsApplied,
+            'markAsApplied',
+            'markAsApplied is not supported in bayesianExperimental mode; '
+                'experimental onboarding generation cannot apply active targets.',
+          );
+        }
         final result =
             await generateBayesianExperimentalOnboardingRecommendation(
           goal: goal,
@@ -654,6 +671,8 @@ class AdaptiveNutritionRecommendationService {
     required BayesianMaintenanceEstimate? latestEstimate,
     required String dueWeekKey,
   }) {
+    // Bootstrap fallback: use profile/activity/body-fat prior when we have
+    // no valid experimental posterior state to chain from.
     final profileBootstrapPrior = BayesianMaintenancePrior(
       meanCalories: input.priorMaintenanceCalories.toDouble(),
       stdDevCalories: const BayesianEstimatorConfig().priorStdDevCalories,
@@ -666,6 +685,9 @@ class AdaptiveNutritionRecommendationService {
     }
 
     if (latestEstimate.dueWeekKey == dueWeekKey) {
+      // Forced regeneration inside the same due week must be deterministic.
+      // Replay the stored prior-used state for this week instead of chaining
+      // from the same-week posterior.
       final replayPrior = BayesianMaintenancePrior(
         meanCalories: latestEstimate.priorMeanUsedCalories,
         stdDevCalories: latestEstimate.priorStdDevUsedCalories,
@@ -677,6 +699,9 @@ class AdaptiveNutritionRecommendationService {
       return profileBootstrapPrior;
     }
 
+    // New due week: recursive chaining step.
+    // Previous posterior becomes current prior before process-noise inflation
+    // inside the Bayesian estimator.
     final chainedPrior = BayesianMaintenancePrior(
       meanCalories: latestEstimate.posteriorMaintenanceCalories,
       stdDevCalories: latestEstimate.posteriorStdDevCalories,
@@ -702,6 +727,21 @@ class AdaptiveNutritionRecommendationService {
     return prior.meanCalories.isFinite &&
         prior.stdDevCalories.isFinite &&
         prior.stdDevCalories > 0;
+  }
+
+  bool _isCoherentBayesianExperimentalState({
+    required NutritionRecommendation recommendation,
+    required BayesianMaintenanceEstimate estimate,
+  }) {
+    final recommendationDueWeekKey = recommendation.dueWeekKey;
+    final estimateDueWeekKey = estimate.dueWeekKey;
+    if (recommendationDueWeekKey == null ||
+        recommendationDueWeekKey.isEmpty ||
+        estimateDueWeekKey == null ||
+        estimateDueWeekKey.isEmpty) {
+      return false;
+    }
+    return recommendationDueWeekKey == estimateDueWeekKey;
   }
 
   Future<int> _estimateMaintenanceForVirtualProfile({

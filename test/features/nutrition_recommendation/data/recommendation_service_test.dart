@@ -10,6 +10,7 @@ import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tde
 import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
 import 'package:hypertrack/models/food_entry.dart';
 import 'package:hypertrack/models/measurement.dart';
 import 'package:hypertrack/models/measurement_session.dart';
@@ -222,6 +223,54 @@ void main() {
         second.maintenanceEstimate.priorStdDevUsedCalories,
         closeTo(first.maintenanceEstimate.priorStdDevUsedCalories, 0.0001),
       );
+    });
+
+    test('experimental retrieval returns coherent pair when dueWeek keys match',
+        () async {
+      final generated =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 6, 10, 0),
+        force: true,
+      );
+      final latest =
+          await service.getLatestBayesianExperimentalRecommendation();
+
+      expect(generated, isNotNull);
+      expect(latest, isNotNull);
+      expect(
+        latest!.recommendation.dueWeekKey,
+        latest.maintenanceEstimate.dueWeekKey,
+      );
+    });
+
+    test('experimental retrieval returns null for mismatched dueWeek payloads',
+        () async {
+      await repository.saveLatestGeneratedRecommendationForMode(
+        mode: RecommendationEstimationMode.bayesianExperimental,
+        recommendation: _recommendationForDueWeek('2026-04-06'),
+      );
+      await repository.saveLatestBayesianMaintenanceEstimate(
+        estimate: const BayesianMaintenanceEstimate(
+          posteriorMaintenanceCalories: 2400,
+          posteriorStdDevCalories: 180,
+          profilePriorMaintenanceCalories: 2350,
+          priorMeanUsedCalories: 2350,
+          priorStdDevUsedCalories: 220,
+          priorSource: BayesianPriorSource.profilePriorBootstrap,
+          observedIntakeCalories: 2300,
+          observedWeightSlopeKgPerWeek: -0.1,
+          observationImpliedMaintenanceCalories: 2410,
+          effectiveSampleSize: 8,
+          confidence: RecommendationConfidence.medium,
+          qualityFlags: <String>[],
+          debugInfo: <String, Object>{},
+          dueWeekKey: '2026-04-13',
+        ),
+      );
+
+      final latest =
+          await service.getLatestBayesianExperimentalRecommendation();
+      expect(latest, isNull);
     });
 
     test(
@@ -457,6 +506,26 @@ void main() {
       expect(storedHeuristic, isNull);
     });
 
+    test(
+        'experimental mode onboarding rejects markAsApplied to keep apply semantics explicit',
+        () async {
+      await expectLater(
+        () => service.generateOnboardingRecommendationForMode(
+          goal: BodyweightGoal.maintainWeight,
+          targetRateKgPerWeek: 0,
+          weightKg: 80,
+          heightCm: 180,
+          birthday: DateTime(1996, 1, 2),
+          gender: 'male',
+          now: DateTime(2026, 4, 5, 9, 0),
+          persistGenerated: true,
+          markAsApplied: true,
+          mode: RecommendationEstimationMode.bayesianExperimental,
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('mode separation keeps production refresh behavior unchanged',
         () async {
       final monday = DateTime(2026, 4, 6, 10, 0);
@@ -648,4 +717,32 @@ void main() {
       expect(recommendation.estimatedMaintenanceCalories, greaterThan(0));
     });
   });
+}
+
+NutritionRecommendation _recommendationForDueWeek(String dueWeekKey) {
+  return NutritionRecommendation(
+    recommendedCalories: 2400,
+    recommendedProteinGrams: 170,
+    recommendedCarbsGrams: 260,
+    recommendedFatGrams: 75,
+    estimatedMaintenanceCalories: 2400,
+    goal: BodyweightGoal.maintainWeight,
+    targetRateKgPerWeek: 0,
+    confidence: RecommendationConfidence.medium,
+    warningState: RecommendationWarningState.none,
+    generatedAt: DateTime(2026, 4, 6, 10, 0),
+    windowStart: DateTime(2026, 3, 16),
+    windowEnd: DateTime(2026, 4, 5, 23, 59, 59),
+    algorithmVersion: AdaptiveNutritionRecommendationService
+        .bayesianExperimentalAlgorithmVersion,
+    inputSummary: const RecommendationInputSummary(
+      windowDays: 21,
+      weightLogCount: 9,
+      intakeLoggedDays: 15,
+      smoothedWeightSlopeKgPerWeek: -0.2,
+      avgLoggedCalories: 2300,
+    ),
+    baselineCalories: 2400,
+    dueWeekKey: dueWeekKey,
+  );
 }

@@ -577,12 +577,14 @@
 - Mode separation is explicit via `RecommendationEstimationMode`.
 - Experimental snapshots and due-week tracking are persisted in separate keys from production heuristic keys.
 - Experimental maintenance-estimate payload persists the recursive prior/posterior metadata needed for next-week chaining.
+- Retrieval of latest experimental state is coherence-checked: recommendation snapshot and Bayesian estimate must agree on due-week key or the pair is treated as invalid.
 - Production keys (`latest_generated`, `latest_applied`, `last_generated_due_week_key`) are preserved and remain authoritative for current UI/apply flows.
 
 ### Known limitations / intentionally experimental areas
 - Current experimental model is a pragmatic scalar-state filter, not a full multi-state physiological model.
 - Measurement uncertainty is heuristic/calibrated from log density and quality flags; it is not learned from user-specific residual history.
 - Experimental apply-to-active-goals is intentionally not wired into the production apply path.
+- `generateOnboardingRecommendationForMode(..., mode: bayesianExperimental)` rejects `markAsApplied == true` to keep production apply semantics explicit and isolated.
 - Confidence semantics differ conceptually:
   - production confidence is threshold/count based
   - experimental confidence is uncertainty-informed with data sufficiency gating
