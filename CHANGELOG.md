@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0-alpha.3-bayesian-preview.1] - 2026-04-06
+
+### Added
+- Experimental Bayesian/Kalman adaptive nutrition estimation path
+- Atomic Bayesian experimental snapshot persistence
+- Manual “Recalculate now” action for adaptive recommendations
+- Recommendation freshness metadata in UI:
+  - calculated at
+  - next adaptive recommendation due
+  - due now indicator
+- Scheduler-based due-notification seam for new adaptive recommendations
+- Richer estimator comparison/debug tracing
+- Documented Bayesian estimator tuning parameters
+
+### Changed
+- Bayesian experimental state now uses atomic snapshot persistence as single source of truth
+- Due-notification logic now requires:
+  - recommendation is currently due
+  - no recommendation has yet been generated for that due week
+  - no notification has yet been sent for that due week
+- Snapshot generation time is now sourced only from `recommendation.generatedAt`
+- German adaptive notification strings now use proper umlauts and cleaner wording
+- Manual recalculation now forces immediate regeneration without auto-applying active goals
+
+### Fixed
+- Safer handling of incoherent or corrupt Bayesian experimental state
+- Safer migration from legacy fragmented Bayesian persistence
+- Removed remaining active use of fragmented Bayesian write paths in normal experimental flow
+
+### Internal
+- Production heuristic recommendation path remains unchanged and authoritative
+- Legacy fragmented Bayesian keys are now migration-only fallback support
+- Documentation reviewed and updated to match final enforced behavior
 ## [0.8.0-alpha.2] - 2026-04-06
 
 This alpha improves the adaptive nutrition recommendation MVP with more conservative sparse-data behavior, more robust trend estimation, better step-prior maintenance inputs, and clearer recommendation transparency.
