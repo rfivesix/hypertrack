@@ -32,9 +32,14 @@ class BayesianNutritionRecommendationEngine {
     required DateTime generatedAt,
     required String algorithmVersion,
     String? dueWeekKey,
+    BayesianMaintenancePrior? chainedPrior,
     NutritionRecommendation? previousRecommendation,
   }) {
-    final maintenanceEstimate = _estimator.estimate(input: input);
+    final maintenanceEstimate = _estimator.estimate(
+      input: input,
+      chainedPrior: chainedPrior,
+      dueWeekKey: dueWeekKey,
+    );
 
     final recommendation =
         AdaptiveNutritionRecommendationEngine.generateFromMaintenanceEstimate(
@@ -48,9 +53,6 @@ class BayesianNutritionRecommendationEngine {
       confidence: maintenanceEstimate.confidence,
       dueWeekKey: dueWeekKey,
       previousRecommendation: previousRecommendation,
-      additionalWarningReasons: maintenanceEstimate.qualityFlags
-          .where((flag) => flag.startsWith('bayesian_'))
-          .toList(growable: false),
     );
 
     return BayesianNutritionRecommendationResult(

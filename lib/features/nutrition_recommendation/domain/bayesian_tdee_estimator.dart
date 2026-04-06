@@ -3,6 +3,23 @@ import 'dart:math' as math;
 import 'confidence_models.dart';
 import 'recommendation_models.dart';
 
+enum BayesianPriorSource {
+  profilePriorBootstrap,
+  chainedPosterior,
+}
+
+class BayesianMaintenancePrior {
+  final double meanCalories;
+  final double stdDevCalories;
+  final BayesianPriorSource source;
+
+  const BayesianMaintenancePrior({
+    required this.meanCalories,
+    required this.stdDevCalories,
+    required this.source,
+  });
+}
+
 class BayesianEstimatorConfig {
   final double priorStdDevCalories;
   final double processStdDevCalories;
@@ -24,9 +41,14 @@ class BayesianEstimatorConfig {
 }
 
 class BayesianMaintenanceEstimate {
+  static const double _legacyDefaultPriorStdDevCalories = 420;
+
   final double posteriorMaintenanceCalories;
   final double posteriorStdDevCalories;
-  final double priorMaintenanceCalories;
+  final double profilePriorMaintenanceCalories;
+  final double priorMeanUsedCalories;
+  final double priorStdDevUsedCalories;
+  final BayesianPriorSource priorSource;
   final double? observedIntakeCalories;
   final double? observedWeightSlopeKgPerWeek;
   final double? observationImpliedMaintenanceCalories;
@@ -34,11 +56,15 @@ class BayesianMaintenanceEstimate {
   final RecommendationConfidence confidence;
   final List<String> qualityFlags;
   final Map<String, Object> debugInfo;
+  final String? dueWeekKey;
 
   const BayesianMaintenanceEstimate({
     required this.posteriorMaintenanceCalories,
     required this.posteriorStdDevCalories,
-    required this.priorMaintenanceCalories,
+    required this.profilePriorMaintenanceCalories,
+    required this.priorMeanUsedCalories,
+    required this.priorStdDevUsedCalories,
+    required this.priorSource,
     required this.observedIntakeCalories,
     required this.observedWeightSlopeKgPerWeek,
     required this.observationImpliedMaintenanceCalories,
@@ -46,13 +72,26 @@ class BayesianMaintenanceEstimate {
     required this.confidence,
     required this.qualityFlags,
     required this.debugInfo,
+    required this.dueWeekKey,
   });
+
+  // Legacy alias for older tests/integrations that referred to a single prior.
+  double get priorMaintenanceCalories => priorMeanUsedCalories;
+
+  bool get usedChainedPosteriorPrior {
+    return priorSource == BayesianPriorSource.chainedPosterior;
+  }
 
   Map<String, dynamic> toJson() {
     return {
       'posteriorMaintenanceCalories': posteriorMaintenanceCalories,
       'posteriorStdDevCalories': posteriorStdDevCalories,
-      'priorMaintenanceCalories': priorMaintenanceCalories,
+      'profilePriorMaintenanceCalories': profilePriorMaintenanceCalories,
+      'priorMeanUsedCalories': priorMeanUsedCalories,
+      'priorStdDevUsedCalories': priorStdDevUsedCalories,
+      'priorSource': priorSource.name,
+      // Legacy key for backward compatibility while reading old payloads.
+      'priorMaintenanceCalories': priorMeanUsedCalories,
       'observedIntakeCalories': observedIntakeCalories,
       'observedWeightSlopeKgPerWeek': observedWeightSlopeKgPerWeek,
       'observationImpliedMaintenanceCalories':
@@ -61,27 +100,53 @@ class BayesianMaintenanceEstimate {
       'confidence': confidence.name,
       'qualityFlags': qualityFlags,
       'debugInfo': debugInfo,
+      'dueWeekKey': dueWeekKey,
     };
   }
 
   factory BayesianMaintenanceEstimate.fromJson(Map<String, dynamic> json) {
+    final debugInfoRaw =
+        ((json['debugInfo'] as Map?) ?? const <String, Object>{})
+            .cast<String, Object>();
     final confidenceRaw = json['confidence'] as String?;
+    final priorSourceRaw = json['priorSource'] as String?;
+
+    final priorMeanUsed = _asDouble(json['priorMeanUsedCalories']) ??
+        _asDouble(json['priorMaintenanceCalories']) ??
+        0;
+
+    final priorVarianceFromDebug =
+        _asDouble(debugInfoRaw['priorVarianceCalories2']);
+    final priorStdFromDebug = priorVarianceFromDebug == null ||
+            priorVarianceFromDebug.isNaN ||
+            priorVarianceFromDebug <= 0
+        ? null
+        : math.sqrt(priorVarianceFromDebug);
+
+    final priorStdUsed = _asDouble(json['priorStdDevUsedCalories']) ??
+        priorStdFromDebug ??
+        _legacyDefaultPriorStdDevCalories;
+
+    final profilePrior =
+        _asDouble(json['profilePriorMaintenanceCalories']) ?? priorMeanUsed;
 
     return BayesianMaintenanceEstimate(
       posteriorMaintenanceCalories:
-          (json['posteriorMaintenanceCalories'] as num?)?.toDouble() ?? 0,
-      posteriorStdDevCalories:
-          (json['posteriorStdDevCalories'] as num?)?.toDouble() ?? 0,
-      priorMaintenanceCalories:
-          (json['priorMaintenanceCalories'] as num?)?.toDouble() ?? 0,
-      observedIntakeCalories:
-          (json['observedIntakeCalories'] as num?)?.toDouble(),
+          _asDouble(json['posteriorMaintenanceCalories']) ?? 0,
+      posteriorStdDevCalories: _asDouble(json['posteriorStdDevCalories']) ?? 0,
+      profilePriorMaintenanceCalories: profilePrior,
+      priorMeanUsedCalories: priorMeanUsed,
+      priorStdDevUsedCalories: priorStdUsed,
+      priorSource: BayesianPriorSource.values.firstWhere(
+        (candidate) => candidate.name == priorSourceRaw,
+        orElse: () => BayesianPriorSource.profilePriorBootstrap,
+      ),
+      observedIntakeCalories: _asDouble(json['observedIntakeCalories']),
       observedWeightSlopeKgPerWeek:
-          (json['observedWeightSlopeKgPerWeek'] as num?)?.toDouble(),
+          _asDouble(json['observedWeightSlopeKgPerWeek']),
       observationImpliedMaintenanceCalories:
-          (json['observationImpliedMaintenanceCalories'] as num?)?.toDouble(),
-      effectiveSampleSize:
-          (json['effectiveSampleSize'] as num?)?.toDouble() ?? 0,
+          _asDouble(json['observationImpliedMaintenanceCalories']),
+      effectiveSampleSize: _asDouble(json['effectiveSampleSize']) ?? 0,
       confidence: RecommendationConfidence.values.firstWhere(
         (candidate) => candidate.name == confidenceRaw,
         orElse: () => RecommendationConfidence.notEnoughData,
@@ -89,9 +154,16 @@ class BayesianMaintenanceEstimate {
       qualityFlags: ((json['qualityFlags'] as List?) ?? const [])
           .map((item) => item.toString())
           .toList(growable: false),
-      debugInfo: ((json['debugInfo'] as Map?) ?? const <String, Object>{})
-          .cast<String, Object>(),
+      debugInfo: debugInfoRaw,
+      dueWeekKey: json['dueWeekKey'] as String?,
     );
+  }
+
+  static double? _asDouble(Object? value) {
+    return switch (value) {
+      num() => value.toDouble(),
+      _ => null,
+    };
   }
 }
 
@@ -106,9 +178,18 @@ class BayesianTdeeEstimator {
 
   BayesianMaintenanceEstimate estimate({
     required RecommendationGenerationInput input,
+    BayesianMaintenancePrior? chainedPrior,
+    String? dueWeekKey,
   }) {
-    final priorMean = input.priorMaintenanceCalories.toDouble();
-    final priorVariance = math.pow(config.priorStdDevCalories, 2).toDouble();
+    final profilePriorMean = input.priorMaintenanceCalories.toDouble();
+    final prior = _resolvePrior(
+      profilePriorMeanCalories: profilePriorMean,
+      chainedPrior: chainedPrior,
+    );
+
+    final priorMean = prior.meanCalories;
+    final priorStdDev = prior.stdDevCalories;
+    final priorVariance = math.pow(priorStdDev, 2).toDouble();
     final processVariance =
         math.pow(config.processStdDevCalories, 2).toDouble();
     final predictedVariance = priorVariance + processVariance;
@@ -118,7 +199,13 @@ class BayesianTdeeEstimator {
     final hasIntake = input.intakeLoggedDays > 0;
     final hasObservation = hasSlope && hasIntake;
 
-    final qualityFlags = <String>[];
+    final qualityFlags = <String>[
+      if (prior.source == BayesianPriorSource.chainedPosterior)
+        'bayesian_prior_chained_posterior'
+      else
+        'bayesian_prior_profile_bootstrap',
+    ];
+
     if (!hasIntake) {
       qualityFlags.add('bayesian_intake_unavailable');
     }
@@ -195,7 +282,10 @@ class BayesianTdeeEstimator {
     return BayesianMaintenanceEstimate(
       posteriorMaintenanceCalories: posteriorMean,
       posteriorStdDevCalories: posteriorStdDev,
-      priorMaintenanceCalories: priorMean,
+      profilePriorMaintenanceCalories: profilePriorMean,
+      priorMeanUsedCalories: priorMean,
+      priorStdDevUsedCalories: priorStdDev,
+      priorSource: prior.source,
       observedIntakeCalories: hasIntake ? input.avgLoggedCalories : null,
       observedWeightSlopeKgPerWeek: slope,
       observationImpliedMaintenanceCalories: observedMaintenance,
@@ -209,7 +299,45 @@ class BayesianTdeeEstimator {
         'observationVarianceCalories2': observationVariance,
         'kalmanGain': kalmanGain,
       },
+      dueWeekKey: dueWeekKey,
     );
+  }
+
+  BayesianMaintenancePrior _resolvePrior({
+    required double profilePriorMeanCalories,
+    required BayesianMaintenancePrior? chainedPrior,
+  }) {
+    if (chainedPrior == null || !_isValidPrior(chainedPrior)) {
+      return BayesianMaintenancePrior(
+        meanCalories: profilePriorMeanCalories,
+        stdDevCalories: config.priorStdDevCalories,
+        source: BayesianPriorSource.profilePriorBootstrap,
+      );
+    }
+
+    final clampedMean = chainedPrior.meanCalories.clamp(
+      config.minimumMaintenanceCalories,
+      config.maximumMaintenanceCalories,
+    );
+
+    return BayesianMaintenancePrior(
+      meanCalories: clampedMean,
+      stdDevCalories: chainedPrior.stdDevCalories,
+      source: chainedPrior.source,
+    );
+  }
+
+  bool _isValidPrior(BayesianMaintenancePrior prior) {
+    if (prior.meanCalories.isNaN || prior.stdDevCalories.isNaN) {
+      return false;
+    }
+    if (!prior.meanCalories.isFinite || !prior.stdDevCalories.isFinite) {
+      return false;
+    }
+    if (prior.stdDevCalories <= 0) {
+      return false;
+    }
+    return true;
   }
 
   double _effectiveSampleSize({

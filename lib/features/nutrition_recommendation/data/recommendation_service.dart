@@ -36,8 +36,41 @@ class RecommendationEstimatorComparison {
   });
 
   int get maintenanceDeltaCalories {
+    return maintenanceDeltaVsHeuristicCalories;
+  }
+
+  int get heuristicEstimatedMaintenanceCalories {
+    return heuristicRecommendation.estimatedMaintenanceCalories;
+  }
+
+  int get bayesianPosteriorMaintenanceCalories {
+    return bayesianRecommendation.estimatedMaintenanceCalories;
+  }
+
+  double get bayesianPriorMeanCalories {
+    return bayesianMaintenanceEstimate.priorMeanUsedCalories;
+  }
+
+  double get bayesianPriorStdDevCalories {
+    return bayesianMaintenanceEstimate.priorStdDevUsedCalories;
+  }
+
+  double get bayesianPosteriorStdDevCalories {
+    return bayesianMaintenanceEstimate.posteriorStdDevCalories;
+  }
+
+  double? get bayesianObservationImpliedMaintenanceCalories {
+    return bayesianMaintenanceEstimate.observationImpliedMaintenanceCalories;
+  }
+
+  int get maintenanceDeltaVsHeuristicCalories {
     return bayesianRecommendation.estimatedMaintenanceCalories -
         heuristicRecommendation.estimatedMaintenanceCalories;
+  }
+
+  double get maintenanceDeltaVsBayesianPriorCalories {
+    return bayesianRecommendation.estimatedMaintenanceCalories -
+        bayesianMaintenanceEstimate.priorMeanUsedCalories;
   }
 }
 
@@ -243,7 +276,10 @@ class AdaptiveNutritionRecommendationService {
           dueWeekKey: dueWeekKey,
           lastGeneratedDueWeekKey: lastGeneratedDueWeekKey,
         )) {
-      return getLatestBayesianExperimentalRecommendation();
+      final existing = await getLatestBayesianExperimentalRecommendation();
+      if (existing != null) {
+        return existing;
+      }
     }
 
     final priorActivityLevel = await _repository.getPriorActivityLevel();
@@ -256,6 +292,7 @@ class AdaptiveNutritionRecommendationService {
       _repository.getLatestGeneratedRecommendationForMode(
         mode: RecommendationEstimationMode.bayesianExperimental,
       ),
+      _repository.getLatestBayesianMaintenanceEstimate(),
       _inputAdapter.buildInput(
         now: stableWindowEndDay,
         declaredActivityLevel: priorActivityLevel,
@@ -266,7 +303,13 @@ class AdaptiveNutritionRecommendationService {
     final goal = results[0] as BodyweightGoal;
     final targetRateKgPerWeek = results[1] as double;
     final previousRecommendation = results[2] as NutritionRecommendation?;
-    final input = results[3] as RecommendationGenerationInput;
+    final latestEstimate = results[3] as BayesianMaintenanceEstimate?;
+    final input = results[4] as RecommendationGenerationInput;
+    final chainedPrior = _resolveChainedBayesianPrior(
+      input: input,
+      latestEstimate: latestEstimate,
+      dueWeekKey: dueWeekKey,
+    );
 
     final bayesianResult = _bayesianEngine.generate(
       input: input,
@@ -275,6 +318,7 @@ class AdaptiveNutritionRecommendationService {
       generatedAt: effectiveNow,
       algorithmVersion: bayesianExperimentalAlgorithmVersion,
       dueWeekKey: dueWeekKey,
+      chainedPrior: chainedPrior,
       previousRecommendation: previousRecommendation,
     );
 
@@ -308,6 +352,7 @@ class AdaptiveNutritionRecommendationService {
       _repository.getLatestGeneratedRecommendationForMode(
         mode: RecommendationEstimationMode.bayesianExperimental,
       ),
+      _repository.getLatestBayesianMaintenanceEstimate(),
       _inputAdapter.buildInput(
         now: stableWindowEndDay,
         declaredActivityLevel: priorActivityLevel,
@@ -319,7 +364,13 @@ class AdaptiveNutritionRecommendationService {
     final targetRateKgPerWeek = results[1] as double;
     final previousHeuristic = results[2] as NutritionRecommendation?;
     final previousBayesian = results[3] as NutritionRecommendation?;
-    final input = results[4] as RecommendationGenerationInput;
+    final latestBayesianEstimate = results[4] as BayesianMaintenanceEstimate?;
+    final input = results[5] as RecommendationGenerationInput;
+    final chainedPrior = _resolveChainedBayesianPrior(
+      input: input,
+      latestEstimate: latestBayesianEstimate,
+      dueWeekKey: dueWeekKey,
+    );
 
     final heuristic = AdaptiveNutritionRecommendationEngine.generate(
       input: input,
@@ -338,6 +389,7 @@ class AdaptiveNutritionRecommendationService {
       generatedAt: effectiveNow,
       algorithmVersion: bayesianExperimentalAlgorithmVersion,
       dueWeekKey: dueWeekKey,
+      chainedPrior: chainedPrior,
       previousRecommendation: previousBayesian,
     );
 
@@ -595,6 +647,61 @@ class AdaptiveNutritionRecommendationService {
     );
 
     return true;
+  }
+
+  BayesianMaintenancePrior _resolveChainedBayesianPrior({
+    required RecommendationGenerationInput input,
+    required BayesianMaintenanceEstimate? latestEstimate,
+    required String dueWeekKey,
+  }) {
+    final profileBootstrapPrior = BayesianMaintenancePrior(
+      meanCalories: input.priorMaintenanceCalories.toDouble(),
+      stdDevCalories: const BayesianEstimatorConfig().priorStdDevCalories,
+      source: BayesianPriorSource.profilePriorBootstrap,
+    );
+
+    if (latestEstimate == null ||
+        !_isValidEstimateForChaining(latestEstimate)) {
+      return profileBootstrapPrior;
+    }
+
+    if (latestEstimate.dueWeekKey == dueWeekKey) {
+      final replayPrior = BayesianMaintenancePrior(
+        meanCalories: latestEstimate.priorMeanUsedCalories,
+        stdDevCalories: latestEstimate.priorStdDevUsedCalories,
+        source: latestEstimate.priorSource,
+      );
+      if (_isValidPrior(replayPrior)) {
+        return replayPrior;
+      }
+      return profileBootstrapPrior;
+    }
+
+    final chainedPrior = BayesianMaintenancePrior(
+      meanCalories: latestEstimate.posteriorMaintenanceCalories,
+      stdDevCalories: latestEstimate.posteriorStdDevCalories,
+      source: BayesianPriorSource.chainedPosterior,
+    );
+    if (_isValidPrior(chainedPrior)) {
+      return chainedPrior;
+    }
+
+    return profileBootstrapPrior;
+  }
+
+  bool _isValidEstimateForChaining(BayesianMaintenanceEstimate estimate) {
+    return estimate.posteriorMaintenanceCalories.isFinite &&
+        estimate.posteriorStdDevCalories.isFinite &&
+        estimate.posteriorStdDevCalories > 0 &&
+        estimate.priorMeanUsedCalories.isFinite &&
+        estimate.priorStdDevUsedCalories.isFinite &&
+        estimate.priorStdDevUsedCalories > 0;
+  }
+
+  bool _isValidPrior(BayesianMaintenancePrior prior) {
+    return prior.meanCalories.isFinite &&
+        prior.stdDevCalories.isFinite &&
+        prior.stdDevCalories > 0;
   }
 
   Future<int> _estimateMaintenanceForVirtualProfile({

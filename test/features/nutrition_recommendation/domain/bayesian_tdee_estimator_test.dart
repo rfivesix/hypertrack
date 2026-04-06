@@ -23,6 +23,9 @@ void main() {
       expect(estimate.posteriorStdDevCalories, greaterThan(400));
       expect(estimate.effectiveSampleSize, 0);
       expect(estimate.confidence, RecommendationConfidence.notEnoughData);
+      expect(estimate.priorSource, BayesianPriorSource.profilePriorBootstrap);
+      expect(estimate.priorMeanUsedCalories, closeTo(2500, 0.001));
+      expect(estimate.priorStdDevUsedCalories, closeTo(420, 0.001));
     });
 
     test('sparse data produces only a small update from prior', () {
@@ -129,6 +132,32 @@ void main() {
       );
       expect(second.confidence, first.confidence);
       expect(second.qualityFlags, first.qualityFlags);
+    });
+
+    test('chained prior overrides profile prior when provided', () {
+      final input = _input(
+        priorMaintenanceCalories: 2600,
+        avgLoggedCalories: 2400,
+        smoothedWeightSlopeKgPerWeek: -0.05,
+        windowDays: 14,
+        weightLogCount: 7,
+        intakeLoggedDays: 11,
+      );
+      const chainedPrior = BayesianMaintenancePrior(
+        meanCalories: 2200,
+        stdDevCalories: 150,
+        source: BayesianPriorSource.chainedPosterior,
+      );
+
+      final estimate = estimator.estimate(
+        input: input,
+        chainedPrior: chainedPrior,
+      );
+
+      expect(estimate.profilePriorMaintenanceCalories, 2600);
+      expect(estimate.priorMeanUsedCalories, closeTo(2200, 0.001));
+      expect(estimate.priorStdDevUsedCalories, closeTo(150, 0.001));
+      expect(estimate.priorSource, BayesianPriorSource.chainedPosterior);
     });
 
     test('uncertainty narrows with better data quality and volume', () {

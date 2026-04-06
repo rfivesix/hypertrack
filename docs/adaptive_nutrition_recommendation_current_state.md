@@ -531,18 +531,30 @@
   - `refreshRecommendationIfDue(...)`
   - `generateOnboardingRecommendation(...)`
 
-### Latent-state and observation semantics (implemented)
+### Latent-state and recursive prior semantics (implemented)
 - Latent state: scalar maintenance calories (TDEE) only.
-- Prior mean: `RecommendationGenerationInput.priorMaintenanceCalories` (same profile/body-fat/activity prior model as production).
 - Observation model:
   - `z = avgLoggedCalories - smoothedWeightSlopeKgPerWeek * (7700/7)`
+- Prior precedence for each experimental weekly update:
+  1. if a valid previous Bayesian estimate exists for an earlier due week:
+     - prior mean = previous posterior mean
+     - prior stddev = previous posterior stddev
+  2. if a valid previous Bayesian estimate exists for the same due week (forced in-week regeneration):
+     - prior mean/stddev are replayed from that estimate’s stored prior-used fields
+     - this preserves deterministic in-week stability
+  3. otherwise (missing/corrupt/invalid previous experimental state):
+     - bootstrap prior mean = `RecommendationGenerationInput.priorMaintenanceCalories`
+     - bootstrap prior stddev = estimator default prior stddev
 - Process model:
-  - prior variance is inflated by fixed process noise each update.
+  - process variance is added on top of the selected prior variance each update.
 - Update model:
-  - scalar Kalman-style update combines prior and observation by uncertainty-weighted gain.
+  - scalar Kalman-style posterior update combines prior and observation by uncertainty-weighted gain.
 
 ### Uncertainty semantics (implemented)
 - Experimental output includes:
+  - profile prior mean (bootstrap reference)
+  - actual prior mean/stddev used for this update
+  - prior-source marker (`profilePriorBootstrap` vs `chainedPosterior`)
   - posterior mean maintenance kcal/day
   - posterior standard deviation (kcal/day)
   - effective sample size proxy
@@ -559,10 +571,12 @@
   - macro generation constraints
   - warning state construction
   - Monday-anchored due-week scheduling
+- Estimator technical flags remain in the experimental estimate object and are not forwarded directly as user-facing warning reasons.
 
 ### Mode separation and persistence semantics (implemented)
 - Mode separation is explicit via `RecommendationEstimationMode`.
 - Experimental snapshots and due-week tracking are persisted in separate keys from production heuristic keys.
+- Experimental maintenance-estimate payload persists the recursive prior/posterior metadata needed for next-week chaining.
 - Production keys (`latest_generated`, `latest_applied`, `last_generated_due_week_key`) are preserved and remain authoritative for current UI/apply flows.
 
 ### Known limitations / intentionally experimental areas

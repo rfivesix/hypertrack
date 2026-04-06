@@ -6,6 +6,8 @@ import 'package:hypertrack/data/drift_database.dart'
     show AppDatabase, ProductsCompanion;
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_service.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart';
 import 'package:hypertrack/models/food_entry.dart';
@@ -212,6 +214,14 @@ void main() {
         second.maintenanceEstimate.posteriorMaintenanceCalories,
         closeTo(first.maintenanceEstimate.posteriorMaintenanceCalories, 0.0001),
       );
+      expect(
+        second.maintenanceEstimate.priorMeanUsedCalories,
+        closeTo(first.maintenanceEstimate.priorMeanUsedCalories, 0.0001),
+      );
+      expect(
+        second.maintenanceEstimate.priorStdDevUsedCalories,
+        closeTo(first.maintenanceEstimate.priorStdDevUsedCalories, 0.0001),
+      );
     });
 
     test(
@@ -265,6 +275,135 @@ void main() {
         second.maintenanceEstimate.posteriorStdDevCalories,
         closeTo(first.maintenanceEstimate.posteriorStdDevCalories, 0.0001),
       );
+      expect(
+        second.maintenanceEstimate.priorMeanUsedCalories,
+        closeTo(first.maintenanceEstimate.priorMeanUsedCalories, 0.0001),
+      );
+    });
+
+    test('experimental next due week chains from previous posterior', () async {
+      final firstWeekMonday = DateTime(2026, 4, 6, 10, 0);
+      final firstWeek =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: firstWeekMonday,
+        force: true,
+      );
+
+      final secondWeek =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 13, 10, 0),
+        force: true,
+      );
+
+      expect(firstWeek, isNotNull);
+      expect(secondWeek, isNotNull);
+      expect(
+        secondWeek!.maintenanceEstimate.priorSource,
+        BayesianPriorSource.chainedPosterior,
+      );
+      expect(
+        secondWeek.maintenanceEstimate.priorMeanUsedCalories,
+        closeTo(
+          firstWeek!.maintenanceEstimate.posteriorMaintenanceCalories,
+          0.0001,
+        ),
+      );
+      expect(
+        secondWeek.maintenanceEstimate.priorMeanUsedCalories,
+        isNot(closeTo(
+          secondWeek.maintenanceEstimate.profilePriorMaintenanceCalories,
+          0.0001,
+        )),
+      );
+      expect(
+        secondWeek.maintenanceEstimate.priorStdDevUsedCalories,
+        closeTo(firstWeek.maintenanceEstimate.posteriorStdDevCalories, 0.0001),
+      );
+    });
+
+    test('experimental bootstrap uses profile prior when no previous state',
+        () async {
+      final result =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 6, 10, 0),
+        force: true,
+      );
+
+      expect(result, isNotNull);
+      expect(
+        result!.maintenanceEstimate.priorSource,
+        BayesianPriorSource.profilePriorBootstrap,
+      );
+      expect(
+        result.maintenanceEstimate.priorMeanUsedCalories,
+        closeTo(
+          result.maintenanceEstimate.profilePriorMaintenanceCalories,
+          0.0001,
+        ),
+      );
+    });
+
+    test(
+        'experimental falls back to profile prior when stored state is corrupt',
+        () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate',
+        '{ definitely_not_json',
+      );
+
+      final result =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 6, 10, 0),
+        force: true,
+      );
+
+      expect(result, isNotNull);
+      expect(
+        result!.maintenanceEstimate.priorSource,
+        BayesianPriorSource.profilePriorBootstrap,
+      );
+      expect(
+        result.maintenanceEstimate.priorMeanUsedCalories,
+        closeTo(
+          result.maintenanceEstimate.profilePriorMaintenanceCalories,
+          0.0001,
+        ),
+      );
+    });
+
+    test('experimental falls back when persisted prior stats are invalid',
+        () async {
+      await repository.saveLatestBayesianMaintenanceEstimate(
+        estimate: const BayesianMaintenanceEstimate(
+          posteriorMaintenanceCalories: 2500,
+          posteriorStdDevCalories: -10,
+          profilePriorMaintenanceCalories: 2400,
+          priorMeanUsedCalories: 2400,
+          priorStdDevUsedCalories: 0,
+          priorSource: BayesianPriorSource.chainedPosterior,
+          observedIntakeCalories: 2300,
+          observedWeightSlopeKgPerWeek: 0,
+          observationImpliedMaintenanceCalories: 2300,
+          effectiveSampleSize: 10,
+          confidence: RecommendationConfidence.medium,
+          qualityFlags: <String>[],
+          debugInfo: <String, Object>{},
+          dueWeekKey: '2026-03-30',
+        ),
+      );
+
+      final result =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 6, 10, 0),
+        force: true,
+      );
+
+      expect(result, isNotNull);
+      expect(
+        result!.maintenanceEstimate.priorSource,
+        BayesianPriorSource.profilePriorBootstrap,
+      );
     });
 
     test('experimental refresh does not mutate active goals', () async {
@@ -277,9 +416,12 @@ void main() {
           await service.refreshBayesianExperimentalRecommendationIfDue(
         now: monday,
       );
+      final generatedHeuristic =
+          await repository.getLatestGeneratedRecommendation();
       final afterRefreshSettings = await dbHelper.getAppSettings();
 
       expect(generated, isNotNull);
+      expect(generatedHeuristic, isNull);
       expect(afterRefreshSettings, isNotNull);
       expect(afterRefreshSettings!.targetCalories, 2400);
 
@@ -353,6 +495,17 @@ void main() {
       expect(comparison.bayesianMaintenanceEstimate.posteriorStdDevCalories,
           greaterThan(0));
       expect(comparison.maintenanceDeltaCalories.abs(), lessThan(500));
+      expect(comparison.bayesianPriorMeanCalories, greaterThan(0));
+      expect(comparison.bayesianPriorStdDevCalories, greaterThan(0));
+      expect(comparison.bayesianPosteriorStdDevCalories, greaterThan(0));
+      expect(
+        comparison.maintenanceDeltaVsBayesianPriorCalories.abs(),
+        lessThan(800),
+      );
+      expect(
+        comparison.bayesianObservationImpliedMaintenanceCalories,
+        isNotNull,
+      );
     });
 
     test('onboarding recommendation can be persisted and marked as applied',

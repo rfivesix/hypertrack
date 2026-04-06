@@ -92,7 +92,10 @@ void main() {
       final estimate = BayesianMaintenanceEstimate(
         posteriorMaintenanceCalories: 2380,
         posteriorStdDevCalories: 180,
-        priorMaintenanceCalories: 2400,
+        profilePriorMaintenanceCalories: 2400,
+        priorMeanUsedCalories: 2400,
+        priorStdDevUsedCalories: 200,
+        priorSource: BayesianPriorSource.profilePriorBootstrap,
         observedIntakeCalories: 2300,
         observedWeightSlopeKgPerWeek: -0.1,
         observationImpliedMaintenanceCalories: 2410,
@@ -100,6 +103,7 @@ void main() {
         confidence: RecommendationConfidence.medium,
         qualityFlags: const ['bayesian_prior_dominant'],
         debugInfo: const {'kalmanGain': 0.33},
+        dueWeekKey: '2026-04-06',
       );
 
       await repository.saveLatestGeneratedRecommendationForMode(
