@@ -5,6 +5,7 @@ import '../../../widgets/summary_card.dart';
 import '../domain/confidence_models.dart';
 import '../domain/goal_models.dart';
 import '../domain/recommendation_models.dart';
+import 'recommendation_ui_copy.dart';
 
 class NutritionRecommendationCard extends StatelessWidget {
   final BodyweightGoal goal;
@@ -28,6 +29,9 @@ class NutritionRecommendationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final recommendationWarning = recommendation == null
+        ? null
+        : RecommendationUiCopy.warningMessage(l10n, recommendation!);
 
     return SummaryCard(
       child: Padding(
@@ -109,7 +113,10 @@ class NutritionRecommendationCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     l10n.adaptiveRecommendationConfidenceLine(
-                      _confidenceLabel(l10n, recommendation!.confidence),
+                      RecommendationUiCopy.confidenceLabel(
+                        l10n,
+                        recommendation!.confidence,
+                      ),
                     ),
                     style: theme.textTheme.bodySmall,
                   ),
@@ -122,6 +129,16 @@ class NutritionRecommendationCard extends StatelessWidget {
                     ),
                     style: theme.textTheme.bodySmall,
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    RecommendationUiCopy.dataBasisMessage(
+                      l10n,
+                      recommendation!,
+                    ),
+                    key:
+                        const Key('adaptive_recommendation_data_basis_message'),
+                    style: theme.textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     l10n.adaptiveRecommendationActiveCaloriesLine(
@@ -129,8 +146,7 @@ class NutritionRecommendationCard extends StatelessWidget {
                     ),
                     style: theme.textTheme.bodySmall,
                   ),
-                  if (recommendation!.warningState.warningLevel !=
-                      RecommendationWarningLevel.none)
+                  if (recommendationWarning != null)
                     Container(
                       margin: const EdgeInsets.only(top: 12),
                       padding: const EdgeInsets.all(10),
@@ -142,7 +158,8 @@ class NutritionRecommendationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        _warningMessage(l10n, recommendation!),
+                        recommendationWarning,
+                        key: const Key('adaptive_recommendation_warning_text'),
                         style: theme.textTheme.bodySmall,
                       ),
                     ),
@@ -178,40 +195,6 @@ class NutritionRecommendationCard extends StatelessWidget {
   String _rateLabel(AppLocalizations l10n, double kgPerWeek) {
     final sign = kgPerWeek > 0 ? '+' : '';
     return l10n.adaptiveRatePerWeek('$sign${kgPerWeek.toStringAsFixed(2)}');
-  }
-
-  String _confidenceLabel(
-    AppLocalizations l10n,
-    RecommendationConfidence confidence,
-  ) {
-    switch (confidence) {
-      case RecommendationConfidence.notEnoughData:
-        return l10n.adaptiveConfidenceNotEnoughData;
-      case RecommendationConfidence.low:
-        return l10n.adaptiveConfidenceLow;
-      case RecommendationConfidence.medium:
-        return l10n.adaptiveConfidenceMedium;
-      case RecommendationConfidence.high:
-        return l10n.adaptiveConfidenceHigh;
-    }
-  }
-
-  String _warningMessage(
-    AppLocalizations l10n,
-    NutritionRecommendation recommendation,
-  ) {
-    final reasons = recommendation.warningState.warningReasons;
-    if (reasons.contains('calorie_floor_applied')) {
-      return l10n.adaptiveRecommendationWarningCalorieFloor;
-    }
-    if (reasons.contains('unresolved_food_calories')) {
-      return l10n.adaptiveRecommendationWarningUnresolvedFood;
-    }
-    if (recommendation.warningState.warningLevel ==
-        RecommendationWarningLevel.high) {
-      return l10n.adaptiveRecommendationWarningLargeAdjustment;
-    }
-    return l10n.adaptiveRecommendationWarningConservative;
   }
 }
 

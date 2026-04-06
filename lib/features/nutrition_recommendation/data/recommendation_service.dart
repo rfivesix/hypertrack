@@ -298,6 +298,12 @@ class AdaptiveNutritionRecommendationService {
         await _databaseHelper.getAverageCompletedWorkoutsPerWeek(now: now);
     final targetSteps = (await _databaseHelper.getAppSettings())?.targetSteps ??
         await _databaseHelper.getCurrentTargetStepsOrDefault();
+    final recentAverageActualSteps =
+        await RecommendationInputAdapter.loadRecentAverageActualSteps(
+      databaseHelper: _databaseHelper,
+      endDay: RecommendationInputAdapter.normalizeDay(now),
+      lookbackDays: RecommendationInputAdapter.defaultPriorStepsLookbackDays,
+    );
 
     final mergedProfile = _VirtualProfile(
       birthday: profile.birthday ?? persistedProfile?.birthday,
@@ -328,6 +334,7 @@ class AdaptiveNutritionRecommendationService {
       extraCardioHoursOption: extraCardioHoursOption,
       averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
       targetSteps: targetSteps,
+      recentAverageSteps: recentAverageActualSteps,
       now: now,
     );
   }

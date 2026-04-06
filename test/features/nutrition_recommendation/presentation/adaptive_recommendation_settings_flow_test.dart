@@ -248,5 +248,86 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(l10n.adaptivePriorActivityVeryHigh), findsOneWidget);
     });
+
+    testWidgets('onboarding preview surfaces prior-only data basis state',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: OnboardingScreen(
+            recommendationService: recommendationService,
+            databaseHelper: dbHelper,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester
+          .tap(find.byKey(const Key('onboarding_continue_setup_button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('onboarding_name_text_field')),
+        'Alex',
+      );
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(OnboardingScreen));
+      final l10n = AppLocalizations.of(context)!;
+      expect(
+        find.byKey(const Key('onboarding_adaptive_summary_data_basis_message')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(l10n.adaptiveRecommendationDataBasisHintPriorOnly),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('onboarding final page shows finish action', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: OnboardingScreen(
+            recommendationService: recommendationService,
+            databaseHelper: dbHelper,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(OnboardingScreen));
+      final l10n = AppLocalizations.of(context)!;
+      final nextButton = find.byKey(const Key('onboarding_bottom_next_button'));
+
+      await tester
+          .tap(find.byKey(const Key('onboarding_continue_setup_button')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('onboarding_name_text_field')),
+        'Alex',
+      );
+      await tester.tap(nextButton); // profile -> weight
+      await tester.pumpAndSettle();
+      await tester.tap(nextButton); // weight -> body fat
+      await tester.pumpAndSettle();
+      await tester.tap(nextButton); // body fat -> adaptive
+      await tester.pumpAndSettle();
+      await tester.tap(nextButton); // adaptive -> calories
+      await tester.pumpAndSettle();
+      await tester.tap(nextButton); // calories -> macros
+      await tester.pumpAndSettle();
+      await tester.tap(nextButton); // macros -> water
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.onboardingFinish.toUpperCase()), findsOneWidget);
+    });
   });
 }

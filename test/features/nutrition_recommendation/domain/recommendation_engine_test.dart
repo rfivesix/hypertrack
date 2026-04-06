@@ -228,6 +228,62 @@ void main() {
       expect(recommendation.estimatedMaintenanceCalories,
           greaterThanOrEqualTo(2160));
     });
+
+    test('generate keeps notEnoughData recommendations strictly prior-only',
+        () {
+      final previous = NutritionRecommendation(
+        recommendedCalories: 2500,
+        recommendedProteinGrams: 180,
+        recommendedCarbsGrams: 260,
+        recommendedFatGrams: 80,
+        estimatedMaintenanceCalories: 2500,
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        confidence: RecommendationConfidence.high,
+        warningState: RecommendationWarningState.none,
+        generatedAt: DateTime(2026, 3, 29),
+        windowStart: DateTime(2026, 3, 9),
+        windowEnd: DateTime(2026, 3, 29, 23, 59, 59),
+        algorithmVersion: 'test',
+        inputSummary: const RecommendationInputSummary(
+          windowDays: 21,
+          weightLogCount: 9,
+          intakeLoggedDays: 15,
+          smoothedWeightSlopeKgPerWeek: 0.1,
+          avgLoggedCalories: 2500,
+        ),
+        baselineCalories: 2500,
+        dueWeekKey: '2026-03-23',
+      );
+
+      final input = _input(
+        priorMaintenanceCalories: 2100,
+        avgLoggedCalories: 3000,
+        smoothedWeightSlopeKgPerWeek: -0.8,
+        windowDays: 3,
+        weightLogCount: 1,
+        intakeLoggedDays: 1,
+      );
+
+      final recommendation = AdaptiveNutritionRecommendationEngine.generate(
+        input: input,
+        goal: BodyweightGoal.loseWeight,
+        targetRateKgPerWeek: -0.5,
+        generatedAt: DateTime(2026, 4, 5),
+        algorithmVersion: 'test',
+        previousRecommendation: previous,
+      );
+
+      expect(recommendation.confidence, RecommendationConfidence.notEnoughData);
+      expect(recommendation.estimatedMaintenanceCalories, 2100);
+      expect(
+        recommendation.recommendedCalories,
+        2100 +
+            AdaptiveNutritionRecommendationEngine.rateAdjustmentKcalPerDay(
+              -0.5,
+            ),
+      );
+    });
   });
 }
 

@@ -5507,7 +5507,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingAdaptiveSummaryConfidence.
   ///
   /// In en, this message translates to:
-  /// **'Confidence: {value}'**
+  /// **'Data basis: {value}'**
   String onboardingAdaptiveSummaryConfidence(String value);
 
   /// No description provided for @onboardingAdaptiveSummaryApply.
@@ -5711,7 +5711,7 @@ abstract class AppLocalizations {
   /// No description provided for @adaptiveRecommendationConfidenceLine.
   ///
   /// In en, this message translates to:
-  /// **'Confidence: {value}'**
+  /// **'Data basis: {value}'**
   String adaptiveRecommendationConfidenceLine(String value);
 
   /// No description provided for @adaptiveRecommendationDataBasisLine.
@@ -5748,7 +5748,7 @@ abstract class AppLocalizations {
   /// No description provided for @adaptiveRecommendationWarningUnresolvedFood.
   ///
   /// In en, this message translates to:
-  /// **'Some nutrition entries could not be fully resolved for calorie estimation. Recommendation is conservative.'**
+  /// **'Some nutrition entries could not be fully resolved for calories. Check recent logs before applying.'**
   String get adaptiveRecommendationWarningUnresolvedFood;
 
   /// No description provided for @adaptiveRecommendationWarningLargeAdjustment.
@@ -5757,34 +5757,70 @@ abstract class AppLocalizations {
   /// **'Large adjustment detected. Please review your recent logging completeness before applying.'**
   String get adaptiveRecommendationWarningLargeAdjustment;
 
+  /// No description provided for @adaptiveRecommendationWarningMacroConstrained.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro split was constrained by the calorie budget. Check if your target rate is too aggressive.'**
+  String get adaptiveRecommendationWarningMacroConstrained;
+
   /// No description provided for @adaptiveRecommendationWarningConservative.
   ///
   /// In en, this message translates to:
   /// **'Review suggested: recommendation was adjusted conservatively due to data variability.'**
   String get adaptiveRecommendationWarningConservative;
 
+  /// No description provided for @adaptiveRecommendationDataBasisHintDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Built from recent logs and their completeness.'**
+  String get adaptiveRecommendationDataBasisHintDefault;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintPriorOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on profile/prior data only. Add recent weight and intake logs for adaptive adjustment.'**
+  String get adaptiveRecommendationDataBasisHintPriorOnly;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintSparseWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent weight logs are sparse, so trend quality is limited.'**
+  String get adaptiveRecommendationDataBasisHintSparseWeight;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintSparseIntake.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent intake logs are sparse, so maintenance inference is limited.'**
+  String get adaptiveRecommendationDataBasisHintSparseIntake;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintSparseWeightAndIntake.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent weight and intake logs are sparse, so this recommendation is more conservative.'**
+  String get adaptiveRecommendationDataBasisHintSparseWeightAndIntake;
+
   /// No description provided for @adaptiveConfidenceNotEnoughData.
   ///
   /// In en, this message translates to:
-  /// **'Not enough data'**
+  /// **'Profile/prior only'**
   String get adaptiveConfidenceNotEnoughData;
 
   /// No description provided for @adaptiveConfidenceLow.
   ///
   /// In en, this message translates to:
-  /// **'Low'**
+  /// **'Limited recent logs'**
   String get adaptiveConfidenceLow;
 
   /// No description provided for @adaptiveConfidenceMedium.
   ///
   /// In en, this message translates to:
-  /// **'Medium'**
+  /// **'Usable recent logs'**
   String get adaptiveConfidenceMedium;
 
   /// No description provided for @adaptiveConfidenceHigh.
   ///
   /// In en, this message translates to:
-  /// **'High'**
+  /// **'Strong recent logs'**
   String get adaptiveConfidenceHigh;
 
   /// No description provided for @adaptiveRecommendationAppliedToGoalsSnack.

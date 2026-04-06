@@ -2978,7 +2978,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String onboardingAdaptiveSummaryConfidence(String value) {
-    return 'Confidence: $value';
+    return 'Data basis: $value';
   }
 
   @override
@@ -3106,7 +3106,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String adaptiveRecommendationConfidenceLine(String value) {
-    return 'Confidence: $value';
+    return 'Data basis: $value';
   }
 
   @override
@@ -3133,27 +3133,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptiveRecommendationWarningUnresolvedFood =>
-      'Some nutrition entries could not be fully resolved for calorie estimation. Recommendation is conservative.';
+      'Some nutrition entries could not be fully resolved for calories. Check recent logs before applying.';
 
   @override
   String get adaptiveRecommendationWarningLargeAdjustment =>
       'Large adjustment detected. Please review your recent logging completeness before applying.';
 
   @override
+  String get adaptiveRecommendationWarningMacroConstrained =>
+      'Macro split was constrained by the calorie budget. Check if your target rate is too aggressive.';
+
+  @override
   String get adaptiveRecommendationWarningConservative =>
       'Review suggested: recommendation was adjusted conservatively due to data variability.';
 
   @override
-  String get adaptiveConfidenceNotEnoughData => 'Not enough data';
+  String get adaptiveRecommendationDataBasisHintDefault =>
+      'Built from recent logs and their completeness.';
 
   @override
-  String get adaptiveConfidenceLow => 'Low';
+  String get adaptiveRecommendationDataBasisHintPriorOnly =>
+      'Based on profile/prior data only. Add recent weight and intake logs for adaptive adjustment.';
 
   @override
-  String get adaptiveConfidenceMedium => 'Medium';
+  String get adaptiveRecommendationDataBasisHintSparseWeight =>
+      'Recent weight logs are sparse, so trend quality is limited.';
 
   @override
-  String get adaptiveConfidenceHigh => 'High';
+  String get adaptiveRecommendationDataBasisHintSparseIntake =>
+      'Recent intake logs are sparse, so maintenance inference is limited.';
+
+  @override
+  String get adaptiveRecommendationDataBasisHintSparseWeightAndIntake =>
+      'Recent weight and intake logs are sparse, so this recommendation is more conservative.';
+
+  @override
+  String get adaptiveConfidenceNotEnoughData => 'Profile/prior only';
+
+  @override
+  String get adaptiveConfidenceLow => 'Limited recent logs';
+
+  @override
+  String get adaptiveConfidenceMedium => 'Usable recent logs';
+
+  @override
+  String get adaptiveConfidenceHigh => 'Strong recent logs';
 
   @override
   String get adaptiveRecommendationAppliedToGoalsSnack =>

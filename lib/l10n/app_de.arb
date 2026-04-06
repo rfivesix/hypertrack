@@ -1256,7 +1256,7 @@
       "value": { "type": "int" }
     }
   }
-  ,"onboardingAdaptiveSummaryConfidence": "Konfidenz: {value}"
+  ,"onboardingAdaptiveSummaryConfidence": "Datenbasis: {value}"
   ,"@onboardingAdaptiveSummaryConfidence": {
     "placeholders": {
       "value": { "type": "String" }
@@ -1331,7 +1331,7 @@
       "value": { "type": "int" }
     }
   }
-  ,"adaptiveRecommendationConfidenceLine": "Konfidenz: {value}"
+  ,"adaptiveRecommendationConfidenceLine": "Datenbasis: {value}"
   ,"@adaptiveRecommendationConfidenceLine": {
     "placeholders": {
       "value": { "type": "String" }
@@ -1354,13 +1354,19 @@
   ,"adaptiveRecommendationApplying": "Wird angewendet..."
   ,"adaptiveRecommendationApplyAction": "Empfehlung auf aktive Ziele anwenden"
   ,"adaptiveRecommendationWarningCalorieFloor": "Empfehlung wurde durch ein Mindest-Kalorien-Sicherheitslimit begrenzt. Bitte Profil und aktuelle Logs vor dem Anwenden prüfen."
-  ,"adaptiveRecommendationWarningUnresolvedFood": "Einige Ernährungseinträge konnten für die Kalorienschätzung nicht vollständig aufgelöst werden. Die Empfehlung ist konservativ."
+  ,"adaptiveRecommendationWarningUnresolvedFood": "Einige Ernährungseinträge konnten kalorisch nicht vollständig aufgelöst werden. Bitte prüfe deine letzten Logs vor dem Anwenden."
   ,"adaptiveRecommendationWarningLargeAdjustment": "Große Anpassung erkannt. Bitte prüfe vor dem Anwenden die Vollständigkeit deiner letzten Logs."
+  ,"adaptiveRecommendationWarningMacroConstrained": "Die Makroverteilung wurde durch das Kalorienbudget begrenzt. Prüfe, ob deine Wochenrate zu aggressiv ist."
   ,"adaptiveRecommendationWarningConservative": "Hinweis: Die Empfehlung wurde aufgrund von Datenschwankungen konservativ angepasst."
-  ,"adaptiveConfidenceNotEnoughData": "Nicht genug Daten"
-  ,"adaptiveConfidenceLow": "Niedrig"
-  ,"adaptiveConfidenceMedium": "Mittel"
-  ,"adaptiveConfidenceHigh": "Hoch"
+  ,"adaptiveRecommendationDataBasisHintDefault": "Basiert auf deinen letzten Logs und deren Vollständigkeit."
+  ,"adaptiveRecommendationDataBasisHintPriorOnly": "Aktuell nur auf Profil-/Prior-Daten basiert. Mit aktuellen Gewichts- und Intake-Logs wird die Anpassung präziser."
+  ,"adaptiveRecommendationDataBasisHintSparseWeight": "Es gibt nur wenige aktuelle Gewichtseinträge, daher ist die Trendqualität begrenzt."
+  ,"adaptiveRecommendationDataBasisHintSparseIntake": "Es gibt nur wenige aktuelle Intake-Logs, daher ist die Erhaltungsschätzung begrenzt."
+  ,"adaptiveRecommendationDataBasisHintSparseWeightAndIntake": "Gewichts- und Intake-Logs sind aktuell spärlich, deshalb ist diese Empfehlung konservativer."
+  ,"adaptiveConfidenceNotEnoughData": "Nur Profil-/Prior-Basis"
+  ,"adaptiveConfidenceLow": "Wenige aktuelle Logs"
+  ,"adaptiveConfidenceMedium": "Nutzbare aktuelle Logs"
+  ,"adaptiveConfidenceHigh": "Starke aktuelle Logs"
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Empfehlung auf aktive Ziele angewendet."
   ,"adaptiveRecommendationNotAvailableSnack": "Keine Empfehlung zum Anwenden verfügbar."
 }
