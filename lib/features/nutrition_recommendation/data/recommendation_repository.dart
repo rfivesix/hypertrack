@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/bayesian_tdee_estimator.dart';
 import '../domain/goal_models.dart';
+import '../domain/recommendation_estimation_mode.dart';
 import '../domain/recommendation_models.dart';
 
 typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
@@ -22,6 +24,12 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.latest_applied';
   static const String _lastGeneratedDueWeekKey =
       'adaptive_nutrition_recommendation.last_generated_due_week_key';
+  static const String _latestGeneratedBayesianExperimentalKey =
+      'adaptive_nutrition_recommendation.latest_generated_bayesian_experimental';
+  static const String _lastGeneratedDueWeekBayesianExperimentalKey =
+      'adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental';
+  static const String _latestBayesianMaintenanceEstimateKey =
+      'adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate';
 
   final SharedPreferencesLoader _prefsLoader;
 
@@ -89,21 +97,18 @@ class RecommendationRepository {
   }
 
   Future<NutritionRecommendation?> getLatestGeneratedRecommendation() async {
-    return _loadRecommendation(_latestGeneratedKey);
+    return getLatestGeneratedRecommendationForMode(
+      mode: RecommendationEstimationMode.heuristic,
+    );
   }
 
   Future<void> saveLatestGeneratedRecommendation({
     required NutritionRecommendation recommendation,
   }) async {
-    await _saveRecommendation(_latestGeneratedKey, recommendation);
-    if (recommendation.dueWeekKey != null &&
-        recommendation.dueWeekKey!.isNotEmpty) {
-      final prefs = await _prefsLoader();
-      await prefs.setString(
-        _lastGeneratedDueWeekKey,
-        recommendation.dueWeekKey!,
-      );
-    }
+    await saveLatestGeneratedRecommendationForMode(
+      mode: RecommendationEstimationMode.heuristic,
+      recommendation: recommendation,
+    );
   }
 
   Future<NutritionRecommendation?> getLatestAppliedRecommendation() async {
@@ -117,13 +122,80 @@ class RecommendationRepository {
   }
 
   Future<String?> getLastGeneratedDueWeekKey() async {
-    final prefs = await _prefsLoader();
-    return prefs.getString(_lastGeneratedDueWeekKey);
+    return getLastGeneratedDueWeekKeyForMode(
+      mode: RecommendationEstimationMode.heuristic,
+    );
   }
 
   Future<void> setLastGeneratedDueWeekKey(String dueWeekKey) async {
+    await setLastGeneratedDueWeekKeyForMode(
+      mode: RecommendationEstimationMode.heuristic,
+      dueWeekKey: dueWeekKey,
+    );
+  }
+
+  Future<NutritionRecommendation?> getLatestGeneratedRecommendationForMode({
+    required RecommendationEstimationMode mode,
+  }) async {
+    return _loadRecommendation(_latestGeneratedKeyForMode(mode));
+  }
+
+  Future<void> saveLatestGeneratedRecommendationForMode({
+    required RecommendationEstimationMode mode,
+    required NutritionRecommendation recommendation,
+  }) async {
+    await _saveRecommendation(_latestGeneratedKeyForMode(mode), recommendation);
+    if (recommendation.dueWeekKey != null &&
+        recommendation.dueWeekKey!.isNotEmpty) {
+      await setLastGeneratedDueWeekKeyForMode(
+        mode: mode,
+        dueWeekKey: recommendation.dueWeekKey!,
+      );
+    }
+  }
+
+  Future<String?> getLastGeneratedDueWeekKeyForMode({
+    required RecommendationEstimationMode mode,
+  }) async {
     final prefs = await _prefsLoader();
-    await prefs.setString(_lastGeneratedDueWeekKey, dueWeekKey);
+    return prefs.getString(_lastGeneratedDueWeekKeyForMode(mode));
+  }
+
+  Future<void> setLastGeneratedDueWeekKeyForMode({
+    required RecommendationEstimationMode mode,
+    required String dueWeekKey,
+  }) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(_lastGeneratedDueWeekKeyForMode(mode), dueWeekKey);
+  }
+
+  Future<BayesianMaintenanceEstimate?>
+      getLatestBayesianMaintenanceEstimate() async {
+    final prefs = await _prefsLoader();
+    final encoded = prefs.getString(_latestBayesianMaintenanceEstimateKey);
+    if (encoded == null || encoded.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(encoded);
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+      return BayesianMaintenanceEstimate.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveLatestBayesianMaintenanceEstimate({
+    required BayesianMaintenanceEstimate estimate,
+  }) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(
+      _latestBayesianMaintenanceEstimateKey,
+      jsonEncode(estimate.toJson()),
+    );
   }
 
   Future<void> clearForTesting() async {
@@ -135,6 +207,27 @@ class RecommendationRepository {
     await prefs.remove(_latestGeneratedKey);
     await prefs.remove(_latestAppliedKey);
     await prefs.remove(_lastGeneratedDueWeekKey);
+    await prefs.remove(_latestGeneratedBayesianExperimentalKey);
+    await prefs.remove(_lastGeneratedDueWeekBayesianExperimentalKey);
+    await prefs.remove(_latestBayesianMaintenanceEstimateKey);
+  }
+
+  String _latestGeneratedKeyForMode(RecommendationEstimationMode mode) {
+    switch (mode) {
+      case RecommendationEstimationMode.heuristic:
+        return _latestGeneratedKey;
+      case RecommendationEstimationMode.bayesianExperimental:
+        return _latestGeneratedBayesianExperimentalKey;
+    }
+  }
+
+  String _lastGeneratedDueWeekKeyForMode(RecommendationEstimationMode mode) {
+    switch (mode) {
+      case RecommendationEstimationMode.heuristic:
+        return _lastGeneratedDueWeekKey;
+      case RecommendationEstimationMode.bayesianExperimental:
+        return _lastGeneratedDueWeekBayesianExperimentalKey;
+    }
   }
 
   Future<void> _saveRecommendation(

@@ -7,6 +7,7 @@ import 'package:hypertrack/data/drift_database.dart'
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_service.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart';
 import 'package:hypertrack/models/food_entry.dart';
 import 'package:hypertrack/models/measurement.dart';
 import 'package:hypertrack/models/measurement_session.dart';
@@ -183,6 +184,175 @@ void main() {
         afterApplySettings.targetProtein,
         recommendation.recommendedProteinGrams,
       );
+    });
+
+    test('experimental refresh is idempotent per due week', () async {
+      final monday = DateTime(2026, 4, 6, 10, 0);
+      final first =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: monday,
+      );
+      final second =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: monday.add(const Duration(days: 2)),
+      );
+
+      expect(first, isNotNull);
+      expect(second, isNotNull);
+      expect(first!.recommendation.generatedAt,
+          second!.recommendation.generatedAt);
+      expect(first.recommendation.dueWeekKey, '2026-04-06');
+      expect(
+        await repository.getLastGeneratedDueWeekKeyForMode(
+          mode: RecommendationEstimationMode.bayesianExperimental,
+        ),
+        '2026-04-06',
+      );
+      expect(
+        second.maintenanceEstimate.posteriorMaintenanceCalories,
+        closeTo(first.maintenanceEstimate.posteriorMaintenanceCalories, 0.0001),
+      );
+    });
+
+    test(
+        'experimental forced regeneration stays stable in due week despite new logs',
+        () async {
+      final monday = DateTime(2026, 4, 6, 10, 0);
+      final first =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: monday,
+        force: true,
+      );
+
+      await dbHelper.insertMeasurementSession(
+        MeasurementSession(
+          timestamp: DateTime(2026, 4, 7, 7, 0),
+          measurements: [
+            Measurement(
+              sessionId: 0,
+              type: 'weight',
+              value: 68,
+              unit: 'kg',
+            ),
+          ],
+        ),
+      );
+      await dbHelper.insertFoodEntry(
+        FoodEntry(
+          barcode: 'test-food',
+          timestamp: DateTime(2026, 4, 7, 12, 0),
+          quantityInGrams: 4200,
+          mealType: 'mealtypeLunch',
+        ),
+      );
+
+      final second =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 8, 10, 0),
+        force: true,
+      );
+
+      expect(first, isNotNull);
+      expect(second, isNotNull);
+      expect(first!.recommendation.windowEnd, DateTime(2026, 4, 5, 23, 59, 59));
+      expect(
+          second!.recommendation.windowEnd, DateTime(2026, 4, 5, 23, 59, 59));
+      expect(
+        second.recommendation.estimatedMaintenanceCalories,
+        first.recommendation.estimatedMaintenanceCalories,
+      );
+      expect(
+        second.maintenanceEstimate.posteriorStdDevCalories,
+        closeTo(first.maintenanceEstimate.posteriorStdDevCalories, 0.0001),
+      );
+    });
+
+    test('experimental refresh does not mutate active goals', () async {
+      final monday = DateTime(2026, 4, 6, 10, 0);
+      final beforeRefreshSettings = await dbHelper.getAppSettings();
+      expect(beforeRefreshSettings, isNotNull);
+      expect(beforeRefreshSettings!.targetCalories, 2400);
+
+      final generated =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: monday,
+      );
+      final afterRefreshSettings = await dbHelper.getAppSettings();
+
+      expect(generated, isNotNull);
+      expect(afterRefreshSettings, isNotNull);
+      expect(afterRefreshSettings!.targetCalories, 2400);
+
+      // Explicit apply continues to only use production (heuristic) snapshots.
+      final applied = await service.applyLatestRecommendationToActiveTargets();
+      expect(applied, isFalse);
+    });
+
+    test('experimental onboarding can generate and persist safely', () async {
+      final result =
+          await service.generateBayesianExperimentalOnboardingRecommendation(
+        goal: BodyweightGoal.gainWeight,
+        targetRateKgPerWeek: 0.25,
+        weightKg: 80,
+        heightCm: 180,
+        birthday: DateTime(1996, 1, 2),
+        gender: 'male',
+        now: DateTime(2026, 4, 5, 9, 0),
+        persistGenerated: true,
+      );
+
+      final storedExperimental =
+          await repository.getLatestGeneratedRecommendationForMode(
+        mode: RecommendationEstimationMode.bayesianExperimental,
+      );
+      final storedHeuristic =
+          await repository.getLatestGeneratedRecommendation();
+
+      expect(result.recommendation.recommendedCalories, greaterThan(0));
+      expect(
+          result.maintenanceEstimate.posteriorStdDevCalories, greaterThan(0));
+      expect(storedExperimental, isNotNull);
+      expect(storedHeuristic, isNull);
+    });
+
+    test('mode separation keeps production refresh behavior unchanged',
+        () async {
+      final monday = DateTime(2026, 4, 6, 10, 0);
+      final experimental = await service.refreshRecommendationIfDueForMode(
+        now: monday,
+        mode: RecommendationEstimationMode.bayesianExperimental,
+      );
+      final heuristic = await service.refreshRecommendationIfDueForMode(
+        now: monday,
+        mode: RecommendationEstimationMode.heuristic,
+      );
+
+      expect(experimental, isNotNull);
+      expect(heuristic, isNotNull);
+      expect(experimental!.dueWeekKey, heuristic!.dueWeekKey);
+      expect(
+        heuristic.algorithmVersion,
+        AdaptiveNutritionRecommendationService.algorithmVersion,
+      );
+      expect(
+        experimental.algorithmVersion,
+        AdaptiveNutritionRecommendationService
+            .bayesianExperimentalAlgorithmVersion,
+      );
+    });
+
+    test('comparison helper returns side-by-side estimator outputs', () async {
+      final comparison = await service.generateEstimatorComparison(
+        now: DateTime(2026, 4, 6, 10, 0),
+      );
+
+      expect(comparison.heuristicRecommendation.recommendedCalories,
+          greaterThan(0));
+      expect(comparison.bayesianRecommendation.recommendedCalories,
+          greaterThan(0));
+      expect(comparison.bayesianMaintenanceEstimate.posteriorStdDevCalories,
+          greaterThan(0));
+      expect(comparison.maintenanceDeltaCalories.abs(), lessThan(500));
     });
 
     test('onboarding recommendation can be persisted and marked as applied',

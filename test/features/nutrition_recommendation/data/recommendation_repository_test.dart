@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -81,6 +83,57 @@ void main() {
       expect(
         await repository.getPriorActivityLevel(),
         PriorActivityLevel.moderate,
+      );
+    });
+
+    test('persists experimental recommendation and estimate separately',
+        () async {
+      final recommendation = _recommendation();
+      final estimate = BayesianMaintenanceEstimate(
+        posteriorMaintenanceCalories: 2380,
+        posteriorStdDevCalories: 180,
+        priorMaintenanceCalories: 2400,
+        observedIntakeCalories: 2300,
+        observedWeightSlopeKgPerWeek: -0.1,
+        observationImpliedMaintenanceCalories: 2410,
+        effectiveSampleSize: 10,
+        confidence: RecommendationConfidence.medium,
+        qualityFlags: const ['bayesian_prior_dominant'],
+        debugInfo: const {'kalmanGain': 0.33},
+      );
+
+      await repository.saveLatestGeneratedRecommendationForMode(
+        mode: RecommendationEstimationMode.bayesianExperimental,
+        recommendation: recommendation,
+      );
+      await repository.setLastGeneratedDueWeekKeyForMode(
+        mode: RecommendationEstimationMode.bayesianExperimental,
+        dueWeekKey: '2026-04-06',
+      );
+      await repository.saveLatestBayesianMaintenanceEstimate(
+        estimate: estimate,
+      );
+
+      final experimental =
+          await repository.getLatestGeneratedRecommendationForMode(
+        mode: RecommendationEstimationMode.bayesianExperimental,
+      );
+      final heuristic = await repository.getLatestGeneratedRecommendation();
+      final restoredEstimate =
+          await repository.getLatestBayesianMaintenanceEstimate();
+
+      expect(experimental, isNotNull);
+      expect(heuristic, isNull);
+      expect(
+        await repository.getLastGeneratedDueWeekKeyForMode(
+          mode: RecommendationEstimationMode.bayesianExperimental,
+        ),
+        '2026-04-06',
+      );
+      expect(restoredEstimate, isNotNull);
+      expect(
+        restoredEstimate!.posteriorMaintenanceCalories,
+        closeTo(2380, 0.001),
       );
     });
   });

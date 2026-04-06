@@ -515,3 +515,60 @@
 - [ ] **Warning/confidence semantics**: large-adjustment thresholds (`250/450`), floor override to high, unresolved-food propagation, and reason-prioritized warning copy are intact.
 - [ ] **Localization coverage**: adaptive strings used in onboarding/goals/card/hub exist in both `app_en.arb` and `app_de.arb`; card German title has test coverage.
 - [ ] **Placeholder acceptance for alpha**: informational body-fat helper sheet (no estimator), coarse manual extra-cardio heuristic (no cardio tracking model), and unresolved-food conservative handling are explicitly accepted.
+
+## 15. Experimental Bayesian/Kalman path (parallel, non-default)
+
+### Implemented behavior
+- A separate experimental estimation path is implemented in parallel and does not replace production defaults:
+  - `lib/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart`
+  - `lib/features/nutrition_recommendation/domain/bayesian_recommendation_engine.dart`
+  - mode enum: `lib/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart`
+- Service now exposes dedicated experimental generation methods while keeping existing heuristic methods as the default production path:
+  - `refreshBayesianExperimentalRecommendationIfDue(...)`
+  - `generateBayesianExperimentalOnboardingRecommendation(...)`
+  - `generateEstimatorComparison(...)` for side-by-side output
+- Existing production methods remain unchanged in signature and default behavior:
+  - `refreshRecommendationIfDue(...)`
+  - `generateOnboardingRecommendation(...)`
+
+### Latent-state and observation semantics (implemented)
+- Latent state: scalar maintenance calories (TDEE) only.
+- Prior mean: `RecommendationGenerationInput.priorMaintenanceCalories` (same profile/body-fat/activity prior model as production).
+- Observation model:
+  - `z = avgLoggedCalories - smoothedWeightSlopeKgPerWeek * (7700/7)`
+- Process model:
+  - prior variance is inflated by fixed process noise each update.
+- Update model:
+  - scalar Kalman-style update combines prior and observation by uncertainty-weighted gain.
+
+### Uncertainty semantics (implemented)
+- Experimental output includes:
+  - posterior mean maintenance kcal/day
+  - posterior standard deviation (kcal/day)
+  - effective sample size proxy
+  - uncertainty-informed confidence bucket (`notEnoughData/low/medium/high`)
+  - quality/debug flags and gain/variance debug fields
+- Sparse/missing data behavior:
+  - if intake and/or weight trend observation is unavailable, posterior mean remains at prior and uncertainty remains high.
+
+### Shared recommendation semantics (implemented)
+- Experimental path only swaps the maintenance-estimation stage.
+- Downstream recommendation projection still uses existing product semantics for:
+  - goal-rate calorie adjustment
+  - calorie floor handling
+  - macro generation constraints
+  - warning state construction
+  - Monday-anchored due-week scheduling
+
+### Mode separation and persistence semantics (implemented)
+- Mode separation is explicit via `RecommendationEstimationMode`.
+- Experimental snapshots and due-week tracking are persisted in separate keys from production heuristic keys.
+- Production keys (`latest_generated`, `latest_applied`, `last_generated_due_week_key`) are preserved and remain authoritative for current UI/apply flows.
+
+### Known limitations / intentionally experimental areas
+- Current experimental model is a pragmatic scalar-state filter, not a full multi-state physiological model.
+- Measurement uncertainty is heuristic/calibrated from log density and quality flags; it is not learned from user-specific residual history.
+- Experimental apply-to-active-goals is intentionally not wired into the production apply path.
+- Confidence semantics differ conceptually:
+  - production confidence is threshold/count based
+  - experimental confidence is uncertainty-informed with data sufficiency gating

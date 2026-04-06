@@ -47,12 +47,34 @@ class AdaptiveNutritionRecommendationEngine {
       maintenance = blendedMaintenance;
     }
 
+    return generateFromMaintenanceEstimate(
+      input: input,
+      goal: goal,
+      targetRateKgPerWeek: targetRateKgPerWeek,
+      generatedAt: generatedAt,
+      algorithmVersion: algorithmVersion,
+      estimatedMaintenanceCalories: maintenance.round(),
+      confidence: confidence,
+      dueWeekKey: dueWeekKey,
+      previousRecommendation: previousRecommendation,
+    );
+  }
+
+  static NutritionRecommendation generateFromMaintenanceEstimate({
+    required RecommendationGenerationInput input,
+    required BodyweightGoal goal,
+    required double targetRateKgPerWeek,
+    required DateTime generatedAt,
+    required String algorithmVersion,
+    required int estimatedMaintenanceCalories,
+    required RecommendationConfidence confidence,
+    String? dueWeekKey,
+    NutritionRecommendation? previousRecommendation,
+    List<String> additionalWarningReasons = const [],
+  }) {
     var effectiveConfidence = confidence;
-    final estimatedMaintenanceCalories = maintenance.round();
     final calorieAdjustment = rateAdjustmentKcalPerDay(targetRateKgPerWeek);
-    final rawRecommendedCalories =
-        estimatedMaintenanceCalories + calorieAdjustment;
-    var recommendedCalories = rawRecommendedCalories;
+    var recommendedCalories = estimatedMaintenanceCalories + calorieAdjustment;
     final safetyWarningReasons = <String>[];
 
     if (recommendedCalories < _minimumRecommendedCalories) {
@@ -72,15 +94,18 @@ class AdaptiveNutritionRecommendationEngine {
 
     final baselineCalories = input.activeTargetCalories ??
         previousRecommendation?.recommendedCalories;
+    final warningReasons = <String>{
+      ...macroResult.warningReasons,
+      ...safetyWarningReasons,
+      if (input.qualityFlags.contains('unresolved_food_calories'))
+        'unresolved_food_calories',
+      ...additionalWarningReasons,
+    }.toList(growable: false);
+
     final warningState = _buildWarningState(
       baselineCalories: baselineCalories,
       recommendedCalories: recommendedCalories,
-      extraReasons: [
-        ...macroResult.warningReasons,
-        ...safetyWarningReasons,
-        if (input.qualityFlags.contains('unresolved_food_calories'))
-          'unresolved_food_calories',
-      ],
+      extraReasons: warningReasons,
     );
 
     return NutritionRecommendation(
