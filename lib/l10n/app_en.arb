@@ -1346,6 +1346,21 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationCalculatedAtLine": "Calculated at: {value}"
+  ,"@adaptiveRecommendationCalculatedAtLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationNextDueLine": "Next adaptive recommendation due: {value}"
+  ,"@adaptiveRecommendationNextDueLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationDueNowLine": "A new adaptive recommendation is due this week."
+  ,"adaptiveRecommendationRecalculateNowAction": "Recalculate now"
+  ,"adaptiveRecommendationRecalculating": "Recalculating..."
   ,"adaptiveRecommendationApplying": "Applying..."
   ,"adaptiveRecommendationApplyAction": "Apply recommendation to active goals"
   ,"adaptiveRecommendationWarningCalorieFloor": "Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying."
@@ -1362,6 +1377,7 @@
   ,"adaptiveConfidenceLow": "Limited recent logs"
   ,"adaptiveConfidenceMedium": "Usable recent logs"
   ,"adaptiveConfidenceHigh": "Strong recent logs"
+  ,"adaptiveRecommendationRecalculatedSnack": "Recommendation recalculated."
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Recommendation applied to active goals."
   ,"adaptiveRecommendationNotAvailableSnack": "No recommendation available to apply."
 }

@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_experimental_snapshot.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
@@ -86,58 +89,83 @@ void main() {
       );
     });
 
-    test('persists experimental recommendation and estimate separately',
+    test('persists and restores atomic Bayesian experimental snapshot',
         () async {
-      final recommendation = _recommendation();
-      final estimate = BayesianMaintenanceEstimate(
-        posteriorMaintenanceCalories: 2380,
-        posteriorStdDevCalories: 180,
-        profilePriorMaintenanceCalories: 2400,
-        priorMeanUsedCalories: 2400,
-        priorStdDevUsedCalories: 200,
-        priorSource: BayesianPriorSource.profilePriorBootstrap,
-        observedIntakeCalories: 2300,
-        observedWeightSlopeKgPerWeek: -0.1,
-        observationImpliedMaintenanceCalories: 2410,
-        effectiveSampleSize: 10,
-        confidence: RecommendationConfidence.medium,
-        qualityFlags: const ['bayesian_prior_dominant'],
-        debugInfo: const {'kalmanGain': 0.33},
+      final snapshot = BayesianExperimentalRecommendationSnapshot(
+        recommendation: _recommendation().copyWith(
+          dueWeekKey: '2026-04-06',
+          algorithmVersion: 'bayesian_test',
+        ),
+        maintenanceEstimate: _estimate(dueWeekKey: '2026-04-06'),
         dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
+        generatedAt: DateTime(2026, 4, 6, 10, 0),
       );
 
-      await repository.saveLatestGeneratedRecommendationForMode(
-        mode: RecommendationEstimationMode.bayesianExperimental,
-        recommendation: recommendation,
-      );
-      await repository.setLastGeneratedDueWeekKeyForMode(
-        mode: RecommendationEstimationMode.bayesianExperimental,
-        dueWeekKey: '2026-04-06',
-      );
-      await repository.saveLatestBayesianMaintenanceEstimate(
-        estimate: estimate,
+      await repository.saveLatestBayesianExperimentalSnapshot(
+        snapshot: snapshot,
       );
 
-      final experimental =
-          await repository.getLatestGeneratedRecommendationForMode(
-        mode: RecommendationEstimationMode.bayesianExperimental,
-      );
+      final restored = await repository.getLatestBayesianExperimentalSnapshot();
       final heuristic = await repository.getLatestGeneratedRecommendation();
-      final restoredEstimate =
-          await repository.getLatestBayesianMaintenanceEstimate();
 
-      expect(experimental, isNotNull);
+      expect(restored, isNotNull);
       expect(heuristic, isNull);
+      expect(restored!.dueWeekKey, '2026-04-06');
+      expect(
+        restored.maintenanceEstimate.posteriorMaintenanceCalories,
+        closeTo(2380, 0.001),
+      );
       expect(
         await repository.getLastGeneratedDueWeekKeyForMode(
           mode: RecommendationEstimationMode.bayesianExperimental,
         ),
         '2026-04-06',
       );
-      expect(restoredEstimate, isNotNull);
+    });
+
+    test('returns null for incoherent Bayesian snapshot payload', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot',
+        '{"dueWeekKey":"2026-04-06","algorithmVersion":"bayesian_test",'
+            '"generatedAt":"2026-04-06T10:00:00.000",'
+            '"recommendation":{"dueWeekKey":"2026-04-06","algorithmVersion":"bayesian_test"},'
+            '"maintenanceEstimate":{"dueWeekKey":"2026-04-13"}}',
+      );
+
+      final snapshot = await repository.getLatestBayesianExperimentalSnapshot();
+      expect(snapshot, isNull);
+    });
+
+    test('migrates coherent legacy experimental payload to atomic snapshot',
+        () async {
+      final recommendation = _recommendation().copyWith(
+        dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
+      );
+      final estimate = _estimate(dueWeekKey: '2026-04-06');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_generated_bayesian_experimental',
+        _encodeRecommendation(recommendation),
+      );
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate',
+        _encodeEstimate(estimate),
+      );
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental',
+        '2026-04-06',
+      );
+
+      final snapshot = await repository.getLatestBayesianExperimentalSnapshot();
+
+      expect(snapshot, isNotNull);
+      expect(snapshot!.dueWeekKey, '2026-04-06');
       expect(
-        restoredEstimate!.posteriorMaintenanceCalories,
-        closeTo(2380, 0.001),
+        snapshot.maintenanceEstimate.posteriorMaintenanceCalories,
+        closeTo(estimate.posteriorMaintenanceCalories, 0.001),
       );
     });
   });
@@ -168,4 +196,74 @@ NutritionRecommendation _recommendation() {
     baselineCalories: 2300,
     dueWeekKey: '2026-03-30',
   );
+}
+
+BayesianMaintenanceEstimate _estimate({required String dueWeekKey}) {
+  return BayesianMaintenanceEstimate(
+    posteriorMaintenanceCalories: 2380,
+    posteriorStdDevCalories: 180,
+    profilePriorMaintenanceCalories: 2400,
+    priorMeanUsedCalories: 2400,
+    priorStdDevUsedCalories: 200,
+    priorSource: BayesianPriorSource.profilePriorBootstrap,
+    observedIntakeCalories: 2300,
+    observedWeightSlopeKgPerWeek: -0.1,
+    observationImpliedMaintenanceCalories: 2410,
+    effectiveSampleSize: 10,
+    confidence: RecommendationConfidence.medium,
+    qualityFlags: const ['bayesian_prior_dominant'],
+    debugInfo: const {'kalmanGain': 0.33},
+    dueWeekKey: dueWeekKey,
+  );
+}
+
+String _encodeRecommendation(NutritionRecommendation recommendation) {
+  return jsonEncode(recommendation.toJson());
+}
+
+String _encodeEstimate(BayesianMaintenanceEstimate estimate) {
+  return jsonEncode(estimate.toJson());
+}
+
+extension on NutritionRecommendation {
+  NutritionRecommendation copyWith({
+    int? recommendedCalories,
+    int? recommendedProteinGrams,
+    int? recommendedCarbsGrams,
+    int? recommendedFatGrams,
+    int? estimatedMaintenanceCalories,
+    BodyweightGoal? goal,
+    double? targetRateKgPerWeek,
+    RecommendationConfidence? confidence,
+    RecommendationWarningState? warningState,
+    DateTime? generatedAt,
+    DateTime? windowStart,
+    DateTime? windowEnd,
+    String? algorithmVersion,
+    RecommendationInputSummary? inputSummary,
+    int? baselineCalories,
+    String? dueWeekKey,
+  }) {
+    return NutritionRecommendation(
+      recommendedCalories: recommendedCalories ?? this.recommendedCalories,
+      recommendedProteinGrams:
+          recommendedProteinGrams ?? this.recommendedProteinGrams,
+      recommendedCarbsGrams:
+          recommendedCarbsGrams ?? this.recommendedCarbsGrams,
+      recommendedFatGrams: recommendedFatGrams ?? this.recommendedFatGrams,
+      estimatedMaintenanceCalories:
+          estimatedMaintenanceCalories ?? this.estimatedMaintenanceCalories,
+      goal: goal ?? this.goal,
+      targetRateKgPerWeek: targetRateKgPerWeek ?? this.targetRateKgPerWeek,
+      confidence: confidence ?? this.confidence,
+      warningState: warningState ?? this.warningState,
+      generatedAt: generatedAt ?? this.generatedAt,
+      windowStart: windowStart ?? this.windowStart,
+      windowEnd: windowEnd ?? this.windowEnd,
+      algorithmVersion: algorithmVersion ?? this.algorithmVersion,
+      inputSummary: inputSummary ?? this.inputSummary,
+      baselineCalories: baselineCalories ?? this.baselineCalories,
+      dueWeekKey: dueWeekKey ?? this.dueWeekKey,
+    );
+  }
 }

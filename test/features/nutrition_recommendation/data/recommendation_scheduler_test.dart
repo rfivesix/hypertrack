@@ -46,6 +46,39 @@ void main() {
       );
     });
 
+    test('isDueNow and nextDueAt expose freshness semantics', () {
+      final monday = DateTime(2026, 4, 6, 9, 0);
+      expect(
+        RecommendationScheduler.isDueNow(
+          now: monday,
+          lastGeneratedDueWeekKey: null,
+        ),
+        isTrue,
+      );
+      expect(
+        RecommendationScheduler.nextDueAt(
+          now: monday,
+          lastGeneratedDueWeekKey: null,
+        ),
+        DateTime(2026, 4, 6),
+      );
+
+      expect(
+        RecommendationScheduler.isDueNow(
+          now: DateTime(2026, 4, 8, 9, 0),
+          lastGeneratedDueWeekKey: '2026-04-06',
+        ),
+        isFalse,
+      );
+      expect(
+        RecommendationScheduler.nextDueAt(
+          now: DateTime(2026, 4, 8, 9, 0),
+          lastGeneratedDueWeekKey: '2026-04-06',
+        ),
+        DateTime(2026, 4, 13),
+      );
+    });
+
     test('stableWindowEndDayForDueWeek stays fixed within the same due week',
         () {
       expect(

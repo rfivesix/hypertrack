@@ -34,4 +34,29 @@ class RecommendationScheduler {
   }) {
     return dueWeekKey != lastGeneratedDueWeekKey;
   }
+
+  static bool isDueNow({
+    required DateTime now,
+    required String? lastGeneratedDueWeekKey,
+  }) {
+    return shouldGenerateForWeek(
+      dueWeekKey: dueWeekKeyFor(now),
+      lastGeneratedDueWeekKey: lastGeneratedDueWeekKey,
+    );
+  }
+
+  static DateTime nextDueAt({
+    required DateTime now,
+    required String? lastGeneratedDueWeekKey,
+  }) {
+    final dueStart = dueWeekStart(now);
+    final dueNow = isDueNow(
+      now: now,
+      lastGeneratedDueWeekKey: lastGeneratedDueWeekKey,
+    );
+    if (dueNow) {
+      return dueStart;
+    }
+    return dueStart.add(const Duration(days: 7));
+  }
 }

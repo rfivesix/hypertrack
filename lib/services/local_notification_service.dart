@@ -10,7 +10,10 @@ class LocalNotificationService {
   static final LocalNotificationService instance = LocalNotificationService._();
 
   static const int restTimerNotificationId = 8801;
+  static const int adaptiveRecommendationDueNotificationId = 8802;
   static const String _restChannelId = 'rest_timer_channel';
+  static const String _adaptiveRecommendationChannelId =
+      'adaptive_recommendation_channel';
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -68,6 +71,21 @@ class LocalNotificationService {
     );
   }
 
+  NotificationDetails _adaptiveRecommendationNotificationDetails() {
+    return const NotificationDetails(
+      android: AndroidNotificationDetails(
+        _adaptiveRecommendationChannelId,
+        'Adaptive nutrition',
+        channelDescription: 'Alerts when a new adaptive recommendation is due.',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+      ),
+      iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
+      macOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
+    );
+  }
+
   ({String title, String body}) _localizedRestTexts() {
     final languageCode = WidgetsBinding
         .instance.platformDispatcher.locale.languageCode
@@ -84,6 +102,26 @@ class LocalNotificationService {
     return (
       title: 'Rest finished',
       body: 'Your pause timer is over. Ready for the next set.',
+    );
+  }
+
+  ({String title, String body}) _localizedAdaptiveRecommendationDueTexts() {
+    final languageCode = WidgetsBinding
+        .instance.platformDispatcher.locale.languageCode
+        .toLowerCase();
+
+    if (languageCode == 'de') {
+      return (
+        title: 'Neue adaptive Empfehlung verfuegbar',
+        body:
+            'Deine neue woechentliche adaptive Ernaehrungsempfehlung ist jetzt faellig.',
+      );
+    }
+
+    return (
+      title: 'New adaptive recommendation due',
+      body:
+          'Your new weekly adaptive nutrition recommendation is now available.',
     );
   }
 
@@ -134,5 +172,17 @@ class LocalNotificationService {
   Future<void> cancelRestTimerNotification() async {
     if (!_isInitialized) return;
     await _plugin.cancel(id: restTimerNotificationId);
+  }
+
+  Future<void> showAdaptiveRecommendationDueNotification() async {
+    if (!_isInitialized) await initialize();
+    final texts = _localizedAdaptiveRecommendationDueTexts();
+
+    await _plugin.show(
+      id: adaptiveRecommendationDueNotificationId,
+      title: texts.title,
+      body: texts.body,
+      notificationDetails: _adaptiveRecommendationNotificationDetails(),
+    );
   }
 }

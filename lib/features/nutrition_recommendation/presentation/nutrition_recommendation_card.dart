@@ -11,8 +11,13 @@ class NutritionRecommendationCard extends StatelessWidget {
   final BodyweightGoal goal;
   final double targetRateKgPerWeek;
   final NutritionRecommendation? recommendation;
+  final DateTime? generatedAt;
+  final DateTime nextAdaptiveRecommendationDueAt;
+  final bool isAdaptiveRecommendationDueNow;
   final int activeTargetCalories;
+  final bool isRecalculating;
   final bool isApplying;
+  final VoidCallback? onRecalculate;
   final VoidCallback? onApply;
 
   const NutritionRecommendationCard({
@@ -20,8 +25,13 @@ class NutritionRecommendationCard extends StatelessWidget {
     required this.goal,
     required this.targetRateKgPerWeek,
     required this.recommendation,
+    required this.generatedAt,
+    required this.nextAdaptiveRecommendationDueAt,
+    required this.isAdaptiveRecommendationDueNow,
     required this.activeTargetCalories,
+    required this.isRecalculating,
     required this.isApplying,
+    required this.onRecalculate,
     required this.onApply,
   });
 
@@ -59,6 +69,31 @@ class NutritionRecommendationCard extends StatelessWidget {
                     ),
                     style: theme.textTheme.bodySmall,
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.adaptiveRecommendationNextDueLine(
+                      _formatDate(context, nextAdaptiveRecommendationDueAt),
+                    ),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  if (isAdaptiveRecommendationDueNow)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        l10n.adaptiveRecommendationDueNowLine,
+                        key: const Key('adaptive_recommendation_due_now_line'),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  FilledButton.tonal(
+                    onPressed: isRecalculating ? null : onRecalculate,
+                    child: Text(
+                      isRecalculating
+                          ? l10n.adaptiveRecommendationRecalculating
+                          : l10n.adaptiveRecommendationRecalculateNowAction,
+                    ),
+                  ),
                 ],
               )
             : Column(
@@ -79,6 +114,32 @@ class NutritionRecommendationCard extends StatelessWidget {
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 4),
+                  Text(
+                    l10n.adaptiveRecommendationCalculatedAtLine(
+                      _formatDateTime(
+                        context,
+                        generatedAt ?? recommendation!.generatedAt,
+                      ),
+                    ),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.adaptiveRecommendationNextDueLine(
+                      _formatDate(context, nextAdaptiveRecommendationDueAt),
+                    ),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  if (isAdaptiveRecommendationDueNow)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        l10n.adaptiveRecommendationDueNowLine,
+                        key: const Key('adaptive_recommendation_due_now_line'),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
                   Text(
                     l10n.adaptiveRecommendationMaintenanceLine(
                       recommendation!.estimatedMaintenanceCalories,
@@ -164,16 +225,28 @@ class NutritionRecommendationCard extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ElevatedButton(
-                      onPressed: isApplying ? null : onApply,
-                      child: Text(
-                        isApplying
-                            ? l10n.adaptiveRecommendationApplying
-                            : l10n.adaptiveRecommendationApplyAction,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.start,
+                    children: [
+                      FilledButton.tonal(
+                        onPressed: isRecalculating ? null : onRecalculate,
+                        child: Text(
+                          isRecalculating
+                              ? l10n.adaptiveRecommendationRecalculating
+                              : l10n.adaptiveRecommendationRecalculateNowAction,
+                        ),
                       ),
-                    ),
+                      ElevatedButton(
+                        onPressed: isApplying ? null : onApply,
+                        child: Text(
+                          isApplying
+                              ? l10n.adaptiveRecommendationApplying
+                              : l10n.adaptiveRecommendationApplyAction,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -195,6 +268,22 @@ class NutritionRecommendationCard extends StatelessWidget {
   String _rateLabel(AppLocalizations l10n, double kgPerWeek) {
     final sign = kgPerWeek > 0 ? '+' : '';
     return l10n.adaptiveRatePerWeek('$sign${kgPerWeek.toStringAsFixed(2)}');
+  }
+
+  String _formatDate(BuildContext context, DateTime value) {
+    return MaterialLocalizations.of(context).formatMediumDate(value.toLocal());
+  }
+
+  String _formatDateTime(BuildContext context, DateTime value) {
+    final localizations = MaterialLocalizations.of(context);
+    final localValue = value.toLocal();
+    final dateText = localizations.formatMediumDate(localValue);
+    final timeText = localizations.formatTimeOfDay(
+      TimeOfDay.fromDateTime(localValue),
+      alwaysUse24HourFormat:
+          MediaQuery.maybeOf(context)?.alwaysUse24HourFormat ?? false,
+    );
+    return '$dateText $timeText';
   }
 }
 

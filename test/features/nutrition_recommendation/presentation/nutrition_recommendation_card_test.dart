@@ -17,8 +17,13 @@ void main() {
             goal: BodyweightGoal.maintainWeight,
             targetRateKgPerWeek: 0,
             recommendation: null,
+            generatedAt: null,
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 6),
+            isAdaptiveRecommendationDueNow: true,
             activeTargetCalories: 2400,
+            isRecalculating: false,
             isApplying: false,
+            onRecalculate: () {},
             onApply: () {},
           ),
         ),
@@ -35,6 +40,7 @@ void main() {
   testWidgets('renders recommendation details and apply action',
       (tester) async {
     var applyTapped = false;
+    var recalculateTapped = false;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -45,8 +51,15 @@ void main() {
             goal: BodyweightGoal.maintainWeight,
             targetRateKgPerWeek: 0,
             recommendation: _recommendation(),
+            generatedAt: DateTime(2026, 4, 5, 9, 0),
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+            isAdaptiveRecommendationDueNow: false,
             activeTargetCalories: 2400,
+            isRecalculating: false,
             isApplying: false,
+            onRecalculate: () {
+              recalculateTapped = true;
+            },
             onApply: () {
               applyTapped = true;
             },
@@ -60,11 +73,18 @@ void main() {
 
     expect(find.text('2500 kcal'), findsOneWidget);
     expect(find.text(l10n.adaptiveRecommendationApplyAction), findsOneWidget);
+    expect(
+      find.text(l10n.adaptiveRecommendationRecalculateNowAction),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text(l10n.adaptiveRecommendationApplyAction));
+    await tester
+        .tap(find.text(l10n.adaptiveRecommendationRecalculateNowAction));
     await tester.pump();
 
     expect(applyTapped, isTrue);
+    expect(recalculateTapped, isTrue);
   });
 
   testWidgets('renders safety-floor warning message when reason is present',
@@ -86,8 +106,13 @@ void main() {
             goal: BodyweightGoal.maintainWeight,
             targetRateKgPerWeek: 0,
             recommendation: recommendation,
+            generatedAt: recommendation.generatedAt,
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+            isAdaptiveRecommendationDueNow: false,
             activeTargetCalories: 2400,
+            isRecalculating: false,
             isApplying: false,
+            onRecalculate: () {},
             onApply: () {},
           ),
         ),
@@ -121,8 +146,13 @@ void main() {
             goal: BodyweightGoal.maintainWeight,
             targetRateKgPerWeek: 0,
             recommendation: recommendation,
+            generatedAt: recommendation.generatedAt,
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+            isAdaptiveRecommendationDueNow: false,
             activeTargetCalories: 2400,
+            isRecalculating: false,
             isApplying: false,
+            onRecalculate: () {},
             onApply: () {},
           ),
         ),
@@ -161,8 +191,13 @@ void main() {
             goal: BodyweightGoal.maintainWeight,
             targetRateKgPerWeek: 0,
             recommendation: recommendation,
+            generatedAt: recommendation.generatedAt,
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+            isAdaptiveRecommendationDueNow: false,
             activeTargetCalories: 2400,
+            isRecalculating: false,
             isApplying: false,
+            onRecalculate: () {},
             onApply: () {},
           ),
         ),
@@ -189,8 +224,13 @@ void main() {
             goal: BodyweightGoal.maintainWeight,
             targetRateKgPerWeek: 0,
             recommendation: null,
+            generatedAt: null,
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 6),
+            isAdaptiveRecommendationDueNow: true,
             activeTargetCalories: 2400,
+            isRecalculating: false,
             isApplying: false,
+            onRecalculate: () {},
             onApply: () {},
           ),
         ),

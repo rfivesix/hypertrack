@@ -21,14 +21,34 @@ class BayesianMaintenancePrior {
 }
 
 class BayesianEstimatorConfig {
+  /// Bootstrap prior uncertainty (kcal/day, standard deviation).
+  ///
+  /// Used when no valid chained posterior is available yet.
   final double priorStdDevCalories;
+
+  /// Week-to-week latent maintenance drift (kcal/day, standard deviation).
+  ///
+  /// This inflates carried prior variance before each update step.
   final double processStdDevCalories;
+
+  /// Baseline observation noise floor (kcal/day, standard deviation).
+  ///
+  /// Represents residual model/measurement mismatch even with dense logs.
   final double baseObservationStdDevCalories;
+
+  /// Intake day-to-day variability (kcal/day, standard deviation).
+  ///
+  /// Reduced by sqrt(intake logged days) inside observation standard error.
   final double intakeDayStdDevCalories;
+
+  /// Weight-trend uncertainty (kg/week, standard deviation).
+  ///
+  /// Converted into kcal/day uncertainty via 7700/7 and weighted by sample size.
   final double weightTrendStdDevKgPerWeek;
   final double minimumMaintenanceCalories;
   final double maximumMaintenanceCalories;
 
+  /// Conservative defaults tuned for stability in sparse/noisy weekly logs.
   const BayesianEstimatorConfig({
     this.priorStdDevCalories = 420,
     this.processStdDevCalories = 90,
@@ -217,7 +237,7 @@ class BayesianTdeeEstimator {
     }
 
     final observedMaintenance = hasObservation
-        ? input.avgLoggedCalories - (slope! * _kcalPerKgPerWeekToDay)
+        ? input.avgLoggedCalories - (slope * _kcalPerKgPerWeekToDay)
         : null;
 
     final effectiveSampleSize = _effectiveSampleSize(

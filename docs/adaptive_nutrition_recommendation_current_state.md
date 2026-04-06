@@ -76,6 +76,10 @@
   - metadata: `generatedAt`, `windowStart`, `windowEnd`, `algorithmVersion`, `inputSummary`, `baselineCalories`, `dueWeekKey`
 - `AdaptiveNutritionRecommendationState`:
   - `goal`, `targetRateKgPerWeek`, `latestGeneratedRecommendation`, `latestAppliedRecommendation`
+  - `latestGeneratedAt`
+  - `nextAdaptiveRecommendationDueAt`
+  - `isAdaptiveRecommendationDueNow`
+  - `currentDueWeekKey`
 
 ### SharedPreferences keys used by the feature
 
@@ -87,6 +91,12 @@
 - `adaptive_nutrition_recommendation.latest_generated`: JSON string of `NutritionRecommendation`
 - `adaptive_nutrition_recommendation.latest_applied`: JSON string of `NutritionRecommendation`
 - `adaptive_nutrition_recommendation.last_generated_due_week_key`: due-week string (`yyyy-MM-dd` Monday anchor)
+- `adaptive_nutrition_recommendation.last_due_notification_week_key`: last due week for which a due-notification was emitted
+- `adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot`: atomic JSON payload for experimental Bayesian recommendation + estimate + metadata
+- legacy experimental keys are still readable only for one-way migration/fallback safety:
+  - `adaptive_nutrition_recommendation.latest_generated_bayesian_experimental`
+  - `adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental`
+  - `adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate`
 
 #### Adjacent onboarding/goals integration keys touched in related flows
 - `userHeight`: fallback cached height (goals/onboarding integration path)
@@ -101,6 +111,12 @@
 - **Stable window end day**: `stableWindowEndDayForDueWeek(now)` = previous Sunday (due-week Monday minus 1 day).
 - **Duplicate prevention**: generation skipped when `dueWeekKey == lastGeneratedDueWeekKey` unless `force == true`.
 - **Force behavior**: `force: true` bypasses duplicate prevention but still uses the same due week key and same stable window end anchor.
+- **Manual recalculate behavior (Variant A)**:
+  - immediate regeneration is supported (`recalculateRecommendationNow`)
+  - still anchored to the same due-week key + stable previous-Sunday boundary
+  - does not auto-apply active calorie/macronutrient goals
+- **Freshness metadata helpers**:
+  - scheduler now exposes `isDueNow(...)` and `nextDueAt(...)` for explicit UI/service freshness semantics.
 - **Persisted scheduling state**:
   - recommendation stores `dueWeekKey`
   - repository stores `last_generated_due_week_key`
@@ -432,7 +448,14 @@
   - after relevant navigation returns
 - Recommendation card displays:
   - empty state when no generated recommendation
-  - otherwise goal/rate, maintenance estimate, kcal/macros, data-basis label, data-basis counts, prioritized data-basis hint, active target calories, warning banner, apply button
+  - otherwise goal/rate, maintenance estimate, kcal/macros, data-basis label, data-basis counts, prioritized data-basis hint, active target calories, warning banner
+  - freshness/scheduling metadata:
+    - calculated-at timestamp
+    - next adaptive recommendation due timestamp
+    - due-now indicator when a new regular recommendation is due
+  - actions:
+    - separate `recalculate now` action (manual refresh, non-applying)
+    - separate `apply recommendation to active goals` action
   - warning copy prioritizes specific reasons when present (`calorie_floor_applied`, `unresolved_food_calories`, `large_adjustment_*`, `macro_distribution_constrained`) before generic fallback text
 - Apply-to-active-goals:
   - card button -> `applyLatestRecommendationToActiveTargets()`
@@ -443,6 +466,13 @@
 ### What does not mutate automatically
 - Recommendation refresh does not change active DB goals.
 - Only explicit apply mutates active goals.
+- Manual recalculate also does not mutate active goals.
+
+### Notification support (first version)
+- A scheduler-based due notification seam is implemented:
+  - `notifyIfNewRecommendationDue(...)` emits at most once per due week key
+  - eligibility is based on due-week scheduling only (not model deltas)
+  - notification dispatch is abstracted via `AdaptiveRecommendationDueNotifier` (local-notification implementation + test noop/fake support)
 
 ## 11. Warnings, confidence, and data quality semantics
 
@@ -542,6 +572,7 @@
   2. if a valid previous Bayesian estimate exists for the same due week (forced in-week regeneration):
      - prior mean/stddev are replayed from that estimate’s stored prior-used fields
      - this preserves deterministic in-week stability
+     - stable in-week behavior is reinforced by the same stable previous-Sunday input window boundary
   3. otherwise (missing/corrupt/invalid previous experimental state):
      - bootstrap prior mean = `RecommendationGenerationInput.priorMaintenanceCalories`
      - bootstrap prior stddev = estimator default prior stddev
@@ -575,10 +606,34 @@
 
 ### Mode separation and persistence semantics (implemented)
 - Mode separation is explicit via `RecommendationEstimationMode`.
-- Experimental snapshots and due-week tracking are persisted in separate keys from production heuristic keys.
-- Experimental maintenance-estimate payload persists the recursive prior/posterior metadata needed for next-week chaining.
-- Retrieval of latest experimental state is coherence-checked: recommendation snapshot and Bayesian estimate must agree on due-week key or the pair is treated as invalid.
+- Experimental persistence is now an atomic snapshot model:
+  - `BayesianExperimentalRecommendationSnapshot` stores recommendation + maintenance estimate + due week key + algorithm version + generated-at metadata in one payload.
+- Experimental retrieval no longer reconstructs state from fragmented recommendation/estimate keys.
+- Coherence is validated at snapshot decode time (due week key + algorithm alignment); incoherent payloads are treated as invalid and ignored.
+- Minimal legacy compatibility:
+  - if no atomic snapshot exists, coherent legacy experimental payloads are migrated once into the atomic snapshot key
+  - missing/corrupt/incoherent legacy payloads are ignored safely.
 - Production keys (`latest_generated`, `latest_applied`, `last_generated_due_week_key`) are preserved and remain authoritative for current UI/apply flows.
+
+### Comparison/debug tracing (implemented)
+- `generateEstimatorComparison(...)` now exposes richer side-by-side diagnostics, including:
+  - due week key and generated-at timestamp
+  - heuristic maintenance estimate
+  - Bayesian profile prior, prior-used mean/stddev, posterior mean/stddev
+  - observation-implied maintenance
+  - effective sample size, confidence bucket, and quality flags
+  - deltas vs heuristic and vs Bayesian prior
+  - input-window summary fields (window days, weight log count, intake logged days, smoothed slope, average logged calories)
+- This is internal/dev tracing for evaluation, not production-facing apply semantics.
+
+### Estimator parameter tuning surface (implemented)
+- Bayesian estimator noise assumptions are centralized in `BayesianEstimatorConfig`.
+- Major parameters are explicitly documented in code comments for intent/tuning:
+  - `priorStdDevCalories`
+  - `processStdDevCalories`
+  - `baseObservationStdDevCalories`
+  - `intakeDayStdDevCalories`
+  - `weightTrendStdDevKgPerWeek`
 
 ### Known limitations / intentionally experimental areas
 - Current experimental model is a pragmatic scalar-state filter, not a full multi-state physiological model.

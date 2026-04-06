@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/data/database_helper.dart';
 import 'package:hypertrack/data/drift_database.dart'
     show AppDatabase, ProductsCompanion;
+import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_due_notification.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_service.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_experimental_snapshot.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
@@ -23,6 +27,7 @@ void main() {
     late AppDatabase database;
     late DatabaseHelper dbHelper;
     late RecommendationRepository repository;
+    late _FakeDueNotifier dueNotifier;
     late AdaptiveNutritionRecommendationService service;
 
     setUp(() async {
@@ -30,9 +35,11 @@ void main() {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
       repository = RecommendationRepository();
+      dueNotifier = _FakeDueNotifier();
       service = AdaptiveNutritionRecommendationService(
         repository: repository,
         databaseHelper: dbHelper,
+        dueNotifier: dueNotifier,
       );
 
       await dbHelper.saveUserProfile(
@@ -273,6 +280,22 @@ void main() {
       expect(latest, isNull);
     });
 
+    test('experimental retrieval returns null for incoherent snapshot payload',
+        () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot',
+        '{"dueWeekKey":"2026-04-06","algorithmVersion":"bayesian_test",'
+            '"generatedAt":"2026-04-06T10:00:00.000",'
+            '"recommendation":${_encodedRecommendationJson("2026-04-06", "bayesian_test")},'
+            '"maintenanceEstimate":${_encodedEstimateJson("2026-04-13")}}',
+      );
+
+      final latest =
+          await service.getLatestBayesianExperimentalRecommendation();
+      expect(latest, isNull);
+    });
+
     test(
         'experimental forced regeneration stays stable in due week despite new logs',
         () async {
@@ -370,6 +393,42 @@ void main() {
       );
     });
 
+    test('experimental refresh chains from atomic snapshot context', () async {
+      final firstWeek =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 6, 10, 0),
+        force: true,
+      );
+      expect(firstWeek, isNotNull);
+
+      // Legacy fragmented keys are ignored for chaining once an atomic snapshot
+      // exists; this should not perturb prior resolution.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate',
+        '{ legacy_corrupt_payload',
+      );
+
+      final secondWeek =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 13, 10, 0),
+        force: true,
+      );
+
+      expect(secondWeek, isNotNull);
+      expect(
+        secondWeek!.maintenanceEstimate.priorSource,
+        BayesianPriorSource.chainedPosterior,
+      );
+      expect(
+        secondWeek.maintenanceEstimate.priorMeanUsedCalories,
+        closeTo(
+          firstWeek!.maintenanceEstimate.posteriorMaintenanceCalories,
+          0.0001,
+        ),
+      );
+    });
+
     test('experimental bootstrap uses profile prior when no previous state',
         () async {
       final result =
@@ -396,6 +455,10 @@ void main() {
         'experimental falls back to profile prior when stored state is corrupt',
         () async {
       final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot',
+        '{ definitely_not_json',
+      );
       await prefs.setString(
         'adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate',
         '{ definitely_not_json',
@@ -479,6 +542,88 @@ void main() {
       expect(applied, isFalse);
     });
 
+    test(
+        'manual recalculate now uses stable window and does not auto-apply goals',
+        () async {
+      final monday = DateTime(2026, 4, 6, 10, 0);
+      final first = await service.refreshRecommendationIfDue(
+        now: monday,
+        force: true,
+      );
+      expect(first, isNotNull);
+
+      await repository.saveGoalAndTargetRate(
+        goal: BodyweightGoal.loseWeight,
+        targetRateKgPerWeek: -0.5,
+      );
+
+      final recalculated = await service.recalculateRecommendationNow(
+        now: DateTime(2026, 4, 8, 12, 30),
+      );
+      final settingsAfter = await dbHelper.getAppSettings();
+
+      expect(recalculated, isNotNull);
+      expect(recalculated!.dueWeekKey, '2026-04-06');
+      expect(recalculated.windowEnd, DateTime(2026, 4, 5, 23, 59, 59));
+      expect(recalculated.generatedAt, DateTime(2026, 4, 8, 12, 30));
+      expect(recalculated.goal, BodyweightGoal.loseWeight);
+      expect(settingsAfter, isNotNull);
+      expect(settingsAfter!.targetCalories, 2400);
+    });
+
+    test('loadState exposes recommendation freshness and next-due metadata',
+        () async {
+      final monday = DateTime(2026, 4, 6, 10, 0);
+      final before = await service.loadState(
+        now: monday,
+        refreshIfDue: false,
+      );
+      expect(before.latestGeneratedAt, isNull);
+      expect(before.isAdaptiveRecommendationDueNow, isTrue);
+      expect(before.nextAdaptiveRecommendationDueAt, DateTime(2026, 4, 6));
+      expect(before.currentDueWeekKey, '2026-04-06');
+
+      final generated = await service.refreshRecommendationIfDue(now: monday);
+      final after = await service.loadState(
+        now: DateTime(2026, 4, 8, 10, 0),
+        refreshIfDue: false,
+      );
+
+      expect(generated, isNotNull);
+      expect(after.latestGeneratedAt, generated!.generatedAt);
+      expect(after.isAdaptiveRecommendationDueNow, isFalse);
+      expect(after.nextAdaptiveRecommendationDueAt, DateTime(2026, 4, 13));
+      expect(after.currentDueWeekKey, '2026-04-06');
+    });
+
+    test('scheduler-based due notification is emitted once per due week',
+        () async {
+      final firstNotified = await service.notifyIfNewRecommendationDue(
+        now: DateTime(2026, 4, 6, 8, 0),
+      );
+      final duplicateNotified = await service.notifyIfNewRecommendationDue(
+        now: DateTime(2026, 4, 8, 8, 0),
+      );
+
+      await service.refreshRecommendationIfDue(
+          now: DateTime(2026, 4, 6, 10, 0));
+      final notDueAfterGeneration = await service.notifyIfNewRecommendationDue(
+        now: DateTime(2026, 4, 10, 9, 0),
+      );
+
+      final nextWeekNotified = await service.notifyIfNewRecommendationDue(
+        now: DateTime(2026, 4, 13, 8, 0),
+      );
+
+      expect(firstNotified, isTrue);
+      expect(duplicateNotified, isFalse);
+      expect(notDueAfterGeneration, isFalse);
+      expect(nextWeekNotified, isTrue);
+      expect(dueNotifier.notifications, hasLength(2));
+      expect(dueNotifier.notifications[0].dueWeekKey, '2026-04-06');
+      expect(dueNotifier.notifications[1].dueWeekKey, '2026-04-13');
+    });
+
     test('experimental onboarding can generate and persist safely', () async {
       final result =
           await service.generateBayesianExperimentalOnboardingRecommendation(
@@ -493,9 +638,7 @@ void main() {
       );
 
       final storedExperimental =
-          await repository.getLatestGeneratedRecommendationForMode(
-        mode: RecommendationEstimationMode.bayesianExperimental,
-      );
+          await repository.getLatestBayesianExperimentalSnapshot();
       final storedHeuristic =
           await repository.getLatestGeneratedRecommendation();
 
@@ -503,6 +646,13 @@ void main() {
       expect(
           result.maintenanceEstimate.posteriorStdDevCalories, greaterThan(0));
       expect(storedExperimental, isNotNull);
+      expect(
+        storedExperimental!.maintenanceEstimate.posteriorMaintenanceCalories,
+        closeTo(
+          result.maintenanceEstimate.posteriorMaintenanceCalories,
+          0.001,
+        ),
+      );
       expect(storedHeuristic, isNull);
     });
 
@@ -540,6 +690,13 @@ void main() {
 
       expect(experimental, isNotNull);
       expect(heuristic, isNotNull);
+      expect(await repository.getLastGeneratedDueWeekKey(), '2026-04-06');
+      expect(
+        await repository.getLastGeneratedDueWeekKeyForMode(
+          mode: RecommendationEstimationMode.bayesianExperimental,
+        ),
+        '2026-04-06',
+      );
       expect(experimental!.dueWeekKey, heuristic!.dueWeekKey);
       expect(
         heuristic.algorithmVersion,
@@ -556,6 +713,7 @@ void main() {
       final comparison = await service.generateEstimatorComparison(
         now: DateTime(2026, 4, 6, 10, 0),
       );
+      final trace = comparison.toDebugTrace();
 
       expect(comparison.heuristicRecommendation.recommendedCalories,
           greaterThan(0));
@@ -575,6 +733,19 @@ void main() {
         comparison.bayesianObservationImpliedMaintenanceCalories,
         isNotNull,
       );
+      expect(comparison.dueWeekKey, '2026-04-06');
+      expect(comparison.generatedAt, DateTime(2026, 4, 6, 10, 0));
+      expect(comparison.bayesianProfilePriorCalories, greaterThan(0));
+      expect(comparison.bayesianEffectiveSampleSize, greaterThan(0));
+      expect(comparison.bayesianQualityFlags, isNotEmpty);
+      expect(comparison.windowDays, greaterThan(0));
+      expect(comparison.weightLogCount, greaterThan(0));
+      expect(comparison.intakeLoggedDays, greaterThan(0));
+      expect(comparison.avgLoggedCalories, greaterThan(0));
+      expect(trace['dueWeekKey'], '2026-04-06');
+      expect(trace['heuristicEstimatedMaintenanceCalories'], isNotNull);
+      expect(trace['bayesianPosteriorStdDevCalories'], isNotNull);
+      expect(trace['smoothedWeightSlopeKgPerWeek'], isNotNull);
     });
 
     test('onboarding recommendation can be persisted and marked as applied',
@@ -745,4 +916,90 @@ NutritionRecommendation _recommendationForDueWeek(String dueWeekKey) {
     baselineCalories: 2400,
     dueWeekKey: dueWeekKey,
   );
+}
+
+BayesianMaintenanceEstimate _estimateForDueWeek(String dueWeekKey) {
+  return BayesianMaintenanceEstimate(
+    posteriorMaintenanceCalories: 2400,
+    posteriorStdDevCalories: 180,
+    profilePriorMaintenanceCalories: 2350,
+    priorMeanUsedCalories: 2350,
+    priorStdDevUsedCalories: 220,
+    priorSource: BayesianPriorSource.profilePriorBootstrap,
+    observedIntakeCalories: 2300,
+    observedWeightSlopeKgPerWeek: -0.1,
+    observationImpliedMaintenanceCalories: 2410,
+    effectiveSampleSize: 8,
+    confidence: RecommendationConfidence.medium,
+    qualityFlags: const <String>[],
+    debugInfo: const <String, Object>{},
+    dueWeekKey: dueWeekKey,
+  );
+}
+
+String _encodedRecommendationJson(String dueWeekKey, String algorithmVersion) {
+  return jsonEncode(
+    _recommendationForDueWeek(dueWeekKey)
+        .copyWith(algorithmVersion: algorithmVersion)
+        .toJson(),
+  );
+}
+
+String _encodedEstimateJson(String dueWeekKey) {
+  return jsonEncode(_estimateForDueWeek(dueWeekKey).toJson());
+}
+
+class _FakeDueNotifier implements AdaptiveRecommendationDueNotifier {
+  final List<({String dueWeekKey, DateTime dueAt})> notifications = [];
+
+  @override
+  Future<void> notifyRecommendationDue({
+    required String dueWeekKey,
+    required DateTime dueAt,
+  }) async {
+    notifications.add((dueWeekKey: dueWeekKey, dueAt: dueAt));
+  }
+}
+
+extension on NutritionRecommendation {
+  NutritionRecommendation copyWith({
+    int? recommendedCalories,
+    int? recommendedProteinGrams,
+    int? recommendedCarbsGrams,
+    int? recommendedFatGrams,
+    int? estimatedMaintenanceCalories,
+    BodyweightGoal? goal,
+    double? targetRateKgPerWeek,
+    RecommendationConfidence? confidence,
+    RecommendationWarningState? warningState,
+    DateTime? generatedAt,
+    DateTime? windowStart,
+    DateTime? windowEnd,
+    String? algorithmVersion,
+    RecommendationInputSummary? inputSummary,
+    int? baselineCalories,
+    String? dueWeekKey,
+  }) {
+    return NutritionRecommendation(
+      recommendedCalories: recommendedCalories ?? this.recommendedCalories,
+      recommendedProteinGrams:
+          recommendedProteinGrams ?? this.recommendedProteinGrams,
+      recommendedCarbsGrams:
+          recommendedCarbsGrams ?? this.recommendedCarbsGrams,
+      recommendedFatGrams: recommendedFatGrams ?? this.recommendedFatGrams,
+      estimatedMaintenanceCalories:
+          estimatedMaintenanceCalories ?? this.estimatedMaintenanceCalories,
+      goal: goal ?? this.goal,
+      targetRateKgPerWeek: targetRateKgPerWeek ?? this.targetRateKgPerWeek,
+      confidence: confidence ?? this.confidence,
+      warningState: warningState ?? this.warningState,
+      generatedAt: generatedAt ?? this.generatedAt,
+      windowStart: windowStart ?? this.windowStart,
+      windowEnd: windowEnd ?? this.windowEnd,
+      algorithmVersion: algorithmVersion ?? this.algorithmVersion,
+      inputSummary: inputSummary ?? this.inputSummary,
+      baselineCalories: baselineCalories ?? this.baselineCalories,
+      dueWeekKey: dueWeekKey ?? this.dueWeekKey,
+    );
+  }
 }

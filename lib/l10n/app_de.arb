@@ -1351,6 +1351,21 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationCalculatedAtLine": "Berechnet am: {value}"
+  ,"@adaptiveRecommendationCalculatedAtLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationNextDueLine": "Nächste adaptive Empfehlung fällig: {value}"
+  ,"@adaptiveRecommendationNextDueLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationDueNowLine": "Diese Woche ist eine neue adaptive Empfehlung fällig."
+  ,"adaptiveRecommendationRecalculateNowAction": "Jetzt neu berechnen"
+  ,"adaptiveRecommendationRecalculating": "Wird neu berechnet..."
   ,"adaptiveRecommendationApplying": "Wird angewendet..."
   ,"adaptiveRecommendationApplyAction": "Empfehlung auf aktive Ziele anwenden"
   ,"adaptiveRecommendationWarningCalorieFloor": "Empfehlung wurde durch ein Mindest-Kalorien-Sicherheitslimit begrenzt. Bitte Profil und aktuelle Logs vor dem Anwenden prüfen."
@@ -1367,6 +1382,7 @@
   ,"adaptiveConfidenceLow": "Wenige aktuelle Logs"
   ,"adaptiveConfidenceMedium": "Nutzbare aktuelle Logs"
   ,"adaptiveConfidenceHigh": "Starke aktuelle Logs"
+  ,"adaptiveRecommendationRecalculatedSnack": "Empfehlung neu berechnet."
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Empfehlung auf aktive Ziele angewendet."
   ,"adaptiveRecommendationNotAvailableSnack": "Keine Empfehlung zum Anwenden verfügbar."
 }

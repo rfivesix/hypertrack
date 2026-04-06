@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/bayesian_experimental_snapshot.dart';
 import '../domain/bayesian_tdee_estimator.dart';
 import '../domain/goal_models.dart';
 import '../domain/recommendation_estimation_mode.dart';
@@ -24,6 +25,10 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.latest_applied';
   static const String _lastGeneratedDueWeekKey =
       'adaptive_nutrition_recommendation.last_generated_due_week_key';
+  static const String _lastDueNotificationWeekKey =
+      'adaptive_nutrition_recommendation.last_due_notification_week_key';
+  static const String _latestBayesianExperimentalSnapshotKey =
+      'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot';
   static const String _latestGeneratedBayesianExperimentalKey =
       'adaptive_nutrition_recommendation.latest_generated_bayesian_experimental';
   static const String _lastGeneratedDueWeekBayesianExperimentalKey =
@@ -134,6 +139,16 @@ class RecommendationRepository {
     );
   }
 
+  Future<String?> getLastDueNotificationWeekKey() async {
+    final prefs = await _prefsLoader();
+    return prefs.getString(_lastDueNotificationWeekKey);
+  }
+
+  Future<void> setLastDueNotificationWeekKey(String dueWeekKey) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(_lastDueNotificationWeekKey, dueWeekKey);
+  }
+
   Future<NutritionRecommendation?> getLatestGeneratedRecommendationForMode({
     required RecommendationEstimationMode mode,
   }) async {
@@ -167,6 +182,48 @@ class RecommendationRepository {
   }) async {
     final prefs = await _prefsLoader();
     await prefs.setString(_lastGeneratedDueWeekKeyForMode(mode), dueWeekKey);
+  }
+
+  Future<BayesianExperimentalRecommendationSnapshot?>
+      getLatestBayesianExperimentalSnapshot() async {
+    final prefs = await _prefsLoader();
+    final encoded = prefs.getString(_latestBayesianExperimentalSnapshotKey);
+    if (encoded != null && encoded.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(encoded);
+        if (decoded is! Map<String, dynamic>) {
+          return null;
+        }
+        return BayesianExperimentalRecommendationSnapshot.fromJson(decoded);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return _migrateLegacyBayesianExperimentalSnapshot(prefs);
+  }
+
+  Future<void> saveLatestBayesianExperimentalSnapshot({
+    required BayesianExperimentalRecommendationSnapshot snapshot,
+  }) async {
+    if (!snapshot.isCoherent) {
+      throw ArgumentError.value(
+        snapshot,
+        'snapshot',
+        'Bayesian experimental snapshot must be coherent before persistence.',
+      );
+    }
+
+    final prefs = await _prefsLoader();
+    await prefs.setString(
+      _latestBayesianExperimentalSnapshotKey,
+      jsonEncode(snapshot.toJson()),
+    );
+    // Keep due-week tracking in sync for compatibility with older reads/tests.
+    await prefs.setString(
+      _lastGeneratedDueWeekBayesianExperimentalKey,
+      snapshot.dueWeekKey,
+    );
   }
 
   Future<BayesianMaintenanceEstimate?>
@@ -207,6 +264,8 @@ class RecommendationRepository {
     await prefs.remove(_latestGeneratedKey);
     await prefs.remove(_latestAppliedKey);
     await prefs.remove(_lastGeneratedDueWeekKey);
+    await prefs.remove(_lastDueNotificationWeekKey);
+    await prefs.remove(_latestBayesianExperimentalSnapshotKey);
     await prefs.remove(_latestGeneratedBayesianExperimentalKey);
     await prefs.remove(_lastGeneratedDueWeekBayesianExperimentalKey);
     await prefs.remove(_latestBayesianMaintenanceEstimateKey);
@@ -250,6 +309,96 @@ class RecommendationRepository {
         return null;
       }
       return NutritionRecommendation.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<BayesianExperimentalRecommendationSnapshot?>
+      _migrateLegacyBayesianExperimentalSnapshot(
+          SharedPreferences prefs) async {
+    final recommendation = _loadRecommendationFromPrefs(
+      prefs,
+      _latestGeneratedBayesianExperimentalKey,
+    );
+    final estimate = _loadEstimateFromPrefs(
+      prefs,
+      _latestBayesianMaintenanceEstimateKey,
+    );
+
+    if (recommendation == null || estimate == null) {
+      return null;
+    }
+
+    final dueWeekKey = recommendation.dueWeekKey;
+    final estimateDueWeekKey = estimate.dueWeekKey;
+    if (dueWeekKey == null ||
+        dueWeekKey.isEmpty ||
+        estimateDueWeekKey == null ||
+        estimateDueWeekKey.isEmpty ||
+        dueWeekKey != estimateDueWeekKey) {
+      return null;
+    }
+
+    final legacyLastGeneratedDueWeekKey =
+        prefs.getString(_lastGeneratedDueWeekBayesianExperimentalKey);
+    if (legacyLastGeneratedDueWeekKey != null &&
+        legacyLastGeneratedDueWeekKey.isNotEmpty &&
+        legacyLastGeneratedDueWeekKey != dueWeekKey) {
+      return null;
+    }
+
+    final snapshot = BayesianExperimentalRecommendationSnapshot(
+      recommendation: recommendation,
+      maintenanceEstimate: estimate,
+      dueWeekKey: dueWeekKey,
+      algorithmVersion: recommendation.algorithmVersion,
+      generatedAt: recommendation.generatedAt,
+    );
+    if (!snapshot.isCoherent) {
+      return null;
+    }
+
+    await prefs.setString(
+      _latestBayesianExperimentalSnapshotKey,
+      jsonEncode(snapshot.toJson()),
+    );
+    return snapshot;
+  }
+
+  NutritionRecommendation? _loadRecommendationFromPrefs(
+    SharedPreferences prefs,
+    String key,
+  ) {
+    final encoded = prefs.getString(key);
+    if (encoded == null || encoded.isEmpty) {
+      return null;
+    }
+    try {
+      final decoded = jsonDecode(encoded);
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+      return NutritionRecommendation.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  BayesianMaintenanceEstimate? _loadEstimateFromPrefs(
+    SharedPreferences prefs,
+    String key,
+  ) {
+    final encoded = prefs.getString(key);
+    if (encoded == null || encoded.isEmpty) {
+      return null;
+    }
+    try {
+      final decoded = jsonDecode(encoded);
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+      return BayesianMaintenanceEstimate.fromJson(decoded);
     } catch (_) {
       return null;
     }

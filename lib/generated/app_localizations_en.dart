@@ -3121,6 +3121,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String adaptiveRecommendationCalculatedAtLine(String value) {
+    return 'Calculated at: $value';
+  }
+
+  @override
+  String adaptiveRecommendationNextDueLine(String value) {
+    return 'Next adaptive recommendation due: $value';
+  }
+
+  @override
+  String get adaptiveRecommendationDueNowLine =>
+      'A new adaptive recommendation is due this week.';
+
+  @override
+  String get adaptiveRecommendationRecalculateNowAction => 'Recalculate now';
+
+  @override
+  String get adaptiveRecommendationRecalculating => 'Recalculating...';
+
+  @override
   String get adaptiveRecommendationApplying => 'Applying...';
 
   @override
@@ -3178,6 +3198,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptiveConfidenceHigh => 'Strong recent logs';
+
+  @override
+  String get adaptiveRecommendationRecalculatedSnack =>
+      'Recommendation recalculated.';
 
   @override
   String get adaptiveRecommendationAppliedToGoalsSnack =>
