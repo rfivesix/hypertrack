@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0-alpha.2] - 2026-04-06
+
+This alpha improves the adaptive nutrition recommendation MVP with more conservative sparse-data behavior, more robust trend estimation, better step-prior maintenance inputs, and clearer recommendation transparency.
+
+### Added
+- Recommendation transparency copy layer shared across onboarding and nutrition hub surfaces.
+- New data-basis hint messaging for:
+  - profile/prior-only recommendations
+  - sparse recent weight logs
+  - sparse recent intake logs
+  - sparse weight + intake logs together
+- New specific warning copy for macro-constrained recommendations.
+
+### Changed
+- `notEnoughData` recommendations are now strictly prior-only:
+  - no inferred-maintenance blending
+  - no week-over-week maintenance drift against previous recommendations
+  - goal-rate calorie adjustment still applies on top of the prior estimate
+- Prior maintenance estimation now uses step input with the following precedence:
+  1. recent average actual daily steps
+  2. configured daily step target
+  3. fallback default of `8000`
+- Recent actual step averages now use synced step data from the rolling lookback window when available.
+- Weight-trend estimation now uses linear regression over EWMA-smoothed bodyweight data instead of endpoint-only delta.
+- Recommendation surfaces now frame confidence as **data basis quality** rather than scientific certainty.
+- Onboarding adaptive recommendation preview now shows:
+  - data basis label
+  - data basis counts
+  - explicit prior-only messaging when applicable
+  - prioritized warning text aligned with the nutrition hub card
+- Recommendation warning prioritization is now more explicit:
+  - calorie floor applied
+  - unresolved food calories
+  - large adjustment detected
+  - macro distribution constrained
+  - generic conservative fallback only when no more specific warning applies
+- EN/DE adaptive recommendation wording was revised to match the new semantics and transparency model.
+
+### Fixed
+- Prevented sparse-data recommendations from drifting maintenance estimates despite explicitly insufficient adaptive data.
+- Reduced sensitivity of weekly trend estimation to noisy start/end bodyweight values.
+- Improved recommendation copy so unresolved food-calorie issues are surfaced more clearly before apply.
+- Fixed onboarding progress/button logic so the final onboarding page cleanly exposes the finish action.
+
+### Documentation
+- Updated the adaptive nutrition recommendation current-state documentation to match implementation truth for:
+  - strict prior-only `notEnoughData` behavior
+  - regression-based weight slope calculation
+  - step-priority precedence (`actual -> target -> default 8000`)
+  - compact prioritized basis/warning messaging
+  - continued treatment of extra cardio as a coarse manual heuristic
+
+### Testing
+- Added and updated automated tests for:
+  - strict prior-only engine behavior
+  - actual-steps vs target-steps fallback precedence
+  - regression-based weight trend calculation
+  - prior-only UI messaging
+  - unresolved-food warning rendering
+  - onboarding preview transparency
+  - final onboarding-page finish behavior
+
+### Notes
+- Extra cardio remains a manual heuristic input and is not backed by a dedicated cardio-tracking model.
+- Recent actual step averages currently use usable logged days only within the lookback window.
+
 ## [0.8.0-alpha.1] - 2026-04-06
 
 This alpha introduces the first end-to-end MVP of adaptive nutrition recommendations.

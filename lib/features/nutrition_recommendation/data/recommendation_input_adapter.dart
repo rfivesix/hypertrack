@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import '../../../data/database_helper.dart';
 import '../../../models/chart_data_point.dart';
 import '../../../models/fluid_entry.dart';
+import '../../../services/health/steps_sync_service.dart';
 import '../../../data/drift_database.dart' as db;
 import '../domain/goal_models.dart';
 import '../domain/recommendation_models.dart';
 
 class RecommendationInputAdapter {
+  static const int defaultPriorStepsLookbackDays = 21;
+
   final DatabaseHelper _databaseHelper;
 
   const RecommendationInputAdapter({
@@ -59,6 +62,11 @@ class RecommendationInputAdapter {
     final bodyFatPercent = results[5] as double?;
     final averageCompletedWorkoutsPerWeek = results[6] as double;
     final appSettings = results[7] as db.AppSetting?;
+    final recentAverageActualSteps = await loadRecentAverageActualSteps(
+      databaseHelper: _databaseHelper,
+      endDay: windowEndDay,
+      lookbackDays: rollingWindowDays,
+    );
 
     final caloriesByDay = _buildCaloriesByDay(
       foodCaloriesByDay: foodCaloriesResult.caloriesByDay,
@@ -98,6 +106,7 @@ class RecommendationInputAdapter {
       extraCardioHoursOption: extraCardioHoursOption,
       averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
       targetSteps: appSettings?.targetSteps,
+      recentAverageSteps: recentAverageActualSteps,
       now: now,
     );
 
@@ -144,6 +153,7 @@ class RecommendationInputAdapter {
     ExtraCardioHoursOption extraCardioHoursOption = ExtraCardioHoursOption.h0,
     double? averageCompletedWorkoutsPerWeek,
     int? targetSteps,
+    int? recentAverageSteps,
     int fallbackHeightCm = 175,
   }) {
     final weightKg = currentWeightKg > 0 ? currentWeightKg : 75.0;
@@ -178,6 +188,7 @@ class RecommendationInputAdapter {
       extraCardioHoursOption: extraCardioHoursOption,
       averageCompletedWorkoutsPerWeek: averageCompletedWorkoutsPerWeek,
       targetSteps: targetSteps,
+      recentAverageSteps: recentAverageSteps,
     );
 
     final maintenance = rmr * activityFactor;
@@ -189,6 +200,7 @@ class RecommendationInputAdapter {
     required ExtraCardioHoursOption extraCardioHoursOption,
     required double? averageCompletedWorkoutsPerWeek,
     required int? targetSteps,
+    required int? recentAverageSteps,
   }) {
     var factor = switch (declaredActivityLevel) {
       PriorActivityLevel.low => 1.35,
@@ -206,7 +218,10 @@ class RecommendationInputAdapter {
       factor += 0.02;
     }
 
-    final steps = targetSteps ?? 8000;
+    final steps = _effectiveStepsForPrior(
+      recentAverageSteps: recentAverageSteps,
+      targetSteps: targetSteps,
+    );
     if (steps >= 13000) {
       factor += 0.05;
     } else if (steps >= 10000) {
@@ -237,6 +252,16 @@ class RecommendationInputAdapter {
       case ExtraCardioHoursOption.h7Plus:
         return 0.07;
     }
+  }
+
+  static int _effectiveStepsForPrior({
+    required int? recentAverageSteps,
+    required int? targetSteps,
+  }) {
+    if (recentAverageSteps != null && recentAverageSteps > 0) {
+      return recentAverageSteps;
+    }
+    return targetSteps ?? 8000;
   }
 
   static int? _estimateAgeYears(DateTime? birthday, DateTime now) {
@@ -323,21 +348,81 @@ class RecommendationInputAdapter {
     List<_WeightedDayPoint> smoothed,
     List<_WeightedDayPoint> raw,
   ) {
+    // Use EWMA-smoothed series whenever possible, then fit a linear
+    // regression (weight over day-index) and convert slope to kg/week.
     final source = smoothed.length >= 2 ? smoothed : raw;
     if (source.length < 2) {
       return null;
     }
 
-    final first = source.first;
-    final last = source.last;
-    final daySpan =
-        normalizeDay(last.day).difference(normalizeDay(first.day)).inDays;
-    if (daySpan <= 0) {
+    final anchorDay = normalizeDay(source.first.day);
+    final xValues = <double>[];
+    final yValues = <double>[];
+
+    for (final point in source) {
+      final x = normalizeDay(point.day).difference(anchorDay).inDays.toDouble();
+      xValues.add(x);
+      yValues.add(point.value);
+    }
+
+    final count = source.length;
+    final meanX =
+        xValues.fold<double>(0.0, (sum, value) => sum + value) / count;
+    final meanY =
+        yValues.fold<double>(0.0, (sum, value) => sum + value) / count;
+
+    var numerator = 0.0;
+    var denominator = 0.0;
+    for (var i = 0; i < count; i++) {
+      final xDelta = xValues[i] - meanX;
+      final yDelta = yValues[i] - meanY;
+      numerator += xDelta * yDelta;
+      denominator += xDelta * xDelta;
+    }
+
+    if (denominator <= 0) {
       return null;
     }
 
-    final totalDelta = last.value - first.value;
-    return (totalDelta / daySpan) * 7;
+    final slopeKgPerDay = numerator / denominator;
+    return slopeKgPerDay * 7;
+  }
+
+  static Future<int?> loadRecentAverageActualSteps({
+    required DatabaseHelper databaseHelper,
+    required DateTime endDay,
+    required int lookbackDays,
+  }) async {
+    final safeLookback = math.max(lookbackDays, 1);
+    final normalizedEndDay = normalizeDay(endDay);
+    final startDay = normalizedEndDay.subtract(
+      Duration(days: safeLookback - 1),
+    );
+    final stepsSyncService = StepsSyncService(dbHelper: databaseHelper);
+    final providerFilter = StepsSyncService.providerFilterToRaw(
+      await stepsSyncService.getProviderFilter(),
+    );
+    final sourcePolicy = StepsSyncService.sourcePolicyToRaw(
+      await stepsSyncService.getSourcePolicy(),
+    );
+
+    final rows = await databaseHelper.getDailyStepsTotalsForRange(
+      startLocal: startDay,
+      endLocal: normalizedEndDay,
+      providerFilter: providerFilter,
+      sourcePolicy: sourcePolicy,
+    );
+    final usableDayTotals = rows
+        .map((row) => row['totalSteps'] as int? ?? 0)
+        .where((total) => total > 0)
+        .toList(growable: false);
+
+    if (usableDayTotals.isEmpty) {
+      return null;
+    }
+
+    final total = usableDayTotals.fold<int>(0, (sum, steps) => sum + steps);
+    return (total / usableDayTotals.length).round();
   }
 }
 

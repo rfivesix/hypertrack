@@ -9,9 +9,10 @@ import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/domain/confidence_models.dart';
 import '../features/nutrition_recommendation/presentation/body_fat_guidance_sheet.dart';
 import '../features/nutrition_recommendation/presentation/prior_activity_help_block.dart';
-import '../features/nutrition_recommendation/domain/confidence_models.dart';
+import '../features/nutrition_recommendation/presentation/recommendation_ui_copy.dart';
 import '../features/nutrition_recommendation/domain/goal_models.dart';
 import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 
@@ -35,10 +36,11 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   static const int _adaptiveGoalPageIndex = 4;
+  static const int _pageCount = 8;
+  static const int _lastPageIndex = _pageCount - 1;
 
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _totalPages = 8;
   bool _isRestoring = false;
   bool _isGeneratingOnboardingRecommendation = false;
 
@@ -367,7 +369,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (_nameController.text.trim().isEmpty) return;
     }
 
-    if (_currentPage < _totalPages) {
+    if (_currentPage < _lastPageIndex) {
       _pageController.animateToPage(
         _currentPage + 1,
         duration: const Duration(milliseconds: 300),
@@ -399,7 +401,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           children: [
             LinearProgressIndicator(
-              value: (_currentPage + 1) / (_totalPages + 1),
+              value: (_currentPage + 1) / _pageCount,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
               valueColor: AlwaysStoppedAnimation<Color>(
                 theme.colorScheme.primary,
@@ -452,7 +454,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentPage == _totalPages
+                        _currentPage == _lastPageIndex
                             ? l10n.onboardingFinish.toUpperCase()
                             : l10n.onboardingNext.toUpperCase(),
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -934,6 +936,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       );
     }
+    final warningMessage = RecommendationUiCopy.warningMessage(
+      l10n,
+      recommendation,
+    );
 
     return Container(
       width: double.infinity,
@@ -973,10 +979,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 8),
           Text(
             l10n.onboardingAdaptiveSummaryConfidence(
-              _confidenceLabel(l10n, recommendation.confidence),
+              RecommendationUiCopy.confidenceLabel(
+                l10n,
+                recommendation.confidence,
+              ),
             ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.adaptiveRecommendationDataBasisLine(
+              recommendation.inputSummary.windowDays,
+              recommendation.inputSummary.weightLogCount,
+              recommendation.inputSummary.intakeLoggedDays,
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            RecommendationUiCopy.dataBasisMessage(l10n, recommendation),
+            key: const Key('onboarding_adaptive_summary_data_basis_message'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (warningMessage != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: recommendation.warningState.warningLevel ==
+                        RecommendationWarningLevel.high
+                    ? Theme.of(context).colorScheme.errorContainer
+                    : Theme.of(context).colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                warningMessage,
+                key: const Key('onboarding_adaptive_summary_warning_text'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           FilledButton(
             onPressed: _applyOnboardingRecommendationToGoals,
@@ -1044,22 +1087,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         return l10n.adaptiveExtraCardioOption5;
       case ExtraCardioHoursOption.h7Plus:
         return l10n.adaptiveExtraCardioOption7Plus;
-    }
-  }
-
-  String _confidenceLabel(
-    AppLocalizations l10n,
-    RecommendationConfidence confidence,
-  ) {
-    switch (confidence) {
-      case RecommendationConfidence.notEnoughData:
-        return l10n.adaptiveConfidenceNotEnoughData;
-      case RecommendationConfidence.low:
-        return l10n.adaptiveConfidenceLow;
-      case RecommendationConfidence.medium:
-        return l10n.adaptiveConfidenceMedium;
-      case RecommendationConfidence.high:
-        return l10n.adaptiveConfidenceHigh;
     }
   }
 

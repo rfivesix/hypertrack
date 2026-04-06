@@ -23,18 +23,28 @@ class AdaptiveNutritionRecommendationEngine {
       intakeLoggedDays: input.intakeLoggedDays,
     );
 
-    final inferredMaintenance = _inferMaintenanceCalories(input);
-    final blend = _blendFactorForConfidence(confidence);
+    final isStrictPriorOnly = _isStrictPriorOnly(confidence);
+    late final double maintenance;
 
-    var maintenance = (input.priorMaintenanceCalories * (1 - blend)) +
-        (inferredMaintenance * blend);
+    if (isStrictPriorOnly) {
+      // "notEnoughData" is strictly prior-only by design: no inferred blend
+      // and no week-over-week drift against previous recommendations.
+      maintenance = input.priorMaintenanceCalories.toDouble();
+    } else {
+      final inferredMaintenance = _inferMaintenanceCalories(input);
+      final blend = _blendFactorForConfidence(confidence);
+      var blendedMaintenance = (input.priorMaintenanceCalories * (1 - blend)) +
+          (inferredMaintenance * blend);
 
-    if (previousRecommendation != null) {
-      final deltaLimit = _weeklyMaintenanceDeltaLimit(confidence);
-      final delta =
-          maintenance - previousRecommendation.estimatedMaintenanceCalories;
-      maintenance = previousRecommendation.estimatedMaintenanceCalories +
-          delta.clamp(-deltaLimit, deltaLimit);
+      if (previousRecommendation != null) {
+        final deltaLimit = _weeklyMaintenanceDeltaLimit(confidence);
+        final delta = blendedMaintenance -
+            previousRecommendation.estimatedMaintenanceCalories;
+        blendedMaintenance =
+            previousRecommendation.estimatedMaintenanceCalories +
+                delta.clamp(-deltaLimit, deltaLimit);
+      }
+      maintenance = blendedMaintenance;
     }
 
     var effectiveConfidence = confidence;
@@ -119,6 +129,10 @@ class AdaptiveNutritionRecommendationEngine {
 
   static int rateAdjustmentKcalPerDay(double kgPerWeek) {
     return (kgPerWeek * _kcalPerKgPerWeekToDay).round();
+  }
+
+  static bool _isStrictPriorOnly(RecommendationConfidence confidence) {
+    return confidence == RecommendationConfidence.notEnoughData;
   }
 
   static double _inferMaintenanceCalories(RecommendationGenerationInput input) {

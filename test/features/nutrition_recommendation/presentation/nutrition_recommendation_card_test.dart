@@ -102,6 +102,81 @@ void main() {
     );
   });
 
+  testWidgets('renders unresolved-food warning message when reason is present',
+      (tester) async {
+    final recommendation = _recommendation().copyWith(
+      warningState: const RecommendationWarningState(
+        hasLargeAdjustmentWarning: false,
+        warningLevel: RecommendationWarningLevel.moderate,
+        warningReasons: ['unresolved_food_calories'],
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: NutritionRecommendationCard(
+            goal: BodyweightGoal.maintainWeight,
+            targetRateKgPerWeek: 0,
+            recommendation: recommendation,
+            activeTargetCalories: 2400,
+            isApplying: false,
+            onApply: () {},
+          ),
+        ),
+      ),
+    );
+
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
+    expect(
+      find.text(l10n.adaptiveRecommendationWarningUnresolvedFood),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+      'renders prior-only data-basis message when recommendation is prior-only',
+      (tester) async {
+    final recommendation = _recommendation().copyWith(
+      confidence: RecommendationConfidence.notEnoughData,
+      inputSummary: const RecommendationInputSummary(
+        windowDays: 0,
+        weightLogCount: 1,
+        intakeLoggedDays: 0,
+        smoothedWeightSlopeKgPerWeek: null,
+        avgLoggedCalories: 0,
+        qualityFlags: ['onboarding_prior_only'],
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: NutritionRecommendationCard(
+            goal: BodyweightGoal.maintainWeight,
+            targetRateKgPerWeek: 0,
+            recommendation: recommendation,
+            activeTargetCalories: 2400,
+            isApplying: false,
+            onApply: () {},
+          ),
+        ),
+      ),
+    );
+
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
+    expect(
+      find.text(l10n.adaptiveRecommendationDataBasisHintPriorOnly),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('renders localized recommendation title for german locale',
       (tester) async {
     await tester.pumpWidget(

@@ -2999,7 +2999,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String onboardingAdaptiveSummaryConfidence(String value) {
-    return 'Konfidenz: $value';
+    return 'Datenbasis: $value';
   }
 
   @override
@@ -3127,7 +3127,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String adaptiveRecommendationConfidenceLine(String value) {
-    return 'Konfidenz: $value';
+    return 'Datenbasis: $value';
   }
 
   @override
@@ -3154,27 +3154,51 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adaptiveRecommendationWarningUnresolvedFood =>
-      'Einige Ernährungseinträge konnten für die Kalorienschätzung nicht vollständig aufgelöst werden. Die Empfehlung ist konservativ.';
+      'Einige Ernährungseinträge konnten kalorisch nicht vollständig aufgelöst werden. Bitte prüfe deine letzten Logs vor dem Anwenden.';
 
   @override
   String get adaptiveRecommendationWarningLargeAdjustment =>
       'Große Anpassung erkannt. Bitte prüfe vor dem Anwenden die Vollständigkeit deiner letzten Logs.';
 
   @override
+  String get adaptiveRecommendationWarningMacroConstrained =>
+      'Die Makroverteilung wurde durch das Kalorienbudget begrenzt. Prüfe, ob deine Wochenrate zu aggressiv ist.';
+
+  @override
   String get adaptiveRecommendationWarningConservative =>
       'Hinweis: Die Empfehlung wurde aufgrund von Datenschwankungen konservativ angepasst.';
 
   @override
-  String get adaptiveConfidenceNotEnoughData => 'Nicht genug Daten';
+  String get adaptiveRecommendationDataBasisHintDefault =>
+      'Basiert auf deinen letzten Logs und deren Vollständigkeit.';
 
   @override
-  String get adaptiveConfidenceLow => 'Niedrig';
+  String get adaptiveRecommendationDataBasisHintPriorOnly =>
+      'Aktuell nur auf Profil-/Prior-Daten basiert. Mit aktuellen Gewichts- und Intake-Logs wird die Anpassung präziser.';
 
   @override
-  String get adaptiveConfidenceMedium => 'Mittel';
+  String get adaptiveRecommendationDataBasisHintSparseWeight =>
+      'Es gibt nur wenige aktuelle Gewichtseinträge, daher ist die Trendqualität begrenzt.';
 
   @override
-  String get adaptiveConfidenceHigh => 'Hoch';
+  String get adaptiveRecommendationDataBasisHintSparseIntake =>
+      'Es gibt nur wenige aktuelle Intake-Logs, daher ist die Erhaltungsschätzung begrenzt.';
+
+  @override
+  String get adaptiveRecommendationDataBasisHintSparseWeightAndIntake =>
+      'Gewichts- und Intake-Logs sind aktuell spärlich, deshalb ist diese Empfehlung konservativer.';
+
+  @override
+  String get adaptiveConfidenceNotEnoughData => 'Nur Profil-/Prior-Basis';
+
+  @override
+  String get adaptiveConfidenceLow => 'Wenige aktuelle Logs';
+
+  @override
+  String get adaptiveConfidenceMedium => 'Nutzbare aktuelle Logs';
+
+  @override
+  String get adaptiveConfidenceHigh => 'Starke aktuelle Logs';
 
   @override
   String get adaptiveRecommendationAppliedToGoalsSnack =>

@@ -132,6 +132,7 @@
 - `getLatestBodyFatPercentageBefore(rangeEnd)`
 - `getAverageCompletedWorkoutsPerWeek(now: rangeEnd)`
 - `getAppSettings()`
+- `getDailyStepsTotalsForRange(startLocal, endLocal, providerFilter, sourcePolicy)` for recent actual steps, with provider/source policy read from `StepsSyncService` preferences.
 
 #### Food calorie aggregation and fallback order
 - `DatabaseHelper.getFoodCaloriesByDayForDateRange(...)` resolves product calories in order:
@@ -156,10 +157,22 @@
 #### EWMA smoothing and slope
 - EWMA alpha: `0.35`.
 - Slope source: smoothed series when length >= 2, else raw.
-- Slope formula:
-  - `daySpan = (last.day - first.day).inDays`
-  - if `daySpan <= 0` => `null`
-  - else `((last.value - first.value) / daySpan) * 7` (`kg/week`)
+- Slope formula is ordinary least-squares linear regression over the chosen series:
+  - `x = day index from first point`
+  - `y = smoothed weight (kg)`
+  - `slopeKgPerDay = cov(x,y) / var(x)`
+  - output = `slopeKgPerDay * 7` (`kg/week`)
+  - if variance is zero (no usable day span), result is `null`.
+
+#### Recent actual-steps aggregation for prior model
+- Prior activity uses an effective steps input with precedence:
+  1. recent average actual daily steps (if available)
+  2. target steps from app settings
+  3. default `8000`
+- Lookback window for recent actual steps is the same rolling window used by input build (default `21` days).
+- Daily totals come from `health_step_segments` aggregation; multiple segments per day are summed into day totals by DB query logic.
+- “Available” means at least one day in the lookback has a usable total (`totalSteps > 0`).
+- Average actual steps is computed over those usable days only.
 
 #### Intake-day and calorie summary
 - `intakeLoggedDays`: number of days where merged day calories `> 0`.
@@ -221,12 +234,13 @@
   - `>=5`: `+0.06`
   - `>=3`: `+0.04`
   - `>=1`: `+0.02`
-- Steps adjustment (`targetSteps`, default `8000`):
+- Steps adjustment uses effective steps (`recentAverageActualSteps ?? targetSteps ?? 8000`):
   - `>=13000`: `+0.05`
   - `>=10000`: `+0.03`
   - `<7000`: `-0.03`
 - Extra cardio adjustment (`ExtraCardioHoursOption`):
   - `h0 +0.00`, `h1 +0.01`, `h2 +0.02`, `h3 +0.03`, `h5 +0.05`, `h7Plus +0.07`
+  - This remains a coarse manual heuristic for activity not captured in app workouts; it is not backed by any dedicated cardio-tracking model.
 - Activity factor clamp: `[1.20, 1.95]`
 
 #### Final maintenance prior and clamp
@@ -257,6 +271,14 @@
 - Else:
   - `inferred = avgLoggedCalories - (smoothedWeightSlopeKgPerWeek * 7700/7)`
 
+#### Strict prior-only path for `notEnoughData`
+- When confidence is `notEnoughData`, maintenance is strictly:
+  - `estimatedMaintenanceCalories = priorMaintenanceCalories`
+- In this path there is:
+  - no inferred-maintenance blending
+  - no weekly maintenance adjustment against previous recommendation
+- Goal-rate calorie adjustment is still applied on top of this maintenance estimate.
+
 #### Blend factor by confidence
 - `notEnoughData: 0.00`
 - `low: 0.35`
@@ -264,10 +286,10 @@
 - `high: 0.80`
 - Blended maintenance:
   - `maintenance = prior*(1-blend) + inferred*blend`
+  - This blended path is used only when confidence is `low`/`medium`/`high` (not for strict prior-only).
 
 #### Weekly maintenance delta damping vs previous recommendation
-- If `previousRecommendation` exists, change in maintenance is clamped per confidence:
-  - `notEnoughData: ±80`
+- If `previousRecommendation` exists and confidence is `low`/`medium`/`high`, change in maintenance is clamped per confidence:
   - `low: ±110`
   - `medium: ±170`
   - `high: ±240`
@@ -318,7 +340,7 @@
   - if input quality flags include `unresolved_food_calories`, reason is appended to warning reasons.
 
 ### Inferred behavior from code structure
-- `onboarding_prior_only` quality flag is persisted in input summary but not mapped to a dedicated warning reason or UI warning message.
+- `onboarding_prior_only` remains a quality flag (not a warning reason) and is surfaced through data-basis messaging in onboarding/hub recommendation surfaces.
 
 ## 8. Onboarding behavior
 
@@ -346,6 +368,10 @@
   - refresh on adaptive dropdown/chip changes
   - manual refresh button (`adaptiveRecommendationRefresh`)
   - profile DOB changes can trigger refresh if current page index is adaptive or later
+- Recommendation preview transparency:
+  - shows data-basis label/counts and prioritized basis hint
+  - onboarding `onboarding_prior_only` is user-visible via explicit prior-only copy in the preview
+  - warning copy uses the same prioritized reason mapping as the hub card
 - Apply-to-goals preview behavior:
   - preview apply button copies recommendation kcal/protein/carbs/fat into onboarding goals text fields
   - this is local state only until finish
@@ -406,7 +432,8 @@
   - after relevant navigation returns
 - Recommendation card displays:
   - empty state when no generated recommendation
-  - otherwise goal/rate, maintenance estimate, kcal/macros, confidence, data-basis counts, active target calories, warning banner, apply button
+  - otherwise goal/rate, maintenance estimate, kcal/macros, data-basis label, data-basis counts, prioritized data-basis hint, active target calories, warning banner, apply button
+  - warning copy prioritizes specific reasons when present (`calorie_floor_applied`, `unresolved_food_calories`, `large_adjustment_*`, `macro_distribution_constrained`) before generic fallback text
 - Apply-to-active-goals:
   - card button -> `applyLatestRecommendationToActiveTargets()`
   - updates DB daily goals (kcal/macros from recommendation, water/steps preserved from current settings/defaults)
@@ -420,8 +447,9 @@
 ## 11. Warnings, confidence, and data quality semantics
 
 ### Confidence semantics (operational)
-- `notEnoughData`: minimum thresholds not met; recommendation still generated but with blend `0` (prior-dominant).
+- `notEnoughData`: minimum thresholds not met; recommendation remains strictly prior-only for maintenance (no inferred blend, no previous-recommendation drift).
 - `low`/`medium`/`high`: progressively stricter data thresholds and higher inferred-maintenance blending.
+- UI copy treats this as data-basis quality (recent logs/completeness), not lab-grade certainty.
 
 ### Warning-level semantics
 - `none`: no large adjustment and no extra warning reasons.
@@ -438,7 +466,12 @@
 
 ### Data-quality flags
 - `sparse_intake_logs`, `sparse_weight_logs`, `weight_trend_unavailable`, `onboarding_prior_only` are persisted in `inputSummary.qualityFlags`.
-- UI currently exposes confidence level and data-basis counts, but does not render dedicated messages for all quality flags.
+- UI surfaces data-basis messaging from these flags in recommendation surfaces:
+  - explicit prior-only message
+  - sparse weight logs message
+  - sparse intake logs message
+  - combined sparse weight+intake message
+  - unresolved food warning remains warning-reason driven
 
 ## 12. Backup/restore implications
 
@@ -467,7 +500,7 @@
 - Unresolved food entries are counted and warned, but not calorie-imputed.
 - Baseline comparison for warning deltas uses `activeTargetCalories` from adapter input (anchored to stable window-end date in weekly refresh path), which can differ from current-day UI target context.
 - Onboarding body-fat helper is informational only (manual lookup sheet).
-- Quality flags beyond unresolved-food are not surfaced as specific card warnings.
+- Data-basis messaging is compact and prioritized; only one primary basis hint and one warning banner are shown at once.
 - Detailed nutrient goals (`targetSugar/targetFiber/targetSalt`) remain prefs-backed integration fields, separate from adaptive model/persistence structures.
 
 ## 14. Semantic verification checklist
@@ -476,7 +509,9 @@
 - [ ] **Persistence semantics**: repository writes/reads all adaptive keys and recommendation JSON snapshots (`latest_generated`, `latest_applied`, due week key).
 - [ ] **Onboarding semantics**: body-fat step exists after weight; adaptive preview generates from current onboarding inputs; finish persists recommendation/settings/profile/goals as implemented.
 - [ ] **Apply semantics**: recommendation refresh alone does not mutate active goals; explicit apply updates DB goals and stores `latest_applied`.
-- [ ] **Generation semantics**: confidence thresholds, blend factors, delta damping, calorie floor, and macro fallback paths match engine constants/formulas.
-- [ ] **Warning/confidence semantics**: large-adjustment thresholds (`250/450`), floor override to high, unresolved-food propagation, and confidence degradation on floor are intact.
+- [ ] **Generation semantics**: confidence thresholds, strict prior-only `notEnoughData` maintenance behavior, blend factors (`low`/`medium`/`high`), delta damping, calorie floor, and macro fallback paths match engine constants/formulas.
+- [ ] **Trend semantics**: EWMA preprocessing plus regression-based slope (`kg/week`) is intact; insufficient usable weight data still returns `null`.
+- [ ] **Prior activity semantics**: effective steps precedence is intact (`recent average actual` -> `target steps` -> `default 8000`) using the rolling lookback window.
+- [ ] **Warning/confidence semantics**: large-adjustment thresholds (`250/450`), floor override to high, unresolved-food propagation, and reason-prioritized warning copy are intact.
 - [ ] **Localization coverage**: adaptive strings used in onboarding/goals/card/hub exist in both `app_en.arb` and `app_de.arb`; card German title has test coverage.
-- [ ] **Placeholder acceptance for alpha**: informational body-fat helper sheet (no estimator), coarse activity/cardio buckets, unresolved-food conservative handling, and non-surfaced quality flags are explicitly accepted.
+- [ ] **Placeholder acceptance for alpha**: informational body-fat helper sheet (no estimator), coarse manual extra-cardio heuristic (no cardio tracking model), and unresolved-food conservative handling are explicitly accepted.

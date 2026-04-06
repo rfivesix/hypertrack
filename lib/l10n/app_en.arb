@@ -1251,7 +1251,7 @@
       "value": { "type": "int" }
     }
   }
-  ,"onboardingAdaptiveSummaryConfidence": "Confidence: {value}"
+  ,"onboardingAdaptiveSummaryConfidence": "Data basis: {value}"
   ,"@onboardingAdaptiveSummaryConfidence": {
     "placeholders": {
       "value": { "type": "String" }
@@ -1326,7 +1326,7 @@
       "value": { "type": "int" }
     }
   }
-  ,"adaptiveRecommendationConfidenceLine": "Confidence: {value}"
+  ,"adaptiveRecommendationConfidenceLine": "Data basis: {value}"
   ,"@adaptiveRecommendationConfidenceLine": {
     "placeholders": {
       "value": { "type": "String" }
@@ -1349,13 +1349,19 @@
   ,"adaptiveRecommendationApplying": "Applying..."
   ,"adaptiveRecommendationApplyAction": "Apply recommendation to active goals"
   ,"adaptiveRecommendationWarningCalorieFloor": "Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying."
-  ,"adaptiveRecommendationWarningUnresolvedFood": "Some nutrition entries could not be fully resolved for calorie estimation. Recommendation is conservative."
+  ,"adaptiveRecommendationWarningUnresolvedFood": "Some nutrition entries could not be fully resolved for calories. Check recent logs before applying."
   ,"adaptiveRecommendationWarningLargeAdjustment": "Large adjustment detected. Please review your recent logging completeness before applying."
+  ,"adaptiveRecommendationWarningMacroConstrained": "Macro split was constrained by the calorie budget. Check if your target rate is too aggressive."
   ,"adaptiveRecommendationWarningConservative": "Review suggested: recommendation was adjusted conservatively due to data variability."
-  ,"adaptiveConfidenceNotEnoughData": "Not enough data"
-  ,"adaptiveConfidenceLow": "Low"
-  ,"adaptiveConfidenceMedium": "Medium"
-  ,"adaptiveConfidenceHigh": "High"
+  ,"adaptiveRecommendationDataBasisHintDefault": "Built from recent logs and their completeness."
+  ,"adaptiveRecommendationDataBasisHintPriorOnly": "Based on profile/prior data only. Add recent weight and intake logs for adaptive adjustment."
+  ,"adaptiveRecommendationDataBasisHintSparseWeight": "Recent weight logs are sparse, so trend quality is limited."
+  ,"adaptiveRecommendationDataBasisHintSparseIntake": "Recent intake logs are sparse, so maintenance inference is limited."
+  ,"adaptiveRecommendationDataBasisHintSparseWeightAndIntake": "Recent weight and intake logs are sparse, so this recommendation is more conservative."
+  ,"adaptiveConfidenceNotEnoughData": "Profile/prior only"
+  ,"adaptiveConfidenceLow": "Limited recent logs"
+  ,"adaptiveConfidenceMedium": "Usable recent logs"
+  ,"adaptiveConfidenceHigh": "Strong recent logs"
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Recommendation applied to active goals."
   ,"adaptiveRecommendationNotAvailableSnack": "No recommendation available to apply."
 }
