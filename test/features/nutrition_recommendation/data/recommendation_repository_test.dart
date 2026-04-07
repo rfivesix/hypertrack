@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_experimental_snapshot.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_recommendation_snapshot.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
@@ -32,6 +32,8 @@ void main() {
         ExtraCardioHoursOption.h0,
       );
       expect(await repository.getLatestGeneratedRecommendation(), isNull);
+      expect(await repository.getLatestRecommendationSnapshot(), isNull);
+      expect(await repository.getLatestEstimatorState(), isNull);
     });
 
     test('coerces unsupported rate to goal default', () async {
@@ -44,100 +46,53 @@ void main() {
       expect(await repository.getTargetRateKgPerWeek(), 0.25);
     });
 
-    test('persists and restores generated/applied recommendations', () async {
-      final recommendation = _recommendation();
-      await repository.savePriorActivityLevel(PriorActivityLevel.veryHigh);
-      await repository.saveExtraCardioHoursOption(ExtraCardioHoursOption.h3);
-
-      await repository.saveLatestGeneratedRecommendation(
-        recommendation: recommendation,
-      );
-      await repository.saveLatestAppliedRecommendation(
-        recommendation: recommendation,
-      );
-
-      final generated = await repository.getLatestGeneratedRecommendation();
-      final applied = await repository.getLatestAppliedRecommendation();
-
-      expect(generated, isNotNull);
-      expect(applied, isNotNull);
-      expect(
-          generated!.recommendedCalories, recommendation.recommendedCalories);
-      expect(applied!.recommendedFatGrams, recommendation.recommendedFatGrams);
-      expect(await repository.getLastGeneratedDueWeekKey(), '2026-03-30');
-      expect(
-        await repository.getPriorActivityLevel(),
-        PriorActivityLevel.veryHigh,
-      );
-      expect(
-        await repository.getExtraCardioHoursOption(),
-        ExtraCardioHoursOption.h3,
-      );
-    });
-
-    test('falls back to default prior activity level on unknown raw value',
+    test('persists and restores canonical snapshot + generated/applied',
         () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{
-        'adaptive_nutrition_recommendation.prior_activity_level': 'legacyValue',
-      });
-      repository = RecommendationRepository();
-
-      expect(
-        await repository.getPriorActivityLevel(),
-        PriorActivityLevel.moderate,
+      final recommendation = _recommendation().copyWith(
+        dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
       );
-    });
-
-    test('persists and restores atomic Bayesian experimental snapshot',
-        () async {
-      final snapshot = BayesianExperimentalRecommendationSnapshot(
-        recommendation: _recommendation().copyWith(
-          dueWeekKey: '2026-04-06',
-          algorithmVersion: 'bayesian_test',
-        ),
-        maintenanceEstimate: _estimate(dueWeekKey: '2026-04-06'),
+      final estimate = _estimate(dueWeekKey: '2026-04-06');
+      final snapshot = AdaptiveRecommendationSnapshot(
+        recommendation: recommendation,
+        maintenanceEstimate: estimate,
         dueWeekKey: '2026-04-06',
         algorithmVersion: 'bayesian_test',
       );
 
-      await repository.saveLatestBayesianExperimentalSnapshot(
-        snapshot: snapshot,
+      await repository.saveLatestRecommendationSnapshot(snapshot: snapshot);
+      await repository.saveLatestAppliedRecommendation(
+        recommendation: recommendation,
       );
 
-      final restored = await repository.getLatestBayesianExperimentalSnapshot();
-      final heuristic = await repository.getLatestGeneratedRecommendation();
+      final restoredSnapshot =
+          await repository.getLatestRecommendationSnapshot();
+      final generated = await repository.getLatestGeneratedRecommendation();
+      final applied = await repository.getLatestAppliedRecommendation();
       final prefs = await SharedPreferences.getInstance();
       final rawSnapshot = prefs.getString(
-        'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot',
+        'adaptive_nutrition_recommendation.latest_snapshot',
       );
-      final decodedSnapshot = jsonDecode(rawSnapshot!) as Map<String, dynamic>;
+      final decoded = jsonDecode(rawSnapshot!) as Map<String, dynamic>;
 
-      expect(restored, isNotNull);
-      expect(heuristic, isNull);
-      expect(restored!.dueWeekKey, '2026-04-06');
-      expect(restored.generatedAt, restored.recommendation.generatedAt);
+      expect(restoredSnapshot, isNotNull);
+      expect(generated, isNotNull);
+      expect(applied, isNotNull);
+      expect(restoredSnapshot!.isCoherent, isTrue);
+      expect(restoredSnapshot.dueWeekKey, '2026-04-06');
+      expect(restoredSnapshot.generatedAt, recommendation.generatedAt);
       expect(
-        restored.generatedAt,
-        snapshot.recommendation.generatedAt,
-      );
-      expect(decodedSnapshot.containsKey('generatedAt'), isFalse);
+          generated!.recommendedCalories, recommendation.recommendedCalories);
+      expect(applied!.recommendedFatGrams, recommendation.recommendedFatGrams);
+      expect(await repository.getLastGeneratedDueWeekKey(), '2026-04-06');
+      expect(decoded.containsKey('generatedAt'), isFalse);
       expect(
-        (decodedSnapshot['recommendation'] as Map)['generatedAt'],
+        (decoded['recommendation'] as Map<String, dynamic>)['generatedAt'],
         isNotNull,
-      );
-      expect(
-        restored.maintenanceEstimate.posteriorMaintenanceCalories,
-        closeTo(2380, 0.001),
-      );
-      expect(
-        prefs.getString(
-          'adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental',
-        ),
-        isNull,
       );
     });
 
-    test('persists and restores Bayesian recursive estimator state', () async {
+    test('persists and restores recursive estimator state', () async {
       const state = BayesianEstimatorState(
         posteriorMeanCalories: 2375,
         posteriorVarianceCalories2: 42000,
@@ -148,8 +103,8 @@ void main() {
         lastObservationUsed: true,
       );
 
-      await repository.saveLatestBayesianEstimatorState(state: state);
-      final restored = await repository.getLatestBayesianEstimatorState();
+      await repository.saveLatestEstimatorState(state: state);
+      final restored = await repository.getLatestEstimatorState();
 
       expect(restored, isNotNull);
       expect(restored!.lastDueWeekKey, '2026-04-06');
@@ -161,7 +116,7 @@ void main() {
 
     test('derives recursive state from snapshot when state key is absent',
         () async {
-      final snapshot = BayesianExperimentalRecommendationSnapshot(
+      final snapshot = AdaptiveRecommendationSnapshot(
         recommendation: _recommendation().copyWith(
           dueWeekKey: '2026-04-06',
           algorithmVersion: 'bayesian_test',
@@ -170,18 +125,16 @@ void main() {
         dueWeekKey: '2026-04-06',
         algorithmVersion: 'bayesian_test',
       );
-      await repository.saveLatestBayesianExperimentalSnapshot(
-        snapshot: snapshot,
-      );
+      await repository.saveLatestRecommendationSnapshot(snapshot: snapshot);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(
-        'adaptive_nutrition_recommendation.latest_bayesian_recursive_state',
+        'adaptive_nutrition_recommendation.latest_recursive_state',
       );
 
-      final derived = await repository.getLatestBayesianEstimatorState();
+      final derived = await repository.getLatestEstimatorState();
       final rawPersisted = prefs.getString(
-        'adaptive_nutrition_recommendation.latest_bayesian_recursive_state',
+        'adaptive_nutrition_recommendation.latest_recursive_state',
       );
 
       expect(derived, isNotNull);
@@ -194,20 +147,20 @@ void main() {
       expect(rawPersisted, isNotNull);
     });
 
-    test('returns null for incoherent Bayesian snapshot payload', () async {
+    test('returns null for incoherent canonical snapshot payload', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-        'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot',
+        'adaptive_nutrition_recommendation.latest_snapshot',
         '{"dueWeekKey":"2026-04-06","algorithmVersion":"bayesian_test",'
             '"recommendation":{"dueWeekKey":"2026-04-06","algorithmVersion":"bayesian_test"},'
             '"maintenanceEstimate":{"dueWeekKey":"2026-04-13"}}',
       );
 
-      final snapshot = await repository.getLatestBayesianExperimentalSnapshot();
+      final snapshot = await repository.getLatestRecommendationSnapshot();
       expect(snapshot, isNull);
     });
 
-    test('migrates coherent legacy experimental payload to atomic snapshot',
+    test('migrates coherent legacy bayesian payload to canonical snapshot',
         () async {
       final recommendation = _recommendation().copyWith(
         dueWeekKey: '2026-04-06',
@@ -228,13 +181,51 @@ void main() {
         '2026-04-06',
       );
 
-      final snapshot = await repository.getLatestBayesianExperimentalSnapshot();
+      final snapshot = await repository.getLatestRecommendationSnapshot();
+      final rawCanonical = prefs.getString(
+        'adaptive_nutrition_recommendation.latest_snapshot',
+      );
 
       expect(snapshot, isNotNull);
       expect(snapshot!.dueWeekKey, '2026-04-06');
       expect(
         snapshot.maintenanceEstimate.posteriorMaintenanceCalories,
         closeTo(estimate.posteriorMaintenanceCalories, 0.001),
+      );
+      expect(rawCanonical, isNotNull);
+    });
+
+    test('migrates legacy generated recommendation into synthetic snapshot',
+        () async {
+      final recommendation = _recommendation().copyWith(
+        dueWeekKey: '2026-03-30',
+        algorithmVersion: 'legacy_heuristic',
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_generated',
+        _encodeRecommendation(recommendation),
+      );
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.last_generated_due_week_key',
+        '2026-03-30',
+      );
+
+      final snapshot = await repository.getLatestRecommendationSnapshot();
+
+      expect(snapshot, isNotNull);
+      expect(snapshot!.dueWeekKey, '2026-03-30');
+      expect(
+        snapshot.maintenanceEstimate.qualityFlags,
+        contains('legacy_generated_snapshot_migration'),
+      );
+      expect(
+        snapshot.maintenanceEstimate.debugInfo['migration'],
+        'from_legacy_generated_recommendation',
+      );
+      expect(
+        snapshot.maintenanceEstimate.posteriorMaintenanceCalories,
+        recommendation.estimatedMaintenanceCalories.toDouble(),
       );
     });
   });

@@ -1,658 +1,212 @@
-# Adaptive Nutrition Recommendation — Current State
-
-## 1. Purpose and scope
-
-### Implemented behavior
-- This subsystem computes and stores adaptive nutrition recommendations (`kcal`, `protein`, `carbs`, `fat`) using recent logs plus a profile-based maintenance prior.
-- Core implementation lives in:
-  - `lib/features/nutrition_recommendation/data/recommendation_input_adapter.dart`
-  - `lib/features/nutrition_recommendation/domain/recommendation_engine.dart`
-  - `lib/features/nutrition_recommendation/data/recommendation_service.dart`
-  - `lib/features/nutrition_recommendation/data/recommendation_repository.dart`
-  - `lib/features/nutrition_recommendation/data/recommendation_scheduler.dart`
-- UI integration is implemented in onboarding, goals, and nutrition hub:
-  - `lib/screens/onboarding_screen.dart`
-  - `lib/screens/goals_screen.dart`
-  - `lib/screens/nutrition_hub_screen.dart`
-  - `lib/features/nutrition_recommendation/presentation/nutrition_recommendation_card.dart`
-
-### Inferred behavior from code structure
-- Weekly recommendation generation is intended to run when feature state is loaded in the nutrition hub (`loadState(refreshIfDue: true)`), not via a background worker.
-
-### Known limitations / visible gaps
-- Recommendation updates are not auto-applied to active goals; explicit apply action is required (`applyLatestRecommendationToActiveTargets`).
-- Adaptation currently targets calories and macros only; water/steps are preserved during apply, and sugar/fiber/salt are not part of adaptive generation.
-
-## 2. High-level architecture
-
-### Implemented behavior
-- **Repository** (`RecommendationRepository`): persists adaptive settings and recommendation snapshots in `SharedPreferences`.
-- **Scheduler** (`RecommendationScheduler`): computes Monday-anchored due week keys and stable window-end day.
-- **Input adapter** (`RecommendationInputAdapter`): reads DB logs/profile/settings and builds `RecommendationGenerationInput`.
-- **Recommendation engine** (`AdaptiveNutritionRecommendationEngine`): pure computation for confidence, maintenance, calorie target, macros, and warnings.
-- **Service** (`AdaptiveNutritionRecommendationService`): orchestration layer combining scheduler + repository + adapter + engine, and apply workflow.
-- **UI/presentation**:
-  - `OnboardingScreen`: preview generation and optional apply-to-onboarding-goals flow.
-  - `GoalsScreen`: user-configurable adaptive settings.
-  - `NutritionHubScreen` + `NutritionRecommendationCard`: state load, render, and apply action.
-- **Persistence/database helper** (`DatabaseHelper`): supplies weight, food/fluid logs, profile, goals, body-fat, workouts, and app settings to adapter/service.
-
-### Data flow
-1. User settings are loaded/saved via `RecommendationRepository` (goal direction, rate, prior activity, extra cardio).
-2. `AdaptiveNutritionRecommendationService.refreshRecommendationIfDue()` computes `dueWeekKey` and stable input anchor via `RecommendationScheduler`.
-3. `RecommendationInputAdapter.buildInput()` loads and preprocesses historical signals from `DatabaseHelper`.
-4. `AdaptiveNutritionRecommendationEngine.generate()` computes recommendation and warning/confidence state.
-5. Service persists latest generated recommendation and due week key via repository.
-6. Explicit apply writes recommendation values into active DB goals via `DatabaseHelper.saveUserGoals(...)` and persists `latest_applied` snapshot.
-
-## 3. Data model and persisted state
-
-### Domain enums and models
-- `BodyweightGoal`: `loseWeight`, `maintainWeight`, `gainWeight`.
-- `PriorActivityLevel`: `low`, `moderate`, `high`, `veryHigh`.
-- `ExtraCardioHoursOption`: `h0`, `h1`, `h2`, `h3`, `h5`, `h7Plus`.
-- `WeeklyTargetRateOption`: `{ goal, kgPerWeek, isDefault }`.
-- `WeeklyTargetRateCatalog.supportedOptions`:
-  - lose: `-0.25`, `-0.50` (default), `-0.75`, `-1.00`
-  - maintain: `0.00` (default)
-  - gain: `0.10`, `0.25` (default), `0.50`
-  - unsupported values are coerced to `defaultForGoal(...)`.
-- `RecommendationConfidence`: `notEnoughData`, `low`, `medium`, `high`.
-- `RecommendationWarningLevel`: `none`, `moderate`, `high`.
-- `RecommendationWarningState`:
-  - `hasLargeAdjustmentWarning`
-  - `warningLevel`
-  - `warningReasons` (string reason codes)
-- `RecommendationGenerationInput`:
-  - window/time: `windowStart`, `windowEnd`, `windowDays`
-  - signal counts: `weightLogCount`, `intakeLoggedDays`
-  - trend/intake: `smoothedWeightSlopeKgPerWeek`, `avgLoggedCalories`
-  - profile/prior/baseline: `currentWeightKg`, `priorMaintenanceCalories`, `activeTargetCalories`
-  - `qualityFlags`
-- `RecommendationInputSummary`: persisted summary subset of generation input.
-- `NutritionRecommendation`:
-  - outputs: `recommendedCalories`, `recommendedProteinGrams`, `recommendedCarbsGrams`, `recommendedFatGrams`
-  - model state: `estimatedMaintenanceCalories`, `goal`, `targetRateKgPerWeek`, `confidence`, `warningState`
-  - metadata: `generatedAt`, `windowStart`, `windowEnd`, `algorithmVersion`, `inputSummary`, `baselineCalories`, `dueWeekKey`
-- `AdaptiveNutritionRecommendationState`:
-  - `goal`, `targetRateKgPerWeek`, `latestGeneratedRecommendation`, `latestAppliedRecommendation`
-  - `latestGeneratedAt`
-  - `nextAdaptiveRecommendationDueAt`
-  - `isAdaptiveRecommendationDueNow`
-  - `currentDueWeekKey`
-
-### SharedPreferences keys used by the feature
-
-#### Adaptive recommendation keys (`RecommendationRepository`)
-- `adaptive_nutrition_recommendation.goal_direction`: `BodyweightGoal.name`
-- `adaptive_nutrition_recommendation.target_rate_kg_per_week`: `double`
-- `adaptive_nutrition_recommendation.prior_activity_level`: `PriorActivityLevel.name`
-- `adaptive_nutrition_recommendation.extra_cardio_hours`: `ExtraCardioHoursOption.name`
-- `adaptive_nutrition_recommendation.latest_generated`: JSON string of `NutritionRecommendation`
-- `adaptive_nutrition_recommendation.latest_applied`: JSON string of `NutritionRecommendation`
-- `adaptive_nutrition_recommendation.last_generated_due_week_key`: due-week string (`yyyy-MM-dd` Monday anchor)
-- `adaptive_nutrition_recommendation.last_due_notification_week_key`: last due week for which a due-notification was emitted
-- `adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot`: atomic JSON payload for experimental Bayesian recommendation + estimate + metadata
-- `adaptive_nutrition_recommendation.latest_bayesian_recursive_state`: persisted recursive Bayesian filter state (`posterior mean/variance`, last due week, replay-prior fields)
-  - snapshot generation time is sourced from `snapshot.recommendation.generatedAt` (no separate top-level snapshot timestamp field)
-- legacy experimental keys are still readable only for one-way migration/fallback safety:
-  - `adaptive_nutrition_recommendation.latest_generated_bayesian_experimental`
-  - `adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental`
-  - `adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate`
-
-#### Adjacent onboarding/goals integration keys touched in related flows
-- `userHeight`: fallback cached height (goals/onboarding integration path)
-- `targetSugar`, `targetFiber`, `targetSalt`: detailed nutrient targets (currently prefs-based in goals screen)
-- `hasSeenOnboarding`: onboarding completion flag
-
-## 4. Recommendation scheduling model
-
-### Implemented behavior
-- **Due week concept**: week starts on Monday via `RecommendationScheduler.dueWeekStart(now)`.
-- **Due week key**: formatted Monday date string from `dueWeekKeyFor(now)` (`yyyy-MM-dd`).
-- **Stable window end day**: `stableWindowEndDayForDueWeek(now)` = previous Sunday (due-week Monday minus 1 day).
-- **Duplicate prevention**: generation skipped when `dueWeekKey == lastGeneratedDueWeekKey` unless `force == true`.
-- **Force behavior**: `force: true` bypasses duplicate prevention but still uses the same due week key and same stable window end anchor.
-- **Manual recalculate behavior (Variant A)**:
-  - immediate regeneration is supported (`recalculateRecommendationNow`)
-  - still anchored to the same due-week key + stable previous-Sunday boundary
-  - does not auto-apply active calorie/macronutrient goals
-- **Freshness metadata helpers**:
-  - scheduler now exposes `isDueNow(...)` and `nextDueAt(...)` for explicit UI/service freshness semantics.
-- **Persisted scheduling state**:
-  - recommendation stores `dueWeekKey`
-  - repository stores `last_generated_due_week_key`
-
-### Test-confirmed semantics
-- Monday anchoring and weekly key rollover verified in `recommendation_scheduler_test.dart`.
-- In-week idempotency and stable-window behavior verified in `recommendation_service_test.dart`.
-
-### Known limitation / ambiguity
-- Scheduling is invocation-driven (service call path), not background-triggered.
-
-## 5. Input aggregation and preprocessing
-
-### Implemented behavior (`RecommendationInputAdapter.buildInput`)
-
-#### Rolling window, normalization, and range
-- `windowEndDay = normalizeDay(now)`.
-- `windowStartDay = windowEndDay - (max(rollingWindowDays, 1) - 1)` (default `rollingWindowDays = 21`).
-- Query range:
-  - `rangeStart = windowStartDay`
-  - `rangeEnd = endOfDay(windowEndDay)` (`23:59:59`)
-
-#### Loaded data sources
-- `getChartDataForTypeAndRange('weight', range)`
-- `getFoodCaloriesByDayForDateRange(rangeStart, rangeEnd)`
-- `getFluidEntriesForDateRange(rangeStart, rangeEnd)`
-- `getUserProfile()`
-- `getGoalsForDate(now)`
-- `getLatestBodyFatPercentageBefore(rangeEnd)`
-- `getAverageCompletedWorkoutsPerWeek(now: rangeEnd)`
-- `getAppSettings()`
-- `getDailyStepsTotalsForRange(startLocal, endLocal, providerFilter, sourcePolicy)` for recent actual steps, with provider/source policy read from `StepsSyncService` preferences.
-
-#### Food calorie aggregation and fallback order
-- `DatabaseHelper.getFoodCaloriesByDayForDateRange(...)` resolves product calories in order:
-  1. `nutrition_logs.product_id -> products.id`
-  2. fallback `nutrition_logs.legacy_barcode -> products.barcode`
-- If both are present, `product_id` path is used (`productById ?? productByBarcode`).
-- Per-row food calories: `product.calories * (log.amount / 100.0)`.
-- Unresolved rows are skipped from calorie totals and increment `unresolvedEntryCount`.
-
-#### Unresolved food handling
-- Adapter adds `qualityFlags += ['unresolved_food_calories']` when unresolved count > 0.
-
-#### Fluid merge
-- `_buildCaloriesByDay(...)` starts from food totals and adds fluid kcal per normalized day:
-  - added fluid kcal = `(entry.kcal ?? 0).toDouble()`
-
-#### Weight-by-day extraction
-- Raw weight points are sorted ascending by timestamp.
-- `_latestWeightByDay(...)` maps by normalized day; later same-day entries overwrite earlier ones.
-- `weightLogCount` therefore counts unique days after this dedupe.
-
-#### EWMA smoothing and slope
-- EWMA alpha: `0.35`.
-- Slope source: smoothed series when length >= 2, else raw.
-- Slope formula is ordinary least-squares linear regression over the chosen series:
-  - `x = day index from first point`
-  - `y = smoothed weight (kg)`
-  - `slopeKgPerDay = cov(x,y) / var(x)`
-  - output = `slopeKgPerDay * 7` (`kg/week`)
-  - if variance is zero (no usable day span), result is `null`.
-
-#### Recent actual-steps aggregation for prior model
-- Prior activity uses an effective steps input with precedence:
-  1. recent average actual daily steps (if available)
-  2. target steps from app settings
-  3. default `8000`
-- Lookback window for recent actual steps is the same rolling window used by input build (default `21` days).
-- Daily totals come from `health_step_segments` aggregation; multiple segments per day are summed into day totals by DB query logic.
-- “Available” means at least one day in the lookback has a usable total (`totalSteps > 0`).
-- Average actual steps is computed over those usable days only.
-
-#### Intake-day and calorie summary
-- `intakeLoggedDays`: number of days where merged day calories `> 0`.
-- `avgLoggedCalories`: sum of merged day calories `> 0` divided by `intakeLoggedDays` (0 when no intake days).
-
-#### Current bodyweight
-- `currentWeightKg`: last value of sorted unique-day weight series, else fallback `75.0`.
-
-#### Usable window days
-- `_usableWindowDays(...)` uses span between first and last day in union of:
-  - all weight days
-  - intake days with calories `> 0`
-- result = inclusive day span (`last - first + 1`), or `0` if no data days.
-
-#### Quality flags generated
-- `weight_trend_unavailable` when slope is `null`
-- `sparse_intake_logs` when intake days `< 5`
-- `sparse_weight_logs` when weight log count `< 3`
-- `unresolved_food_calories` when unresolved food entries exist
-
-### Inferred behavior from code structure
-- Because calories are computed from resolved foods only, unresolved food rows bias `avgLoggedCalories` downward; this is partially compensated by warning propagation, not by imputation.
-
-### Known limitation / ambiguity
-- No unresolved-calorie estimation is attempted; unresolved rows are counted but not quantified.
-
-## 6. Prior maintenance calorie model
-
-### Implemented behavior (`estimatePriorMaintenanceCalories`)
-
-#### Required/effective inputs and fallbacks
-- `currentWeightKg`: uses `75.0` fallback if non-positive.
-- `heightCm`: `profile?.height` or fallback `175`.
-- `ageYears`: `_estimateAgeYears(profile?.birthday, now)` or fallback `30`.
-- `gender`: `profile?.gender` string.
-- `bodyFatPercent` path only active when `3 < bodyFatPercent < 70`.
-
-#### Age estimation
-- `years = now.year - birthday.year`, minus one if birthday not reached this year.
-- negative result => `null` (then fallback age `30`).
-
-#### Body-fat-aware path
-- If valid BF%, uses Katch-McArdle RMR:
-  - `leanMassKg = weightKg * (1 - bf/100)`
-  - `rmr = 370 + 21.6 * leanMassKg`
-
-#### Mifflin fallback path
-- If BF% missing/invalid, uses Mifflin-based formula:
-  - `base = 10*weight + 6.25*height - 5*age`
-  - gender adjustment:
-    - `'male'`: `base + 5`
-    - `'female'`: `base - 161`
-    - other/unknown: `base - 78`
-
-#### Activity factor composition
-- Base by `PriorActivityLevel`:
-  - `low 1.35`, `moderate 1.50`, `high 1.65`, `veryHigh 1.75`
-- Workout adjustment (`averageCompletedWorkoutsPerWeek`):
-  - `>=5`: `+0.06`
-  - `>=3`: `+0.04`
-  - `>=1`: `+0.02`
-- Steps adjustment uses effective steps (`recentAverageActualSteps ?? targetSteps ?? 8000`):
-  - `>=13000`: `+0.05`
-  - `>=10000`: `+0.03`
-  - `<7000`: `-0.03`
-- Extra cardio adjustment (`ExtraCardioHoursOption`):
-  - `h0 +0.00`, `h1 +0.01`, `h2 +0.02`, `h3 +0.03`, `h5 +0.05`, `h7Plus +0.07`
-  - This remains a coarse manual heuristic for activity not captured in app workouts; it is not backed by any dedicated cardio-tracking model.
-- Activity factor clamp: `[1.20, 1.95]`
-
-#### Final maintenance prior and clamp
-- `maintenance = rmr * activityFactor`
-- return `maintenance.round().clamp(1200, 5000)`
-
-### Same-bodyweight differentiation (implemented)
-- Users with same bodyweight can still get different priors due to:
-  - BF%-aware vs Mifflin path
-  - declared activity bucket
-  - workouts/week uplift
-  - step-target adjustment
-  - extra cardio uplift
-
-## 7. Adaptive recommendation engine
-
-### Implemented behavior (`AdaptiveNutritionRecommendationEngine.generate`)
-
-#### Confidence classification thresholds
-- `high`: `windowDays >= 21 && weightLogCount >= 9 && intakeLoggedDays >= 15`
-- `medium`: `windowDays >= 14 && weightLogCount >= 6 && intakeLoggedDays >= 10`
-- `low`: `windowDays >= 7 && weightLogCount >= 3 && intakeLoggedDays >= 5`
-- else `notEnoughData`
-
-#### Inferred maintenance formula
-- If slope is missing or intake days <= 0:
-  - inferred maintenance = `priorMaintenanceCalories`
-- Else:
-  - `inferred = avgLoggedCalories - (smoothedWeightSlopeKgPerWeek * 7700/7)`
-
-#### Strict prior-only path for `notEnoughData`
-- When confidence is `notEnoughData`, maintenance is strictly:
-  - `estimatedMaintenanceCalories = priorMaintenanceCalories`
-- In this path there is:
-  - no inferred-maintenance blending
-  - no weekly maintenance adjustment against previous recommendation
-- Goal-rate calorie adjustment is still applied on top of this maintenance estimate.
-
-#### Blend factor by confidence
-- `notEnoughData: 0.00`
-- `low: 0.35`
-- `medium: 0.60`
-- `high: 0.80`
-- Blended maintenance:
-  - `maintenance = prior*(1-blend) + inferred*blend`
-  - This blended path is used only when confidence is `low`/`medium`/`high` (not for strict prior-only).
-
-#### Weekly maintenance delta damping vs previous recommendation
-- If `previousRecommendation` exists and confidence is `low`/`medium`/`high`, change in maintenance is clamped per confidence:
-  - `low: ±110`
-  - `medium: ±170`
-  - `high: ±240`
-- Clamp applies against `previousRecommendation.estimatedMaintenanceCalories`.
-
-#### Calorie target from kg/week goal
-- Daily adjustment:
-  - `rateAdjustmentKcalPerDay = round(targetRateKgPerWeek * (7700/7))`
-- `rawRecommendedCalories = estimatedMaintenanceCalories + adjustment`
-
-#### Calorie floor logic and confidence degradation
-- Minimum recommendation floor: `1200` kcal.
-- If floor is applied:
-  - add warning reason `calorie_floor_applied`
-  - degrade confidence from `high`/`medium` to `low` (low/notEnoughData unchanged)
-
-#### Macro computation
-- Weight normalization: if `currentWeightKg <= 0`, use `75.0`.
-- Protein per kg:
-  - `loseWeight: 2.0`
-  - `maintainWeight/gainWeight: 1.8`
-- `proteinGrams = round(weight * proteinPerKg)`
-- Fat floor:
-  - `fatFloor = round(weight * 0.60).clamp(35, 130)`
-- Initial carbs:
-  - `carbs = round((recommendedCalories - protein*4 - fat*9) / 4)`
-
-#### Constrained macro fallback when carbs would go negative
-- If carbs `< 0`:
-  - set `carbs = 0`
-  - recompute fat: `fat = floor((recommendedCalories - protein*4)/9)`
-  - if `fat < 25`, set `fat = 25`
-  - if remaining calories cannot support protein target, reduce protein:
-    - `protein = floor((recommendedCalories - fat*9)/4).clamp(0, 999)`
-  - add warning reason `macro_distribution_constrained`
-- Final clamp: protein/carbs/fat each clamped to `[0, 999]`.
-
-#### Warning-state generation
-- Baseline used for delta comparison:
-  - `baselineCalories = input.activeTargetCalories ?? previousRecommendation?.recommendedCalories`
-- Large adjustment thresholds (absolute delta vs baseline):
-  - `>= 450` => `warningLevel = high`, reason `large_adjustment_high`, `hasLargeAdjustmentWarning = true`
-  - `>= 250` => `warningLevel = moderate`, reason `large_adjustment_moderate`, `hasLargeAdjustmentWarning = true`
-- Additional precedence:
-  - if reasons contain `calorie_floor_applied`, force `warningLevel = high`
-  - else if no large-adjustment flag and reasons not empty, set `warningLevel = moderate`
-- Unresolved food propagation:
-  - if input quality flags include `unresolved_food_calories`, reason is appended to warning reasons.
-
-### Inferred behavior from code structure
-- `onboarding_prior_only` remains a quality flag (not a warning reason) and is surfaced through data-basis messaging in onboarding/hub recommendation surfaces.
-
-## 8. Onboarding behavior
-
-### Implemented behavior
-- Step order in `PageView`:
-  1. welcome
-  2. profile
-  3. weight
-  4. body-fat
-  5. adaptive goal
-  6. calories
-  7. macros
-  8. water
-- Adaptive inputs in onboarding adaptive page:
-  - `BodyweightGoal`
-  - `PriorActivityLevel`
-  - `ExtraCardioHoursOption`
-  - weekly target-rate chips from `WeeklyTargetRateCatalog.optionsForGoal(...)`
-- Body-fat handling:
-  - optional text input (`_bodyFatPercentController`)
-  - saved at finish only if `>0 && <=100` via `saveInitialBodyFatPercentage(...)`
-  - recommendation prior model later validates usable BF% range (`>3 && <70`)
-- Recommendation preview generation:
-  - auto-refresh when entering adaptive page (`onPageChanged` at adaptive index)
-  - refresh on adaptive dropdown/chip changes
-  - manual refresh button (`adaptiveRecommendationRefresh`)
-  - profile DOB changes can trigger refresh if current page index is adaptive or later
-- Recommendation preview transparency:
-  - shows data-basis label/counts and prioritized basis hint
-  - onboarding `onboarding_prior_only` is user-visible via explicit prior-only copy in the preview
-  - warning copy uses the same prioritized reason mapping as the hub card
-- Apply-to-goals preview behavior:
-  - preview apply button copies recommendation kcal/protein/carbs/fat into onboarding goals text fields
-  - this is local state only until finish
-- Finish behavior (`_finishOnboarding`):
-  - saves profile (DB), initial weight/body-fat measurements (DB when present)
-  - saves adaptive settings (repository)
-  - persists generated recommendation snapshot (generated now or previously previewed)
-  - sets `markAsApplied` only if current goal inputs exactly match recommendation outputs
-  - saves active goals via `saveUserGoals(...)` with steps fixed to `8000`
-  - sets `hasSeenOnboarding = true`
-
-### Inferred behavior from code structure
-- Height, weight, gender edits reset onboarding “applied preview” marker but do not always trigger immediate preview recomputation; recomputation is guaranteed when entering adaptive page or pressing refresh.
-
-### Known limitations / visible gaps
-- Body-fat helper entry point is implemented as a static guidance bottom sheet (`showBodyFatGuidanceSheet`), not an estimator or auto-fill workflow.
-
-## 9. Goals screen behavior
-
-### Implemented behavior
-- Current section ordering:
-  1. Personal data (`goals_personal_section_title`) with height field
-  2. Adaptive bodyweight target (`goals_adaptive_section_title`)
-  3. Recommendation settings (`goals_recommendation_settings_section_title`)
-  4. Daily goals (`goals_daily_section_title`)
-  5. Detailed nutrient goals
-- Personal data section currently includes height only.
-- Adaptive target section includes:
-  - goal direction dropdown
-  - weekly target-rate choice chips filtered by selected goal
-- Recommendation settings section includes:
-  - prior-activity dropdown + help block
-  - extra-cardio dropdown + helper text
-- Save action (`_saveSettings`) writes:
-  - `userHeight` to prefs
-  - adaptive settings via recommendation service/repository
-  - calories/protein/carbs/fat/water/steps to DB via `saveUserGoals`
-  - sugar/fiber/salt to prefs
-
-### Coexistence semantics (implemented)
-- Adaptive settings and ordinary goal values coexist.
-- Saving goals screen does **not** regenerate recommendations and does **not** auto-apply any recommendation snapshot.
-
-### Known limitation / visible gap
-- Sugar/fiber/salt remain prefs-backed (not in `AppSettings` schema per code comments).
-
-## 10. Nutrition hub behavior
-
-### Implemented behavior
-- Hub load (`_loadHubData`) reads:
-  - active target calories for today from DB goals
-  - meals list
-  - adaptive state via `loadState(refreshIfDue: true)`
-- Refresh triggers:
-  - initial first load in `didChangeDependencies`
-  - pull-to-refresh (`RefreshIndicator`)
-  - after apply action
-  - after relevant navigation returns
-- Recommendation card displays:
-  - empty state when no generated recommendation
-  - otherwise goal/rate, maintenance estimate, kcal/macros, data-basis label, data-basis counts, prioritized data-basis hint, active target calories, warning banner
-  - freshness/scheduling metadata:
-    - calculated-at timestamp
-    - next adaptive recommendation due timestamp
-    - due-now indicator when a new regular recommendation is due
-  - actions:
-    - separate `recalculate now` action (manual refresh, non-applying)
-    - separate `apply recommendation to active goals` action
-  - warning copy prioritizes specific reasons when present (`calorie_floor_applied`, `unresolved_food_calories`, `large_adjustment_*`, `macro_distribution_constrained`) before generic fallback text
-- Apply-to-active-goals:
-  - card button -> `applyLatestRecommendationToActiveTargets()`
-  - updates DB daily goals (kcal/macros from recommendation, water/steps preserved from current settings/defaults)
-  - persists `latest_applied` snapshot
-  - shows success/failure snackbar and refreshes hub data
-
-### What does not mutate automatically
-- Recommendation refresh does not change active DB goals.
-- Only explicit apply mutates active goals.
-- Manual recalculate also does not mutate active goals.
-
-### Notification support (first version)
-- A scheduler-based due notification seam is implemented:
-  - `notifyIfNewRecommendationDue(...)` emits only when all conditions hold:
-    - recommendation is currently due for this due week
-    - no recommendation has yet been generated for this due week
-    - no due-notification has yet been sent for this due week
-  - eligibility is scheduler-based only (not model deltas)
-  - notification dispatch is abstracted via `AdaptiveRecommendationDueNotifier` (local-notification implementation + test noop/fake support)
-
-## 11. Warnings, confidence, and data quality semantics
-
-### Confidence semantics (operational)
-- `notEnoughData`: minimum thresholds not met; recommendation remains strictly prior-only for maintenance (no inferred blend, no previous-recommendation drift).
-- `low`/`medium`/`high`: progressively stricter data thresholds and higher inferred-maintenance blending.
-- UI copy treats this as data-basis quality (recent logs/completeness), not lab-grade certainty.
-
-### Warning-level semantics
-- `none`: no large adjustment and no extra warning reasons.
-- `moderate`: either medium-sized adjustment (`>=250`) or non-empty reasons without high-severity triggers.
-- `high`: large adjustment (`>=450`) or calorie floor application.
-
-### Large-adjustment warnings
-- Generated only when baseline calories are available.
-- Reason code is explicit: `large_adjustment_moderate` or `large_adjustment_high`.
-
-### Unresolved food warnings
-- Unresolved nutrition rows produce input quality flag `unresolved_food_calories`.
-- Engine propagates that into warning reasons; UI warning message maps this reason explicitly.
-
-### Data-quality flags
-- `sparse_intake_logs`, `sparse_weight_logs`, `weight_trend_unavailable`, `onboarding_prior_only` are persisted in `inputSummary.qualityFlags`.
-- UI surfaces data-basis messaging from these flags in recommendation surfaces:
-  - explicit prior-only message
-  - sparse weight logs message
-  - sparse intake logs message
-  - combined sparse weight+intake message
-  - unresolved food warning remains warning-reason driven
-
-## 12. Backup/restore implications
-
-### Implemented behavior
-- Backup manager serializes **all** SharedPreferences keys into `userPreferences` and restores them on import (`backup_manager.dart`).
-- Therefore adaptive recommendation prefs state is backup/restore-covered, including:
-  - goal direction, target rate, prior activity, extra cardio
-  - latest generated/applied recommendation JSON snapshots
-  - last generated due week key
-- Apply-related goal changes are persisted in the normal DB goal/settings path and are expected to be covered by DB backup payloads, subject to the current backup_manager.dart table export set.
-
-### Test-confirmed coverage
-- `backup_restore_integrity_test.dart` explicitly verifies restore for:
-  - goal, target rate, prior activity, extra cardio
-  - latest generated recommendation JSON
-  - last generated due week key
-
-### Inferred coverage from implementation
-- `latest_applied` key is not explicitly asserted in the adaptive backup test, but should be covered by the all-keys SharedPreferences export/import loop.
-
-## 13. Current limitations and non-final areas
-
-### Visible in code/tests
-- Weekly generation is call-driven from UI/service usage; no background scheduler/job is implemented.
-- Activity/cardio priors are bucket-based and deliberately coarse (`PriorActivityLevel`, `ExtraCardioHoursOption`).
-- Unresolved food entries are counted and warned, but not calorie-imputed.
-- Baseline comparison for warning deltas uses `activeTargetCalories` from adapter input (anchored to stable window-end date in weekly refresh path), which can differ from current-day UI target context.
-- Onboarding body-fat helper is informational only (manual lookup sheet).
-- Data-basis messaging is compact and prioritized; only one primary basis hint and one warning banner are shown at once.
-- Detailed nutrient goals (`targetSugar/targetFiber/targetSalt`) remain prefs-backed integration fields, separate from adaptive model/persistence structures.
-
-## 14. Semantic verification checklist
-
-- [ ] **Scheduling semantics**: due week key is Monday-anchored; stable window-end is previous Sunday; same due week does not regenerate unless forced.
-- [ ] **Persistence semantics**: repository writes/reads all adaptive keys and recommendation JSON snapshots (`latest_generated`, `latest_applied`, due week key).
-- [ ] **Onboarding semantics**: body-fat step exists after weight; adaptive preview generates from current onboarding inputs; finish persists recommendation/settings/profile/goals as implemented.
-- [ ] **Apply semantics**: recommendation refresh alone does not mutate active goals; explicit apply updates DB goals and stores `latest_applied`.
-- [ ] **Generation semantics**: confidence thresholds, strict prior-only `notEnoughData` maintenance behavior, blend factors (`low`/`medium`/`high`), delta damping, calorie floor, and macro fallback paths match engine constants/formulas.
-- [ ] **Trend semantics**: EWMA preprocessing plus regression-based slope (`kg/week`) is intact; insufficient usable weight data still returns `null`.
-- [ ] **Prior activity semantics**: effective steps precedence is intact (`recent average actual` -> `target steps` -> `default 8000`) using the rolling lookback window.
-- [ ] **Warning/confidence semantics**: large-adjustment thresholds (`250/450`), floor override to high, unresolved-food propagation, and reason-prioritized warning copy are intact.
-- [ ] **Localization coverage**: adaptive strings used in onboarding/goals/card/hub exist in both `app_en.arb` and `app_de.arb`; card German title has test coverage.
-- [ ] **Placeholder acceptance for alpha**: informational body-fat helper sheet (no estimator), coarse manual extra-cardio heuristic (no cardio tracking model), and unresolved-food conservative handling are explicitly accepted.
-
-## 15. Experimental Bayesian/Kalman path (parallel, non-default)
-
-### Scope and mode separation
-- Experimental Bayesian logic remains separate and non-default:
-  - `lib/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart`
-  - `lib/features/nutrition_recommendation/domain/bayesian_recommendation_engine.dart`
-  - mode enum: `lib/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart`
-- Production heuristic generation/apply flow is unchanged and still authoritative for:
-  - `refreshRecommendationIfDue(...)`
-  - `generateOnboardingRecommendation(...)`
-  - `applyLatestRecommendationToActiveTargets(...)`
-- Experimental entry points remain explicit:
-  - `refreshBayesianExperimentalRecommendationIfDue(...)`
-  - `generateBayesianExperimentalOnboardingRecommendation(...)`
-  - `generateEstimatorComparison(...)`
-
-### Recursive Bayesian state model (implemented)
-- Experimental path now persists an explicit recursive filter state in addition to recommendation snapshots:
-  - `adaptive_nutrition_recommendation.latest_bayesian_recursive_state`
-- Persisted recursive state stores:
-  - posterior maintenance mean (`kcal/day`)
-  - posterior variance (`kcal^2/day^2`)
-  - last processed due week key
-  - replay-prior fields (prior mean/variance/source for deterministic same-week force refresh)
-- Snapshot (`latest_bayesian_experimental_snapshot`) is still used for recommendation payload coherence and retrieval.
-- If recursive state is missing but a coherent snapshot exists, repository derives a valid recursive state from the snapshot estimate once.
-
-### True weekly recursive chaining semantics (implemented)
-- For each new due week, filter uses previous posterior as new prior:
-  - `x_pred = x_prev`
-  - `P_pred = min(P_prev + n*Q, P_cap)` where `n` is elapsed due-week steps
-- Same due week forced refresh uses replayed prior for that due week, so repeated force refreshes are stable.
-- Update step (only when usable observation exists):
-  - `K = P_pred / (P_pred + R)`
-  - `x_post = x_pred + K * (z - x_pred)`
-  - `P_post = (1 - K) * P_pred`
-- Missing/sparse observation week:
-  - prediction-only
-  - posterior mean remains at predicted mean
-  - uncertainty still grows via `+Q` and is bounded by `P_cap`
-
-### Observation model and short-horizon kcal/kg scaling
-- Observation remains scalar maintenance-implied estimate:
-  - `z = avgLoggedCalories - weightSlopeKgPerWeek * (effectiveKcalPerKg / 7)`
-- Effective `kcal/kg` is horizon-dependent to reduce short-window overreaction:
-  - `<14 days`: `5500`
-  - `14-27 days`: linear interpolation `5500 -> 7700`
-  - `>=28 days`: `7700`
-- Debug output includes chosen `effectiveKcalPerKg` and mode label.
-
-### Q/R semantics, initialization, and cap behavior
-- `Q` now explicitly represents expected weekly maintenance drift:
-  - default drift target: `~40 kcal/week`
-  - `Q = 40^2 = 1600 (kcal^2/day^2 per due week step)`
-- `R` is observation variance from explicit components:
-  - base model variance floor
-  - intake logging uncertainty/sparsity/completeness
-  - weight slope uncertainty
-  - unresolved food penalties
-- Initialization for new users / first experimental run:
-  - mean from profile prior
-  - `P0 = min(10 * R_initial, P_cap)`
-- Memory cap / anti-reset behavior:
-  - `P_cap = 10 * R_reference`
-  - long gaps increase uncertainty but do not fully reset filter memory.
-
-### Steady-state sanity diagnostics
-- Scalar steady-state gain is computed for debug/tests (not used as update approximation):
-  - `K_ss = (sqrt(Q^2 + 4QR) - Q) / (2R)`
-  - `P_ss = K_ss * R`
-- Debug output includes:
-  - `Q`, `R`, `Q/R`
-  - live `K`
-  - `P_pred`, `P_post`
-  - residual (`z - x_pred`)
-  - `steadyStateGain`, `steadyStateVariance`
-  - live-vs-steady-state variance ratio
-
-### Confidence semantics (experimental only)
-- Experimental confidence is uncertainty-centric and separate from production heuristic confidence semantics.
-- Primary drivers:
-  - posterior uncertainty (relative to capped uncertainty scale)
-  - whether observation exists
-  - effective sample size / data sufficiency
-- Missing-observation weeks remain conservative (`notEnoughData`) while still updating uncertainty via prediction.
-
-### Service/repository behavior summary
-- Experimental refresh flow now:
-  1. loads latest experimental snapshot + recursive state
-  2. runs recursive prediction for due-week gap
-  3. computes observation (if available)
-  4. applies update or prediction-only
-  5. persists both:
-     - latest experimental snapshot
-     - latest recursive estimator state
-- Experimental onboarding generation:
-  - initializes safely from profile prior
-  - works with no logs
-  - does not mutate production keys or apply active goals.
-- Comparison helper includes recursive-state context (before/after) for internal diagnostics.
-
-### Current limitations (still intentional)
-- Model remains scalar TDEE-state only (no multi-state physiology model).
-- Noise model is calibrated heuristic decomposition, not learned per-user residual modeling.
-- Experimental path remains non-default and is not wired into production apply UI/flow.
+# Adaptive Nutrition Recommendation: Current State
+
+## Overview
+
+Adaptive nutrition recommendations are generated by a single canonical Bayesian recursive estimator in this branch.
+
+The feature:
+- estimates daily maintenance calories (TDEE) from profile prior + recent logs
+- converts the maintenance estimate into calorie and macro targets
+- runs on weekly due-week semantics with deterministic in-week recomputation behavior
+- persists both recommendation snapshot and recursive estimator state
+- requires explicit user apply (generation never auto-applies active goals)
+
+Primary implementation files:
+- `lib/features/nutrition_recommendation/data/recommendation_service.dart`
+- `lib/features/nutrition_recommendation/data/recommendation_repository.dart`
+- `lib/features/nutrition_recommendation/data/recommendation_input_adapter.dart`
+- `lib/features/nutrition_recommendation/data/recommendation_scheduler.dart`
+- `lib/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart`
+- `lib/features/nutrition_recommendation/domain/bayesian_recommendation_engine.dart`
+- `lib/features/nutrition_recommendation/domain/recommendation_engine.dart`
+
+## User-Facing Behavior
+
+From a user perspective:
+- the app can generate a weekly adaptive recommendation
+- the UI shows freshness metadata:
+  - calculated at
+  - next due at
+  - due now indicator
+- user can manually trigger `Recalculate now`
+- generated recommendation does not change active goals automatically
+- user must explicitly apply recommendation to active targets
+
+## Scheduling And Data Window Semantics
+
+Due-week semantics are Monday anchored.
+
+- Due-week key: `yyyy-MM-dd` Monday date
+- Stable input window anchor: previous Sunday end-of-day for that due week
+- One generation per due week unless force refresh is requested
+
+Important behavior:
+- `refreshRecommendationIfDue(...)` skips regeneration if current due week is already generated
+- `recalculateRecommendationNow(...)` forces regeneration in the same due week
+- forced in-week recalculation still uses the same stable window anchor
+
+This prevents Monday-vs-Wednesday window drift inside one due week.
+
+## Recommendation Inputs
+
+`RecommendationInputAdapter` builds `RecommendationGenerationInput` from:
+- weight logs (smoothed slope)
+- logged intake
+- profile + optional body-fat info
+- activity/cardio settings
+- active target baseline context
+- quality flags (for sparse/unresolved data signaling)
+
+Observation signal used by the estimator is based on:
+- intake average (`avgLoggedCalories`)
+- weight slope (`smoothedWeightSlopeKgPerWeek`)
+- effective `kcalPerKg` scaling based on window maturity
+
+## Recursive Bayesian Estimation Model
+
+### Compact Mathematical Summary
+
+Latent state:
+- `x_t`: true maintenance calories/day at due week `t`
+
+State uncertainty:
+- `P_t`: posterior variance
+
+Prediction step (each elapsed due week):
+- `x_pred = x_prev`
+- `P_pred = min(P_prev + Q, P_cap)`
+
+Update step (only if observation exists):
+- `K = P_pred / (P_pred + R)`
+- `x_post = x_pred + K * (z - x_pred)`
+- `P_post = (1 - K) * P_pred`
+
+No usable observation:
+- `x_post = x_pred`
+- `P_post = P_pred`
+
+### Practical Semantics In This Implementation
+
+- `Q` represents expected week-to-week maintenance drift.
+- `R` represents observation uncertainty from intake + slope + data quality penalties.
+- posterior from due week `N` becomes prior for due week `N+1`.
+- posterior variance is chained recursively and capped by `P_cap`.
+- long missing periods increase uncertainty but cannot create full reset behavior because of the variance cap.
+
+### Same-Week Replay Behavior
+
+When force-refresh happens within the same due week, the estimator reuses the stored pre-update prior for that due week (if available), instead of chaining from the already-updated posterior again. This keeps repeated in-week force refresh deterministic.
+
+### Onboarding Bootstrap Behavior
+
+With no adaptive logs yet, the filter initializes from profile prior maintenance and deterministic initial variance (`P0` rule from configured multipliers). This allows safe generation during onboarding.
+
+### Horizon-Dependent kcal/kg Observation Scaling
+
+Effective `kcalPerKg` is window-sensitive:
+- `< 14 days`: 5500
+- `14-27 days`: linear interpolation from 5500 to 7700
+- `>= 28 days`: 7700
+
+This reduces overreaction to short-horizon water/glycogen noise.
+
+## Recommendation Projection And Safety Rules
+
+`AdaptiveNutritionRecommendationEngine.generateFromMaintenanceEstimate(...)` applies:
+- goal-rate calorie adjustment
+- calorie floor protection
+- macro derivation
+- warning-state construction
+- baseline delta warning checks
+
+If calorie floor constraints bind, confidence is degraded conservatively and warning reasons include explicit floor/constrained signals.
+
+## Apply And Recalculate Semantics
+
+Generation and apply are intentionally separate:
+- generation writes recommendation snapshot + recursive state
+- apply writes recommendation targets into active app goals
+
+`applyLatestRecommendationToActiveTargets()`:
+- uses canonical latest generated recommendation
+- preserves non-adaptive targets like water/steps
+- updates `latest_applied` snapshot
+
+`recalculateRecommendationNow()`:
+- regenerates immediately
+- keeps due-week anchor semantics
+- does not auto-apply
+
+## Persistence Model
+
+Canonical keys:
+- `adaptive_nutrition_recommendation.latest_snapshot`
+- `adaptive_nutrition_recommendation.latest_recursive_state`
+- `adaptive_nutrition_recommendation.latest_applied`
+- `adaptive_nutrition_recommendation.last_generated_due_week_key`
+- `adaptive_nutrition_recommendation.last_due_notification_week_key`
+
+Snapshot payload (`AdaptiveRecommendationSnapshot`) includes:
+- generated recommendation
+- maintenance estimate
+- due week key
+- algorithm version
+
+Coherence checks reject malformed or mismatched payloads.
+
+### Migration Notes (Legacy Fallback Only)
+
+Legacy keys are read only when canonical snapshot/state is absent, then migrated forward.
+
+Legacy fallback keys:
+- `adaptive_nutrition_recommendation.latest_generated`
+- `adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot`
+- `adaptive_nutrition_recommendation.latest_generated_bayesian_experimental`
+- `adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental`
+- `adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate`
+
+These legacy keys are not the active write path.
+
+## Notification Behavior
+
+`notifyIfNewRecommendationDue(...)` emits a due notification only when all are true:
+- recommendation is currently due
+- no recommendation exists for the current due week
+- no due notification was already sent for that due week
+
+This is a scheduler seam, not an implicit auto-apply mechanism.
+
+## Confidence, Warnings, And Transparency
+
+Confidence is an operational data-quality/uncertainty signal, not scientific certainty.
+
+Primary confidence drivers:
+- posterior uncertainty relative to cap
+- observation availability
+- effective sample size / usable horizon
+
+Transparency surfaces include:
+- data-basis hints
+- warning reasons
+- confidence level
+- freshness metadata
+
+## Limitations
+
+Current known limitations:
+- scalar single-state maintenance model only
+- no explicit unresolved-calorie imputation (quality penalties/warnings are used instead)
+- weekly invocation-driven behavior (no autonomous background recomputation loop in this layer)
+
+## Verification Checklist
+
+When validating future changes, verify at minimum:
+- due-week Monday anchoring and stable previous-Sunday input window
+- in-week force refresh determinism
+- recursive posterior chaining across weeks
+- prediction-only behavior for missing-observation weeks
+- variance-cap bounded uncertainty growth after long gaps
+- onboarding bootstrap without logs
+- explicit apply semantics (`generate != apply`)
+- snapshot/state persistence coherence and restore behavior
+- due-notification eligibility rules

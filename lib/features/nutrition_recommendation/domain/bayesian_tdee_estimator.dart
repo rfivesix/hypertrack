@@ -8,18 +8,6 @@ enum BayesianPriorSource {
   chainedPosterior,
 }
 
-class BayesianMaintenancePrior {
-  final double meanCalories;
-  final double stdDevCalories;
-  final BayesianPriorSource source;
-
-  const BayesianMaintenancePrior({
-    required this.meanCalories,
-    required this.stdDevCalories,
-    required this.source,
-  });
-}
-
 class BayesianEstimatorConfig {
   /// Bootstrap prior uncertainty (kcal/day, standard deviation).
   ///
@@ -310,7 +298,6 @@ class BayesianTdeeEstimator {
   BayesianEstimatorRunResult estimate({
     required RecommendationGenerationInput input,
     BayesianEstimatorState? recursiveState,
-    BayesianMaintenancePrior? chainedPrior,
     String? dueWeekKey,
   }) {
     final profilePriorMean = input.priorMaintenanceCalories.toDouble();
@@ -336,7 +323,6 @@ class BayesianTdeeEstimator {
       profilePriorMeanCalories: profilePriorMean,
       dueWeekKey: normalizedDueWeekKey,
       recursiveState: recursiveState,
-      chainedPrior: chainedPrior,
       qVariance: qVariance,
       referenceObservationVariance: observationModel.referenceVariance,
       qualityFlags: qualityFlags,
@@ -378,6 +364,8 @@ class BayesianTdeeEstimator {
     double posteriorVariance;
 
     if (!hasObservation || observedMaintenance == null) {
+      // Prediction-only week: mean stays at prediction, uncertainty still
+      // evolves through the process model (already applied in priorStep).
       kalmanGain = 0;
       posteriorMean = predictedMean;
       posteriorVariance = predictedVariance;
@@ -518,7 +506,6 @@ class BayesianTdeeEstimator {
     required double profilePriorMeanCalories,
     required String? dueWeekKey,
     required BayesianEstimatorState? recursiveState,
-    required BayesianMaintenancePrior? chainedPrior,
     required double qVariance,
     required double referenceObservationVariance,
     required List<String> qualityFlags,
@@ -536,6 +523,8 @@ class BayesianTdeeEstimator {
           normalizedLastDueWeekKey == dueWeekKey &&
           dueWeekKey.isNotEmpty;
 
+      // Same due-week force refresh should replay that week's pre-update prior
+      // so repeated in-week runs remain deterministic.
       final priorMean = sameDueWeek && recursiveState.hasReplayPrior
           ? recursiveState.lastPriorMeanCalories!
           : recursiveState.posteriorMeanCalories;
@@ -557,6 +546,8 @@ class BayesianTdeeEstimator {
             );
 
       var predictedVariance = priorVariance;
+      // Apply one prediction step per elapsed due week to chain uncertainty
+      // growth while retaining memory via the variance cap.
       for (var i = 0; i < elapsedDueWeeks; i++) {
         predictedVariance =
             math.min(predictedVariance + qVariance, varianceCap);
@@ -577,32 +568,6 @@ class BayesianTdeeEstimator {
         varianceCap: varianceCap,
         initializedThisRun: false,
         replayedSameWeekPrior: sameDueWeek && recursiveState.hasReplayPrior,
-      );
-    }
-
-    if (chainedPrior != null && _isValidPrior(chainedPrior)) {
-      final clampedMean = chainedPrior.meanCalories.clamp(
-        config.minimumMaintenanceCalories,
-        config.maximumMaintenanceCalories,
-      );
-      final priorVariance = _clampVariance(
-        math.pow(chainedPrior.stdDevCalories, 2).toDouble(),
-        maxVariance: varianceCap,
-      );
-      final predictedVariance =
-          math.min(priorVariance + qVariance, varianceCap);
-
-      return _PriorStep(
-        priorMeanBeforePrediction: clampedMean,
-        priorVarianceBeforePrediction: priorVariance,
-        predictedMean: clampedMean,
-        predictedVariance: predictedVariance,
-        priorSource: chainedPrior.source,
-        appliedPredictionSteps: 1,
-        elapsedDueWeeks: 1,
-        varianceCap: varianceCap,
-        initializedThisRun: false,
-        replayedSameWeekPrior: false,
       );
     }
 
@@ -627,19 +592,6 @@ class BayesianTdeeEstimator {
       initializedThisRun: true,
       replayedSameWeekPrior: false,
     );
-  }
-
-  bool _isValidPrior(BayesianMaintenancePrior prior) {
-    if (prior.meanCalories.isNaN || prior.stdDevCalories.isNaN) {
-      return false;
-    }
-    if (!prior.meanCalories.isFinite || !prior.stdDevCalories.isFinite) {
-      return false;
-    }
-    if (prior.stdDevCalories <= 0) {
-      return false;
-    }
-    return true;
   }
 
   _ObservationModel _buildObservationModel({
@@ -751,6 +703,8 @@ class BayesianTdeeEstimator {
     final interpolationWindow = math.max(matureLower - shortUpper, 1);
     final ratio =
         ((usableDays - shortUpper) / interpolationWindow).clamp(0.0, 1.0);
+    // Transition smoothly between short-horizon conservative scaling and
+    // mature-horizon 7700 kcal/kg scaling.
     return _KcalPerKgSelection(
       kcalPerKg: config.shortWindowKcalPerKg +
           ((config.matureWindowKcalPerKg - config.shortWindowKcalPerKg) *

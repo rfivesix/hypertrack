@@ -35,13 +35,11 @@ class BayesianNutritionRecommendationEngine {
     required String algorithmVersion,
     String? dueWeekKey,
     BayesianEstimatorState? recursiveState,
-    BayesianMaintenancePrior? chainedPrior,
     NutritionRecommendation? previousRecommendation,
   }) {
     final estimatorRun = _estimator.estimate(
       input: input,
       recursiveState: recursiveState,
-      chainedPrior: chainedPrior,
       dueWeekKey: dueWeekKey,
     );
     final maintenanceEstimate = estimatorRun.estimate;

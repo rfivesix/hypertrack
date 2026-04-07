@@ -1,12 +1,11 @@
+import 'dart:math' as math;
+
 import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart' as db;
+import '../domain/adaptive_recommendation_snapshot.dart';
 import '../domain/bayesian_recommendation_engine.dart';
-import '../domain/bayesian_experimental_snapshot.dart';
 import '../domain/bayesian_tdee_estimator.dart';
-import '../domain/confidence_models.dart';
 import '../domain/goal_models.dart';
-import '../domain/recommendation_engine.dart';
-import '../domain/recommendation_estimation_mode.dart';
 import '../domain/recommendation_models.dart';
 import 'recommendation_due_notification.dart';
 import 'recommendation_input_adapter.dart';
@@ -35,141 +34,9 @@ class AdaptiveNutritionRecommendationState {
   });
 }
 
-class RecommendationEstimatorComparison {
-  final String dueWeekKey;
-  final DateTime generatedAt;
-  final NutritionRecommendation heuristicRecommendation;
-  final NutritionRecommendation bayesianRecommendation;
-  final BayesianMaintenanceEstimate bayesianMaintenanceEstimate;
-  final BayesianEstimatorState? bayesianRecursiveStateBefore;
-  final BayesianEstimatorState? bayesianRecursiveStateAfter;
-
-  const RecommendationEstimatorComparison({
-    required this.dueWeekKey,
-    required this.generatedAt,
-    required this.heuristicRecommendation,
-    required this.bayesianRecommendation,
-    required this.bayesianMaintenanceEstimate,
-    this.bayesianRecursiveStateBefore,
-    this.bayesianRecursiveStateAfter,
-  });
-
-  int get maintenanceDeltaCalories {
-    return maintenanceDeltaVsHeuristicCalories;
-  }
-
-  int get heuristicEstimatedMaintenanceCalories {
-    return heuristicRecommendation.estimatedMaintenanceCalories;
-  }
-
-  int get bayesianPosteriorMaintenanceCalories {
-    return bayesianRecommendation.estimatedMaintenanceCalories;
-  }
-
-  double get bayesianProfilePriorCalories {
-    return bayesianMaintenanceEstimate.profilePriorMaintenanceCalories;
-  }
-
-  double get bayesianPriorMeanCalories {
-    return bayesianMaintenanceEstimate.priorMeanUsedCalories;
-  }
-
-  double get bayesianPriorStdDevCalories {
-    return bayesianMaintenanceEstimate.priorStdDevUsedCalories;
-  }
-
-  double get bayesianPosteriorStdDevCalories {
-    return bayesianMaintenanceEstimate.posteriorStdDevCalories;
-  }
-
-  double? get bayesianObservationImpliedMaintenanceCalories {
-    return bayesianMaintenanceEstimate.observationImpliedMaintenanceCalories;
-  }
-
-  int get maintenanceDeltaVsHeuristicCalories {
-    return bayesianRecommendation.estimatedMaintenanceCalories -
-        heuristicRecommendation.estimatedMaintenanceCalories;
-  }
-
-  double get maintenanceDeltaVsBayesianPriorCalories {
-    return bayesianRecommendation.estimatedMaintenanceCalories -
-        bayesianMaintenanceEstimate.priorMeanUsedCalories;
-  }
-
-  double get bayesianEffectiveSampleSize {
-    return bayesianMaintenanceEstimate.effectiveSampleSize;
-  }
-
-  RecommendationConfidence get bayesianConfidenceBucket {
-    return bayesianMaintenanceEstimate.confidence;
-  }
-
-  List<String> get bayesianQualityFlags {
-    return bayesianMaintenanceEstimate.qualityFlags;
-  }
-
-  int get windowDays {
-    return bayesianRecommendation.inputSummary.windowDays;
-  }
-
-  int get weightLogCount {
-    return bayesianRecommendation.inputSummary.weightLogCount;
-  }
-
-  int get intakeLoggedDays {
-    return bayesianRecommendation.inputSummary.intakeLoggedDays;
-  }
-
-  double? get smoothedWeightSlopeKgPerWeek {
-    return bayesianRecommendation.inputSummary.smoothedWeightSlopeKgPerWeek;
-  }
-
-  double get avgLoggedCalories {
-    return bayesianRecommendation.inputSummary.avgLoggedCalories;
-  }
-
-  Map<String, Object?> toDebugTrace() {
-    return <String, Object?>{
-      'dueWeekKey': dueWeekKey,
-      'generatedAt': generatedAt.toIso8601String(),
-      'heuristicEstimatedMaintenanceCalories':
-          heuristicEstimatedMaintenanceCalories,
-      'bayesianProfilePriorCalories': bayesianProfilePriorCalories,
-      'bayesianPriorMeanCalories': bayesianPriorMeanCalories,
-      'bayesianPriorStdDevCalories': bayesianPriorStdDevCalories,
-      'bayesianPosteriorMaintenanceCalories':
-          bayesianMaintenanceEstimate.posteriorMaintenanceCalories,
-      'bayesianPosteriorStdDevCalories': bayesianPosteriorStdDevCalories,
-      'bayesianObservationImpliedMaintenanceCalories':
-          bayesianObservationImpliedMaintenanceCalories,
-      'bayesianEffectiveSampleSize': bayesianEffectiveSampleSize,
-      'bayesianConfidenceBucket': bayesianConfidenceBucket.name,
-      'bayesianQualityFlags': bayesianQualityFlags,
-      'maintenanceDeltaVsHeuristicCalories':
-          maintenanceDeltaVsHeuristicCalories,
-      'maintenanceDeltaVsBayesianPriorCalories':
-          maintenanceDeltaVsBayesianPriorCalories,
-      'windowDays': windowDays,
-      'weightLogCount': weightLogCount,
-      'intakeLoggedDays': intakeLoggedDays,
-      'smoothedWeightSlopeKgPerWeek': smoothedWeightSlopeKgPerWeek,
-      'avgLoggedCalories': avgLoggedCalories,
-      'bayesianRecursiveStateBeforeDueWeekKey':
-          bayesianRecursiveStateBefore?.lastDueWeekKey,
-      'bayesianRecursiveStateAfterDueWeekKey':
-          bayesianRecursiveStateAfter?.lastDueWeekKey,
-      'bayesianRecursiveStateBeforeVarianceCalories2':
-          bayesianRecursiveStateBefore?.posteriorVarianceCalories2,
-      'bayesianRecursiveStateAfterVarianceCalories2':
-          bayesianRecursiveStateAfter?.posteriorVarianceCalories2,
-    };
-  }
-}
-
 class AdaptiveNutritionRecommendationService {
-  static const String algorithmVersion = 'tdee_adaptive_recommendation_0_8_mvp';
-  static const String bayesianExperimentalAlgorithmVersion =
-      'tdee_adaptive_recommendation_0_8_bayesian_experimental_v2';
+  static const String algorithmVersion =
+      'tdee_adaptive_recommendation_1_0_bayesian_recursive';
 
   final RecommendationRepository _repository;
   final RecommendationInputAdapter _inputAdapter;
@@ -246,15 +113,12 @@ class AdaptiveNutritionRecommendationService {
     return refreshRecommendationIfDue(now: now, force: true);
   }
 
-  /// Scheduler-oriented notification hook (simple first version).
+  /// Scheduler-oriented notification hook.
   ///
   /// Notification is sent only when all conditions are true:
-  /// 1. a recommendation is currently due for this due week,
-  /// 2. no recommendation has been generated for this due week yet,
-  /// 3. no due-notification has been sent for this due week yet.
-  ///
-  /// This remains strictly scheduler-based (no model-delta logic),
-  /// and does not auto-apply goals.
+  /// 1. recommendation is currently due for this due week
+  /// 2. no recommendation has been generated for this due week yet
+  /// 3. no due-notification has been sent for this due week yet
   Future<bool> notifyIfNewRecommendationDue({
     DateTime? now,
   }) async {
@@ -345,9 +209,18 @@ class AdaptiveNutritionRecommendationService {
   }) async {
     final effectiveNow = now ?? DateTime.now();
     final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
+    // Keep the adaptive input window stable within one due week by anchoring to
+    // the previous Sunday end-of-day. This makes in-week force refreshes
+    // deterministic instead of drifting with "today".
     final stableWindowEndDay =
         RecommendationScheduler.stableWindowEndDayForDueWeek(effectiveNow);
-    final lastGeneratedDueWeekKey =
+    final latestContext = await Future.wait<dynamic>([
+      _repository.getLatestRecommendationSnapshot(),
+      _repository.getLatestEstimatorState(),
+    ]);
+    final latestSnapshot = latestContext[0] as AdaptiveRecommendationSnapshot?;
+    final latestRecursiveState = latestContext[1] as BayesianEstimatorState?;
+    final lastGeneratedDueWeekKey = latestSnapshot?.dueWeekKey ??
         await _repository.getLastGeneratedDueWeekKey();
 
     if (!force &&
@@ -355,8 +228,10 @@ class AdaptiveNutritionRecommendationService {
           dueWeekKey: dueWeekKey,
           lastGeneratedDueWeekKey: lastGeneratedDueWeekKey,
         )) {
-      return _repository.getLatestGeneratedRecommendation();
+      // No regeneration for the same due week unless explicitly forced.
+      return latestSnapshot?.recommendation;
     }
+
     final priorActivityLevel = await _repository.getPriorActivityLevel();
     final extraCardioHoursOption =
         await _repository.getExtraCardioHoursOption();
@@ -364,7 +239,6 @@ class AdaptiveNutritionRecommendationService {
     final results = await Future.wait<dynamic>([
       _repository.getGoal(),
       _repository.getTargetRateKgPerWeek(),
-      _repository.getLatestGeneratedRecommendation(),
       _inputAdapter.buildInput(
         now: stableWindowEndDay,
         declaredActivityLevel: priorActivityLevel,
@@ -374,219 +248,35 @@ class AdaptiveNutritionRecommendationService {
 
     final goal = results[0] as BodyweightGoal;
     final targetRateKgPerWeek = results[1] as double;
-    final previousRecommendation = results[2] as NutritionRecommendation?;
-    final input = results[3] as RecommendationGenerationInput;
+    final input = results[2] as RecommendationGenerationInput;
+    final previousRecommendation = latestSnapshot?.recommendation;
 
-    final recommendation = AdaptiveNutritionRecommendationEngine.generate(
+    final result = _bayesianEngine.generate(
       input: input,
       goal: goal,
       targetRateKgPerWeek: targetRateKgPerWeek,
       generatedAt: effectiveNow,
       algorithmVersion: algorithmVersion,
-      dueWeekKey: dueWeekKey,
-      previousRecommendation: previousRecommendation,
-    );
-
-    await _repository.saveLatestGeneratedRecommendation(
-      recommendation: recommendation,
-    );
-    await _repository.setLastGeneratedDueWeekKey(dueWeekKey);
-
-    return recommendation;
-  }
-
-  Future<NutritionRecommendation?> refreshRecommendationIfDueForMode({
-    DateTime? now,
-    bool force = false,
-    RecommendationEstimationMode mode = RecommendationEstimationMode.heuristic,
-  }) async {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        return refreshRecommendationIfDue(now: now, force: force);
-      case RecommendationEstimationMode.bayesianExperimental:
-        final result = await refreshBayesianExperimentalRecommendationIfDue(
-          now: now,
-          force: force,
-        );
-        return result?.recommendation;
-    }
-  }
-
-  Future<BayesianNutritionRecommendationResult?>
-      getLatestBayesianExperimentalRecommendation() async {
-    final results = await Future.wait<dynamic>([
-      _repository.getLatestBayesianExperimentalSnapshot(),
-      _repository.getLatestBayesianEstimatorState(),
-    ]);
-    final snapshot = results[0] as BayesianExperimentalRecommendationSnapshot?;
-    final recursiveState = results[1] as BayesianEstimatorState?;
-    if (snapshot == null) {
-      return null;
-    }
-
-    return BayesianNutritionRecommendationResult(
-      recommendation: snapshot.recommendation,
-      maintenanceEstimate: snapshot.maintenanceEstimate,
-      recursiveState: recursiveState,
-    );
-  }
-
-  Future<BayesianNutritionRecommendationResult?>
-      refreshBayesianExperimentalRecommendationIfDue({
-    DateTime? now,
-    bool force = false,
-  }) async {
-    final effectiveNow = now ?? DateTime.now();
-    final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
-    final stableWindowEndDay =
-        RecommendationScheduler.stableWindowEndDayForDueWeek(effectiveNow);
-    // Stable previous-Sunday anchoring is the first determinism guard:
-    // all generations inside the same due week use the same data window
-    // regardless of app-open timing.
-    final persistedContext = await Future.wait<dynamic>([
-      _repository.getLatestBayesianExperimentalSnapshot(),
-      _repository.getLatestBayesianEstimatorState(),
-    ]);
-    final latestSnapshot =
-        persistedContext[0] as BayesianExperimentalRecommendationSnapshot?;
-    final latestRecursiveState = persistedContext[1] as BayesianEstimatorState?;
-    final coherentLatest = latestSnapshot == null
-        ? null
-        : BayesianNutritionRecommendationResult(
-            recommendation: latestSnapshot.recommendation,
-            maintenanceEstimate: latestSnapshot.maintenanceEstimate,
-            recursiveState: latestRecursiveState,
-          );
-    final lastGeneratedDueWeekKey = latestSnapshot?.dueWeekKey;
-
-    if (!force &&
-        !RecommendationScheduler.shouldGenerateForWeek(
-          dueWeekKey: dueWeekKey,
-          lastGeneratedDueWeekKey: lastGeneratedDueWeekKey,
-        )) {
-      // Same due week: return the already generated coherent snapshot.
-      if (coherentLatest != null) {
-        return coherentLatest;
-      }
-    }
-
-    final priorActivityLevel = await _repository.getPriorActivityLevel();
-    final extraCardioHoursOption =
-        await _repository.getExtraCardioHoursOption();
-
-    final results = await Future.wait<dynamic>([
-      _repository.getGoal(),
-      _repository.getTargetRateKgPerWeek(),
-      _inputAdapter.buildInput(
-        // Stable previous-Sunday boundary keeps in-week window data fixed.
-        // This is the first guard against in-week drift, independent of
-        // recursive-prior replay behavior.
-        now: stableWindowEndDay,
-        declaredActivityLevel: priorActivityLevel,
-        extraCardioHoursOption: extraCardioHoursOption,
-      ),
-    ]);
-
-    final goal = results[0] as BodyweightGoal;
-    final targetRateKgPerWeek = results[1] as double;
-    final previousRecommendation = coherentLatest?.recommendation;
-    final input = results[2] as RecommendationGenerationInput;
-
-    final bayesianResult = _bayesianEngine.generate(
-      input: input,
-      goal: goal,
-      targetRateKgPerWeek: targetRateKgPerWeek,
-      generatedAt: effectiveNow,
-      algorithmVersion: bayesianExperimentalAlgorithmVersion,
       dueWeekKey: dueWeekKey,
       recursiveState: latestRecursiveState,
       previousRecommendation: previousRecommendation,
     );
 
-    final snapshot = BayesianExperimentalRecommendationSnapshot(
-      recommendation: bayesianResult.recommendation,
-      maintenanceEstimate: bayesianResult.maintenanceEstimate,
-      dueWeekKey: dueWeekKey,
-      algorithmVersion: bayesianExperimentalAlgorithmVersion,
-    );
-
-    await _repository.saveLatestBayesianExperimentalSnapshot(
-      snapshot: snapshot,
-    );
-    final nextRecursiveState = bayesianResult.recursiveState;
-    if (nextRecursiveState != null && nextRecursiveState.isValid) {
-      await _repository.saveLatestBayesianEstimatorState(
-        state: nextRecursiveState,
-      );
-    }
-
-    return bayesianResult;
-  }
-
-  Future<RecommendationEstimatorComparison> generateEstimatorComparison({
-    DateTime? now,
-  }) async {
-    final effectiveNow = now ?? DateTime.now();
-    final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
-    final stableWindowEndDay =
-        RecommendationScheduler.stableWindowEndDayForDueWeek(effectiveNow);
-
-    final priorActivityLevel = await _repository.getPriorActivityLevel();
-    final extraCardioHoursOption =
-        await _repository.getExtraCardioHoursOption();
-
-    final results = await Future.wait<dynamic>([
-      _repository.getGoal(),
-      _repository.getTargetRateKgPerWeek(),
-      _repository.getLatestGeneratedRecommendation(),
-      _repository.getLatestBayesianExperimentalSnapshot(),
-      _repository.getLatestBayesianEstimatorState(),
-      _inputAdapter.buildInput(
-        now: stableWindowEndDay,
-        declaredActivityLevel: priorActivityLevel,
-        extraCardioHoursOption: extraCardioHoursOption,
+    await _repository.saveLatestRecommendationSnapshot(
+      snapshot: AdaptiveRecommendationSnapshot(
+        recommendation: result.recommendation,
+        maintenanceEstimate: result.maintenanceEstimate,
+        dueWeekKey: dueWeekKey,
+        algorithmVersion: algorithmVersion,
       ),
-    ]);
-
-    final goal = results[0] as BodyweightGoal;
-    final targetRateKgPerWeek = results[1] as double;
-    final previousHeuristic = results[2] as NutritionRecommendation?;
-    final latestBayesianSnapshot =
-        results[3] as BayesianExperimentalRecommendationSnapshot?;
-    final latestBayesianRecursiveState = results[4] as BayesianEstimatorState?;
-    final previousBayesian = latestBayesianSnapshot?.recommendation;
-    final input = results[5] as RecommendationGenerationInput;
-
-    final heuristic = AdaptiveNutritionRecommendationEngine.generate(
-      input: input,
-      goal: goal,
-      targetRateKgPerWeek: targetRateKgPerWeek,
-      generatedAt: effectiveNow,
-      algorithmVersion: algorithmVersion,
-      dueWeekKey: dueWeekKey,
-      previousRecommendation: previousHeuristic,
     );
+    if (result.recursiveState != null && result.recursiveState!.isValid) {
+      await _repository.saveLatestEstimatorState(state: result.recursiveState!);
+    }
+    // Generation only updates adaptive recommendation state.
+    // It never mutates active goals; apply remains an explicit user action.
 
-    final bayesian = _bayesianEngine.generate(
-      input: input,
-      goal: goal,
-      targetRateKgPerWeek: targetRateKgPerWeek,
-      generatedAt: effectiveNow,
-      algorithmVersion: bayesianExperimentalAlgorithmVersion,
-      dueWeekKey: dueWeekKey,
-      recursiveState: latestBayesianRecursiveState,
-      previousRecommendation: previousBayesian,
-    );
-
-    return RecommendationEstimatorComparison(
-      dueWeekKey: dueWeekKey,
-      generatedAt: effectiveNow,
-      heuristicRecommendation: heuristic,
-      bayesianRecommendation: bayesian.recommendation,
-      bayesianMaintenanceEstimate: bayesian.maintenanceEstimate,
-      bayesianRecursiveStateBefore: latestBayesianRecursiveState,
-      bayesianRecursiveStateAfter: bayesian.recursiveState,
-    );
+    return result.recommendation;
   }
 
   Future<NutritionRecommendation> generateOnboardingRecommendation({
@@ -626,6 +316,9 @@ class AdaptiveNutritionRecommendationService {
     );
 
     final input = RecommendationGenerationInput(
+      // Onboarding has no adaptive observation history yet. We bootstrap the
+      // recursive filter from a profile-based prior and let weekly updates
+      // refine from real logs later.
       windowStart: RecommendationScheduler.normalizeDay(effectiveNow),
       windowEnd: RecommendationInputAdapter.endOfDay(effectiveNow),
       windowDays: 0,
@@ -639,184 +332,90 @@ class AdaptiveNutritionRecommendationService {
       qualityFlags: const ['onboarding_prior_only'],
     );
 
-    final recommendation = AdaptiveNutritionRecommendationEngine.generate(
+    final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
+    final result = _bayesianEngine.generate(
       input: input,
       goal: goal,
       targetRateKgPerWeek: targetRateKgPerWeek,
       generatedAt: effectiveNow,
       algorithmVersion: algorithmVersion,
-      dueWeekKey: RecommendationScheduler.dueWeekKeyFor(effectiveNow),
-    );
-
-    if (persistGenerated) {
-      await _repository.saveLatestGeneratedRecommendation(
-        recommendation: recommendation,
-      );
-      await _repository.setLastGeneratedDueWeekKey(
-        recommendation.dueWeekKey ??
-            RecommendationScheduler.dueWeekKeyFor(effectiveNow),
-      );
-      if (markAsApplied) {
-        await _repository.saveLatestAppliedRecommendation(
-          recommendation: recommendation,
-        );
-      }
-    }
-
-    return recommendation;
-  }
-
-  Future<NutritionRecommendation> generateOnboardingRecommendationForMode({
-    required BodyweightGoal goal,
-    required double targetRateKgPerWeek,
-    required double? weightKg,
-    required int? heightCm,
-    required DateTime? birthday,
-    required String? gender,
-    double? bodyFatPercent,
-    PriorActivityLevel? declaredActivityLevel,
-    ExtraCardioHoursOption? extraCardioHoursOption,
-    DateTime? now,
-    bool persistGenerated = false,
-    bool markAsApplied = false,
-    RecommendationEstimationMode mode = RecommendationEstimationMode.heuristic,
-  }) async {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        return generateOnboardingRecommendation(
-          goal: goal,
-          targetRateKgPerWeek: targetRateKgPerWeek,
-          weightKg: weightKg,
-          heightCm: heightCm,
-          birthday: birthday,
-          gender: gender,
-          bodyFatPercent: bodyFatPercent,
-          declaredActivityLevel: declaredActivityLevel,
-          extraCardioHoursOption: extraCardioHoursOption,
-          now: now,
-          persistGenerated: persistGenerated,
-          markAsApplied: markAsApplied,
-        );
-      case RecommendationEstimationMode.bayesianExperimental:
-        if (markAsApplied) {
-          throw ArgumentError.value(
-            markAsApplied,
-            'markAsApplied',
-            'markAsApplied is not supported in bayesianExperimental mode; '
-                'experimental onboarding generation cannot apply active targets.',
-          );
-        }
-        final result =
-            await generateBayesianExperimentalOnboardingRecommendation(
-          goal: goal,
-          targetRateKgPerWeek: targetRateKgPerWeek,
-          weightKg: weightKg,
-          heightCm: heightCm,
-          birthday: birthday,
-          gender: gender,
-          bodyFatPercent: bodyFatPercent,
-          declaredActivityLevel: declaredActivityLevel,
-          extraCardioHoursOption: extraCardioHoursOption,
-          now: now,
-          persistGenerated: persistGenerated,
-        );
-        return result.recommendation;
-    }
-  }
-
-  Future<BayesianNutritionRecommendationResult>
-      generateBayesianExperimentalOnboardingRecommendation({
-    required BodyweightGoal goal,
-    required double targetRateKgPerWeek,
-    required double? weightKg,
-    required int? heightCm,
-    required DateTime? birthday,
-    required String? gender,
-    double? bodyFatPercent,
-    PriorActivityLevel? declaredActivityLevel,
-    ExtraCardioHoursOption? extraCardioHoursOption,
-    DateTime? now,
-    bool persistGenerated = false,
-  }) async {
-    final effectiveNow = now ?? DateTime.now();
-    final effectiveDeclaredActivityLevel =
-        declaredActivityLevel ?? await _repository.getPriorActivityLevel();
-    final effectiveExtraCardioHoursOption =
-        extraCardioHoursOption ?? await _repository.getExtraCardioHoursOption();
-
-    final virtualProfile = _VirtualProfile(
-      birthday: birthday,
-      height: heightCm,
-      gender: gender,
-    );
-
-    final priorMaintenanceCalories =
-        await _estimateMaintenanceForVirtualProfile(
-      profile: virtualProfile,
-      weightKg: weightKg,
-      bodyFatPercent: bodyFatPercent,
-      declaredActivityLevel: effectiveDeclaredActivityLevel,
-      extraCardioHoursOption: effectiveExtraCardioHoursOption,
-      now: effectiveNow,
-    );
-
-    final input = RecommendationGenerationInput(
-      windowStart: RecommendationScheduler.normalizeDay(effectiveNow),
-      windowEnd: RecommendationInputAdapter.endOfDay(effectiveNow),
-      windowDays: 0,
-      weightLogCount: weightKg != null ? 1 : 0,
-      intakeLoggedDays: 0,
-      smoothedWeightSlopeKgPerWeek: null,
-      avgLoggedCalories: 0,
-      currentWeightKg: weightKg ?? 75,
-      priorMaintenanceCalories: priorMaintenanceCalories,
-      activeTargetCalories: null,
-      qualityFlags: const ['onboarding_prior_only'],
-    );
-
-    final recommendation = _bayesianEngine.generate(
-      input: input,
-      goal: goal,
-      targetRateKgPerWeek: targetRateKgPerWeek,
-      generatedAt: effectiveNow,
-      algorithmVersion: bayesianExperimentalAlgorithmVersion,
-      dueWeekKey: RecommendationScheduler.dueWeekKeyFor(effectiveNow),
+      dueWeekKey: dueWeekKey,
       recursiveState: null,
+      previousRecommendation: null,
     );
 
     if (persistGenerated) {
-      final dueWeekKey = recommendation.recommendation.dueWeekKey ??
-          RecommendationScheduler.dueWeekKeyFor(effectiveNow);
-      await _repository.saveLatestBayesianExperimentalSnapshot(
-        snapshot: BayesianExperimentalRecommendationSnapshot(
-          recommendation: recommendation.recommendation,
-          maintenanceEstimate: recommendation.maintenanceEstimate,
+      await _repository.saveLatestRecommendationSnapshot(
+        snapshot: AdaptiveRecommendationSnapshot(
+          recommendation: result.recommendation,
+          maintenanceEstimate: result.maintenanceEstimate,
           dueWeekKey: dueWeekKey,
-          algorithmVersion: bayesianExperimentalAlgorithmVersion,
+          algorithmVersion: algorithmVersion,
         ),
       );
-      final recursiveState = recommendation.recursiveState;
-      if (recursiveState != null && recursiveState.isValid) {
-        await _repository.saveLatestBayesianEstimatorState(
-          state: recursiveState,
+      if (result.recursiveState != null && result.recursiveState!.isValid) {
+        await _repository.saveLatestEstimatorState(
+            state: result.recursiveState!);
+      }
+      if (markAsApplied) {
+        await _repository.saveLatestAppliedRecommendation(
+          recommendation: result.recommendation,
         );
       }
     }
 
-    return recommendation;
+    return result.recommendation;
   }
 
   Future<void> persistGeneratedRecommendation({
     required NutritionRecommendation recommendation,
     bool markAsApplied = false,
   }) async {
+    final dueWeekKey = recommendation.dueWeekKey ??
+        RecommendationScheduler.dueWeekKeyFor(recommendation.generatedAt);
+    final syntheticEstimate = BayesianMaintenanceEstimate(
+      posteriorMaintenanceCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      posteriorStdDevCalories:
+          const BayesianEstimatorConfig().priorStdDevCalories,
+      profilePriorMaintenanceCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      priorMeanUsedCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      priorStdDevUsedCalories:
+          const BayesianEstimatorConfig().priorStdDevCalories,
+      priorSource: BayesianPriorSource.profilePriorBootstrap,
+      observedIntakeCalories: null,
+      observedWeightSlopeKgPerWeek: null,
+      observationImpliedMaintenanceCalories: null,
+      effectiveSampleSize: 0,
+      confidence: recommendation.confidence,
+      qualityFlags: const ['persisted_recommendation_without_estimate'],
+      debugInfo: const {'persistedFrom': 'persistGeneratedRecommendation'},
+      dueWeekKey: dueWeekKey,
+    );
+    final state = BayesianEstimatorState(
+      posteriorMeanCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      posteriorVarianceCalories2: math
+          .pow(const BayesianEstimatorConfig().priorStdDevCalories, 2)
+          .toDouble(),
+      lastDueWeekKey: dueWeekKey,
+      lastPriorMeanCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      lastPriorVarianceCalories2: math
+          .pow(const BayesianEstimatorConfig().priorStdDevCalories, 2)
+          .toDouble(),
+      lastPriorSource: BayesianPriorSource.profilePriorBootstrap,
+      lastObservationUsed: false,
+    );
+
     await _repository.saveLatestGeneratedRecommendation(
       recommendation: recommendation,
+      maintenanceEstimate: syntheticEstimate,
+      recursiveState: state,
     );
-    await _repository.setLastGeneratedDueWeekKey(
-      recommendation.dueWeekKey ??
-          RecommendationScheduler.dueWeekKeyFor(recommendation.generatedAt),
-    );
+    await _repository.setLastGeneratedDueWeekKey(dueWeekKey);
     if (markAsApplied) {
       await _repository.saveLatestAppliedRecommendation(
         recommendation: recommendation,
@@ -825,6 +424,7 @@ class AdaptiveNutritionRecommendationService {
   }
 
   Future<bool> applyLatestRecommendationToActiveTargets() async {
+    // Explicit apply action only. If nothing is generated yet, do nothing.
     final recommendation = await _repository.getLatestGeneratedRecommendation();
     if (recommendation == null) {
       return false;

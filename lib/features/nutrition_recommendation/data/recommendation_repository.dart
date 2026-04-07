@@ -3,10 +3,9 @@ import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../domain/bayesian_experimental_snapshot.dart';
+import '../domain/adaptive_recommendation_snapshot.dart';
 import '../domain/bayesian_tdee_estimator.dart';
 import '../domain/goal_models.dart';
-import '../domain/recommendation_estimation_mode.dart';
 import '../domain/recommendation_models.dart';
 
 typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
@@ -20,25 +19,27 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.prior_activity_level';
   static const String _extraCardioHoursKey =
       'adaptive_nutrition_recommendation.extra_cardio_hours';
-  static const String _latestGeneratedKey =
-      'adaptive_nutrition_recommendation.latest_generated';
+  static const String _latestSnapshotKey =
+      'adaptive_nutrition_recommendation.latest_snapshot';
+  static const String _latestRecursiveStateKey =
+      'adaptive_nutrition_recommendation.latest_recursive_state';
   static const String _latestAppliedKey =
       'adaptive_nutrition_recommendation.latest_applied';
   static const String _lastGeneratedDueWeekKey =
       'adaptive_nutrition_recommendation.last_generated_due_week_key';
   static const String _lastDueNotificationWeekKey =
       'adaptive_nutrition_recommendation.last_due_notification_week_key';
-  static const String _latestBayesianExperimentalSnapshotKey =
+
+  // Legacy keys kept only for one-way migration/fallback support.
+  static const String _legacyLatestGeneratedKey =
+      'adaptive_nutrition_recommendation.latest_generated';
+  static const String _legacyLatestBayesianSnapshotKey =
       'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot';
-  static const String _latestBayesianEstimatorStateKey =
-      'adaptive_nutrition_recommendation.latest_bayesian_recursive_state';
-  // Legacy fragmented Bayesian experimental keys.
-  // These remain readable for one-way migration only.
-  static const String _latestGeneratedBayesianExperimentalKey =
+  static const String _legacyLatestGeneratedBayesianKey =
       'adaptive_nutrition_recommendation.latest_generated_bayesian_experimental';
-  static const String _lastGeneratedDueWeekBayesianExperimentalKey =
+  static const String _legacyLastGeneratedDueWeekBayesianKey =
       'adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental';
-  static const String _latestBayesianMaintenanceEstimateKey =
+  static const String _legacyLatestBayesianMaintenanceEstimateKey =
       'adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate';
 
   final SharedPreferencesLoader _prefsLoader;
@@ -106,19 +107,70 @@ class RecommendationRepository {
     await prefs.setString(_extraCardioHoursKey, option.name);
   }
 
+  Future<AdaptiveRecommendationSnapshot?>
+      getLatestRecommendationSnapshot() async {
+    final prefs = await _prefsLoader();
+    final encoded = prefs.getString(_latestSnapshotKey);
+    if (encoded != null && encoded.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(encoded);
+        if (decoded is! Map<String, dynamic>) {
+          return null;
+        }
+        return AdaptiveRecommendationSnapshot.fromJson(decoded);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return _migrateLegacySnapshot(prefs);
+  }
+
+  Future<void> saveLatestRecommendationSnapshot({
+    required AdaptiveRecommendationSnapshot snapshot,
+  }) async {
+    if (!snapshot.isCoherent) {
+      throw ArgumentError.value(
+        snapshot,
+        'snapshot',
+        'Adaptive recommendation snapshot must be coherent before persistence.',
+      );
+    }
+
+    final prefs = await _prefsLoader();
+    await prefs.setString(_latestSnapshotKey, jsonEncode(snapshot.toJson()));
+    await prefs.setString(_lastGeneratedDueWeekKey, snapshot.dueWeekKey);
+  }
+
   Future<NutritionRecommendation?> getLatestGeneratedRecommendation() async {
-    return getLatestGeneratedRecommendationForMode(
-      mode: RecommendationEstimationMode.heuristic,
-    );
+    return (await getLatestRecommendationSnapshot())?.recommendation;
   }
 
   Future<void> saveLatestGeneratedRecommendation({
     required NutritionRecommendation recommendation,
+    required BayesianMaintenanceEstimate maintenanceEstimate,
+    BayesianEstimatorState? recursiveState,
   }) async {
-    await saveLatestGeneratedRecommendationForMode(
-      mode: RecommendationEstimationMode.heuristic,
+    final dueWeekKey = recommendation.dueWeekKey?.trim();
+    if (dueWeekKey == null || dueWeekKey.isEmpty) {
+      throw ArgumentError.value(
+        recommendation.dueWeekKey,
+        'recommendation.dueWeekKey',
+        'Recommendation dueWeekKey must be present for snapshot persistence.',
+      );
+    }
+
+    final snapshot = AdaptiveRecommendationSnapshot(
       recommendation: recommendation,
+      maintenanceEstimate: maintenanceEstimate,
+      dueWeekKey: dueWeekKey,
+      algorithmVersion: recommendation.algorithmVersion,
     );
+    await saveLatestRecommendationSnapshot(snapshot: snapshot);
+
+    if (recursiveState != null && recursiveState.isValid) {
+      await saveLatestEstimatorState(state: recursiveState);
+    }
   }
 
   Future<NutritionRecommendation?> getLatestAppliedRecommendation() async {
@@ -131,145 +183,9 @@ class RecommendationRepository {
     await _saveRecommendation(_latestAppliedKey, recommendation);
   }
 
-  Future<String?> getLastGeneratedDueWeekKey() async {
-    return getLastGeneratedDueWeekKeyForMode(
-      mode: RecommendationEstimationMode.heuristic,
-    );
-  }
-
-  Future<void> setLastGeneratedDueWeekKey(String dueWeekKey) async {
-    await setLastGeneratedDueWeekKeyForMode(
-      mode: RecommendationEstimationMode.heuristic,
-      dueWeekKey: dueWeekKey,
-    );
-  }
-
-  Future<String?> getLastDueNotificationWeekKey() async {
+  Future<BayesianEstimatorState?> getLatestEstimatorState() async {
     final prefs = await _prefsLoader();
-    return prefs.getString(_lastDueNotificationWeekKey);
-  }
-
-  Future<void> setLastDueNotificationWeekKey(String dueWeekKey) async {
-    final prefs = await _prefsLoader();
-    await prefs.setString(_lastDueNotificationWeekKey, dueWeekKey);
-  }
-
-  Future<NutritionRecommendation?> getLatestGeneratedRecommendationForMode({
-    required RecommendationEstimationMode mode,
-  }) async {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        return _loadRecommendation(_latestGeneratedKey);
-      case RecommendationEstimationMode.bayesianExperimental:
-        // Bayesian experimental mode no longer uses fragmented persistence keys.
-        throw UnsupportedError(
-          'Bayesian experimental mode uses atomic snapshot persistence. '
-          'Legacy fragmented recommendation keys are migration-only.',
-        );
-    }
-  }
-
-  Future<void> saveLatestGeneratedRecommendationForMode({
-    required RecommendationEstimationMode mode,
-    required NutritionRecommendation recommendation,
-  }) async {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        await _saveRecommendation(_latestGeneratedKey, recommendation);
-        if (recommendation.dueWeekKey != null &&
-            recommendation.dueWeekKey!.isNotEmpty) {
-          await setLastGeneratedDueWeekKeyForMode(
-            mode: mode,
-            dueWeekKey: recommendation.dueWeekKey!,
-          );
-        }
-        return;
-      case RecommendationEstimationMode.bayesianExperimental:
-        // Bayesian experimental mode no longer uses fragmented persistence keys.
-        throw UnsupportedError(
-          'Bayesian experimental mode uses atomic snapshot persistence. '
-          'Legacy fragmented recommendation keys are migration-only.',
-        );
-    }
-  }
-
-  Future<String?> getLastGeneratedDueWeekKeyForMode({
-    required RecommendationEstimationMode mode,
-  }) async {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        final prefs = await _prefsLoader();
-        return prefs.getString(_lastGeneratedDueWeekKey);
-      case RecommendationEstimationMode.bayesianExperimental:
-        // Bayesian experimental mode no longer uses fragmented persistence keys.
-        throw UnsupportedError(
-          'Bayesian experimental mode uses atomic snapshot persistence. '
-          'Legacy fragmented due-week keys are migration-only.',
-        );
-    }
-  }
-
-  Future<void> setLastGeneratedDueWeekKeyForMode({
-    required RecommendationEstimationMode mode,
-    required String dueWeekKey,
-  }) async {
-    switch (mode) {
-      case RecommendationEstimationMode.heuristic:
-        final prefs = await _prefsLoader();
-        await prefs.setString(_lastGeneratedDueWeekKey, dueWeekKey);
-        return;
-      case RecommendationEstimationMode.bayesianExperimental:
-        // Bayesian experimental mode no longer uses fragmented persistence keys.
-        throw UnsupportedError(
-          'Bayesian experimental mode uses atomic snapshot persistence. '
-          'Legacy fragmented due-week keys are migration-only.',
-        );
-    }
-  }
-
-  Future<BayesianExperimentalRecommendationSnapshot?>
-      getLatestBayesianExperimentalSnapshot() async {
-    final prefs = await _prefsLoader();
-    final encoded = prefs.getString(_latestBayesianExperimentalSnapshotKey);
-    if (encoded != null && encoded.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(encoded);
-        if (decoded is! Map<String, dynamic>) {
-          return null;
-        }
-        return BayesianExperimentalRecommendationSnapshot.fromJson(decoded);
-      } catch (_) {
-        return null;
-      }
-    }
-
-    // Legacy one-way migration fallback:
-    // only if no atomic snapshot exists, attempt to migrate coherent
-    // fragmented legacy keys into the snapshot key.
-    return _migrateLegacyBayesianExperimentalSnapshot(prefs);
-  }
-
-  Future<void> saveLatestBayesianExperimentalSnapshot({
-    required BayesianExperimentalRecommendationSnapshot snapshot,
-  }) async {
-    if (!snapshot.isCoherent) {
-      throw ArgumentError.value(
-        snapshot,
-        'snapshot',
-        'Bayesian experimental snapshot must be coherent before persistence.',
-      );
-    }
-
-    final prefs = await _prefsLoader();
-    await prefs.setString(
-      _latestBayesianExperimentalSnapshotKey,
-      jsonEncode(snapshot.toJson()),
-    );
-  }
-
-  Future<BayesianEstimatorState?> getLatestBayesianEstimatorState() async {
-    final prefs = await _prefsLoader();
-    final encoded = prefs.getString(_latestBayesianEstimatorStateKey);
+    final encoded = prefs.getString(_latestRecursiveStateKey);
     if (encoded != null && encoded.isNotEmpty) {
       try {
         final decoded = jsonDecode(encoded);
@@ -283,36 +199,69 @@ class RecommendationRepository {
       }
     }
 
-    final snapshot = await getLatestBayesianExperimentalSnapshot();
+    final snapshot = await getLatestRecommendationSnapshot();
     if (snapshot == null) {
       return null;
     }
 
+    // Backfill recursive state from a coherent snapshot for migration and
+    // recovery paths where only snapshot payload exists.
     final derivedState = _deriveEstimatorStateFromSnapshot(snapshot);
     if (derivedState == null || !derivedState.isValid) {
       return null;
     }
 
-    await saveLatestBayesianEstimatorState(state: derivedState);
+    await saveLatestEstimatorState(state: derivedState);
     return derivedState;
   }
 
-  Future<void> saveLatestBayesianEstimatorState({
+  Future<void> saveLatestEstimatorState({
     required BayesianEstimatorState state,
   }) async {
     if (!state.isValid) {
       throw ArgumentError.value(
         state,
         'state',
-        'Bayesian recursive estimator state must be valid before persistence.',
+        'Recursive estimator state must be valid before persistence.',
       );
     }
 
     final prefs = await _prefsLoader();
     await prefs.setString(
-      _latestBayesianEstimatorStateKey,
+      _latestRecursiveStateKey,
       jsonEncode(state.toJson()),
     );
+  }
+
+  Future<String?> getLastGeneratedDueWeekKey() async {
+    final prefs = await _prefsLoader();
+    final explicit = prefs.getString(_lastGeneratedDueWeekKey);
+    if (explicit != null && explicit.isNotEmpty) {
+      return explicit;
+    }
+
+    final snapshot = await getLatestRecommendationSnapshot();
+    if (snapshot == null) {
+      return null;
+    }
+
+    await prefs.setString(_lastGeneratedDueWeekKey, snapshot.dueWeekKey);
+    return snapshot.dueWeekKey;
+  }
+
+  Future<void> setLastGeneratedDueWeekKey(String dueWeekKey) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(_lastGeneratedDueWeekKey, dueWeekKey);
+  }
+
+  Future<String?> getLastDueNotificationWeekKey() async {
+    final prefs = await _prefsLoader();
+    return prefs.getString(_lastDueNotificationWeekKey);
+  }
+
+  Future<void> setLastDueNotificationWeekKey(String dueWeekKey) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(_lastDueNotificationWeekKey, dueWeekKey);
   }
 
   Future<void> clearForTesting() async {
@@ -321,28 +270,38 @@ class RecommendationRepository {
     await prefs.remove(_targetRateKey);
     await prefs.remove(_priorActivityLevelKey);
     await prefs.remove(_extraCardioHoursKey);
-    await prefs.remove(_latestGeneratedKey);
+    await prefs.remove(_latestSnapshotKey);
+    await prefs.remove(_latestRecursiveStateKey);
     await prefs.remove(_latestAppliedKey);
     await prefs.remove(_lastGeneratedDueWeekKey);
     await prefs.remove(_lastDueNotificationWeekKey);
-    await prefs.remove(_latestBayesianExperimentalSnapshotKey);
-    await prefs.remove(_latestBayesianEstimatorStateKey);
-    await prefs.remove(_latestGeneratedBayesianExperimentalKey);
-    await prefs.remove(_lastGeneratedDueWeekBayesianExperimentalKey);
-    await prefs.remove(_latestBayesianMaintenanceEstimateKey);
+
+    // Legacy keys are still cleaned for deterministic tests.
+    await prefs.remove(_legacyLatestGeneratedKey);
+    await prefs.remove(_legacyLatestBayesianSnapshotKey);
+    await prefs.remove(_legacyLatestGeneratedBayesianKey);
+    await prefs.remove(_legacyLastGeneratedDueWeekBayesianKey);
+    await prefs.remove(_legacyLatestBayesianMaintenanceEstimateKey);
   }
 
-  Future<void> _saveRecommendation(
-    String key,
-    NutritionRecommendation recommendation,
+  Future<AdaptiveRecommendationSnapshot?> _migrateLegacySnapshot(
+    SharedPreferences prefs,
   ) async {
-    final prefs = await _prefsLoader();
-    await prefs.setString(key, jsonEncode(recommendation.toJson()));
+    final migrated = await _migrateLegacyBayesianSnapshot(prefs) ??
+        await _migrateLegacyFragmentedBayesianSnapshot(prefs) ??
+        await _migrateLegacyGeneratedRecommendationSnapshot(prefs);
+
+    if (migrated == null) {
+      return null;
+    }
+    await saveLatestRecommendationSnapshot(snapshot: migrated);
+    return migrated;
   }
 
-  Future<NutritionRecommendation?> _loadRecommendation(String key) async {
-    final prefs = await _prefsLoader();
-    final encoded = prefs.getString(key);
+  Future<AdaptiveRecommendationSnapshot?> _migrateLegacyBayesianSnapshot(
+    SharedPreferences prefs,
+  ) async {
+    final encoded = prefs.getString(_legacyLatestBayesianSnapshotKey);
     if (encoded == null || encoded.isEmpty) {
       return null;
     }
@@ -351,22 +310,23 @@ class RecommendationRepository {
       if (decoded is! Map<String, dynamic>) {
         return null;
       }
-      return NutritionRecommendation.fromJson(decoded);
+      return AdaptiveRecommendationSnapshot.fromJson(decoded);
     } catch (_) {
       return null;
     }
   }
 
-  Future<BayesianExperimentalRecommendationSnapshot?>
-      _migrateLegacyBayesianExperimentalSnapshot(
-          SharedPreferences prefs) async {
+  Future<AdaptiveRecommendationSnapshot?>
+      _migrateLegacyFragmentedBayesianSnapshot(
+    SharedPreferences prefs,
+  ) async {
     final recommendation = _loadRecommendationFromPrefs(
       prefs,
-      _latestGeneratedBayesianExperimentalKey,
+      _legacyLatestGeneratedBayesianKey,
     );
     final estimate = _loadEstimateFromPrefs(
       prefs,
-      _latestBayesianMaintenanceEstimateKey,
+      _legacyLatestBayesianMaintenanceEstimateKey,
     );
 
     if (recommendation == null || estimate == null) {
@@ -384,32 +344,75 @@ class RecommendationRepository {
     }
 
     final legacyLastGeneratedDueWeekKey =
-        prefs.getString(_lastGeneratedDueWeekBayesianExperimentalKey);
+        prefs.getString(_legacyLastGeneratedDueWeekBayesianKey);
     if (legacyLastGeneratedDueWeekKey != null &&
         legacyLastGeneratedDueWeekKey.isNotEmpty &&
         legacyLastGeneratedDueWeekKey != dueWeekKey) {
       return null;
     }
 
-    final snapshot = BayesianExperimentalRecommendationSnapshot(
+    final snapshot = AdaptiveRecommendationSnapshot(
       recommendation: recommendation,
       maintenanceEstimate: estimate,
       dueWeekKey: dueWeekKey,
       algorithmVersion: recommendation.algorithmVersion,
     );
-    if (!snapshot.isCoherent) {
+    return snapshot.isCoherent ? snapshot : null;
+  }
+
+  Future<AdaptiveRecommendationSnapshot?>
+      _migrateLegacyGeneratedRecommendationSnapshot(
+    SharedPreferences prefs,
+  ) async {
+    final recommendation =
+        _loadRecommendationFromPrefs(prefs, _legacyLatestGeneratedKey);
+    if (recommendation == null) {
       return null;
     }
 
-    await prefs.setString(
-      _latestBayesianExperimentalSnapshotKey,
-      jsonEncode(snapshot.toJson()),
+    final dueWeekKey = recommendation.dueWeekKey?.trim() ??
+        prefs.getString(_lastGeneratedDueWeekKey)?.trim();
+    if (dueWeekKey == null || dueWeekKey.isEmpty) {
+      return null;
+    }
+
+    final syntheticEstimate = BayesianMaintenanceEstimate(
+      posteriorMaintenanceCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      posteriorStdDevCalories:
+          const BayesianEstimatorConfig().priorStdDevCalories,
+      profilePriorMaintenanceCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      priorMeanUsedCalories:
+          recommendation.estimatedMaintenanceCalories.toDouble(),
+      priorStdDevUsedCalories:
+          const BayesianEstimatorConfig().priorStdDevCalories,
+      priorSource: BayesianPriorSource.profilePriorBootstrap,
+      observedIntakeCalories: null,
+      observedWeightSlopeKgPerWeek: null,
+      observationImpliedMaintenanceCalories: null,
+      effectiveSampleSize: 0,
+      confidence: recommendation.confidence,
+      qualityFlags: const <String>['legacy_generated_snapshot_migration'],
+      debugInfo: const <String, Object>{
+        'migration': 'from_legacy_generated_recommendation',
+      },
+      dueWeekKey: dueWeekKey,
     );
-    return snapshot;
+
+    return AdaptiveRecommendationSnapshot(
+      recommendation: _copyRecommendationWithDueWeekKey(
+        recommendation: recommendation,
+        dueWeekKey: dueWeekKey,
+      ),
+      maintenanceEstimate: syntheticEstimate,
+      dueWeekKey: dueWeekKey,
+      algorithmVersion: recommendation.algorithmVersion,
+    );
   }
 
   BayesianEstimatorState? _deriveEstimatorStateFromSnapshot(
-    BayesianExperimentalRecommendationSnapshot snapshot,
+    AdaptiveRecommendationSnapshot snapshot,
   ) {
     final estimate = snapshot.maintenanceEstimate;
     final dueWeekKey = snapshot.dueWeekKey.trim();
@@ -442,6 +445,19 @@ class RecommendationRepository {
     );
 
     return state.isValid ? state : null;
+  }
+
+  Future<void> _saveRecommendation(
+    String key,
+    NutritionRecommendation recommendation,
+  ) async {
+    final prefs = await _prefsLoader();
+    await prefs.setString(key, jsonEncode(recommendation.toJson()));
+  }
+
+  Future<NutritionRecommendation?> _loadRecommendation(String key) async {
+    final prefs = await _prefsLoader();
+    return _loadRecommendationFromPrefs(prefs, key);
   }
 
   NutritionRecommendation? _loadRecommendationFromPrefs(
@@ -480,5 +496,29 @@ class RecommendationRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  NutritionRecommendation _copyRecommendationWithDueWeekKey({
+    required NutritionRecommendation recommendation,
+    required String dueWeekKey,
+  }) {
+    return NutritionRecommendation(
+      recommendedCalories: recommendation.recommendedCalories,
+      recommendedProteinGrams: recommendation.recommendedProteinGrams,
+      recommendedCarbsGrams: recommendation.recommendedCarbsGrams,
+      recommendedFatGrams: recommendation.recommendedFatGrams,
+      estimatedMaintenanceCalories: recommendation.estimatedMaintenanceCalories,
+      goal: recommendation.goal,
+      targetRateKgPerWeek: recommendation.targetRateKgPerWeek,
+      confidence: recommendation.confidence,
+      warningState: recommendation.warningState,
+      generatedAt: recommendation.generatedAt,
+      windowStart: recommendation.windowStart,
+      windowEnd: recommendation.windowEnd,
+      algorithmVersion: recommendation.algorithmVersion,
+      inputSummary: recommendation.inputSummary,
+      baselineCalories: recommendation.baselineCalories,
+      dueWeekKey: dueWeekKey,
+    );
   }
 }

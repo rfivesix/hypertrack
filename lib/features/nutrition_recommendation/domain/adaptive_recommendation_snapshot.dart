@@ -1,7 +1,7 @@
 import 'bayesian_tdee_estimator.dart';
 import 'recommendation_models.dart';
 
-class BayesianExperimentalRecommendationSnapshot {
+class AdaptiveRecommendationSnapshot {
   static const int currentSnapshotVersion = 1;
 
   final NutritionRecommendation recommendation;
@@ -10,7 +10,7 @@ class BayesianExperimentalRecommendationSnapshot {
   final String algorithmVersion;
   final int snapshotVersion;
 
-  const BayesianExperimentalRecommendationSnapshot({
+  const AdaptiveRecommendationSnapshot({
     required this.recommendation,
     required this.maintenanceEstimate,
     required this.dueWeekKey,
@@ -18,7 +18,6 @@ class BayesianExperimentalRecommendationSnapshot {
     this.snapshotVersion = currentSnapshotVersion,
   });
 
-  /// Single source of truth for snapshot generation time.
   DateTime get generatedAt => recommendation.generatedAt;
 
   bool get isCoherent {
@@ -57,7 +56,7 @@ class BayesianExperimentalRecommendationSnapshot {
     };
   }
 
-  factory BayesianExperimentalRecommendationSnapshot.fromJson(
+  factory AdaptiveRecommendationSnapshot.fromJson(
     Map<String, dynamic> json,
   ) {
     final recommendationRaw =
@@ -67,7 +66,7 @@ class BayesianExperimentalRecommendationSnapshot {
 
     if (recommendationRaw == null || maintenanceEstimateRaw == null) {
       throw const FormatException(
-        'Invalid Bayesian experimental snapshot payload.',
+        'Invalid adaptive recommendation snapshot payload.',
       );
     }
 
@@ -88,7 +87,7 @@ class BayesianExperimentalRecommendationSnapshot {
         ? explicitAlgorithmVersion!
         : recommendation.algorithmVersion;
 
-    final snapshot = BayesianExperimentalRecommendationSnapshot(
+    final snapshot = AdaptiveRecommendationSnapshot(
       recommendation: recommendation,
       maintenanceEstimate: maintenanceEstimate,
       dueWeekKey: dueWeekKey,
@@ -99,7 +98,7 @@ class BayesianExperimentalRecommendationSnapshot {
 
     if (!snapshot.isCoherent) {
       throw const FormatException(
-        'Incoherent Bayesian experimental snapshot payload.',
+        'Incoherent adaptive recommendation snapshot payload.',
       );
     }
 

@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0-alpha.3-bayesian-preview.2] - 2026-04-07
+
+### Changed
+- Adaptive nutrition recommendations are now documented as a single canonical Bayesian recursive system end-to-end.
+- Current-state documentation was restructured for newcomer readability with clearer sections for:
+  - user-facing behavior
+  - scheduling and stable data-window semantics
+  - recursive Bayesian prediction/update chaining
+  - apply vs recalculate behavior
+  - persistence and due-notification semantics
+  - confidence/warning interpretation
+- Added a compact mathematical model section in docs (state, prediction, update, missing-observation behavior, Q/R roles, variance cap, horizon-based `kcalPerKg` scaling).
+- Tightened inline comments at subtle logic points (same-week replay prior behavior, prediction-only weeks, variance-cap memory behavior, explicit non-auto-apply semantics).
+- README documentation navigation now points clearly to the Bayesian recursive adaptive nutrition current-state doc.
+
+### Internal
+- Adaptive nutrition terminology was normalized across code comments/docs to avoid legacy dual-path wording in active architecture descriptions.
+
 ## [0.8.0-alpha.3-bayesian-preview.1] - 2026-04-06
 
 ### Added

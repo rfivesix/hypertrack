@@ -9,6 +9,7 @@ This README is intentionally implementation-focused and reflects the **current w
 ## Documentation
 
 - [Project Overview](documentation/overview.md)
+- [Adaptive Nutrition Recommendation (Bayesian Recursive Current State)](docs/adaptive_nutrition_recommendation_current_state.md)
 - [Statistics Module (Current Implementation)](documentation/statistics_module.md)
 - [Sleep Module (Current Source of Truth)](documentation/sleep/sleep_current_state.md)
 - [Sleep Health Score V2 (Current Canonical)](documentation/sleep/sleep_health_score_v2.md)
