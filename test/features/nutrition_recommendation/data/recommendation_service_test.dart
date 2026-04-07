@@ -236,6 +236,46 @@ void main() {
       );
     });
 
+    test('experimental refresh persists recursive estimator state', () async {
+      final first =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 6, 10, 0),
+        force: true,
+      );
+      expect(first, isNotNull);
+
+      final persistedState = await repository.getLatestBayesianEstimatorState();
+      expect(persistedState, isNotNull);
+      expect(persistedState!.lastDueWeekKey, '2026-04-06');
+      expect(
+        persistedState.posteriorMeanCalories,
+        closeTo(first!.maintenanceEstimate.posteriorMaintenanceCalories, 0.001),
+      );
+
+      // Simulate app restore/reload by creating a new service instance
+      // that must consume persisted recursive state.
+      final restoredService = AdaptiveNutritionRecommendationService(
+        repository: repository,
+        databaseHelper: dbHelper,
+        dueNotifier: dueNotifier,
+      );
+      final nextWeek =
+          await restoredService.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 13, 10, 0),
+        force: true,
+      );
+
+      expect(nextWeek, isNotNull);
+      expect(
+        nextWeek!.maintenanceEstimate.priorSource,
+        BayesianPriorSource.chainedPosterior,
+      );
+      expect(
+        nextWeek.maintenanceEstimate.priorMeanUsedCalories,
+        closeTo(first.maintenanceEstimate.posteriorMaintenanceCalories, 0.0001),
+      );
+    });
+
     test('experimental retrieval returns coherent pair when dueWeek keys match',
         () async {
       final generated =
@@ -384,6 +424,77 @@ void main() {
         secondWeek.maintenanceEstimate.priorStdDevUsedCalories,
         closeTo(firstWeek.maintenanceEstimate.posteriorStdDevCalories, 0.0001),
       );
+    });
+
+    test(
+        'experimental long-gap behavior increases uncertainty but avoids near-unity reset',
+        () async {
+      final firstWeek =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 4, 6, 10, 0),
+        force: true,
+      );
+      expect(firstWeek, isNotNull);
+
+      final longGapPredictionOnly =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 8, 31, 10, 0),
+        force: true,
+      );
+      expect(longGapPredictionOnly, isNotNull);
+      expect(
+        longGapPredictionOnly!
+            .maintenanceEstimate.observationImpliedMaintenanceCalories,
+        isNull,
+      );
+
+      final start = DateTime(2026, 8, 17);
+      for (var i = 0; i < 21; i++) {
+        final day = start.add(Duration(days: i));
+        await dbHelper.insertMeasurementSession(
+          MeasurementSession(
+            timestamp: DateTime(day.year, day.month, day.day, 7, 0),
+            measurements: [
+              Measurement(
+                sessionId: 0,
+                type: 'weight',
+                value: 80.0 - (i * 0.03),
+                unit: 'kg',
+              ),
+            ],
+          ),
+        );
+        await dbHelper.insertFoodEntry(
+          FoodEntry(
+            barcode: 'test-food',
+            timestamp: DateTime(day.year, day.month, day.day, 12, 0),
+            quantityInGrams: 850,
+            mealType: 'mealtypeLunch',
+          ),
+        );
+      }
+
+      final afterGapWithObservation =
+          await service.refreshBayesianExperimentalRecommendationIfDue(
+        now: DateTime(2026, 9, 7, 10, 0),
+        force: true,
+      );
+      expect(afterGapWithObservation, isNotNull);
+
+      final gain = _debugDouble(
+        afterGapWithObservation!.maintenanceEstimate,
+        'kalmanGain',
+      );
+      final cap = _debugDouble(
+        afterGapWithObservation.maintenanceEstimate,
+        'varianceCapCalories2',
+      );
+      final postVar = _debugDouble(
+        afterGapWithObservation.maintenanceEstimate,
+        'posteriorVarianceCalories2',
+      );
+      expect(gain, lessThan(0.93));
+      expect(postVar, lessThanOrEqualTo(cap + 0.0001));
     });
 
     test('experimental refresh chains from atomic snapshot context', () async {
@@ -788,6 +899,14 @@ void main() {
       expect(trace['heuristicEstimatedMaintenanceCalories'], isNotNull);
       expect(trace['bayesianPosteriorStdDevCalories'], isNotNull);
       expect(trace['smoothedWeightSlopeKgPerWeek'], isNotNull);
+      expect(
+        comparison.bayesianRecursiveStateAfter?.lastDueWeekKey,
+        '2026-04-06',
+      );
+      expect(
+        trace['bayesianRecursiveStateAfterDueWeekKey'],
+        '2026-04-06',
+      );
     });
 
     test('onboarding recommendation can be persisted and marked as applied',
@@ -989,6 +1108,14 @@ String _encodedRecommendationJson(String dueWeekKey, String algorithmVersion) {
 
 String _encodedEstimateJson(String dueWeekKey) {
   return jsonEncode(_estimateForDueWeek(dueWeekKey).toJson());
+}
+
+double _debugDouble(BayesianMaintenanceEstimate estimate, String key) {
+  final value = estimate.debugInfo[key];
+  if (value is num) {
+    return value.toDouble();
+  }
+  throw StateError('Missing numeric debug key: $key');
 }
 
 class _FakeDueNotifier implements AdaptiveRecommendationDueNotifier {

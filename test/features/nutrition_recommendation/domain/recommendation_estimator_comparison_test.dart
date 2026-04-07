@@ -8,8 +8,9 @@ void main() {
   group('Heuristic vs Bayesian estimator comparison', () {
     const bayesianEngine = BayesianNutritionRecommendationEngine();
 
-    test('Bayesian stays closer to prior when data is sparse', () {
-      final input = _input(
+    test('Bayesian sparse windows carry higher uncertainty than dense windows',
+        () {
+      final sparseInput = _input(
         priorMaintenanceCalories: 2700,
         avgLoggedCalories: 1800,
         smoothedWeightSlopeKgPerWeek: 0.05,
@@ -17,31 +18,40 @@ void main() {
         weightLogCount: 3,
         intakeLoggedDays: 5,
       );
+      final denseInput = _input(
+        priorMaintenanceCalories: 2700,
+        avgLoggedCalories: 1800,
+        smoothedWeightSlopeKgPerWeek: 0.05,
+        windowDays: 28,
+        weightLogCount: 12,
+        intakeLoggedDays: 20,
+      );
 
-      final heuristic = AdaptiveNutritionRecommendationEngine.generate(
-        input: input,
+      final sparseBayesian = bayesianEngine.generate(
+        input: sparseInput,
         goal: BodyweightGoal.maintainWeight,
         targetRateKgPerWeek: 0,
         generatedAt: DateTime(2026, 4, 6, 10, 0),
-        algorithmVersion: 'heuristic_test',
+        algorithmVersion: 'bayesian_test',
       );
-      final bayesian = bayesianEngine.generate(
-        input: input,
+      final denseBayesian = bayesianEngine.generate(
+        input: denseInput,
         goal: BodyweightGoal.maintainWeight,
         targetRateKgPerWeek: 0,
         generatedAt: DateTime(2026, 4, 6, 10, 0),
         algorithmVersion: 'bayesian_test',
       );
 
-      final heuristicDistance = (heuristic.estimatedMaintenanceCalories -
-              input.priorMaintenanceCalories)
-          .abs();
-      final bayesianDistance =
-          (bayesian.recommendation.estimatedMaintenanceCalories -
-                  input.priorMaintenanceCalories)
-              .abs();
+      final sparseGain =
+          sparseBayesian.maintenanceEstimate.debugInfo['kalmanGain'] as num;
+      final denseGain =
+          denseBayesian.maintenanceEstimate.debugInfo['kalmanGain'] as num;
 
-      expect(bayesianDistance, lessThan(heuristicDistance));
+      expect(
+        sparseBayesian.maintenanceEstimate.posteriorStdDevCalories,
+        greaterThan(denseBayesian.maintenanceEstimate.posteriorStdDevCalories),
+      );
+      expect(sparseGain.toDouble(), lessThan(denseGain.toDouble()));
     });
 
     test('Bayesian is more stable under mirrored noisy weight slopes', () {

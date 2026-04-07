@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,6 +30,8 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.last_due_notification_week_key';
   static const String _latestBayesianExperimentalSnapshotKey =
       'adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot';
+  static const String _latestBayesianEstimatorStateKey =
+      'adaptive_nutrition_recommendation.latest_bayesian_recursive_state';
   // Legacy fragmented Bayesian experimental keys.
   // These remain readable for one-way migration only.
   static const String _latestGeneratedBayesianExperimentalKey =
@@ -264,6 +267,54 @@ class RecommendationRepository {
     );
   }
 
+  Future<BayesianEstimatorState?> getLatestBayesianEstimatorState() async {
+    final prefs = await _prefsLoader();
+    final encoded = prefs.getString(_latestBayesianEstimatorStateKey);
+    if (encoded != null && encoded.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(encoded);
+        if (decoded is! Map<String, dynamic>) {
+          return null;
+        }
+        final state = BayesianEstimatorState.fromJson(decoded);
+        return state.isValid ? state : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final snapshot = await getLatestBayesianExperimentalSnapshot();
+    if (snapshot == null) {
+      return null;
+    }
+
+    final derivedState = _deriveEstimatorStateFromSnapshot(snapshot);
+    if (derivedState == null || !derivedState.isValid) {
+      return null;
+    }
+
+    await saveLatestBayesianEstimatorState(state: derivedState);
+    return derivedState;
+  }
+
+  Future<void> saveLatestBayesianEstimatorState({
+    required BayesianEstimatorState state,
+  }) async {
+    if (!state.isValid) {
+      throw ArgumentError.value(
+        state,
+        'state',
+        'Bayesian recursive estimator state must be valid before persistence.',
+      );
+    }
+
+    final prefs = await _prefsLoader();
+    await prefs.setString(
+      _latestBayesianEstimatorStateKey,
+      jsonEncode(state.toJson()),
+    );
+  }
+
   Future<void> clearForTesting() async {
     final prefs = await _prefsLoader();
     await prefs.remove(_goalKey);
@@ -275,6 +326,7 @@ class RecommendationRepository {
     await prefs.remove(_lastGeneratedDueWeekKey);
     await prefs.remove(_lastDueNotificationWeekKey);
     await prefs.remove(_latestBayesianExperimentalSnapshotKey);
+    await prefs.remove(_latestBayesianEstimatorStateKey);
     await prefs.remove(_latestGeneratedBayesianExperimentalKey);
     await prefs.remove(_lastGeneratedDueWeekBayesianExperimentalKey);
     await prefs.remove(_latestBayesianMaintenanceEstimateKey);
@@ -354,6 +406,42 @@ class RecommendationRepository {
       jsonEncode(snapshot.toJson()),
     );
     return snapshot;
+  }
+
+  BayesianEstimatorState? _deriveEstimatorStateFromSnapshot(
+    BayesianExperimentalRecommendationSnapshot snapshot,
+  ) {
+    final estimate = snapshot.maintenanceEstimate;
+    final dueWeekKey = snapshot.dueWeekKey.trim();
+    if (dueWeekKey.isEmpty) {
+      return null;
+    }
+    if (!estimate.posteriorMaintenanceCalories.isFinite ||
+        !estimate.posteriorStdDevCalories.isFinite ||
+        estimate.posteriorStdDevCalories <= 0 ||
+        !estimate.priorMeanUsedCalories.isFinite ||
+        !estimate.priorStdDevUsedCalories.isFinite ||
+        estimate.priorStdDevUsedCalories <= 0) {
+      return null;
+    }
+
+    final posteriorVariance =
+        math.pow(estimate.posteriorStdDevCalories, 2).toDouble();
+    final priorVariance =
+        math.pow(estimate.priorStdDevUsedCalories, 2).toDouble();
+
+    final state = BayesianEstimatorState(
+      posteriorMeanCalories: estimate.posteriorMaintenanceCalories,
+      posteriorVarianceCalories2: posteriorVariance,
+      lastDueWeekKey: dueWeekKey,
+      lastPriorMeanCalories: estimate.priorMeanUsedCalories,
+      lastPriorVarianceCalories2: priorVariance,
+      lastPriorSource: estimate.priorSource,
+      lastObservationUsed:
+          estimate.observationImpliedMaintenanceCalories != null,
+    );
+
+    return state.isValid ? state : null;
   }
 
   NutritionRecommendation? _loadRecommendationFromPrefs(

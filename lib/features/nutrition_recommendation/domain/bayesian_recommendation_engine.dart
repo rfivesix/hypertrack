@@ -6,10 +6,12 @@ import 'recommendation_models.dart';
 class BayesianNutritionRecommendationResult {
   final NutritionRecommendation recommendation;
   final BayesianMaintenanceEstimate maintenanceEstimate;
+  final BayesianEstimatorState? recursiveState;
 
   const BayesianNutritionRecommendationResult({
     required this.recommendation,
     required this.maintenanceEstimate,
+    this.recursiveState,
   });
 
   int get maintenanceDeltaFromPriorCalories {
@@ -32,14 +34,17 @@ class BayesianNutritionRecommendationEngine {
     required DateTime generatedAt,
     required String algorithmVersion,
     String? dueWeekKey,
+    BayesianEstimatorState? recursiveState,
     BayesianMaintenancePrior? chainedPrior,
     NutritionRecommendation? previousRecommendation,
   }) {
-    final maintenanceEstimate = _estimator.estimate(
+    final estimatorRun = _estimator.estimate(
       input: input,
+      recursiveState: recursiveState,
       chainedPrior: chainedPrior,
       dueWeekKey: dueWeekKey,
     );
+    final maintenanceEstimate = estimatorRun.estimate;
 
     final recommendation =
         AdaptiveNutritionRecommendationEngine.generateFromMaintenanceEstimate(
@@ -58,6 +63,7 @@ class BayesianNutritionRecommendationEngine {
     return BayesianNutritionRecommendationResult(
       recommendation: recommendation,
       maintenanceEstimate: maintenanceEstimate,
+      recursiveState: estimatorRun.nextState,
     );
   }
 }

@@ -137,6 +137,63 @@ void main() {
       );
     });
 
+    test('persists and restores Bayesian recursive estimator state', () async {
+      const state = BayesianEstimatorState(
+        posteriorMeanCalories: 2375,
+        posteriorVarianceCalories2: 42000,
+        lastDueWeekKey: '2026-04-06',
+        lastPriorMeanCalories: 2400,
+        lastPriorVarianceCalories2: 60000,
+        lastPriorSource: BayesianPriorSource.chainedPosterior,
+        lastObservationUsed: true,
+      );
+
+      await repository.saveLatestBayesianEstimatorState(state: state);
+      final restored = await repository.getLatestBayesianEstimatorState();
+
+      expect(restored, isNotNull);
+      expect(restored!.lastDueWeekKey, '2026-04-06');
+      expect(restored.posteriorMeanCalories, closeTo(2375, 0.0001));
+      expect(restored.posteriorVarianceCalories2, closeTo(42000, 0.0001));
+      expect(restored.lastPriorSource, BayesianPriorSource.chainedPosterior);
+      expect(restored.hasReplayPrior, isTrue);
+    });
+
+    test('derives recursive state from snapshot when state key is absent',
+        () async {
+      final snapshot = BayesianExperimentalRecommendationSnapshot(
+        recommendation: _recommendation().copyWith(
+          dueWeekKey: '2026-04-06',
+          algorithmVersion: 'bayesian_test',
+        ),
+        maintenanceEstimate: _estimate(dueWeekKey: '2026-04-06'),
+        dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
+      );
+      await repository.saveLatestBayesianExperimentalSnapshot(
+        snapshot: snapshot,
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(
+        'adaptive_nutrition_recommendation.latest_bayesian_recursive_state',
+      );
+
+      final derived = await repository.getLatestBayesianEstimatorState();
+      final rawPersisted = prefs.getString(
+        'adaptive_nutrition_recommendation.latest_bayesian_recursive_state',
+      );
+
+      expect(derived, isNotNull);
+      expect(derived!.lastDueWeekKey, '2026-04-06');
+      expect(
+        derived.posteriorMeanCalories,
+        closeTo(
+            snapshot.maintenanceEstimate.posteriorMaintenanceCalories, 0.001),
+      );
+      expect(rawPersisted, isNotNull);
+    });
+
     test('returns null for incoherent Bayesian snapshot payload', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(

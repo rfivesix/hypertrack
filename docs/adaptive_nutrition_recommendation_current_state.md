@@ -93,6 +93,7 @@
 - `adaptive_nutrition_recommendation.last_generated_due_week_key`: due-week string (`yyyy-MM-dd` Monday anchor)
 - `adaptive_nutrition_recommendation.last_due_notification_week_key`: last due week for which a due-notification was emitted
 - `adaptive_nutrition_recommendation.latest_bayesian_experimental_snapshot`: atomic JSON payload for experimental Bayesian recommendation + estimate + metadata
+- `adaptive_nutrition_recommendation.latest_bayesian_recursive_state`: persisted recursive Bayesian filter state (`posterior mean/variance`, last due week, replay-prior fields)
   - snapshot generation time is sourced from `snapshot.recommendation.generatedAt` (no separate top-level snapshot timestamp field)
 - legacy experimental keys are still readable only for one-way migration/fallback safety:
   - `adaptive_nutrition_recommendation.latest_generated_bayesian_experimental`
@@ -552,100 +553,106 @@
 
 ## 15. Experimental Bayesian/Kalman path (parallel, non-default)
 
-### Implemented behavior
-- A separate experimental estimation path is implemented in parallel and does not replace production defaults:
+### Scope and mode separation
+- Experimental Bayesian logic remains separate and non-default:
   - `lib/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart`
   - `lib/features/nutrition_recommendation/domain/bayesian_recommendation_engine.dart`
   - mode enum: `lib/features/nutrition_recommendation/domain/recommendation_estimation_mode.dart`
-- Service now exposes dedicated experimental generation methods while keeping existing heuristic methods as the default production path:
-  - `refreshBayesianExperimentalRecommendationIfDue(...)`
-  - `generateBayesianExperimentalOnboardingRecommendation(...)`
-  - `generateEstimatorComparison(...)` for side-by-side output
-- Existing production methods remain unchanged in signature and default behavior:
+- Production heuristic generation/apply flow is unchanged and still authoritative for:
   - `refreshRecommendationIfDue(...)`
   - `generateOnboardingRecommendation(...)`
+  - `applyLatestRecommendationToActiveTargets(...)`
+- Experimental entry points remain explicit:
+  - `refreshBayesianExperimentalRecommendationIfDue(...)`
+  - `generateBayesianExperimentalOnboardingRecommendation(...)`
+  - `generateEstimatorComparison(...)`
 
-### Latent-state and recursive prior semantics (implemented)
-- Latent state: scalar maintenance calories (TDEE) only.
-- Observation model:
-  - `z = avgLoggedCalories - smoothedWeightSlopeKgPerWeek * (7700/7)`
-- Prior precedence for each experimental weekly update:
-  1. if a valid previous Bayesian estimate exists for an earlier due week:
-     - prior mean = previous posterior mean
-     - prior stddev = previous posterior stddev
-  2. if a valid previous Bayesian estimate exists for the same due week (forced in-week regeneration):
-     - prior mean/stddev are replayed from that estimate’s stored prior-used fields
-     - this preserves deterministic in-week stability
-     - stable in-week behavior is reinforced by the same stable previous-Sunday input window boundary
-  3. otherwise (missing/corrupt/invalid previous experimental state):
-     - bootstrap prior mean = `RecommendationGenerationInput.priorMaintenanceCalories`
-     - bootstrap prior stddev = estimator default prior stddev
-- Process model:
-  - process variance is added on top of the selected prior variance each update.
-- Update model:
-  - scalar Kalman-style posterior update combines prior and observation by uncertainty-weighted gain.
+### Recursive Bayesian state model (implemented)
+- Experimental path now persists an explicit recursive filter state in addition to recommendation snapshots:
+  - `adaptive_nutrition_recommendation.latest_bayesian_recursive_state`
+- Persisted recursive state stores:
+  - posterior maintenance mean (`kcal/day`)
+  - posterior variance (`kcal^2/day^2`)
+  - last processed due week key
+  - replay-prior fields (prior mean/variance/source for deterministic same-week force refresh)
+- Snapshot (`latest_bayesian_experimental_snapshot`) is still used for recommendation payload coherence and retrieval.
+- If recursive state is missing but a coherent snapshot exists, repository derives a valid recursive state from the snapshot estimate once.
 
-### Uncertainty semantics (implemented)
-- Experimental output includes:
-  - profile prior mean (bootstrap reference)
-  - actual prior mean/stddev used for this update
-  - prior-source marker (`profilePriorBootstrap` vs `chainedPosterior`)
-  - posterior mean maintenance kcal/day
-  - posterior standard deviation (kcal/day)
-  - effective sample size proxy
-  - uncertainty-informed confidence bucket (`notEnoughData/low/medium/high`)
-  - quality/debug flags and gain/variance debug fields
-- Sparse/missing data behavior:
-  - if intake and/or weight trend observation is unavailable, posterior mean remains at prior and uncertainty remains high.
+### True weekly recursive chaining semantics (implemented)
+- For each new due week, filter uses previous posterior as new prior:
+  - `x_pred = x_prev`
+  - `P_pred = min(P_prev + n*Q, P_cap)` where `n` is elapsed due-week steps
+- Same due week forced refresh uses replayed prior for that due week, so repeated force refreshes are stable.
+- Update step (only when usable observation exists):
+  - `K = P_pred / (P_pred + R)`
+  - `x_post = x_pred + K * (z - x_pred)`
+  - `P_post = (1 - K) * P_pred`
+- Missing/sparse observation week:
+  - prediction-only
+  - posterior mean remains at predicted mean
+  - uncertainty still grows via `+Q` and is bounded by `P_cap`
 
-### Shared recommendation semantics (implemented)
-- Experimental path only swaps the maintenance-estimation stage.
-- Downstream recommendation projection still uses existing product semantics for:
-  - goal-rate calorie adjustment
-  - calorie floor handling
-  - macro generation constraints
-  - warning state construction
-  - Monday-anchored due-week scheduling
-- Estimator technical flags remain in the experimental estimate object and are not forwarded directly as user-facing warning reasons.
+### Observation model and short-horizon kcal/kg scaling
+- Observation remains scalar maintenance-implied estimate:
+  - `z = avgLoggedCalories - weightSlopeKgPerWeek * (effectiveKcalPerKg / 7)`
+- Effective `kcal/kg` is horizon-dependent to reduce short-window overreaction:
+  - `<14 days`: `5500`
+  - `14-27 days`: linear interpolation `5500 -> 7700`
+  - `>=28 days`: `7700`
+- Debug output includes chosen `effectiveKcalPerKg` and mode label.
 
-### Mode separation and persistence semantics (implemented)
-- Mode separation is explicit via `RecommendationEstimationMode`.
-- Experimental persistence is now an atomic snapshot model:
-  - `BayesianExperimentalRecommendationSnapshot` stores recommendation + maintenance estimate + due week key + algorithm version.
-  - generation time is read from `recommendation.generatedAt`.
-- Experimental retrieval no longer reconstructs state from fragmented recommendation/estimate keys.
-- Coherence is validated at snapshot decode time (due week key + algorithm alignment); incoherent payloads are treated as invalid and ignored.
-- Minimal legacy compatibility:
-  - if no atomic snapshot exists, coherent legacy experimental payloads are migrated once into the atomic snapshot key
-  - missing/corrupt/incoherent legacy payloads are ignored safely.
-- Legacy fragmented Bayesian keys are migration support only and are not used as normal active write paths.
-- Production keys (`latest_generated`, `latest_applied`, `last_generated_due_week_key`) are preserved and remain authoritative for current UI/apply flows.
+### Q/R semantics, initialization, and cap behavior
+- `Q` now explicitly represents expected weekly maintenance drift:
+  - default drift target: `~40 kcal/week`
+  - `Q = 40^2 = 1600 (kcal^2/day^2 per due week step)`
+- `R` is observation variance from explicit components:
+  - base model variance floor
+  - intake logging uncertainty/sparsity/completeness
+  - weight slope uncertainty
+  - unresolved food penalties
+- Initialization for new users / first experimental run:
+  - mean from profile prior
+  - `P0 = min(10 * R_initial, P_cap)`
+- Memory cap / anti-reset behavior:
+  - `P_cap = 10 * R_reference`
+  - long gaps increase uncertainty but do not fully reset filter memory.
 
-### Comparison/debug tracing (implemented)
-- `generateEstimatorComparison(...)` now exposes richer side-by-side diagnostics, including:
-  - due week key and generated-at timestamp
-  - heuristic maintenance estimate
-  - Bayesian profile prior, prior-used mean/stddev, posterior mean/stddev
-  - observation-implied maintenance
-  - effective sample size, confidence bucket, and quality flags
-  - deltas vs heuristic and vs Bayesian prior
-  - input-window summary fields (window days, weight log count, intake logged days, smoothed slope, average logged calories)
-- This is internal/dev tracing for evaluation, not production-facing apply semantics.
+### Steady-state sanity diagnostics
+- Scalar steady-state gain is computed for debug/tests (not used as update approximation):
+  - `K_ss = (sqrt(Q^2 + 4QR) - Q) / (2R)`
+  - `P_ss = K_ss * R`
+- Debug output includes:
+  - `Q`, `R`, `Q/R`
+  - live `K`
+  - `P_pred`, `P_post`
+  - residual (`z - x_pred`)
+  - `steadyStateGain`, `steadyStateVariance`
+  - live-vs-steady-state variance ratio
 
-### Estimator parameter tuning surface (implemented)
-- Bayesian estimator noise assumptions are centralized in `BayesianEstimatorConfig`.
-- Major parameters are explicitly documented in code comments for intent/tuning:
-  - `priorStdDevCalories`
-  - `processStdDevCalories`
-  - `baseObservationStdDevCalories`
-  - `intakeDayStdDevCalories`
-  - `weightTrendStdDevKgPerWeek`
+### Confidence semantics (experimental only)
+- Experimental confidence is uncertainty-centric and separate from production heuristic confidence semantics.
+- Primary drivers:
+  - posterior uncertainty (relative to capped uncertainty scale)
+  - whether observation exists
+  - effective sample size / data sufficiency
+- Missing-observation weeks remain conservative (`notEnoughData`) while still updating uncertainty via prediction.
 
-### Known limitations / intentionally experimental areas
-- Current experimental model is a pragmatic scalar-state filter, not a full multi-state physiological model.
-- Measurement uncertainty is heuristic/calibrated from log density and quality flags; it is not learned from user-specific residual history.
-- Experimental apply-to-active-goals is intentionally not wired into the production apply path.
-- `generateOnboardingRecommendationForMode(..., mode: bayesianExperimental)` rejects `markAsApplied == true` to keep production apply semantics explicit and isolated.
-- Confidence semantics differ conceptually:
-  - production confidence is threshold/count based
-  - experimental confidence is uncertainty-informed with data sufficiency gating
+### Service/repository behavior summary
+- Experimental refresh flow now:
+  1. loads latest experimental snapshot + recursive state
+  2. runs recursive prediction for due-week gap
+  3. computes observation (if available)
+  4. applies update or prediction-only
+  5. persists both:
+     - latest experimental snapshot
+     - latest recursive estimator state
+- Experimental onboarding generation:
+  - initializes safely from profile prior
+  - works with no logs
+  - does not mutate production keys or apply active goals.
+- Comparison helper includes recursive-state context (before/after) for internal diagnostics.
+
+### Current limitations (still intentional)
+- Model remains scalar TDEE-state only (no multi-state physiology model).
+- Noise model is calibrated heuristic decomposition, not learned per-user residual modeling.
+- Experimental path remains non-default and is not wired into production apply UI/flow.
