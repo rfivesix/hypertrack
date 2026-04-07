@@ -9,6 +9,7 @@ import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
+import '../features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import '../features/nutrition_recommendation/domain/confidence_models.dart';
 import '../features/nutrition_recommendation/presentation/body_fat_guidance_sheet.dart';
 import '../features/nutrition_recommendation/presentation/prior_activity_help_block.dart';
@@ -51,6 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     BodyweightGoal.maintainWeight,
   ).kgPerWeek;
   NutritionRecommendation? _onboardingRecommendation;
+  BayesianMaintenanceEstimate? _onboardingMaintenanceEstimate;
   bool _hasAppliedOnboardingRecommendationToGoals = false;
 
   // --- CONTROLLER ---
@@ -140,8 +142,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final bodyFatPercent =
         double.tryParse(_bodyFatPercentController.text.replaceAll(',', '.'));
     try {
-      final recommendation =
-          await _recommendationService.generateOnboardingRecommendation(
+      final preview =
+          await _recommendationService.generateOnboardingRecommendationPreview(
         goal: _selectedGoal,
         targetRateKgPerWeek: _selectedTargetRateKgPerWeek,
         weightKg: weight,
@@ -157,7 +159,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       if (!mounted) return;
       setState(() {
-        _onboardingRecommendation = recommendation;
+        _onboardingRecommendation = preview.recommendation;
+        _onboardingMaintenanceEstimate = preview.maintenanceEstimate;
       });
     } finally {
       if (mounted) {
@@ -923,6 +926,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildOnboardingRecommendationSummary() {
     final l10n = AppLocalizations.of(context)!;
     final recommendation = _onboardingRecommendation;
+    final maintenanceEstimate = _onboardingMaintenanceEstimate;
     if (recommendation == null) {
       return Container(
         width: double.infinity,
@@ -986,6 +990,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          if (maintenanceEstimate != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.adaptiveRecommendationMaintenanceLine(
+                recommendation.estimatedMaintenanceCalories,
+              ),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.adaptiveRecommendationMaintenanceRangeLine(
+                maintenanceEstimate.credibleIntervalLowerCalories(),
+                maintenanceEstimate.credibleIntervalUpperCalories(),
+              ),
+              key: const Key('onboarding_adaptive_summary_range_line'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              RecommendationUiCopy.uncertaintyHint(l10n, maintenanceEstimate),
+              key: const Key('onboarding_adaptive_summary_uncertainty_hint'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (RecommendationUiCopy.isStabilizing(maintenanceEstimate))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  l10n.adaptiveRecommendationStabilizingHint,
+                  key:
+                      const Key('onboarding_adaptive_summary_stabilizing_hint'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+          ],
           const SizedBox(height: 4),
           Text(
             l10n.adaptiveRecommendationDataBasisLine(

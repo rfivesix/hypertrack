@@ -1,4 +1,5 @@
 import '../../../generated/app_localizations.dart';
+import '../domain/bayesian_tdee_estimator.dart';
 import '../domain/confidence_models.dart';
 import '../domain/recommendation_models.dart';
 
@@ -74,5 +75,23 @@ class RecommendationUiCopy {
         recommendation.inputSummary.qualityFlags.contains(
           'onboarding_prior_only',
         );
+  }
+
+  static String uncertaintyHint(
+    AppLocalizations l10n,
+    BayesianMaintenanceEstimate estimate,
+  ) {
+    final width = estimate.credibleIntervalWidthCalories();
+    if (width <= 260) {
+      return l10n.adaptiveRecommendationUncertaintyHintNarrow;
+    }
+    if (width <= 460) {
+      return l10n.adaptiveRecommendationUncertaintyHintModerate;
+    }
+    return l10n.adaptiveRecommendationUncertaintyHintWide;
+  }
+
+  static bool isStabilizing(BayesianMaintenanceEstimate estimate) {
+    return estimate.isStillStabilizing;
   }
 }

@@ -1307,6 +1307,17 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationMaintenanceRangeLine": "Wahrscheinlicher Bereich: {lower}-{upper} kcal"
+  ,"@adaptiveRecommendationMaintenanceRangeLine": {
+    "placeholders": {
+      "lower": { "type": "int" },
+      "upper": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationUncertaintyHintNarrow": "Die letzten Signale sind recht konsistent, daher ist diese Schätzung enger."
+  ,"adaptiveRecommendationUncertaintyHintModerate": "Die letzten Daten sind nutzbar, aber noch variabel, daher ist der Bereich moderat."
+  ,"adaptiveRecommendationUncertaintyHintWide": "Die letzten Daten sind spärlich oder verrauscht, daher bleibt diese Schätzung breit."
+  ,"adaptiveRecommendationStabilizingHint": "Die adaptive Schätzung stabilisiert sich noch."
   ,"adaptiveRecommendationCaloriesValue": "{value} kcal"
   ,"@adaptiveRecommendationCaloriesValue": {
     "placeholders": {

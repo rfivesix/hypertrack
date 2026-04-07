@@ -1302,6 +1302,17 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationMaintenanceRangeLine": "Likely range: {lower}-{upper} kcal"
+  ,"@adaptiveRecommendationMaintenanceRangeLine": {
+    "placeholders": {
+      "lower": { "type": "int" },
+      "upper": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationUncertaintyHintNarrow": "Recent signals are fairly consistent, so this estimate is tighter."
+  ,"adaptiveRecommendationUncertaintyHintModerate": "Recent data is usable but still variable, so this estimate has a moderate range."
+  ,"adaptiveRecommendationUncertaintyHintWide": "Recent data is sparse or noisy, so this estimate remains broad."
+  ,"adaptiveRecommendationStabilizingHint": "The adaptive estimate is still stabilizing."
   ,"adaptiveRecommendationCaloriesValue": "{value} kcal"
   ,"@adaptiveRecommendationCaloriesValue": {
     "placeholders": {

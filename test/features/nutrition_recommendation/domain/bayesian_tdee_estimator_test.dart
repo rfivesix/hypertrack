@@ -323,6 +323,246 @@ void main() {
       expect(strongK, greaterThan(sparseK));
     });
 
+    test(
+        'history-calibrated R is higher for noisy residual histories and widens interval',
+        () {
+      const calibratedEstimator = BayesianTdeeEstimator(
+        config: BayesianEstimatorConfig(
+          minimumHistorySamplesForCalibration: 3,
+          residualHistoryInfluenceOnR: 1.0,
+          posteriorDriftHistoryInfluenceOnQ: 0.0,
+        ),
+      );
+      const stableState = BayesianEstimatorState(
+        posteriorMeanCalories: 2475,
+        posteriorVarianceCalories2: 42000,
+        lastDueWeekKey: '2026-04-06',
+        lastPriorMeanCalories: 2460,
+        lastPriorVarianceCalories2: 45000,
+        lastPriorSource: BayesianPriorSource.chainedPosterior,
+        lastObservationUsed: true,
+        recentPosteriorMeansCalories: <double>[2460, 2470, 2472, 2475],
+        recentObservationResidualsCalories: <double>[12, -10, 15, -8],
+      );
+      const noisyState = BayesianEstimatorState(
+        posteriorMeanCalories: 2475,
+        posteriorVarianceCalories2: 42000,
+        lastDueWeekKey: '2026-04-06',
+        lastPriorMeanCalories: 2460,
+        lastPriorVarianceCalories2: 45000,
+        lastPriorSource: BayesianPriorSource.chainedPosterior,
+        lastObservationUsed: true,
+        recentPosteriorMeansCalories: <double>[2460, 2470, 2472, 2475],
+        recentObservationResidualsCalories: <double>[520, -510, 540, -530],
+      );
+
+      final stable = calibratedEstimator
+          .estimate(
+            input: _input(
+              priorMaintenanceCalories: 2500,
+              avgLoggedCalories: 2300,
+              smoothedWeightSlopeKgPerWeek: -0.06,
+              windowDays: 28,
+              weightLogCount: 12,
+              intakeLoggedDays: 20,
+            ),
+            recursiveState: stableState,
+            dueWeekKey: '2026-04-13',
+          )
+          .estimate;
+      final noisy = calibratedEstimator
+          .estimate(
+            input: _input(
+              priorMaintenanceCalories: 2500,
+              avgLoggedCalories: 2300,
+              smoothedWeightSlopeKgPerWeek: -0.06,
+              windowDays: 28,
+              weightLogCount: 12,
+              intakeLoggedDays: 20,
+            ),
+            recursiveState: noisyState,
+            dueWeekKey: '2026-04-13',
+          )
+          .estimate;
+
+      expect(
+          stable.qualityFlags, contains('bayesian_r_calibrated_from_history'));
+      expect(
+          noisy.qualityFlags, contains('bayesian_r_calibrated_from_history'));
+      expect(
+        _debugDouble(noisy, 'rCalibrationScaleFromHistory'),
+        greaterThan(_debugDouble(stable, 'rCalibrationScaleFromHistory')),
+      );
+      expect(
+        _debugDouble(noisy, 'rVarianceCalories2'),
+        greaterThan(_debugDouble(stable, 'rVarianceCalories2')),
+      );
+      expect(
+        noisy.credibleIntervalWidthCalories(),
+        greaterThan(stable.credibleIntervalWidthCalories()),
+      );
+    });
+
+    test('history-calibrated Q reacts to drift and remains bounded', () {
+      const config = BayesianEstimatorConfig(
+        minimumHistorySamplesForCalibration: 3,
+        residualHistoryInfluenceOnR: 0.0,
+        posteriorDriftHistoryInfluenceOnQ: 1.0,
+      );
+      const qEstimator = BayesianTdeeEstimator(config: config);
+      const stableState = BayesianEstimatorState(
+        posteriorMeanCalories: 2410,
+        posteriorVarianceCalories2: 42000,
+        lastDueWeekKey: '2026-04-06',
+        lastPriorMeanCalories: 2400,
+        lastPriorVarianceCalories2: 45000,
+        lastPriorSource: BayesianPriorSource.chainedPosterior,
+        lastObservationUsed: true,
+        recentPosteriorMeansCalories: <double>[2400, 2410, 2405, 2408, 2409],
+      );
+      const driftingState = BayesianEstimatorState(
+        posteriorMeanCalories: 2800,
+        posteriorVarianceCalories2: 42000,
+        lastDueWeekKey: '2026-04-06',
+        lastPriorMeanCalories: 2600,
+        lastPriorVarianceCalories2: 45000,
+        lastPriorSource: BayesianPriorSource.chainedPosterior,
+        lastObservationUsed: true,
+        recentPosteriorMeansCalories: <double>[2200, 2420, 2650, 2850, 3050],
+      );
+
+      final stable = qEstimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2500,
+          avgLoggedCalories: 2300,
+          smoothedWeightSlopeKgPerWeek: -0.05,
+          windowDays: 28,
+          weightLogCount: 12,
+          intakeLoggedDays: 20,
+        ),
+        recursiveState: stableState,
+        dueWeekKey: '2026-04-13',
+      );
+      final drifting = qEstimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2500,
+          avgLoggedCalories: 2300,
+          smoothedWeightSlopeKgPerWeek: -0.05,
+          windowDays: 28,
+          weightLogCount: 12,
+          intakeLoggedDays: 20,
+        ),
+        recursiveState: driftingState,
+        dueWeekKey: '2026-04-13',
+      );
+
+      final stableScale =
+          _debugDouble(stable.estimate, 'qCalibrationScaleFromHistory');
+      final driftingScale =
+          _debugDouble(drifting.estimate, 'qCalibrationScaleFromHistory');
+      expect(stable.estimate.qualityFlags,
+          contains('bayesian_q_calibrated_from_history'));
+      expect(
+        drifting.estimate.qualityFlags,
+        contains('bayesian_q_calibrated_from_history'),
+      );
+      expect(stableScale, greaterThanOrEqualTo(config.minimumHistoricalQScale));
+      expect(driftingScale, lessThanOrEqualTo(config.maximumHistoricalQScale));
+      expect(driftingScale, greaterThan(stableScale));
+      expect(
+        _debugDouble(drifting.estimate, 'qVarianceCalories2'),
+        greaterThan(_debugDouble(stable.estimate, 'qVarianceCalories2')),
+      );
+    });
+
+    test('calibration falls back safely when history is insufficient', () {
+      const fallbackEstimator = BayesianTdeeEstimator(
+        config: BayesianEstimatorConfig(
+          minimumHistorySamplesForCalibration: 6,
+        ),
+      );
+      const sparseState = BayesianEstimatorState(
+        posteriorMeanCalories: 2450,
+        posteriorVarianceCalories2: 45000,
+        lastDueWeekKey: '2026-04-06',
+        lastPriorMeanCalories: 2440,
+        lastPriorVarianceCalories2: 50000,
+        lastPriorSource: BayesianPriorSource.chainedPosterior,
+        lastObservationUsed: true,
+        recentPosteriorMeansCalories: <double>[2440, 2450],
+        recentObservationResidualsCalories: <double>[20, -15],
+      );
+
+      final run = fallbackEstimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2450,
+          avgLoggedCalories: 2325,
+          smoothedWeightSlopeKgPerWeek: -0.05,
+          windowDays: 21,
+          weightLogCount: 8,
+          intakeLoggedDays: 10,
+        ),
+        recursiveState: sparseState,
+        dueWeekKey: '2026-04-13',
+      );
+
+      expect(
+          run.estimate.qualityFlags, contains('bayesian_q_default_fallback'));
+      expect(
+          run.estimate.qualityFlags, contains('bayesian_r_default_fallback'));
+      expect(_debugDouble(run.estimate, 'qCalibrationScaleFromHistory'), 1.0);
+      expect(_debugDouble(run.estimate, 'rCalibrationScaleFromHistory'), 1.0);
+    });
+
+    test('stabilization quality flag is raised for noisy transient regimes',
+        () {
+      const estimatorWithNoisyHistory = BayesianTdeeEstimator(
+        config: BayesianEstimatorConfig(
+          minimumHistorySamplesForCalibration: 3,
+          residualHistoryInfluenceOnR: 1.0,
+        ),
+      );
+      const priorState = BayesianEstimatorState(
+        posteriorMeanCalories: 2480,
+        posteriorVarianceCalories2: 60000,
+        lastDueWeekKey: '2026-04-06',
+        lastPriorMeanCalories: 2460,
+        lastPriorVarianceCalories2: 62000,
+        lastPriorSource: BayesianPriorSource.chainedPosterior,
+        lastObservationUsed: true,
+        recentPosteriorMeansCalories: <double>[2440, 2470, 2490, 2500],
+        recentObservationResidualsCalories: <double>[
+          -520,
+          510,
+          -540,
+          530,
+        ],
+      );
+
+      final run = estimatorWithNoisyHistory.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2500,
+          avgLoggedCalories: 2200,
+          smoothedWeightSlopeKgPerWeek: -0.08,
+          windowDays: 21,
+          weightLogCount: 8,
+          intakeLoggedDays: 8,
+        ),
+        recursiveState: priorState,
+        dueWeekKey: '2026-04-13',
+      );
+
+      expect(run.estimate.isStillStabilizing, isTrue);
+      expect(
+        run.estimate.qualityFlags,
+        anyOf(
+          contains('bayesian_stabilizing_noisy_regime'),
+          contains('bayesian_stabilizing_high_gain'),
+          contains('bayesian_stabilizing_high_variance'),
+        ),
+      );
+    });
+
     test('deterministic repeated runs with identical weekly sequence', () {
       final weeks =
           <({String dueWeekKey, RecommendationGenerationInput input})>[

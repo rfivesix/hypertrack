@@ -5684,6 +5684,36 @@ abstract class AppLocalizations {
   /// **'Maintenance estimate: {value} kcal'**
   String adaptiveRecommendationMaintenanceLine(int value);
 
+  /// No description provided for @adaptiveRecommendationMaintenanceRangeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Likely range: {lower}-{upper} kcal'**
+  String adaptiveRecommendationMaintenanceRangeLine(int lower, int upper);
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintNarrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent signals are fairly consistent, so this estimate is tighter.'**
+  String get adaptiveRecommendationUncertaintyHintNarrow;
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent data is usable but still variable, so this estimate has a moderate range.'**
+  String get adaptiveRecommendationUncertaintyHintModerate;
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintWide.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent data is sparse or noisy, so this estimate remains broad.'**
+  String get adaptiveRecommendationUncertaintyHintWide;
+
+  /// No description provided for @adaptiveRecommendationStabilizingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The adaptive estimate is still stabilizing.'**
+  String get adaptiveRecommendationStabilizingHint;
+
   /// No description provided for @adaptiveRecommendationCaloriesValue.
   ///
   /// In en, this message translates to:

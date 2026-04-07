@@ -101,6 +101,9 @@ void main() {
         lastPriorVarianceCalories2: 60000,
         lastPriorSource: BayesianPriorSource.chainedPosterior,
         lastObservationUsed: true,
+        recentPosteriorMeansCalories: <double>[2360, 2370, 2375],
+        recentObservationResidualsCalories: <double>[35, -20],
+        recentObservationImpliedMaintenanceCalories: <double>[2385, 2365],
       );
 
       await repository.saveLatestEstimatorState(state: state);
@@ -112,6 +115,10 @@ void main() {
       expect(restored.posteriorVarianceCalories2, closeTo(42000, 0.0001));
       expect(restored.lastPriorSource, BayesianPriorSource.chainedPosterior);
       expect(restored.hasReplayPrior, isTrue);
+      expect(restored.recentPosteriorMeansCalories, hasLength(3));
+      expect(restored.recentObservationResidualsCalories, hasLength(2));
+      expect(
+          restored.recentObservationImpliedMaintenanceCalories, hasLength(2));
     });
 
     test('derives recursive state from snapshot when state key is absent',
@@ -144,6 +151,9 @@ void main() {
         closeTo(
             snapshot.maintenanceEstimate.posteriorMaintenanceCalories, 0.001),
       );
+      expect(derived.recentPosteriorMeansCalories, hasLength(1));
+      expect(derived.recentObservationResidualsCalories, hasLength(1));
+      expect(derived.recentObservationImpliedMaintenanceCalories, hasLength(1));
       expect(rawPersisted, isNotNull);
     });
 
@@ -272,7 +282,10 @@ BayesianMaintenanceEstimate _estimate({required String dueWeekKey}) {
     effectiveSampleSize: 10,
     confidence: RecommendationConfidence.medium,
     qualityFlags: const ['bayesian_prior_dominant'],
-    debugInfo: const {'kalmanGain': 0.33},
+    debugInfo: const {
+      'kalmanGain': 0.33,
+      'observationResidualCalories': 30,
+    },
     dueWeekKey: dueWeekKey,
   );
 }

@@ -9,6 +9,8 @@ The feature:
 - converts the maintenance estimate into calorie and macro targets
 - runs on weekly due-week semantics with deterministic in-week recomputation behavior
 - persists both recommendation snapshot and recursive estimator state
+- calibrates estimator noise from recent user behavior when sufficient history exists
+- surfaces a user-facing maintenance uncertainty range and stabilization hints
 - requires explicit user apply (generation never auto-applies active goals)
 
 Primary implementation files:
@@ -93,6 +95,28 @@ No usable observation:
 - posterior variance is chained recursively and capped by `P_cap`.
 - long missing periods increase uncertainty but cannot create full reset behavior because of the variance cap.
 
+### Data-Calibrated Q And R
+
+`Q` and `R` keep deterministic defaults, then apply bounded historical calibration when enough data exists.
+
+- `Q` base:
+  - `weeklyMaintenanceDriftCalories^2`
+- `R` base:
+  - observation decomposition from base model mismatch + intake uncertainty + weight-slope uncertainty
+  - then scaled by completeness and quality multipliers (sparse logs, unresolved food)
+
+Historical calibration inputs (from recursive state history):
+- residual history (`observation - prediction`) informs `R` scaling
+- posterior week-to-week drift history informs `Q` scaling
+
+Calibration behavior:
+- only activates when minimum history samples are present
+- scales are clamped to configured bounds
+- influence weights blend calibrated scale with base value
+- sparse history safely falls back to base defaults (explicit fallback quality flags)
+
+This keeps the estimator adaptive to user-specific noise without making sparse users unstable.
+
 ### Same-Week Replay Behavior
 
 When force-refresh happens within the same due week, the estimator reuses the stored pre-update prior for that due week (if available), instead of chaining from the already-updated posterior again. This keeps repeated in-week force refresh deterministic.
@@ -100,6 +124,8 @@ When force-refresh happens within the same due week, the estimator reuses the st
 ### Onboarding Bootstrap Behavior
 
 With no adaptive logs yet, the filter initializes from profile prior maintenance and deterministic initial variance (`P0` rule from configured multipliers). This allows safe generation during onboarding.
+
+During this phase, stabilization flags are expected and confidence is kept conservative.
 
 ### Horizon-Dependent kcal/kg Observation Scaling
 
@@ -121,6 +147,8 @@ This reduces overreaction to short-horizon water/glycogen noise.
 
 If calorie floor constraints bind, confidence is degraded conservatively and warning reasons include explicit floor/constrained signals.
 
+The final recommendation still comes from the same canonical projection rules; uncertainty calibration affects maintenance inference confidence, not macro floor safety logic.
+
 ## Apply And Recalculate Semantics
 
 Generation and apply are intentionally separate:
@@ -136,6 +164,8 @@ Generation and apply are intentionally separate:
 - regenerates immediately
 - keeps due-week anchor semantics
 - does not auto-apply
+
+Same-week recalculation replays that due week’s pre-update prior (when available), so repeated force-refresh runs stay deterministic instead of repeatedly compounding updates.
 
 ## Persistence Model
 
@@ -153,6 +183,11 @@ Snapshot payload (`AdaptiveRecommendationSnapshot`) includes:
 - algorithm version
 
 Coherence checks reject malformed or mismatched payloads.
+
+Recursive state payload (`BayesianEstimatorState`) includes:
+- posterior mean/variance and replay-prior fields
+- last due-week key
+- rolling posterior / residual / observation-implied history used by noise calibration
 
 ### Migration Notes (Legacy Fallback Only)
 
@@ -184,12 +219,20 @@ Primary confidence drivers:
 - posterior uncertainty relative to cap
 - observation availability
 - effective sample size / usable horizon
+- stabilization sanity flags (bootstrap/transient/noisy regimes)
 
 Transparency surfaces include:
 - data-basis hints
 - warning reasons
 - confidence level
 - freshness metadata
+- maintenance uncertainty interval in recommendation UI:
+  - estimated maintenance calories
+  - likely range derived from posterior (`mean ± 1σ`)
+- plain-language uncertainty hints:
+  - tighter range for consistent recent data
+  - wider range for sparse/noisy recent data
+- stabilization hint when the recursive filter is still settling
 
 ## Limitations
 
@@ -197,6 +240,8 @@ Current known limitations:
 - scalar single-state maintenance model only
 - no explicit unresolved-calorie imputation (quality penalties/warnings are used instead)
 - weekly invocation-driven behavior (no autonomous background recomputation loop in this layer)
+- historical calibration is intentionally conservative and bounded (it is not a full offline re-fit or multi-parameter optimizer)
+- credible interval is a simple posterior-normal approximation (product transparency aid, not a clinical guarantee)
 
 ## Verification Checklist
 
@@ -207,6 +252,10 @@ When validating future changes, verify at minimum:
 - prediction-only behavior for missing-observation weeks
 - variance-cap bounded uncertainty growth after long gaps
 - onboarding bootstrap without logs
+- Q/R fallback behavior when history is insufficient
+- Q/R calibration response under stable vs noisy histories
+- user-facing maintenance range/hint rendering in hub + onboarding preview
+- stabilization hint behavior during bootstrap/transient phases
 - explicit apply semantics (`generate != apply`)
 - snapshot/state persistence coherence and restore behavior
 - due-notification eligibility rules

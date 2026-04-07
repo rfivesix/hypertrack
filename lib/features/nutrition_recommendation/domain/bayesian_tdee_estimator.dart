@@ -45,6 +45,16 @@ class BayesianEstimatorConfig {
   final double initialVarianceMultiplier;
   final double varianceCapMultiplier;
 
+  /// History-based noise calibration settings.
+  final int calibrationHistoryWindowWeeks;
+  final int minimumHistorySamplesForCalibration;
+  final double residualHistoryInfluenceOnR;
+  final double posteriorDriftHistoryInfluenceOnQ;
+  final double minimumHistoricalRScale;
+  final double maximumHistoricalRScale;
+  final double minimumHistoricalQScale;
+  final double maximumHistoricalQScale;
+
   /// Horizon-dependent effective kcal/kg settings for short windows.
   final double shortWindowKcalPerKg;
   final double matureWindowKcalPerKg;
@@ -66,6 +76,14 @@ class BayesianEstimatorConfig {
     this.sparseWeightVarianceMultiplier = 1.10,
     this.initialVarianceMultiplier = 10,
     this.varianceCapMultiplier = 10,
+    this.calibrationHistoryWindowWeeks = 8,
+    this.minimumHistorySamplesForCalibration = 4,
+    this.residualHistoryInfluenceOnR = 0.45,
+    this.posteriorDriftHistoryInfluenceOnQ = 0.40,
+    this.minimumHistoricalRScale = 0.50,
+    this.maximumHistoricalRScale = 2.60,
+    this.minimumHistoricalQScale = 0.60,
+    this.maximumHistoricalQScale = 1.90,
     this.shortWindowKcalPerKg = 5500,
     this.matureWindowKcalPerKg = 7700,
     this.shortWindowUpperBoundDays = 14,
@@ -76,7 +94,7 @@ class BayesianEstimatorConfig {
 }
 
 class BayesianEstimatorState {
-  static const int currentStateVersion = 1;
+  static const int currentStateVersion = 2;
 
   final double posteriorMeanCalories;
   final double posteriorVarianceCalories2;
@@ -85,6 +103,9 @@ class BayesianEstimatorState {
   final double? lastPriorVarianceCalories2;
   final BayesianPriorSource? lastPriorSource;
   final bool lastObservationUsed;
+  final List<double> recentPosteriorMeansCalories;
+  final List<double> recentObservationResidualsCalories;
+  final List<double> recentObservationImpliedMaintenanceCalories;
   final int stateVersion;
 
   const BayesianEstimatorState({
@@ -95,6 +116,9 @@ class BayesianEstimatorState {
     required this.lastPriorVarianceCalories2,
     required this.lastPriorSource,
     required this.lastObservationUsed,
+    this.recentPosteriorMeansCalories = const [],
+    this.recentObservationResidualsCalories = const [],
+    this.recentObservationImpliedMaintenanceCalories = const [],
     this.stateVersion = currentStateVersion,
   });
 
@@ -113,7 +137,10 @@ class BayesianEstimatorState {
     return posteriorMeanCalories.isFinite &&
         posteriorVarianceCalories2.isFinite &&
         posteriorVarianceCalories2 > 0 &&
-        lastDueWeekKey.trim().isNotEmpty;
+        lastDueWeekKey.trim().isNotEmpty &&
+        _allFinite(recentPosteriorMeansCalories) &&
+        _allFinite(recentObservationResidualsCalories) &&
+        _allFinite(recentObservationImpliedMaintenanceCalories);
   }
 
   Map<String, dynamic> toJson() {
@@ -126,6 +153,10 @@ class BayesianEstimatorState {
       'lastPriorVarianceCalories2': lastPriorVarianceCalories2,
       'lastPriorSource': lastPriorSource?.name,
       'lastObservationUsed': lastObservationUsed,
+      'recentPosteriorMeansCalories': recentPosteriorMeansCalories,
+      'recentObservationResidualsCalories': recentObservationResidualsCalories,
+      'recentObservationImpliedMaintenanceCalories':
+          recentObservationImpliedMaintenanceCalories,
     };
   }
 
@@ -146,13 +177,41 @@ class BayesianEstimatorState {
               orElse: () => BayesianPriorSource.chainedPosterior,
             ),
       lastObservationUsed: json['lastObservationUsed'] as bool? ?? false,
+      recentPosteriorMeansCalories:
+          _asDoubleList(json['recentPosteriorMeansCalories']),
+      recentObservationResidualsCalories:
+          _asDoubleList(json['recentObservationResidualsCalories']),
+      recentObservationImpliedMaintenanceCalories:
+          _asDoubleList(json['recentObservationImpliedMaintenanceCalories']),
       stateVersion: json['stateVersion'] as int? ?? currentStateVersion,
     );
+  }
+
+  static bool _allFinite(List<double> values) {
+    for (final value in values) {
+      if (!value.isFinite) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static List<double> _asDoubleList(Object? value) {
+    final list = value as List?;
+    if (list == null) {
+      return const [];
+    }
+    return list
+        .map((item) => _asDouble(item))
+        .whereType<double>()
+        .where((item) => item.isFinite)
+        .toList(growable: false);
   }
 }
 
 class BayesianMaintenanceEstimate {
   static const double _legacyDefaultPriorStdDevCalories = 420;
+  static const double defaultCredibleIntervalZScore = 1.0;
 
   final double posteriorMaintenanceCalories;
   final double posteriorStdDevCalories;
@@ -191,6 +250,30 @@ class BayesianMaintenanceEstimate {
 
   bool get usedChainedPosteriorPrior {
     return priorSource == BayesianPriorSource.chainedPosterior;
+  }
+
+  int credibleIntervalLowerCalories({
+    double zScore = defaultCredibleIntervalZScore,
+  }) {
+    final spread = zScore * posteriorStdDevCalories;
+    return (posteriorMaintenanceCalories - spread).round();
+  }
+
+  int credibleIntervalUpperCalories({
+    double zScore = defaultCredibleIntervalZScore,
+  }) {
+    final spread = zScore * posteriorStdDevCalories;
+    return (posteriorMaintenanceCalories + spread).round();
+  }
+
+  int credibleIntervalWidthCalories({
+    double zScore = defaultCredibleIntervalZScore,
+  }) {
+    return (2 * zScore * posteriorStdDevCalories).round();
+  }
+
+  bool get isStillStabilizing {
+    return qualityFlags.contains('bayesian_estimate_still_stabilizing');
   }
 
   Map<String, dynamic> toJson() {
@@ -305,7 +388,7 @@ class BayesianTdeeEstimator {
     final qualityFlags = <String>[
       'bayesian_recursive_filter',
     ];
-    final qVariance =
+    final baseQVariance =
         math.pow(config.weeklyMaintenanceDriftCalories, 2).toDouble();
 
     final observationModel = _buildObservationModel(input: input);
@@ -319,12 +402,37 @@ class BayesianTdeeEstimator {
       qualityFlags.add('unresolved_food_calories');
     }
 
+    final hasObservation = observationModel.hasObservation;
+    final baseObservationVariance = hasObservation
+        ? observationModel.observationVariance
+        : observationModel.referenceVariance;
+    final noiseCalibration = _calibrateNoiseModel(
+      baseQVariance: baseQVariance,
+      baseObservationVariance: baseObservationVariance,
+      baseReferenceObservationVariance: observationModel.referenceVariance,
+      recursiveState: recursiveState,
+    );
+    final qVariance = noiseCalibration.qVariance;
+    final observationVariance = noiseCalibration.observationVariance;
+
+    if (noiseCalibration.usedHistoryForQ) {
+      qualityFlags.add('bayesian_q_calibrated_from_history');
+    } else {
+      qualityFlags.add('bayesian_q_default_fallback');
+    }
+    if (noiseCalibration.usedHistoryForR) {
+      qualityFlags.add('bayesian_r_calibrated_from_history');
+    } else {
+      qualityFlags.add('bayesian_r_default_fallback');
+    }
+
     final priorStep = _resolvePriorStep(
       profilePriorMeanCalories: profilePriorMean,
       dueWeekKey: normalizedDueWeekKey,
       recursiveState: recursiveState,
       qVariance: qVariance,
-      referenceObservationVariance: observationModel.referenceVariance,
+      referenceObservationVariance:
+          noiseCalibration.referenceObservationVariance,
       qualityFlags: qualityFlags,
     );
 
@@ -333,11 +441,7 @@ class BayesianTdeeEstimator {
     final predictedMean = priorStep.predictedMean;
     final predictedVariance = priorStep.predictedVariance;
     final varianceCap = priorStep.varianceCap;
-    final hasObservation = observationModel.hasObservation;
     final observedMaintenance = observationModel.observedMaintenance;
-    final observationVariance = hasObservation
-        ? observationModel.observationVariance
-        : observationModel.referenceVariance;
     final effectiveSampleSize = observationModel.effectiveSampleSize;
     final residualCalories = hasObservation && observedMaintenance != null
         ? observedMaintenance - predictedMean
@@ -405,13 +509,41 @@ class BayesianTdeeEstimator {
     );
     final steadyStateVariance = steadyStateGain * observationVariance;
 
-    final confidence = _classifyConfidence(
+    final rawConfidence = _classifyConfidence(
       hasObservation: hasObservation,
       posteriorVarianceCalories2: posteriorVariance,
       varianceCapCalories2: varianceCap,
       effectiveSampleSize: effectiveSampleSize,
       windowDays: input.windowDays,
     );
+    final stabilization = _assessStabilization(
+      priorStep: priorStep,
+      recursiveState: recursiveState,
+      hasObservation: hasObservation,
+      effectiveSampleSize: effectiveSampleSize,
+      kalmanGain: kalmanGain,
+      steadyStateGain: steadyStateGain,
+      predictedVariance: predictedVariance,
+      steadyStateVariance: steadyStateVariance,
+      rScaleFromHistory: noiseCalibration.rScaleFromHistory,
+    );
+    if (stabilization.isStillStabilizing) {
+      qualityFlags.addAll(stabilization.qualityFlags);
+      qualityFlags.add('bayesian_estimate_still_stabilizing');
+    }
+    final confidence = _applyStabilizationConfidenceGuard(
+      baseConfidence: rawConfidence,
+      stabilization: stabilization,
+    );
+
+    final isSameDueWeekReplay = priorStep.sameDueWeek;
+    final previousPosteriorHistory =
+        recursiveState?.recentPosteriorMeansCalories ?? const <double>[];
+    final previousResidualHistory =
+        recursiveState?.recentObservationResidualsCalories ?? const <double>[];
+    final previousObservationHistory =
+        recursiveState?.recentObservationImpliedMaintenanceCalories ??
+            const <double>[];
 
     final estimate = BayesianMaintenanceEstimate(
       posteriorMaintenanceCalories: posteriorMean,
@@ -428,8 +560,14 @@ class BayesianTdeeEstimator {
       confidence: confidence,
       qualityFlags: qualityFlags,
       debugInfo: {
+        'qBaseVarianceCalories2': baseQVariance,
         'qVarianceCalories2': qVariance,
+        'qCalibrationScaleFromHistory': noiseCalibration.qScaleFromHistory,
+        'qCalibratedFromHistory': noiseCalibration.usedHistoryForQ,
+        'rBaseVarianceCalories2': baseObservationVariance,
         'rVarianceCalories2': observationVariance,
+        'rCalibrationScaleFromHistory': noiseCalibration.rScaleFromHistory,
+        'rCalibratedFromHistory': noiseCalibration.usedHistoryForR,
         'qOverR': qVariance / math.max(observationVariance, 1.0),
         'priorVarianceCalories2': priorVariance,
         'processVarianceCalories2': processVarianceApplied,
@@ -442,11 +580,17 @@ class BayesianTdeeEstimator {
         'steadyStateVarianceCalories2': steadyStateVariance,
         'predictedVsSteadyStateVarianceRatio':
             predictedVariance / math.max(steadyStateVariance, 1.0),
+        'liveGainToSteadyStateRatio':
+            kalmanGain / math.max(steadyStateGain, 0.000001),
         'effectiveKcalPerKg': observationModel.kcalPerKg,
         'effectiveKcalPerKgMode': observationModel.kcalPerKgMode,
         'varianceCapCalories2': varianceCap,
         'predictionWeeksElapsed': priorStep.elapsedDueWeeks,
         'appliedPredictionSteps': priorStep.appliedPredictionSteps,
+        'isSameDueWeekReplay': isSameDueWeekReplay,
+        'stabilizationFlags': stabilization.qualityFlags,
+        'stabilizationIsActive': stabilization.isStillStabilizing,
+        'stabilizationBootstrapPhase': stabilization.bootstrapPhase,
         'observationBaseVarianceCalories2': observationModel.baseVariance,
         'observationIntakeVarianceCalories2': observationModel.intakeVariance,
         'observationSlopeVarianceCalories2': observationModel.slopeVariance,
@@ -457,6 +601,34 @@ class BayesianTdeeEstimator {
       dueWeekKey: normalizedDueWeekKey,
     );
 
+    // Same-week replay should be idempotent: do not append duplicate history
+    // points when force-refresh reuses the same due-week prior.
+    final nextPosteriorHistory = isSameDueWeekReplay
+        ? previousPosteriorHistory
+        : _appendRollingHistory(
+            existing: previousPosteriorHistory,
+            value: posteriorMean,
+            maxLength: config.calibrationHistoryWindowWeeks,
+          );
+    final nextResidualHistory = isSameDueWeekReplay
+        ? previousResidualHistory
+        : (!hasObservation || observedMaintenance == null)
+            ? previousResidualHistory
+            : _appendRollingHistory(
+                existing: previousResidualHistory,
+                value: residualCalories,
+                maxLength: config.calibrationHistoryWindowWeeks,
+              );
+    final nextObservationHistory = isSameDueWeekReplay
+        ? previousObservationHistory
+        : (!hasObservation || observedMaintenance == null)
+            ? previousObservationHistory
+            : _appendRollingHistory(
+                existing: previousObservationHistory,
+                value: observedMaintenance,
+                maxLength: config.calibrationHistoryWindowWeeks,
+              );
+
     final nextState = BayesianEstimatorState(
       posteriorMeanCalories: posteriorMean,
       posteriorVarianceCalories2: posteriorVariance,
@@ -465,6 +637,9 @@ class BayesianTdeeEstimator {
       lastPriorVarianceCalories2: priorVariance,
       lastPriorSource: priorStep.priorSource,
       lastObservationUsed: hasObservation,
+      recentPosteriorMeansCalories: nextPosteriorHistory,
+      recentObservationResidualsCalories: nextResidualHistory,
+      recentObservationImpliedMaintenanceCalories: nextObservationHistory,
     );
 
     return BayesianEstimatorRunResult(
@@ -500,6 +675,191 @@ class BayesianTdeeEstimator {
       observationVariance: observationVariance,
     );
     return gain * observationVariance;
+  }
+
+  _NoiseCalibration _calibrateNoiseModel({
+    required double baseQVariance,
+    required double baseObservationVariance,
+    required double baseReferenceObservationVariance,
+    required BayesianEstimatorState? recursiveState,
+  }) {
+    final residualHistory =
+        recursiveState?.recentObservationResidualsCalories ?? const <double>[];
+    final posteriorHistory =
+        recursiveState?.recentPosteriorMeansCalories ?? const <double>[];
+    final minSamples = config.minimumHistorySamplesForCalibration;
+
+    var qScaleFromHistory = 1.0;
+    var rScaleFromHistory = 1.0;
+    var usedHistoryForQ = false;
+    var usedHistoryForR = false;
+
+    if (residualHistory.length >= minSamples) {
+      final residualVariance = _sampleVariance(residualHistory);
+      if (residualVariance != null && residualVariance.isFinite) {
+        final rawScale =
+            residualVariance / math.max(baseObservationVariance, 1);
+        rScaleFromHistory = rawScale.clamp(
+          config.minimumHistoricalRScale,
+          config.maximumHistoricalRScale,
+        );
+        usedHistoryForR = true;
+      }
+    }
+
+    if (posteriorHistory.length >= minSamples) {
+      final weeklyDeltaRms = _rmsDelta(posteriorHistory);
+      if (weeklyDeltaRms != null && weeklyDeltaRms.isFinite) {
+        final rawScale = math.pow(
+          weeklyDeltaRms / math.max(config.weeklyMaintenanceDriftCalories, 1),
+          2,
+        );
+        qScaleFromHistory = rawScale.toDouble().clamp(
+              config.minimumHistoricalQScale,
+              config.maximumHistoricalQScale,
+            );
+        usedHistoryForQ = true;
+      }
+    }
+
+    final calibratedQVariance = baseQVariance *
+        ((1 - config.posteriorDriftHistoryInfluenceOnQ) +
+            (config.posteriorDriftHistoryInfluenceOnQ * qScaleFromHistory));
+    final calibratedObservationVariance = baseObservationVariance *
+        ((1 - config.residualHistoryInfluenceOnR) +
+            (config.residualHistoryInfluenceOnR * rScaleFromHistory));
+    final calibratedReferenceVariance = baseReferenceObservationVariance *
+        ((1 - config.residualHistoryInfluenceOnR) +
+            (config.residualHistoryInfluenceOnR * rScaleFromHistory));
+
+    return _NoiseCalibration(
+      qVariance: math.max(calibratedQVariance, 1),
+      observationVariance: math.max(calibratedObservationVariance, 1),
+      referenceObservationVariance: math.max(calibratedReferenceVariance, 1),
+      qScaleFromHistory: qScaleFromHistory,
+      rScaleFromHistory: rScaleFromHistory,
+      usedHistoryForQ: usedHistoryForQ,
+      usedHistoryForR: usedHistoryForR,
+    );
+  }
+
+  _StabilizationAssessment _assessStabilization({
+    required _PriorStep priorStep,
+    required BayesianEstimatorState? recursiveState,
+    required bool hasObservation,
+    required double effectiveSampleSize,
+    required double kalmanGain,
+    required double steadyStateGain,
+    required double predictedVariance,
+    required double steadyStateVariance,
+    required double rScaleFromHistory,
+  }) {
+    final qualityFlags = <String>[];
+    final posteriorHistoryCount =
+        recursiveState?.recentPosteriorMeansCalories.length ?? 0;
+    final bootstrapPhase =
+        priorStep.initializedThisRun || posteriorHistoryCount < 3;
+
+    if (bootstrapPhase) {
+      qualityFlags.add('bayesian_stabilizing_bootstrap');
+    }
+
+    final gainToSteadyRatio = !hasObservation || steadyStateGain <= 0
+        ? 0.0
+        : kalmanGain / steadyStateGain;
+    if (hasObservation &&
+        gainToSteadyRatio > 1.75 &&
+        effectiveSampleSize < 12) {
+      qualityFlags.add('bayesian_stabilizing_high_gain');
+    }
+
+    final varianceToSteadyRatio =
+        predictedVariance / math.max(steadyStateVariance, 1);
+    if (varianceToSteadyRatio > 2.25) {
+      qualityFlags.add('bayesian_stabilizing_high_variance');
+    }
+
+    if (rScaleFromHistory > 1.45) {
+      qualityFlags.add('bayesian_stabilizing_noisy_regime');
+    }
+
+    return _StabilizationAssessment(
+      isStillStabilizing: qualityFlags.isNotEmpty,
+      bootstrapPhase: bootstrapPhase,
+      qualityFlags: qualityFlags,
+    );
+  }
+
+  RecommendationConfidence _applyStabilizationConfidenceGuard({
+    required RecommendationConfidence baseConfidence,
+    required _StabilizationAssessment stabilization,
+  }) {
+    if (!stabilization.isStillStabilizing) {
+      return baseConfidence;
+    }
+    // Keep stabilization conservative without collapsing strong observational
+    // runs into "not enough data" too aggressively during normal bootstrap.
+    return _downgradeConfidence(baseConfidence);
+  }
+
+  RecommendationConfidence _downgradeConfidence(
+    RecommendationConfidence confidence,
+  ) {
+    switch (confidence) {
+      case RecommendationConfidence.high:
+        return RecommendationConfidence.medium;
+      case RecommendationConfidence.medium:
+        return RecommendationConfidence.low;
+      case RecommendationConfidence.low:
+      case RecommendationConfidence.notEnoughData:
+        return RecommendationConfidence.notEnoughData;
+    }
+  }
+
+  List<double> _appendRollingHistory({
+    required List<double> existing,
+    required double value,
+    required int maxLength,
+  }) {
+    if (!value.isFinite) {
+      return existing;
+    }
+    final normalizedMaxLength = math.max(maxLength, 1);
+    final next = <double>[...existing, value];
+    if (next.length <= normalizedMaxLength) {
+      return next;
+    }
+    return next.sublist(next.length - normalizedMaxLength);
+  }
+
+  double? _sampleVariance(List<double> values) {
+    if (values.length < 2) {
+      return null;
+    }
+    final mean = values.reduce((a, b) => a + b) / values.length;
+    var sumSquares = 0.0;
+    for (final value in values) {
+      final delta = value - mean;
+      sumSquares += delta * delta;
+    }
+    return sumSquares / (values.length - 1);
+  }
+
+  double? _rmsDelta(List<double> values) {
+    if (values.length < 2) {
+      return null;
+    }
+    var sumSquares = 0.0;
+    var count = 0;
+    for (var i = 1; i < values.length; i++) {
+      final delta = values[i] - values[i - 1];
+      sumSquares += delta * delta;
+      count++;
+    }
+    if (count == 0) {
+      return null;
+    }
+    return math.sqrt(sumSquares / count);
   }
 
   _PriorStep _resolvePriorStep({
@@ -568,6 +928,7 @@ class BayesianTdeeEstimator {
         varianceCap: varianceCap,
         initializedThisRun: false,
         replayedSameWeekPrior: sameDueWeek && recursiveState.hasReplayPrior,
+        sameDueWeek: sameDueWeek,
       );
     }
 
@@ -591,6 +952,7 @@ class BayesianTdeeEstimator {
       varianceCap: varianceCap,
       initializedThisRun: true,
       replayedSameWeekPrior: false,
+      sameDueWeek: false,
     );
   }
 
@@ -812,6 +1174,38 @@ class BayesianTdeeEstimator {
   }
 }
 
+class _NoiseCalibration {
+  final double qVariance;
+  final double observationVariance;
+  final double referenceObservationVariance;
+  final double qScaleFromHistory;
+  final double rScaleFromHistory;
+  final bool usedHistoryForQ;
+  final bool usedHistoryForR;
+
+  const _NoiseCalibration({
+    required this.qVariance,
+    required this.observationVariance,
+    required this.referenceObservationVariance,
+    required this.qScaleFromHistory,
+    required this.rScaleFromHistory,
+    required this.usedHistoryForQ,
+    required this.usedHistoryForR,
+  });
+}
+
+class _StabilizationAssessment {
+  final bool isStillStabilizing;
+  final bool bootstrapPhase;
+  final List<String> qualityFlags;
+
+  const _StabilizationAssessment({
+    required this.isStillStabilizing,
+    required this.bootstrapPhase,
+    required this.qualityFlags,
+  });
+}
+
 class _PriorStep {
   final double priorMeanBeforePrediction;
   final double priorVarianceBeforePrediction;
@@ -823,6 +1217,7 @@ class _PriorStep {
   final double varianceCap;
   final bool initializedThisRun;
   final bool replayedSameWeekPrior;
+  final bool sameDueWeek;
 
   const _PriorStep({
     required this.priorMeanBeforePrediction,
@@ -835,6 +1230,7 @@ class _PriorStep {
     required this.varianceCap,
     required this.initializedThisRun,
     required this.replayedSameWeekPrior,
+    required this.sameDueWeek,
   });
 }
 

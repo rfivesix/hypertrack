@@ -432,6 +432,9 @@ class RecommendationRepository {
         math.pow(estimate.posteriorStdDevCalories, 2).toDouble();
     final priorVariance =
         math.pow(estimate.priorStdDevUsedCalories, 2).toDouble();
+    final residualFromDebug =
+        _asDouble(estimate.debugInfo['observationResidualCalories']);
+    final observedMaintenance = estimate.observationImpliedMaintenanceCalories;
 
     final state = BayesianEstimatorState(
       posteriorMeanCalories: estimate.posteriorMaintenanceCalories,
@@ -442,6 +445,15 @@ class RecommendationRepository {
       lastPriorSource: estimate.priorSource,
       lastObservationUsed:
           estimate.observationImpliedMaintenanceCalories != null,
+      recentPosteriorMeansCalories: <double>[
+        estimate.posteriorMaintenanceCalories,
+      ],
+      recentObservationResidualsCalories: residualFromDebug == null
+          ? const <double>[]
+          : <double>[residualFromDebug],
+      recentObservationImpliedMaintenanceCalories: observedMaintenance == null
+          ? const <double>[]
+          : <double>[observedMaintenance],
     );
 
     return state.isValid ? state : null;
@@ -496,6 +508,13 @@ class RecommendationRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  double? _asDouble(Object? value) {
+    return switch (value) {
+      num() => value.toDouble(),
+      _ => null,
+    };
   }
 
   NutritionRecommendation _copyRecommendationWithDueWeekKey({

@@ -266,6 +266,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
           goal: recommendationState.goal,
           targetRateKgPerWeek: recommendationState.targetRateKgPerWeek,
           recommendation: recommendationState.latestGeneratedRecommendation,
+          maintenanceEstimate: recommendationState.latestMaintenanceEstimate,
           generatedAt: recommendationState.latestGeneratedAt,
           nextAdaptiveRecommendationDueAt:
               recommendationState.nextAdaptiveRecommendationDueAt,

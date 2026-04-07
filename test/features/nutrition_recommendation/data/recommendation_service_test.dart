@@ -408,6 +408,7 @@ void main() {
         refreshIfDue: false,
       );
       expect(before.latestGeneratedAt, isNull);
+      expect(before.latestMaintenanceEstimate, isNull);
       expect(before.isAdaptiveRecommendationDueNow, isTrue);
       expect(before.nextAdaptiveRecommendationDueAt, DateTime(2026, 4, 6));
       expect(before.currentDueWeekKey, '2026-04-06');
@@ -420,6 +421,11 @@ void main() {
 
       expect(generated, isNotNull);
       expect(after.latestGeneratedAt, generated!.generatedAt);
+      expect(after.latestMaintenanceEstimate, isNotNull);
+      expect(
+        after.latestMaintenanceEstimate!.posteriorMaintenanceCalories,
+        closeTo(generated.estimatedMaintenanceCalories.toDouble(), 400),
+      );
       expect(after.isAdaptiveRecommendationDueNow, isFalse);
       expect(after.nextAdaptiveRecommendationDueAt, DateTime(2026, 4, 13));
       expect(after.currentDueWeekKey, '2026-04-06');
@@ -510,6 +516,28 @@ void main() {
       expect(generated.targetRateKgPerWeek, 0.25);
       expect(applied!.recommendedCalories, generated.recommendedCalories);
       expect(snapshot!.isCoherent, isTrue);
+    });
+
+    test(
+        'onboarding preview returns maintenance estimate including stabilization flags',
+        () async {
+      final preview = await service.generateOnboardingRecommendationPreview(
+        goal: BodyweightGoal.maintainWeight,
+        targetRateKgPerWeek: 0,
+        weightKg: 80,
+        heightCm: 180,
+        birthday: DateTime(1996, 1, 2),
+        gender: 'male',
+        now: DateTime(2026, 4, 5, 9, 0),
+      );
+
+      expect(preview.recommendation.recommendedCalories, greaterThan(0));
+      expect(preview.maintenanceEstimate, isNotNull);
+      expect(preview.maintenanceEstimate.dueWeekKey, '2026-03-30');
+      expect(
+        preview.maintenanceEstimate.qualityFlags,
+        contains('bayesian_estimate_still_stabilizing'),
+      );
     });
 
     test('onboarding bootstrap handles missing optional profile inputs safely',

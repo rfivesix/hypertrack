@@ -3085,6 +3085,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String adaptiveRecommendationMaintenanceRangeLine(int lower, int upper) {
+    return 'Likely range: $lower-$upper kcal';
+  }
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintNarrow =>
+      'Recent signals are fairly consistent, so this estimate is tighter.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintModerate =>
+      'Recent data is usable but still variable, so this estimate has a moderate range.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintWide =>
+      'Recent data is sparse or noisy, so this estimate remains broad.';
+
+  @override
+  String get adaptiveRecommendationStabilizingHint =>
+      'The adaptive estimate is still stabilizing.';
+
+  @override
   String adaptiveRecommendationCaloriesValue(int value) {
     return '$value kcal';
   }

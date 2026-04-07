@@ -6,21 +6,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.8.0-alpha.3-bayesian-preview.2] - 2026-04-07
 
+### Added
+- Data-calibrated Bayesian noise adaptation for adaptive nutrition:
+  - bounded history-informed scaling for `Q` (maintenance drift variance)
+  - bounded history-informed scaling for `R` (observation variance)
+  - deterministic fallback to conservative defaults when history is insufficient
+- User-facing maintenance uncertainty transparency:
+  - likely maintenance range derived from posterior uncertainty (`mean ± 1σ`)
+  - plain-language uncertainty hints on adaptive recommendation surfaces
+  - stabilization hint when the recursive estimate is still settling
+- Stabilization sanity-check layer derived from live vs steady-state behavior:
+  - quality flags for bootstrap/transient/noisy regimes
+  - conservative confidence guard during settling phases
+- Expanded Bayesian estimator/service/repository/UI tests for:
+  - calibration responsiveness and bounds
+  - fallback safety under sparse history
+  - stabilization flags and onboarding stabilization copy
+  - maintenance estimate/state persistence coherence
+
 ### Changed
-- Adaptive nutrition recommendations are now documented as a single canonical Bayesian recursive system end-to-end.
-- Current-state documentation was restructured for newcomer readability with clearer sections for:
+- Adaptive nutrition current-state docs were updated for production-style clarity, including:
+  - data-calibrated `Q/R` semantics
+  - credible-interval presentation semantics
+  - stabilization/sanity-check behavior
   - user-facing behavior
   - scheduling and stable data-window semantics
   - recursive Bayesian prediction/update chaining
   - apply vs recalculate behavior
   - persistence and due-notification semantics
   - confidence/warning interpretation
-- Added a compact mathematical model section in docs (state, prediction, update, missing-observation behavior, Q/R roles, variance cap, horizon-based `kcalPerKg` scaling).
-- Tightened inline comments at subtle logic points (same-week replay prior behavior, prediction-only weeks, variance-cap memory behavior, explicit non-auto-apply semantics).
-- README documentation navigation now points clearly to the Bayesian recursive adaptive nutrition current-state doc.
+- The nutrition recommendation card and onboarding preview now include maintenance range + uncertainty/stabilization copy without changing explicit apply semantics.
+- README documentation navigation label was tightened to reflect canonical Bayesian architecture wording.
 
 ### Internal
-- Adaptive nutrition terminology was normalized across code comments/docs to avoid legacy dual-path wording in active architecture descriptions.
+- Adaptive nutrition terminology and inline comments were normalized further around recursive Bayesian, uncertainty, and due-week semantics.
 
 ## [0.8.0-alpha.3-bayesian-preview.1] - 2026-04-06
 

@@ -16,6 +16,7 @@ class AdaptiveNutritionRecommendationState {
   final BodyweightGoal goal;
   final double targetRateKgPerWeek;
   final NutritionRecommendation? latestGeneratedRecommendation;
+  final BayesianMaintenanceEstimate? latestMaintenanceEstimate;
   final NutritionRecommendation? latestAppliedRecommendation;
   final DateTime? latestGeneratedAt;
   final DateTime nextAdaptiveRecommendationDueAt;
@@ -26,6 +27,7 @@ class AdaptiveNutritionRecommendationState {
     required this.goal,
     required this.targetRateKgPerWeek,
     required this.latestGeneratedRecommendation,
+    required this.latestMaintenanceEstimate,
     required this.latestAppliedRecommendation,
     required this.latestGeneratedAt,
     required this.nextAdaptiveRecommendationDueAt,
@@ -172,13 +174,14 @@ class AdaptiveNutritionRecommendationService {
     final results = await Future.wait<dynamic>([
       _repository.getGoal(),
       _repository.getTargetRateKgPerWeek(),
-      _repository.getLatestGeneratedRecommendation(),
+      _repository.getLatestRecommendationSnapshot(),
       _repository.getLatestAppliedRecommendation(),
       _repository.getLastGeneratedDueWeekKey(),
     ]);
 
-    final latestGeneratedRecommendation =
-        results[2] as NutritionRecommendation?;
+    final latestSnapshot = results[2] as AdaptiveRecommendationSnapshot?;
+    final latestGeneratedRecommendation = latestSnapshot?.recommendation;
+    final latestMaintenanceEstimate = latestSnapshot?.maintenanceEstimate;
     final lastGeneratedDueWeekKey = results[4] as String?;
     final currentDueWeekKey =
         RecommendationScheduler.dueWeekKeyFor(effectiveNow);
@@ -195,6 +198,7 @@ class AdaptiveNutritionRecommendationService {
       goal: results[0] as BodyweightGoal,
       targetRateKgPerWeek: results[1] as double,
       latestGeneratedRecommendation: latestGeneratedRecommendation,
+      latestMaintenanceEstimate: latestMaintenanceEstimate,
       latestAppliedRecommendation: results[3] as NutritionRecommendation?,
       latestGeneratedAt: latestGeneratedRecommendation?.generatedAt,
       nextAdaptiveRecommendationDueAt: nextAdaptiveRecommendationDueAt,
@@ -293,6 +297,38 @@ class AdaptiveNutritionRecommendationService {
     bool persistGenerated = false,
     bool markAsApplied = false,
   }) async {
+    final preview = await generateOnboardingRecommendationPreview(
+      goal: goal,
+      targetRateKgPerWeek: targetRateKgPerWeek,
+      weightKg: weightKg,
+      heightCm: heightCm,
+      birthday: birthday,
+      gender: gender,
+      bodyFatPercent: bodyFatPercent,
+      declaredActivityLevel: declaredActivityLevel,
+      extraCardioHoursOption: extraCardioHoursOption,
+      now: now,
+      persistGenerated: persistGenerated,
+      markAsApplied: markAsApplied,
+    );
+    return preview.recommendation;
+  }
+
+  Future<BayesianNutritionRecommendationResult>
+      generateOnboardingRecommendationPreview({
+    required BodyweightGoal goal,
+    required double targetRateKgPerWeek,
+    required double? weightKg,
+    required int? heightCm,
+    required DateTime? birthday,
+    required String? gender,
+    double? bodyFatPercent,
+    PriorActivityLevel? declaredActivityLevel,
+    ExtraCardioHoursOption? extraCardioHoursOption,
+    DateTime? now,
+    bool persistGenerated = false,
+    bool markAsApplied = false,
+  }) async {
     final effectiveNow = now ?? DateTime.now();
     final effectiveDeclaredActivityLevel =
         declaredActivityLevel ?? await _repository.getPriorActivityLevel();
@@ -364,7 +400,7 @@ class AdaptiveNutritionRecommendationService {
       }
     }
 
-    return result.recommendation;
+    return result;
   }
 
   Future<void> persistGeneratedRecommendation({
