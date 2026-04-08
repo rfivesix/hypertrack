@@ -94,7 +94,7 @@ Current patterns in use:
 - `Provider`/`ChangeNotifier` for app-level services (`ThemeService`, `WorkoutSessionManager`, etc.)
 - local `StatefulWidget` state for most screen-level state
 - feature-local `ChangeNotifier` for Sleep day VM (`SleepDayViewModel`)
-- `SharedPreferences` for feature toggles and sync metadata (Steps and Sleep settings)
+- `SharedPreferences` for feature toggles/sync metadata (Steps/Sleep) and adaptive nutrition recommendation state/settings (`adaptive_nutrition_recommendation.*`)
 
 ## Persistence model
 
@@ -110,4 +110,3 @@ Notable current areas:
 
 - `lib/features/statistics/statistics_state_container.dart` exists as a structural container but is not currently wired as shared runtime state.
 - Sleep week/month route names currently resolve to `SleepDayOverviewPage` with scope switching, while standalone week/month page classes also exist.
-

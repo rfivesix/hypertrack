@@ -8,6 +8,7 @@ Hypertrack currently implements:
 
 - Workout tracking and analytics
 - Nutrition/fluid logging
+- Adaptive nutrition recommendation generation (weekly due-week model with explicit manual apply)
 - Measurements
 - Supplements
 - Health steps import + aggregation
@@ -117,6 +118,7 @@ Implemented controls include:
 
 ## Related docs
 
+- [Adaptive nutrition recommendation current state](adaptive_nutrition_recommendation_current_state.md)
 - [Statistics module](statistics_module.md)
 - [Sleep current state](sleep/sleep_current_state.md)
 - [Health export one-way](health_export_one_way.md)

@@ -9,6 +9,7 @@ The feature:
 - converts the maintenance estimate into calorie and macro targets
 - runs on weekly due-week semantics with deterministic in-week recomputation behavior
 - persists both recommendation snapshot and recursive estimator state
+- persists user-configured goal/rate/activity/cardio recommendation settings
 - calibrates estimator noise from recent user behavior when sufficient history exists
 - tracks confirmed vs pending diet phases with 7-day confirmation
 - surfaces a user-facing maintenance uncertainty range and stabilization hints
@@ -194,13 +195,24 @@ Same-week recalculation replays that due week’s pre-update prior (when availab
 
 ## Persistence Model
 
-Canonical keys:
+Adaptive recommendation persistence is currently SharedPreferences-backed via `RecommendationRepository`.
+
+Active user-config keys:
+- `adaptive_nutrition_recommendation.goal_direction`
+- `adaptive_nutrition_recommendation.target_rate_kg_per_week`
+- `adaptive_nutrition_recommendation.prior_activity_level`
+- `adaptive_nutrition_recommendation.extra_cardio_hours`
+
+Active generated-state keys:
 - `adaptive_nutrition_recommendation.latest_snapshot`
 - `adaptive_nutrition_recommendation.latest_recursive_state`
 - `adaptive_nutrition_recommendation.latest_applied`
 - `adaptive_nutrition_recommendation.last_generated_due_week_key`
 - `adaptive_nutrition_recommendation.last_due_notification_week_key`
 - `adaptive_nutrition_recommendation.diet_phase_tracking_state`
+
+Related persistence side effect:
+- explicit apply updates active nutrition targets in `app_settings` (Drift DB) while preserving non-adaptive targets (water/steps)
 
 Snapshot payload (`AdaptiveRecommendationSnapshot`) includes:
 - generated recommendation
@@ -219,6 +231,20 @@ Diet-phase tracking payload (`AdaptiveDietPhaseTrackingState`) includes:
 - confirmed phase and confirmed phase start day
 - optional pending candidate phase and candidate first-seen day
 - deterministic reconciliation data for the 7-day confirmation rule
+
+## Backup / Restore Coverage (Current Implementation)
+
+Backup/restore is handled by `BackupManager` and currently serializes SharedPreferences wholesale:
+- export: `_generateBackupJson()` copies every key from `prefs.getKeys()` into backup `userPreferences`
+- import: `_importBackupPayload()` clears prefs, then restores all supported scalar/list types from `userPreferences`
+
+For adaptive nutrition this means:
+- all active adaptive keys above are backed up/restored
+- migration-only legacy adaptive keys are also preserved when present in prefs
+- there is no adaptive-specific whitelist in backup logic; coverage is implicit via full prefs export/import
+
+Type caveat:
+- restore currently replays `bool`, `int`, `double`, `String`, and `List<String>` values; adaptive keys use supported types (`String`/`double`)
 
 ### Migration Notes (Legacy Fallback Only)
 

@@ -90,3 +90,8 @@ Sleep canonical/derived rows persist version tags used by recompute logic:
 ## Portability and backup
 
 Backup/export tooling remains under `lib/data/backup_manager.dart` and related import/export helpers.
+
+Current backup behavior relevant to adaptive nutrition:
+- SharedPreferences are exported as a full `userPreferences` map (all keys).
+- Import restores supported preference value types from that map after clearing existing prefs.
+- Adaptive recommendation persistence keys (`adaptive_nutrition_recommendation.*`) are therefore covered implicitly, including migration-only legacy keys if still present.
