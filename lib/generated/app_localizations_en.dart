@@ -3085,6 +3085,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String adaptiveRecommendationMaintenanceRangeLine(int lower, int upper) {
+    return 'Likely range: $lower-$upper kcal';
+  }
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintNarrow =>
+      'Your likely maintenance range is fairly tight. Small day-to-day shifts are normal.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintModerate =>
+      'Your likely maintenance range is moderate right now. Some movement week to week is normal.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintWide =>
+      'Your likely maintenance range is still wide. This is normal while we gather more steady data.';
+
+  @override
+  String get adaptiveRecommendationStabilizingHint =>
+      'We are still adapting to your recent phase, so this estimate can move more than usual.';
+
+  @override
   String adaptiveRecommendationCaloriesValue(int value) {
     return '$value kcal';
   }
@@ -3119,6 +3140,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String adaptiveRecommendationActiveCaloriesLine(int value) {
     return 'Current active calories: $value kcal';
   }
+
+  @override
+  String adaptiveRecommendationCalculatedAtLine(String value) {
+    return 'Calculated at: $value';
+  }
+
+  @override
+  String adaptiveRecommendationNextDueLine(String value) {
+    return 'Next adaptive recommendation due: $value';
+  }
+
+  @override
+  String get adaptiveRecommendationDueNowLine =>
+      'A new adaptive recommendation is due this week.';
+
+  @override
+  String get adaptiveRecommendationRecalculateNowAction => 'Recalculate now';
+
+  @override
+  String get adaptiveRecommendationRecalculating => 'Recalculating...';
 
   @override
   String get adaptiveRecommendationApplying => 'Applying...';
@@ -3178,6 +3219,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptiveConfidenceHigh => 'Strong recent logs';
+
+  @override
+  String get adaptiveRecommendationRecalculatedSnack =>
+      'Recommendation recalculated.';
 
   @override
   String get adaptiveRecommendationAppliedToGoalsSnack =>

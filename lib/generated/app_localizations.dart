@@ -5684,6 +5684,36 @@ abstract class AppLocalizations {
   /// **'Maintenance estimate: {value} kcal'**
   String adaptiveRecommendationMaintenanceLine(int value);
 
+  /// No description provided for @adaptiveRecommendationMaintenanceRangeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Likely range: {lower}-{upper} kcal'**
+  String adaptiveRecommendationMaintenanceRangeLine(int lower, int upper);
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintNarrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your likely maintenance range is fairly tight. Small day-to-day shifts are normal.'**
+  String get adaptiveRecommendationUncertaintyHintNarrow;
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Your likely maintenance range is moderate right now. Some movement week to week is normal.'**
+  String get adaptiveRecommendationUncertaintyHintModerate;
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintWide.
+  ///
+  /// In en, this message translates to:
+  /// **'Your likely maintenance range is still wide. This is normal while we gather more steady data.'**
+  String get adaptiveRecommendationUncertaintyHintWide;
+
+  /// No description provided for @adaptiveRecommendationStabilizingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'We are still adapting to your recent phase, so this estimate can move more than usual.'**
+  String get adaptiveRecommendationStabilizingHint;
+
   /// No description provided for @adaptiveRecommendationCaloriesValue.
   ///
   /// In en, this message translates to:
@@ -5726,6 +5756,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current active calories: {value} kcal'**
   String adaptiveRecommendationActiveCaloriesLine(int value);
+
+  /// No description provided for @adaptiveRecommendationCalculatedAtLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated at: {value}'**
+  String adaptiveRecommendationCalculatedAtLine(String value);
+
+  /// No description provided for @adaptiveRecommendationNextDueLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Next adaptive recommendation due: {value}'**
+  String adaptiveRecommendationNextDueLine(String value);
+
+  /// No description provided for @adaptiveRecommendationDueNowLine.
+  ///
+  /// In en, this message translates to:
+  /// **'A new adaptive recommendation is due this week.'**
+  String get adaptiveRecommendationDueNowLine;
+
+  /// No description provided for @adaptiveRecommendationRecalculateNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculate now'**
+  String get adaptiveRecommendationRecalculateNowAction;
+
+  /// No description provided for @adaptiveRecommendationRecalculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculating...'**
+  String get adaptiveRecommendationRecalculating;
 
   /// No description provided for @adaptiveRecommendationApplying.
   ///
@@ -5822,6 +5882,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Strong recent logs'**
   String get adaptiveConfidenceHigh;
+
+  /// No description provided for @adaptiveRecommendationRecalculatedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation recalculated.'**
+  String get adaptiveRecommendationRecalculatedSnack;
 
   /// No description provided for @adaptiveRecommendationAppliedToGoalsSnack.
   ///

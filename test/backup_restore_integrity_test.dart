@@ -169,7 +169,7 @@ void main() {
       expect(restoredPrefs.getInt('targetSalt'), 5);
     });
 
-    test('adaptive recommendation state in shared preferences survives restore',
+    test('adaptive recommendation shared-preference state survives restore',
         () async {
       final prefs = await SharedPreferences.getInstance();
       const goalKey = 'adaptive_nutrition_recommendation.goal_direction';
@@ -179,16 +179,43 @@ void main() {
           'adaptive_nutrition_recommendation.prior_activity_level';
       const extraCardioHoursKey =
           'adaptive_nutrition_recommendation.extra_cardio_hours';
-      const generatedKey = 'adaptive_nutrition_recommendation.latest_generated';
+      const latestSnapshotKey =
+          'adaptive_nutrition_recommendation.latest_snapshot';
+      const latestRecursiveStateKey =
+          'adaptive_nutrition_recommendation.latest_recursive_state';
+      const latestAppliedKey =
+          'adaptive_nutrition_recommendation.latest_applied';
       const dueWeekKey =
           'adaptive_nutrition_recommendation.last_generated_due_week_key';
+      const dueNotificationWeekKey =
+          'adaptive_nutrition_recommendation.last_due_notification_week_key';
+      const dietPhaseTrackingStateKey =
+          'adaptive_nutrition_recommendation.diet_phase_tracking_state';
+      const legacyGeneratedKey =
+          'adaptive_nutrition_recommendation.latest_generated';
 
       await prefs.setString(goalKey, 'loseWeight');
       await prefs.setDouble(rateKey, -0.5);
       await prefs.setString(priorActivityLevelKey, 'veryHigh');
       await prefs.setString(extraCardioHoursKey, 'h5');
       await prefs.setString(
-        generatedKey,
+        latestSnapshotKey,
+        jsonEncode(<String, dynamic>{
+          'dueWeekKey': '2026-03-30',
+          'algorithmVersion':
+              'tdee_adaptive_recommendation_1_0_bayesian_recursive',
+        }),
+      );
+      await prefs.setString(
+        latestRecursiveStateKey,
+        jsonEncode(<String, dynamic>{
+          'lastDueWeekKey': '2026-03-30',
+          'posteriorMeanCalories': 2450.0,
+          'posteriorVarianceCalories2': 160000.0,
+        }),
+      );
+      await prefs.setString(
+        latestAppliedKey,
         jsonEncode(<String, dynamic>{
           'recommendedCalories': 2100,
           'goal': 'loseWeight',
@@ -196,19 +223,39 @@ void main() {
         }),
       );
       await prefs.setString(dueWeekKey, '2026-03-30');
+      await prefs.setString(dueNotificationWeekKey, '2026-03-30');
+      await prefs.setString(
+        dietPhaseTrackingStateKey,
+        jsonEncode(<String, dynamic>{
+          'confirmedPhase': 'cut',
+          'confirmedPhaseStartDay': '2026-03-30',
+        }),
+      );
+      await prefs.setString(legacyGeneratedKey, '{"legacy":true}');
 
       final payload = await backupManager.generateBackupPayloadForTesting();
       final userPreferences =
           payload['userPreferences'] as Map<String, dynamic>;
       expect(userPreferences[priorActivityLevelKey], 'veryHigh');
       expect(userPreferences[extraCardioHoursKey], 'h5');
+      expect(userPreferences[latestSnapshotKey], isNotNull);
+      expect(userPreferences[latestRecursiveStateKey], isNotNull);
+      expect(userPreferences[latestAppliedKey], isNotNull);
+      expect(userPreferences[dueNotificationWeekKey], '2026-03-30');
+      expect(userPreferences[dietPhaseTrackingStateKey], isNotNull);
+      expect(userPreferences[legacyGeneratedKey], '{"legacy":true}');
 
       await prefs.setString(goalKey, 'gainWeight');
       await prefs.setDouble(rateKey, 0.5);
       await prefs.setString(priorActivityLevelKey, 'low');
       await prefs.setString(extraCardioHoursKey, 'h0');
-      await prefs.setString(generatedKey, '{}');
+      await prefs.setString(latestSnapshotKey, '{}');
+      await prefs.setString(latestRecursiveStateKey, '{}');
+      await prefs.setString(latestAppliedKey, '{}');
       await prefs.setString(dueWeekKey, '2026-04-06');
+      await prefs.setString(dueNotificationWeekKey, '2026-04-06');
+      await prefs.setString(dietPhaseTrackingStateKey, '{}');
+      await prefs.setString(legacyGeneratedKey, '{}');
 
       final imported =
           await backupManager.importBackupPayloadForTesting(payload);
@@ -220,14 +267,39 @@ void main() {
       expect(restoredPrefs.getString(priorActivityLevelKey), 'veryHigh');
       expect(restoredPrefs.getString(extraCardioHoursKey), 'h5');
       expect(
-        restoredPrefs.getString(generatedKey),
+        restoredPrefs.getString(latestAppliedKey),
         jsonEncode(<String, dynamic>{
           'recommendedCalories': 2100,
           'goal': 'loseWeight',
           'targetRateKgPerWeek': -0.5,
         }),
       );
+      expect(
+        restoredPrefs.getString(latestSnapshotKey),
+        jsonEncode(<String, dynamic>{
+          'dueWeekKey': '2026-03-30',
+          'algorithmVersion':
+              'tdee_adaptive_recommendation_1_0_bayesian_recursive',
+        }),
+      );
+      expect(
+        restoredPrefs.getString(latestRecursiveStateKey),
+        jsonEncode(<String, dynamic>{
+          'lastDueWeekKey': '2026-03-30',
+          'posteriorMeanCalories': 2450.0,
+          'posteriorVarianceCalories2': 160000.0,
+        }),
+      );
       expect(restoredPrefs.getString(dueWeekKey), '2026-03-30');
+      expect(restoredPrefs.getString(dueNotificationWeekKey), '2026-03-30');
+      expect(
+        restoredPrefs.getString(dietPhaseTrackingStateKey),
+        jsonEncode(<String, dynamic>{
+          'confirmedPhase': 'cut',
+          'confirmedPhaseStartDay': '2026-03-30',
+        }),
+      );
+      expect(restoredPrefs.getString(legacyGeneratedKey), '{"legacy":true}');
     });
 
     test('app settings restore even when profile payload is missing', () async {

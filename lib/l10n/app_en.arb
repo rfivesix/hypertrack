@@ -1302,6 +1302,17 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationMaintenanceRangeLine": "Likely range: {lower}-{upper} kcal"
+  ,"@adaptiveRecommendationMaintenanceRangeLine": {
+    "placeholders": {
+      "lower": { "type": "int" },
+      "upper": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationUncertaintyHintNarrow": "Your likely maintenance range is fairly tight. Small day-to-day shifts are normal."
+  ,"adaptiveRecommendationUncertaintyHintModerate": "Your likely maintenance range is moderate right now. Some movement week to week is normal."
+  ,"adaptiveRecommendationUncertaintyHintWide": "Your likely maintenance range is still wide. This is normal while we gather more steady data."
+  ,"adaptiveRecommendationStabilizingHint": "We are still adapting to your recent phase, so this estimate can move more than usual."
   ,"adaptiveRecommendationCaloriesValue": "{value} kcal"
   ,"@adaptiveRecommendationCaloriesValue": {
     "placeholders": {
@@ -1346,6 +1357,21 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationCalculatedAtLine": "Calculated at: {value}"
+  ,"@adaptiveRecommendationCalculatedAtLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationNextDueLine": "Next adaptive recommendation due: {value}"
+  ,"@adaptiveRecommendationNextDueLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationDueNowLine": "A new adaptive recommendation is due this week."
+  ,"adaptiveRecommendationRecalculateNowAction": "Recalculate now"
+  ,"adaptiveRecommendationRecalculating": "Recalculating..."
   ,"adaptiveRecommendationApplying": "Applying..."
   ,"adaptiveRecommendationApplyAction": "Apply recommendation to active goals"
   ,"adaptiveRecommendationWarningCalorieFloor": "Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying."
@@ -1362,6 +1388,7 @@
   ,"adaptiveConfidenceLow": "Limited recent logs"
   ,"adaptiveConfidenceMedium": "Usable recent logs"
   ,"adaptiveConfidenceHigh": "Strong recent logs"
+  ,"adaptiveRecommendationRecalculatedSnack": "Recommendation recalculated."
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Recommendation applied to active goals."
   ,"adaptiveRecommendationNotAvailableSnack": "No recommendation available to apply."
 }

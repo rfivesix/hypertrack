@@ -287,6 +287,10 @@ void main() {
         find.text(l10n.adaptiveRecommendationDataBasisHintPriorOnly),
         findsOneWidget,
       );
+      expect(
+        find.byKey(const Key('onboarding_adaptive_summary_stabilizing_hint')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('onboarding final page shows finish action', (tester) async {

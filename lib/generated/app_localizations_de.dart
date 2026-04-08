@@ -3106,6 +3106,27 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String adaptiveRecommendationMaintenanceRangeLine(int lower, int upper) {
+    return 'Wahrscheinlicher Bereich: $lower-$upper kcal';
+  }
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintNarrow =>
+      'Dein wahrscheinlicher Erhaltungsbereich ist recht eng. Kleine tägliche Schwankungen sind normal.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintModerate =>
+      'Dein wahrscheinlicher Erhaltungsbereich ist aktuell mittelbreit. Etwas Bewegung von Woche zu Woche ist normal.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintWide =>
+      'Dein wahrscheinlicher Erhaltungsbereich ist noch breit. Das ist normal, solange wir mehr stabile Daten sammeln.';
+
+  @override
+  String get adaptiveRecommendationStabilizingHint =>
+      'Wir passen uns noch an deine letzte Phase an, daher kann sich die Schätzung aktuell stärker bewegen.';
+
+  @override
   String adaptiveRecommendationCaloriesValue(int value) {
     return '$value kcal';
   }
@@ -3140,6 +3161,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String adaptiveRecommendationActiveCaloriesLine(int value) {
     return 'Aktuelle aktive Kalorien: $value kcal';
   }
+
+  @override
+  String adaptiveRecommendationCalculatedAtLine(String value) {
+    return 'Berechnet am: $value';
+  }
+
+  @override
+  String adaptiveRecommendationNextDueLine(String value) {
+    return 'Nächste adaptive Empfehlung fällig: $value';
+  }
+
+  @override
+  String get adaptiveRecommendationDueNowLine =>
+      'Diese Woche ist eine neue adaptive Empfehlung fällig.';
+
+  @override
+  String get adaptiveRecommendationRecalculateNowAction =>
+      'Jetzt neu berechnen';
+
+  @override
+  String get adaptiveRecommendationRecalculating => 'Wird neu berechnet...';
 
   @override
   String get adaptiveRecommendationApplying => 'Wird angewendet...';
@@ -3199,6 +3241,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adaptiveConfidenceHigh => 'Starke aktuelle Logs';
+
+  @override
+  String get adaptiveRecommendationRecalculatedSnack =>
+      'Empfehlung neu berechnet.';
 
   @override
   String get adaptiveRecommendationAppliedToGoalsSnack =>

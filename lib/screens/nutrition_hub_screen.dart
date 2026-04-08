@@ -26,6 +26,7 @@ class NutritionHubScreen extends StatefulWidget {
 class _NutritionHubScreenState extends State<NutritionHubScreen> {
   Future<Map<String, dynamic>>? _hubDataFuture;
   final _recommendationService = AdaptiveNutritionRecommendationService();
+  bool _isRecalculatingRecommendation = false;
   bool _isApplyingRecommendation = false;
 
   @override
@@ -73,6 +74,28 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                   .adaptiveRecommendationAppliedToGoalsSnack
               : AppLocalizations.of(context)!
                   .adaptiveRecommendationNotAvailableSnack,
+        ),
+      ),
+    );
+    await _refreshData();
+  }
+
+  Future<void> _recalculateRecommendationNow() async {
+    if (_isRecalculatingRecommendation) return;
+    setState(() => _isRecalculatingRecommendation = true);
+
+    final recalculated =
+        await _recommendationService.recalculateRecommendationNow();
+    if (!mounted) return;
+    setState(() => _isRecalculatingRecommendation = false);
+
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          recalculated == null
+              ? l10n.adaptiveRecommendationNotAvailableSnack
+              : l10n.adaptiveRecommendationRecalculatedSnack,
         ),
       ),
     );
@@ -243,8 +266,16 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
           goal: recommendationState.goal,
           targetRateKgPerWeek: recommendationState.targetRateKgPerWeek,
           recommendation: recommendationState.latestGeneratedRecommendation,
+          maintenanceEstimate: recommendationState.latestMaintenanceEstimate,
+          generatedAt: recommendationState.latestGeneratedAt,
+          nextAdaptiveRecommendationDueAt:
+              recommendationState.nextAdaptiveRecommendationDueAt,
+          isAdaptiveRecommendationDueNow:
+              recommendationState.isAdaptiveRecommendationDueNow,
           activeTargetCalories: targetCalories,
+          isRecalculating: _isRecalculatingRecommendation,
           isApplying: _isApplyingRecommendation,
+          onRecalculate: _recalculateRecommendationNow,
           onApply: _applyRecommendation,
         ),
         const SizedBox(height: 10),

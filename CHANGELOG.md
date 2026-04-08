@@ -4,6 +4,117 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0-alpha.3-bayesian-preview.3] - 2026-04-08
+
+### Added
+- Canonical adaptive diet-phase model (`cut`, `maintain`, `bulk`) with persisted confirmed/pending phase tracking.
+- Deterministic 7-day phase-change confirmation flow:
+  - pending candidate starts on direction change
+  - confirmed phase switches only after 7 stable days
+  - reverting before confirmation cancels pending reset
+- Lightweight residual-bias diagnostic seam for weekly observation validation:
+  - mean residual summary
+  - sample count
+  - bias direction status (`neutral`, likely over/under-estimating energy density)
+
+### Changed
+- Replaced the window-length kcal/kg observation scaling with confirmed-phase-age ramping:
+  - week 1 = `3000`
+  - linear ramp to week 9 = `7700`
+  - week 9+ stays at `7700`
+- Exact target-rate changes no longer define new adaptive phases; only goal direction does.
+- Adaptive recommendation copy (EN/DE) now uses simpler wording that clearly separates:
+  - “still adapting/settling”
+  - normal uncertainty around likely maintenance range
+- Adaptive nutrition current-state docs updated for confirmed-phase semantics, ramp behavior, and residual diagnostics seam.
+
+### Testing
+- Expanded adaptive nutrition scenario-test infrastructure with reusable synthetic-truth and recovery metrics helpers:
+  - convergence milestones (initial / week-4 / week-8 / week-12)
+  - signed/absolute error progression
+  - error half-life and settling-time checks
+  - bounded overshoot/undershoot and truth-crossing checks
+  - pre/event/post recovery-window summaries for posterior, variance, and confidence
+  - bounded weeks-to-recover checks for transient event scenarios
+- Strengthened ground-truth scenario assertions to validate quantitative convergence behavior, not only boundedness/stability.
+- Strengthened chaotic scenario assertions (weekend spikes, refeed, water jump, illness, logging-quality phases) to validate measurable disruption and recovery behavior.
+- Added comparative long-horizon profile validation (8–12 week style horizons) with directional plausibility checks across matched profile pairs:
+  - heavier vs lighter
+  - lean vs higher body-fat at comparable size
+  - high vs low activity
+  - male/female/unknown plausibility banding
+  - high-steps vs low-steps long-horizon relation
+
+## [0.8.0-alpha.3-bayesian-preview.2] - 2026-04-07
+
+### Added
+- Data-calibrated Bayesian noise adaptation for adaptive nutrition:
+  - bounded history-informed scaling for `Q` (maintenance drift variance)
+  - bounded history-informed scaling for `R` (observation variance)
+  - deterministic fallback to conservative defaults when history is insufficient
+- User-facing maintenance uncertainty transparency:
+  - likely maintenance range derived from posterior uncertainty (`mean ± 1σ`)
+  - plain-language uncertainty hints on adaptive recommendation surfaces
+  - stabilization hint when the recursive estimate is still settling
+- Stabilization sanity-check layer derived from live vs steady-state behavior:
+  - quality flags for bootstrap/transient/noisy regimes
+  - conservative confidence guard during settling phases
+- Expanded Bayesian estimator/service/repository/UI tests for:
+  - calibration responsiveness and bounds
+  - fallback safety under sparse history
+  - stabilization flags and onboarding stabilization copy
+  - maintenance estimate/state persistence coherence
+
+### Changed
+- Adaptive nutrition current-state docs were updated for production-style clarity, including:
+  - data-calibrated `Q/R` semantics
+  - credible-interval presentation semantics
+  - stabilization/sanity-check behavior
+  - user-facing behavior
+  - scheduling and stable data-window semantics
+  - recursive Bayesian prediction/update chaining
+  - apply vs recalculate behavior
+  - persistence and due-notification semantics
+  - confidence/warning interpretation
+- The nutrition recommendation card and onboarding preview now include maintenance range + uncertainty/stabilization copy without changing explicit apply semantics.
+- README documentation navigation label was tightened to reflect canonical Bayesian architecture wording.
+
+### Internal
+- Adaptive nutrition terminology and inline comments were normalized further around recursive Bayesian, uncertainty, and due-week semantics.
+
+## [0.8.0-alpha.3-bayesian-preview.1] - 2026-04-06
+
+### Added
+- Experimental Bayesian/Kalman adaptive nutrition estimation path
+- Atomic Bayesian experimental snapshot persistence
+- Manual “Recalculate now” action for adaptive recommendations
+- Recommendation freshness metadata in UI:
+  - calculated at
+  - next adaptive recommendation due
+  - due now indicator
+- Scheduler-based due-notification seam for new adaptive recommendations
+- Richer estimator comparison/debug tracing
+- Documented Bayesian estimator tuning parameters
+
+### Changed
+- Bayesian experimental state now uses atomic snapshot persistence as single source of truth
+- Due-notification logic now requires:
+  - recommendation is currently due
+  - no recommendation has yet been generated for that due week
+  - no notification has yet been sent for that due week
+- Snapshot generation time is now sourced only from `recommendation.generatedAt`
+- German adaptive notification strings now use proper umlauts and cleaner wording
+- Manual recalculation now forces immediate regeneration without auto-applying active goals
+
+### Fixed
+- Safer handling of incoherent or corrupt Bayesian experimental state
+- Safer migration from legacy fragmented Bayesian persistence
+- Removed remaining active use of fragmented Bayesian write paths in normal experimental flow
+
+### Internal
+- Production heuristic recommendation path remains unchanged and authoritative
+- Legacy fragmented Bayesian keys are now migration-only fallback support
+- Documentation reviewed and updated to match final enforced behavior
 ## [0.8.0-alpha.2] - 2026-04-06
 
 This alpha improves the adaptive nutrition recommendation MVP with more conservative sparse-data behavior, more robust trend estimation, better step-prior maintenance inputs, and clearer recommendation transparency.

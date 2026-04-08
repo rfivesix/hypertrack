@@ -5,10 +5,16 @@ Hypertrack is an offline-first Flutter app for workout, nutrition, measurements,
 This README is intentionally implementation-focused and reflects the **current working copy** of the codebase. Planned work toward `1.0` is listed separately and is **not** described as implemented behavior.
 
 > **Note:** Hypertrack is built with heavy AI assistance across implementation, refactoring, and documentation. I’m very happy with the result, but as with any fast-moving AI-assisted codebase, I cannot guarantee that every detail is perfect.
+## Install
+
+[![Get it on Obtainium](https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png)](http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/hypertrack/releases)
+
+- App Store and Play store release follows soon
 
 ## Documentation
 
 - [Project Overview](documentation/overview.md)
+- [Adaptive Nutrition Recommendation (Current Bayesian Architecture)](documentation/adaptive_nutrition_recommendation_current_state.md)
 - [Statistics Module (Current Implementation)](documentation/statistics_module.md)
 - [Sleep Module (Current Source of Truth)](documentation/sleep/sleep_current_state.md)
 - [Sleep Health Score V2 (Current Canonical)](documentation/sleep/sleep_health_score_v2.md)
@@ -33,6 +39,7 @@ This README is intentionally implementation-focused and reflects the **current w
 - Logging foods and nutrition entries
 - Tracking calories and core macros
 - Tracking additional nutrition fields such as fiber, sugar, and salt/sodium where available
+- Adaptive weekly nutrition recommendation preview (Bayesian recursive estimator) with explicit manual apply
 - Optional AI-assisted meal tracking
   - BYOK (bring your own API key) only
   - user-controlled provider + model setup
@@ -110,11 +117,10 @@ This README is intentionally implementation-focused and reflects the **current w
 
 ## Near-term work toward 1.0 (planned, not yet guaranteed in current working copy)
 
-- Adaptive calorie target / TDEE guidance
-  - goal selection
-  - weekly target rate
-  - recommendation from intake + weight trend
-- Onboarding (including TDEE guidance) and tutorial
+- Adaptive recommendation hardening
+  - broader regression test expansion (separate follow-up)
+  - additional UX/documentation polish around recommendation transparency
+- Onboarding and tutorial polish
 - Widgets
 - App Store release
 - Google Play release

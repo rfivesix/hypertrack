@@ -1307,6 +1307,17 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationMaintenanceRangeLine": "Wahrscheinlicher Bereich: {lower}-{upper} kcal"
+  ,"@adaptiveRecommendationMaintenanceRangeLine": {
+    "placeholders": {
+      "lower": { "type": "int" },
+      "upper": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationUncertaintyHintNarrow": "Dein wahrscheinlicher Erhaltungsbereich ist recht eng. Kleine tägliche Schwankungen sind normal."
+  ,"adaptiveRecommendationUncertaintyHintModerate": "Dein wahrscheinlicher Erhaltungsbereich ist aktuell mittelbreit. Etwas Bewegung von Woche zu Woche ist normal."
+  ,"adaptiveRecommendationUncertaintyHintWide": "Dein wahrscheinlicher Erhaltungsbereich ist noch breit. Das ist normal, solange wir mehr stabile Daten sammeln."
+  ,"adaptiveRecommendationStabilizingHint": "Wir passen uns noch an deine letzte Phase an, daher kann sich die Schätzung aktuell stärker bewegen."
   ,"adaptiveRecommendationCaloriesValue": "{value} kcal"
   ,"@adaptiveRecommendationCaloriesValue": {
     "placeholders": {
@@ -1351,6 +1362,21 @@
       "value": { "type": "int" }
     }
   }
+  ,"adaptiveRecommendationCalculatedAtLine": "Berechnet am: {value}"
+  ,"@adaptiveRecommendationCalculatedAtLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationNextDueLine": "Nächste adaptive Empfehlung fällig: {value}"
+  ,"@adaptiveRecommendationNextDueLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationDueNowLine": "Diese Woche ist eine neue adaptive Empfehlung fällig."
+  ,"adaptiveRecommendationRecalculateNowAction": "Jetzt neu berechnen"
+  ,"adaptiveRecommendationRecalculating": "Wird neu berechnet..."
   ,"adaptiveRecommendationApplying": "Wird angewendet..."
   ,"adaptiveRecommendationApplyAction": "Empfehlung auf aktive Ziele anwenden"
   ,"adaptiveRecommendationWarningCalorieFloor": "Empfehlung wurde durch ein Mindest-Kalorien-Sicherheitslimit begrenzt. Bitte Profil und aktuelle Logs vor dem Anwenden prüfen."
@@ -1367,6 +1393,7 @@
   ,"adaptiveConfidenceLow": "Wenige aktuelle Logs"
   ,"adaptiveConfidenceMedium": "Nutzbare aktuelle Logs"
   ,"adaptiveConfidenceHigh": "Starke aktuelle Logs"
+  ,"adaptiveRecommendationRecalculatedSnack": "Empfehlung neu berechnet."
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Empfehlung auf aktive Ziele angewendet."
   ,"adaptiveRecommendationNotAvailableSnack": "Keine Empfehlung zum Anwenden verfügbar."
 }

@@ -8,51 +8,21 @@ class AdaptiveNutritionRecommendationEngine {
   static const double _kcalPerKgPerWeekToDay = 7700 / 7;
   static const int _minimumRecommendedCalories = 1200;
 
-  static NutritionRecommendation generate({
+  static NutritionRecommendation generateFromMaintenanceEstimate({
     required RecommendationGenerationInput input,
     required BodyweightGoal goal,
     required double targetRateKgPerWeek,
     required DateTime generatedAt,
     required String algorithmVersion,
+    required int estimatedMaintenanceCalories,
+    required RecommendationConfidence confidence,
     String? dueWeekKey,
     NutritionRecommendation? previousRecommendation,
+    List<String> additionalWarningReasons = const [],
   }) {
-    final confidence = classifyConfidence(
-      windowDays: input.windowDays,
-      weightLogCount: input.weightLogCount,
-      intakeLoggedDays: input.intakeLoggedDays,
-    );
-
-    final isStrictPriorOnly = _isStrictPriorOnly(confidence);
-    late final double maintenance;
-
-    if (isStrictPriorOnly) {
-      // "notEnoughData" is strictly prior-only by design: no inferred blend
-      // and no week-over-week drift against previous recommendations.
-      maintenance = input.priorMaintenanceCalories.toDouble();
-    } else {
-      final inferredMaintenance = _inferMaintenanceCalories(input);
-      final blend = _blendFactorForConfidence(confidence);
-      var blendedMaintenance = (input.priorMaintenanceCalories * (1 - blend)) +
-          (inferredMaintenance * blend);
-
-      if (previousRecommendation != null) {
-        final deltaLimit = _weeklyMaintenanceDeltaLimit(confidence);
-        final delta = blendedMaintenance -
-            previousRecommendation.estimatedMaintenanceCalories;
-        blendedMaintenance =
-            previousRecommendation.estimatedMaintenanceCalories +
-                delta.clamp(-deltaLimit, deltaLimit);
-      }
-      maintenance = blendedMaintenance;
-    }
-
     var effectiveConfidence = confidence;
-    final estimatedMaintenanceCalories = maintenance.round();
     final calorieAdjustment = rateAdjustmentKcalPerDay(targetRateKgPerWeek);
-    final rawRecommendedCalories =
-        estimatedMaintenanceCalories + calorieAdjustment;
-    var recommendedCalories = rawRecommendedCalories;
+    var recommendedCalories = estimatedMaintenanceCalories + calorieAdjustment;
     final safetyWarningReasons = <String>[];
 
     if (recommendedCalories < _minimumRecommendedCalories) {
@@ -72,15 +42,18 @@ class AdaptiveNutritionRecommendationEngine {
 
     final baselineCalories = input.activeTargetCalories ??
         previousRecommendation?.recommendedCalories;
+    final warningReasons = <String>{
+      ...macroResult.warningReasons,
+      ...safetyWarningReasons,
+      if (input.qualityFlags.contains('unresolved_food_calories'))
+        'unresolved_food_calories',
+      ...additionalWarningReasons,
+    }.toList(growable: false);
+
     final warningState = _buildWarningState(
       baselineCalories: baselineCalories,
       recommendedCalories: recommendedCalories,
-      extraReasons: [
-        ...macroResult.warningReasons,
-        ...safetyWarningReasons,
-        if (input.qualityFlags.contains('unresolved_food_calories'))
-          'unresolved_food_calories',
-      ],
+      extraReasons: warningReasons,
     );
 
     return NutritionRecommendation(
@@ -110,65 +83,8 @@ class AdaptiveNutritionRecommendationEngine {
     );
   }
 
-  static RecommendationConfidence classifyConfidence({
-    required int windowDays,
-    required int weightLogCount,
-    required int intakeLoggedDays,
-  }) {
-    if (windowDays >= 21 && weightLogCount >= 9 && intakeLoggedDays >= 15) {
-      return RecommendationConfidence.high;
-    }
-    if (windowDays >= 14 && weightLogCount >= 6 && intakeLoggedDays >= 10) {
-      return RecommendationConfidence.medium;
-    }
-    if (windowDays >= 7 && weightLogCount >= 3 && intakeLoggedDays >= 5) {
-      return RecommendationConfidence.low;
-    }
-    return RecommendationConfidence.notEnoughData;
-  }
-
   static int rateAdjustmentKcalPerDay(double kgPerWeek) {
     return (kgPerWeek * _kcalPerKgPerWeekToDay).round();
-  }
-
-  static bool _isStrictPriorOnly(RecommendationConfidence confidence) {
-    return confidence == RecommendationConfidence.notEnoughData;
-  }
-
-  static double _inferMaintenanceCalories(RecommendationGenerationInput input) {
-    final slope = input.smoothedWeightSlopeKgPerWeek;
-    if (slope == null || input.intakeLoggedDays <= 0) {
-      return input.priorMaintenanceCalories.toDouble();
-    }
-    return input.avgLoggedCalories - (slope * _kcalPerKgPerWeekToDay);
-  }
-
-  static double _blendFactorForConfidence(RecommendationConfidence confidence) {
-    switch (confidence) {
-      case RecommendationConfidence.notEnoughData:
-        return 0;
-      case RecommendationConfidence.low:
-        return 0.35;
-      case RecommendationConfidence.medium:
-        return 0.60;
-      case RecommendationConfidence.high:
-        return 0.80;
-    }
-  }
-
-  static double _weeklyMaintenanceDeltaLimit(
-    RecommendationConfidence confidence,
-  ) {
-    switch (confidence) {
-      case RecommendationConfidence.notEnoughData:
-        return 80;
-      case RecommendationConfidence.low:
-        return 110;
-      case RecommendationConfidence.medium:
-        return 170;
-      case RecommendationConfidence.high:
-        return 240;
-    }
   }
 
   static _MacroResult _computeMacros({
