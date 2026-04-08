@@ -28,6 +28,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - normal uncertainty around likely maintenance range
 - Adaptive nutrition current-state docs updated for confirmed-phase semantics, ramp behavior, and residual diagnostics seam.
 
+### Testing
+- Expanded adaptive nutrition scenario-test infrastructure with reusable synthetic-truth and recovery metrics helpers:
+  - convergence milestones (initial / week-4 / week-8 / week-12)
+  - signed/absolute error progression
+  - error half-life and settling-time checks
+  - bounded overshoot/undershoot and truth-crossing checks
+  - pre/event/post recovery-window summaries for posterior, variance, and confidence
+  - bounded weeks-to-recover checks for transient event scenarios
+- Strengthened ground-truth scenario assertions to validate quantitative convergence behavior, not only boundedness/stability.
+- Strengthened chaotic scenario assertions (weekend spikes, refeed, water jump, illness, logging-quality phases) to validate measurable disruption and recovery behavior.
+- Added comparative long-horizon profile validation (8–12 week style horizons) with directional plausibility checks across matched profile pairs:
+  - heavier vs lighter
+  - lean vs higher body-fat at comparable size
+  - high vs low activity
+  - male/female/unknown plausibility banding
+  - high-steps vs low-steps long-horizon relation
+
 ## [0.8.0-alpha.3-bayesian-preview.2] - 2026-04-07
 
 ### Added
