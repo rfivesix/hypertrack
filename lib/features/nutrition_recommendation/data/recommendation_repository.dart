@@ -86,15 +86,21 @@ class RecommendationRepository {
     final prefs = await _prefsLoader();
     final encoded = prefs.getString(_dietPhaseTrackingStateKey);
     if (encoded != null && encoded.isNotEmpty) {
+      var corrupted = false;
       try {
         final decoded = jsonDecode(encoded);
-        if (decoded is! Map<String, dynamic>) {
-          return null;
+        if (decoded is Map<String, dynamic>) {
+          final state = AdaptiveDietPhaseTrackingState.fromJson(decoded);
+          if (state.isValid) {
+            return state;
+          }
         }
-        final state = AdaptiveDietPhaseTrackingState.fromJson(decoded);
-        return state.isValid ? state : null;
+        corrupted = true;
       } catch (_) {
-        return null;
+        corrupted = true;
+      }
+      if (corrupted) {
+        await prefs.remove(_dietPhaseTrackingStateKey);
       }
     }
 
@@ -162,14 +168,18 @@ class RecommendationRepository {
     final prefs = await _prefsLoader();
     final encoded = prefs.getString(_latestSnapshotKey);
     if (encoded != null && encoded.isNotEmpty) {
+      var corrupted = false;
       try {
         final decoded = jsonDecode(encoded);
-        if (decoded is! Map<String, dynamic>) {
-          return null;
+        if (decoded is Map<String, dynamic>) {
+          return AdaptiveRecommendationSnapshot.fromJson(decoded);
         }
-        return AdaptiveRecommendationSnapshot.fromJson(decoded);
+        corrupted = true;
       } catch (_) {
-        return null;
+        corrupted = true;
+      }
+      if (corrupted) {
+        await prefs.remove(_latestSnapshotKey);
       }
     }
 
@@ -237,15 +247,21 @@ class RecommendationRepository {
     final prefs = await _prefsLoader();
     final encoded = prefs.getString(_latestRecursiveStateKey);
     if (encoded != null && encoded.isNotEmpty) {
+      var corrupted = false;
       try {
         final decoded = jsonDecode(encoded);
-        if (decoded is! Map<String, dynamic>) {
-          return null;
+        if (decoded is Map<String, dynamic>) {
+          final state = BayesianEstimatorState.fromJson(decoded);
+          if (state.isValid) {
+            return state;
+          }
         }
-        final state = BayesianEstimatorState.fromJson(decoded);
-        return state.isValid ? state : null;
+        corrupted = true;
       } catch (_) {
-        return null;
+        corrupted = true;
+      }
+      if (corrupted) {
+        await prefs.remove(_latestRecursiveStateKey);
       }
     }
 

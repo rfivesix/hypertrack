@@ -182,6 +182,38 @@ void main() {
       expect(rawPersisted, isNotNull);
     });
 
+    test(
+        'malformed recursive state key falls through to snapshot-derived recovery and re-persists state',
+        () async {
+      final snapshot = AdaptiveRecommendationSnapshot(
+        recommendation: _recommendation().copyWith(
+          dueWeekKey: '2026-04-06',
+          algorithmVersion: 'bayesian_test',
+        ),
+        maintenanceEstimate: _estimate(dueWeekKey: '2026-04-06'),
+        dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
+      );
+      await repository.saveLatestRecommendationSnapshot(snapshot: snapshot);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_recursive_state',
+        '{"broken":',
+      );
+
+      final recovered = await repository.getLatestEstimatorState();
+      final rawPersisted = prefs.getString(
+        'adaptive_nutrition_recommendation.latest_recursive_state',
+      );
+
+      expect(recovered, isNotNull);
+      expect(recovered!.lastDueWeekKey, '2026-04-06');
+      expect(rawPersisted, isNotNull);
+      expect(rawPersisted, isNot('{"broken":'));
+      expect(() => jsonDecode(rawPersisted!), returnsNormally);
+    });
+
     test('derives phase tracking state from snapshot when key is absent',
         () async {
       final snapshot = AdaptiveRecommendationSnapshot(
@@ -214,6 +246,39 @@ void main() {
       );
       expect(derived.pendingPhase, isNull);
       expect(rawPersisted, isNotNull);
+    });
+
+    test(
+        'malformed diet phase key falls through to snapshot-derived recovery and re-persists state',
+        () async {
+      final snapshot = AdaptiveRecommendationSnapshot(
+        recommendation: _recommendation().copyWith(
+          goal: BodyweightGoal.gainWeight,
+          dueWeekKey: '2026-04-06',
+          algorithmVersion: 'bayesian_test',
+        ),
+        maintenanceEstimate: _estimate(dueWeekKey: '2026-04-06'),
+        dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
+      );
+      await repository.saveLatestRecommendationSnapshot(snapshot: snapshot);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.diet_phase_tracking_state',
+        '{"broken":',
+      );
+
+      final recovered = await repository.getDietPhaseTrackingState();
+      final rawPersisted = prefs.getString(
+        'adaptive_nutrition_recommendation.diet_phase_tracking_state',
+      );
+
+      expect(recovered, isNotNull);
+      expect(recovered!.confirmedPhase, AdaptiveDietPhase.bulk);
+      expect(rawPersisted, isNotNull);
+      expect(rawPersisted, isNot('{"broken":'));
+      expect(() => jsonDecode(rawPersisted!), returnsNormally);
     });
 
     test('returns null for incoherent canonical snapshot payload', () async {
@@ -262,6 +327,45 @@ void main() {
         closeTo(estimate.posteriorMaintenanceCalories, 0.001),
       );
       expect(rawCanonical, isNotNull);
+    });
+
+    test(
+        'malformed canonical snapshot key falls through to legacy migration and re-persists canonical snapshot',
+        () async {
+      final recommendation = _recommendation().copyWith(
+        dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
+      );
+      final estimate = _estimate(dueWeekKey: '2026-04-06');
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_snapshot',
+        '{"broken":',
+      );
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_generated_bayesian_experimental',
+        _encodeRecommendation(recommendation),
+      );
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.latest_bayesian_maintenance_estimate',
+        _encodeEstimate(estimate),
+      );
+      await prefs.setString(
+        'adaptive_nutrition_recommendation.last_generated_due_week_key_bayesian_experimental',
+        '2026-04-06',
+      );
+
+      final snapshot = await repository.getLatestRecommendationSnapshot();
+      final rawCanonical = prefs.getString(
+        'adaptive_nutrition_recommendation.latest_snapshot',
+      );
+
+      expect(snapshot, isNotNull);
+      expect(snapshot!.dueWeekKey, '2026-04-06');
+      expect(rawCanonical, isNotNull);
+      expect(rawCanonical, isNot('{"broken":'));
+      expect(() => jsonDecode(rawCanonical!), returnsNormally);
     });
 
     test('migrates legacy generated recommendation into synthetic snapshot',

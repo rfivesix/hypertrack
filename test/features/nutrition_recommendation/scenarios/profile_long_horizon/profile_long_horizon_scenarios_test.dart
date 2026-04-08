@@ -166,8 +166,8 @@ void main() {
         final deltas = posteriorWeeklyDeltaSeries(weeks)
             .map((delta) => delta.abs())
             .toList(growable: false);
-        final delta95 = deltas.isEmpty ? 0 : deltas.reduce(math.max);
-        expect(delta95, lessThanOrEqualTo(620));
+        final maxDelta = deltas.isEmpty ? 0 : deltas.reduce(math.max);
+        expect(maxDelta, lessThanOrEqualTo(620));
 
         expect(averageConfidenceScore(weeks, startWeek: 6),
             greaterThanOrEqualTo(0.9));
