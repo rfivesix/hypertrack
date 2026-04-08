@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
 
@@ -238,19 +239,8 @@ void main() {
       expect(variance, closeTo(gain * r, 0.0000001));
     });
 
-    test('effective kcalPerKg scales with window horizon', () {
-      final short = estimator.estimate(
-        input: _input(
-          priorMaintenanceCalories: 2400,
-          avgLoggedCalories: 2200,
-          smoothedWeightSlopeKgPerWeek: -0.2,
-          windowDays: 10,
-          weightLogCount: 8,
-          intakeLoggedDays: 8,
-        ),
-        dueWeekKey: '2026-04-06',
-      );
-      final transition = estimator.estimate(
+    test('phase ramp uses 3000 kcalPerKg in confirmed phase week 1', () {
+      final week1 = estimator.estimate(
         input: _input(
           priorMaintenanceCalories: 2400,
           avgLoggedCalories: 2200,
@@ -260,8 +250,108 @@ void main() {
           intakeLoggedDays: 8,
         ),
         dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 1),
       );
-      final mature = estimator.estimate(
+
+      expect(_debugDouble(week1.estimate, 'effectiveKcalPerKg'),
+          closeTo(3000, 0.0001));
+    });
+
+    test('phase ramp increases linearly and monotonically with phase age', () {
+      final week1 = estimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2400,
+          avgLoggedCalories: 2200,
+          smoothedWeightSlopeKgPerWeek: -0.2,
+          windowDays: 14,
+          weightLogCount: 8,
+          intakeLoggedDays: 8,
+        ),
+        dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 1),
+      );
+      final week5 = estimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2400,
+          avgLoggedCalories: 2200,
+          smoothedWeightSlopeKgPerWeek: -0.2,
+          windowDays: 14,
+          weightLogCount: 8,
+          intakeLoggedDays: 8,
+        ),
+        dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 29),
+      );
+      final week8 = estimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2400,
+          avgLoggedCalories: 2200,
+          smoothedWeightSlopeKgPerWeek: -0.2,
+          windowDays: 14,
+          weightLogCount: 8,
+          intakeLoggedDays: 8,
+        ),
+        dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 50),
+      );
+
+      final week1Kcal = _debugDouble(week1.estimate, 'effectiveKcalPerKg');
+      final week5Kcal = _debugDouble(week5.estimate, 'effectiveKcalPerKg');
+      final week8Kcal = _debugDouble(week8.estimate, 'effectiveKcalPerKg');
+
+      expect(week1Kcal, closeTo(3000, 0.0001));
+      expect(week5Kcal, closeTo(5350, 0.0001));
+      expect(week8Kcal, closeTo(7112.5, 0.001));
+      expect(week5Kcal, greaterThan(week1Kcal));
+      expect(week8Kcal, greaterThan(week5Kcal));
+    });
+
+    test('phase ramp reaches 7700 by week 9 and stays there', () {
+      final week9 = estimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2400,
+          avgLoggedCalories: 2200,
+          smoothedWeightSlopeKgPerWeek: -0.2,
+          windowDays: 21,
+          weightLogCount: 8,
+          intakeLoggedDays: 8,
+        ),
+        dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 57),
+      );
+      final week14 = estimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2400,
+          avgLoggedCalories: 2200,
+          smoothedWeightSlopeKgPerWeek: -0.2,
+          windowDays: 21,
+          weightLogCount: 8,
+          intakeLoggedDays: 8,
+        ),
+        dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 99),
+      );
+
+      expect(_debugDouble(week9.estimate, 'effectiveKcalPerKg'),
+          closeTo(7700, 0.0001));
+      expect(_debugDouble(week14.estimate, 'effectiveKcalPerKg'),
+          closeTo(7700, 0.0001));
+    });
+
+    test('phase ramp depends on confirmed phase age, not window length', () {
+      final shortWindow = estimator.estimate(
+        input: _input(
+          priorMaintenanceCalories: 2400,
+          avgLoggedCalories: 2200,
+          smoothedWeightSlopeKgPerWeek: -0.2,
+          windowDays: 7,
+          weightLogCount: 8,
+          intakeLoggedDays: 8,
+        ),
+        dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 29),
+      );
+      final longWindow = estimator.estimate(
         input: _input(
           priorMaintenanceCalories: 2400,
           avgLoggedCalories: 2200,
@@ -271,17 +361,14 @@ void main() {
           intakeLoggedDays: 8,
         ),
         dueWeekKey: '2026-04-06',
+        phaseContext: _phaseContext(confirmedPhaseAgeDays: 29),
       );
 
-      final shortKcal = _debugDouble(short.estimate, 'effectiveKcalPerKg');
-      final transitionKcal =
-          _debugDouble(transition.estimate, 'effectiveKcalPerKg');
-      final matureKcal = _debugDouble(mature.estimate, 'effectiveKcalPerKg');
-
-      expect(shortKcal, closeTo(5500, 0.0001));
-      expect(transitionKcal, greaterThan(5500));
-      expect(transitionKcal, lessThan(7700));
-      expect(matureKcal, closeTo(7700, 0.0001));
+      final shortKcal =
+          _debugDouble(shortWindow.estimate, 'effectiveKcalPerKg');
+      final longKcal = _debugDouble(longWindow.estimate, 'effectiveKcalPerKg');
+      expect(shortKcal, closeTo(longKcal, 0.0001));
+      expect(shortKcal, closeTo(5350, 0.0001));
     });
 
     test('posterior stays closer to prior when R is high (sparse data)', () {
@@ -619,6 +706,38 @@ void main() {
         expect(second.estimate.confidence, first.estimate.confidence);
       }
     });
+
+    test('residual bias diagnostics are deterministic and neutral in band', () {
+      final summaryA = BayesianResidualBiasDiagnostics.summarize(
+        residuals: const <double>[20, -10, 25, -15, 5],
+      );
+      final summaryB = BayesianResidualBiasDiagnostics.summarize(
+        residuals: const <double>[20, -10, 25, -15, 5],
+      );
+
+      expect(summaryA.meanResidualCalories,
+          closeTo(summaryB.meanResidualCalories, 0.000001));
+      expect(summaryA.observationCount, summaryB.observationCount);
+      expect(summaryA.status, BayesianResidualBiasStatus.neutral);
+    });
+
+    test('residual bias diagnostics detect positive and negative bias', () {
+      final positive = BayesianResidualBiasDiagnostics.summarize(
+        residuals: const <double>[140, 120, 110, 130],
+      );
+      final negative = BayesianResidualBiasDiagnostics.summarize(
+        residuals: const <double>[-150, -120, -140, -130],
+      );
+
+      expect(
+        positive.status,
+        BayesianResidualBiasStatus.likelyOverestimatingEnergyDensity,
+      );
+      expect(
+        negative.status,
+        BayesianResidualBiasStatus.likelyUnderestimatingEnergyDensity,
+      );
+    });
   });
 }
 
@@ -653,6 +772,20 @@ String _dueWeekKey(DateTime date) {
   final m = date.month.toString().padLeft(2, '0');
   final d = date.day.toString().padLeft(2, '0');
   return '$y-$m-$d';
+}
+
+BayesianObservationPhaseContext _phaseContext({
+  AdaptiveDietPhase confirmedPhase = AdaptiveDietPhase.cut,
+  required int confirmedPhaseAgeDays,
+  AdaptiveDietPhase? pendingPhase,
+  int? pendingPhaseAgeDays,
+}) {
+  return BayesianObservationPhaseContext(
+    confirmedPhase: confirmedPhase,
+    confirmedPhaseAgeDays: confirmedPhaseAgeDays,
+    pendingPhase: pendingPhase,
+    pendingPhaseAgeDays: pendingPhaseAgeDays,
+  );
 }
 
 RecommendationGenerationInput _input({

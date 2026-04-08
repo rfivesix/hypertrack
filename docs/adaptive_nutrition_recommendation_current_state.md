@@ -10,7 +10,9 @@ The feature:
 - runs on weekly due-week semantics with deterministic in-week recomputation behavior
 - persists both recommendation snapshot and recursive estimator state
 - calibrates estimator noise from recent user behavior when sufficient history exists
+- tracks confirmed vs pending diet phases with 7-day confirmation
 - surfaces a user-facing maintenance uncertainty range and stabilization hints
+- exposes residual-bias diagnostics for internal kcal/kg validation
 - requires explicit user apply (generation never auto-applies active goals)
 
 Primary implementation files:
@@ -62,7 +64,14 @@ This prevents Monday-vs-Wednesday window drift inside one due week.
 Observation signal used by the estimator is based on:
 - intake average (`avgLoggedCalories`)
 - weight slope (`smoothedWeightSlopeKgPerWeek`)
-- effective `kcalPerKg` scaling based on window maturity
+- effective `kcalPerKg` scaling based on confirmed phase age
+
+Canonical phase model (target-rate independent):
+- `cut` (`loseWeight`)
+- `maintain` (`maintainWeight`)
+- `bulk` (`gainWeight`)
+
+Target-rate changes inside the same goal direction do **not** create a new phase.
 
 ## Recursive Bayesian Estimation Model
 
@@ -127,14 +136,30 @@ With no adaptive logs yet, the filter initializes from profile prior maintenance
 
 During this phase, stabilization flags are expected and confidence is kept conservative.
 
-### Horizon-Dependent kcal/kg Observation Scaling
+### Confirmed Phase Tracking And 7-Day Confirmation
 
-Effective `kcalPerKg` is window-sensitive:
-- `< 14 days`: 5500
-- `14-27 days`: linear interpolation from 5500 to 7700
-- `>= 28 days`: 7700
+The estimator uses a confirmed-phase tracker to avoid resetting adaptation too aggressively.
 
-This reduces overreaction to short-horizon water/glycogen noise.
+Behavior:
+- a goal-direction change starts a **pending** phase candidate
+- pending candidate must stay unchanged for **7 consecutive days** to be confirmed
+- if user flips back before day 7, pending candidate is canceled
+- confirmed phase stays active until confirmation completes
+
+Current confirmation semantics:
+- phase age resets at **confirmation day** (not first-seen day)
+- this intentionally delays reset so short-lived taps/edits do not wipe useful adaptation history
+
+### Phase-Age kcal/kg Observation Ramp
+
+Effective `kcalPerKg` is phase-age dependent:
+- week 1 of confirmed phase: `3000`
+- linear ramp to `7700` by week 9
+- week 9 onward: `7700`
+
+Why:
+- early phase weeks are often distorted by water/glycogen shifts
+- a simple deterministic `3000 -> 7700` ramp is more robust than fixed mature conversion in week 1
 
 ## Recommendation Projection And Safety Rules
 
@@ -175,6 +200,7 @@ Canonical keys:
 - `adaptive_nutrition_recommendation.latest_applied`
 - `adaptive_nutrition_recommendation.last_generated_due_week_key`
 - `adaptive_nutrition_recommendation.last_due_notification_week_key`
+- `adaptive_nutrition_recommendation.diet_phase_tracking_state`
 
 Snapshot payload (`AdaptiveRecommendationSnapshot`) includes:
 - generated recommendation
@@ -188,6 +214,11 @@ Recursive state payload (`BayesianEstimatorState`) includes:
 - posterior mean/variance and replay-prior fields
 - last due-week key
 - rolling posterior / residual / observation-implied history used by noise calibration
+
+Diet-phase tracking payload (`AdaptiveDietPhaseTrackingState`) includes:
+- confirmed phase and confirmed phase start day
+- optional pending candidate phase and candidate first-seen day
+- deterministic reconciliation data for the 7-day confirmation rule
 
 ### Migration Notes (Legacy Fallback Only)
 
@@ -234,6 +265,16 @@ Transparency surfaces include:
   - wider range for sparse/noisy recent data
 - stabilization hint when the recursive filter is still settling
 
+Internal validation seam (debug/internal use):
+- rolling residual summary from recent observation residuals
+- deterministic mean residual + sample count
+- bias status:
+  - `neutral`
+  - `likely_overestimating_energy_density`
+  - `likely_underestimating_energy_density`
+
+This seam helps detect whether early-phase effective `kcalPerKg` appears systematically high/low.
+
 ## Limitations
 
 Current known limitations:
@@ -242,12 +283,16 @@ Current known limitations:
 - weekly invocation-driven behavior (no autonomous background recomputation loop in this layer)
 - historical calibration is intentionally conservative and bounded (it is not a full offline re-fit or multi-parameter optimizer)
 - credible interval is a simple posterior-normal approximation (product transparency aid, not a clinical guarantee)
+- residual-bias seam is diagnostic only (not an automated self-retuning loop yet)
 
 ## Verification Checklist
 
 When validating future changes, verify at minimum:
 - due-week Monday anchoring and stable previous-Sunday input window
 - in-week force refresh determinism
+- confirmed vs pending phase transitions with 7-day confirmation
+- no phase reset on target-rate-only changes inside same goal direction
+- phase-age `3000 -> 7700` ramp behavior (week 1, ramp, week 9+)
 - recursive posterior chaining across weeks
 - prediction-only behavior for missing-observation weeks
 - variance-cap bounded uncertainty growth after long gaps
@@ -256,6 +301,7 @@ When validating future changes, verify at minimum:
 - Q/R calibration response under stable vs noisy histories
 - user-facing maintenance range/hint rendering in hub + onboarding preview
 - stabilization hint behavior during bootstrap/transient phases
+- residual-bias summary determinism and direction labeling
 - explicit apply semantics (`generate != apply`)
 - snapshot/state persistence coherence and restore behavior
 - due-notification eligibility rules

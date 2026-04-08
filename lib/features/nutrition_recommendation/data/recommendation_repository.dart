@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/adaptive_diet_phase.dart';
 import '../domain/adaptive_recommendation_snapshot.dart';
 import '../domain/bayesian_tdee_estimator.dart';
 import '../domain/goal_models.dart';
@@ -29,6 +30,8 @@ class RecommendationRepository {
       'adaptive_nutrition_recommendation.last_generated_due_week_key';
   static const String _lastDueNotificationWeekKey =
       'adaptive_nutrition_recommendation.last_due_notification_week_key';
+  static const String _dietPhaseTrackingStateKey =
+      'adaptive_nutrition_recommendation.diet_phase_tracking_state';
 
   // Legacy keys kept only for one-way migration/fallback support.
   static const String _legacyLatestGeneratedKey =
@@ -77,6 +80,53 @@ class RecommendationRepository {
     );
     await prefs.setString(_goalKey, goal.name);
     await prefs.setDouble(_targetRateKey, coerced);
+  }
+
+  Future<AdaptiveDietPhaseTrackingState?> getDietPhaseTrackingState() async {
+    final prefs = await _prefsLoader();
+    final encoded = prefs.getString(_dietPhaseTrackingStateKey);
+    if (encoded != null && encoded.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(encoded);
+        if (decoded is! Map<String, dynamic>) {
+          return null;
+        }
+        final state = AdaptiveDietPhaseTrackingState.fromJson(decoded);
+        return state.isValid ? state : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final snapshot = await getLatestRecommendationSnapshot();
+    if (snapshot == null) {
+      return null;
+    }
+
+    final derivedState = _deriveDietPhaseTrackingStateFromSnapshot(snapshot);
+    if (derivedState == null || !derivedState.isValid) {
+      return null;
+    }
+    await saveDietPhaseTrackingState(state: derivedState);
+    return derivedState;
+  }
+
+  Future<void> saveDietPhaseTrackingState({
+    required AdaptiveDietPhaseTrackingState state,
+  }) async {
+    if (!state.isValid) {
+      throw ArgumentError.value(
+        state,
+        'state',
+        'Diet phase tracking state must be valid before persistence.',
+      );
+    }
+
+    final prefs = await _prefsLoader();
+    await prefs.setString(
+      _dietPhaseTrackingStateKey,
+      jsonEncode(state.toJson()),
+    );
   }
 
   Future<PriorActivityLevel> getPriorActivityLevel() async {
@@ -275,6 +325,7 @@ class RecommendationRepository {
     await prefs.remove(_latestAppliedKey);
     await prefs.remove(_lastGeneratedDueWeekKey);
     await prefs.remove(_lastDueNotificationWeekKey);
+    await prefs.remove(_dietPhaseTrackingStateKey);
 
     // Legacy keys are still cleaned for deterministic tests.
     await prefs.remove(_legacyLatestGeneratedKey);
@@ -457,6 +508,24 @@ class RecommendationRepository {
     );
 
     return state.isValid ? state : null;
+  }
+
+  AdaptiveDietPhaseTrackingState? _deriveDietPhaseTrackingStateFromSnapshot(
+    AdaptiveRecommendationSnapshot snapshot,
+  ) {
+    final recommendation = snapshot.recommendation;
+    final dueWeekDay = DateTime.tryParse(snapshot.dueWeekKey.trim());
+    final confirmedStartDay = AdaptiveDietPhaseTrackingState.normalizeDay(
+      dueWeekDay ?? recommendation.generatedAt,
+    );
+    final phase = recommendation.goal.canonicalDietPhase;
+
+    return AdaptiveDietPhaseTrackingState(
+      confirmedPhase: phase,
+      confirmedPhaseStartDay: confirmedStartDay,
+      pendingPhase: null,
+      pendingPhaseFirstSeenDay: null,
+    );
   }
 
   Future<void> _saveRecommendation(

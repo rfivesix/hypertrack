@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart' as db;
+import '../domain/adaptive_diet_phase.dart';
 import '../domain/adaptive_recommendation_snapshot.dart';
 import '../domain/bayesian_recommendation_engine.dart';
 import '../domain/bayesian_tdee_estimator.dart';
@@ -39,6 +40,7 @@ class AdaptiveNutritionRecommendationState {
 class AdaptiveNutritionRecommendationService {
   static const String algorithmVersion =
       'tdee_adaptive_recommendation_1_0_bayesian_recursive';
+  static const int _phaseChangeConfirmationWindowDays = 7;
 
   final RecommendationRepository _repository;
   final RecommendationInputAdapter _inputAdapter;
@@ -66,10 +68,18 @@ class AdaptiveNutritionRecommendationService {
   Future<void> saveGoalAndTargetRate({
     required BodyweightGoal goal,
     required double targetRateKgPerWeek,
-  }) {
-    return _repository.saveGoalAndTargetRate(
+    DateTime? now,
+  }) async {
+    await _repository.saveGoalAndTargetRate(
       goal: goal,
       targetRateKgPerWeek: targetRateKgPerWeek,
+    );
+    final phaseAnchorDay = RecommendationScheduler.normalizeDay(
+      now ?? DateTime.now(),
+    );
+    await _resolveAndPersistPhaseTrackingState(
+      goal: goal,
+      anchorDay: phaseAnchorDay,
     );
   }
 
@@ -253,6 +263,11 @@ class AdaptiveNutritionRecommendationService {
     final goal = results[0] as BodyweightGoal;
     final targetRateKgPerWeek = results[1] as double;
     final input = results[2] as RecommendationGenerationInput;
+    final phaseAnchorDay = RecommendationScheduler.dueWeekStart(effectiveNow);
+    final phaseTrackingState = await _resolveAndPersistPhaseTrackingState(
+      goal: goal,
+      anchorDay: phaseAnchorDay,
+    );
     final previousRecommendation = latestSnapshot?.recommendation;
 
     final result = _bayesianEngine.generate(
@@ -264,6 +279,10 @@ class AdaptiveNutritionRecommendationService {
       dueWeekKey: dueWeekKey,
       recursiveState: latestRecursiveState,
       previousRecommendation: previousRecommendation,
+      phaseContext: BayesianObservationPhaseContext.fromTrackingState(
+        trackingState: phaseTrackingState,
+        asOfDay: phaseAnchorDay,
+      ),
     );
 
     await _repository.saveLatestRecommendationSnapshot(
@@ -369,6 +388,12 @@ class AdaptiveNutritionRecommendationService {
     );
 
     final dueWeekKey = RecommendationScheduler.dueWeekKeyFor(effectiveNow);
+    final onboardingPhaseAnchorDay =
+        RecommendationScheduler.dueWeekStart(effectiveNow);
+    final onboardingPhaseState = AdaptiveDietPhaseTrackingState.bootstrap(
+      phase: goal.canonicalDietPhase,
+      asOfDay: onboardingPhaseAnchorDay,
+    );
     final result = _bayesianEngine.generate(
       input: input,
       goal: goal,
@@ -378,6 +403,10 @@ class AdaptiveNutritionRecommendationService {
       dueWeekKey: dueWeekKey,
       recursiveState: null,
       previousRecommendation: null,
+      phaseContext: BayesianObservationPhaseContext.fromTrackingState(
+        trackingState: onboardingPhaseState,
+        asOfDay: onboardingPhaseAnchorDay,
+      ),
     );
 
     if (persistGenerated) {
@@ -393,6 +422,9 @@ class AdaptiveNutritionRecommendationService {
         await _repository.saveLatestEstimatorState(
             state: result.recursiveState!);
       }
+      await _repository.saveDietPhaseTrackingState(
+        state: onboardingPhaseState,
+      );
       if (markAsApplied) {
         await _repository.saveLatestAppliedRecommendation(
           recommendation: result.recommendation,
@@ -452,6 +484,13 @@ class AdaptiveNutritionRecommendationService {
       recursiveState: state,
     );
     await _repository.setLastGeneratedDueWeekKey(dueWeekKey);
+    await _repository.saveDietPhaseTrackingState(
+      state: AdaptiveDietPhaseTrackingState.bootstrap(
+        phase: recommendation.goal.canonicalDietPhase,
+        asOfDay: DateTime.tryParse(dueWeekKey) ??
+            RecommendationScheduler.dueWeekStart(recommendation.generatedAt),
+      ),
+    );
     if (markAsApplied) {
       await _repository.saveLatestAppliedRecommendation(
         recommendation: recommendation,
@@ -485,6 +524,26 @@ class AdaptiveNutritionRecommendationService {
     );
 
     return true;
+  }
+
+  Future<AdaptiveDietPhaseTrackingState> _resolveAndPersistPhaseTrackingState({
+    required BodyweightGoal goal,
+    required DateTime anchorDay,
+  }) async {
+    final normalizedAnchorDay = RecommendationScheduler.normalizeDay(anchorDay);
+    final observedPhase = goal.canonicalDietPhase;
+    final currentState = await _repository.getDietPhaseTrackingState() ??
+        AdaptiveDietPhaseTrackingState.bootstrap(
+          phase: observedPhase,
+          asOfDay: normalizedAnchorDay,
+        );
+    final nextState = currentState.reconcile(
+      observedPhase: observedPhase,
+      asOfDay: normalizedAnchorDay,
+      confirmationWindowDays: _phaseChangeConfirmationWindowDays,
+    );
+    await _repository.saveDietPhaseTrackingState(state: nextState);
+    return nextState;
   }
 
   Future<int> _estimateMaintenanceForVirtualProfile({

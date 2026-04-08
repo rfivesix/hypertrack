@@ -1,3 +1,4 @@
+import 'adaptive_diet_phase.dart';
 import 'bayesian_tdee_estimator.dart';
 import 'goal_models.dart';
 import 'recommendation_engine.dart';
@@ -36,11 +37,16 @@ class BayesianNutritionRecommendationEngine {
     String? dueWeekKey,
     BayesianEstimatorState? recursiveState,
     NutritionRecommendation? previousRecommendation,
+    BayesianObservationPhaseContext? phaseContext,
   }) {
     final estimatorRun = _estimator.estimate(
       input: input,
       recursiveState: recursiveState,
       dueWeekKey: dueWeekKey,
+      phaseContext: phaseContext ??
+          BayesianObservationPhaseContext.bootstrap(
+            phase: goal.canonicalDietPhase,
+          ),
     );
     final maintenanceEstimate = estimatorRun.estimate;
 

@@ -3112,19 +3112,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adaptiveRecommendationUncertaintyHintNarrow =>
-      'Die letzten Signale sind recht konsistent, daher ist diese Schätzung enger.';
+      'Dein wahrscheinlicher Erhaltungsbereich ist recht eng. Kleine tägliche Schwankungen sind normal.';
 
   @override
   String get adaptiveRecommendationUncertaintyHintModerate =>
-      'Die letzten Daten sind nutzbar, aber noch variabel, daher ist der Bereich moderat.';
+      'Dein wahrscheinlicher Erhaltungsbereich ist aktuell mittelbreit. Etwas Bewegung von Woche zu Woche ist normal.';
 
   @override
   String get adaptiveRecommendationUncertaintyHintWide =>
-      'Die letzten Daten sind spärlich oder verrauscht, daher bleibt diese Schätzung breit.';
+      'Dein wahrscheinlicher Erhaltungsbereich ist noch breit. Das ist normal, solange wir mehr stabile Daten sammeln.';
 
   @override
   String get adaptiveRecommendationStabilizingHint =>
-      'Die adaptive Schätzung stabilisiert sich noch.';
+      'Wir passen uns noch an deine letzte Phase an, daher kann sich die Schätzung aktuell stärker bewegen.';
 
   @override
   String adaptiveRecommendationCaloriesValue(int value) {

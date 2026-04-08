@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/data/database_helper.dart';
 import 'package:hypertrack/data/drift_database.dart'
     show AppDatabase, ProductsCompanion;
+import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_due_notification.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_service.dart';
@@ -398,6 +399,35 @@ void main() {
       expect(recalculated.goal, BodyweightGoal.loseWeight);
       expect(settingsAfter, isNotNull);
       expect(settingsAfter!.targetCalories, 2400);
+    });
+
+    test(
+        'target-rate changes inside same goal direction do not reset confirmed phase',
+        () async {
+      await service.saveGoalAndTargetRate(
+        goal: BodyweightGoal.loseWeight,
+        targetRateKgPerWeek: -0.25,
+        now: DateTime(2026, 4, 1, 10, 0),
+      );
+      final initialPhaseState = await repository.getDietPhaseTrackingState();
+      expect(initialPhaseState, isNotNull);
+      expect(initialPhaseState!.confirmedPhase, AdaptiveDietPhase.cut);
+      expect(initialPhaseState.pendingPhase, isNull);
+
+      await service.saveGoalAndTargetRate(
+        goal: BodyweightGoal.loseWeight,
+        targetRateKgPerWeek: -1.0,
+        now: DateTime(2026, 4, 5, 10, 0),
+      );
+      final updatedPhaseState = await repository.getDietPhaseTrackingState();
+
+      expect(updatedPhaseState, isNotNull);
+      expect(updatedPhaseState!.confirmedPhase, AdaptiveDietPhase.cut);
+      expect(updatedPhaseState.pendingPhase, isNull);
+      expect(
+        updatedPhaseState.confirmedPhaseStartDay,
+        initialPhaseState.confirmedPhaseStartDay,
+      );
     });
 
     test('loadState exposes recommendation freshness and next-due metadata',

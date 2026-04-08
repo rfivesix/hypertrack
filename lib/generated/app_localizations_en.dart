@@ -3091,19 +3091,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptiveRecommendationUncertaintyHintNarrow =>
-      'Recent signals are fairly consistent, so this estimate is tighter.';
+      'Your likely maintenance range is fairly tight. Small day-to-day shifts are normal.';
 
   @override
   String get adaptiveRecommendationUncertaintyHintModerate =>
-      'Recent data is usable but still variable, so this estimate has a moderate range.';
+      'Your likely maintenance range is moderate right now. Some movement week to week is normal.';
 
   @override
   String get adaptiveRecommendationUncertaintyHintWide =>
-      'Recent data is sparse or noisy, so this estimate remains broad.';
+      'Your likely maintenance range is still wide. This is normal while we gather more steady data.';
 
   @override
   String get adaptiveRecommendationStabilizingHint =>
-      'The adaptive estimate is still stabilizing.';
+      'We are still adapting to your recent phase, so this estimate can move more than usual.';
 
   @override
   String adaptiveRecommendationCaloriesValue(int value) {

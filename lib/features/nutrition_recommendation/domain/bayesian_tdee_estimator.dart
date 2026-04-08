@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'adaptive_diet_phase.dart';
 import 'confidence_models.dart';
 import 'recommendation_models.dart';
 
@@ -55,11 +56,13 @@ class BayesianEstimatorConfig {
   final double minimumHistoricalQScale;
   final double maximumHistoricalQScale;
 
-  /// Horizon-dependent effective kcal/kg settings for short windows.
-  final double shortWindowKcalPerKg;
-  final double matureWindowKcalPerKg;
-  final int shortWindowUpperBoundDays;
-  final int matureWindowLowerBoundDays;
+  /// Confirmed-phase kcal/kg ramp settings for the weekly observation model.
+  ///
+  /// Week 1 starts at [phaseRampStartKcalPerKg], then ramps linearly to
+  /// [phaseRampMatureKcalPerKg] by [phaseRampMatureWeek], and stays there.
+  final double phaseRampStartKcalPerKg;
+  final double phaseRampMatureKcalPerKg;
+  final int phaseRampMatureWeek;
 
   final double minimumMaintenanceCalories;
   final double maximumMaintenanceCalories;
@@ -84,10 +87,9 @@ class BayesianEstimatorConfig {
     this.maximumHistoricalRScale = 2.60,
     this.minimumHistoricalQScale = 0.60,
     this.maximumHistoricalQScale = 1.90,
-    this.shortWindowKcalPerKg = 5500,
-    this.matureWindowKcalPerKg = 7700,
-    this.shortWindowUpperBoundDays = 14,
-    this.matureWindowLowerBoundDays = 28,
+    this.phaseRampStartKcalPerKg = 3000,
+    this.phaseRampMatureKcalPerKg = 7700,
+    this.phaseRampMatureWeek = 9,
     this.minimumMaintenanceCalories = 1200,
     this.maximumMaintenanceCalories = 5000,
   });
@@ -382,16 +384,24 @@ class BayesianTdeeEstimator {
     required RecommendationGenerationInput input,
     BayesianEstimatorState? recursiveState,
     String? dueWeekKey,
+    BayesianObservationPhaseContext? phaseContext,
   }) {
     final profilePriorMean = input.priorMaintenanceCalories.toDouble();
     final normalizedDueWeekKey = _normalizeDueWeekKey(dueWeekKey);
+    final effectivePhaseContext = phaseContext ??
+        BayesianObservationPhaseContext.bootstrap(
+          phase: AdaptiveDietPhase.maintain,
+        );
     final qualityFlags = <String>[
       'bayesian_recursive_filter',
     ];
     final baseQVariance =
         math.pow(config.weeklyMaintenanceDriftCalories, 2).toDouble();
 
-    final observationModel = _buildObservationModel(input: input);
+    final observationModel = _buildObservationModel(
+      input: input,
+      phaseContext: effectivePhaseContext,
+    );
     if (!observationModel.hasIntake) {
       qualityFlags.add('bayesian_intake_unavailable');
     }
@@ -400,6 +410,9 @@ class BayesianTdeeEstimator {
     }
     if (input.qualityFlags.contains('unresolved_food_calories')) {
       qualityFlags.add('unresolved_food_calories');
+    }
+    if (effectivePhaseContext.hasPendingPhaseChange) {
+      qualityFlags.add('bayesian_phase_change_pending_confirmation');
     }
 
     final hasObservation = observationModel.hasObservation;
@@ -545,6 +558,50 @@ class BayesianTdeeEstimator {
         recursiveState?.recentObservationImpliedMaintenanceCalories ??
             const <double>[];
 
+    // Same-week replay should be idempotent: do not append duplicate history
+    // points when force-refresh reuses the same due-week prior.
+    final nextPosteriorHistory = isSameDueWeekReplay
+        ? previousPosteriorHistory
+        : _appendRollingHistory(
+            existing: previousPosteriorHistory,
+            value: posteriorMean,
+            maxLength: config.calibrationHistoryWindowWeeks,
+          );
+    final nextResidualHistory = isSameDueWeekReplay
+        ? previousResidualHistory
+        : (!hasObservation || observedMaintenance == null)
+            ? previousResidualHistory
+            : _appendRollingHistory(
+                existing: previousResidualHistory,
+                value: residualCalories,
+                maxLength: config.calibrationHistoryWindowWeeks,
+              );
+    final nextObservationHistory = isSameDueWeekReplay
+        ? previousObservationHistory
+        : (!hasObservation || observedMaintenance == null)
+            ? previousObservationHistory
+            : _appendRollingHistory(
+                existing: previousObservationHistory,
+                value: observedMaintenance,
+                maxLength: config.calibrationHistoryWindowWeeks,
+              );
+
+    final residualBiasSummary = BayesianResidualBiasDiagnostics.summarize(
+      residuals: nextResidualHistory,
+    );
+    if (residualBiasSummary.status ==
+        BayesianResidualBiasStatus.likelyOverestimatingEnergyDensity) {
+      qualityFlags.add(
+        'bayesian_residual_bias_likely_overestimating_energy_density',
+      );
+    }
+    if (residualBiasSummary.status ==
+        BayesianResidualBiasStatus.likelyUnderestimatingEnergyDensity) {
+      qualityFlags.add(
+        'bayesian_residual_bias_likely_underestimating_energy_density',
+      );
+    }
+
     final estimate = BayesianMaintenanceEstimate(
       posteriorMaintenanceCalories: posteriorMean,
       posteriorStdDevCalories: posteriorStdDev,
@@ -584,6 +641,14 @@ class BayesianTdeeEstimator {
             kalmanGain / math.max(steadyStateGain, 0.000001),
         'effectiveKcalPerKg': observationModel.kcalPerKg,
         'effectiveKcalPerKgMode': observationModel.kcalPerKgMode,
+        'confirmedPhase': observationModel.confirmedPhase.name,
+        'confirmedPhaseAgeDays': observationModel.confirmedPhaseAgeDays,
+        'confirmedPhaseAgeWeeks': observationModel.confirmedPhaseAgeWeeks,
+        'confirmedPhaseWeekIndex': observationModel.confirmedPhaseWeekIndex,
+        'isPhaseChangePending': observationModel.pendingPhase != null,
+        'pendingPhase': observationModel.pendingPhase?.name ?? 'none',
+        'pendingPhaseAgeDays': observationModel.pendingPhaseAgeDays ?? 0,
+        'pendingPhaseAgeWeeks': observationModel.pendingPhaseAgeWeeks ?? 0.0,
         'varianceCapCalories2': varianceCap,
         'predictionWeeksElapsed': priorStep.elapsedDueWeeks,
         'appliedPredictionSteps': priorStep.appliedPredictionSteps,
@@ -597,37 +662,12 @@ class BayesianTdeeEstimator {
         'observationCompletenessMultiplier':
             observationModel.completenessMultiplier,
         'observationQualityMultiplier': observationModel.qualityMultiplier,
+        'residualBiasMeanCalories': residualBiasSummary.meanResidualCalories,
+        'residualBiasObservationCount': residualBiasSummary.observationCount,
+        'residualBiasStatus': residualBiasSummary.status.name,
       },
       dueWeekKey: normalizedDueWeekKey,
     );
-
-    // Same-week replay should be idempotent: do not append duplicate history
-    // points when force-refresh reuses the same due-week prior.
-    final nextPosteriorHistory = isSameDueWeekReplay
-        ? previousPosteriorHistory
-        : _appendRollingHistory(
-            existing: previousPosteriorHistory,
-            value: posteriorMean,
-            maxLength: config.calibrationHistoryWindowWeeks,
-          );
-    final nextResidualHistory = isSameDueWeekReplay
-        ? previousResidualHistory
-        : (!hasObservation || observedMaintenance == null)
-            ? previousResidualHistory
-            : _appendRollingHistory(
-                existing: previousResidualHistory,
-                value: residualCalories,
-                maxLength: config.calibrationHistoryWindowWeeks,
-              );
-    final nextObservationHistory = isSameDueWeekReplay
-        ? previousObservationHistory
-        : (!hasObservation || observedMaintenance == null)
-            ? previousObservationHistory
-            : _appendRollingHistory(
-                existing: previousObservationHistory,
-                value: observedMaintenance,
-                maxLength: config.calibrationHistoryWindowWeeks,
-              );
 
     final nextState = BayesianEstimatorState(
       posteriorMeanCalories: posteriorMean,
@@ -958,12 +998,13 @@ class BayesianTdeeEstimator {
 
   _ObservationModel _buildObservationModel({
     required RecommendationGenerationInput input,
+    required BayesianObservationPhaseContext phaseContext,
   }) {
     final hasSlope = input.smoothedWeightSlopeKgPerWeek != null;
     final hasIntake = input.intakeLoggedDays > 0;
     final hasObservation = hasSlope && hasIntake;
     final kcalPerKgSelection = _resolveKcalPerKg(
-      windowDays: input.windowDays,
+      phaseContext: phaseContext,
     );
     final kcalPerKgPerDay = kcalPerKgSelection.kcalPerKg / 7;
 
@@ -1018,6 +1059,23 @@ class BayesianTdeeEstimator {
             (input.smoothedWeightSlopeKgPerWeek! * kcalPerKgPerDay)
         : null;
 
+    final confirmedPhaseAgeDays =
+        math.max(phaseContext.confirmedPhaseAgeDays, 0);
+    final confirmedPhaseAgeWeeks = confirmedPhaseAgeDays <= 0
+        ? 0.0
+        : ((confirmedPhaseAgeDays - 1) / 7) + 1;
+    final confirmedPhaseWeekIndex =
+        confirmedPhaseAgeDays <= 0 ? 0 : ((confirmedPhaseAgeDays - 1) ~/ 7) + 1;
+    final pendingPhaseAgeDaysRaw = phaseContext.pendingPhaseAgeDays;
+    final pendingPhaseAgeDays = pendingPhaseAgeDaysRaw == null
+        ? null
+        : math.max(pendingPhaseAgeDaysRaw, 0);
+    final pendingPhaseAgeWeeks = pendingPhaseAgeDays == null
+        ? null
+        : pendingPhaseAgeDays <= 0
+            ? 0.0
+            : ((pendingPhaseAgeDays - 1) / 7) + 1;
+
     return _ObservationModel(
       hasSlope: hasSlope,
       hasIntake: hasIntake,
@@ -1038,40 +1096,48 @@ class BayesianTdeeEstimator {
       slopeVariance: slopeVariance,
       completenessMultiplier: completenessMultiplier,
       qualityMultiplier: qualityMultiplier,
+      confirmedPhase: phaseContext.confirmedPhase,
+      confirmedPhaseAgeDays: confirmedPhaseAgeDays,
+      confirmedPhaseAgeWeeks: confirmedPhaseAgeWeeks,
+      confirmedPhaseWeekIndex: confirmedPhaseWeekIndex,
+      pendingPhase: phaseContext.pendingPhase,
+      pendingPhaseAgeDays: pendingPhaseAgeDays,
+      pendingPhaseAgeWeeks: pendingPhaseAgeWeeks,
     );
   }
 
   _KcalPerKgSelection _resolveKcalPerKg({
-    required int windowDays,
+    required BayesianObservationPhaseContext phaseContext,
   }) {
-    final usableDays = math.max(windowDays, 0);
-    final shortUpper = math.max(config.shortWindowUpperBoundDays, 1);
-    final matureLower = math.max(config.matureWindowLowerBoundDays, shortUpper);
+    final confirmedAgeDays = math.max(phaseContext.confirmedPhaseAgeDays, 1);
+    final matureWeek = math.max(config.phaseRampMatureWeek, 2);
+    final matureAtAgeDays = 1 + ((matureWeek - 1) * 7);
+    final currentWeekIndex = ((confirmedAgeDays - 1) ~/ 7) + 1;
 
-    if (usableDays < shortUpper) {
+    if (confirmedAgeDays >= matureAtAgeDays) {
       return _KcalPerKgSelection(
-        kcalPerKg: config.shortWindowKcalPerKg,
-        mode: 'short_window',
+        kcalPerKg: config.phaseRampMatureKcalPerKg,
+        mode: 'phase_ramp_mature',
       );
     }
 
-    if (usableDays >= matureLower) {
+    if (currentWeekIndex <= 1) {
       return _KcalPerKgSelection(
-        kcalPerKg: config.matureWindowKcalPerKg,
-        mode: 'mature_window',
+        kcalPerKg: config.phaseRampStartKcalPerKg,
+        mode: 'phase_ramp_week_1',
       );
     }
 
-    final interpolationWindow = math.max(matureLower - shortUpper, 1);
-    final ratio =
-        ((usableDays - shortUpper) / interpolationWindow).clamp(0.0, 1.0);
-    // Transition smoothly between short-horizon conservative scaling and
-    // mature-horizon 7700 kcal/kg scaling.
+    final rampWeeks = math.max(matureWeek - 1, 1);
+    final elapsedRampWeeks = ((confirmedAgeDays - 1) / 7)
+        .clamp(0.0, rampWeeks.toDouble())
+        .toDouble();
+    final ratio = (elapsedRampWeeks / rampWeeks).clamp(0.0, 1.0).toDouble();
     return _KcalPerKgSelection(
-      kcalPerKg: config.shortWindowKcalPerKg +
-          ((config.matureWindowKcalPerKg - config.shortWindowKcalPerKg) *
+      kcalPerKg: config.phaseRampStartKcalPerKg +
+          ((config.phaseRampMatureKcalPerKg - config.phaseRampStartKcalPerKg) *
               ratio),
-      mode: 'transition_window',
+      mode: 'phase_ramp_transition',
     );
   }
 
@@ -1174,6 +1240,64 @@ class BayesianTdeeEstimator {
   }
 }
 
+enum BayesianResidualBiasStatus {
+  neutral,
+  likelyOverestimatingEnergyDensity,
+  likelyUnderestimatingEnergyDensity,
+}
+
+class BayesianResidualBiasSummary {
+  final double meanResidualCalories;
+  final int observationCount;
+  final BayesianResidualBiasStatus status;
+
+  const BayesianResidualBiasSummary({
+    required this.meanResidualCalories,
+    required this.observationCount,
+    required this.status,
+  });
+}
+
+class BayesianResidualBiasDiagnostics {
+  static const int defaultMinimumObservations = 3;
+  static const double defaultNeutralBandCalories = 40;
+
+  const BayesianResidualBiasDiagnostics._();
+
+  static BayesianResidualBiasSummary summarize({
+    required List<double> residuals,
+    int minimumObservations = defaultMinimumObservations,
+    double neutralBandCalories = defaultNeutralBandCalories,
+  }) {
+    final usableResiduals = residuals.where((value) => value.isFinite).toList(
+          growable: false,
+        );
+    final count = usableResiduals.length;
+    if (count < minimumObservations) {
+      return BayesianResidualBiasSummary(
+        meanResidualCalories: 0,
+        observationCount: count,
+        status: BayesianResidualBiasStatus.neutral,
+      );
+    }
+
+    final meanResidual =
+        usableResiduals.reduce((a, b) => a + b) / usableResiduals.length;
+    final neutralBand = neutralBandCalories.abs();
+    final status = meanResidual > neutralBand
+        ? BayesianResidualBiasStatus.likelyOverestimatingEnergyDensity
+        : meanResidual < -neutralBand
+            ? BayesianResidualBiasStatus.likelyUnderestimatingEnergyDensity
+            : BayesianResidualBiasStatus.neutral;
+
+    return BayesianResidualBiasSummary(
+      meanResidualCalories: meanResidual,
+      observationCount: count,
+      status: status,
+    );
+  }
+}
+
 class _NoiseCalibration {
   final double qVariance;
   final double observationVariance;
@@ -1249,6 +1373,13 @@ class _ObservationModel {
   final double slopeVariance;
   final double completenessMultiplier;
   final double qualityMultiplier;
+  final AdaptiveDietPhase confirmedPhase;
+  final int confirmedPhaseAgeDays;
+  final double confirmedPhaseAgeWeeks;
+  final int confirmedPhaseWeekIndex;
+  final AdaptiveDietPhase? pendingPhase;
+  final int? pendingPhaseAgeDays;
+  final double? pendingPhaseAgeWeeks;
 
   const _ObservationModel({
     required this.hasSlope,
@@ -1265,6 +1396,13 @@ class _ObservationModel {
     required this.slopeVariance,
     required this.completenessMultiplier,
     required this.qualityMultiplier,
+    required this.confirmedPhase,
+    required this.confirmedPhaseAgeDays,
+    required this.confirmedPhaseAgeWeeks,
+    required this.confirmedPhaseWeekIndex,
+    required this.pendingPhase,
+    required this.pendingPhaseAgeDays,
+    required this.pendingPhaseAgeWeeks,
   });
 }
 

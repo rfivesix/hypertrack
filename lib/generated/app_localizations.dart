@@ -5693,25 +5693,25 @@ abstract class AppLocalizations {
   /// No description provided for @adaptiveRecommendationUncertaintyHintNarrow.
   ///
   /// In en, this message translates to:
-  /// **'Recent signals are fairly consistent, so this estimate is tighter.'**
+  /// **'Your likely maintenance range is fairly tight. Small day-to-day shifts are normal.'**
   String get adaptiveRecommendationUncertaintyHintNarrow;
 
   /// No description provided for @adaptiveRecommendationUncertaintyHintModerate.
   ///
   /// In en, this message translates to:
-  /// **'Recent data is usable but still variable, so this estimate has a moderate range.'**
+  /// **'Your likely maintenance range is moderate right now. Some movement week to week is normal.'**
   String get adaptiveRecommendationUncertaintyHintModerate;
 
   /// No description provided for @adaptiveRecommendationUncertaintyHintWide.
   ///
   /// In en, this message translates to:
-  /// **'Recent data is sparse or noisy, so this estimate remains broad.'**
+  /// **'Your likely maintenance range is still wide. This is normal while we gather more steady data.'**
   String get adaptiveRecommendationUncertaintyHintWide;
 
   /// No description provided for @adaptiveRecommendationStabilizingHint.
   ///
   /// In en, this message translates to:
-  /// **'The adaptive estimate is still stabilizing.'**
+  /// **'We are still adapting to your recent phase, so this estimate can move more than usual.'**
   String get adaptiveRecommendationStabilizingHint;
 
   /// No description provided for @adaptiveRecommendationCaloriesValue.

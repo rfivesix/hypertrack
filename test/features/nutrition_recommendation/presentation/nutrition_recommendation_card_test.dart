@@ -275,10 +275,16 @@ void main() {
       ),
     );
 
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
     expect(find.byKey(const Key('adaptive_recommendation_range_line')),
         findsOneWidget);
     expect(find.byKey(const Key('adaptive_recommendation_uncertainty_hint')),
         findsOneWidget);
+    expect(
+      find.text(l10n.adaptiveRecommendationUncertaintyHintNarrow),
+      findsOneWidget,
+    );
   });
 
   testWidgets('renders stabilizing hint when estimate is still settling',
@@ -310,10 +316,51 @@ void main() {
       ),
     );
 
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
     expect(
       find.byKey(const Key('adaptive_recommendation_stabilizing_hint')),
       findsOneWidget,
     );
+    expect(
+        find.text(l10n.adaptiveRecommendationStabilizingHint), findsOneWidget);
+  });
+
+  testWidgets('renders uncertainty and stabilizing copy for german locale',
+      (tester) async {
+    final estimate = _estimate().copyWith(
+      qualityFlags: const ['bayesian_estimate_still_stabilizing'],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('de'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: NutritionRecommendationCard(
+            goal: BodyweightGoal.maintainWeight,
+            targetRateKgPerWeek: 0,
+            recommendation: _recommendation(),
+            maintenanceEstimate: estimate,
+            generatedAt: DateTime(2026, 4, 5, 9, 0),
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+            isAdaptiveRecommendationDueNow: false,
+            activeTargetCalories: 2400,
+            isRecalculating: false,
+            isApplying: false,
+            onRecalculate: () {},
+            onApply: () {},
+          ),
+        ),
+      ),
+    );
+
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
+    expect(find.text(l10n.adaptiveRecommendationUncertaintyHintModerate),
+        findsOneWidget);
+    expect(
+        find.text(l10n.adaptiveRecommendationStabilizingHint), findsOneWidget);
   });
 }
 

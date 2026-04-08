@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0-alpha.3-bayesian-preview.3] - 2026-04-08
+
+### Added
+- Canonical adaptive diet-phase model (`cut`, `maintain`, `bulk`) with persisted confirmed/pending phase tracking.
+- Deterministic 7-day phase-change confirmation flow:
+  - pending candidate starts on direction change
+  - confirmed phase switches only after 7 stable days
+  - reverting before confirmation cancels pending reset
+- Lightweight residual-bias diagnostic seam for weekly observation validation:
+  - mean residual summary
+  - sample count
+  - bias direction status (`neutral`, likely over/under-estimating energy density)
+
+### Changed
+- Replaced the window-length kcal/kg observation scaling with confirmed-phase-age ramping:
+  - week 1 = `3000`
+  - linear ramp to week 9 = `7700`
+  - week 9+ stays at `7700`
+- Exact target-rate changes no longer define new adaptive phases; only goal direction does.
+- Adaptive recommendation copy (EN/DE) now uses simpler wording that clearly separates:
+  - “still adapting/settling”
+  - normal uncertainty around likely maintenance range
+- Adaptive nutrition current-state docs updated for confirmed-phase semantics, ramp behavior, and residual diagnostics seam.
+
 ## [0.8.0-alpha.3-bayesian-preview.2] - 2026-04-07
 
 ### Added

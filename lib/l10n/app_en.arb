@@ -1309,10 +1309,10 @@
       "upper": { "type": "int" }
     }
   }
-  ,"adaptiveRecommendationUncertaintyHintNarrow": "Recent signals are fairly consistent, so this estimate is tighter."
-  ,"adaptiveRecommendationUncertaintyHintModerate": "Recent data is usable but still variable, so this estimate has a moderate range."
-  ,"adaptiveRecommendationUncertaintyHintWide": "Recent data is sparse or noisy, so this estimate remains broad."
-  ,"adaptiveRecommendationStabilizingHint": "The adaptive estimate is still stabilizing."
+  ,"adaptiveRecommendationUncertaintyHintNarrow": "Your likely maintenance range is fairly tight. Small day-to-day shifts are normal."
+  ,"adaptiveRecommendationUncertaintyHintModerate": "Your likely maintenance range is moderate right now. Some movement week to week is normal."
+  ,"adaptiveRecommendationUncertaintyHintWide": "Your likely maintenance range is still wide. This is normal while we gather more steady data."
+  ,"adaptiveRecommendationStabilizingHint": "We are still adapting to your recent phase, so this estimate can move more than usual."
   ,"adaptiveRecommendationCaloriesValue": "{value} kcal"
   ,"@adaptiveRecommendationCaloriesValue": {
     "placeholders": {

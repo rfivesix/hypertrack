@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
+import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_recommendation_snapshot.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
 import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
@@ -121,6 +122,30 @@ void main() {
           restored.recentObservationImpliedMaintenanceCalories, hasLength(2));
     });
 
+    test('persists and restores diet phase tracking state', () async {
+      final state = AdaptiveDietPhaseTrackingState(
+        confirmedPhase: AdaptiveDietPhase.cut,
+        confirmedPhaseStartDay: DateTime(2026, 4, 1),
+        pendingPhase: AdaptiveDietPhase.bulk,
+        pendingPhaseFirstSeenDay: DateTime(2026, 4, 3),
+      );
+
+      await repository.saveDietPhaseTrackingState(state: state);
+      final restored = await repository.getDietPhaseTrackingState();
+
+      expect(restored, isNotNull);
+      expect(restored!.confirmedPhase, AdaptiveDietPhase.cut);
+      expect(
+        restored.confirmedPhaseStartDay,
+        AdaptiveDietPhaseTrackingState.normalizeDay(DateTime(2026, 4, 1)),
+      );
+      expect(restored.pendingPhase, AdaptiveDietPhase.bulk);
+      expect(
+        restored.pendingPhaseFirstSeenDay,
+        AdaptiveDietPhaseTrackingState.normalizeDay(DateTime(2026, 4, 3)),
+      );
+    });
+
     test('derives recursive state from snapshot when state key is absent',
         () async {
       final snapshot = AdaptiveRecommendationSnapshot(
@@ -154,6 +179,40 @@ void main() {
       expect(derived.recentPosteriorMeansCalories, hasLength(1));
       expect(derived.recentObservationResidualsCalories, hasLength(1));
       expect(derived.recentObservationImpliedMaintenanceCalories, hasLength(1));
+      expect(rawPersisted, isNotNull);
+    });
+
+    test('derives phase tracking state from snapshot when key is absent',
+        () async {
+      final snapshot = AdaptiveRecommendationSnapshot(
+        recommendation: _recommendation().copyWith(
+          goal: BodyweightGoal.gainWeight,
+          dueWeekKey: '2026-04-06',
+          algorithmVersion: 'bayesian_test',
+        ),
+        maintenanceEstimate: _estimate(dueWeekKey: '2026-04-06'),
+        dueWeekKey: '2026-04-06',
+        algorithmVersion: 'bayesian_test',
+      );
+      await repository.saveLatestRecommendationSnapshot(snapshot: snapshot);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(
+        'adaptive_nutrition_recommendation.diet_phase_tracking_state',
+      );
+
+      final derived = await repository.getDietPhaseTrackingState();
+      final rawPersisted = prefs.getString(
+        'adaptive_nutrition_recommendation.diet_phase_tracking_state',
+      );
+
+      expect(derived, isNotNull);
+      expect(derived!.confirmedPhase, AdaptiveDietPhase.bulk);
+      expect(
+        derived.confirmedPhaseStartDay,
+        AdaptiveDietPhaseTrackingState.normalizeDay(DateTime(2026, 4, 6)),
+      );
+      expect(derived.pendingPhase, isNull);
       expect(rawPersisted, isNotNull);
     });
 
