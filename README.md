@@ -5,7 +5,9 @@ Hypertrack is an offline-first Flutter app for workout, nutrition, measurements,
 This README is intentionally implementation-focused and reflects the **current working copy** of the codebase. Planned work toward `1.0` is listed separately and is **not** described as implemented behavior.
 
 > **Note:** Hypertrack is built with heavy AI assistance across implementation, refactoring, and documentation. I’m very happy with the result, but as with any fast-moving AI-assisted codebase, I cannot guarantee that every detail is perfect.
+## Install
 
+[![Get it on Obtainium](https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png)](http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/hypertrack/releases)
 ## Documentation
 
 - [Project Overview](documentation/overview.md)
