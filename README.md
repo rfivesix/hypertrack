@@ -8,6 +8,9 @@ This README is intentionally implementation-focused and reflects the **current w
 ## Install
 
 [![Get it on Obtainium](https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png)](http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/hypertrack/releases)
+
+- App Store and Play store release follows soon
+
 ## Documentation
 
 - [Project Overview](documentation/overview.md)
