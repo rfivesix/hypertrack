@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.1] - 2026-04-09
+
+### Fixed
+- Improved sleep day-view timeline readability with clearer timestamp labels, better spacing, and stronger light/dark-mode contrast.
+- Corrected the weekly sleep-window chart so displayed time bounds and axis labels better match actual sleep session timing, including cross-midnight sessions.
+- Sleep scoring now applies conservative stage-aware guardrails so mostly-light or REM-missing nights (especially from limited-fidelity sources such as Withings) cannot silently receive near-perfect totals.
+- Depth-related sleep feedback now better reflects light-dominant nights instead of relying on deep-sleep percentage alone.
+
+### Changed
+- Weekly sleep-window aggregation now prefers canonical session start/end bounds when available, instead of relying only on derived duration placement.
+- Sleep scoring pipeline now passes stage mix, timeline confidence, and source metadata into the score calculation.
+
+### Internal
+- Added targeted regression coverage for:
+  - sleep day-view timeline timestamp rendering
+  - weekly sleep-window axis bounds and cross-midnight behavior
+  - stage-aware sleep score guardrails
+  - limited-source / missing-REM scoring behavior
+  - repository propagation of canonical session start/end times
+
 ## [0.8.0] - 2026-04-09
 
 ### Added
@@ -19,7 +39,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Hardened adaptive recommendation persistence with coherent snapshot/state checks, legacy fallback migration handling, and recovery from malformed canonical keys.
 - Ensured backup/restore continuity for adaptive recommendation settings and canonical recursive state persistence.
-- Sleep scoring now applies conservative stage-aware guardrails so mostly-light or REM-missing nights (especially from limited-fidelity sources) cannot silently receive near-perfect totals.
 
 ### Internal
 - Expanded adaptive nutrition regression coverage across domain/data/presentation/scenario layers, including long-horizon simulations, phase-transition scenarios, and backup/restore continuity validation.
