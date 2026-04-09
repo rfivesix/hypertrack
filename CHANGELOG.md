@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Hardened adaptive recommendation persistence with coherent snapshot/state checks, legacy fallback migration handling, and recovery from malformed canonical keys.
 - Ensured backup/restore continuity for adaptive recommendation settings and canonical recursive state persistence.
+- Sleep scoring now applies conservative stage-aware guardrails so mostly-light or REM-missing nights (especially from limited-fidelity sources) cannot silently receive near-perfect totals.
 
 ### Internal
 - Expanded adaptive nutrition regression coverage across domain/data/presentation/scenario layers, including long-horizon simulations, phase-transition scenarios, and backup/restore continuity validation.

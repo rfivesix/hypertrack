@@ -1,3 +1,5 @@
+import '../sleep_enums.dart';
+
 class SleepScoringInput {
   const SleepScoringInput({
     this.durationMinutes,
@@ -5,6 +7,13 @@ class SleepScoringInput {
     this.wasoMinutes,
     this.regularitySri,
     this.regularityValidDays = 0,
+    this.lightSleepPct,
+    this.deepSleepPct,
+    this.remSleepPct,
+    this.asleepUnspecifiedPct,
+    this.stageDataConfidence = SleepStageConfidence.unknown,
+    this.sourcePlatform,
+    this.sourceAppId,
   });
 
   final int? durationMinutes;
@@ -17,6 +26,20 @@ class SleepScoringInput {
   /// minimum threshold.
   final double? regularitySri;
   final int regularityValidDays;
+
+  /// Sleep stage composition percentages relative to total sleep time.
+  ///
+  /// Values are expected on a 0..100 scale and are normalized defensively
+  /// when the sum deviates due to source quirks.
+  final double? lightSleepPct;
+  final double? deepSleepPct;
+  final double? remSleepPct;
+  final double? asleepUnspecifiedPct;
+
+  /// Stage-data fidelity hint derived from source metadata where available.
+  final SleepStageConfidence stageDataConfidence;
+  final String? sourcePlatform;
+  final String? sourceAppId;
 }
 
 class SleepScoringConfig {
@@ -53,6 +76,8 @@ class SleepScoringResult {
     this.seScore,
     this.wasoScore,
     this.regularityScore,
+    this.stageDepthScore,
+    this.stageScoreCap,
     required this.regularityValidDays,
     required this.regularityUsed,
     required this.regularityStable,
@@ -72,6 +97,8 @@ class SleepScoringResult {
   final double? seScore;
   final double? wasoScore;
   final double? regularityScore;
+  final double? stageDepthScore;
+  final double? stageScoreCap;
   final int regularityValidDays;
   final bool regularityUsed;
   final bool regularityStable;
@@ -106,6 +133,17 @@ SleepScoringResult calculateSleepScore(
       input.regularityValidDays >= config.regularityStableDays;
   final regularityScore =
       regularityUsed ? input.regularitySri!.clamp(0, 100).toDouble() : null;
+  final stageDepthScore = scoreStageDepthQualityV1(
+    lightSleepPct: input.lightSleepPct,
+    deepSleepPct: input.deepSleepPct,
+    remSleepPct: input.remSleepPct,
+    asleepUnspecifiedPct: input.asleepUnspecifiedPct,
+    stageDataConfidence: input.stageDataConfidence,
+    sourcePlatform: input.sourcePlatform,
+    sourceAppId: input.sourceAppId,
+  );
+  final stageScoreCap =
+      stageDepthScore == null ? null : scoreStageAwareCapV1(stageDepthScore);
 
   final topLevel = _renormalizedWeightedScore(
     scoredComponents: [
@@ -132,13 +170,19 @@ SleepScoringResult calculateSleepScore(
       seScore: seScore,
       wasoScore: wasoScore,
       regularityScore: regularityScore,
+      stageDepthScore: stageDepthScore,
+      stageScoreCap: stageScoreCap,
       regularityValidDays: input.regularityValidDays,
       regularityUsed: regularityUsed,
       regularityStable: regularityStable,
     );
   }
 
-  final clamped = topLevel.clamp(0, 100).toDouble();
+  final baseScore = topLevel.clamp(0, 100).toDouble();
+  final cappedScore = stageScoreCap == null
+      ? baseScore
+      : (baseScore <= stageScoreCap ? baseScore : stageScoreCap);
+  final clamped = cappedScore.clamp(0, 100).toDouble();
   return SleepScoringResult(
     score: clamped,
     state: _scoreState(clamped),
@@ -148,10 +192,113 @@ SleepScoringResult calculateSleepScore(
     seScore: seScore,
     wasoScore: wasoScore,
     regularityScore: regularityScore,
+    stageDepthScore: stageDepthScore,
+    stageScoreCap: stageScoreCap,
     regularityValidDays: input.regularityValidDays,
     regularityUsed: regularityUsed,
     regularityStable: regularityStable,
   );
+}
+
+/// Stage/depth quality component (0..100).
+///
+/// This component is conservative by design:
+/// - penalizes heavily light-dominant nights
+/// - avoids near-perfect quality when REM is missing
+/// - degrades confidence when stage fidelity is ambiguous/limited
+double? scoreStageDepthQualityV1({
+  double? lightSleepPct,
+  double? deepSleepPct,
+  double? remSleepPct,
+  double? asleepUnspecifiedPct,
+  SleepStageConfidence stageDataConfidence = SleepStageConfidence.unknown,
+  String? sourcePlatform,
+  String? sourceAppId,
+}) {
+  final hasAnyStage = lightSleepPct != null ||
+      deepSleepPct != null ||
+      remSleepPct != null ||
+      asleepUnspecifiedPct != null;
+  if (!hasAnyStage) return null;
+
+  final light = (lightSleepPct ?? 0).clamp(0, 100).toDouble();
+  final deep = (deepSleepPct ?? 0).clamp(0, 100).toDouble();
+  final rem = (remSleepPct ?? 0).clamp(0, 100).toDouble();
+  final unspecified = (asleepUnspecifiedPct ?? 0).clamp(0, 100).toDouble();
+  final total = light + deep + rem + unspecified;
+  if (total <= 0) return null;
+
+  final normalizedLight = (light / total) * 100;
+  final normalizedDeep = (deep / total) * 100;
+  final normalizedRem = (rem / total) * 100;
+  final normalizedUnspecified = (unspecified / total) * 100;
+  final fidelity = _stageFidelity(
+    stageDataConfidence: stageDataConfidence,
+    sourcePlatform: sourcePlatform,
+    sourceAppId: sourceAppId,
+  );
+
+  final lightDominancePenalty =
+      _linear(normalizedLight, 58, 90, 0, 35).clamp(0, 35).toDouble();
+  final deepScarcityPenalty = _linear(
+    (12 - normalizedDeep).clamp(0, 12).toDouble(),
+    0,
+    12,
+    0,
+    16,
+  );
+  final remMissing = normalizedRem < 1.0;
+  final remScarcityPenalty = remMissing
+      ? (fidelity < 0.7 ? 10.0 : 16.0)
+      : _linear(
+          (14 - normalizedRem).clamp(0, 14).toDouble(),
+          0,
+          14,
+          0,
+          16,
+        );
+  final unspecifiedPenalty =
+      _linear(normalizedUnspecified, 10, 45, 0, 14).clamp(0, 14).toDouble();
+  final restorativeBonus = _linear(
+    normalizedDeep + normalizedRem,
+    24,
+    42,
+    0,
+    8,
+  ).clamp(0, 8).toDouble();
+  final confidencePenalty = switch (stageDataConfidence) {
+    SleepStageConfidence.high => 0.0,
+    SleepStageConfidence.medium => 1.5,
+    SleepStageConfidence.unknown => 3.0,
+    SleepStageConfidence.low => 6.0,
+  };
+
+  var score = 100 -
+      lightDominancePenalty -
+      deepScarcityPenalty -
+      remScarcityPenalty -
+      unspecifiedPenalty -
+      confidencePenalty +
+      restorativeBonus;
+
+  if (remMissing) {
+    final remMissingCap = fidelity < 0.7 ? 82.0 : 78.0;
+    if (score > remMissingCap) {
+      score = remMissingCap;
+    }
+  }
+
+  return score.clamp(0, 100).toDouble();
+}
+
+/// Maximum total score allowed by stage/depth quality.
+///
+/// Maps stage quality into a conservative cap:
+/// - poor depth quality can substantially limit high total scores
+/// - high-quality balanced staging keeps near-full score headroom
+double scoreStageAwareCapV1(double stageDepthScore) {
+  final quality = stageDepthScore.clamp(0, 100).toDouble();
+  return (60 + (quality * 0.4)).clamp(60, 100).toDouble();
 }
 
 /// Duration component for Sleep Health Score V2 (0..100).
@@ -247,4 +394,26 @@ SleepScoreState _scoreState(double score) {
   if (score >= 80) return SleepScoreState.good;
   if (score >= 60) return SleepScoreState.average;
   return SleepScoreState.poor;
+}
+
+double _stageFidelity({
+  required SleepStageConfidence stageDataConfidence,
+  required String? sourcePlatform,
+  required String? sourceAppId,
+}) {
+  var fidelity = switch (stageDataConfidence) {
+    SleepStageConfidence.high => 1.0,
+    SleepStageConfidence.medium => 0.8,
+    SleepStageConfidence.unknown => 0.6,
+    SleepStageConfidence.low => 0.4,
+  };
+  final source = '${sourcePlatform ?? ''} ${sourceAppId ?? ''}'.toLowerCase();
+  if (_isLikelyLimitedStagingSource(source)) {
+    fidelity = fidelity.clamp(0.0, 0.5);
+  }
+  return fidelity.toDouble();
+}
+
+bool _isLikelyLimitedStagingSource(String source) {
+  return source.contains('withings');
 }

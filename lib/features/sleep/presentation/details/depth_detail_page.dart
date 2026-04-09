@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../data/sleep_day_repository.dart';
 import '../../domain/sleep_enums.dart';
+import '../../domain/scoring/sleep_scoring_engine.dart';
 import 'sleep_detail_page_shell.dart';
 import 'sleep_metric_formatters.dart';
 
@@ -47,7 +48,15 @@ class DepthDetailPage extends StatelessWidget {
     final deepPct = (deepDuration.inMinutes / totalMinutes) * 100;
     final lightPct = (lightDuration.inMinutes / totalMinutes) * 100;
     final remPct = (remDuration.inMinutes / totalMinutes) * 100;
-    final rating = deepPct >= 20
+    final stageDepthScore = scoreStageDepthQualityV1(
+      lightSleepPct: lightPct,
+      deepSleepPct: deepPct,
+      remSleepPct: remPct,
+      stageDataConfidence: overview.stageDataConfidence,
+      sourcePlatform: overview.session.sourcePlatform,
+      sourceAppId: overview.session.sourceAppId,
+    );
+    final rating = (stageDepthScore ?? 0) >= 68
         ? l10n.sleepDepthRatingRestorative
         : l10n.sleepDepthRatingLightLeaning;
 

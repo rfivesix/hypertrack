@@ -111,6 +111,71 @@ void main() {
   );
 
   test(
+    'pipeline caps score for mostly-light night with missing REM from limited source',
+    () async {
+      final db = AppDatabase(
+        NativeDatabase.memory(
+          setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+        ),
+      );
+      final service = SleepPipelineService(database: db);
+
+      final batch = SleepRawIngestionBatch(
+        sessions: [
+          SleepIngestionSession(
+            recordId: 'withings-session-1',
+            startAtUtc: DateTime.utc(2026, 3, 1, 22),
+            endAtUtc: DateTime.utc(2026, 3, 2, 6),
+            platformSessionType: 'sleep',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+        ],
+        stageSegments: [
+          SleepIngestionStageSegment(
+            recordId: 'withings-seg-1',
+            sessionRecordId: 'withings-session-1',
+            startAtUtc: DateTime.utc(2026, 3, 1, 22),
+            endAtUtc: DateTime.utc(2026, 3, 2, 5, 10),
+            platformStage: 'light',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+          SleepIngestionStageSegment(
+            recordId: 'withings-seg-2',
+            sessionRecordId: 'withings-session-1',
+            startAtUtc: DateTime.utc(2026, 3, 2, 5, 10),
+            endAtUtc: DateTime.utc(2026, 3, 2, 6),
+            platformStage: 'deep',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+        ],
+        heartRateSamples: const [],
+      );
+
+      await service.runImport(batch: batch);
+
+      final analysis = await db.customSelect('''
+      SELECT score, score_completeness
+      FROM sleep_nightly_analyses
+      WHERE session_id = 'withings-session-1'
+      LIMIT 1
+      ''').getSingle();
+
+      final score = analysis.readNullable<double>('score');
+      expect(score, isNotNull);
+      expect(score!, lessThan(94));
+      expect(
+        analysis.readNullable<double>('score_completeness'),
+        closeTo(0.75, 0.0001),
+      );
+
+      await db.close();
+    },
+  );
+
+  test(
     'forced recompute deletes raw imports for sessions in target window',
     () async {
       final db = AppDatabase(
