@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0] - 2026-04-09
+
+### Added
+- User-facing maintenance uncertainty range and stabilization hints on adaptive recommendation surfaces.
+- Canonical adaptive diet-phase tracking (`cut`/`maintain`/`bulk`) with deterministic 7-day confirmation for phase changes.
+
+### Changed
+- Adaptive nutrition recommendation now ships as a canonical Bayesian recursive system with explicit manual apply workflow.
+- Adaptive recommendation observation scaling now uses confirmed-phase-age ramping (`3000 -> 7700` kcal/kg through week 9+) instead of window-length scaling.
+- Generation semantics remain due-week anchored and deterministic within a due week, including force-recalculation replay behavior.
+- Due-notification eligibility is strictly gated by due-week status, generated-state status, and notification-state status.
+
+### Fixed
+- Hardened adaptive recommendation persistence with coherent snapshot/state checks, legacy fallback migration handling, and recovery from malformed canonical keys.
+- Ensured backup/restore continuity for adaptive recommendation settings and canonical recursive state persistence.
+
+### Internal
+- Expanded adaptive nutrition regression coverage across domain/data/presentation/scenario layers, including long-horizon simulations, phase-transition scenarios, and backup/restore continuity validation.
+
+### Acknowledgements
+- Thanks to @Whatsonyourmind for thoughtful review and feedback on the adaptive nutrition model, uncertainty presentation, and edge-case framing during the 0.8.0 development cycle.
+
 ## [0.8.0-alpha.3-bayesian-preview.3] - 2026-04-08
 
 ### Added

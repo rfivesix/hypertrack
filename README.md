@@ -39,7 +39,7 @@ This README is intentionally implementation-focused and reflects the **current w
 - Logging foods and nutrition entries
 - Tracking calories and core macros
 - Tracking additional nutrition fields such as fiber, sugar, and salt/sodium where available
-- Adaptive weekly nutrition recommendation preview (Bayesian recursive estimator) with explicit manual apply
+- Adaptive weekly nutrition recommendation (Bayesian recursive estimator) with explicit manual apply
 - Optional AI-assisted meal tracking
   - BYOK (bring your own API key) only
   - user-controlled provider + model setup
@@ -117,9 +117,6 @@ This README is intentionally implementation-focused and reflects the **current w
 
 ## Near-term work toward 1.0 (planned, not yet guaranteed in current working copy)
 
-- Adaptive recommendation hardening
-  - broader regression test expansion (separate follow-up)
-  - additional UX/documentation polish around recommendation transparency
 - Onboarding and tutorial polish
 - Widgets
 - App Store release
