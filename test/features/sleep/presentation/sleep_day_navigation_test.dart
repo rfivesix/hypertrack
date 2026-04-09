@@ -385,6 +385,55 @@ void main() {
     expect(find.text('Daily score states'), findsOneWidget);
   });
 
+  testWidgets('week window axis adapts to earliest sleep and latest wake', (
+    tester,
+  ) async {
+    final startUtc = DateTime.utc(2026, 3, 30, 20, 0);
+    final endUtc = DateTime.utc(2026, 3, 31, 12, 0);
+    final startLocal = startUtc.toLocal();
+    final endLocal = endUtc.toLocal();
+    final startFloor = (startLocal.hour * 60 + startLocal.minute) ~/ 60 * 60;
+    final startBoundary =
+        (startLocal.minute == 0 ? startFloor - 60 : startFloor);
+    final endCeil = ((endLocal.hour * 60 + endLocal.minute + 59) ~/ 60) * 60;
+    final endBoundary = (endLocal.minute == 0 ? endCeil + 60 : endCeil);
+    String formatHourLabel(int minute) {
+      var hours = (minute ~/ 60) % 24;
+      if (hours < 0) hours += 24;
+      return '$hours:00';
+    }
+
+    final repo = _FakeSleepQueryRepository([
+      NightlySleepAnalysis(
+        id: 'w1',
+        sessionId: 's1',
+        nightDate: DateTime(2026, 3, 31),
+        analysisVersion: 'v1',
+        normalizationVersion: 'n1',
+        analyzedAtUtc: DateTime.utc(2026, 3, 31, 8),
+        score: 80,
+        totalSleepMinutes: 420,
+        sessionStartAtUtc: startUtc,
+        sessionEndAtUtc: endUtc,
+        sleepQuality: SleepQualityBucket.good,
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepWeekOverviewPage(
+          anchorDay: DateTime(2026, 3, 31),
+          repository: repo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(formatHourLabel(startBoundary)), findsOneWidget);
+    expect(find.text(formatHourLabel(endBoundary)), findsOneWidget);
+  });
+
   testWidgets('day scope switch opens week and month screens', (tester) async {
     final overview = _sampleOverview();
     final model = SleepDayViewModel(
@@ -683,6 +732,74 @@ void main() {
     await model.importNow();
     await tester.pumpAndSettle();
     expect(repo.fetchCount, greaterThan(initialFetches));
+  });
+
+  testWidgets('day timeline axis renders readable timestamp ticks', (
+    tester,
+  ) async {
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(_sampleOverview()),
+      selectedDay: DateTime(2026, 3, 31),
+    );
+    await tester.pumpWidget(
+      _testApp(
+        onGenerateRoute: SleepNavigation.onGenerateRoute,
+        home: SleepDayOverviewPage(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('sleep-timeline-axis')), findsOneWidget);
+    final tickFinder = find.byWidgetPredicate(
+      (widget) =>
+          widget is Text &&
+          widget.key is ValueKey<String> &&
+          (widget.key! as ValueKey<String>).value.startsWith(
+                'sleep-timeline-tick-',
+              ),
+    );
+    expect(tickFinder, findsAtLeastNWidgets(3));
+  });
+
+  testWidgets('day timeline axis tick color adapts for light and dark mode', (
+    tester,
+  ) async {
+    final model = SleepDayViewModel(
+      repository: _FakeSleepDayRepository(_sampleOverview()),
+      selectedDay: DateTime(2026, 3, 31),
+    );
+    Future<void> pumpWithMode(ThemeMode mode) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: mode,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: SleepDayOverviewPage(viewModel: model),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    final tickFinder = find.byWidgetPredicate(
+      (widget) =>
+          widget is Text &&
+          widget.key is ValueKey<String> &&
+          (widget.key! as ValueKey<String>).value.startsWith(
+                'sleep-timeline-tick-',
+              ),
+    );
+
+    await pumpWithMode(ThemeMode.light);
+    final lightTheme = ThemeData.light();
+    final lightTick = tester.widget<Text>(tickFinder.first);
+    expect(lightTick.style?.color, lightTheme.colorScheme.onSurfaceVariant);
+
+    await pumpWithMode(ThemeMode.dark);
+    final darkTheme = ThemeData.dark();
+    final darkTick = tester.widget<Text>(tickFinder.first);
+    expect(darkTick.style?.color, darkTheme.colorScheme.onSurfaceVariant);
   });
 
   testWidgets('sleep day list top padding includes app bar height', (

@@ -8,6 +8,8 @@ NightlySleepAnalysis _analysis({
   double? score,
   int? totalSleepMinutes,
   DateTime? analyzedAtUtc,
+  DateTime? sessionStartAtUtc,
+  DateTime? sessionEndAtUtc,
 }) {
   return NightlySleepAnalysis(
     id: 'analysis-${date.toIso8601String()}',
@@ -18,6 +20,8 @@ NightlySleepAnalysis _analysis({
     analyzedAtUtc: analyzedAtUtc ?? DateTime.utc(2026, 1, 1, 8),
     score: score,
     totalSleepMinutes: totalSleepMinutes,
+    sessionStartAtUtc: sessionStartAtUtc,
+    sessionEndAtUtc: sessionEndAtUtc,
     sleepQuality: score == null
         ? SleepQualityBucket.unavailable
         : score >= 80
@@ -62,6 +66,55 @@ void main() {
       expect(result.sleepWindows.length, 7);
       expect(result.sleepWindows.first.hasData, isTrue);
       expect(result.sleepWindows[2].hasData, isFalse);
+    });
+
+    test('uses canonical session bounds for weekly window across midnight', () {
+      final weekStart = DateTime(2026, 3, 30); // Monday
+      final targetDate = weekStart.add(const Duration(days: 1)); // Tuesday
+      final engine = const SleepPeriodAggregationEngine();
+      final result = engine.aggregateWeek(
+        weekStart: weekStart,
+        analyses: [
+          _analysis(
+            date: targetDate,
+            totalSleepMinutes: 420,
+            sessionStartAtUtc: DateTime.utc(2026, 3, 30, 22, 30),
+            sessionEndAtUtc: DateTime.utc(2026, 3, 31, 6, 45),
+          ),
+        ],
+      );
+
+      final window = result.sleepWindows.firstWhere(
+        (item) => item.date == targetDate,
+      );
+      final expectedStartLocal = DateTime.utc(2026, 3, 30, 22, 30).toLocal();
+      final expectedEndLocal = DateTime.utc(2026, 3, 31, 6, 45).toLocal();
+      final expectedStartDate = DateTime(
+        expectedStartLocal.year,
+        expectedStartLocal.month,
+        expectedStartLocal.day,
+      );
+      final expectedEndDate = DateTime(
+        expectedEndLocal.year,
+        expectedEndLocal.month,
+        expectedEndLocal.day,
+      );
+      final targetDateOnly = DateTime(
+        targetDate.year,
+        targetDate.month,
+        targetDate.day,
+      );
+      final expectedStartMinutes = expectedStartLocal.hour * 60 +
+          expectedStartLocal.minute +
+          (expectedStartDate.isBefore(targetDateOnly) ? 0 : 1440);
+      final expectedEndMinutes = expectedEndLocal.hour * 60 +
+          expectedEndLocal.minute +
+          (expectedEndDate.isBefore(targetDateOnly) ? 0 : 1440);
+      expect(window.hasData, isTrue);
+      expect(window.startMinutes, expectedStartMinutes);
+      expect(window.endMinutes, expectedEndMinutes);
+      expect(window.displayStartMinutes, expectedStartMinutes);
+      expect(window.displayEndMinutes, expectedEndMinutes);
     });
 
     test('prefers latest analysis for same wake date', () {

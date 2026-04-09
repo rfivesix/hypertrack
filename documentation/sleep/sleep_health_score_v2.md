@@ -32,6 +32,21 @@ Top-level renormalization over available components:
 - `score = sum(weight_i * componentScore_i) / W`
 - if `W == 0`, score is unavailable (`null`)
 
+## Stage/depth guardrail (implemented)
+
+After computing the renormalized top-level score, V2 applies a conservative
+stage-aware cap when stage composition is available:
+
+- Stage depth quality (`0..100`) is estimated from light/deep/REM mix plus
+  stage-confidence/source-fidelity hints.
+- Nights dominated by light sleep receive lower depth quality.
+- Missing REM cannot produce near-perfect depth quality, with additional
+  conservatism when source fidelity is limited/ambiguous.
+- Final score is capped by: `60 + 0.4 * stageDepthQuality`.
+
+This is a guardrail (confidence-aware ceiling), not a fourth weighted
+top-level component.
+
 ## Continuity formula
 
 Continuity combines:
@@ -127,7 +142,7 @@ This is a data completeness indicator, not a certainty metric.
 
 The following are not used in V2 score computation:
 
-- sleep stage percentages/depth as direct score input
+- sleep stage percentages/depth as a weighted top-level component
 - SOL
 - heart-rate and HRV metrics/deltas
 - interruption count as a standalone component (continuity uses WASO directly)

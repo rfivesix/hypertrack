@@ -76,6 +76,8 @@ void main() {
     final analysis = await repo.getNightlyAnalysisByDate(DateTime(2026, 3, 1));
     expect(analysis, isNotNull);
     expect(analysis!.score, 80);
+    expect(analysis.sessionStartAtUtc, DateTime.utc(2026, 2, 28, 22));
+    expect(analysis.sessionEndAtUtc, DateTime.utc(2026, 3, 1, 6));
   });
 
   test(
@@ -88,6 +90,8 @@ void main() {
         toInclusive: DateTime(2026, 3, 2),
       );
       expect(rows.length, 1);
+      expect(rows.first.sessionStartAtUtc, DateTime.utc(2026, 2, 28, 22));
+      expect(rows.first.sessionEndAtUtc, DateTime.utc(2026, 3, 1, 6));
 
       final empty = await repo.getAnalysesInRange(
         fromInclusive: DateTime(2026, 4, 1),

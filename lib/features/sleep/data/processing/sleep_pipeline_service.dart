@@ -237,6 +237,14 @@ class SleepPipelineService {
             regularitySri: regularityByNight[_nightKey(session.endAtUtc)]?.sri,
             regularityValidDays:
                 regularityByNight[_nightKey(session.endAtUtc)]?.validDays ?? 0,
+            lightSleepPct: metrics.stagePercentages[CanonicalSleepStage.light],
+            deepSleepPct: metrics.stagePercentages[CanonicalSleepStage.deep],
+            remSleepPct: metrics.stagePercentages[CanonicalSleepStage.rem],
+            asleepUnspecifiedPct:
+                metrics.stagePercentages[CanonicalSleepStage.asleepUnspecified],
+            stageDataConfidence: _timelineConfidence(repaired),
+            sourcePlatform: session.sourcePlatform,
+            sourceAppId: session.sourceAppId,
           ),
           config: SleepScoringConfig(analysisVersion: analysisVersion),
         );
@@ -420,6 +428,31 @@ class SleepPipelineService {
       'low' => SleepOverallConfidence.low,
       _ => SleepOverallConfidence.unknown,
     };
+  }
+
+  SleepStageConfidence _timelineConfidence(List<SleepStageSegment> segments) {
+    if (segments.isEmpty) return SleepStageConfidence.unknown;
+    if (segments.every(
+      (segment) => segment.stageConfidence == SleepStageConfidence.unknown,
+    )) {
+      return SleepStageConfidence.unknown;
+    }
+    if (segments.any(
+      (segment) => segment.stageConfidence == SleepStageConfidence.low,
+    )) {
+      return SleepStageConfidence.low;
+    }
+    if (segments.any(
+      (segment) => segment.stageConfidence == SleepStageConfidence.medium,
+    )) {
+      return SleepStageConfidence.medium;
+    }
+    if (segments.any(
+      (segment) => segment.stageConfidence == SleepStageConfidence.high,
+    )) {
+      return SleepStageConfidence.high;
+    }
+    return SleepStageConfidence.unknown;
   }
 
   bool _isSleepStage(CanonicalSleepStage stage) {

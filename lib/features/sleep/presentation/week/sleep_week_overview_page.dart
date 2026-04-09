@@ -177,22 +177,15 @@ class WeekWindowCard extends StatelessWidget {
   const WeekWindowCard({required this.aggregation});
 
   final WeekSleepAggregation aggregation;
-  static const int _minMinutes = 20 * 60;
-  static const int _maxMinutes = 36 * 60;
-  static const List<int> _tickMinutes = <int>[
-    21 * 60,
-    24 * 60,
-    27 * 60,
-    30 * 60,
-    33 * 60,
-    36 * 60,
-  ];
+  static const int _fallbackMinMinutes = 20 * 60;
+  static const int _fallbackMaxMinutes = 36 * 60;
   static const double _labelSpacing = 4;
   static const double _labelRowHeight = 16;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final bounds = _resolveBounds(aggregation.sleepWindows);
     return SummaryCard(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -216,9 +209,9 @@ class WeekWindowCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _TimeAxisLabels(
-                            tickMinutes: _tickMinutes,
-                            minMinutes: _minMinutes,
-                            maxMinutes: _maxMinutes,
+                            tickMinutes: bounds.tickMinutes,
+                            minMinutes: bounds.minMinutes,
+                            maxMinutes: bounds.maxMinutes,
                           ),
                         ),
                         const SizedBox(height: _labelSpacing),
@@ -229,9 +222,9 @@ class WeekWindowCard extends StatelessWidget {
                   Expanded(
                     child: _WeekWindowChart(
                       windows: aggregation.sleepWindows,
-                      minMinutes: _minMinutes,
-                      maxMinutes: _maxMinutes,
-                      tickMinutes: _tickMinutes,
+                      minMinutes: bounds.minMinutes,
+                      maxMinutes: bounds.maxMinutes,
+                      tickMinutes: bounds.tickMinutes,
                       labelRowHeight: _labelRowHeight,
                       labelSpacing: _labelSpacing,
                     ),
@@ -244,6 +237,77 @@ class WeekWindowCard extends StatelessWidget {
       ),
     );
   }
+
+  _WeekWindowBounds _resolveBounds(List<SleepWindowSegment> windows) {
+    final dataWindows = windows.where((window) => window.hasData).toList();
+    if (dataWindows.isEmpty) {
+      return _WeekWindowBounds(
+        minMinutes: _fallbackMinMinutes,
+        maxMinutes: _fallbackMaxMinutes,
+        tickMinutes: _buildTickMinutes(
+          minMinutes: _fallbackMinMinutes,
+          maxMinutes: _fallbackMaxMinutes,
+        ),
+      );
+    }
+
+    final earliestStart = dataWindows
+        .map((window) => window.displayStartMinutes)
+        .reduce(math.min);
+    final latestEnd =
+        dataWindows.map((window) => window.displayEndMinutes).reduce(math.max);
+
+    final flooredHour = (earliestStart ~/ 60) * 60;
+    final minMinutes = earliestStart % 60 == 0 ? flooredHour - 60 : flooredHour;
+
+    final ceilBase = ((latestEnd + 59) ~/ 60) * 60;
+    final maxMinutes = latestEnd % 60 == 0 ? ceilBase + 60 : ceilBase;
+
+    return _WeekWindowBounds(
+      minMinutes: minMinutes,
+      maxMinutes: maxMinutes,
+      tickMinutes: _buildTickMinutes(
+        minMinutes: minMinutes,
+        maxMinutes: maxMinutes,
+      ),
+    );
+  }
+
+  List<int> _buildTickMinutes({
+    required int minMinutes,
+    required int maxMinutes,
+  }) {
+    final spanMinutes = math.max(60, maxMinutes - minMinutes);
+    final spanHours = (spanMinutes / 60).ceil();
+    final stepHours = switch (spanHours) {
+      <= 8 => 1,
+      <= 12 => 2,
+      <= 18 => 3,
+      <= 24 => 4,
+      _ => 6,
+    };
+    final step = stepHours * 60;
+    final ticks = <int>[];
+    for (var minute = minMinutes; minute <= maxMinutes; minute += step) {
+      ticks.add(minute);
+    }
+    if (ticks.isEmpty || ticks.last != maxMinutes) {
+      ticks.add(maxMinutes);
+    }
+    return ticks;
+  }
+}
+
+class _WeekWindowBounds {
+  const _WeekWindowBounds({
+    required this.minMinutes,
+    required this.maxMinutes,
+    required this.tickMinutes,
+  });
+
+  final int minMinutes;
+  final int maxMinutes;
+  final List<int> tickMinutes;
 }
 
 class _WeekWindowChart extends StatelessWidget {
@@ -390,6 +454,7 @@ class _TimeAxisLabels extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const labelHeight = 14.0;
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = constraints.maxHeight;
@@ -398,7 +463,12 @@ class _TimeAxisLabels extends StatelessWidget {
           children: [
             for (final minute in tickMinutes)
               Positioned(
-                top: _positionForMinute(minute.toDouble(), height, range),
+                top: _positionForMinute(
+                  minute.toDouble(),
+                  height,
+                  range,
+                  labelHeight,
+                ),
                 right: 6,
                 child: Text(
                   _formatTickLabel(minute),
@@ -413,9 +483,15 @@ class _TimeAxisLabels extends StatelessWidget {
     );
   }
 
-  double _positionForMinute(double minute, double height, double range) {
+  double _positionForMinute(
+    double minute,
+    double height,
+    double range,
+    double labelHeight,
+  ) {
     final normalized = ((minute - minMinutes) / range).clamp(0.0, 1.0);
-    return (normalized * height) - 6;
+    final centered = (normalized * height) - (labelHeight / 2);
+    return centered.clamp(0.0, math.max(0.0, height - labelHeight));
   }
 
   String _formatTickLabel(int minute) {

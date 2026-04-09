@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hypertrack/features/sleep/domain/sleep_enums.dart';
 import 'package:hypertrack/features/sleep/domain/scoring/sleep_scoring_engine.dart';
 
 void main() {
@@ -120,6 +121,124 @@ void main() {
       final v1Score = (0.35 * v1Duration) + (0.35 * 100) + (0.30 * 90);
       expect(v1Score, greaterThan(80));
       expect(v2.score!, lessThan(v1Score - 5));
+    });
+  });
+
+  group('stage-aware guardrails', () {
+    test(
+      'mostly light sleep without REM reduces high base score meaningfully',
+      () {
+        const baseInput = SleepScoringInput(
+          durationMinutes: 480,
+          sleepEfficiencyPct: 94,
+          wasoMinutes: 20,
+          regularitySri: 90,
+          regularityValidDays: 7,
+        );
+        const mostlyLightInput = SleepScoringInput(
+          durationMinutes: 480,
+          sleepEfficiencyPct: 94,
+          wasoMinutes: 20,
+          regularitySri: 90,
+          regularityValidDays: 7,
+          lightSleepPct: 88,
+          deepSleepPct: 12,
+          remSleepPct: 0,
+          stageDataConfidence: SleepStageConfidence.unknown,
+          sourcePlatform: 'health_connect',
+        );
+
+        final base = calculateSleepScore(baseInput);
+        final guarded = calculateSleepScore(mostlyLightInput);
+
+        expect(base.score, isNotNull);
+        expect(guarded.score, isNotNull);
+        expect(base.score!, greaterThan(90));
+        expect(guarded.score!, lessThan(85));
+        expect(guarded.score!, lessThan(base.score! - 8));
+        expect(guarded.stageDepthScore, isNotNull);
+        expect(guarded.stageScoreCap, isNotNull);
+      },
+    );
+
+    test('balanced staged sleep remains close to baseline score', () {
+      const baseInput = SleepScoringInput(
+        durationMinutes: 480,
+        sleepEfficiencyPct: 94,
+        wasoMinutes: 20,
+        regularitySri: 90,
+        regularityValidDays: 7,
+      );
+      const balancedInput = SleepScoringInput(
+        durationMinutes: 480,
+        sleepEfficiencyPct: 94,
+        wasoMinutes: 20,
+        regularitySri: 90,
+        regularityValidDays: 7,
+        lightSleepPct: 56,
+        deepSleepPct: 22,
+        remSleepPct: 20,
+        stageDataConfidence: SleepStageConfidence.high,
+      );
+
+      final base = calculateSleepScore(baseInput);
+      final balanced = calculateSleepScore(balancedInput);
+
+      expect(base.score, isNotNull);
+      expect(balanced.score, isNotNull);
+      expect((base.score! - balanced.score!).abs(), lessThan(2.0));
+      expect(balanced.score!, greaterThan(90));
+    });
+
+    test('missing REM from likely limited source avoids near-perfect totals',
+        () {
+      const input = SleepScoringInput(
+        durationMinutes: 480,
+        sleepEfficiencyPct: 94,
+        wasoMinutes: 20,
+        regularitySri: 90,
+        regularityValidDays: 7,
+        lightSleepPct: 62,
+        deepSleepPct: 38,
+        remSleepPct: 0,
+        stageDataConfidence: SleepStageConfidence.unknown,
+        sourcePlatform: 'health_connect',
+        sourceAppId: 'com.withings.mobile',
+      );
+
+      final result = calculateSleepScore(input);
+      expect(result.score, isNotNull);
+      expect(result.score!, lessThan(94));
+      expect(result.score!, greaterThan(80));
+      expect(result.stageScoreCap, isNotNull);
+      expect(result.stageScoreCap!, lessThan(94));
+    });
+
+    test('normal staged night regression stays stable', () {
+      const withoutStages = SleepScoringInput(
+        durationMinutes: 420,
+        sleepEfficiencyPct: 90,
+        wasoMinutes: 30,
+        regularitySri: 85,
+        regularityValidDays: 7,
+      );
+      const withStages = SleepScoringInput(
+        durationMinutes: 420,
+        sleepEfficiencyPct: 90,
+        wasoMinutes: 30,
+        regularitySri: 85,
+        regularityValidDays: 7,
+        lightSleepPct: 54,
+        deepSleepPct: 21,
+        remSleepPct: 22,
+        stageDataConfidence: SleepStageConfidence.medium,
+      );
+
+      final baseline = calculateSleepScore(withoutStages);
+      final staged = calculateSleepScore(withStages);
+      expect(baseline.score, isNotNull);
+      expect(staged.score, isNotNull);
+      expect((baseline.score! - staged.score!).abs(), lessThan(2.0));
     });
   });
 }
