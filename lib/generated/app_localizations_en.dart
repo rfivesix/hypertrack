@@ -2849,4 +2849,386 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sleepRawImportPayload => 'Payload';
+
+  @override
+  String get adaptiveBodyweightTargetSectionTitle =>
+      'Adaptive bodyweight target';
+
+  @override
+  String get adaptiveRecommendationSettingsSectionTitle =>
+      'Recommendation settings';
+
+  @override
+  String get adaptiveGoalDirectionLabel => 'Goal direction';
+
+  @override
+  String get adaptiveGoalLose => 'Lose weight';
+
+  @override
+  String get adaptiveGoalMaintain => 'Maintain weight';
+
+  @override
+  String get adaptiveGoalGain => 'Gain weight';
+
+  @override
+  String adaptiveRatePerWeek(String value) {
+    return '$value kg/week';
+  }
+
+  @override
+  String get adaptivePriorActivityLabel => 'Baseline daily activity';
+
+  @override
+  String get adaptivePriorActivityLow => 'Low activity';
+
+  @override
+  String get adaptivePriorActivityModerate => 'Moderate activity';
+
+  @override
+  String get adaptivePriorActivityHigh => 'High activity';
+
+  @override
+  String get adaptivePriorActivityVeryHigh => 'Very high activity';
+
+  @override
+  String get adaptivePriorActivityHelpIntro =>
+      'Baseline daily activity only (separate from extra cardio):';
+
+  @override
+  String get adaptivePriorActivityHelpLowLine =>
+      'Low: mostly sitting, student/pupil or office routine.';
+
+  @override
+  String get adaptivePriorActivityHelpModerateLine =>
+      'Moderate: mixed sitting, walking, and standing.';
+
+  @override
+  String get adaptivePriorActivityHelpHighLine =>
+      'High: lots of standing/walking or a physically active job.';
+
+  @override
+  String get adaptivePriorActivityHelpVeryHighLine =>
+      'Very high: very movement-heavy routine/job with consistently high daily activity.';
+
+  @override
+  String get adaptiveExtraCardioLabel =>
+      'Extra cardio/endurance outside the app';
+
+  @override
+  String get adaptiveExtraCardioOption0 => '0 h/week';
+
+  @override
+  String get adaptiveExtraCardioOption1 => '1 h/week';
+
+  @override
+  String get adaptiveExtraCardioOption2 => '2 h/week';
+
+  @override
+  String get adaptiveExtraCardioOption3 => '3 h/week';
+
+  @override
+  String get adaptiveExtraCardioOption5 => '5 h/week';
+
+  @override
+  String get adaptiveExtraCardioOption7Plus => '7+ h/week';
+
+  @override
+  String get adaptiveExtraCardioHelp =>
+      'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts.';
+
+  @override
+  String get onboardingAdaptiveGoalTitle => 'Adaptive nutrition recommendation';
+
+  @override
+  String get onboardingAdaptiveGoalSubtitle =>
+      'Set your direction and weekly rate. We create a conservative starting recommendation and adapt it with your logs.';
+
+  @override
+  String get adaptiveRecommendationGenerating => 'Generating...';
+
+  @override
+  String get adaptiveRecommendationRefresh => 'Refresh recommendation';
+
+  @override
+  String get onboardingAdaptiveSummaryEmpty =>
+      'Set your goal inputs and tap refresh to preview your starting recommendation.';
+
+  @override
+  String get onboardingAdaptiveSummaryTitle => 'Recommendation preview';
+
+  @override
+  String onboardingAdaptiveSummaryCalories(int value) {
+    return 'Calories: $value kcal';
+  }
+
+  @override
+  String onboardingAdaptiveSummaryProtein(int value) {
+    return 'Protein: $value g';
+  }
+
+  @override
+  String onboardingAdaptiveSummaryCarbs(int value) {
+    return 'Carbs: $value g';
+  }
+
+  @override
+  String onboardingAdaptiveSummaryFat(int value) {
+    return 'Fat: $value g';
+  }
+
+  @override
+  String onboardingAdaptiveSummaryConfidence(String value) {
+    return 'Data basis: $value';
+  }
+
+  @override
+  String get onboardingAdaptiveSummaryApply => 'Apply to daily goals';
+
+  @override
+  String get onboardingAdaptiveSummaryApplied => 'Applied to daily goals';
+
+  @override
+  String get onboardingBodyFatPageTitle => 'Body fat %';
+
+  @override
+  String get onboardingBodyFatPageSubtitle =>
+      'Optional step: enter a rough estimate if you know it.';
+
+  @override
+  String get onboardingBodyFatOptionalLabel => 'Body fat % (optional)';
+
+  @override
+  String get onboardingBodyFatOptionalHelper =>
+      'Optional: only enter this if you roughly know your value. Leaving it empty is okay. It helps personalize the initial recommendation.';
+
+  @override
+  String get onboardingBodyFatHelpAction => 'How do I estimate this?';
+
+  @override
+  String get bodyFatGuidanceTitle => 'Body fat % guidance';
+
+  @override
+  String get bodyFatGuidanceIntro =>
+      'Body-fat percentage can only be estimated roughly from appearance. This is orientation only, not a precise diagnosis.';
+
+  @override
+  String get bodyFatGuidanceDisclaimer =>
+      'Appearance can vary strongly at the same body-fat level due to muscle mass, fat distribution, genetics, water retention, posture, and lighting.';
+
+  @override
+  String get bodyFatGuidanceSexLabel => 'Reference sex';
+
+  @override
+  String bodyFatGuidancePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get bodyFatGuidanceMale10 => 'Very lean, clear definition.';
+
+  @override
+  String get bodyFatGuidanceMale15 => 'Athletic, visibly defined.';
+
+  @override
+  String get bodyFatGuidanceMale20 => 'Sporty, slightly softer.';
+
+  @override
+  String get bodyFatGuidanceMale25 =>
+      'Less definition, more waist and belly softness.';
+
+  @override
+  String get bodyFatGuidanceMale30 => 'Clearly softer, rounder.';
+
+  @override
+  String get bodyFatGuidanceMale35 =>
+      'Very soft, almost no visible definition.';
+
+  @override
+  String get bodyFatGuidanceMale40 =>
+      'Strongly rounder appearance, no visible definition.';
+
+  @override
+  String get bodyFatGuidanceFemale15 => 'Very lean, very defined.';
+
+  @override
+  String get bodyFatGuidanceFemale20 => 'Lean and athletic.';
+
+  @override
+  String get bodyFatGuidanceFemale25 => 'Fit, lightly soft.';
+
+  @override
+  String get bodyFatGuidanceFemale30 =>
+      'Soft, healthy-looking average athletic-to-normal range.';
+
+  @override
+  String get bodyFatGuidanceFemale35 => 'Noticeably softer.';
+
+  @override
+  String get bodyFatGuidanceFemale40 =>
+      'Clearly softer, rounder overall appearance.';
+
+  @override
+  String get adaptiveRecommendationCardTitle => 'Adaptive recommendation';
+
+  @override
+  String get adaptiveRecommendationEmptyBody =>
+      'Track weight and nutrition for about a week to unlock your first weekly recommendation.';
+
+  @override
+  String adaptiveRecommendationGoalLine(String goal, String rate) {
+    return 'Goal: $goal ($rate)';
+  }
+
+  @override
+  String adaptiveRecommendationMaintenanceLine(int value) {
+    return 'Maintenance estimate: $value kcal';
+  }
+
+  @override
+  String adaptiveRecommendationMaintenanceRangeLine(int lower, int upper) {
+    return 'Likely range: $lower-$upper kcal';
+  }
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintNarrow =>
+      'Your likely maintenance range is fairly tight. Small day-to-day shifts are normal.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintModerate =>
+      'Your likely maintenance range is moderate right now. Some movement week to week is normal.';
+
+  @override
+  String get adaptiveRecommendationUncertaintyHintWide =>
+      'Your likely maintenance range is still wide. This is normal while we gather more steady data.';
+
+  @override
+  String get adaptiveRecommendationStabilizingHint =>
+      'We are still adapting to your recent phase, so this estimate can move more than usual.';
+
+  @override
+  String adaptiveRecommendationCaloriesValue(int value) {
+    return '$value kcal';
+  }
+
+  @override
+  String adaptiveRecommendationProteinValue(int value) {
+    return '$value g';
+  }
+
+  @override
+  String adaptiveRecommendationCarbsValue(int value) {
+    return '$value g';
+  }
+
+  @override
+  String adaptiveRecommendationFatValue(int value) {
+    return '$value g';
+  }
+
+  @override
+  String adaptiveRecommendationConfidenceLine(String value) {
+    return 'Data basis: $value';
+  }
+
+  @override
+  String adaptiveRecommendationDataBasisLine(
+      int windowDays, int weightLogs, int intakeDays) {
+    return 'Data basis: $windowDays days, $weightLogs weight logs, $intakeDays intake days';
+  }
+
+  @override
+  String adaptiveRecommendationActiveCaloriesLine(int value) {
+    return 'Current active calories: $value kcal';
+  }
+
+  @override
+  String adaptiveRecommendationCalculatedAtLine(String value) {
+    return 'Calculated at: $value';
+  }
+
+  @override
+  String adaptiveRecommendationNextDueLine(String value) {
+    return 'Next adaptive recommendation due: $value';
+  }
+
+  @override
+  String get adaptiveRecommendationDueNowLine =>
+      'A new adaptive recommendation is due this week.';
+
+  @override
+  String get adaptiveRecommendationRecalculateNowAction => 'Recalculate now';
+
+  @override
+  String get adaptiveRecommendationRecalculating => 'Recalculating...';
+
+  @override
+  String get adaptiveRecommendationApplying => 'Applying...';
+
+  @override
+  String get adaptiveRecommendationApplyAction =>
+      'Apply recommendation to active goals';
+
+  @override
+  String get adaptiveRecommendationWarningCalorieFloor =>
+      'Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying.';
+
+  @override
+  String get adaptiveRecommendationWarningUnresolvedFood =>
+      'Some nutrition entries could not be fully resolved for calories. Check recent logs before applying.';
+
+  @override
+  String get adaptiveRecommendationWarningLargeAdjustment =>
+      'Large adjustment detected. Please review your recent logging completeness before applying.';
+
+  @override
+  String get adaptiveRecommendationWarningMacroConstrained =>
+      'Macro split was constrained by the calorie budget. Check if your target rate is too aggressive.';
+
+  @override
+  String get adaptiveRecommendationWarningConservative =>
+      'Review suggested: recommendation was adjusted conservatively due to data variability.';
+
+  @override
+  String get adaptiveRecommendationDataBasisHintDefault =>
+      'Built from recent logs and their completeness.';
+
+  @override
+  String get adaptiveRecommendationDataBasisHintPriorOnly =>
+      'Based on profile/prior data only. Add recent weight and intake logs for adaptive adjustment.';
+
+  @override
+  String get adaptiveRecommendationDataBasisHintSparseWeight =>
+      'Recent weight logs are sparse, so trend quality is limited.';
+
+  @override
+  String get adaptiveRecommendationDataBasisHintSparseIntake =>
+      'Recent intake logs are sparse, so maintenance inference is limited.';
+
+  @override
+  String get adaptiveRecommendationDataBasisHintSparseWeightAndIntake =>
+      'Recent weight and intake logs are sparse, so this recommendation is more conservative.';
+
+  @override
+  String get adaptiveConfidenceNotEnoughData => 'Profile/prior only';
+
+  @override
+  String get adaptiveConfidenceLow => 'Limited recent logs';
+
+  @override
+  String get adaptiveConfidenceMedium => 'Usable recent logs';
+
+  @override
+  String get adaptiveConfidenceHigh => 'Strong recent logs';
+
+  @override
+  String get adaptiveRecommendationRecalculatedSnack =>
+      'Recommendation recalculated.';
+
+  @override
+  String get adaptiveRecommendationAppliedToGoalsSnack =>
+      'Recommendation applied to active goals.';
+
+  @override
+  String get adaptiveRecommendationNotAvailableSnack =>
+      'No recommendation available to apply.';
 }

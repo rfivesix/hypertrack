@@ -4,6 +4,268 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.0] - 2026-04-09
+
+### Added
+- User-facing maintenance uncertainty range and stabilization hints on adaptive recommendation surfaces.
+- Canonical adaptive diet-phase tracking (`cut`/`maintain`/`bulk`) with deterministic 7-day confirmation for phase changes.
+
+### Changed
+- Adaptive nutrition recommendation now ships as a canonical Bayesian recursive system with explicit manual apply workflow.
+- Adaptive recommendation observation scaling now uses confirmed-phase-age ramping (`3000 -> 7700` kcal/kg through week 9+) instead of window-length scaling.
+- Generation semantics remain due-week anchored and deterministic within a due week, including force-recalculation replay behavior.
+- Due-notification eligibility is strictly gated by due-week status, generated-state status, and notification-state status.
+
+### Fixed
+- Hardened adaptive recommendation persistence with coherent snapshot/state checks, legacy fallback migration handling, and recovery from malformed canonical keys.
+- Ensured backup/restore continuity for adaptive recommendation settings and canonical recursive state persistence.
+
+### Internal
+- Expanded adaptive nutrition regression coverage across domain/data/presentation/scenario layers, including long-horizon simulations, phase-transition scenarios, and backup/restore continuity validation.
+
+### Acknowledgements
+- Thanks to @Whatsonyourmind for thoughtful review and feedback on the adaptive nutrition model, uncertainty presentation, and edge-case framing during the 0.8.0 development cycle.
+
+## [0.8.0-alpha.3-bayesian-preview.3] - 2026-04-08
+
+### Added
+- Canonical adaptive diet-phase model (`cut`, `maintain`, `bulk`) with persisted confirmed/pending phase tracking.
+- Deterministic 7-day phase-change confirmation flow:
+  - pending candidate starts on direction change
+  - confirmed phase switches only after 7 stable days
+  - reverting before confirmation cancels pending reset
+- Lightweight residual-bias diagnostic seam for weekly observation validation:
+  - mean residual summary
+  - sample count
+  - bias direction status (`neutral`, likely over/under-estimating energy density)
+
+### Changed
+- Replaced the window-length kcal/kg observation scaling with confirmed-phase-age ramping:
+  - week 1 = `3000`
+  - linear ramp to week 9 = `7700`
+  - week 9+ stays at `7700`
+- Exact target-rate changes no longer define new adaptive phases; only goal direction does.
+- Adaptive recommendation copy (EN/DE) now uses simpler wording that clearly separates:
+  - “still adapting/settling”
+  - normal uncertainty around likely maintenance range
+- Adaptive nutrition current-state docs updated for confirmed-phase semantics, ramp behavior, and residual diagnostics seam.
+
+### Testing
+- Expanded adaptive nutrition scenario-test infrastructure with reusable synthetic-truth and recovery metrics helpers:
+  - convergence milestones (initial / week-4 / week-8 / week-12)
+  - signed/absolute error progression
+  - error half-life and settling-time checks
+  - bounded overshoot/undershoot and truth-crossing checks
+  - pre/event/post recovery-window summaries for posterior, variance, and confidence
+  - bounded weeks-to-recover checks for transient event scenarios
+- Strengthened ground-truth scenario assertions to validate quantitative convergence behavior, not only boundedness/stability.
+- Strengthened chaotic scenario assertions (weekend spikes, refeed, water jump, illness, logging-quality phases) to validate measurable disruption and recovery behavior.
+- Added comparative long-horizon profile validation (8–12 week style horizons) with directional plausibility checks across matched profile pairs:
+  - heavier vs lighter
+  - lean vs higher body-fat at comparable size
+  - high vs low activity
+  - male/female/unknown plausibility banding
+  - high-steps vs low-steps long-horizon relation
+
+## [0.8.0-alpha.3-bayesian-preview.2] - 2026-04-07
+
+### Added
+- Data-calibrated Bayesian noise adaptation for adaptive nutrition:
+  - bounded history-informed scaling for `Q` (maintenance drift variance)
+  - bounded history-informed scaling for `R` (observation variance)
+  - deterministic fallback to conservative defaults when history is insufficient
+- User-facing maintenance uncertainty transparency:
+  - likely maintenance range derived from posterior uncertainty (`mean ± 1σ`)
+  - plain-language uncertainty hints on adaptive recommendation surfaces
+  - stabilization hint when the recursive estimate is still settling
+- Stabilization sanity-check layer derived from live vs steady-state behavior:
+  - quality flags for bootstrap/transient/noisy regimes
+  - conservative confidence guard during settling phases
+- Expanded Bayesian estimator/service/repository/UI tests for:
+  - calibration responsiveness and bounds
+  - fallback safety under sparse history
+  - stabilization flags and onboarding stabilization copy
+  - maintenance estimate/state persistence coherence
+
+### Changed
+- Adaptive nutrition current-state docs were updated for production-style clarity, including:
+  - data-calibrated `Q/R` semantics
+  - credible-interval presentation semantics
+  - stabilization/sanity-check behavior
+  - user-facing behavior
+  - scheduling and stable data-window semantics
+  - recursive Bayesian prediction/update chaining
+  - apply vs recalculate behavior
+  - persistence and due-notification semantics
+  - confidence/warning interpretation
+- The nutrition recommendation card and onboarding preview now include maintenance range + uncertainty/stabilization copy without changing explicit apply semantics.
+- README documentation navigation label was tightened to reflect canonical Bayesian architecture wording.
+
+### Internal
+- Adaptive nutrition terminology and inline comments were normalized further around recursive Bayesian, uncertainty, and due-week semantics.
+
+## [0.8.0-alpha.3-bayesian-preview.1] - 2026-04-06
+
+### Added
+- Experimental Bayesian/Kalman adaptive nutrition estimation path
+- Atomic Bayesian experimental snapshot persistence
+- Manual “Recalculate now” action for adaptive recommendations
+- Recommendation freshness metadata in UI:
+  - calculated at
+  - next adaptive recommendation due
+  - due now indicator
+- Scheduler-based due-notification seam for new adaptive recommendations
+- Richer estimator comparison/debug tracing
+- Documented Bayesian estimator tuning parameters
+
+### Changed
+- Bayesian experimental state now uses atomic snapshot persistence as single source of truth
+- Due-notification logic now requires:
+  - recommendation is currently due
+  - no recommendation has yet been generated for that due week
+  - no notification has yet been sent for that due week
+- Snapshot generation time is now sourced only from `recommendation.generatedAt`
+- German adaptive notification strings now use proper umlauts and cleaner wording
+- Manual recalculation now forces immediate regeneration without auto-applying active goals
+
+### Fixed
+- Safer handling of incoherent or corrupt Bayesian experimental state
+- Safer migration from legacy fragmented Bayesian persistence
+- Removed remaining active use of fragmented Bayesian write paths in normal experimental flow
+
+### Internal
+- Production heuristic recommendation path remains unchanged and authoritative
+- Legacy fragmented Bayesian keys are now migration-only fallback support
+- Documentation reviewed and updated to match final enforced behavior
+## [0.8.0-alpha.2] - 2026-04-06
+
+This alpha improves the adaptive nutrition recommendation MVP with more conservative sparse-data behavior, more robust trend estimation, better step-prior maintenance inputs, and clearer recommendation transparency.
+
+### Added
+- Recommendation transparency copy layer shared across onboarding and nutrition hub surfaces.
+- New data-basis hint messaging for:
+  - profile/prior-only recommendations
+  - sparse recent weight logs
+  - sparse recent intake logs
+  - sparse weight + intake logs together
+- New specific warning copy for macro-constrained recommendations.
+
+### Changed
+- `notEnoughData` recommendations are now strictly prior-only:
+  - no inferred-maintenance blending
+  - no week-over-week maintenance drift against previous recommendations
+  - goal-rate calorie adjustment still applies on top of the prior estimate
+- Prior maintenance estimation now uses step input with the following precedence:
+  1. recent average actual daily steps
+  2. configured daily step target
+  3. fallback default of `8000`
+- Recent actual step averages now use synced step data from the rolling lookback window when available.
+- Weight-trend estimation now uses linear regression over EWMA-smoothed bodyweight data instead of endpoint-only delta.
+- Recommendation surfaces now frame confidence as **data basis quality** rather than scientific certainty.
+- Onboarding adaptive recommendation preview now shows:
+  - data basis label
+  - data basis counts
+  - explicit prior-only messaging when applicable
+  - prioritized warning text aligned with the nutrition hub card
+- Recommendation warning prioritization is now more explicit:
+  - calorie floor applied
+  - unresolved food calories
+  - large adjustment detected
+  - macro distribution constrained
+  - generic conservative fallback only when no more specific warning applies
+- EN/DE adaptive recommendation wording was revised to match the new semantics and transparency model.
+
+### Fixed
+- Prevented sparse-data recommendations from drifting maintenance estimates despite explicitly insufficient adaptive data.
+- Reduced sensitivity of weekly trend estimation to noisy start/end bodyweight values.
+- Improved recommendation copy so unresolved food-calorie issues are surfaced more clearly before apply.
+- Fixed onboarding progress/button logic so the final onboarding page cleanly exposes the finish action.
+
+### Documentation
+- Updated the adaptive nutrition recommendation current-state documentation to match implementation truth for:
+  - strict prior-only `notEnoughData` behavior
+  - regression-based weight slope calculation
+  - step-priority precedence (`actual -> target -> default 8000`)
+  - compact prioritized basis/warning messaging
+  - continued treatment of extra cardio as a coarse manual heuristic
+
+### Testing
+- Added and updated automated tests for:
+  - strict prior-only engine behavior
+  - actual-steps vs target-steps fallback precedence
+  - regression-based weight trend calculation
+  - prior-only UI messaging
+  - unresolved-food warning rendering
+  - onboarding preview transparency
+  - final onboarding-page finish behavior
+
+### Notes
+- Extra cardio remains a manual heuristic input and is not backed by a dedicated cardio-tracking model.
+- Recent actual step averages currently use usable logged days only within the lookback window.
+
+## [0.8.0-alpha.1] - 2026-04-06
+
+This alpha introduces the first end-to-end MVP of adaptive nutrition recommendations.
+
+### Added
+- Adaptive weekly nutrition recommendation foundation:
+  - repository persistence
+  - due-week scheduler
+  - recommendation input adapter
+  - recommendation engine
+  - orchestration service
+- Nutrition hub recommendation card integration with:
+  - confidence + warning display
+  - explicit apply action for active targets
+- Onboarding adaptive recommendation flow with:
+  - dedicated goal/rate/activity/cardio setup
+  - dedicated optional body-fat onboarding step
+  - body-fat guidance entry point with text-based male/female reference helper
+- Goals screen recommendation settings for:
+  - bodyweight goal direction
+  - weekly target rate
+  - baseline daily activity
+  - extra cardio/endurance outside the app
+- New adaptive recommendation persistence keys in `SharedPreferences` for settings/state snapshots.
+
+### Changed
+- Onboarding order is now:
+  - Welcome
+  - Profile
+  - Bodyweight
+  - Body fat %
+  - Adaptive goal/recommendation settings
+  - Calories
+  - Macros
+  - Water
+- Baseline activity model expanded from 3 to 4 levels:
+  - low
+  - moderate
+  - high
+  - very high
+- Activity-level helper UX is now structured and easier to scan (intro + one line per level), and remains separate from extra-cardio input.
+- Prior maintenance estimation is now more personalized for MVP:
+  - uses body-fat/lean-mass-aware path when body-fat % is available
+  - falls back safely when body-fat is missing
+  - applies declared baseline activity + extra-cardio influence conservatively
+- Recommendation generation is stable per due week (no in-week drift from Monday vs later-week app-open timing).
+- Recommendation-related EN/DE strings were moved/expanded in l10n and regenerated.
+
+### Fixed
+- Prevented implausible calorie outputs from being surfaced without explicit constrained/warning handling.
+- Hardened calorie-input aggregation paths to reduce systematic undercounting in common logging scenarios.
+- Ensured backup/restore explicitly covers adaptive recommendation settings:
+  - `adaptive_nutrition_recommendation.prior_activity_level`
+  - `adaptive_nutrition_recommendation.extra_cardio_hours`
+
+### Testing
+- Added and updated automated tests for:
+  - recommendation domain logic
+  - recommendation persistence/state behavior
+  - due-week stability behavior
+  - onboarding/goals recommendation flows
+  - backup/restore coverage for adaptive recommendation keys
+
 ## [0.7.10] - 2026-04-05
 
 This release includes a fix for Diary refresh behavior after saving meals through the AI meal-recognition flow.

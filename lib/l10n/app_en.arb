@@ -1191,4 +1191,204 @@
   ,"sleepRawImportApp": "App"
   ,"sleepRawImportConfidence": "Confidence"
   ,"sleepRawImportPayload": "Payload"
+  ,"adaptiveBodyweightTargetSectionTitle": "Adaptive bodyweight target"
+  ,"adaptiveRecommendationSettingsSectionTitle": "Recommendation settings"
+  ,"adaptiveGoalDirectionLabel": "Goal direction"
+  ,"adaptiveGoalLose": "Lose weight"
+  ,"adaptiveGoalMaintain": "Maintain weight"
+  ,"adaptiveGoalGain": "Gain weight"
+  ,"adaptiveRatePerWeek": "{value} kg/week"
+  ,"@adaptiveRatePerWeek": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptivePriorActivityLabel": "Baseline daily activity"
+  ,"adaptivePriorActivityLow": "Low activity"
+  ,"adaptivePriorActivityModerate": "Moderate activity"
+  ,"adaptivePriorActivityHigh": "High activity"
+  ,"adaptivePriorActivityVeryHigh": "Very high activity"
+  ,"adaptivePriorActivityHelpIntro": "Baseline daily activity only (separate from extra cardio):"
+  ,"adaptivePriorActivityHelpLowLine": "Low: mostly sitting, student/pupil or office routine."
+  ,"adaptivePriorActivityHelpModerateLine": "Moderate: mixed sitting, walking, and standing."
+  ,"adaptivePriorActivityHelpHighLine": "High: lots of standing/walking or a physically active job."
+  ,"adaptivePriorActivityHelpVeryHighLine": "Very high: very movement-heavy routine/job with consistently high daily activity."
+  ,"adaptiveExtraCardioLabel": "Extra cardio/endurance outside the app"
+  ,"adaptiveExtraCardioOption0": "0 h/week"
+  ,"adaptiveExtraCardioOption1": "1 h/week"
+  ,"adaptiveExtraCardioOption2": "2 h/week"
+  ,"adaptiveExtraCardioOption3": "3 h/week"
+  ,"adaptiveExtraCardioOption5": "5 h/week"
+  ,"adaptiveExtraCardioOption7Plus": "7+ h/week"
+  ,"adaptiveExtraCardioHelp": "Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts."
+  ,"onboardingAdaptiveGoalTitle": "Adaptive nutrition recommendation"
+  ,"onboardingAdaptiveGoalSubtitle": "Set your direction and weekly rate. We create a conservative starting recommendation and adapt it with your logs."
+  ,"adaptiveRecommendationGenerating": "Generating..."
+  ,"adaptiveRecommendationRefresh": "Refresh recommendation"
+  ,"onboardingAdaptiveSummaryEmpty": "Set your goal inputs and tap refresh to preview your starting recommendation."
+  ,"onboardingAdaptiveSummaryTitle": "Recommendation preview"
+  ,"onboardingAdaptiveSummaryCalories": "Calories: {value} kcal"
+  ,"@onboardingAdaptiveSummaryCalories": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryProtein": "Protein: {value} g"
+  ,"@onboardingAdaptiveSummaryProtein": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryCarbs": "Carbs: {value} g"
+  ,"@onboardingAdaptiveSummaryCarbs": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryFat": "Fat: {value} g"
+  ,"@onboardingAdaptiveSummaryFat": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryConfidence": "Data basis: {value}"
+  ,"@onboardingAdaptiveSummaryConfidence": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"onboardingAdaptiveSummaryApply": "Apply to daily goals"
+  ,"onboardingAdaptiveSummaryApplied": "Applied to daily goals"
+  ,"onboardingBodyFatPageTitle": "Body fat %"
+  ,"onboardingBodyFatPageSubtitle": "Optional step: enter a rough estimate if you know it."
+  ,"onboardingBodyFatOptionalLabel": "Body fat % (optional)"
+  ,"onboardingBodyFatOptionalHelper": "Optional: only enter this if you roughly know your value. Leaving it empty is okay. It helps personalize the initial recommendation."
+  ,"onboardingBodyFatHelpAction": "How do I estimate this?"
+  ,"bodyFatGuidanceTitle": "Body fat % guidance"
+  ,"bodyFatGuidanceIntro": "Body-fat percentage can only be estimated roughly from appearance. This is orientation only, not a precise diagnosis."
+  ,"bodyFatGuidanceDisclaimer": "Appearance can vary strongly at the same body-fat level due to muscle mass, fat distribution, genetics, water retention, posture, and lighting."
+  ,"bodyFatGuidanceSexLabel": "Reference sex"
+  ,"bodyFatGuidancePercent": "{percent}%"
+  ,"@bodyFatGuidancePercent": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  }
+  ,"bodyFatGuidanceMale10": "Very lean, clear definition."
+  ,"bodyFatGuidanceMale15": "Athletic, visibly defined."
+  ,"bodyFatGuidanceMale20": "Sporty, slightly softer."
+  ,"bodyFatGuidanceMale25": "Less definition, more waist and belly softness."
+  ,"bodyFatGuidanceMale30": "Clearly softer, rounder."
+  ,"bodyFatGuidanceMale35": "Very soft, almost no visible definition."
+  ,"bodyFatGuidanceMale40": "Strongly rounder appearance, no visible definition."
+  ,"bodyFatGuidanceFemale15": "Very lean, very defined."
+  ,"bodyFatGuidanceFemale20": "Lean and athletic."
+  ,"bodyFatGuidanceFemale25": "Fit, lightly soft."
+  ,"bodyFatGuidanceFemale30": "Soft, healthy-looking average athletic-to-normal range."
+  ,"bodyFatGuidanceFemale35": "Noticeably softer."
+  ,"bodyFatGuidanceFemale40": "Clearly softer, rounder overall appearance."
+  ,"adaptiveRecommendationCardTitle": "Adaptive recommendation"
+  ,"adaptiveRecommendationEmptyBody": "Track weight and nutrition for about a week to unlock your first weekly recommendation."
+  ,"adaptiveRecommendationGoalLine": "Goal: {goal} ({rate})"
+  ,"@adaptiveRecommendationGoalLine": {
+    "placeholders": {
+      "goal": { "type": "String" },
+      "rate": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationMaintenanceLine": "Maintenance estimate: {value} kcal"
+  ,"@adaptiveRecommendationMaintenanceLine": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationMaintenanceRangeLine": "Likely range: {lower}-{upper} kcal"
+  ,"@adaptiveRecommendationMaintenanceRangeLine": {
+    "placeholders": {
+      "lower": { "type": "int" },
+      "upper": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationUncertaintyHintNarrow": "Your likely maintenance range is fairly tight. Small day-to-day shifts are normal."
+  ,"adaptiveRecommendationUncertaintyHintModerate": "Your likely maintenance range is moderate right now. Some movement week to week is normal."
+  ,"adaptiveRecommendationUncertaintyHintWide": "Your likely maintenance range is still wide. This is normal while we gather more steady data."
+  ,"adaptiveRecommendationStabilizingHint": "We are still adapting to your recent phase, so this estimate can move more than usual."
+  ,"adaptiveRecommendationCaloriesValue": "{value} kcal"
+  ,"@adaptiveRecommendationCaloriesValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationProteinValue": "{value} g"
+  ,"@adaptiveRecommendationProteinValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationCarbsValue": "{value} g"
+  ,"@adaptiveRecommendationCarbsValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationFatValue": "{value} g"
+  ,"@adaptiveRecommendationFatValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationConfidenceLine": "Data basis: {value}"
+  ,"@adaptiveRecommendationConfidenceLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationDataBasisLine": "Data basis: {windowDays} days, {weightLogs} weight logs, {intakeDays} intake days"
+  ,"@adaptiveRecommendationDataBasisLine": {
+    "placeholders": {
+      "windowDays": { "type": "int" },
+      "weightLogs": { "type": "int" },
+      "intakeDays": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationActiveCaloriesLine": "Current active calories: {value} kcal"
+  ,"@adaptiveRecommendationActiveCaloriesLine": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  }
+  ,"adaptiveRecommendationCalculatedAtLine": "Calculated at: {value}"
+  ,"@adaptiveRecommendationCalculatedAtLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationNextDueLine": "Next adaptive recommendation due: {value}"
+  ,"@adaptiveRecommendationNextDueLine": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
+  ,"adaptiveRecommendationDueNowLine": "A new adaptive recommendation is due this week."
+  ,"adaptiveRecommendationRecalculateNowAction": "Recalculate now"
+  ,"adaptiveRecommendationRecalculating": "Recalculating..."
+  ,"adaptiveRecommendationApplying": "Applying..."
+  ,"adaptiveRecommendationApplyAction": "Apply recommendation to active goals"
+  ,"adaptiveRecommendationWarningCalorieFloor": "Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying."
+  ,"adaptiveRecommendationWarningUnresolvedFood": "Some nutrition entries could not be fully resolved for calories. Check recent logs before applying."
+  ,"adaptiveRecommendationWarningLargeAdjustment": "Large adjustment detected. Please review your recent logging completeness before applying."
+  ,"adaptiveRecommendationWarningMacroConstrained": "Macro split was constrained by the calorie budget. Check if your target rate is too aggressive."
+  ,"adaptiveRecommendationWarningConservative": "Review suggested: recommendation was adjusted conservatively due to data variability."
+  ,"adaptiveRecommendationDataBasisHintDefault": "Built from recent logs and their completeness."
+  ,"adaptiveRecommendationDataBasisHintPriorOnly": "Based on profile/prior data only. Add recent weight and intake logs for adaptive adjustment."
+  ,"adaptiveRecommendationDataBasisHintSparseWeight": "Recent weight logs are sparse, so trend quality is limited."
+  ,"adaptiveRecommendationDataBasisHintSparseIntake": "Recent intake logs are sparse, so maintenance inference is limited."
+  ,"adaptiveRecommendationDataBasisHintSparseWeightAndIntake": "Recent weight and intake logs are sparse, so this recommendation is more conservative."
+  ,"adaptiveConfidenceNotEnoughData": "Profile/prior only"
+  ,"adaptiveConfidenceLow": "Limited recent logs"
+  ,"adaptiveConfidenceMedium": "Usable recent logs"
+  ,"adaptiveConfidenceHigh": "Strong recent logs"
+  ,"adaptiveRecommendationRecalculatedSnack": "Recommendation recalculated."
+  ,"adaptiveRecommendationAppliedToGoalsSnack": "Recommendation applied to active goals."
+  ,"adaptiveRecommendationNotAvailableSnack": "No recommendation available to apply."
 }

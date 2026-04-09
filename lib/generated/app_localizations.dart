@@ -5293,6 +5293,613 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payload'**
   String get sleepRawImportPayload;
+
+  /// No description provided for @adaptiveBodyweightTargetSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive bodyweight target'**
+  String get adaptiveBodyweightTargetSectionTitle;
+
+  /// No description provided for @adaptiveRecommendationSettingsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation settings'**
+  String get adaptiveRecommendationSettingsSectionTitle;
+
+  /// No description provided for @adaptiveGoalDirectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal direction'**
+  String get adaptiveGoalDirectionLabel;
+
+  /// No description provided for @adaptiveGoalLose.
+  ///
+  /// In en, this message translates to:
+  /// **'Lose weight'**
+  String get adaptiveGoalLose;
+
+  /// No description provided for @adaptiveGoalMaintain.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain weight'**
+  String get adaptiveGoalMaintain;
+
+  /// No description provided for @adaptiveGoalGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain weight'**
+  String get adaptiveGoalGain;
+
+  /// No description provided for @adaptiveRatePerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} kg/week'**
+  String adaptiveRatePerWeek(String value);
+
+  /// No description provided for @adaptivePriorActivityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline daily activity'**
+  String get adaptivePriorActivityLabel;
+
+  /// No description provided for @adaptivePriorActivityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low activity'**
+  String get adaptivePriorActivityLow;
+
+  /// No description provided for @adaptivePriorActivityModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate activity'**
+  String get adaptivePriorActivityModerate;
+
+  /// No description provided for @adaptivePriorActivityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High activity'**
+  String get adaptivePriorActivityHigh;
+
+  /// No description provided for @adaptivePriorActivityVeryHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Very high activity'**
+  String get adaptivePriorActivityVeryHigh;
+
+  /// No description provided for @adaptivePriorActivityHelpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline daily activity only (separate from extra cardio):'**
+  String get adaptivePriorActivityHelpIntro;
+
+  /// No description provided for @adaptivePriorActivityHelpLowLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Low: mostly sitting, student/pupil or office routine.'**
+  String get adaptivePriorActivityHelpLowLine;
+
+  /// No description provided for @adaptivePriorActivityHelpModerateLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate: mixed sitting, walking, and standing.'**
+  String get adaptivePriorActivityHelpModerateLine;
+
+  /// No description provided for @adaptivePriorActivityHelpHighLine.
+  ///
+  /// In en, this message translates to:
+  /// **'High: lots of standing/walking or a physically active job.'**
+  String get adaptivePriorActivityHelpHighLine;
+
+  /// No description provided for @adaptivePriorActivityHelpVeryHighLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Very high: very movement-heavy routine/job with consistently high daily activity.'**
+  String get adaptivePriorActivityHelpVeryHighLine;
+
+  /// No description provided for @adaptiveExtraCardioLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra cardio/endurance outside the app'**
+  String get adaptiveExtraCardioLabel;
+
+  /// No description provided for @adaptiveExtraCardioOption0.
+  ///
+  /// In en, this message translates to:
+  /// **'0 h/week'**
+  String get adaptiveExtraCardioOption0;
+
+  /// No description provided for @adaptiveExtraCardioOption1.
+  ///
+  /// In en, this message translates to:
+  /// **'1 h/week'**
+  String get adaptiveExtraCardioOption1;
+
+  /// No description provided for @adaptiveExtraCardioOption2.
+  ///
+  /// In en, this message translates to:
+  /// **'2 h/week'**
+  String get adaptiveExtraCardioOption2;
+
+  /// No description provided for @adaptiveExtraCardioOption3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 h/week'**
+  String get adaptiveExtraCardioOption3;
+
+  /// No description provided for @adaptiveExtraCardioOption5.
+  ///
+  /// In en, this message translates to:
+  /// **'5 h/week'**
+  String get adaptiveExtraCardioOption5;
+
+  /// No description provided for @adaptiveExtraCardioOption7Plus.
+  ///
+  /// In en, this message translates to:
+  /// **'7+ h/week'**
+  String get adaptiveExtraCardioOption7Plus;
+
+  /// No description provided for @adaptiveExtraCardioHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts.'**
+  String get adaptiveExtraCardioHelp;
+
+  /// No description provided for @onboardingAdaptiveGoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive nutrition recommendation'**
+  String get onboardingAdaptiveGoalTitle;
+
+  /// No description provided for @onboardingAdaptiveGoalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your direction and weekly rate. We create a conservative starting recommendation and adapt it with your logs.'**
+  String get onboardingAdaptiveGoalSubtitle;
+
+  /// No description provided for @adaptiveRecommendationGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating...'**
+  String get adaptiveRecommendationGenerating;
+
+  /// No description provided for @adaptiveRecommendationRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh recommendation'**
+  String get adaptiveRecommendationRefresh;
+
+  /// No description provided for @onboardingAdaptiveSummaryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your goal inputs and tap refresh to preview your starting recommendation.'**
+  String get onboardingAdaptiveSummaryEmpty;
+
+  /// No description provided for @onboardingAdaptiveSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation preview'**
+  String get onboardingAdaptiveSummaryTitle;
+
+  /// No description provided for @onboardingAdaptiveSummaryCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories: {value} kcal'**
+  String onboardingAdaptiveSummaryCalories(int value);
+
+  /// No description provided for @onboardingAdaptiveSummaryProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein: {value} g'**
+  String onboardingAdaptiveSummaryProtein(int value);
+
+  /// No description provided for @onboardingAdaptiveSummaryCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs: {value} g'**
+  String onboardingAdaptiveSummaryCarbs(int value);
+
+  /// No description provided for @onboardingAdaptiveSummaryFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat: {value} g'**
+  String onboardingAdaptiveSummaryFat(int value);
+
+  /// No description provided for @onboardingAdaptiveSummaryConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Data basis: {value}'**
+  String onboardingAdaptiveSummaryConfidence(String value);
+
+  /// No description provided for @onboardingAdaptiveSummaryApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to daily goals'**
+  String get onboardingAdaptiveSummaryApply;
+
+  /// No description provided for @onboardingAdaptiveSummaryApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied to daily goals'**
+  String get onboardingAdaptiveSummaryApplied;
+
+  /// No description provided for @onboardingBodyFatPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat %'**
+  String get onboardingBodyFatPageTitle;
+
+  /// No description provided for @onboardingBodyFatPageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional step: enter a rough estimate if you know it.'**
+  String get onboardingBodyFatPageSubtitle;
+
+  /// No description provided for @onboardingBodyFatOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat % (optional)'**
+  String get onboardingBodyFatOptionalLabel;
+
+  /// No description provided for @onboardingBodyFatOptionalHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: only enter this if you roughly know your value. Leaving it empty is okay. It helps personalize the initial recommendation.'**
+  String get onboardingBodyFatOptionalHelper;
+
+  /// No description provided for @onboardingBodyFatHelpAction.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I estimate this?'**
+  String get onboardingBodyFatHelpAction;
+
+  /// No description provided for @bodyFatGuidanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat % guidance'**
+  String get bodyFatGuidanceTitle;
+
+  /// No description provided for @bodyFatGuidanceIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Body-fat percentage can only be estimated roughly from appearance. This is orientation only, not a precise diagnosis.'**
+  String get bodyFatGuidanceIntro;
+
+  /// No description provided for @bodyFatGuidanceDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance can vary strongly at the same body-fat level due to muscle mass, fat distribution, genetics, water retention, posture, and lighting.'**
+  String get bodyFatGuidanceDisclaimer;
+
+  /// No description provided for @bodyFatGuidanceSexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference sex'**
+  String get bodyFatGuidanceSexLabel;
+
+  /// No description provided for @bodyFatGuidancePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String bodyFatGuidancePercent(int percent);
+
+  /// No description provided for @bodyFatGuidanceMale10.
+  ///
+  /// In en, this message translates to:
+  /// **'Very lean, clear definition.'**
+  String get bodyFatGuidanceMale10;
+
+  /// No description provided for @bodyFatGuidanceMale15.
+  ///
+  /// In en, this message translates to:
+  /// **'Athletic, visibly defined.'**
+  String get bodyFatGuidanceMale15;
+
+  /// No description provided for @bodyFatGuidanceMale20.
+  ///
+  /// In en, this message translates to:
+  /// **'Sporty, slightly softer.'**
+  String get bodyFatGuidanceMale20;
+
+  /// No description provided for @bodyFatGuidanceMale25.
+  ///
+  /// In en, this message translates to:
+  /// **'Less definition, more waist and belly softness.'**
+  String get bodyFatGuidanceMale25;
+
+  /// No description provided for @bodyFatGuidanceMale30.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearly softer, rounder.'**
+  String get bodyFatGuidanceMale30;
+
+  /// No description provided for @bodyFatGuidanceMale35.
+  ///
+  /// In en, this message translates to:
+  /// **'Very soft, almost no visible definition.'**
+  String get bodyFatGuidanceMale35;
+
+  /// No description provided for @bodyFatGuidanceMale40.
+  ///
+  /// In en, this message translates to:
+  /// **'Strongly rounder appearance, no visible definition.'**
+  String get bodyFatGuidanceMale40;
+
+  /// No description provided for @bodyFatGuidanceFemale15.
+  ///
+  /// In en, this message translates to:
+  /// **'Very lean, very defined.'**
+  String get bodyFatGuidanceFemale15;
+
+  /// No description provided for @bodyFatGuidanceFemale20.
+  ///
+  /// In en, this message translates to:
+  /// **'Lean and athletic.'**
+  String get bodyFatGuidanceFemale20;
+
+  /// No description provided for @bodyFatGuidanceFemale25.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit, lightly soft.'**
+  String get bodyFatGuidanceFemale25;
+
+  /// No description provided for @bodyFatGuidanceFemale30.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft, healthy-looking average athletic-to-normal range.'**
+  String get bodyFatGuidanceFemale30;
+
+  /// No description provided for @bodyFatGuidanceFemale35.
+  ///
+  /// In en, this message translates to:
+  /// **'Noticeably softer.'**
+  String get bodyFatGuidanceFemale35;
+
+  /// No description provided for @bodyFatGuidanceFemale40.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearly softer, rounder overall appearance.'**
+  String get bodyFatGuidanceFemale40;
+
+  /// No description provided for @adaptiveRecommendationCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive recommendation'**
+  String get adaptiveRecommendationCardTitle;
+
+  /// No description provided for @adaptiveRecommendationEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Track weight and nutrition for about a week to unlock your first weekly recommendation.'**
+  String get adaptiveRecommendationEmptyBody;
+
+  /// No description provided for @adaptiveRecommendationGoalLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {goal} ({rate})'**
+  String adaptiveRecommendationGoalLine(String goal, String rate);
+
+  /// No description provided for @adaptiveRecommendationMaintenanceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance estimate: {value} kcal'**
+  String adaptiveRecommendationMaintenanceLine(int value);
+
+  /// No description provided for @adaptiveRecommendationMaintenanceRangeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Likely range: {lower}-{upper} kcal'**
+  String adaptiveRecommendationMaintenanceRangeLine(int lower, int upper);
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintNarrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your likely maintenance range is fairly tight. Small day-to-day shifts are normal.'**
+  String get adaptiveRecommendationUncertaintyHintNarrow;
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Your likely maintenance range is moderate right now. Some movement week to week is normal.'**
+  String get adaptiveRecommendationUncertaintyHintModerate;
+
+  /// No description provided for @adaptiveRecommendationUncertaintyHintWide.
+  ///
+  /// In en, this message translates to:
+  /// **'Your likely maintenance range is still wide. This is normal while we gather more steady data.'**
+  String get adaptiveRecommendationUncertaintyHintWide;
+
+  /// No description provided for @adaptiveRecommendationStabilizingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'We are still adapting to your recent phase, so this estimate can move more than usual.'**
+  String get adaptiveRecommendationStabilizingHint;
+
+  /// No description provided for @adaptiveRecommendationCaloriesValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} kcal'**
+  String adaptiveRecommendationCaloriesValue(int value);
+
+  /// No description provided for @adaptiveRecommendationProteinValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} g'**
+  String adaptiveRecommendationProteinValue(int value);
+
+  /// No description provided for @adaptiveRecommendationCarbsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} g'**
+  String adaptiveRecommendationCarbsValue(int value);
+
+  /// No description provided for @adaptiveRecommendationFatValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} g'**
+  String adaptiveRecommendationFatValue(int value);
+
+  /// No description provided for @adaptiveRecommendationConfidenceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Data basis: {value}'**
+  String adaptiveRecommendationConfidenceLine(String value);
+
+  /// No description provided for @adaptiveRecommendationDataBasisLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Data basis: {windowDays} days, {weightLogs} weight logs, {intakeDays} intake days'**
+  String adaptiveRecommendationDataBasisLine(
+      int windowDays, int weightLogs, int intakeDays);
+
+  /// No description provided for @adaptiveRecommendationActiveCaloriesLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Current active calories: {value} kcal'**
+  String adaptiveRecommendationActiveCaloriesLine(int value);
+
+  /// No description provided for @adaptiveRecommendationCalculatedAtLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated at: {value}'**
+  String adaptiveRecommendationCalculatedAtLine(String value);
+
+  /// No description provided for @adaptiveRecommendationNextDueLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Next adaptive recommendation due: {value}'**
+  String adaptiveRecommendationNextDueLine(String value);
+
+  /// No description provided for @adaptiveRecommendationDueNowLine.
+  ///
+  /// In en, this message translates to:
+  /// **'A new adaptive recommendation is due this week.'**
+  String get adaptiveRecommendationDueNowLine;
+
+  /// No description provided for @adaptiveRecommendationRecalculateNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculate now'**
+  String get adaptiveRecommendationRecalculateNowAction;
+
+  /// No description provided for @adaptiveRecommendationRecalculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculating...'**
+  String get adaptiveRecommendationRecalculating;
+
+  /// No description provided for @adaptiveRecommendationApplying.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying...'**
+  String get adaptiveRecommendationApplying;
+
+  /// No description provided for @adaptiveRecommendationApplyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply recommendation to active goals'**
+  String get adaptiveRecommendationApplyAction;
+
+  /// No description provided for @adaptiveRecommendationWarningCalorieFloor.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation constrained by a minimum calorie safety floor. Review profile data and recent logs before applying.'**
+  String get adaptiveRecommendationWarningCalorieFloor;
+
+  /// No description provided for @adaptiveRecommendationWarningUnresolvedFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Some nutrition entries could not be fully resolved for calories. Check recent logs before applying.'**
+  String get adaptiveRecommendationWarningUnresolvedFood;
+
+  /// No description provided for @adaptiveRecommendationWarningLargeAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Large adjustment detected. Please review your recent logging completeness before applying.'**
+  String get adaptiveRecommendationWarningLargeAdjustment;
+
+  /// No description provided for @adaptiveRecommendationWarningMacroConstrained.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro split was constrained by the calorie budget. Check if your target rate is too aggressive.'**
+  String get adaptiveRecommendationWarningMacroConstrained;
+
+  /// No description provided for @adaptiveRecommendationWarningConservative.
+  ///
+  /// In en, this message translates to:
+  /// **'Review suggested: recommendation was adjusted conservatively due to data variability.'**
+  String get adaptiveRecommendationWarningConservative;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Built from recent logs and their completeness.'**
+  String get adaptiveRecommendationDataBasisHintDefault;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintPriorOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on profile/prior data only. Add recent weight and intake logs for adaptive adjustment.'**
+  String get adaptiveRecommendationDataBasisHintPriorOnly;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintSparseWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent weight logs are sparse, so trend quality is limited.'**
+  String get adaptiveRecommendationDataBasisHintSparseWeight;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintSparseIntake.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent intake logs are sparse, so maintenance inference is limited.'**
+  String get adaptiveRecommendationDataBasisHintSparseIntake;
+
+  /// No description provided for @adaptiveRecommendationDataBasisHintSparseWeightAndIntake.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent weight and intake logs are sparse, so this recommendation is more conservative.'**
+  String get adaptiveRecommendationDataBasisHintSparseWeightAndIntake;
+
+  /// No description provided for @adaptiveConfidenceNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile/prior only'**
+  String get adaptiveConfidenceNotEnoughData;
+
+  /// No description provided for @adaptiveConfidenceLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited recent logs'**
+  String get adaptiveConfidenceLow;
+
+  /// No description provided for @adaptiveConfidenceMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Usable recent logs'**
+  String get adaptiveConfidenceMedium;
+
+  /// No description provided for @adaptiveConfidenceHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong recent logs'**
+  String get adaptiveConfidenceHigh;
+
+  /// No description provided for @adaptiveRecommendationRecalculatedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation recalculated.'**
+  String get adaptiveRecommendationRecalculatedSnack;
+
+  /// No description provided for @adaptiveRecommendationAppliedToGoalsSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation applied to active goals.'**
+  String get adaptiveRecommendationAppliedToGoalsSnack;
+
+  /// No description provided for @adaptiveRecommendationNotAvailableSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'No recommendation available to apply.'**
+  String get adaptiveRecommendationNotAvailableSnack;
 }
 
 class _AppLocalizationsDelegate
