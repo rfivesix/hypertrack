@@ -23,6 +23,8 @@ class NightlySleepAnalysis {
     this.regularityValidDays,
     this.regularityStable,
     this.sleepQuality = SleepQualityBucket.unavailable,
+    this.sessionStartAtUtc,
+    this.sessionEndAtUtc,
     this.sourcePlatform,
     this.sourceAppId,
     this.sourceRecordHash,
@@ -45,6 +47,8 @@ class NightlySleepAnalysis {
   final int? regularityValidDays;
   final bool? regularityStable;
   final SleepQualityBucket sleepQuality;
+  final DateTime? sessionStartAtUtc;
+  final DateTime? sessionEndAtUtc;
   final String? sourcePlatform;
   final String? sourceAppId;
   final String? sourceRecordHash;
@@ -67,6 +71,8 @@ class NightlySleepAnalysis {
         'regularityValidDays': regularityValidDays,
         'regularityStable': regularityStable,
         'sleepQuality': sleepQuality.name,
+        'sessionStartAtUtc': sessionStartAtUtc?.toIso8601String(),
+        'sessionEndAtUtc': sessionEndAtUtc?.toIso8601String(),
         'sourcePlatform': sourcePlatform,
         'sourceAppId': sourceAppId,
         'sourceRecordHash': sourceRecordHash,

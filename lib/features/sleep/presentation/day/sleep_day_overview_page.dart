@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
 
 import '../../../../data/database_helper.dart';
@@ -416,23 +417,12 @@ class _SleepTimelineCard extends StatelessWidget {
             const SizedBox(height: 12),
             _SleepTimelineLegend(labels: labels),
             const SizedBox(height: 14),
-            SizedBox(
-              height: 108,
-              width: double.infinity,
-              child: CustomPaint(
-                painter: _SleepStagesPainter(
-                  segments: chartSegments,
-                  startAtUtc: chartStart,
-                  endAtUtc: chartEnd,
-                  colors: colors,
-                  gridColor: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _SleepTimelineAxis(
-              start: chartStart.toLocal(),
-              end: chartEnd.toLocal(),
+            _SleepTimelinePlot(
+              segments: chartSegments,
+              startAtUtc: chartStart,
+              endAtUtc: chartEnd,
+              colors: colors,
+              gridColor: Theme.of(context).colorScheme.outlineVariant,
               use24HourFormat: use24h,
             ),
           ],
@@ -442,44 +432,201 @@ class _SleepTimelineCard extends StatelessWidget {
   }
 }
 
-class _SleepTimelineAxis extends StatelessWidget {
-  const _SleepTimelineAxis({
-    required this.start,
-    required this.end,
+class _SleepTimelinePlot extends StatelessWidget {
+  const _SleepTimelinePlot({
+    required this.segments,
+    required this.startAtUtc,
+    required this.endAtUtc,
+    required this.colors,
+    required this.gridColor,
     required this.use24HourFormat,
   });
 
-  final DateTime start;
-  final DateTime end;
+  final List<_ChartStageSegment> segments;
+  final DateTime startAtUtc;
+  final DateTime endAtUtc;
+  final Map<_SleepChartStage, Color> colors;
+  final Color gridColor;
   final bool use24HourFormat;
 
   @override
   Widget build(BuildContext context) {
-    final duration = end.difference(start);
-    const tickCount = 6;
-    final ticks = List<DateTime>.generate(tickCount, (index) {
-      if (index == tickCount - 1) return end;
-      final ratio = index / (tickCount - 1);
-      final tickOffset = (duration.inMinutes * ratio).round();
-      return start.add(Duration(minutes: tickOffset));
-    });
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: ticks
-          .map((tick) => Text(_formatTick(tick, use24HourFormat)))
-          .toList(growable: false),
+    final theme = Theme.of(context);
+    final axisTextStyle =
+        (theme.textTheme.bodySmall ?? const TextStyle()).copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final ticks = _buildTimelineTicks(
+          startAtUtc: startAtUtc,
+          endAtUtc: endAtUtc,
+          use24HourFormat: use24HourFormat,
+          availableWidth: constraints.maxWidth,
+          textStyle: axisTextStyle,
+        );
+        return Column(
+          children: [
+            SizedBox(
+              height: 108,
+              width: double.infinity,
+              child: CustomPaint(
+                painter: _SleepStagesPainter(
+                  segments: segments,
+                  startAtUtc: startAtUtc,
+                  endAtUtc: endAtUtc,
+                  colors: colors,
+                  gridColor: gridColor,
+                  timestampTicksUtc: ticks
+                      .map((tick) => tick.timestampUtc)
+                      .toList(growable: false),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              key: const Key('sleep-timeline-axis'),
+              height: 20,
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  for (var i = 0; i < ticks.length; i++)
+                    Positioned(
+                      left: ticks[i].left,
+                      child: Text(
+                        ticks[i].label,
+                        key: Key('sleep-timeline-tick-$i'),
+                        style: axisTextStyle,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+List<_TimelineAxisTick> _buildTimelineTicks({
+  required DateTime startAtUtc,
+  required DateTime endAtUtc,
+  required bool use24HourFormat,
+  required double availableWidth,
+  required TextStyle textStyle,
+}) {
+  final totalMinutes = endAtUtc.difference(startAtUtc).inMinutes;
+  if (totalMinutes <= 0 || availableWidth <= 0) {
+    return [];
+  }
+  final intervalMinutes = _selectTickIntervalMinutes(
+    totalMinutes: totalMinutes,
+    availableWidth: availableWidth,
+  );
+  final formatter = use24HourFormat ? DateFormat.Hm() : DateFormat.jm();
+
+  final startLocal = startAtUtc.toLocal();
+  final endLocal = endAtUtc.toLocal();
+  final rawTicksLocal = <DateTime>{startLocal, endLocal};
+  final startMinutes = startLocal.hour * 60 + startLocal.minute;
+  final firstBoundaryMinute =
+      ((startMinutes + intervalMinutes - 1) ~/ intervalMinutes) *
+          intervalMinutes;
+  var current = DateTime(
+    startLocal.year,
+    startLocal.month,
+    startLocal.day,
+    0,
+    firstBoundaryMinute,
+  );
+  if (current.isBefore(startLocal)) {
+    current = current.add(Duration(minutes: intervalMinutes));
+  }
+  while (current.isBefore(endLocal)) {
+    rawTicksLocal.add(current);
+    current = current.add(Duration(minutes: intervalMinutes));
+  }
+
+  final sortedTicksUtc = rawTicksLocal
+      .map((tick) => tick.toUtc())
+      .toList(growable: false)
+    ..sort((a, b) => a.compareTo(b));
+
+  if (sortedTicksUtc.isEmpty) return [];
+
+  final effectiveWidth = availableWidth - 4;
+  final candidates = <_TimelineAxisTick>[];
+  for (final tickUtc in sortedTicksUtc) {
+    final ratio = tickUtc.difference(startAtUtc).inMinutes / totalMinutes;
+    final anchorX = ratio * effectiveWidth + 2;
+    final label = formatter.format(tickUtc.toLocal());
+    final painter = TextPainter(
+      text: TextSpan(text: label, style: textStyle),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final labelWidth = painter.width;
+    final left = (anchorX - (labelWidth / 2)).clamp(
+      0.0,
+      availableWidth - labelWidth,
+    );
+    candidates.add(
+      _TimelineAxisTick(
+        timestampUtc: tickUtc,
+        label: label,
+        left: left,
+      ),
     );
   }
 
-  String _formatTick(DateTime value, bool use24h) {
-    final hour = value.hour.toString().padLeft(2, '0');
-    if (use24h) {
-      return '$hour:00';
+  if (candidates.length <= 2) return candidates;
+
+  const minimumDistance = 56.0;
+  final selected = <_TimelineAxisTick>[candidates.first];
+  for (var i = 1; i < candidates.length - 1; i++) {
+    final tick = candidates[i];
+    final spacingFromPrevious = tick.left - selected.last.left;
+    if (spacingFromPrevious >= minimumDistance) {
+      selected.add(tick);
     }
-    final suffix = value.hour >= 12 ? 'pm' : 'am';
-    final twelveHour = value.hour % 12 == 0 ? 12 : value.hour % 12;
-    return '$twelveHour$suffix';
   }
+  final endTick = candidates.last;
+  while (selected.length > 1 &&
+      (endTick.left - selected.last.left) < minimumDistance) {
+    selected.removeLast();
+  }
+  if ((endTick.left - selected.last.left) >= minimumDistance) {
+    selected.add(endTick);
+  }
+  return selected;
+}
+
+int _selectTickIntervalMinutes({
+  required int totalMinutes,
+  required double availableWidth,
+}) {
+  final maxLabels = (availableWidth / 82).floor().clamp(4, 10);
+  const candidates = [30, 45, 60, 90, 120, 180, 240, 360];
+  for (final interval in candidates) {
+    final interior = (totalMinutes / interval).floor();
+    final estimatedLabels = interior + 2;
+    if (estimatedLabels <= maxLabels) return interval;
+  }
+  return candidates.last;
+}
+
+class _TimelineAxisTick {
+  const _TimelineAxisTick({
+    required this.timestampUtc,
+    required this.label,
+    required this.left,
+  });
+
+  final DateTime timestampUtc;
+  final String label;
+  final double left;
 }
 
 class _SleepTimelineLegend extends StatelessWidget {
@@ -522,6 +669,7 @@ class _SleepStagesPainter extends CustomPainter {
     required this.endAtUtc,
     required this.colors,
     required this.gridColor,
+    required this.timestampTicksUtc,
   });
 
   final List<_ChartStageSegment> segments;
@@ -529,6 +677,7 @@ class _SleepStagesPainter extends CustomPainter {
   final DateTime endAtUtc;
   final Map<_SleepChartStage, Color> colors;
   final Color gridColor;
+  final List<DateTime> timestampTicksUtc;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -566,6 +715,20 @@ class _SleepStagesPainter extends CustomPainter {
         _SleepChartStage.light => chartTop + centerOffset + (barThickness * 2),
         _SleepChartStage.deep => chartTop + centerOffset + (barThickness * 3),
       };
+    }
+
+    final timestampGridPaint = Paint()
+      ..color = gridColor.withValues(alpha: 0.42)
+      ..strokeWidth = 1;
+    for (final tick in timestampTicksUtc) {
+      final x = xFor(tick);
+      _drawDottedVerticalLine(
+        canvas,
+        x: x,
+        top: chartTop,
+        bottom: chartBottom,
+        paint: timestampGridPaint,
+      );
     }
 
     for (var i = 0; i < segments.length; i++) {
@@ -611,7 +774,25 @@ class _SleepStagesPainter extends CustomPainter {
         oldDelegate.startAtUtc != startAtUtc ||
         oldDelegate.endAtUtc != endAtUtc ||
         oldDelegate.colors != colors ||
-        oldDelegate.gridColor != gridColor;
+        oldDelegate.gridColor != gridColor ||
+        oldDelegate.timestampTicksUtc != timestampTicksUtc;
+  }
+
+  void _drawDottedVerticalLine(
+    Canvas canvas, {
+    required double x,
+    required double top,
+    required double bottom,
+    required Paint paint,
+  }) {
+    const dashLength = 3.0;
+    const gapLength = 4.0;
+    var y = top;
+    while (y < bottom) {
+      final y2 = (y + dashLength).clamp(top, bottom);
+      canvas.drawLine(Offset(x, y), Offset(x, y2), paint);
+      y += dashLength + gapLength;
+    }
   }
 }
 

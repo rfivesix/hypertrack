@@ -156,6 +156,30 @@ class SleepPeriodAggregationEngine {
   }
 
   SleepWindowSegment _toWindow(DateTime date, NightlySleepAnalysis? analysis) {
+    final startAtUtc = analysis?.sessionStartAtUtc;
+    final endAtUtc = analysis?.sessionEndAtUtc;
+    if (startAtUtc != null &&
+        endAtUtc != null &&
+        endAtUtc.isAfter(startAtUtc)) {
+      final start = _toWeeklyWindowMinute(
+        wakeDate: date,
+        timestampLocal: startAtUtc.toLocal(),
+      );
+      var end = _toWeeklyWindowMinute(
+        wakeDate: date,
+        timestampLocal: endAtUtc.toLocal(),
+      );
+      if (end <= start) {
+        end += 1440;
+      }
+      return SleepWindowSegment(
+        date: date,
+        startMinutes: start,
+        endMinutes: end,
+        hasData: true,
+      );
+    }
+
     final totalMinutes = analysis?.totalSleepMinutes;
     if (totalMinutes == null || totalMinutes <= 0) {
       return SleepWindowSegment(date: date, hasData: false);
@@ -169,6 +193,24 @@ class SleepPeriodAggregationEngine {
       endMinutes: end,
       hasData: true,
     );
+  }
+
+  int _toWeeklyWindowMinute({
+    required DateTime wakeDate,
+    required DateTime timestampLocal,
+  }) {
+    final wakeDateOnly = DateTime(wakeDate.year, wakeDate.month, wakeDate.day);
+    final tsDateOnly = DateTime(
+      timestampLocal.year,
+      timestampLocal.month,
+      timestampLocal.day,
+    );
+    final minuteOfDay = timestampLocal.hour * 60 + timestampLocal.minute;
+    if (tsDateOnly.isAtSameMomentAs(wakeDateOnly) ||
+        tsDateOnly.isAfter(wakeDateOnly)) {
+      return minuteOfDay + 1440;
+    }
+    return minuteOfDay;
   }
 
   double? _meanScore(List<SleepDayAggregate> days) {

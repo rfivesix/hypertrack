@@ -1,4 +1,5 @@
 import '../../../../data/drift_database.dart';
+import '../persistence/dao/sleep_canonical_dao.dart';
 import '../../domain/derived/nightly_sleep_analysis.dart';
 import '../../domain/sleep_enums.dart';
 import '../persistence/dao/sleep_nightly_analyses_dao.dart';
@@ -19,11 +20,13 @@ class DriftSleepQueryRepository implements SleepQueryRepository {
   })  : _database = database,
         _ownsDatabase = ownsDatabase {
     _dao = SleepNightlyAnalysesDao(_database);
+    _sessionsDao = SleepCanonicalSessionsDao(_database);
   }
 
   final AppDatabase _database;
   final bool _ownsDatabase;
   late final SleepNightlyAnalysesDao _dao;
+  late final SleepCanonicalSessionsDao _sessionsDao;
 
   @override
   Future<NightlySleepAnalysis?> getNightlyAnalysisByDate(DateTime day) async {
@@ -34,7 +37,8 @@ class DriftSleepQueryRepository implements SleepQueryRepository {
     );
     if (rows.isEmpty) return null;
     rows.sort((a, b) => b.analyzedAt.compareTo(a.analyzedAt));
-    return _toDomain(rows.first);
+    final sessionsById = await _loadSessionsById([rows.first.sessionId]);
+    return _toDomain(rows.first, sessionsById[rows.first.sessionId]);
   }
 
   @override
@@ -46,10 +50,30 @@ class DriftSleepQueryRepository implements SleepQueryRepository {
       fromNightDateInclusive: _nightKey(fromInclusive),
       toNightDateInclusive: _nightKey(toInclusive),
     );
-    return rows.map(_toDomain).toList(growable: false);
+    final sessionIds = rows.map((row) => row.sessionId).toSet();
+    final sessionsById = await _loadSessionsById(sessionIds);
+    return rows
+        .map((row) => _toDomain(row, sessionsById[row.sessionId]))
+        .toList(growable: false);
   }
 
-  NightlySleepAnalysis _toDomain(SleepNightlyAnalysisRecord record) {
+  Future<Map<String, SleepCanonicalSessionRecord>> _loadSessionsById(
+    Iterable<String> sessionIds,
+  ) async {
+    final map = <String, SleepCanonicalSessionRecord>{};
+    for (final sessionId in sessionIds) {
+      final session = await _sessionsDao.findById(sessionId);
+      if (session != null) {
+        map[sessionId] = session;
+      }
+    }
+    return map;
+  }
+
+  NightlySleepAnalysis _toDomain(
+    SleepNightlyAnalysisRecord record,
+    SleepCanonicalSessionRecord? session,
+  ) {
     return NightlySleepAnalysis(
       id: record.id,
       sessionId: record.sessionId,
@@ -68,6 +92,8 @@ class DriftSleepQueryRepository implements SleepQueryRepository {
       regularityValidDays: record.regularityValidDays,
       regularityStable: record.regularityIsStable,
       sleepQuality: _qualityFromScore(record.score),
+      sessionStartAtUtc: session?.startedAt.toUtc(),
+      sessionEndAtUtc: session?.endedAt.toUtc(),
       sourcePlatform: record.sourcePlatform,
       sourceAppId: record.sourceAppId,
       sourceRecordHash: record.sourceRecordHash,
