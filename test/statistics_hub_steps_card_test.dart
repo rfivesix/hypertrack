@@ -219,7 +219,7 @@ void main() {
   Finder stepsSectionHeader() {
     return find.descendant(
       of: find.byType(AnalyticsSectionHeader),
-      matching: find.text('Steps'),
+      matching: find.text('STEPS'),
     );
   }
 

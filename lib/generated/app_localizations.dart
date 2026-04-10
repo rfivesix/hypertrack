@@ -1640,6 +1640,36 @@ abstract class AppLocalizations {
   /// **'Manage all plans'**
   String get manage_all_plans;
 
+  /// No description provided for @workoutSectionStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get workoutSectionStart;
+
+  /// No description provided for @workoutSectionMyPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'My plans'**
+  String get workoutSectionMyPlans;
+
+  /// No description provided for @workoutSectionHistoryLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'History & library'**
+  String get workoutSectionHistoryLibrary;
+
+  /// No description provided for @workoutAllRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'All routines'**
+  String get workoutAllRoutines;
+
+  /// No description provided for @workoutEntryWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get workoutEntryWorkouts;
+
   /// No description provided for @free_training.
   ///
   /// In en, this message translates to:
@@ -2503,6 +2533,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MY MEALS'**
   String get myMealsCL;
+
+  /// No description provided for @nutritionSectionTodayInFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Today in focus'**
+  String get nutritionSectionTodayInFocus;
+
+  /// No description provided for @nutritionSectionMyMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'My meals'**
+  String get nutritionSectionMyMeals;
+
+  /// No description provided for @nutritionSectionToolsAndLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools & library'**
+  String get nutritionSectionToolsAndLibrary;
 
   /// No description provided for @supplement_caffeine.
   ///
@@ -3709,6 +3757,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Body & Nutrition'**
   String get sectionBodyNutrition;
+
+  /// No description provided for @statisticsSectionTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get statisticsSectionTraining;
+
+  /// No description provided for @statisticsSectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get statisticsSectionBody;
+
+  /// No description provided for @statisticsEnableStepTrackingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable step tracking in Settings'**
+  String get statisticsEnableStepTrackingHint;
+
+  /// No description provided for @statisticsNoStepDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No step data yet'**
+  String get statisticsNoStepDataYet;
+
+  /// No description provided for @statisticsTotalSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Total steps'**
+  String get statisticsTotalSteps;
+
+  /// No description provided for @statisticsLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get statisticsLast7Days;
+
+  /// No description provided for @statisticsLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get statisticsLast30Days;
+
+  /// No description provided for @statisticsLast3Months.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 3 months'**
+  String get statisticsLast3Months;
+
+  /// No description provided for @statisticsLast6Months.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 6 months'**
+  String get statisticsLast6Months;
 
   /// No description provided for @metricsCurrentWeight.
   ///

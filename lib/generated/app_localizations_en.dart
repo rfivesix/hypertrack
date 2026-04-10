@@ -834,6 +834,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manage_all_plans => 'Manage all plans';
 
   @override
+  String get workoutSectionStart => 'Start';
+
+  @override
+  String get workoutSectionMyPlans => 'My plans';
+
+  @override
+  String get workoutSectionHistoryLibrary => 'History & library';
+
+  @override
+  String get workoutAllRoutines => 'All routines';
+
+  @override
+  String get workoutEntryWorkouts => 'Workouts';
+
+  @override
   String get free_training => 'free training';
 
   @override
@@ -1290,6 +1305,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myMealsCL => 'MY MEALS';
+
+  @override
+  String get nutritionSectionTodayInFocus => 'Today in focus';
+
+  @override
+  String get nutritionSectionMyMeals => 'My meals';
+
+  @override
+  String get nutritionSectionToolsAndLibrary => 'Tools & library';
 
   @override
   String get supplement_caffeine => 'Caffeine';
@@ -1945,6 +1969,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sectionBodyNutrition => 'Body & Nutrition';
+
+  @override
+  String get statisticsSectionTraining => 'Training';
+
+  @override
+  String get statisticsSectionBody => 'Body';
+
+  @override
+  String get statisticsEnableStepTrackingHint =>
+      'Enable step tracking in Settings';
+
+  @override
+  String get statisticsNoStepDataYet => 'No step data yet';
+
+  @override
+  String get statisticsTotalSteps => 'Total steps';
+
+  @override
+  String get statisticsLast7Days => 'Last 7 days';
+
+  @override
+  String get statisticsLast30Days => 'Last 30 days';
+
+  @override
+  String get statisticsLast3Months => 'Last 3 months';
+
+  @override
+  String get statisticsLast6Months => 'Last 6 months';
 
   @override
   String get metricsCurrentWeight => 'Current Weight';
