@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../data/backup_manager.dart';
 import '../data/basis_data_manager.dart';
+import '../features/widgets/today_focus_widget_service.dart';
 // import '../generated/app_localizations.dart'; // Not required here because status text is dynamic.
 import 'main_screen.dart';
 import 'onboarding_screen.dart';
@@ -64,6 +65,9 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
     } catch (e) {
       debugPrint("Auto-backup startup failed: $e");
     }
+
+    // Keep home-screen widget payload in sync at app startup.
+    await TodayFocusWidgetSyncService.instance.sync();
 
     // 3) Decide target route based on onboarding state.
     final prefs = await SharedPreferences.getInstance();

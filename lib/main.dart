@@ -7,8 +7,10 @@ import 'package:flutter/services.dart';
 import 'data/database_helper.dart';
 import 'features/sleep/presentation/sleep_navigation.dart';
 import 'generated/app_localizations.dart';
+import 'features/widgets/widget_launch_service.dart';
 // App startup routing is delegated to the dedicated initializer screen.
 import 'screens/app_initializer_screen.dart';
+import 'screens/main_screen.dart';
 import 'services/profile_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/workout_session_manager.dart';
@@ -64,9 +66,39 @@ void main() async {
 ///
 /// This application is a fitness tracker that allows users to log workouts,
 /// manage supplements, and track body measurements.
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   /// Creates the root widget for the application.
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetLaunchService.instance.initialize(
+        onOpenDiary: _openDiaryFromWidget,
+      );
+    });
+  }
+
+  Future<void> _openDiaryFromWidget() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null) return;
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const MainScreen(initialTabIndex: 0),
+        ),
+        (_) => false,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +380,7 @@ class MyApp extends StatelessWidget {
         );
 
         return MaterialApp(
+          navigatorKey: _navigatorKey,
           debugShowCheckedModeBanner: false,
           scrollBehavior: NoGlowScrollBehavior(),
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

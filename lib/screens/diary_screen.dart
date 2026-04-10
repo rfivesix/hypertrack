@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -38,6 +40,7 @@ import '../features/steps/presentation/steps_module_screen.dart';
 import '../features/sleep/data/sleep_day_repository.dart';
 import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/sleep/presentation/sleep_navigation.dart';
+import '../features/widgets/today_focus_widget_service.dart';
 import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
@@ -303,6 +306,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     await _syncSleepIfDue(force: forceStepsRefresh);
     await _loadSleepForDate(date);
     await _syncStepsIfDue(date, force: forceStepsRefresh);
+    unawaited(TodayFocusWidgetSyncService.instance.sync());
   }
 
   Future<void> _loadStepsForDate(

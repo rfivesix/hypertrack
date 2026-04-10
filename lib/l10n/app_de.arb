@@ -577,6 +577,55 @@
   "myMeals": "Meine Mahlzeiten",
   "myMealsCL": "MEINE MAHLZEITEN",
   "nutritionSectionTodayInFocus": "Heute im Blick",
+  "widgetSettingsSectionTitle": "Home-Screen Widget",
+  "widgetSettingsEnableTitle": "Heute-im-Blick Widget aktivieren",
+  "widgetSettingsEnableSubtitle": "Zeigt deine wichtigsten Tageswerte auf dem Homescreen",
+  "widgetSettingsMaxItemsTitle": "Maximal sichtbare Einträge",
+  "widgetSettingsMaxItemsSubtitle": "Wird zusätzlich automatisch an die Widget-Größe angepasst",
+  "widgetSettingsChooseMetricsTitle": "Metriken auswählen",
+  "widgetSettingsChooseMetricsSubtitle": "Deterministische Reihenfolge wie in der Tagesübersicht",
+  "widgetMetricCreatine": "Kreatin",
+  "widgetMetricSupplements": "Supplements",
+  "widgetOpenAppToLoadData": "Öffne Hypertrack, um heutige Daten zu laden",
+  "widgetUnitKcal": "kcal",
+  "widgetUnitGramShort": "g",
+  "widgetUnitMl": "ml",
+  "widgetUnitMg": "mg",
+  "widgetValueProgress": "{current} / {target} {unit}",
+  "@widgetValueProgress": {
+    "placeholders": {
+      "current": {},
+      "target": {},
+      "unit": {}
+    }
+  },
+  "widgetSupplementsProgress": "{taken} / {total}",
+  "@widgetSupplementsProgress": {
+    "placeholders": {
+      "taken": {},
+      "total": {}
+    }
+  },
+  "widgetWorkoutCompletedCount": "{count} abgeschlossen",
+  "@widgetWorkoutCompletedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "widgetSleepDuration": "{hours}h {minutes}m",
+  "@widgetSleepDuration": {
+    "placeholders": {
+      "hours": {},
+      "minutes": {}
+    }
+  },
+  "widgetSleepWithScore": "{duration} · {score}",
+  "@widgetSleepWithScore": {
+    "placeholders": {
+      "duration": {},
+      "score": {}
+    }
+  },
   "nutritionSectionMyMeals": "Meine Mahlzeiten",
   "nutritionSectionToolsAndLibrary": "Tools und Bibliothek",
   "supplement_caffeine": "Koffein",

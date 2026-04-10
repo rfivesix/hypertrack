@@ -1318,6 +1318,77 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nutritionSectionTodayInFocus => 'Heute im Blick';
 
   @override
+  String get widgetSettingsSectionTitle => 'Home-Screen Widget';
+
+  @override
+  String get widgetSettingsEnableTitle => 'Heute-im-Blick Widget aktivieren';
+
+  @override
+  String get widgetSettingsEnableSubtitle =>
+      'Zeigt deine wichtigsten Tageswerte auf dem Homescreen';
+
+  @override
+  String get widgetSettingsMaxItemsTitle => 'Maximal sichtbare Einträge';
+
+  @override
+  String get widgetSettingsMaxItemsSubtitle =>
+      'Wird zusätzlich automatisch an die Widget-Größe angepasst';
+
+  @override
+  String get widgetSettingsChooseMetricsTitle => 'Metriken auswählen';
+
+  @override
+  String get widgetSettingsChooseMetricsSubtitle =>
+      'Deterministische Reihenfolge wie in der Tagesübersicht';
+
+  @override
+  String get widgetMetricCreatine => 'Kreatin';
+
+  @override
+  String get widgetMetricSupplements => 'Supplements';
+
+  @override
+  String get widgetOpenAppToLoadData =>
+      'Öffne Hypertrack, um heutige Daten zu laden';
+
+  @override
+  String get widgetUnitKcal => 'kcal';
+
+  @override
+  String get widgetUnitGramShort => 'g';
+
+  @override
+  String get widgetUnitMl => 'ml';
+
+  @override
+  String get widgetUnitMg => 'mg';
+
+  @override
+  String widgetValueProgress(Object current, Object target, Object unit) {
+    return '$current / $target $unit';
+  }
+
+  @override
+  String widgetSupplementsProgress(Object taken, Object total) {
+    return '$taken / $total';
+  }
+
+  @override
+  String widgetWorkoutCompletedCount(Object count) {
+    return '$count abgeschlossen';
+  }
+
+  @override
+  String widgetSleepDuration(Object hours, Object minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String widgetSleepWithScore(Object duration, Object score) {
+    return '$duration · $score';
+  }
+
+  @override
   String get nutritionSectionMyMeals => 'Meine Mahlzeiten';
 
   @override

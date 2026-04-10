@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.3-alpha.1] - 2026-04-10
+
+### Added
+- Added a first alpha version of the new **Today in Focus** home-screen widget.
+- Widget supports configurable daily metrics such as calories, protein, water, carbohydrates, sugar, fat, caffeine, creatine, supplements, steps, workouts, and sleep.
+- Added widget configuration support for visible metric selection and maximum visible item count.
+- Added widget tap behavior to open the app directly into the Diary / Tagebuch flow.
+- Added a new **Haptic feedback** setting, enabled by default.
+
+### Changed
+- Finalized the app’s haptic feedback behavior through a centralized, settings-aware feedback layer.
+- Added lightweight confirmation haptics for meaningful completion actions such as saving, adding, applying, starting, and finishing.
+- Preserved existing haptic behavior for tab switching, FAB interactions, chart-point dragging, and timer completion flows.
+- Added subtle AI waiting haptics during active generation/loading states.
+
+### Fixed
+- Fixed missing confirmation haptics on important add/save actions in several key flows.
+- Fixed AI waiting haptics so they stop correctly when generation finishes and no longer continue into review/result screens.
+- Refined the AI waiting haptic pattern to feel more periodic and less abrupt.
+
+### Known issues
+- The new widget is currently **alpha quality**.
+- iOS widget installation is currently blocked by a WidgetKit extension configuration issue (`TodayFocusWidget.appex`) and may not run correctly yet on iOS simulators/devices.
+- Android widget support may work, but should still be considered early preview status until broader validation is complete.
+
 ## [0.8.2] - 2026-04-10
 
 ### Changed
