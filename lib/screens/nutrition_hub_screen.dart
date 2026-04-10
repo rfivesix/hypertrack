@@ -176,51 +176,33 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
             child: ListView(
               padding: finalPadding,
               children: [
-                _buildSectionTitle(context, l10n.today_overview_text),
+                _buildSectionTitle(context, l10n.nutritionSectionTodayInFocus),
                 _buildGoalsAndRecommendationCard(
                   context,
                   recommendationState,
                   targetCalories,
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.myMealsCL),
-                meals.isEmpty
-                    ? _buildEmptyMealsCard(context, l10n)
-                    : SizedBox(
-                        height: 150,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          clipBehavior: Clip.none,
-                          itemCount: meals.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return _buildCreateMealCard(context, l10n);
-                            }
-                            return _buildMealCard(context, meals[index - 1]);
-                          },
-                        ),
-                      ),
-                const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.overview_capslock),
-                _buildNavigationCard(
-                  context: context,
-                  icon: Icons.restaurant_menu_outlined,
-                  title: l10n.manage_all_plans.replaceAll(
-                    'Pläne',
-                    'Mahlzeiten',
+                _buildSectionTitle(context, l10n.nutritionSectionMyMeals),
+                SizedBox(
+                  height: 150,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    itemCount: meals.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return _buildCreateMealCard(context, l10n);
+                      }
+                      return _buildMealCard(context, meals[index - 1]);
+                    },
                   ),
-                  subtitle: l10n.mealsEmptyBody,
-                  onTap: () {
-                    Navigator.of(context)
-                        .push(
-                          MaterialPageRoute(
-                            builder: (_) => const AddFoodScreen(),
-                          ),
-                        )
-                        .then((_) => _refreshData());
-                  },
                 ),
-                //const SizedBox(height: DesignConstants.spacingM),
+                const SizedBox(height: DesignConstants.spacingXL),
+                _buildSectionTitle(
+                  context,
+                  l10n.nutritionSectionToolsAndLibrary,
+                ),
                 _buildNavigationCard(
                   context: context,
                   icon: Icons.medication_outlined,
@@ -234,7 +216,6 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                     );
                   },
                 ),
-                //const SizedBox(height: DesignConstants.spacingM),
                 _buildNavigationCard(
                   context: context,
                   icon: Icons.search,
@@ -298,7 +279,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: Colors.grey[600],
               fontWeight: FontWeight.bold,
@@ -381,34 +362,6 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyMealsCard(BuildContext context, AppLocalizations l10n) {
-    return SummaryCard(
-      child: Padding(
-        padding: DesignConstants.cardPadding,
-        child: Column(
-          children: [
-            Text(
-              l10n.mealsEmptyTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: DesignConstants.spacingS),
-            Text(
-              l10n.mealsEmptyBody,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: DesignConstants.spacingL),
-            TextButton.icon(
-              onPressed: _createMealAndOpenEditor,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.mealsCreate),
-            ),
-          ],
         ),
       ),
     );

@@ -117,7 +117,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
             child: ListView(
               padding: finalPadding,
               children: [
-                _buildSectionTitle(context, l10n.startCapsLock),
+                _buildSectionTitle(context, l10n.workoutSectionStart),
                 SummaryCard(
                   child: InkWell(
                     onTap: _startEmptyWorkout,
@@ -141,43 +141,28 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                   ),
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.my_plans_capslock),
-                _routines.isEmpty
-                    ? _buildEmptyRoutinesCard(context, l10n)
-                    : SizedBox(
-                        height: 150,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          clipBehavior: Clip.none,
-                          itemCount: _routines.length + 1, // HIER DIE ANPASSUNG
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              // HIER DIE ANPASSUNG
-                              return _buildCreateRoutineCard(context, l10n);
-                            }
-                            return _buildRoutineCard(
-                              context,
-                              _routines[index - 1], // HIER DIE ANPASSUNG
-                            );
-                          },
-                        ),
-                      ),
-                const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.overview_capslock),
-                _buildNavigationTile(
-                  context: context,
-                  icon: Icons.history,
-                  title: l10n.workoutHistoryButton,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const WorkoutHistoryScreen(),
-                    ),
+                _buildSectionTitle(context, l10n.workoutSectionMyPlans),
+                SizedBox(
+                  height: 150,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    itemCount: _routines.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return _buildCreateRoutineCard(context, l10n);
+                      }
+                      return _buildRoutineCard(
+                        context,
+                        _routines[index - 1],
+                      );
+                    },
                   ),
                 ),
                 _buildNavigationTile(
                   context: context,
                   icon: Icons.list_alt_rounded,
-                  title: l10n.manage_all_plans,
+                  title: l10n.workoutAllRoutines,
                   onTap: () => Navigator.of(context)
                       .push(
                         MaterialPageRoute(
@@ -185,6 +170,18 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                         ),
                       )
                       .then((_) => _loadData()),
+                ),
+                const SizedBox(height: DesignConstants.spacingXL),
+                _buildSectionTitle(context, l10n.workoutSectionHistoryLibrary),
+                _buildNavigationTile(
+                  context: context,
+                  icon: Icons.history,
+                  title: l10n.workoutEntryWorkouts,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const WorkoutHistoryScreen(),
+                    ),
+                  ),
                 ),
                 _buildNavigationTile(
                   context: context,
@@ -233,108 +230,12 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
       ),
     );
   }
-  /*
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              child: ListView(
-                padding: DesignConstants.cardPadding,
-                children: [
-                  _buildSectionTitle(context, l10n.startCapsLock),
-                  SummaryCard(
-                    child: InkWell(
-                      onTap: _startEmptyWorkout,
-                      borderRadius: BorderRadius.circular(
-                        DesignConstants.borderRadiusM,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.add_circle_outline, size: 28),
-                            const SizedBox(width: 12),
-                            Text(
-                              l10n.startEmptyWorkoutButton,
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: DesignConstants.spacingXL),
-                  _buildSectionTitle(context, l10n.my_plans_capslock),
-                  _routines.isEmpty
-                      ? _buildEmptyRoutinesCard(context, l10n)
-                      : SizedBox(
-                          height: 150,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            clipBehavior: Clip.none,
-                            itemCount: _routines.length,
-                            itemBuilder: (context, index) {
-                              return _buildRoutineCard(
-                                context,
-                                _routines[index],
-                              );
-                            },
-                          ),
-                        ),
-                  const SizedBox(height: DesignConstants.spacingXL),
-                  _buildSectionTitle(context, l10n.overview_capslock),
-                  _buildNavigationTile(
-                    context: context,
-                    icon: Icons.history,
-                    title: l10n.workoutHistoryButton,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const WorkoutHistoryScreen(),
-                      ),
-                    ),
-                  ),
-                  //const SizedBox(height: DesignConstants.spacingS),
-                  _buildNavigationTile(
-                    context: context,
-                    icon: Icons.list_alt_rounded,
-                    title: l10n.manage_all_plans,
-                    onTap: () => Navigator.of(context)
-                        .push(
-                          MaterialPageRoute(
-                            builder: (context) => const RoutinesScreen(),
-                          ),
-                        )
-                        .then((_) => _loadData()),
-                  ),
-                  //const SizedBox(height: DesignConstants.spacingM),
-                  _buildNavigationTile(
-                    context: context,
-                    icon: Icons.folder_open_outlined,
-                    title: l10n.drawerExerciseCatalog,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const ExerciseCatalogScreen(),
-                      ),
-                    ),
-                  ),
-                  const BottomContentSpacer(),
-                ],
-              ),
-            ),
-    );
-  }
-  */
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: Colors.grey[600],
               fontWeight: FontWeight.bold,
@@ -384,40 +285,6 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyRoutinesCard(BuildContext context, AppLocalizations l10n) {
-    return SummaryCard(
-      child: Padding(
-        padding: DesignConstants.cardPadding,
-        child: Column(
-          children: [
-            Text(
-              l10n.emptyRoutinesTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: DesignConstants.spacingS),
-            Text(
-              l10n.emptyRoutinesSubtitle,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: DesignConstants.spacingL),
-            TextButton.icon(
-              onPressed: () => Navigator.of(context)
-                  .push(
-                    MaterialPageRoute(
-                      builder: (context) => const RoutinesScreen(),
-                    ),
-                  )
-                  .then((_) => _loadData()),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.createFirstRoutineButton),
-            ),
-          ],
         ),
       ),
     );

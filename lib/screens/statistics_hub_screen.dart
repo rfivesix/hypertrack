@@ -25,7 +25,6 @@ import 'analytics/consistency_tracker_screen.dart';
 import 'analytics/muscle_group_analytics_screen.dart';
 import 'analytics/pr_dashboard_screen.dart';
 import 'analytics/recovery_tracker_screen.dart';
-import 'exercise_catalog_screen.dart';
 import 'measurements_screen.dart';
 import '../widgets/statistics_steps_card.dart';
 import '../data/database_helper.dart';
@@ -278,31 +277,25 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
                 if (_stepsTrackingEnabled) ...[
-                  _buildSectionTitle(context, "Steps"),
+                  _buildSectionTitle(context, l10n.steps),
                   _buildStepsCard(),
                   const SizedBox(height: DesignConstants.spacingL),
                 ],
                 _buildSectionTitle(context, l10n.sectionRecovery),
                 _buildRecoverySection(),
-                const SizedBox(height: DesignConstants.spacingL),
                 if (_sleepTrackingEnabled) ...[
-                  _buildSectionTitle(context, l10n.sleepSectionTitle),
+                  const SizedBox(height: 8),
                   _buildSleepSection(),
-                  const SizedBox(height: DesignConstants.spacingL),
                 ],
-                _buildSectionTitle(context, l10n.sectionConsistency),
+                const SizedBox(height: DesignConstants.spacingL),
+                _buildSectionTitle(context, l10n.statisticsSectionTraining),
                 _buildConsistencySection(),
-                const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(
-                  context,
-                  l10n.analyticsSectionPerformanceRecords,
-                ),
+                const SizedBox(height: 8),
                 _buildPerformanceSection(),
-                const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.analyticsSectionVolumeMuscles),
+                const SizedBox(height: 8),
                 _buildMuscleVolumeSection(),
                 const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.sectionBodyNutrition),
+                _buildSectionTitle(context, l10n.statisticsSectionBody),
                 _buildBodyMetricsSection(),
                 const BottomContentSpacer(),
               ]),
@@ -339,7 +332,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title);
+    return AnalyticsSectionHeader(title: title.toUpperCase());
   }
 
   Widget _buildStepsCard() {
@@ -350,15 +343,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _selectedTimeRangeIndex,
     );
     final subtitleRange = _rangeSubtitle(selectedDays, range);
-    final localeCode = Localizations.localeOf(
-      context,
-    ).languageCode.toLowerCase();
-    final stepsTitle = localeCode == 'de' ? 'Schritte' : 'Steps';
+    final stepsTitle = l10n.steps;
     final noDataText = !_stepsTrackingEnabled
-        ? (localeCode == 'de'
-            ? 'Schritt-Tracking in den Einstellungen aktivieren'
-            : 'Enable step tracking in Settings')
-        : (localeCode == 'de' ? 'Noch keine Schrittdaten' : 'No step data yet');
+        ? l10n.statisticsEnableStepTrackingHint
+        : l10n.statisticsNoStepDataYet;
 
     // Fallback info if tracking disabled or no data
     if (!_stepsTrackingEnabled || !hasData) {
@@ -394,7 +382,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final bool isSevenDays = _selectedTimeRangeIndex == 0;
 
     int currentSteps = 0;
-    String stepsSubtitle = localeCode == 'de' ? 'Heute' : 'Today';
+    String stepsSubtitle = l10n.today;
 
     if (isSevenDays) {
       final todayBucket = range!.dailyTotals.lastWhere(
@@ -405,7 +393,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       currentSteps = todayBucket.steps;
     } else {
       currentSteps = range!.totalSteps;
-      stepsSubtitle = localeCode == 'de' ? 'Gesamtschrittzahl' : 'Total steps';
+      stepsSubtitle = l10n.statisticsTotalSteps;
     }
 
     final subtitle = '$subtitleRange • $_stepsProviderName';
@@ -426,26 +414,23 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   String _rangeSubtitle(int selectedDays, RangeStepsAggregation? range) {
-    final localeCode = Localizations.localeOf(
-      context,
-    ).languageCode.toLowerCase();
     if (range == null) {
-      return localeCode == 'de' ? '$selectedDays Tage' : '$selectedDays days';
+      return '$selectedDays ${l10n.analyticsDayUnitLabel}';
     }
     if (_rangePolicy.isAllTimeRangeIndex(_selectedTimeRangeIndex)) {
       return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
     }
     if (selectedDays == _days7) {
-      return localeCode == 'de' ? 'Letzte 7 Tage' : 'Last 7 days';
+      return l10n.statisticsLast7Days;
     }
     if (selectedDays == _days30) {
-      return localeCode == 'de' ? 'Letzte 30 Tage' : 'Last 30 days';
+      return l10n.statisticsLast30Days;
     }
     if (selectedDays == _days90) {
-      return localeCode == 'de' ? 'Letzte 3 Monate' : 'Last 3 months';
+      return l10n.statisticsLast3Months;
     }
     if (selectedDays == _days180) {
-      return localeCode == 'de' ? 'Letzte 6 Monate' : 'Last 6 months';
+      return l10n.statisticsLast6Months;
     }
     return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
   }
@@ -602,85 +587,52 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final momentumColor = topImprovement == null
         ? Theme.of(context).colorScheme.outline
         : Theme.of(context).colorScheme.primary;
-    return Column(
-      children: [
-        SummaryCard(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PRDashboardScreen()),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderWithChevron(
-                  label: l10n.metricsMostImproved,
-                  chipText: _effectivePerformanceRangeLabel(),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  topExerciseName,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  momentumValue,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: momentumColor,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  performanceSummaryText,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                _buildMicroCaption(l10n.analyticsRecentRecords),
-                const SizedBox(height: 4),
-                _buildMiniBars(
-                  values: compactSignals,
-                  color: Theme.of(context).colorScheme.primary,
-                  semanticsLabel: l10n.analyticsSectionPerformanceRecords,
-                ),
-              ],
+    return SummaryCard(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PRDashboardScreen()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeaderWithChevron(
+              label: l10n.exerciseAnalyticsTitle,
+              chipText: _effectivePerformanceRangeLabel(),
             ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SummaryCard(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ExerciseCatalogScreen()),
-            );
-          },
-          child: ListTile(
-            leading: Icon(
-              Icons.search,
+            const SizedBox(height: 4),
+            Text(
+              topExerciseName,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              momentumValue,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: momentumColor,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              performanceSummaryText,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            _buildMicroCaption(l10n.analyticsRecentRecords),
+            const SizedBox(height: 4),
+            _buildMiniBars(
+              values: compactSignals,
               color: Theme.of(context).colorScheme.primary,
+              semanticsLabel: l10n.exerciseAnalyticsTitle,
             ),
-            title: Text(
-              l10n.exerciseAnalyticsTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(l10n.exerciseAnalyticsSubtitle),
-            trailing: Icon(
-              Icons.chevron_right,
-              size: DesignConstants.iconSizeM,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                DesignConstants.borderRadiusM,
-              ),
-            ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -892,7 +844,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               value: 1,
               strokeWidth: 8,
               valueColor: AlwaysStoppedAnimation<Color>(
-                colorScheme.surfaceVariant,
+                colorScheme.surfaceContainerHighest,
               ),
             ),
           ),

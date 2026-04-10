@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.2] - 2026-04-10
+
+### Changed
+- Reorganized the Workout, Statistics, and Nutrition hub screens to better separate training actions, analytics, and nutrition tools.
+- Updated hub section structure and ordering to reduce overlap and make navigation clearer.
+- Workout hub now focuses on starting training, managing routines, and accessing workout history / exercise library.
+- Nutrition hub now groups adaptive recommendation, goals, meals, and nutrition tools more clearly.
+- Statistics hub now groups content into Steps, Recovery, Training, and Body sections.
+
+### Fixed
+- Removed redundant hub entries that added clutter without meaningful functionality.
+- Fixed remaining localization regressions from the hub reorganization by replacing hardcoded Statistics UI strings with proper l10n usage.
+- Standardized uppercase section-header rendering across the reorganized hub screens.
+- Ensured hub entry labels and section names are consistently localized in German and English.
 ## [0.8.1] - 2026-04-09
 
 ### Fixed
