@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../services/theme_service.dart';
+import '../services/haptic_feedback_service.dart';
 import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
@@ -76,7 +76,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
   void _onTapUp(TapUpDetails details) {
     if (_hasTap) {
       _controller.reverse();
-      HapticFeedback.lightImpact();
+      HapticFeedbackService.instance.lightImpact();
       widget.onTap!.call();
     }
   }

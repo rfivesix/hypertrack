@@ -1,8 +1,8 @@
 // lib/widgets/glass_bottom_menu.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../generated/app_localizations.dart';
+import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
@@ -172,7 +172,8 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                             title: a.label,
                             subtitle: a.subtitle,
                             onTap: () {
-                              HapticFeedback.selectionClick();
+                              HapticFeedbackService.instance
+                                  .selectionFeedback();
                               Navigator.of(context).maybePop();
                               WidgetsBinding.instance.addPostFrameCallback(
                                 (_) => a.onTap(),

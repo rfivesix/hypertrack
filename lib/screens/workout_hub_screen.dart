@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/routine.dart';
+import '../services/haptic_feedback_service.dart';
 import 'edit_routine_screen.dart';
 import 'exercise_catalog_screen.dart';
 import 'live_workout_screen.dart';
@@ -51,6 +52,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
       routineName: l10n.free_training,
     );
     if (mounted) {
+      HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context)
           .push(
             MaterialPageRoute(
@@ -72,6 +74,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
       routineName: routine.name,
     );
     if (mounted) {
+      HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context)
           .push(
             MaterialPageRoute(
@@ -87,9 +90,12 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
   Future<void> _createNewRoutine() async {
     // Navigiert zum Editor für eine neue Routine und lädt danach die Daten neu.
-    await Navigator.of(
+    final created = await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
+    if (created == true) {
+      HapticFeedbackService.instance.confirmationFeedback();
+    }
     _loadData();
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../generated/app_localizations.dart';
 import '../services/ai_service.dart';
+import '../services/haptic_feedback_service.dart';
 import '../widgets/global_app_bar.dart';
 import 'ai_meal_review_screen.dart';
 import 'ai_settings_screen.dart';
@@ -39,6 +40,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   // Analysis state
   bool _isAnalyzing = false;
+  bool _aiWaitingHapticActive = false;
 
   late AnimationController _analyzeButtonAnimationController;
 
@@ -53,9 +55,22 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   @override
   void dispose() {
+    _stopAiWaitingHaptics();
     _textController.dispose();
     _analyzeButtonAnimationController.dispose();
     super.dispose();
+  }
+
+  void _startAiWaitingHaptics() {
+    if (_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = true;
+    HapticFeedbackService.instance.startAiWaiting();
+  }
+
+  void _stopAiWaitingHaptics() {
+    if (!_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = false;
+    HapticFeedbackService.instance.stopAiWaiting();
   }
 
   // ---------------------------------------------------------------------------
@@ -103,6 +118,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   Future<void> _analyze() async {
     if (!_hasInput) return;
     setState(() => _isAnalyzing = true);
+    _startAiWaitingHaptics();
 
     // Pass the current app language so the AI returns localised food names
     final languageCode = Localizations.localeOf(context).languageCode;
@@ -125,6 +141,11 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       }
 
       if (!mounted) return;
+
+      _stopAiWaitingHaptics();
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+      }
 
       final saved = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
@@ -152,6 +173,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
         ),
       );
     } finally {
+      _stopAiWaitingHaptics();
       if (mounted) setState(() => _isAnalyzing = false);
     }
   }

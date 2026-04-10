@@ -8,6 +8,7 @@ import '../models/food_entry.dart';
 import '../models/food_item.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
+import '../services/haptic_feedback_service.dart';
 import 'food_detail_screen.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_fab.dart';
@@ -372,6 +373,7 @@ class _MealScreenState extends State<MealScreen> {
       }
       if (mounted) {
         setState(() => _editMode = false);
+        HapticFeedbackService.instance.confirmationFeedback();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.mealSaved)),
         );
@@ -761,6 +763,7 @@ class _MealScreenState extends State<MealScreen> {
     }
 
     if (mounted) {
+      HapticFeedbackService.instance.confirmationFeedback();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));

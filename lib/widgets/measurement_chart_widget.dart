@@ -1,11 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/chart_data_point.dart';
+import '../services/haptic_feedback_service.dart';
 import '../util/design_constants.dart';
 
 enum MeasurementChartAxisMode { day, time }
@@ -167,7 +167,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
     if (newIndex == _touchedIndex) return;
     _touchedIndex = newIndex;
     if (newIndex != null) {
-      HapticFeedback.mediumImpact();
+      HapticFeedbackService.instance.chartSelectionFeedback();
     }
     if (mounted) setState(() {});
   }

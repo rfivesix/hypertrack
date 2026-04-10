@@ -24,6 +24,7 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/off_attribution_widget.dart';
 import '../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
+import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 
 // lib/screens/add_food_screen.dart
@@ -1246,6 +1247,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
 
     if (mounted) {
+      HapticFeedbackService.instance.confirmationFeedback();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
