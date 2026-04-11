@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.3-alpha.2] - 2026-04-11
+
+### Changed
+- Refined **Today in Focus** widget density and spacing on both iOS and Android to reduce wasted space and show more useful data in the same widget area.
+- Improved small-widget layout behavior on iOS with tighter typography and padding, allowing more compact metric presentation.
+- Improved Android widget row sizing, spacing, and adaptive visibility logic so medium/large widget sizes can display more metrics.
+
+### Fixed
+- Fixed measurement deletion persistence in the Measurements screen: swiping to delete now removes the session from storage, not only from the current UI state.
+- Hardened measurement-session deletion for legacy records by adding a timestamp-based fallback when legacy session IDs are missing.
+
 ## [0.8.3-alpha.1] - 2026-04-10
 
 ### Added

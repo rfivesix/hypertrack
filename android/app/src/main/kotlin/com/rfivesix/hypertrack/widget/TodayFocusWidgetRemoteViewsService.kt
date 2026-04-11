@@ -71,10 +71,14 @@ class TodayFocusWidgetFactory(
     override fun hasStableIds(): Boolean = true
 
     private fun computeSizeCap(minWidthDp: Int, minHeightDp: Int): Int {
+        val safeMinHeight = max(1, minHeightDp)
+        val safeMinWidth = max(1, minWidthDp)
         return when {
-            minHeightDp <= 120 || minWidthDp <= 120 -> 2
-            minHeightDp <= 220 -> 4
-            minHeightDp <= 320 -> 6
+            safeMinHeight <= 110 -> 2
+            safeMinHeight <= 170 -> 3
+            safeMinHeight <= 240 -> 4
+            safeMinHeight <= 320 -> 6
+            safeMinWidth >= 280 -> 10
             else -> 8
         }
     }

@@ -688,12 +688,26 @@ class DatabaseHelper {
     }).toList();
   }
 
-  Future<void> deleteMeasurementSession(int id) async {
+  Future<void> deleteMeasurementSession(
+    int id, {
+    DateTime? fallbackTimestamp,
+  }) async {
     final dbInstance = await database;
-    await (dbInstance.delete(
+    final deletedByLegacyId = await (dbInstance.delete(
       dbInstance.measurements,
     )..where((tbl) => tbl.legacySessionId.equals(id)))
         .go();
+
+    if (deletedByLegacyId == 0 && fallbackTimestamp != null) {
+      await (dbInstance.delete(
+        dbInstance.measurements,
+      )..where(
+              (tbl) =>
+                  tbl.legacySessionId.isNull() &
+                  tbl.date.equals(fallbackTimestamp),
+            ))
+          .go();
+    }
   }
 
   Future<DateTime?> getEarliestMeasurementDate() async {

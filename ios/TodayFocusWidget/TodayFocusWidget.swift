@@ -68,6 +68,7 @@ struct TodayFocusWidgetProvider: TimelineProvider {
 
 struct TodayFocusWidgetView: View {
   @Environment(\.widgetFamily) private var family
+  @Environment(\.colorScheme) private var colorScheme
   let entry: TodayFocusWidgetProvider.Entry
 
   var body: some View {
@@ -75,68 +76,69 @@ struct TodayFocusWidgetView: View {
     let maxByFamily = familyMaxCount
     let visibleCount = max(1, min(payload.maxVisibleItems, maxByFamily, payload.items.count))
     let visibleItems = Array(payload.items.prefix(visibleCount))
+    let layout = layoutSpec
+    let showSubtitle = !payload.subtitle.isEmpty && family != .systemSmall
 
-    ZStack {
-      solidBackground
+    VStack(alignment: .leading, spacing: layout.sectionSpacing) {
+      Text(payload.title)
+        .font(.system(size: layout.titleFontSize, weight: .bold))
+        .foregroundColor(primaryTextColor)
+        .lineLimit(family == .systemSmall ? 1 : 2)
+        .minimumScaleFactor(0.8)
 
-      VStack(alignment: .leading, spacing: 8) {
-        Text(payload.title)
-          .font(.system(size: 16, weight: .bold))
-          .foregroundColor(.white)
+      if showSubtitle {
+        Text(payload.subtitle)
+          .font(.system(size: layout.subtitleFontSize, weight: .regular))
+          .foregroundColor(secondaryTextColor)
           .lineLimit(1)
+      }
 
-        if !payload.subtitle.isEmpty {
-          Text(payload.subtitle)
-            .font(.system(size: 12, weight: .regular))
-            .foregroundColor(.white.opacity(0.85))
-            .lineLimit(1)
-        }
+      if !payload.enabled || visibleItems.isEmpty {
+        Text(payload.emptyText)
+          .font(.system(size: layout.subtitleFontSize, weight: .regular))
+          .foregroundColor(secondaryTextColor)
+          .padding(.top, 4)
+        Spacer(minLength: 0)
+      } else {
+        VStack(alignment: .leading, spacing: layout.itemSpacing) {
+          ForEach(visibleItems) { item in
+            HStack(spacing: layout.rowSpacing) {
+              Rectangle()
+                .fill(colorFromArgb(item.accentColor))
+                .frame(width: 4, height: layout.accentHeight)
+                .cornerRadius(2)
 
-        if !payload.enabled || visibleItems.isEmpty {
-          Text(payload.emptyText)
-            .font(.system(size: 12, weight: .regular))
-            .foregroundColor(.white.opacity(0.85))
-            .padding(.top, 4)
-          Spacer(minLength: 0)
-        } else {
-          VStack(alignment: .leading, spacing: 6) {
-            ForEach(visibleItems) { item in
-              HStack(spacing: 8) {
-                Rectangle()
-                  .fill(colorFromArgb(item.accentColor))
-                  .frame(width: 4, height: 24)
-                  .cornerRadius(2)
-
-                VStack(alignment: .leading, spacing: 1) {
-                  Text(item.label)
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(.white.opacity(0.85))
-                    .lineLimit(1)
-                  Text(item.valueText)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                }
-
-                Spacer(minLength: 0)
+              VStack(alignment: .leading, spacing: 1) {
+                Text(item.label)
+                  .font(.system(size: layout.labelFontSize, weight: .regular))
+                  .foregroundColor(secondaryTextColor)
+                  .lineLimit(1)
+                Text(item.valueText)
+                  .font(.system(size: layout.valueFontSize, weight: .semibold))
+                  .foregroundColor(primaryTextColor)
+                  .lineLimit(1)
+                  .minimumScaleFactor(0.82)
               }
+
+              Spacer(minLength: 0)
             }
           }
-          Spacer(minLength: 0)
         }
+        Spacer(minLength: 0)
       }
-      .padding(12)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    .padding(layout.padding)
     .widgetURL(URL(string: "hypertrack://diary"))
-    .modifier(TodayFocusWidgetBackgroundModifier(color: solidBackground))
+    .modifier(TodayFocusWidgetBackgroundModifier(color: surfaceBackground))
   }
 
   private var familyMaxCount: Int {
     switch family {
     case .systemSmall:
-      return 2
+      return 3
     case .systemMedium:
-      return 4
+      return 5
     case .systemLarge:
       return 8
     case .systemExtraLarge:
@@ -152,12 +154,94 @@ struct TodayFocusWidgetView: View {
     Color(red: 26.0 / 255.0, green: 26.0 / 255.0, blue: 26.0 / 255.0)
   }
 
+  private var surfaceBackground: Color {
+    if colorScheme == .dark {
+      return solidBackground
+    }
+    return Color(red: 242.0 / 255.0, green: 243.0 / 255.0, blue: 247.0 / 255.0)
+  }
+
+  private var primaryTextColor: Color {
+    colorScheme == .dark ? .white : Color(red: 22.0 / 255.0, green: 24.0 / 255.0, blue: 29.0 / 255.0)
+  }
+
+  private var secondaryTextColor: Color {
+    colorScheme == .dark
+      ? Color.white.opacity(0.85)
+      : Color(red: 69.0 / 255.0, green: 74.0 / 255.0, blue: 84.0 / 255.0)
+  }
+
+  private var layoutSpec: TodayFocusLayoutSpec {
+    switch family {
+    case .systemSmall:
+      return TodayFocusLayoutSpec(
+        padding: 7,
+        sectionSpacing: 4,
+        itemSpacing: 2,
+        rowSpacing: 6,
+        titleFontSize: 9,
+        subtitleFontSize: 8,
+        labelFontSize: 8,
+        valueFontSize: 9,
+        accentHeight: 16
+      )
+    case .systemMedium:
+      return TodayFocusLayoutSpec(
+        padding: 10,
+        sectionSpacing: 6,
+        itemSpacing: 4,
+        rowSpacing: 8,
+        titleFontSize: 13,
+        subtitleFontSize: 10,
+        labelFontSize: 10,
+        valueFontSize: 12,
+        accentHeight: 20
+      )
+    case .systemLarge, .systemExtraLarge:
+      return TodayFocusLayoutSpec(
+        padding: 13,
+        sectionSpacing: 7,
+        itemSpacing: 6,
+        rowSpacing: 8,
+        titleFontSize: 15,
+        subtitleFontSize: 12,
+        labelFontSize: 11,
+        valueFontSize: 13,
+        accentHeight: 24
+      )
+    default:
+      return TodayFocusLayoutSpec(
+        padding: 12,
+        sectionSpacing: 6,
+        itemSpacing: 5,
+        rowSpacing: 8,
+        titleFontSize: 13,
+        subtitleFontSize: 10,
+        labelFontSize: 10,
+        valueFontSize: 12,
+        accentHeight: 22
+      )
+    }
+  }
+
   private func colorFromArgb(_ argb: Int) -> Color {
     let red = Double((argb >> 16) & 0xFF) / 255.0
     let green = Double((argb >> 8) & 0xFF) / 255.0
     let blue = Double(argb & 0xFF) / 255.0
     return Color(red: red, green: green, blue: blue)
   }
+}
+
+private struct TodayFocusLayoutSpec {
+  let padding: CGFloat
+  let sectionSpacing: CGFloat
+  let itemSpacing: CGFloat
+  let rowSpacing: CGFloat
+  let titleFontSize: CGFloat
+  let subtitleFontSize: CGFloat
+  let labelFontSize: CGFloat
+  let valueFontSize: CGFloat
+  let accentHeight: CGFloat
 }
 
 struct TodayFocusWidgetBackgroundModifier: ViewModifier {

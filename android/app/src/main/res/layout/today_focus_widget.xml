@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/today_focus_widget_bg"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="8dp">
 
     <TextView
         android:id="@+id/today_focus_widget_title"
@@ -13,37 +13,37 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#FFFFFFFF"
-        android:textSize="14sp"
+        android:textColor="@color/today_focus_widget_text_primary"
+        android:textSize="13sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/today_focus_widget_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="1dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#CCFFFFFF"
-        android:textSize="11sp" />
+        android:textColor="@color/today_focus_widget_text_secondary"
+        android:textSize="10sp" />
 
     <ListView
         android:id="@+id/today_focus_widget_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="5dp"
         android:layout_weight="1"
         android:divider="@android:color/transparent"
-        android:dividerHeight="6dp"
+        android:dividerHeight="3dp"
         android:scrollbars="none" />
 
     <TextView
         android:id="@+id/today_focus_widget_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="5dp"
         android:text="@string/today_focus_widget_empty"
-        android:textColor="#CCFFFFFF"
-        android:textSize="12sp"
+        android:textColor="@color/today_focus_widget_text_secondary"
+        android:textSize="11sp"
         android:visibility="gone" />
 </LinearLayout>

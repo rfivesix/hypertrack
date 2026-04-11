@@ -116,6 +116,25 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         .then((_) => _loadMeasurements());
   }
 
+  Future<void> _deleteMeasurementSession(MeasurementSession session) async {
+    final sessionId = session.id;
+    if (sessionId == null) {
+      await _loadMeasurements();
+      return;
+    }
+
+    try {
+      await DatabaseHelper.instance.deleteMeasurementSession(
+        sessionId,
+        fallbackTimestamp: session.timestamp,
+      );
+    } finally {
+      if (mounted) {
+        await _loadMeasurements();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -320,6 +339,16 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
       confirmDismiss: (direction) async {
         // NEU: Helper
         return await showDeleteConfirmation(context);
+      },
+      onDismissed: (direction) {
+        setState(() {
+          _sessions.removeWhere(
+            (s) =>
+                (s.id != null && s.id == session.id) ||
+                (s.id == null && s.timestamp == session.timestamp),
+          );
+        });
+        _deleteMeasurementSession(session);
       },
       child: SummaryCard(
         child: Column(

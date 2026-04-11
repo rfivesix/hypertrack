@@ -16,6 +16,7 @@ import WidgetKit
   private let widgetActionOpenDiary = "openDiary"
   private var widgetLauncherChannel: FlutterMethodChannel?
   private var pendingWidgetAction: String?
+  private var channelsConfigured = false
 
   override func application(
     _ application: UIApplication,
@@ -25,81 +26,13 @@ import WidgetKit
       pendingWidgetAction = widgetAction(for: launchUrl)
     }
 
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(name: stepsChannelName, binaryMessenger: controller.binaryMessenger)
-      channel.setMethodCallHandler { [weak self] call, result in
-        self?.handleStepsCall(call: call, result: result)
-      }
-      let sleepChannel = FlutterMethodChannel(
-        name: sleepHealthKitChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      sleepChannel.setMethodCallHandler { [weak self] call, result in
-        self?.handleSleepHealthKitCall(call: call, result: result)
-      }
-      let exportChannel = FlutterMethodChannel(
-        name: exportAppleHealthChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      exportChannel.setMethodCallHandler { [weak self] call, result in
-        self?.handleExportAppleHealthCall(call: call, result: result)
-      }
-
-      let widgetChannel = FlutterMethodChannel(
-        name: todayFocusWidgetChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      widgetChannel.setMethodCallHandler { [weak self] call, result in
-        guard let self else {
-          result(FlutterError(code: "internal", message: "AppDelegate unavailable", details: nil))
-          return
-        }
-        switch call.method {
-        case "setPayload":
-          guard
-            let args = call.arguments as? [String: Any],
-            let payloadJson = args["payloadJson"] as? String
-          else {
-            result(FlutterError(code: "invalid_args", message: "payloadJson missing", details: nil))
-            return
-          }
-          self.widgetDefaults().set(payloadJson, forKey: self.todayFocusWidgetPayloadKey)
-          self.widgetDefaults().synchronize()
-          if #available(iOS 14.0, *) {
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-          result(true)
-        case "refresh":
-          if #available(iOS 14.0, *) {
-            WidgetCenter.shared.reloadAllTimelines()
-          }
-          result(true)
-        default:
-          result(FlutterMethodNotImplemented)
-        }
-      }
-
-      let launcherChannel = FlutterMethodChannel(
-        name: widgetLauncherChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      launcherChannel.setMethodCallHandler { [weak self] call, result in
-        guard let self else {
-          result(FlutterError(code: "internal", message: "AppDelegate unavailable", details: nil))
-          return
-        }
-        switch call.method {
-        case "getInitialAction":
-          let action = self.pendingWidgetAction
-          self.pendingWidgetAction = nil
-          result(action)
-        default:
-          result(FlutterMethodNotImplemented)
-        }
-      }
-      widgetLauncherChannel = launcherChannel
-    }
+    configureChannelsIfNeeded()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func applicationDidBecomeActive(_ application: UIApplication) {
+    configureChannelsIfNeeded()
+    super.applicationDidBecomeActive(application)
   }
 
   override func application(
@@ -125,15 +58,121 @@ import WidgetKit
     {
       pendingWidgetAction = action
     }
-    return super.application(
-      application,
-      configurationForConnecting: connectingSceneSession,
-      options: options
+    // FlutterAppDelegate does not guarantee an implementation for this selector
+    // across iOS/Xcode combinations. Returning an explicit scene configuration
+    // avoids a runtime "doesNotRecognizeSelector" crash on app launch.
+    return UISceneConfiguration(
+      name: "flutter",
+      sessionRole: connectingSceneSession.role
     )
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    configureChannelsIfNeeded(binaryMessenger: engineBridge.applicationRegistrar.messenger())
+  }
+
+  private func configureChannelsIfNeeded(
+    binaryMessenger: FlutterBinaryMessenger? = nil
+  ) {
+    guard !channelsConfigured else { return }
+    let messenger =
+      binaryMessenger
+      ?? resolveFlutterViewController()?.binaryMessenger
+    guard let messenger else { return }
+
+    let channel = FlutterMethodChannel(name: stepsChannelName, binaryMessenger: messenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      self?.handleStepsCall(call: call, result: result)
+    }
+
+    let sleepChannel = FlutterMethodChannel(
+      name: sleepHealthKitChannelName,
+      binaryMessenger: messenger
+    )
+    sleepChannel.setMethodCallHandler { [weak self] call, result in
+      self?.handleSleepHealthKitCall(call: call, result: result)
+    }
+
+    let exportChannel = FlutterMethodChannel(
+      name: exportAppleHealthChannelName,
+      binaryMessenger: messenger
+    )
+    exportChannel.setMethodCallHandler { [weak self] call, result in
+      self?.handleExportAppleHealthCall(call: call, result: result)
+    }
+
+    let widgetChannel = FlutterMethodChannel(
+      name: todayFocusWidgetChannelName,
+      binaryMessenger: messenger
+    )
+    widgetChannel.setMethodCallHandler { [weak self] call, result in
+      guard let self else {
+        result(FlutterError(code: "internal", message: "AppDelegate unavailable", details: nil))
+        return
+      }
+      switch call.method {
+      case "setPayload":
+        guard
+          let args = call.arguments as? [String: Any],
+          let payloadJson = args["payloadJson"] as? String
+        else {
+          result(FlutterError(code: "invalid_args", message: "payloadJson missing", details: nil))
+          return
+        }
+        self.widgetDefaults().set(payloadJson, forKey: self.todayFocusWidgetPayloadKey)
+        self.widgetDefaults().synchronize()
+        if #available(iOS 14.0, *) {
+          WidgetCenter.shared.reloadAllTimelines()
+        }
+        result(true)
+      case "refresh":
+        if #available(iOS 14.0, *) {
+          WidgetCenter.shared.reloadAllTimelines()
+        }
+        result(true)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
+    let launcherChannel = FlutterMethodChannel(
+      name: widgetLauncherChannelName,
+      binaryMessenger: messenger
+    )
+    launcherChannel.setMethodCallHandler { [weak self] call, result in
+      guard let self else {
+        result(FlutterError(code: "internal", message: "AppDelegate unavailable", details: nil))
+        return
+      }
+      switch call.method {
+      case "getInitialAction":
+        let action = self.pendingWidgetAction
+        self.pendingWidgetAction = nil
+        result(action)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+    widgetLauncherChannel = launcherChannel
+    channelsConfigured = true
+  }
+
+  private func resolveFlutterViewController() -> FlutterViewController? {
+    if let controller = window?.rootViewController as? FlutterViewController {
+      return controller
+    }
+    if #available(iOS 13.0, *) {
+      for scene in UIApplication.shared.connectedScenes {
+        guard let windowScene = scene as? UIWindowScene else { continue }
+        for sceneWindow in windowScene.windows {
+          if let controller = sceneWindow.rootViewController as? FlutterViewController {
+            return controller
+          }
+        }
+      }
+    }
+    return nil
   }
 
   private func handleStepsCall(call: FlutterMethodCall, result: @escaping FlutterResult) {

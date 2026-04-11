@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -51,15 +52,22 @@ class TodayFocusWidgetSyncService {
 
   Future<void> _pushPayload({required Map<String, Object> payload}) async {
     final payloadJson = jsonEncode(payload);
-    try {
-      await _channel.invokeMethod<void>('setPayload', <String, Object>{
-        'payloadJson': payloadJson,
-      });
-      await _channel.invokeMethod<void>('refresh');
-    } on MissingPluginException {
-      // Unsupported platform in MVP.
-    } on PlatformException {
-      // Ignore widget sync failures to keep app interactions fast.
+    const maxAttempts = 5;
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        await _channel.invokeMethod<void>('setPayload', <String, Object>{
+          'payloadJson': payloadJson,
+        });
+        await _channel.invokeMethod<void>('refresh');
+        return;
+      } on MissingPluginException {
+        // iOS scene startup can race channel registration; retry briefly.
+      } on PlatformException {
+        // Keep app interactions fast; retry quickly and then give up quietly.
+      }
+      if (attempt < maxAttempts - 1) {
+        await Future<void>.delayed(Duration(milliseconds: 250 * (attempt + 1)));
+      }
     }
   }
 

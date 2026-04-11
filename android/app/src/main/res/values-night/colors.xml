@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="today_focus_widget_surface">#FF1A1A1A</color>
+    <color name="today_focus_widget_text_primary">#FFFFFFFF</color>
+    <color name="today_focus_widget_text_secondary">#D9FFFFFF</color>
+</resources>
