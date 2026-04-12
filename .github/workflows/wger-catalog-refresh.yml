@@ -23,6 +23,7 @@ jobs:
   refresh-catalog:
     runs-on: ubuntu-latest
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
       GENERATED_DB_PATH: artifacts/hypertrack_training.db
       BUILD_REPORT_PATH: artifacts/wger_build_report.json
       DIFF_REPORT_PATH: artifacts/wger_diff_report.json
@@ -57,14 +58,27 @@ jobs:
           python -m py_compile skript/wger_catalog_diff.py
 
       - name: Generate exercise catalog and build report
+        id: generate
+        continue-on-error: true
         run: |
           mkdir -p artifacts
           python skript/create_wger_exercise_db.py \
             --db-out "$GENERATED_DB_PATH" \
             --report-json-out "$BUILD_REPORT_PATH"
 
+      - name: Check generated outputs
+        id: generated_outputs
+        if: always()
+        run: |
+          if [ -f "$GENERATED_DB_PATH" ] && [ -f "$BUILD_REPORT_PATH" ]; then
+            echo "generator_success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "generator_success=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Diff against committed reference DB (if available)
         id: diff
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         continue-on-error: true
         run: |
           mkdir -p artifacts
@@ -89,6 +103,7 @@ jobs:
           fi
 
       - name: Build catalog manifest artifact
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         run: |
           python - <<'PY'
           import hashlib
@@ -129,6 +144,7 @@ jobs:
 
           imported_count = int(summary.get("imported_count", 0) or 0)
           min_exercise_count = max(50, math.floor(imported_count * 0.85))
+
           manifest = {
             "source_id": "wger_catalog",
             "channel": os.environ.get("RELEASE_CHANNEL", "stable"),
@@ -160,6 +176,7 @@ jobs:
           PY
 
       - name: Build release notes
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         run: |
           python - <<'PY'
           import json
@@ -206,7 +223,7 @@ jobs:
           PY
 
       - name: Upload generated DB artifact
-        if: always()
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: wger-generated-db
@@ -214,7 +231,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload build report artifact
-        if: always()
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: wger-build-report
@@ -222,7 +239,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload catalog manifest artifact
-        if: always()
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: wger-catalog-manifest
@@ -230,7 +247,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload diff report artifact
-        if: always()
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: wger-diff-report
@@ -238,7 +255,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload release notes artifact
-        if: always()
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: wger-release-notes
@@ -247,7 +264,7 @@ jobs:
 
       - name: Publish release assets (catalog channel)
         id: publish_release
-        if: always() && env.PUBLISH_RELEASE_ASSETS == 'true' && (steps.diff.outputs.reference_db_found != 'true' || steps.diff.outcome == 'success' || env.FAIL_ON_BREAKING != 'true')
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true' && env.PUBLISH_RELEASE_ASSETS == 'true' && (steps.diff.outputs.reference_db_found != 'true' || steps.diff.outcome == 'success' || env.FAIL_ON_BREAKING != 'true')
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -275,10 +292,13 @@ jobs:
           diff_path = os.environ["DIFF_REPORT_PATH"]
           release_page_url = os.environ.get("RELEASE_PAGE_URL", "")
           publish_outcome = os.environ.get("PUBLISH_OUTCOME", "skipped")
+          generator_success = os.environ.get("GENERATOR_SUCCESS", "false")
+          generate_outcome = os.environ.get("GENERATE_OUTCOME", "unknown")
 
           lines = ["## Wger Catalog Refresh Summary", ""]
+          lines.append(f"- Catalog generation: `{generate_outcome}`")
 
-          if os.path.exists(build_path):
+          if generator_success == "true" and os.path.exists(build_path):
             with open(build_path, "r", encoding="utf-8") as f:
               build = json.load(f)
             bmeta = build.get("build", {})
@@ -287,8 +307,10 @@ jobs:
             lines.append(f"- Generated at: `{bmeta.get('generated_at', 'n/a')}`")
             lines.append(f"- Imported: `{summary.get('imported_count', 'n/a')}`")
             lines.append(f"- Rejected: `{summary.get('rejected_count', 'n/a')}`")
+          else:
+            lines.append("- Catalog artifacts were not generated; downstream steps were skipped.")
 
-          if os.path.exists(diff_path):
+          if generator_success == "true" and os.path.exists(diff_path):
             with open(diff_path, "r", encoding="utf-8") as f:
               diff = json.load(f)
             if diff.get("skipped"):
@@ -306,9 +328,17 @@ jobs:
           PY
         env:
           PUBLISH_OUTCOME: ${{ steps.publish_release.outcome }}
+          GENERATOR_SUCCESS: ${{ steps.generated_outputs.outputs.generator_success }}
+          GENERATE_OUTCOME: ${{ steps.generate.outcome }}
+
+      - name: Fail if catalog generation failed
+        if: always() && steps.generated_outputs.outputs.generator_success != 'true'
+        run: |
+          echo "Catalog generation failed; downstream artifact/release steps were skipped."
+          exit 1
 
       - name: Enforce safety gate result
-        if: always() && steps.diff.outputs.reference_db_found == 'true' && env.FAIL_ON_BREAKING == 'true' && steps.diff.outcome == 'failure'
+        if: always() && steps.generated_outputs.outputs.generator_success == 'true' && steps.diff.outputs.reference_db_found == 'true' && env.FAIL_ON_BREAKING == 'true' && steps.diff.outcome == 'failure'
         run: |
           echo "Diff safety validation failed under --fail-on-breaking."
           exit 1
