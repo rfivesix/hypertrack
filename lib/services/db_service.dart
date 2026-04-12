@@ -3,6 +3,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import '../config/app_data_sources.dart';
+
 /// Service responsible for managing the local SQLite database.
 ///
 /// Handles database initialization, asset copying for pre-populated data,
@@ -28,7 +30,7 @@ class DbService {
 
     // Falls Datei noch nicht existiert: aus Assets kopieren
     if (!await File(dbPath).exists()) {
-      final bytes = await rootBundle.load('assets/db/hypertrack_training.db');
+      final bytes = await rootBundle.load(AppDataSources.trainingAssetDbPath);
       await File(dbPath).writeAsBytes(
         bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
         flush: true,
