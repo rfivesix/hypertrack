@@ -1,0 +1,17 @@
+{
+  "source_id": "wger_catalog",
+  "channel": "stable",
+  "release_tag": "wger-catalog-stable",
+  "release_page_url": "https://github.com/rfivesix/hypertrack/releases/tag/wger-catalog-stable",
+  "asset_base_url": "https://github.com/rfivesix/hypertrack/releases/download/wger-catalog-stable/",
+  "version": "202512260209",
+  "generated_at": "2025-12-26T02:09:00Z",
+  "db_file": "hypertrack_training.db",
+  "db_url": "https://github.com/rfivesix/hypertrack/releases/download/wger-catalog-stable/hypertrack_training.db",
+  "build_report_file": "wger_build_report.json",
+  "build_report_url": "https://github.com/rfivesix/hypertrack/releases/download/wger-catalog-stable/wger_build_report.json",
+  "diff_report_file": "wger_diff_report.json",
+  "diff_report_url": "https://github.com/rfivesix/hypertrack/releases/download/wger-catalog-stable/wger_diff_report.json",
+  "expected_exercise_count": 789,
+  "min_exercise_count": 789
+}

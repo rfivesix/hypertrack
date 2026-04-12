@@ -8,11 +8,16 @@ name: Wger Catalog Refresh
         required: false
         default: true
         type: boolean
+      publish_release_assets:
+        description: "Publish DB/manifest/build-report to the catalog release channel"
+        required: false
+        default: true
+        type: boolean
   schedule:
     - cron: "0 5 * * 1"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   refresh-catalog:
@@ -21,8 +26,16 @@ jobs:
       GENERATED_DB_PATH: artifacts/hypertrack_training.db
       BUILD_REPORT_PATH: artifacts/wger_build_report.json
       DIFF_REPORT_PATH: artifacts/wger_diff_report.json
+      MANIFEST_PATH: artifacts/wger_catalog_manifest.json
+      RELEASE_NOTES_PATH: artifacts/wger_release_notes.md
       REFERENCE_DB_PATH: assets/db/hypertrack_training.db
+      RELEASE_TAG: wger-catalog-stable
+      RELEASE_NAME: Wger Catalog Data (stable channel)
+      RELEASE_CHANNEL: stable
+      RELEASE_DOWNLOAD_BASE: https://github.com/${{ github.repository }}/releases/download/wger-catalog-stable/
+      RELEASE_PAGE_URL: https://github.com/${{ github.repository }}/releases/tag/wger-catalog-stable
       FAIL_ON_BREAKING: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_breaking || 'true' }}
+      PUBLISH_RELEASE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release_assets || 'true' }}
 
     steps:
       - name: Checkout repository
@@ -65,7 +78,120 @@ jobs:
           else
             echo "reference_db_found=false" >> "$GITHUB_OUTPUT"
             echo "Reference DB not found at $REFERENCE_DB_PATH. Skipping diff." | tee artifacts/wger_diff_skipped.txt
+            python - <<'PY'
+            import json
+            import os
+
+            out = os.environ["DIFF_REPORT_PATH"]
+            payload = {
+              "skipped": True,
+              "reason": "reference_db_missing",
+              "reference_db_path": os.environ.get("REFERENCE_DB_PATH", ""),
+            }
+            with open(out, "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False, indent=2)
+            PY
           fi
+
+      - name: Build catalog manifest artifact
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          build_path = os.environ["BUILD_REPORT_PATH"]
+          diff_path = os.environ["DIFF_REPORT_PATH"]
+          manifest_path = os.environ["MANIFEST_PATH"]
+          release_base = os.environ["RELEASE_DOWNLOAD_BASE"]
+
+          with open(build_path, "r", encoding="utf-8") as f:
+            build_report = json.load(f)
+
+          diff_report = {}
+          if os.path.exists(diff_path):
+            with open(diff_path, "r", encoding="utf-8") as f:
+              diff_report = json.load(f)
+
+          build = build_report.get("build", {})
+          summary = build_report.get("summary", {})
+
+          db_file = os.path.basename(os.environ["GENERATED_DB_PATH"])
+          build_report_file = os.path.basename(build_path)
+          diff_report_file = os.path.basename(diff_path)
+
+          imported_count = int(summary.get("imported_count", 0) or 0)
+          manifest = {
+            "source_id": "wger_catalog",
+            "channel": os.environ.get("RELEASE_CHANNEL", "stable"),
+            "release_tag": os.environ.get("RELEASE_TAG", ""),
+            "release_page_url": os.environ.get("RELEASE_PAGE_URL", ""),
+            "asset_base_url": release_base,
+            "version": build.get("db_version", ""),
+            "generated_at": build.get("generated_at"),
+            "db_file": db_file,
+            "db_url": f"{release_base}{db_file}",
+            "build_report_file": build_report_file,
+            "build_report_url": f"{release_base}{build_report_file}",
+            "diff_report_file": diff_report_file,
+            "diff_report_url": f"{release_base}{diff_report_file}",
+            "expected_exercise_count": imported_count,
+            "min_exercise_count": imported_count if imported_count > 0 else 50,
+            "safety": {
+              "diff_skipped": bool(diff_report.get("skipped", False)),
+              "diff_removed_count": diff_report.get("summary", {}).get("removed_count"),
+              "diff_added_count": diff_report.get("summary", {}).get("added_count"),
+            },
+          }
+
+          with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, ensure_ascii=False, indent=2)
+          PY
+
+      - name: Build release notes
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          build_path = os.environ["BUILD_REPORT_PATH"]
+          diff_path = os.environ["DIFF_REPORT_PATH"]
+          out_path = os.environ["RELEASE_NOTES_PATH"]
+
+          with open(build_path, "r", encoding="utf-8") as f:
+            build = json.load(f)
+
+          diff = {}
+          if os.path.exists(diff_path):
+            with open(diff_path, "r", encoding="utf-8") as f:
+              diff = json.load(f)
+
+          bmeta = build.get("build", {})
+          bsum = build.get("summary", {})
+          dsum = diff.get("summary", {}) if isinstance(diff, dict) else {}
+
+          lines = [
+            "# Wger Catalog Data Refresh",
+            "",
+            f"- Version: `{bmeta.get('db_version', 'n/a')}`",
+            f"- Generated at: `{bmeta.get('generated_at', 'n/a')}`",
+            f"- Imported exercises: `{bsum.get('imported_count', 'n/a')}`",
+            f"- Rejected exercises: `{bsum.get('rejected_count', 'n/a')}`",
+          ]
+
+          if diff.get("skipped"):
+            lines.append("- Diff: skipped (reference DB missing)")
+          elif dsum:
+            lines.append(f"- Diff removed IDs: `{dsum.get('removed_count', 'n/a')}`")
+            lines.append(f"- Diff added IDs: `{dsum.get('added_count', 'n/a')}`")
+          else:
+            lines.append("- Diff summary unavailable")
+
+          lines.append("")
+          lines.append("This is a data-artifact release channel used by app-side catalog refresh.")
+
+          with open(out_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+          PY
 
       - name: Upload generated DB artifact
         if: always()
@@ -83,21 +209,48 @@ jobs:
           path: ${{ env.BUILD_REPORT_PATH }}
           if-no-files-found: error
 
+      - name: Upload catalog manifest artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wger-catalog-manifest
+          path: ${{ env.MANIFEST_PATH }}
+          if-no-files-found: error
+
       - name: Upload diff report artifact
-        if: always() && steps.diff.outputs.reference_db_found == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: wger-diff-report
           path: ${{ env.DIFF_REPORT_PATH }}
           if-no-files-found: error
 
-      - name: Upload diff-skip info artifact
-        if: always() && steps.diff.outputs.reference_db_found != 'true'
+      - name: Upload release notes artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wger-diff-report
-          path: artifacts/wger_diff_skipped.txt
+          name: wger-release-notes
+          path: ${{ env.RELEASE_NOTES_PATH }}
           if-no-files-found: error
+
+      - name: Publish release assets (catalog channel)
+        id: publish_release
+        if: always() && env.PUBLISH_RELEASE_ASSETS == 'true' && (steps.diff.outputs.reference_db_found != 'true' || steps.diff.outcome == 'success' || env.FAIL_ON_BREAKING != 'true')
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+          makeLatest: 'false'
+          artifacts: |
+            ${{ env.GENERATED_DB_PATH }}
+            ${{ env.BUILD_REPORT_PATH }}
+            ${{ env.DIFF_REPORT_PATH }}
+            ${{ env.MANIFEST_PATH }}
+          bodyFile: ${{ env.RELEASE_NOTES_PATH }}
 
       - name: Publish run summary
         if: always()
@@ -108,8 +261,8 @@ jobs:
 
           build_path = os.environ["BUILD_REPORT_PATH"]
           diff_path = os.environ["DIFF_REPORT_PATH"]
-          reference_found = os.environ.get("REFERENCE_FOUND", "false")
-          diff_outcome = os.environ.get("DIFF_OUTCOME", "unknown")
+          release_page_url = os.environ.get("RELEASE_PAGE_URL", "")
+          publish_outcome = os.environ.get("PUBLISH_OUTCOME", "skipped")
 
           lines = ["## Wger Catalog Refresh Summary", ""]
 
@@ -120,30 +273,27 @@ jobs:
             summary = build.get("summary", {})
             lines.append(f"- DB version: `{bmeta.get('db_version', 'n/a')}`")
             lines.append(f"- Generated at: `{bmeta.get('generated_at', 'n/a')}`")
-            lines.append(f"- Raw exercises: `{summary.get('raw_exercise_count', 'n/a')}`")
             lines.append(f"- Imported: `{summary.get('imported_count', 'n/a')}`")
             lines.append(f"- Rejected: `{summary.get('rejected_count', 'n/a')}`")
-          else:
-            lines.append("- Build report not found.")
 
-          if reference_found == "true" and os.path.exists(diff_path):
+          if os.path.exists(diff_path):
             with open(diff_path, "r", encoding="utf-8") as f:
               diff = json.load(f)
-            ds = diff.get("summary", {})
-            lines.append(f"- Removed IDs: `{ds.get('removed_count', 'n/a')}`")
-            lines.append(f"- Added IDs: `{ds.get('added_count', 'n/a')}`")
-            lines.append(f"- Safety validation outcome: `{diff_outcome}`")
-          elif reference_found == "true":
-            lines.append("- Diff step ran but no diff JSON was produced.")
-          else:
-            lines.append("- Diff skipped: reference DB not found.")
+            if diff.get("skipped"):
+              lines.append("- Diff: skipped (reference DB missing)")
+            else:
+              dsum = diff.get("summary", {})
+              lines.append(f"- Removed IDs: `{dsum.get('removed_count', 'n/a')}`")
+              lines.append(f"- Added IDs: `{dsum.get('added_count', 'n/a')}`")
+
+          lines.append(f"- Release publication: `{publish_outcome}`")
+          lines.append(f"- Catalog release page: {release_page_url}")
 
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
           PY
         env:
-          REFERENCE_FOUND: ${{ steps.diff.outputs.reference_db_found }}
-          DIFF_OUTCOME: ${{ steps.diff.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish_release.outcome }}
 
       - name: Enforce safety gate result
         if: always() && steps.diff.outputs.reference_db_found == 'true' && env.FAIL_ON_BREAKING == 'true' && steps.diff.outcome == 'failure'

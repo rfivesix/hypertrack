@@ -13,6 +13,31 @@ Main access paths currently in use:
 - `lib/data/product_database_helper.dart`
 - Sleep DAOs in `lib/features/sleep/data/persistence/dao/*`
 
+## Exercise catalog source and refresh
+
+Bundled exercise seed data ships as:
+
+- `assets/db/hypertrack_training.db`
+
+Startup import path:
+
+- `lib/screens/app_initializer_screen.dart` -> `BasisDataManager.checkForBasisDataUpdate(...)`
+
+Remote refresh service:
+
+- `lib/services/exercise_catalog_refresh_service.dart`
+
+Remote source configuration is centralized in:
+
+- `lib/config/app_data_sources.dart`
+
+The app checks the release-distributed catalog manifest and can adopt a newer
+catalog DB after structural validation. On any remote error, startup falls back
+to the bundled asset source.
+
+Tracking state for remote refresh checks is kept in `SharedPreferences` keys
+under the `exercise_catalog_*` namespace.
+
 ## Core app entities (non-sleep)
 
 The traditional app model classes remain under `lib/models/*` (nutrition, workouts, measurements, supplements, chart/timeline helpers, backup serialization).

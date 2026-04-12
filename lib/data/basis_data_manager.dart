@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'database_helper.dart';
 import 'drift_database.dart';
@@ -10,6 +11,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:drift/drift.dart' as drift;
+
+import '../config/app_data_sources.dart';
+import '../services/exercise_catalog_refresh_service.dart';
 
 // Typ-Definition für den Callback
 typedef ProgressCallback = void Function(
@@ -58,10 +62,12 @@ class BasisDataManager {
       String key,
       String table,
       Function(Map<String, dynamic>) mapper, {
+      String? sourceFilePath,
       String? driftTable,
     }) async {
-      await _updateDatabaseFromAsset(
+      await _updateDatabaseFromSource(
         assetPath: asset,
+        sourceFilePath: sourceFilePath,
         prefKey: key,
         prefs: prefs,
         tableName: table,
@@ -73,19 +79,46 @@ class BasisDataManager {
       );
     }
 
-    // 1. Übungen
+    String? remoteTrainingDbPath;
+    final installedTrainingVersion =
+        prefs.getString(_keyVersionTraining) ?? '0';
+    try {
+      onProgress?.call(
+        "Prüfe Übungen...",
+        "Suche nach Remote-Katalog-Updates...",
+        0.0,
+      );
+      final remoteCandidate =
+          await ExerciseCatalogRefreshService.instance.prepareUpdateCandidate(
+        installedVersion: installedTrainingVersion,
+        force: force,
+      );
+      if (remoteCandidate != null) {
+        remoteTrainingDbPath = remoteCandidate.localDbPath;
+        onProgress?.call(
+          "Update Übungen",
+          "Remote-Katalog ${remoteCandidate.version} gefunden.",
+          0.02,
+        );
+      }
+    } catch (e) {
+      debugPrint('Remote exercise catalog check skipped safely: $e');
+    }
+
+    // 1. Übungen (Remote-Candidate wenn verfügbar, sonst Asset)
     await process(
       'Übungen',
-      'assets/db/hypertrack_training.db',
+      AppDataSources.trainingAssetDbPath,
       _keyVersionTraining,
       'exercises',
       _mapExerciseRow,
+      sourceFilePath: remoteTrainingDbPath,
     );
 
     // 2a. Base Foods
     await process(
       'Basis-Produkte',
-      'assets/db/hypertrack_base_foods.db',
+      AppDataSources.baseFoodsAssetDbPath,
       _keyVersionFood,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'base'),
@@ -94,7 +127,7 @@ class BasisDataManager {
     // 2b. Kategorien
     await process(
       'Kategorien',
-      'assets/db/hypertrack_base_foods.db',
+      AppDataSources.foodCategoriesAssetDbPath,
       _keyVersionCats,
       'categories',
       _mapCategoryRow,
@@ -104,15 +137,16 @@ class BasisDataManager {
     // 3. OFF Datenbank (Das große File)
     await process(
       'Produktdatenbank',
-      'assets/db/hypertrack_prep_de.db',
+      AppDataSources.offFoodsAssetDbPath,
       _keyVersionOff,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'off'),
     );
   }
 
-  Future<void> _updateDatabaseFromAsset({
+  Future<void> _updateDatabaseFromSource({
     required String assetPath,
+    String? sourceFilePath,
     required String prefKey,
     required SharedPreferences prefs,
     required String tableName,
@@ -129,23 +163,37 @@ class BasisDataManager {
       // Initiale Meldung (0%)
       onProgress?.call("Prüfe $taskLabel...", "Initialisiere...", 0.0);
 
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, p.basename(assetPath));
-
-      try {
-        final byteData = await rootBundle.load(assetPath);
-        tempFile = File(tempPath);
-        await tempFile.writeAsBytes(
-          byteData.buffer.asUint8List(
-            byteData.offsetInBytes,
-            byteData.lengthInBytes,
-          ),
-        );
-      } catch (e) {
-        return;
+      if (sourceFilePath != null &&
+          sourceFilePath.isNotEmpty &&
+          await File(sourceFilePath).exists()) {
+        try {
+          assetDb = await sqflite.openDatabase(sourceFilePath, readOnly: true);
+        } catch (e) {
+          debugPrint(
+            'Falling back to bundled asset for $taskLabel (remote source failed): $e',
+          );
+        }
       }
 
-      assetDb = await sqflite.openDatabase(tempPath, readOnly: true);
+      if (assetDb == null) {
+        final tempDir = await getTemporaryDirectory();
+        final tempPath = p.join(tempDir.path, p.basename(assetPath));
+
+        try {
+          final byteData = await rootBundle.load(assetPath);
+          tempFile = File(tempPath);
+          await tempFile.writeAsBytes(
+            byteData.buffer.asUint8List(
+              byteData.offsetInBytes,
+              byteData.lengthInBytes,
+            ),
+          );
+        } catch (e) {
+          return;
+        }
+
+        assetDb = await sqflite.openDatabase(tempPath, readOnly: true);
+      }
 
       var checkTable = tableName;
       if (tableName == 'exercises') {
@@ -336,7 +384,9 @@ class BasisDataManager {
                 mode: drift.InsertMode.insertOrReplace,
               );
             }
-          } catch (e) {}
+          } catch (e) {
+            debugPrint('Skipping malformed import row for $taskLabel: $e');
+          }
         }
       });
 

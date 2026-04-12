@@ -7,6 +7,7 @@ This document describes the app as implemented in the **current working copy**.
 Hypertrack currently implements:
 
 - Workout tracking and analytics
+- Exercise catalog refresh via release-distributed wger data artifacts
 - Nutrition/fluid logging
 - Adaptive nutrition recommendation generation (weekly due-week model with explicit manual apply)
 - Measurements
@@ -122,5 +123,6 @@ Implemented controls include:
 - [Statistics module](statistics_module.md)
 - [Sleep current state](sleep/sleep_current_state.md)
 - [Health export one-way](health_export_one_way.md)
+- [Wger catalog refresh & distribution](wger_catalog_refresh_system.md)
 - [Architecture](architecture.md)
 - [Data models and storage](data_models_and_storage.md)
