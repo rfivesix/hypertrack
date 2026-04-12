@@ -1,6 +1,6 @@
 name: Wger Catalog Refresh
 
-'on':
+"on":
   workflow_dispatch:
     inputs:
       fail_on_breaking:
@@ -67,6 +67,8 @@ jobs:
         id: diff
         continue-on-error: true
         run: |
+          mkdir -p artifacts
+
           if [ -f "$REFERENCE_DB_PATH" ]; then
             echo "reference_db_found=true" >> "$GITHUB_OUTPUT"
             DIFF_CMD="python skript/wger_catalog_diff.py --old \"$REFERENCE_DB_PATH\" --new \"$GENERATED_DB_PATH\" --json-out \"$DIFF_REPORT_PATH\""
@@ -78,19 +80,12 @@ jobs:
           else
             echo "reference_db_found=false" >> "$GITHUB_OUTPUT"
             echo "Reference DB not found at $REFERENCE_DB_PATH. Skipping diff." | tee artifacts/wger_diff_skipped.txt
-            python - <<'PY'
-            import json
-            import os
-
-            out = os.environ["DIFF_REPORT_PATH"]
-            payload = {
-              "skipped": True,
-              "reason": "reference_db_missing",
-              "reference_db_path": os.environ.get("REFERENCE_DB_PATH", ""),
-            }
-            with open(out, "w", encoding="utf-8") as f:
-              json.dump(payload, f, ensure_ascii=False, indent=2)
-            PY
+            printf '%s\n' \
+              '{' \
+              '  "skipped": true,' \
+              '  "reason": "reference_db_missing",' \
+              "  \"reference_db_path\": \"$REFERENCE_DB_PATH\"" \
+              '}' > "$DIFF_REPORT_PATH"
           fi
 
       - name: Build catalog manifest artifact
@@ -261,7 +256,7 @@ jobs:
           prerelease: true
           allowUpdates: true
           replacesArtifacts: true
-          makeLatest: 'false'
+          makeLatest: "false"
           artifacts: |
             ${{ env.GENERATED_DB_PATH }}
             ${{ env.BUILD_REPORT_PATH }}
