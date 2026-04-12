@@ -9,6 +9,7 @@ import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../models/routine_exercise.dart';
 import '../models/set_template.dart';
+import '../services/haptic_feedback_service.dart';
 import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import '../util/design_constants.dart';
@@ -161,6 +162,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         setState(() {
           _routineExercises = [..._routineExercises, newRoutineExercise];
         });
+        HapticFeedbackService.instance.confirmationFeedback();
       }
     }
   }
@@ -229,6 +231,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
+      HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context).pop(true);
     }
     return true;

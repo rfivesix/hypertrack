@@ -448,6 +448,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               themeService.setMaterialColorsEnabled(value),
                         ),
                       ],
+                      const Divider(height: 1),
+                      SwitchListTile(
+                        secondary: const Icon(Icons.vibration_outlined),
+                        title: Text(
+                          isGerman ? 'Haptisches Feedback' : 'Haptic feedback',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          isGerman
+                              ? 'Leichte Vibrationen bei Bestätigungen und KI-Warten'
+                              : 'Light vibrations for confirmations and AI waiting',
+                        ),
+                        value: themeService.hapticsEnabled,
+                        onChanged: (value) =>
+                            themeService.setHapticsEnabled(value),
+                      ),
                     ],
                   ),
                 ),
@@ -633,6 +649,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ),
+          const SizedBox(height: DesignConstants.spacingXL),
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
           ValueListenableBuilder<SleepPermissionStatus>(

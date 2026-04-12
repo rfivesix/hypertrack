@@ -15,6 +15,7 @@ import '../models/routine_exercise.dart';
 import '../models/set_log.dart';
 import '../models/workout_log.dart';
 import '../models/set_template.dart';
+import '../services/haptic_feedback_service.dart';
 import '../services/workout_session_manager.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
@@ -363,6 +364,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         notes: result.notes.isNotEmpty ? result.notes : null,
       );
       if (mounted && logId != null) {
+        HapticFeedbackService.instance.confirmationFeedback();
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => WorkoutSummaryScreen(logId: logId),

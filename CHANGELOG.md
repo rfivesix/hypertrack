@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.3] - 2026-04-12
+
+### Removed
+- Removed the complete home-screen widget feature from MVP scope on all platforms (Flutter, Android, iOS).
+- Removed Android app-widget provider/resources and iOS WidgetKit extension target integration.
+- Removed widget-specific app startup, deep-link launcher, and shared widget bridge/config plumbing.
+
+### Changed
+- Regenerated app localizations after removing widget-only translation keys.
+- Cleaned release notes/changelog references tied only to the removed widget rollout.
+
+### Fixed
+- Restored reliable iOS simulator install/runtime by removing broken app-extension integration from the app build.
+- Preserved and kept active the Measurements deletion persistence fix (including legacy timestamp fallback behavior).
+
+## [0.8.3-alpha.2] - 2026-04-11
+
+### Changed
+- Refined **Today in Focus** widget density and spacing on both iOS and Android to reduce wasted space and show more useful data in the same widget area.
+- Improved small-widget layout behavior on iOS with tighter typography and padding, allowing more compact metric presentation.
+- Improved Android widget row sizing, spacing, and adaptive visibility logic so medium/large widget sizes can display more metrics.
+
+### Fixed
+- Fixed measurement deletion persistence in the Measurements screen: swiping to delete now removes the session from storage, not only from the current UI state.
+- Hardened measurement-session deletion for legacy records by adding a timestamp-based fallback when legacy session IDs are missing.
+
+## [0.8.3-alpha.1] - 2026-04-10
+
+### Added
+- Added a first alpha version of the new **Today in Focus** home-screen widget.
+- Widget supports configurable daily metrics such as calories, protein, water, carbohydrates, sugar, fat, caffeine, creatine, supplements, steps, workouts, and sleep.
+- Added widget configuration support for visible metric selection and maximum visible item count.
+- Added widget tap behavior to open the app directly into the Diary / Tagebuch flow.
+- Added a new **Haptic feedback** setting, enabled by default.
+
+### Changed
+- Finalized the app’s haptic feedback behavior through a centralized, settings-aware feedback layer.
+- Added lightweight confirmation haptics for meaningful completion actions such as saving, adding, applying, starting, and finishing.
+- Preserved existing haptic behavior for tab switching, FAB interactions, chart-point dragging, and timer completion flows.
+- Added subtle AI waiting haptics during active generation/loading states.
+
+### Fixed
+- Fixed missing confirmation haptics on important add/save actions in several key flows.
+- Fixed AI waiting haptics so they stop correctly when generation finishes and no longer continue into review/result screens.
+- Refined the AI waiting haptic pattern to feel more periodic and less abrupt.
+
 ## [0.8.2] - 2026-04-10
 
 ### Changed

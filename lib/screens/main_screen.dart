@@ -27,6 +27,7 @@ import 'statistics_hub_screen.dart';
 import 'workout_hub_screen.dart';
 import '../services/profile_service.dart';
 import '../features/steps/data/steps_aggregation_repository.dart';
+import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 import '../services/workout_session_manager.dart';
 import '../theme/color_constants.dart';
@@ -376,6 +377,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     // HIER passiert die eigentliche Navigation zum Workout,
     // NACHDEM das Menü geschlossen ist.
     if (result != null && mounted) {
+      HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context)
           .push(
             MaterialPageRoute(
@@ -442,6 +444,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
       newFoodEntry,
     );
+    HapticFeedbackService.instance.confirmationFeedback();
 
     if (isLiquid) {
       // ... insertFluidEntry mit timestamp ...
@@ -637,6 +640,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                           state.caffeineText.replaceAll(',', '.'),
                         );
                         if (quantity != null && quantity > 0) {
+                          HapticFeedbackService.instance.confirmationFeedback();
                           close();
                           Navigator.of(ctx).pop((
                             quantity: quantity,

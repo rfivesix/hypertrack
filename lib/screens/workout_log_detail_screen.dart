@@ -8,6 +8,7 @@ import '../generated/app_localizations.dart';
 import '../models/exercise.dart';
 import '../models/set_log.dart';
 import '../models/workout_log.dart';
+import '../services/haptic_feedback_service.dart';
 import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import '../util/design_constants.dart';
@@ -288,6 +289,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
 
     if (mounted) {
+      HapticFeedbackService.instance.confirmationFeedback();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));

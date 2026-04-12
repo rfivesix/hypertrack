@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/routine.dart';
+import '../services/haptic_feedback_service.dart';
 import 'edit_routine_screen.dart';
 import 'live_workout_screen.dart';
 import '../util/design_constants.dart';
@@ -88,6 +89,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     if (!mounted) return;
     Navigator.of(context).pop();
     if (fullRoutine != null) {
+      HapticFeedbackService.instance.confirmationFeedback();
       final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
       Navigator.of(context)
           .push(
@@ -108,6 +110,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
       routineName: l10n.freeWorkoutTitle,
     );
     if (!mounted) return;
+    HapticFeedbackService.instance.confirmationFeedback();
     Navigator.of(context)
         .push(
           MaterialPageRoute(
@@ -129,6 +132,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   // NEUE METHODEN FÜR DAS MENÜ
   void _duplicateRoutine(int routineId) async {
     await WorkoutDatabaseHelper.instance.duplicateRoutine(routineId);
+    HapticFeedbackService.instance.confirmationFeedback();
     final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
     _loadRoutines(l10n); // l10n hier übergeben
   }

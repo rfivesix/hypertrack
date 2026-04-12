@@ -8,36 +8,95 @@ import UIKit
   private let stepsChannelName = "hypertrack.health/steps"
   private let sleepHealthKitChannelName = "hypertrack.health/sleep_healthkit"
   private let exportAppleHealthChannelName = "hypertrack.health/export_apple_health"
+  private var channelsConfigured = false
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(name: stepsChannelName, binaryMessenger: controller.binaryMessenger)
-      channel.setMethodCallHandler { [weak self] call, result in
-        self?.handleStepsCall(call: call, result: result)
-      }
-      let sleepChannel = FlutterMethodChannel(
-        name: sleepHealthKitChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      sleepChannel.setMethodCallHandler { [weak self] call, result in
-        self?.handleSleepHealthKitCall(call: call, result: result)
-      }
-      let exportChannel = FlutterMethodChannel(
-        name: exportAppleHealthChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      exportChannel.setMethodCallHandler { [weak self] call, result in
-        self?.handleExportAppleHealthCall(call: call, result: result)
-      }
-    }
+    configureChannelsIfNeeded()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func applicationDidBecomeActive(_ application: UIApplication) {
+    configureChannelsIfNeeded()
+    super.applicationDidBecomeActive(application)
+  }
+
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+  ) -> Bool {
+    return super.application(app, open: url, options: options)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    configurationForConnecting connectingSceneSession: UISceneSession,
+    options: UIScene.ConnectionOptions
+  ) -> UISceneConfiguration {
+    // FlutterAppDelegate does not guarantee an implementation for this selector
+    // across iOS/Xcode combinations. Returning an explicit scene configuration
+    // avoids a runtime "doesNotRecognizeSelector" crash on app launch.
+    return UISceneConfiguration(
+      name: "flutter",
+      sessionRole: connectingSceneSession.role
+    )
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    configureChannelsIfNeeded(binaryMessenger: engineBridge.applicationRegistrar.messenger())
+  }
+
+  private func configureChannelsIfNeeded(
+    binaryMessenger: FlutterBinaryMessenger? = nil
+  ) {
+    guard !channelsConfigured else { return }
+    let messenger =
+      binaryMessenger
+      ?? resolveFlutterViewController()?.binaryMessenger
+    guard let messenger else { return }
+
+    let channel = FlutterMethodChannel(name: stepsChannelName, binaryMessenger: messenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      self?.handleStepsCall(call: call, result: result)
+    }
+
+    let sleepChannel = FlutterMethodChannel(
+      name: sleepHealthKitChannelName,
+      binaryMessenger: messenger
+    )
+    sleepChannel.setMethodCallHandler { [weak self] call, result in
+      self?.handleSleepHealthKitCall(call: call, result: result)
+    }
+
+    let exportChannel = FlutterMethodChannel(
+      name: exportAppleHealthChannelName,
+      binaryMessenger: messenger
+    )
+    exportChannel.setMethodCallHandler { [weak self] call, result in
+      self?.handleExportAppleHealthCall(call: call, result: result)
+    }
+    channelsConfigured = true
+  }
+
+  private func resolveFlutterViewController() -> FlutterViewController? {
+    if let controller = window?.rootViewController as? FlutterViewController {
+      return controller
+    }
+    if #available(iOS 13.0, *) {
+      for scene in UIApplication.shared.connectedScenes {
+        guard let windowScene = scene as? UIWindowScene else { continue }
+        for sceneWindow in windowScene.windows {
+          if let controller = sceneWindow.rootViewController as? FlutterViewController {
+            return controller
+          }
+        }
+      }
+    }
+    return nil
   }
 
   private func handleStepsCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -544,4 +603,5 @@ import UIKit
   private func overlap(_ aStart: Date, _ aEnd: Date, _ bStart: Date, _ bEnd: Date) -> Bool {
     return aStart < bEnd && aEnd > bStart
   }
+
 }

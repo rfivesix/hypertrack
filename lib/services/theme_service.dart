@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'haptic_feedback_service.dart';
 
 /// Service responsible for managing the application's theme and visual style.
 ///
@@ -9,10 +10,12 @@ class ThemeService extends ChangeNotifier {
   static const _styleKey = 'visual_style';
   static const _aiEnabledKey = 'ai_enabled';
   static const _materialColorsEnabledKey = 'material_colors_enabled';
+  static const _hapticsEnabledKey = 'haptics_enabled';
   ThemeMode _themeMode = ThemeMode.system;
   int _visualStyle = 0; // 0 = Standard, 1 = Liquid
   bool _isAiEnabled = false;
   bool _materialColorsEnabled = false;
+  bool _hapticsEnabled = true;
 
   /// The current theme mode (light, dark, or system).
   ThemeMode get themeMode => _themeMode;
@@ -26,12 +29,16 @@ class ThemeService extends ChangeNotifier {
   /// Whether Android dynamic Material colors are enabled.
   bool get materialColorsEnabled => _materialColorsEnabled;
 
+  /// Whether haptic feedback is enabled globally.
+  bool get hapticsEnabled => _hapticsEnabled;
+
   /// Creates a [ThemeService] and loads saved preferences.
   ThemeService() {
     _loadThemeMode();
     _loadVisualStyle();
     _loadAiEnabled();
     _loadMaterialColorsEnabled();
+    _loadHapticsEnabled();
   }
 
   Future<void> _loadThemeMode() async {
@@ -78,6 +85,13 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _loadHapticsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    _hapticsEnabled = prefs.getBool(_hapticsEnabledKey) ?? true;
+    HapticFeedbackService.instance.setEnabled(_hapticsEnabled);
+    notifyListeners();
+  }
+
   /// Sets whether AI features are enabled and persists it to storage.
   Future<void> setAiEnabled(bool enabled) async {
     if (enabled == _isAiEnabled) return;
@@ -94,5 +108,15 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_materialColorsEnabledKey, enabled);
+  }
+
+  /// Sets whether haptic feedback should be used across the app.
+  Future<void> setHapticsEnabled(bool enabled) async {
+    if (enabled == _hapticsEnabled) return;
+    _hapticsEnabled = enabled;
+    HapticFeedbackService.instance.setEnabled(enabled);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hapticsEnabledKey, enabled);
   }
 }

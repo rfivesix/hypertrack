@@ -165,6 +165,7 @@ class MainActivity : FlutterFragmentActivity() {
                 else -> result.notImplemented()
             }
         }
+
     }
 
     private fun handleAvailability(result: MethodChannel.Result) {

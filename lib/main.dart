@@ -64,9 +64,16 @@ void main() async {
 ///
 /// This application is a fitness tracker that allows users to log workouts,
 /// manage supplements, and track body measurements.
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   /// Creates the root widget for the application.
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +355,7 @@ class MyApp extends StatelessWidget {
         );
 
         return MaterialApp(
+          navigatorKey: _navigatorKey,
           debugShowCheckedModeBanner: false,
           scrollBehavior: NoGlowScrollBehavior(),
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

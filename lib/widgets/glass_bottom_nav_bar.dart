@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
@@ -45,7 +45,7 @@ class GlassBottomNavBar extends StatelessWidget {
         type: MaterialType.transparency,
         child: InkWell(
           onTap: () {
-            HapticFeedback.lightImpact();
+            HapticFeedbackService.instance.lightImpact();
             onTap();
           },
           borderRadius: BorderRadius.circular(16),
@@ -136,21 +136,22 @@ class GlassBottomNavBar extends StatelessWidget {
                   items.length,
                 );
                 onTap(idx);
-                HapticFeedback.lightImpact(); // Feedback bei einfachem Tap
+                HapticFeedbackService.instance
+                    .lightImpact(); // Feedback bei einfachem Tap
               },
               onPanStart: (details) {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 lastHoverIndex = idx;
-                HapticFeedback
-                    .selectionClick(); // leichtes Feedback beim ersten Kontakt
+                HapticFeedbackService.instance
+                    .selectionFeedback(); // leichtes Feedback beim ersten Kontakt
               },
               onPanUpdate: (details) {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 if (idx != lastHoverIndex) {
                   lastHoverIndex = idx;
-                  HapticFeedback
+                  HapticFeedbackService.instance
                       .lightImpact(); // leichtes Feedback beim Wechseln der Zone
                 }
               },

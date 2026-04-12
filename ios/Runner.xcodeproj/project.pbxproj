@@ -185,16 +185,16 @@
 				9ED191574EDB018D4C7333BF /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
-				97C146EB1CF9000F007C117D /* Frameworks */,
-				97C146EC1CF9000F007C117D /* Resources */,
-				9705A1C41CF9048500538489 /* Embed Frameworks */,
-				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
-				89FA4178F93BD63D061C329A /* [CP] Copy Pods Resources */,
+					97C146EB1CF9000F007C117D /* Frameworks */,
+					97C146EC1CF9000F007C117D /* Resources */,
+					9705A1C41CF9048500538489 /* Embed Frameworks */,
+					3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+					89FA4178F93BD63D061C329A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
+				dependencies = (
+				);
 			name = Runner;
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
@@ -226,16 +226,17 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				de,
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
-			targets = (
-				97C146ED1CF9000F007C117D /* Runner */,
-				331C8080294A63A400263BE5 /* RunnerTests */,
-			);
+				targets = (
+					97C146ED1CF9000F007C117D /* Runner */,
+					331C8080294A63A400263BE5 /* RunnerTests */,
+				);
 		};
 /* End PBXProject section */
 
@@ -444,7 +445,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = QUXZN5283U;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";

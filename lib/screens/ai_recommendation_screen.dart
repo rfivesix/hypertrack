@@ -7,6 +7,7 @@ import '../generated/app_localizations.dart';
 import '../models/food_entry.dart';
 import '../models/food_item.dart';
 import '../services/ai_service.dart';
+import '../services/haptic_feedback_service.dart';
 import '../widgets/global_app_bar.dart';
 import 'ai_settings_screen.dart';
 
@@ -49,6 +50,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
   // ── Animation ──
   late final AnimationController _shimmerController;
+  bool _aiWaitingHapticActive = false;
 
   @override
   void initState() {
@@ -61,9 +63,22 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
   @override
   void dispose() {
+    _stopAiWaitingHaptics();
     _customRequestController.dispose();
     _shimmerController.dispose();
     super.dispose();
+  }
+
+  void _startAiWaitingHaptics() {
+    if (_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = true;
+    HapticFeedbackService.instance.startAiWaiting();
+  }
+
+  void _stopAiWaitingHaptics() {
+    if (!_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = false;
+    HapticFeedbackService.instance.stopAiWaiting();
   }
 
   // ---------------------------------------------------------------------------
@@ -77,6 +92,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       _recommendation = null;
       _matchedIngredients = [];
     });
+    _startAiWaitingHaptics();
 
     try {
       final db = DatabaseHelper.instance;
@@ -225,6 +241,8 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         _isGenerating = false;
         _errorMessage = e.toString();
       });
+    } finally {
+      _stopAiWaitingHaptics();
     }
   }
 
@@ -251,6 +269,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
     if (mounted) {
       setState(() => _isSaving = false);
+      HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context).pop(true); // Signal diary to refresh
     }
   }

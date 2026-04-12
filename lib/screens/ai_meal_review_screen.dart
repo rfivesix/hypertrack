@@ -9,6 +9,7 @@ import '../generated/app_localizations.dart';
 import '../models/food_entry.dart';
 import '../models/food_item.dart';
 import '../services/ai_service.dart';
+import '../services/haptic_feedback_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -46,6 +47,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   bool _isRetrying = false;
   bool _isSaving = false;
   bool _isMatching = true;
+  bool _aiWaitingHapticActive = false;
 
   // Meal type selection
   late String _selectedMealType;
@@ -62,8 +64,21 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   @override
   void dispose() {
+    _stopAiWaitingHaptics();
     _feedbackController.dispose();
     super.dispose();
+  }
+
+  void _startAiWaitingHaptics() {
+    if (_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = true;
+    HapticFeedbackService.instance.startAiWaiting();
+  }
+
+  void _stopAiWaitingHaptics() {
+    if (!_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = false;
+    HapticFeedbackService.instance.stopAiWaiting();
   }
 
   // ---------------------------------------------------------------------------
@@ -181,6 +196,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
           ),
         );
       });
+      HapticFeedbackService.instance.confirmationFeedback();
     }
   }
 
@@ -193,6 +209,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
     if (feedback.isEmpty) return;
 
     setState(() => _isRetrying = true);
+    _startAiWaitingHaptics();
     try {
       final newResults = await AiService.instance.retry(
         previousResults: _items.map((e) => e.suggestion).toList(),
@@ -219,6 +236,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
         );
       }
     } finally {
+      _stopAiWaitingHaptics();
       if (mounted) setState(() => _isRetrying = false);
     }
   }
@@ -249,6 +267,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
     if (mounted) {
       setState(() => _isSaving = false);
+      HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context).pop(true);
     }
   }

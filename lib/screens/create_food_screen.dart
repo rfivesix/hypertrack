@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../data/product_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/food_item.dart';
+import '../services/haptic_feedback_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 
@@ -93,6 +94,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
       }
 
       if (mounted) {
+        HapticFeedbackService.instance.confirmationFeedback();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.snackbarSaveSuccess(foodData.name))),
         );
