@@ -1,0 +1,152 @@
+name: Wger Catalog Refresh
+
+'on':
+  workflow_dispatch:
+    inputs:
+      fail_on_breaking:
+        description: "Fail workflow if diff detects breaking changes"
+        required: false
+        default: true
+        type: boolean
+  schedule:
+    - cron: "0 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  refresh-catalog:
+    runs-on: ubuntu-latest
+    env:
+      GENERATED_DB_PATH: artifacts/hypertrack_training.db
+      BUILD_REPORT_PATH: artifacts/wger_build_report.json
+      DIFF_REPORT_PATH: artifacts/wger_diff_report.json
+      REFERENCE_DB_PATH: assets/db/hypertrack_training.db
+      FAIL_ON_BREAKING: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_breaking || 'true' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Validate script syntax
+        run: |
+          python -m py_compile skript/create_wger_exercise_db.py
+          python -m py_compile skript/wger_catalog_diff.py
+
+      - name: Generate exercise catalog and build report
+        run: |
+          mkdir -p artifacts
+          python skript/create_wger_exercise_db.py \
+            --db-out "$GENERATED_DB_PATH" \
+            --report-json-out "$BUILD_REPORT_PATH"
+
+      - name: Diff against committed reference DB (if available)
+        id: diff
+        continue-on-error: true
+        run: |
+          if [ -f "$REFERENCE_DB_PATH" ]; then
+            echo "reference_db_found=true" >> "$GITHUB_OUTPUT"
+            DIFF_CMD="python skript/wger_catalog_diff.py --old \"$REFERENCE_DB_PATH\" --new \"$GENERATED_DB_PATH\" --json-out \"$DIFF_REPORT_PATH\""
+            if [ "$FAIL_ON_BREAKING" = "true" ]; then
+              DIFF_CMD="$DIFF_CMD --fail-on-breaking"
+            fi
+            echo "Running diff command: $DIFF_CMD"
+            eval "$DIFF_CMD"
+          else
+            echo "reference_db_found=false" >> "$GITHUB_OUTPUT"
+            echo "Reference DB not found at $REFERENCE_DB_PATH. Skipping diff." | tee artifacts/wger_diff_skipped.txt
+          fi
+
+      - name: Upload generated DB artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wger-generated-db
+          path: ${{ env.GENERATED_DB_PATH }}
+          if-no-files-found: error
+
+      - name: Upload build report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wger-build-report
+          path: ${{ env.BUILD_REPORT_PATH }}
+          if-no-files-found: error
+
+      - name: Upload diff report artifact
+        if: always() && steps.diff.outputs.reference_db_found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wger-diff-report
+          path: ${{ env.DIFF_REPORT_PATH }}
+          if-no-files-found: error
+
+      - name: Upload diff-skip info artifact
+        if: always() && steps.diff.outputs.reference_db_found != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wger-diff-report
+          path: artifacts/wger_diff_skipped.txt
+          if-no-files-found: error
+
+      - name: Publish run summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          build_path = os.environ["BUILD_REPORT_PATH"]
+          diff_path = os.environ["DIFF_REPORT_PATH"]
+          reference_found = os.environ.get("REFERENCE_FOUND", "false")
+          diff_outcome = os.environ.get("DIFF_OUTCOME", "unknown")
+
+          lines = ["## Wger Catalog Refresh Summary", ""]
+
+          if os.path.exists(build_path):
+            with open(build_path, "r", encoding="utf-8") as f:
+              build = json.load(f)
+            bmeta = build.get("build", {})
+            summary = build.get("summary", {})
+            lines.append(f"- DB version: `{bmeta.get('db_version', 'n/a')}`")
+            lines.append(f"- Generated at: `{bmeta.get('generated_at', 'n/a')}`")
+            lines.append(f"- Raw exercises: `{summary.get('raw_exercise_count', 'n/a')}`")
+            lines.append(f"- Imported: `{summary.get('imported_count', 'n/a')}`")
+            lines.append(f"- Rejected: `{summary.get('rejected_count', 'n/a')}`")
+          else:
+            lines.append("- Build report not found.")
+
+          if reference_found == "true" and os.path.exists(diff_path):
+            with open(diff_path, "r", encoding="utf-8") as f:
+              diff = json.load(f)
+            ds = diff.get("summary", {})
+            lines.append(f"- Removed IDs: `{ds.get('removed_count', 'n/a')}`")
+            lines.append(f"- Added IDs: `{ds.get('added_count', 'n/a')}`")
+            lines.append(f"- Safety validation outcome: `{diff_outcome}`")
+          elif reference_found == "true":
+            lines.append("- Diff step ran but no diff JSON was produced.")
+          else:
+            lines.append("- Diff skipped: reference DB not found.")
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+          PY
+        env:
+          REFERENCE_FOUND: ${{ steps.diff.outputs.reference_db_found }}
+          DIFF_OUTCOME: ${{ steps.diff.outcome }}
+
+      - name: Enforce safety gate result
+        if: always() && steps.diff.outputs.reference_db_found == 'true' && env.FAIL_ON_BREAKING == 'true' && steps.diff.outcome == 'failure'
+        run: |
+          echo "Diff safety validation failed under --fail-on-breaking."
+          exit 1
