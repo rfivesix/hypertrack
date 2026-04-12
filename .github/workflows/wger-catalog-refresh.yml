@@ -80,13 +80,12 @@ jobs:
           else
             echo "reference_db_found=false" >> "$GITHUB_OUTPUT"
             echo "Reference DB not found at $REFERENCE_DB_PATH. Skipping diff." | tee artifacts/wger_diff_skipped.txt
-            cat > "$DIFF_REPORT_PATH" <<EOF
-          {
-            "skipped": true,
-            "reason": "reference_db_missing",
-            "reference_db_path": "$REFERENCE_DB_PATH"
-          }
-          EOF
+            printf '%s\n' \
+              '{' \
+              '  "skipped": true,' \
+              '  "reason": "reference_db_missing",' \
+              "  \"reference_db_path\": \"$REFERENCE_DB_PATH\"" \
+              '}' > "$DIFF_REPORT_PATH"
           fi
 
       - name: Build catalog manifest artifact
