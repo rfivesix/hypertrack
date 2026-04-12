@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
@@ -17,7 +18,9 @@ class ExerciseCatalogManifest {
   final String sourceId;
   final String channel;
   final DateTime? generatedAt;
+  final int? expectedExerciseRows;
   final int? minimumExerciseRows;
+  final String dbSha256;
 
   const ExerciseCatalogManifest({
     required this.version,
@@ -26,7 +29,9 @@ class ExerciseCatalogManifest {
     required this.sourceId,
     required this.channel,
     required this.generatedAt,
+    required this.expectedExerciseRows,
     required this.minimumExerciseRows,
+    required this.dbSha256,
   });
 }
 
@@ -226,6 +231,16 @@ class ExerciseCatalogRefreshService {
         return null;
       }
 
+      final actualDbSha256 = await _computeFileSha256(tempDbPath);
+      if (!_sha256Equals(actualDbSha256, manifest.dbSha256)) {
+        await prefs.setString(
+          _keyLastError,
+          'Downloaded DB checksum mismatch. expected=${manifest.dbSha256} actual=$actualDbSha256',
+        );
+        await _deleteIfExists(tempDbPath);
+        return null;
+      }
+
       final validated = await _validateCatalogDb(
         dbPath: tempDbPath,
         expectedVersion: manifest.version,
@@ -315,8 +330,10 @@ class ExerciseCatalogRefreshService {
       'version': manifest.version,
       'generated_at': manifest.generatedAt?.toIso8601String(),
       'db_url': manifest.dbUri.toString(),
+      'db_sha256': manifest.dbSha256,
       'build_report_url': manifest.buildReportUri?.toString(),
       'manifest_url': manifestUri.toString(),
+      'expected_exercise_count': manifest.expectedExerciseRows,
       'minimum_exercise_rows': manifest.minimumExerciseRows,
       'cached_at': _nowProvider().toIso8601String(),
     };
@@ -364,12 +381,49 @@ class ExerciseCatalogRefreshService {
             config.sourceId;
     final channel = _firstNonBlankString([json['channel'], build['channel']]) ??
         config.channel;
+    if (sourceId != config.sourceId || channel != config.channel) {
+      return null;
+    }
+
+    final dbSha256 = _firstNonBlankString([json['db_sha256']]);
+    if (dbSha256 == null || !_isValidSha256(dbSha256)) {
+      return null;
+    }
+
+    final expectedRows = _parseInt(json['expected_exercise_count']);
+    final minimumRows = _parseInt(json['minimum_exercise_rows']) ??
+        _parseInt(json['min_exercise_count']) ??
+        _parseInt(json['min_rows']);
+    if (minimumRows != null && minimumRows <= 0) {
+      return null;
+    }
+    if (expectedRows != null && expectedRows <= 0) {
+      return null;
+    }
+    if (expectedRows != null &&
+        minimumRows != null &&
+        expectedRows < minimumRows) {
+      return null;
+    }
+
+    final usesFileKeys = _firstNonBlankString([
+          json['db_file'],
+          json['db_path'],
+          json['database_path'],
+          json['build_report_file'],
+          json['build_report_path'],
+          json['report_path'],
+        ]) !=
+        null;
     final effectiveBaseUrl = _firstNonBlankString([
           json['asset_base_url'],
           json['download_base_url'],
           json['base_url'],
         ]) ??
         config.baseUrl;
+    if (usesFileKeys && effectiveBaseUrl.trim().isEmpty) {
+      return null;
+    }
 
     final dbUri = _resolveFromManifest(
       baseUrl: effectiveBaseUrl,
@@ -387,6 +441,9 @@ class ExerciseCatalogRefreshService {
     if (dbUri == null) {
       return null;
     }
+    if (!_isSecureRemoteUri(dbUri)) {
+      return null;
+    }
 
     final buildReportUri = _resolveFromManifest(
       baseUrl: effectiveBaseUrl,
@@ -401,16 +458,14 @@ class ExerciseCatalogRefreshService {
       ]),
       fallbackPath: config.defaultBuildReportPath,
     );
+    if (buildReportUri != null && !_isSecureRemoteUri(buildReportUri)) {
+      return null;
+    }
 
     final generatedAtRaw =
         _firstNonBlankString([json['generated_at'], build['generated_at']]);
     final generatedAt =
         generatedAtRaw != null ? DateTime.tryParse(generatedAtRaw) : null;
-
-    final minimumRows = _parseInt(json['minimum_exercise_rows']) ??
-        _parseInt(json['min_exercise_count']) ??
-        _parseInt(json['expected_exercise_count']) ??
-        _parseInt(json['min_rows']);
 
     return ExerciseCatalogManifest(
       version: version,
@@ -419,7 +474,9 @@ class ExerciseCatalogRefreshService {
       sourceId: sourceId,
       channel: channel,
       generatedAt: generatedAt,
+      expectedExerciseRows: expectedRows,
       minimumExerciseRows: minimumRows,
+      dbSha256: dbSha256.toLowerCase(),
     );
   }
 
@@ -555,6 +612,15 @@ class ExerciseCatalogRefreshService {
     }
   }
 
+  Future<String> _computeFileSha256(String filePath) async {
+    final bytes = await File(filePath).readAsBytes();
+    return sha256.convert(bytes).toString();
+  }
+
+  static bool _sha256Equals(String a, String b) {
+    return a.trim().toLowerCase() == b.trim().toLowerCase();
+  }
+
   static Uri _resolveUrlOrPath(String baseUrl, String value) {
     final parsed = Uri.tryParse(value);
     if (parsed != null && parsed.hasScheme) {
@@ -599,6 +665,14 @@ class ExerciseCatalogRefreshService {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value.toString());
+  }
+
+  static bool _isSecureRemoteUri(Uri uri) {
+    return uri.hasScheme && uri.scheme == 'https' && uri.host.isNotEmpty;
+  }
+
+  static bool _isValidSha256(String value) {
+    return RegExp(r'^[A-Fa-f0-9]{64}$').hasMatch(value.trim());
   }
 }
 

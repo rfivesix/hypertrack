@@ -103,12 +103,35 @@ Important fields:
 - `generated_at`
 - `db_file`
 - `db_url`
+- `db_sha256`
 - `build_report_file`
 - `build_report_url`
 - `diff_report_file`
 - `diff_report_url`
 - `expected_exercise_count`
 - `min_exercise_count`
+
+Validation semantics:
+
+- `expected_exercise_count` is informational metadata (observability/debugging only).
+- `min_exercise_count` is the actual hard lower validation floor used by the app.
+- The workflow computes `min_exercise_count` conservatively as:
+  - `max(50, floor(imported_count * 0.85))`
+  - This intentionally allows small legitimate source fluctuations while still
+    blocking obviously broken payloads.
+- `db_sha256` is required for payload integrity:
+  - the app computes SHA-256 of the downloaded DB and rejects mismatches before
+    structural DB validation.
+
+Manifest validation hardening (app side):
+
+- `source_id` and `channel` must match configured expected values.
+- `version` must be present and non-blank.
+- DB location must be resolvable.
+- remote URLs must use `https`.
+- `min_exercise_count` must be `> 0` if present.
+- if both counts are present: `expected_exercise_count >= min_exercise_count`.
+- invalid/malformed manifests are rejected with safe fallback.
 
 The app parser supports:
 
@@ -145,6 +168,8 @@ Startup integration:
 - Import path is currently non-destructive (`insertOrReplace`) for base exercises.
 - Existing routine/history links are preserved by avoiding hard delete sweeps of exercise IDs.
 - Remote validation is structural/sanity-level, not cryptographic signature verification.
+- Payload integrity currently uses SHA-256 checksums from the manifest.
+- Digital signature verification is intentionally not implemented yet.
 
 ## Operational testing checklist (before broader rollout)
 

@@ -96,7 +96,9 @@ jobs:
       - name: Build catalog manifest artifact
         run: |
           python - <<'PY'
+          import hashlib
           import json
+          import math
           import os
 
           build_path = os.environ["BUILD_REPORT_PATH"]
@@ -119,7 +121,19 @@ jobs:
           build_report_file = os.path.basename(build_path)
           diff_report_file = os.path.basename(diff_path)
 
+          def sha256_file(path: str) -> str:
+            h = hashlib.sha256()
+            with open(path, "rb") as f:
+              for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                h.update(chunk)
+            return h.hexdigest()
+
+          db_sha256 = sha256_file(os.environ["GENERATED_DB_PATH"])
+          build_report_sha256 = sha256_file(build_path)
+          diff_report_sha256 = sha256_file(diff_path) if os.path.exists(diff_path) else None
+
           imported_count = int(summary.get("imported_count", 0) or 0)
+          min_exercise_count = max(50, math.floor(imported_count * 0.85))
           manifest = {
             "source_id": "wger_catalog",
             "channel": os.environ.get("RELEASE_CHANNEL", "stable"),
@@ -130,12 +144,15 @@ jobs:
             "generated_at": build.get("generated_at"),
             "db_file": db_file,
             "db_url": f"{release_base}{db_file}",
+            "db_sha256": db_sha256,
             "build_report_file": build_report_file,
             "build_report_url": f"{release_base}{build_report_file}",
+            "build_report_sha256": build_report_sha256,
             "diff_report_file": diff_report_file,
             "diff_report_url": f"{release_base}{diff_report_file}",
+            "diff_report_sha256": diff_report_sha256,
             "expected_exercise_count": imported_count,
-            "min_exercise_count": imported_count if imported_count > 0 else 50,
+            "min_exercise_count": int(min_exercise_count),
             "safety": {
               "diff_skipped": bool(diff_report.get("skipped", False)),
               "diff_removed_count": diff_report.get("summary", {}).get("removed_count"),
