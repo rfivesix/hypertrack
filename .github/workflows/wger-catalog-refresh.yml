@@ -57,6 +57,10 @@ jobs:
         run: |
           python -m py_compile skript/create_wger_exercise_db.py
           python -m py_compile skript/wger_catalog_diff.py
+          python -m py_compile skript/resolve_wger_reference_manifest.py
+          python -m py_compile skript/build_wger_catalog_manifest.py
+          python -m py_compile skript/build_wger_release_notes.py
+          python -m py_compile skript/publish_wger_run_summary.py
 
       - name: Generate exercise catalog and build report
         id: generate
@@ -87,36 +91,7 @@ jobs:
 
           if curl -fsSL "$MANIFEST_URL" -o "$RELEASE_REFERENCE_MANIFEST_PATH"; then
             echo "reference_manifest_found=true" >> "$GITHUB_OUTPUT"
-
-            python - <<'PY'
-            import json
-            import os
-            import sys
-            from urllib.parse import urlparse
-
-            manifest_path = os.environ["RELEASE_REFERENCE_MANIFEST_PATH"]
-            with open(manifest_path, "r", encoding="utf-8") as f:
-                manifest = json.load(f)
-
-            db_url = manifest.get("db_url", "").strip()
-            if not db_url:
-                asset_base_url = manifest.get("asset_base_url", "").strip()
-                db_file = manifest.get("db_file", "").strip()
-                if asset_base_url and db_file:
-                    db_url = asset_base_url + db_file
-
-            if not db_url:
-                print("No db_url could be resolved from release manifest.", file=sys.stderr)
-                sys.exit(1)
-
-            parsed = urlparse(db_url)
-            if parsed.scheme != "https":
-                print(f"Release db_url must be https, got: {db_url}", file=sys.stderr)
-                sys.exit(1)
-
-            with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
-                out.write(f"reference_db_url={db_url}\n")
-            PY
+            python skript/resolve_wger_reference_manifest.py
           else
             echo "reference_manifest_found=false" >> "$GITHUB_OUTPUT"
             echo "No previous release manifest found. Diff baseline unavailable." | tee artifacts/wger_reference_missing.txt
@@ -162,123 +137,11 @@ jobs:
 
       - name: Build catalog manifest artifact
         if: steps.generator_status.outputs.generator_success == 'true'
-        run: |
-          python - <<'PY'
-            import hashlib
-            import json
-            import math
-            import os
-
-            build_path = os.environ["BUILD_REPORT_PATH"]
-            diff_path = os.environ["DIFF_REPORT_PATH"]
-            manifest_path = os.environ["MANIFEST_PATH"]
-            release_base = os.environ["RELEASE_DOWNLOAD_BASE"]
-
-            with open(build_path, "r", encoding="utf-8") as f:
-                build_report = json.load(f)
-
-            diff_report = {}
-            if os.path.exists(diff_path):
-                with open(diff_path, "r", encoding="utf-8") as f:
-                    diff_report = json.load(f)
-
-            build = build_report.get("build", {})
-            summary = build_report.get("summary", {})
-
-            db_file = os.path.basename(os.environ["GENERATED_DB_PATH"])
-            build_report_file = os.path.basename(build_path)
-            diff_report_file = os.path.basename(diff_path)
-
-            def sha256_file(path: str) -> str:
-                h = hashlib.sha256()
-                with open(path, "rb") as f:
-                    for chunk in iter(lambda: f.read(1024 * 1024), b""):
-                        h.update(chunk)
-                return h.hexdigest()
-
-            db_sha256 = sha256_file(os.environ["GENERATED_DB_PATH"])
-            build_report_sha256 = sha256_file(build_path)
-            diff_report_sha256 = sha256_file(diff_path) if os.path.exists(diff_path) else None
-
-            imported_count = int(summary.get("imported_count", 0) or 0)
-            min_exercise_count = max(50, math.floor(imported_count * 0.85))
-
-            manifest = {
-                "source_id": "wger_catalog",
-                "channel": os.environ.get("RELEASE_CHANNEL", "stable"),
-                "release_tag": os.environ.get("RELEASE_TAG", ""),
-                "release_page_url": os.environ.get("RELEASE_PAGE_URL", ""),
-                "asset_base_url": release_base,
-                "version": build.get("db_version", ""),
-                "generated_at": build.get("generated_at"),
-                "db_file": db_file,
-                "db_url": f"{release_base}{db_file}",
-                "db_sha256": db_sha256,
-                "build_report_file": build_report_file,
-                "build_report_url": f"{release_base}{build_report_file}",
-                "build_report_sha256": build_report_sha256,
-                "diff_report_file": diff_report_file,
-                "diff_report_url": f"{release_base}{diff_report_file}",
-                "diff_report_sha256": diff_report_sha256,
-                "expected_exercise_count": imported_count,
-                "min_exercise_count": int(min_exercise_count),
-                "safety": {
-                    "diff_skipped": bool(diff_report.get("skipped", False)),
-                    "diff_removed_count": diff_report.get("summary", {}).get("removed_count"),
-                    "diff_added_count": diff_report.get("summary", {}).get("added_count"),
-                },
-            }
-
-            with open(manifest_path, "w", encoding="utf-8") as f:
-                json.dump(manifest, f, ensure_ascii=False, indent=2)
-            PY
+        run: python skript/build_wger_catalog_manifest.py
 
       - name: Build release notes
         if: steps.generator_status.outputs.generator_success == 'true'
-        run: |
-          python - <<'PY'
-            import json
-            import os
-
-            build_path = os.environ["BUILD_REPORT_PATH"]
-            diff_path = os.environ["DIFF_REPORT_PATH"]
-            out_path = os.environ["RELEASE_NOTES_PATH"]
-
-            with open(build_path, "r", encoding="utf-8") as f:
-                build = json.load(f)
-
-            diff = {}
-            if os.path.exists(diff_path):
-                with open(diff_path, "r", encoding="utf-8") as f:
-                    diff = json.load(f)
-
-            bmeta = build.get("build", {})
-            bsum = build.get("summary", {})
-            dsum = diff.get("summary", {}) if isinstance(diff, dict) else {}
-
-            lines = [
-                "# Wger Catalog Data Refresh",
-                "",
-                f"- Version: `{bmeta.get('db_version', 'n/a')}`",
-                f"- Generated at: `{bmeta.get('generated_at', 'n/a')}`",
-                f"- Imported exercises: `{bsum.get('imported_count', 'n/a')}`",
-                f"- Rejected exercises: `{bsum.get('rejected_count', 'n/a')}`",
-            ]
-
-            if diff.get("skipped"):
-                lines.append("- Diff: skipped (published reference DB missing)")
-            elif dsum:
-                lines.append(f"- Diff removed IDs: `{dsum.get('removed_count', 'n/a')}`")
-                lines.append(f"- Diff added IDs: `{dsum.get('added_count', 'n/a')}`")
-            else:
-                lines.append("- Diff summary unavailable")
-
-            lines.append("")
-            lines.append("This is a data-artifact release channel used by app-side catalog refresh.")
-
-            with open(out_path, "w", encoding="utf-8") as f:
-                f.write("\n".join(lines) + "\n")
-            PY
+        run: python skript/build_wger_release_notes.py
 
       - name: Upload generated DB artifact
         if: always() && steps.generator_status.outputs.generator_success == 'true'
@@ -341,49 +204,7 @@ jobs:
 
       - name: Publish run summary
         if: always()
-        run: |
-          python - <<'PY'
-            import json
-            import os
-
-            build_path = os.environ["BUILD_REPORT_PATH"]
-            diff_path = os.environ["DIFF_REPORT_PATH"]
-            release_page_url = os.environ.get("RELEASE_PAGE_URL", "")
-            publish_outcome = os.environ.get("PUBLISH_OUTCOME", "skipped")
-            generator_success = os.environ.get("GENERATOR_SUCCESS", "false")
-            generate_outcome = os.environ.get("GENERATE_OUTCOME", "unknown")
-
-            lines = ["## Wger Catalog Refresh Summary", ""]
-            lines.append(f"- Catalog generation: `{generate_outcome}`")
-
-            if generator_success == "true" and os.path.exists(build_path):
-                with open(build_path, "r", encoding="utf-8") as f:
-                    build = json.load(f)
-                bmeta = build.get("build", {})
-                summary = build.get("summary", {})
-                lines.append(f"- DB version: `{bmeta.get('db_version', 'n/a')}`")
-                lines.append(f"- Generated at: `{bmeta.get('generated_at', 'n/a')}`")
-                lines.append(f"- Imported: `{summary.get('imported_count', 'n/a')}`")
-                lines.append(f"- Rejected: `{summary.get('rejected_count', 'n/a')}`")
-            else:
-                lines.append("- Catalog artifacts were not generated; downstream steps were skipped.")
-
-            if generator_success == "true" and os.path.exists(diff_path):
-                with open(diff_path, "r", encoding="utf-8") as f:
-                    diff = json.load(f)
-                if diff.get("skipped"):
-                    lines.append("- Diff: skipped (published reference DB missing)")
-                else:
-                    dsum = diff.get("summary", {})
-                    lines.append(f"- Removed IDs: `{dsum.get('removed_count', 'n/a')}`")
-                    lines.append(f"- Added IDs: `{dsum.get('added_count', 'n/a')}`")
-
-            lines.append(f"- Release publication: `{publish_outcome}`")
-            lines.append(f"- Catalog release page: {release_page_url}")
-
-            with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
-                f.write("\n".join(lines) + "\n")
-          PY
+        run: python skript/publish_wger_run_summary.py
         env:
           PUBLISH_OUTCOME: ${{ steps.publish_release.outcome }}
           GENERATOR_SUCCESS: ${{ steps.generator_status.outputs.generator_success }}
