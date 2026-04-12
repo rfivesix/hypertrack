@@ -572,55 +572,6 @@
   "myMeals": "My Meals",
   "myMealsCL": "MY MEALS",
   "nutritionSectionTodayInFocus": "Today in focus",
-  "widgetSettingsSectionTitle": "Home screen widget",
-  "widgetSettingsEnableTitle": "Enable Today in focus widget",
-  "widgetSettingsEnableSubtitle": "Shows your key daily metrics on the home screen",
-  "widgetSettingsMaxItemsTitle": "Max visible items",
-  "widgetSettingsMaxItemsSubtitle": "Also adapts automatically to widget size",
-  "widgetSettingsChooseMetricsTitle": "Choose metrics",
-  "widgetSettingsChooseMetricsSubtitle": "Deterministic order matching the daily overview",
-  "widgetMetricCreatine": "Creatine",
-  "widgetMetricSupplements": "Supplements",
-  "widgetOpenAppToLoadData": "Open Hypertrack to load today data",
-  "widgetUnitKcal": "kcal",
-  "widgetUnitGramShort": "g",
-  "widgetUnitMl": "ml",
-  "widgetUnitMg": "mg",
-  "widgetValueProgress": "{current} / {target} {unit}",
-  "@widgetValueProgress": {
-    "placeholders": {
-      "current": {},
-      "target": {},
-      "unit": {}
-    }
-  },
-  "widgetSupplementsProgress": "{taken} / {total}",
-  "@widgetSupplementsProgress": {
-    "placeholders": {
-      "taken": {},
-      "total": {}
-    }
-  },
-  "widgetWorkoutCompletedCount": "{count} completed",
-  "@widgetWorkoutCompletedCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "widgetSleepDuration": "{hours}h {minutes}m",
-  "@widgetSleepDuration": {
-    "placeholders": {
-      "hours": {},
-      "minutes": {}
-    }
-  },
-  "widgetSleepWithScore": "{duration} · {score}",
-  "@widgetSleepWithScore": {
-    "placeholders": {
-      "duration": {},
-      "score": {}
-    }
-  },
   "nutritionSectionMyMeals": "My meals",
   "nutritionSectionToolsAndLibrary": "Tools & library",
   "supplement_caffeine": "Caffeine",

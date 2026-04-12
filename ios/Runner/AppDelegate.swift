@@ -1,7 +1,6 @@
 import Flutter
 import HealthKit
 import UIKit
-import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -9,23 +8,12 @@ import WidgetKit
   private let stepsChannelName = "hypertrack.health/steps"
   private let sleepHealthKitChannelName = "hypertrack.health/sleep_healthkit"
   private let exportAppleHealthChannelName = "hypertrack.health/export_apple_health"
-  private let todayFocusWidgetChannelName = "hypertrack.widget/today_focus"
-  private let widgetLauncherChannelName = "hypertrack.widget/launcher"
-  private let todayFocusWidgetSuiteName = "group.com.rfivesix.hypertrack.widget"
-  private let todayFocusWidgetPayloadKey = "payload_json"
-  private let widgetActionOpenDiary = "openDiary"
-  private var widgetLauncherChannel: FlutterMethodChannel?
-  private var pendingWidgetAction: String?
   private var channelsConfigured = false
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    if let launchUrl = launchOptions?[.url] as? URL {
-      pendingWidgetAction = widgetAction(for: launchUrl)
-    }
-
     configureChannelsIfNeeded()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -40,10 +28,6 @@ import WidgetKit
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
-    if let action = widgetAction(for: url) {
-      notifyWidgetAction(action)
-      return true
-    }
     return super.application(app, open: url, options: options)
   }
 
@@ -52,12 +36,6 @@ import WidgetKit
     configurationForConnecting connectingSceneSession: UISceneSession,
     options: UIScene.ConnectionOptions
   ) -> UISceneConfiguration {
-    if
-      let url = options.urlContexts.first?.url,
-      let action = widgetAction(for: url)
-    {
-      pendingWidgetAction = action
-    }
     // FlutterAppDelegate does not guarantee an implementation for this selector
     // across iOS/Xcode combinations. Returning an explicit scene configuration
     // avoids a runtime "doesNotRecognizeSelector" crash on app launch.
@@ -101,60 +79,6 @@ import WidgetKit
     exportChannel.setMethodCallHandler { [weak self] call, result in
       self?.handleExportAppleHealthCall(call: call, result: result)
     }
-
-    let widgetChannel = FlutterMethodChannel(
-      name: todayFocusWidgetChannelName,
-      binaryMessenger: messenger
-    )
-    widgetChannel.setMethodCallHandler { [weak self] call, result in
-      guard let self else {
-        result(FlutterError(code: "internal", message: "AppDelegate unavailable", details: nil))
-        return
-      }
-      switch call.method {
-      case "setPayload":
-        guard
-          let args = call.arguments as? [String: Any],
-          let payloadJson = args["payloadJson"] as? String
-        else {
-          result(FlutterError(code: "invalid_args", message: "payloadJson missing", details: nil))
-          return
-        }
-        self.widgetDefaults().set(payloadJson, forKey: self.todayFocusWidgetPayloadKey)
-        self.widgetDefaults().synchronize()
-        if #available(iOS 14.0, *) {
-          WidgetCenter.shared.reloadAllTimelines()
-        }
-        result(true)
-      case "refresh":
-        if #available(iOS 14.0, *) {
-          WidgetCenter.shared.reloadAllTimelines()
-        }
-        result(true)
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    }
-
-    let launcherChannel = FlutterMethodChannel(
-      name: widgetLauncherChannelName,
-      binaryMessenger: messenger
-    )
-    launcherChannel.setMethodCallHandler { [weak self] call, result in
-      guard let self else {
-        result(FlutterError(code: "internal", message: "AppDelegate unavailable", details: nil))
-        return
-      }
-      switch call.method {
-      case "getInitialAction":
-        let action = self.pendingWidgetAction
-        self.pendingWidgetAction = nil
-        result(action)
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    }
-    widgetLauncherChannel = launcherChannel
     channelsConfigured = true
   }
 
@@ -680,24 +604,4 @@ import WidgetKit
     return aStart < bEnd && aEnd > bStart
   }
 
-  private func widgetDefaults() -> UserDefaults {
-    UserDefaults(suiteName: todayFocusWidgetSuiteName) ?? .standard
-  }
-
-  private func widgetAction(for url: URL) -> String? {
-    let scheme = url.scheme?.lowercased()
-    let host = url.host?.lowercased()
-    guard scheme == "hypertrack", host == "diary" else {
-      return nil
-    }
-    return widgetActionOpenDiary
-  }
-
-  private func notifyWidgetAction(_ action: String) {
-    pendingWidgetAction = action
-    widgetLauncherChannel?.invokeMethod(
-      "onWidgetAction",
-      arguments: ["action": action]
-    )
-  }
 }

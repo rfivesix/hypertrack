@@ -4,7 +4,6 @@ package com.rfivesix.hypertrack
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
 import android.provider.DocumentsContract
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,8 +31,6 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import com.rfivesix.hypertrack.widget.TodayFocusWidgetProvider
-import com.rfivesix.hypertrack.widget.TodayFocusWidgetStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -55,10 +52,6 @@ class MainActivity : FlutterFragmentActivity() {
     private val sleepHealthConnectChannelName = "hypertrack.health/sleep_health_connect"
     private val exportHealthConnectChannelName = "hypertrack.health/export_health_connect"
     private val storageChannelName = "hypertrack.storage/saf"
-    private val todayFocusWidgetChannelName = "hypertrack.widget/today_focus"
-    private val widgetLauncherChannelName = "hypertrack.widget/launcher"
-    private var widgetLauncherChannel: MethodChannel? = null
-    private var pendingWidgetAction: String? = null
     private var pendingPermissionResult: MethodChannel.Result? = null
     private var pendingPermissionRequestSet: Set<String>? = null
     private var pendingDirectoryPickerResult: MethodChannel.Result? = null
@@ -76,11 +69,6 @@ class MainActivity : FlutterFragmentActivity() {
         HealthPermission.getWritePermission(HydrationRecord::class),
         HealthPermission.getWritePermission(ExerciseSessionRecord::class),
     )
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        pendingWidgetAction = extractWidgetAction(intent)
-    }
 
     private val permissionLauncher = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract(),
@@ -178,61 +166,6 @@ class MainActivity : FlutterFragmentActivity() {
             }
         }
 
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            todayFocusWidgetChannelName,
-        ).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "setPayload" -> {
-                    val payloadJson = call.argument<String>("payloadJson")
-                    if (payloadJson == null) {
-                        result.error("invalid_args", "payloadJson missing", null)
-                        return@setMethodCallHandler
-                    }
-                    TodayFocusWidgetStore.savePayload(this, payloadJson)
-                    result.success(true)
-                }
-                "refresh" -> {
-                    TodayFocusWidgetProvider.refreshAll(this)
-                    result.success(true)
-                }
-                else -> result.notImplemented()
-            }
-        }
-
-        widgetLauncherChannel = MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            widgetLauncherChannelName,
-        ).apply {
-            setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "getInitialAction" -> {
-                        val action = pendingWidgetAction
-                        pendingWidgetAction = null
-                        result.success(action)
-                    }
-                    else -> result.notImplemented()
-                }
-            }
-        }
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        val action = extractWidgetAction(intent) ?: return
-        pendingWidgetAction = action
-        widgetLauncherChannel?.invokeMethod(
-            "onWidgetAction",
-            mapOf("action" to action),
-        )
-    }
-
-    private fun extractWidgetAction(intent: Intent?): String? {
-        if (intent == null) return null
-        if (intent.action != TodayFocusWidgetProvider.actionOpenDiaryFromWidget) return null
-        return intent.getStringExtra(TodayFocusWidgetProvider.extraWidgetAction)
-            ?: TodayFocusWidgetProvider.widgetActionOpenDiary
     }
 
     private fun handleAvailability(result: MethodChannel.Result) {

@@ -7,9 +7,6 @@ import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
 import 'ai_settings_screen.dart';
 import 'data_management_screen.dart';
-import '../features/widgets/today_focus_widget_config.dart';
-import '../features/widgets/today_focus_widget_models.dart';
-import '../features/widgets/today_focus_widget_service.dart';
 import '../services/theme_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/summary_card.dart';
@@ -73,11 +70,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isAppleExporting = false;
   bool _isHealthConnectExporting = false;
   bool _showSugarInDiaryOverview = false;
-  bool _todayFocusWidgetEnabled = true;
-  int _todayFocusWidgetMaxVisibleItems =
-      TodayFocusWidgetConfig.defaultMaxVisibleItems;
-  List<TodayFocusMetricType> _todayFocusSelectedMetrics =
-      TodayFocusWidgetConfig.defaultSelectedMetrics;
 
   /// Flag for parent screens to know steps settings changed and data should be refreshed.
   bool hasStepsSettingsChanged = false;
@@ -98,7 +90,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSleepSettings();
     _loadHealthExportSettings();
     _loadDiaryOverviewSettings();
-    _loadTodayFocusWidgetSettings();
   }
 
   Future<void> _loadAppVersion() async {
@@ -152,29 +143,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _showSugarInDiaryOverview =
           prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
     });
-  }
-
-  Future<void> _loadTodayFocusWidgetSettings() async {
-    final config = await TodayFocusWidgetConfig.load();
-    if (!mounted) return;
-    setState(() {
-      _todayFocusWidgetEnabled = config.enabled;
-      _todayFocusWidgetMaxVisibleItems = config.maxVisibleItems;
-      _todayFocusSelectedMetrics = List<TodayFocusMetricType>.from(
-        config.selectedMetrics,
-      );
-    });
-  }
-
-  Future<void> _persistTodayFocusWidgetSettings() async {
-    final config = TodayFocusWidgetConfig(
-      enabled: _todayFocusWidgetEnabled,
-      maxVisibleItems: _todayFocusWidgetMaxVisibleItems,
-      selectedMetrics: _todayFocusSelectedMetrics,
-    );
-    await config.persist();
-    await TodayFocusWidgetSyncService.instance.sync();
-    hasStepsSettingsChanged = true;
   }
 
   @override
@@ -682,109 +650,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(
-            context,
-            l10n.widgetSettingsSectionTitle,
-          ),
-          SummaryCard(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  secondary: const Icon(Icons.widgets_outlined),
-                  title: Text(
-                    l10n.widgetSettingsEnableTitle,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(l10n.widgetSettingsEnableSubtitle),
-                  value: _todayFocusWidgetEnabled,
-                  onChanged: (value) async {
-                    setState(() => _todayFocusWidgetEnabled = value);
-                    await _persistTodayFocusWidgetSettings();
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.pin_outlined),
-                  title: Text(
-                    l10n.widgetSettingsMaxItemsTitle,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(l10n.widgetSettingsMaxItemsSubtitle),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: _todayFocusWidgetMaxVisibleItems.toDouble(),
-                          min: 1,
-                          max: 12,
-                          divisions: 11,
-                          label: _todayFocusWidgetMaxVisibleItems.toString(),
-                          onChanged: (value) async {
-                            setState(() {
-                              _todayFocusWidgetMaxVisibleItems = value.round();
-                            });
-                            await _persistTodayFocusWidgetSettings();
-                          },
-                        ),
-                      ),
-                      Text(_todayFocusWidgetMaxVisibleItems.toString()),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.tune),
-                  title: Text(
-                    l10n.widgetSettingsChooseMetricsTitle,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(l10n.widgetSettingsChooseMetricsSubtitle),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: TodayFocusMetricTypeX.stableOrder.map((metric) {
-                        final selected =
-                            _todayFocusSelectedMetrics.contains(metric);
-                        return FilterChip(
-                          selected: selected,
-                          label: Text(metric.localizedLabel(l10n)),
-                          onSelected: (value) async {
-                            if (!value &&
-                                _todayFocusSelectedMetrics.length == 1 &&
-                                _todayFocusSelectedMetrics.first == metric) {
-                              return;
-                            }
-                            setState(() {
-                              if (value) {
-                                _todayFocusSelectedMetrics = [
-                                  ..._todayFocusSelectedMetrics,
-                                  metric,
-                                ];
-                              } else {
-                                _todayFocusSelectedMetrics =
-                                    _todayFocusSelectedMetrics
-                                        .where((item) => item != metric)
-                                        .toList();
-                              }
-                            });
-                            await _persistTodayFocusWidgetSettings();
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
           ValueListenableBuilder<SleepPermissionStatus>(

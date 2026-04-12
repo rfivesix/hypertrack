@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="today_focus_widget_title">Heute im Blick</string>
-    <string name="today_focus_widget_description">Heute-im-Blick Widget mit Hypertrack Tageswerten</string>
-    <string name="today_focus_widget_empty">Öffne Hypertrack, um heutige Daten zu laden</string>
-</resources>

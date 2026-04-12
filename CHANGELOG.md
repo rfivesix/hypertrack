@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.3] - 2026-04-12
+
+### Removed
+- Removed the complete home-screen widget feature from MVP scope on all platforms (Flutter, Android, iOS).
+- Removed Android app-widget provider/resources and iOS WidgetKit extension target integration.
+- Removed widget-specific app startup, deep-link launcher, and shared widget bridge/config plumbing.
+
+### Changed
+- Regenerated app localizations after removing widget-only translation keys.
+- Cleaned release notes/changelog references tied only to the removed widget rollout.
+
+### Fixed
+- Restored reliable iOS simulator install/runtime by removing broken app-extension integration from the app build.
+- Preserved and kept active the Measurements deletion persistence fix (including legacy timestamp fallback behavior).
+
 ## [0.8.3-alpha.2] - 2026-04-11
 
 ### Changed
@@ -34,11 +49,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed missing confirmation haptics on important add/save actions in several key flows.
 - Fixed AI waiting haptics so they stop correctly when generation finishes and no longer continue into review/result screens.
 - Refined the AI waiting haptic pattern to feel more periodic and less abrupt.
-
-### Known issues
-- The new widget is currently **alpha quality**.
-- iOS widget installation is currently blocked by a WidgetKit extension configuration issue (`TodayFocusWidget.appex`) and may not run correctly yet on iOS simulators/devices.
-- Android widget support may work, but should still be considered early preview status until broader validation is complete.
 
 ## [0.8.2] - 2026-04-10
 
