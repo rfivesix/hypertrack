@@ -89,34 +89,34 @@ jobs:
             echo "reference_manifest_found=true" >> "$GITHUB_OUTPUT"
 
             python - <<'PY'
-              import json
-              import os
-              import sys
-              from urllib.parse import urlparse
+            import json
+            import os
+            import sys
+            from urllib.parse import urlparse
 
-              manifest_path = os.environ["RELEASE_REFERENCE_MANIFEST_PATH"]
-              with open(manifest_path, "r", encoding="utf-8") as f:
-                  manifest = json.load(f)
+            manifest_path = os.environ["RELEASE_REFERENCE_MANIFEST_PATH"]
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
 
-              db_url = manifest.get("db_url", "").strip()
-              if not db_url:
-                  asset_base_url = manifest.get("asset_base_url", "").strip()
-                  db_file = manifest.get("db_file", "").strip()
-                  if asset_base_url and db_file:
-                      db_url = asset_base_url + db_file
+            db_url = manifest.get("db_url", "").strip()
+            if not db_url:
+                asset_base_url = manifest.get("asset_base_url", "").strip()
+                db_file = manifest.get("db_file", "").strip()
+                if asset_base_url and db_file:
+                    db_url = asset_base_url + db_file
 
-              if not db_url:
-                  print("No db_url could be resolved from release manifest.", file=sys.stderr)
-                  sys.exit(1)
+            if not db_url:
+                print("No db_url could be resolved from release manifest.", file=sys.stderr)
+                sys.exit(1)
 
-              parsed = urlparse(db_url)
-              if parsed.scheme != "https":
-                  print(f"Release db_url must be https, got: {db_url}", file=sys.stderr)
-                  sys.exit(1)
+            parsed = urlparse(db_url)
+            if parsed.scheme != "https":
+                print(f"Release db_url must be https, got: {db_url}", file=sys.stderr)
+                sys.exit(1)
 
-              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
-                  out.write(f"reference_db_url={db_url}\n")
-              PY
+            with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+                out.write(f"reference_db_url={db_url}\n")
+            PY
           else
             echo "reference_manifest_found=false" >> "$GITHUB_OUTPUT"
             echo "No previous release manifest found. Diff baseline unavailable." | tee artifacts/wger_reference_missing.txt
@@ -231,7 +231,7 @@ jobs:
 
             with open(manifest_path, "w", encoding="utf-8") as f:
                 json.dump(manifest, f, ensure_ascii=False, indent=2)
-          PY
+            PY
 
       - name: Build release notes
         if: steps.generator_status.outputs.generator_success == 'true'
@@ -278,7 +278,7 @@ jobs:
 
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(lines) + "\n")
-          PY
+            PY
 
       - name: Upload generated DB artifact
         if: always() && steps.generator_status.outputs.generator_success == 'true'
