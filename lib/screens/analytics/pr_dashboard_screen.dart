@@ -16,7 +16,6 @@ class PRDashboardScreen extends StatefulWidget {
 
 class _PRDashboardScreenState extends State<PRDashboardScreen> {
   final _rangePolicy = StatisticsRangePolicyService.instance;
-  static const int _topMomentumIndex = 0;
   static const int _twoColumnGridCount = 2;
   bool _isLoading = true;
   int _selectedWindowDays = 30;

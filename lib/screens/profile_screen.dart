@@ -235,10 +235,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String genderString = '';
     if (_userProfile?.gender == 'male') {
       genderString = l10n.genderMale;
-    } else if (_userProfile?.gender == 'female')
+    } else if (_userProfile?.gender == 'female') {
       genderString = l10n.genderFemale;
-    else if (_userProfile?.gender == 'diverse')
+    } else if (_userProfile?.gender == 'diverse') {
       genderString = l10n.genderDiverse;
+    }
 
     // Kombinierter String: "25 Jahre • Männlich"
     final String subline = [
