@@ -497,7 +497,7 @@ class _TimeAxisLabels extends StatelessWidget {
   String _formatTickLabel(int minute) {
     var hours = (minute ~/ 60) % 24;
     if (hours < 0) hours += 24;
-    return '${hours}:00';
+    return '$hours:00';
   }
 }
 

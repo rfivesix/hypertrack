@@ -108,23 +108,20 @@ class SleepDayViewModel extends ChangeNotifier {
 class SleepPeriodSelection {
   SleepPeriodSelection({
     DateTime? anchorDate,
-    SleepPeriodScope scope = SleepPeriodScope.day,
-  })  : _anchorDate = _normalizeDate(anchorDate ?? DateTime.now()),
-        _scope = scope;
+    this.scope = SleepPeriodScope.day,
+  }) : _anchorDate = _normalizeDate(anchorDate ?? DateTime.now());
 
   DateTime _anchorDate;
-  SleepPeriodScope _scope;
+  SleepPeriodScope scope;
 
   DateTime get anchorDate => _anchorDate;
-  SleepPeriodScope get scope => _scope;
-  set scope(SleepPeriodScope value) => _scope = value;
 
   void setAnchorDate(DateTime value) {
     _anchorDate = _normalizeDate(value);
   }
 
   void shift(int delta) {
-    switch (_scope) {
+    switch (scope) {
       case SleepPeriodScope.day:
         _anchorDate = _anchorDate.add(Duration(days: delta));
         break;
@@ -138,7 +135,7 @@ class SleepPeriodSelection {
   }
 
   DateTime get periodStart {
-    switch (_scope) {
+    switch (scope) {
       case SleepPeriodScope.day:
         return _anchorDate;
       case SleepPeriodScope.week:
@@ -150,7 +147,7 @@ class SleepPeriodSelection {
 
   DateTime get periodEnd {
     final start = periodStart;
-    switch (_scope) {
+    switch (scope) {
       case SleepPeriodScope.day:
         return start;
       case SleepPeriodScope.week:
@@ -161,7 +158,7 @@ class SleepPeriodSelection {
   }
 
   String label(String localeCode) {
-    switch (_scope) {
+    switch (scope) {
       case SleepPeriodScope.day:
         return DateFormat.yMMMd(localeCode).format(_anchorDate);
       case SleepPeriodScope.week:

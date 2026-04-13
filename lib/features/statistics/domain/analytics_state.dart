@@ -41,8 +41,6 @@ enum AnalyticsStatus {
 /// state = AnalyticsState.ready(myData);
 /// ```
 class AnalyticsState<T> {
-  const AnalyticsState._({required this.status, this.data, this.errorMessage});
-
   /// A state indicating data is currently being loaded.
   const AnalyticsState.loading()
       : status = AnalyticsStatus.loading,
