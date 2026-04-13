@@ -2,6 +2,7 @@
 import argparse
 import datetime
 import json
+import numbers
 import os
 import sqlite3
 import sys
@@ -9,6 +10,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, List, Sequence, Tuple
 
+import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
@@ -206,7 +208,7 @@ def to_tag_values(raw: Any) -> Tuple[str, ...]:
             )
         return (stripped.lower(),)
 
-    if isinstance(raw, (list, tuple, set)):
+    if isinstance(raw, (list, tuple, set, np.ndarray)):
         normalized: List[str] = []
         for item in raw:
             token = normalize_text(item).lower()
@@ -268,7 +270,7 @@ def extract_product_name(raw: Any, preferred_languages: Sequence[str]) -> str:
     if isinstance(raw, dict):
         return _extract_name_from_dict(raw, preferred_languages)
 
-    if isinstance(raw, (list, tuple)):
+    if isinstance(raw, (list, tuple, np.ndarray)):
         # Pass 1: explicit preferred language match.
         for lang in preferred_languages:
             for item in raw:
@@ -303,7 +305,7 @@ def extract_product_name(raw: Any, preferred_languages: Sequence[str]) -> str:
 def _parse_float(raw: Any) -> float:
     if raw is None:
         return 0.0
-    if isinstance(raw, (int, float)):
+    if isinstance(raw, numbers.Number):
         return float(raw)
     if isinstance(raw, str):
         text = raw.strip().replace(",", ".")
@@ -350,7 +352,7 @@ def extract_nutrients(raw: Any) -> Dict[str, float]:
                     break
             result[target_name] = chosen
 
-    elif isinstance(raw, (list, tuple)):
+    elif isinstance(raw, (list, tuple, np.ndarray)):
         for item in raw:
             if not isinstance(item, dict):
                 continue
@@ -568,11 +570,33 @@ def process(ctx: BuildContext) -> int:
             batch_rows = len(batch_df)
             scanned_rows += batch_rows
 
+            if batch_index == 1:
+                print(f"Batch 1 columns: {', '.join(batch_df.columns.tolist())}")
+                for column in ("countries_tags", "product_name", "nutriments"):
+                    if column in batch_df.columns and batch_rows > 0:
+                        sample = next(
+                            (
+                                value
+                                for value in batch_df[column].tolist()
+                                if value is not None
+                            ),
+                            None,
+                        )
+                        if sample is not None:
+                            print(
+                                f"Batch 1 sample type {column}: {type(sample).__name__}"
+                            )
+
             filtered = batch_df[
                 batch_df["countries_tags"].apply(
                     lambda tags: has_country_tag(tags, ctx.country_tags)
                 )
             ]
+            if batch_index == 1:
+                print(
+                    "Batch 1 country filter rows: "
+                    f"before={batch_rows:,}, after={len(filtered):,}"
+                )
 
             records, stats = build_records(filtered, ctx.preferred_languages)
 
