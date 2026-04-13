@@ -634,6 +634,24 @@
   "settingsVisualStyleLiquidDesc": "Rounded, floating UI elements",
   "settingsMaterialColorsTitle": "Material colors",
   "settingsMaterialColorsSubtitle": "Use Android dynamic colors (Material You) instead of the Hypertrack brand accent",
+  "settingsFoodDbSectionTitle": "Food database",
+  "settingsFoodDbRegionTitle": "Food database region",
+  "settingsFoodDbRegionSubtitle": "Select which Open Food Facts product catalog region is used for food search.",
+  "settingsFoodDbRegionCurrent": "Current region",
+  "settingsFoodDbRegionDialogTitle": "Choose food database region",
+  "settingsFoodDbRegionDialogSubtitle": "This changes the Open Food Facts catalog source used by product search.",
+  "settingsFoodDbRegionIssueHint": "If your country is not listed yet, feel free to open a GitHub issue and request support.",
+  "settingsFoodDbRegionGermany": "Germany (DE)",
+  "settingsFoodDbRegionUnitedStates": "United States (US)",
+  "settingsFoodDbRegionUnitedKingdom": "United Kingdom (UK)",
+  "settingsFoodDbRegionChanged": "Food database region set to {region}. Changes apply on the next catalog refresh/import cycle.",
+  "@settingsFoodDbRegionChanged": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "searchBaseFoodHint": "Search base foods",
   "searchNoHits": "No hits.",
   "onbSubtitleWelcome": "Your central tool for fitness, nutrition & progress.",

@@ -9,6 +9,7 @@ Hypertrack currently implements:
 - Workout tracking and analytics
 - Exercise catalog refresh via release-distributed wger data artifacts
 - Open Food Facts country-aware catalog refresh foundation (DE/US/UK channels)
+- User-selectable Open Food Facts region setting (DE/US/UK)
 - Nutrition/fluid logging
 - Adaptive nutrition recommendation generation (weekly due-week model with explicit manual apply)
 - Measurements

@@ -1496,6 +1496,44 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent';
 
   @override
+  String get settingsFoodDbSectionTitle => 'Food database';
+
+  @override
+  String get settingsFoodDbRegionTitle => 'Food database region';
+
+  @override
+  String get settingsFoodDbRegionSubtitle =>
+      'Select which Open Food Facts product catalog region is used for food search.';
+
+  @override
+  String get settingsFoodDbRegionCurrent => 'Current region';
+
+  @override
+  String get settingsFoodDbRegionDialogTitle => 'Choose food database region';
+
+  @override
+  String get settingsFoodDbRegionDialogSubtitle =>
+      'This changes the Open Food Facts catalog source used by product search.';
+
+  @override
+  String get settingsFoodDbRegionIssueHint =>
+      'If your country is not listed yet, feel free to open a GitHub issue and request support.';
+
+  @override
+  String get settingsFoodDbRegionGermany => 'Germany (DE)';
+
+  @override
+  String get settingsFoodDbRegionUnitedStates => 'United States (US)';
+
+  @override
+  String get settingsFoodDbRegionUnitedKingdom => 'United Kingdom (UK)';
+
+  @override
+  String settingsFoodDbRegionChanged(String region) {
+    return 'Food database region set to $region. Changes apply on the next catalog refresh/import cycle.';
+  }
+
+  @override
   String get searchBaseFoodHint => 'Search base foods';
 
   @override

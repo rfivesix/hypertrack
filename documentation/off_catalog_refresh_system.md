@@ -198,6 +198,21 @@ Supported OFF countries are centralized as:
 
 `BasisDataManager` now resolves OFF import source via the active country config and uses country-scoped OFF version keys for import state.
 
+### User-selectable region setting
+
+The app now exposes a user-facing settings control for OFF region selection:
+
+- settings key: `off_catalog_active_country`
+- options: `Germany (DE)`, `United States (US)`, `United Kingdom (UK)`
+- persistence: `OffCatalogCountryService.writeActiveCountry(...)`
+
+Switch behavior is intentionally safe:
+
+- no destructive wipe of historical data
+- `off` / `off_retained` continuity semantics remain active
+- selected region is applied through the existing startup import/update flow
+- users get explicit UI feedback that changes take effect on the next catalog refresh/import cycle
+
 ### Missing bundled fallback behavior (US/UK safe handling)
 
 `BasisDataManager` now checks whether a bundled OFF asset exists for the active country.
@@ -207,6 +222,10 @@ Supported OFF countries are centralized as:
 - if neither exists: skip OFF import safely and keep existing local data usable
 
 This prevents startup crashes when a configured bundled asset path is not shipped yet (for example non-DE countries during staged rollout).
+
+Current staged-rollout note:
+
+- bundled DE OFF fallback (`assets/db/hypertrack_prep_de.db`) is intentionally kept.
 
 ## Active vs retained semantics
 

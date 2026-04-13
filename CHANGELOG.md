@@ -6,6 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.8.5] - 2026-04-13
 
+### Added
+- Added Open Food Facts multi-country refresh/distribution infrastructure with dedicated country channels:
+  - `off-foods-de-stable`
+  - `off-foods-us-stable`
+  - `off-foods-uk-stable`
+- Added country-specific OFF release artifacts and metadata pipeline:
+  - `hypertrack_off_<country>.db`
+  - `off_build_report_<country>.json`
+  - `off_catalog_manifest_<country>.json`
+  - `off_diff_report_<country>.json`
+  - `off_release_notes_<country>.md`
+- Added OFF helper scripts for workflow robustness and maintainability:
+  - `off_catalog_diff.py`
+  - `resolve_off_reference_manifest.py`
+  - `build_off_catalog_manifest.py`
+  - `build_off_release_notes.py`
+  - `publish_off_run_summary.py`
+- Added OFF country-aware remote adoption service and startup integration:
+  - `OffCatalogRefreshService`
+  - `BasisDataManager` OFF remote-candidate adoption with safe fallback behavior
+- Added user-facing settings UI for selecting the active food database region:
+  - Germany (DE)
+  - United States (US)
+  - United Kingdom (UK)
+
+### Changed
+- OFF catalog generation is now explicitly country-parameterized and bulk-parquet based (`create_off_food_db.py` CLI).
+- OFF manifest contract was formalized with integrity + safety fields:
+  - `source_id`, `country_code`, `channel`, `version`
+  - `db_sha256`
+  - `product_count` (informational)
+  - `min_product_count` (hard validation floor)
+- OFF diff baseline strategy now compares against previous published release assets per country channel (not repository baseline files).
+- OFF installed-version tracking moved to country-scoped keys (`installed_off_version_<country>`), with legacy migration safety for existing DE installs.
+- Settings flow now clearly communicates that OFF region changes are applied through the existing next refresh/import cycle.
+
+### Fixed
+- Hardened OFF startup safety when bundle and remote are unavailable for a selected country: imports are skipped safely without destructive side effects.
+- Preserved historical nutrition continuity under OFF region/catalog changes by keeping `off` + `off_retained` semantics intact.
+
+### Notes
+- The bundled DE OFF database fallback remains intentionally included for staged rollout safety.
+- Supported OFF app regions in this release are DE, US, and UK.
 
 ## [0.8.4] - 2026-04-13
 

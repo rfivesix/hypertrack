@@ -639,6 +639,24 @@
   "settingsVisualStyleLiquidDesc": "Runde, schwebende UI-Elemente",
   "settingsMaterialColorsTitle": "Material-Farben",
   "settingsMaterialColorsSubtitle": "Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents",
+  "settingsFoodDbSectionTitle": "Lebensmittel-Datenbank",
+  "settingsFoodDbRegionTitle": "Region der Lebensmittel-Datenbank",
+  "settingsFoodDbRegionSubtitle": "Wähle, welche Open-Food-Facts-Region für die Produktsuche verwendet wird.",
+  "settingsFoodDbRegionCurrent": "Aktive Region",
+  "settingsFoodDbRegionDialogTitle": "Region der Lebensmittel-Datenbank auswählen",
+  "settingsFoodDbRegionDialogSubtitle": "Dies ändert die Open-Food-Facts-Katalogquelle für die Produktsuche.",
+  "settingsFoodDbRegionIssueHint": "Wenn dein Land noch nicht gelistet ist, eröffne gerne ein GitHub-Issue und fordere Unterstützung an.",
+  "settingsFoodDbRegionGermany": "Deutschland (DE)",
+  "settingsFoodDbRegionUnitedStates": "Vereinigte Staaten (US)",
+  "settingsFoodDbRegionUnitedKingdom": "Vereinigtes Königreich (UK)",
+  "settingsFoodDbRegionChanged": "Region der Lebensmittel-Datenbank auf {region} gesetzt. Änderungen gelten beim nächsten Katalog-Refresh/Import.",
+  "@settingsFoodDbRegionChanged": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "searchBaseFoodHint": "Suche Grundnahrungsmittel",
   "searchNoHits": "Keine Treffer.",
   "onbSubtitleWelcome": "Dein zentrales Werkzeug für Fitness, Ernährung & Fortschritt.",
