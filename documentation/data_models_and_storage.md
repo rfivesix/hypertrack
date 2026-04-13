@@ -38,6 +38,52 @@ to the bundled asset source.
 Tracking state for remote refresh checks is kept in `SharedPreferences` keys
 under the `exercise_catalog_*` namespace.
 
+## Open Food Facts country data source foundation
+
+Bundled OFF seed data fallback currently defaults to the DE asset:
+
+- `assets/db/hypertrack_prep_de.db`
+
+Country-aware OFF source/channel configuration is centralized in:
+
+- `lib/config/app_data_sources.dart`
+
+Active OFF country selection persistence:
+
+- `lib/services/off_catalog_country_service.dart`
+- `SharedPreferences` key: `off_catalog_active_country`
+
+OFF remote adoption service:
+
+- `lib/services/off_catalog_refresh_service.dart`
+
+Current supported OFF country codes:
+
+- `de`
+- `us`
+- `uk`
+
+Country-scoped OFF import version tracking keys:
+
+- `installed_off_version_de`
+- `installed_off_version_us`
+- `installed_off_version_uk`
+
+Legacy migration compatibility:
+
+- existing `installed_off_version` (single-country legacy key) is migrated to the
+  DE-scoped key when needed.
+
+Historical continuity semantics remain active in OFF replacement imports:
+
+- active searchable OFF rows use `source='off'`
+- historically referenced rows can be retained as `source='off_retained'`
+- non-referenced stale OFF rows are pruned
+
+Bundled fallback safety for country rollout:
+
+- if active country bundle is missing and no remote candidate is available, OFF import is skipped safely and existing local products remain usable.
+
 ## Core app entities (non-sleep)
 
 The traditional app model classes remain under `lib/models/*` (nutrition, workouts, measurements, supplements, chart/timeline helpers, backup serialization).

@@ -1504,6 +1504,45 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents';
 
   @override
+  String get settingsFoodDbSectionTitle => 'Lebensmittel-Datenbank';
+
+  @override
+  String get settingsFoodDbRegionTitle => 'Region der Lebensmittel-Datenbank';
+
+  @override
+  String get settingsFoodDbRegionSubtitle =>
+      'Wähle, welche Open-Food-Facts-Region für die Produktsuche verwendet wird.';
+
+  @override
+  String get settingsFoodDbRegionCurrent => 'Aktive Region';
+
+  @override
+  String get settingsFoodDbRegionDialogTitle =>
+      'Region der Lebensmittel-Datenbank auswählen';
+
+  @override
+  String get settingsFoodDbRegionDialogSubtitle =>
+      'Dies ändert die Open-Food-Facts-Katalogquelle für die Produktsuche.';
+
+  @override
+  String get settingsFoodDbRegionIssueHint =>
+      'Wenn dein Land noch nicht gelistet ist, eröffne gerne ein GitHub-Issue und fordere Unterstützung an.';
+
+  @override
+  String get settingsFoodDbRegionGermany => 'Deutschland (DE)';
+
+  @override
+  String get settingsFoodDbRegionUnitedStates => 'Vereinigte Staaten (US)';
+
+  @override
+  String get settingsFoodDbRegionUnitedKingdom => 'Vereinigtes Königreich (UK)';
+
+  @override
+  String settingsFoodDbRegionChanged(String region) {
+    return 'Region der Lebensmittel-Datenbank auf $region gesetzt. Änderungen gelten beim nächsten Katalog-Refresh/Import.';
+  }
+
+  @override
   String get searchBaseFoodHint => 'Suche Grundnahrungsmittel';
 
   @override

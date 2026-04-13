@@ -24,6 +24,7 @@ This README is intentionally implementation-focused and reflects the **current w
 - [Health Steps Module (Current Implementation)](documentation/health_steps_alpha.md)
 - [One-way Health Export (Current Implementation)](documentation/health_export_one_way.md)
 - [Wger Catalog Refresh & Distribution](documentation/wger_catalog_refresh_system.md)
+- [OFF Catalog Refresh & Distribution](documentation/off_catalog_refresh_system.md)
 - [Shared Analytics Definitions (Legacy Reference)](documentation/analytics_definitions.md)
 
 ## What Hypertrack currently supports

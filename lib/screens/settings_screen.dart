@@ -20,10 +20,12 @@ import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/sleep/platform/permissions/sleep_permission_controller.dart';
 import '../features/sleep/platform/permissions/sleep_permission_models.dart';
 import '../features/sleep/data/persistence/sleep_persistence_models.dart';
+import '../config/app_data_sources.dart';
 import '../health_export/adapters/apple_health/apple_health_export_adapter.dart';
 import '../health_export/adapters/health_connect/health_connect_export_adapter.dart';
 import '../health_export/export_service.dart';
 import '../health_export/models/export_models.dart';
+import '../services/off_catalog_country_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A screen for configuring application-wide preferences.
@@ -70,6 +72,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isAppleExporting = false;
   bool _isHealthConnectExporting = false;
   bool _showSugarInDiaryOverview = false;
+  OffCatalogCountry _activeOffCatalogCountry =
+      AppDataSources.defaultOffCatalogCountry;
 
   /// Flag for parent screens to know steps settings changed and data should be refreshed.
   bool hasStepsSettingsChanged = false;
@@ -90,6 +94,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSleepSettings();
     _loadHealthExportSettings();
     _loadDiaryOverviewSettings();
+    _loadOffCatalogSettings();
   }
 
   Future<void> _loadAppVersion() async {
@@ -143,6 +148,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _showSugarInDiaryOverview =
           prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
     });
+  }
+
+  Future<void> _loadOffCatalogSettings() async {
+    final country = await OffCatalogCountryService.readActiveCountry();
+    if (!mounted) return;
+    setState(() => _activeOffCatalogCountry = country);
+  }
+
+  String _offCountryLabel(OffCatalogCountry country, AppLocalizations l10n) {
+    return switch (country) {
+      OffCatalogCountry.de => l10n.settingsFoodDbRegionGermany,
+      OffCatalogCountry.us => l10n.settingsFoodDbRegionUnitedStates,
+      OffCatalogCountry.uk => l10n.settingsFoodDbRegionUnitedKingdom,
+    };
+  }
+
+  Future<void> _showOffCatalogRegionPicker() async {
+    final l10n = AppLocalizations.of(context)!;
+    final selectedCountry = await showDialog<OffCatalogCountry>(
+      context: context,
+      builder: (dialogContext) {
+        var draftSelection = _activeOffCatalogCountry;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: Text(l10n.settingsFoodDbRegionDialogTitle),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.settingsFoodDbRegionDialogSubtitle),
+                  const SizedBox(height: 12),
+                  for (final country
+                      in AppDataSources.supportedOffCatalogCountries)
+                    RadioListTile<OffCatalogCountry>(
+                      contentPadding: EdgeInsets.zero,
+                      value: country,
+                      groupValue: draftSelection,
+                      title: Text(_offCountryLabel(country, l10n)),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setDialogState(() => draftSelection = value);
+                      },
+                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.settingsFoodDbRegionIssueHint,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(dialogContext).pop(draftSelection),
+                child: Text(l10n.save),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted || selectedCountry == null) return;
+    if (selectedCountry == _activeOffCatalogCountry) return;
+
+    await OffCatalogCountryService.writeActiveCountry(selectedCountry);
+    if (!mounted) return;
+
+    setState(() => _activeOffCatalogCountry = selectedCountry);
+    hasStepsSettingsChanged = true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n.settingsFoodDbRegionChanged(
+            _offCountryLabel(selectedCountry, l10n),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -650,6 +741,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.settingsFoodDbSectionTitle),
+          SummaryCard(
+            child: ListTile(
+              leading: const Icon(Icons.public),
+              title: Text(
+                l10n.settingsFoodDbRegionTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                '${l10n.settingsFoodDbRegionSubtitle}\n'
+                '${l10n.settingsFoodDbRegionCurrent}: '
+                '${_offCountryLabel(_activeOffCatalogCountry, l10n)}',
+              ),
+              isThreeLine: true,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _showOffCatalogRegionPicker,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Text(
+              l10n.settingsFoodDbRegionIssueHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
           ValueListenableBuilder<SleepPermissionStatus>(

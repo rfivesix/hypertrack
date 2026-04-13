@@ -2894,6 +2894,72 @@ abstract class AppLocalizations {
   /// **'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent'**
   String get settingsMaterialColorsSubtitle;
 
+  /// No description provided for @settingsFoodDbSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Food database'**
+  String get settingsFoodDbSectionTitle;
+
+  /// No description provided for @settingsFoodDbRegionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Food database region'**
+  String get settingsFoodDbRegionTitle;
+
+  /// No description provided for @settingsFoodDbRegionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select which Open Food Facts product catalog region is used for food search.'**
+  String get settingsFoodDbRegionSubtitle;
+
+  /// No description provided for @settingsFoodDbRegionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current region'**
+  String get settingsFoodDbRegionCurrent;
+
+  /// No description provided for @settingsFoodDbRegionDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose food database region'**
+  String get settingsFoodDbRegionDialogTitle;
+
+  /// No description provided for @settingsFoodDbRegionDialogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This changes the Open Food Facts catalog source used by product search.'**
+  String get settingsFoodDbRegionDialogSubtitle;
+
+  /// No description provided for @settingsFoodDbRegionIssueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If your country is not listed yet, feel free to open a GitHub issue and request support.'**
+  String get settingsFoodDbRegionIssueHint;
+
+  /// No description provided for @settingsFoodDbRegionGermany.
+  ///
+  /// In en, this message translates to:
+  /// **'Germany (DE)'**
+  String get settingsFoodDbRegionGermany;
+
+  /// No description provided for @settingsFoodDbRegionUnitedStates.
+  ///
+  /// In en, this message translates to:
+  /// **'United States (US)'**
+  String get settingsFoodDbRegionUnitedStates;
+
+  /// No description provided for @settingsFoodDbRegionUnitedKingdom.
+  ///
+  /// In en, this message translates to:
+  /// **'United Kingdom (UK)'**
+  String get settingsFoodDbRegionUnitedKingdom;
+
+  /// No description provided for @settingsFoodDbRegionChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Food database region set to {region}. Changes apply on the next catalog refresh/import cycle.'**
+  String settingsFoodDbRegionChanged(String region);
+
   /// No description provided for @searchBaseFoodHint.
   ///
   /// In en, this message translates to:
