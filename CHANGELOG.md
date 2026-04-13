@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.6] - 2026-04-13
+
+### Added
+- Added an optional, user-triggered feedback/diagnostic report flow in Settings:
+  - local report generation only (no automatic upload or hidden submission)
+  - explicit preview before any sharing action
+  - explicit actions: copy, save temporary `.txt`, share via native sheet, or open prefilled email draft to `feedback@schotte.me`
+  - optional section toggles for adaptive nutrition diagnostics, backup/restore diagnostics, and user note
+
+### Changed
+- Reordered top-level Settings sections for a clearer flow:
+  - Appearance
+  - Diary
+  - AI Meal Capture
+  - Steps
+  - Sleep
+  - Health export
+  - Data backup & import
+  - Food database
+  - Support
+  - About & legal
+
 ## [0.8.5] - 2026-04-13
 
 ### Added

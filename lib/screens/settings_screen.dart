@@ -27,6 +27,7 @@ import '../health_export/export_service.dart';
 import '../health_export/models/export_models.dart';
 import '../services/off_catalog_country_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../features/feedback_report/presentation/feedback_report_screen.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -562,16 +563,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(context, l10n.backup_and_import),
+          _buildSectionTitle(context, isGerman ? 'Tagebuch' : 'Diary'),
+          SummaryCard(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.monitor_heart_outlined),
+              title: Text(
+                isGerman
+                    ? 'Zucker in Tagebuch-Übersicht anzeigen'
+                    : 'Show sugar in Diary overview',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                isGerman
+                    ? 'Blendet Zucker in der oberen Tagesübersicht ein'
+                    : 'Shows sugar in the top daily overview section',
+              ),
+              value: _showSugarInDiaryOverview,
+              onChanged: (value) async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool(_showSugarInDiaryOverviewPrefKey, value);
+                hasStepsSettingsChanged = true;
+                if (!mounted) return;
+                setState(() => _showSugarInDiaryOverview = value);
+              },
+            ),
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.aiSettingsTitle),
           _buildNavigationCard(
             context: context,
-            icon: Icons.import_export_rounded,
-            title: l10n.backup_and_import,
-            subtitle: l10n.backup_and_import_description,
+            icon: Icons.auto_awesome,
+            title: l10n.aiSettingsTitle,
+            subtitle: l10n.aiSettingsDescription,
+            useGradientIcon: true,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const DataManagementScreen(),
+                  builder: (context) => const AiSettingsScreen(),
                 ),
               );
             },
@@ -712,58 +740,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(context, isGerman ? 'Tagebuch' : 'Diary'),
-          SummaryCard(
-            child: SwitchListTile(
-              secondary: const Icon(Icons.monitor_heart_outlined),
-              title: Text(
-                isGerman
-                    ? 'Zucker in Tagebuch-Übersicht anzeigen'
-                    : 'Show sugar in Diary overview',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                isGerman
-                    ? 'Blendet Zucker in der oberen Tagesübersicht ein'
-                    : 'Shows sugar in the top daily overview section',
-              ),
-              value: _showSugarInDiaryOverview,
-              onChanged: (value) async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool(_showSugarInDiaryOverviewPrefKey, value);
-                hasStepsSettingsChanged = true;
-                if (!mounted) return;
-                setState(() => _showSugarInDiaryOverview = value);
-              },
-            ),
-          ),
-          const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(context, l10n.settingsFoodDbSectionTitle),
-          SummaryCard(
-            child: ListTile(
-              leading: const Icon(Icons.public),
-              title: Text(
-                l10n.settingsFoodDbRegionTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                '${l10n.settingsFoodDbRegionSubtitle}\n'
-                '${l10n.settingsFoodDbRegionCurrent}: '
-                '${_offCountryLabel(_activeOffCatalogCountry, l10n)}',
-              ),
-              isThreeLine: true,
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _showOffCatalogRegionPicker,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: Text(
-              l10n.settingsFoodDbRegionIssueHint,
-              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
@@ -1042,17 +1018,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(context, l10n.aiSettingsTitle),
+          _buildSectionTitle(context, l10n.backup_and_import),
           _buildNavigationCard(
             context: context,
-            icon: Icons.auto_awesome,
-            title: l10n.aiSettingsTitle,
-            subtitle: l10n.aiSettingsDescription,
-            useGradientIcon: true,
+            icon: Icons.import_export_rounded,
+            title: l10n.backup_and_import,
+            subtitle: l10n.backup_and_import_description,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const AiSettingsScreen(),
+                  builder: (context) => const DataManagementScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.settingsFoodDbSectionTitle),
+          SummaryCard(
+            child: ListTile(
+              leading: const Icon(Icons.public),
+              title: Text(
+                l10n.settingsFoodDbRegionTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                '${l10n.settingsFoodDbRegionSubtitle}\n'
+                '${l10n.settingsFoodDbRegionCurrent}: '
+                '${_offCountryLabel(_activeOffCatalogCountry, l10n)}',
+              ),
+              isThreeLine: true,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _showOffCatalogRegionPicker,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Text(
+              l10n.settingsFoodDbRegionIssueHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.feedbackReportSettingsSectionTitle),
+          _buildNavigationCard(
+            context: context,
+            icon: Icons.feedback_outlined,
+            title: l10n.feedbackReportSettingsEntryTitle,
+            subtitle: l10n.feedbackReportSettingsEntrySubtitle,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const FeedbackReportScreen(),
                 ),
               );
             },
