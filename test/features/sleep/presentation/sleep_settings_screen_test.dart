@@ -190,6 +190,10 @@ void main() {
       500,
     );
     await tester.ensureVisible(importTile);
+    // Keep the tile away from the exact viewport edge to avoid flaky hit tests
+    // when settings sections above grow.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -120));
+    await tester.pumpAndSettle();
     await tester.tap(importTile);
     await tester.pumpAndSettle();
     expect(service.importCalls, 1);
