@@ -238,9 +238,18 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       final block = blocks[i];
       if (block.isEmpty) continue;
 
-      final exName = block.first.exerciseName;
-      final exercise = await _workoutDb.getExerciseByName(exName);
-      if (exercise == null) continue; // Should not happen
+      final firstSet = block.first;
+      final exName = firstSet.exerciseName;
+      final exercise = await _workoutDb.resolveExerciseForSetLog(firstSet) ??
+          Exercise(
+            nameDe: exName,
+            nameEn: exName,
+            descriptionDe: '',
+            descriptionEn: '',
+            categoryName: 'Unknown',
+            primaryMuscles: const [],
+            secondaryMuscles: const [],
+          );
 
       final syntheticReId = DateTime.now().millisecondsSinceEpoch + i;
       final pauseSec = block.first.restTimeSeconds ?? 90;

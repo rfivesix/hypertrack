@@ -165,7 +165,7 @@ Startup integration:
 
 ## Data safety behavior
 
-- Import path is currently non-destructive (`insertOrReplace`) for base exercises.
+- Import path is non-destructive for base exercises (`ON CONFLICT(id) DO UPDATE`).
 - Existing routine/history links are preserved by avoiding hard delete sweeps of exercise IDs.
 - Remote validation is structural/sanity-level, not cryptographic signature verification.
 - Payload integrity currently uses SHA-256 checksums from the manifest.

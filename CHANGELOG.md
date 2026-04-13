@@ -3,6 +3,42 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [v0.8.4] - 2026-04-13
+
+### Added
+- Added end-to-end remote exercise catalog refresh channel using release assets (`wger-catalog-stable`) with app-side adoption flow.
+- Added dedicated catalog artifacts and supporting reports (`wger_build_report.json`, `wger_diff_report.json`, manifest).
+- Added helper scripts for workflow robustness:
+  - `build_wger_catalog_manifest.py`
+  - `resolve_wger_reference_manifest.py`
+  - `build_wger_release_notes.py`
+  - `publish_wger_run_summary.py`
+- Added regression tests for exercise catalog ID-upsert semantics and historical workout restoration under catalog drift.
+
+### Changed
+- Catalog refresh now uses stricter manifest contract and validation rules (source/channel/version/url checks).
+- Threshold semantics were clarified and enforced:
+  - `expected_exercise_count` is informational
+  - `min_exercise_count` / minimum rows is the hard validation floor.
+- Diff baseline logic now compares against the previously published release asset DB (not the committed repository DB baseline).
+- Workflow hardening for scheduled/manual refresh + channel publication, including safer gating and artifact handling.
+- App-side exercise base import now uses non-destructive `ON CONFLICT(id) DO UPDATE` behavior for catalog rows.
+- Workout detail/summary/session restore paths now resolve exercises by stored `exercise_id` first, with graceful fallback.
+
+### Fixed
+- Fixed potential aggressive refresh behavior by avoiding replace-style writes for base exercises.
+- Fixed a history integrity risk where session restore could lose blocks if exercise names changed after catalog update.
+- Fixed set-log update behavior to preserve existing `exercise_id` linkage when name lookup no longer matches.
+- Preserved historical usability when exercise rows are missing by preventing silent loss in restore flows.
+
+### Internal / Tooling
+- Hardened workflow implementation by moving fragile inline scripting to dedicated Python utilities.
+- Improved release-channel publication plumbing and run-summary diagnostics.
+- Updated catalog refresh documentation to match current non-destructive import semantics and release-asset distribution model.
+
+### Notes
+- Existing workout logs continue to resolve via stable exercise IDs where present; metadata updates for the same ID are reflected.
+- Upstream-removed exercises are preserved locally (no hard-delete sweep in refresh path), maintaining history integrity and selector availability for retained rows.
 
 ## [0.8.3] - 2026-04-12
 

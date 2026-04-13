@@ -158,6 +158,36 @@ class WorkoutDatabaseHelper {
     return row != null ? _mapExerciseToModel(row) : null;
   }
 
+  Future<Exercise?> getExerciseByUuid(String exerciseUuid) async {
+    final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.exercises)
+          ..where((tbl) => tbl.id.equals(exerciseUuid))
+          ..limit(1))
+        .getSingleOrNull();
+
+    return row != null ? _mapExerciseToModel(row) : null;
+  }
+
+  Future<Exercise?> resolveExerciseForSetLog(SetLog setLog) async {
+    final dbInstance = await database;
+    String? exerciseUuid;
+
+    if (setLog.id != null) {
+      final setRow = await (dbInstance.select(dbInstance.setLogs)
+            ..where((tbl) => tbl.localId.equals(setLog.id!))
+            ..limit(1))
+          .getSingleOrNull();
+      exerciseUuid = setRow?.exerciseId;
+    }
+
+    if (exerciseUuid != null && exerciseUuid.isNotEmpty) {
+      final exercise = await getExerciseByUuid(exerciseUuid);
+      if (exercise != null) return exercise;
+    }
+
+    return getExerciseByName(setLog.exerciseName);
+  }
+
   Future<Exercise> insertExercise(Exercise exercise) async {
     final dbInstance = await database;
 
@@ -598,6 +628,15 @@ class WorkoutDatabaseHelper {
           ..limit(1))
         .getSingleOrNull();
     exerciseUuid = exRow?.id;
+
+    // Keep existing exercise linkage on updates when name-based lookup fails.
+    if (setLog.id != null && (exerciseUuid == null || exerciseUuid.isEmpty)) {
+      final existingSetRow = await (dbInstance.select(dbInstance.setLogs)
+            ..where((tbl) => tbl.localId.equals(setLog.id!))
+            ..limit(1))
+          .getSingleOrNull();
+      exerciseUuid = existingSetRow?.exerciseId;
+    }
 
     final companion = db.SetLogsCompanion(
       workoutLogId: drift.Value(workoutLogUuid),

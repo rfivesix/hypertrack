@@ -114,11 +114,16 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       groups.putIfAbsent(set.exerciseName, () => []).add(set);
     }
 
-    // Exercises laden um Cardio zu erkennen
+    // Resolve exercise metadata via stored exercise_id when available.
     final Map<String, Exercise> details = {};
-    for (var name in groups.keys) {
-      final ex = await WorkoutDatabaseHelper.instance.getExerciseByName(name);
-      if (ex != null) details[name] = ex;
+    for (final set in data.sets) {
+      if (details.containsKey(set.exerciseName)) continue;
+      final ex = await WorkoutDatabaseHelper.instance.resolveExerciseForSetLog(
+        set,
+      );
+      if (ex != null) {
+        details[set.exerciseName] = ex;
+      }
     }
 
     // Volumen (nur Kraft) für den Header
