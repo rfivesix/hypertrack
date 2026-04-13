@@ -3,7 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-## [v0.8.4] - 2026-04-13
+
+## [0.8.5] - 2026-04-13
+
+
+## [0.8.4] - 2026-04-13
 
 ### Added
 - Added end-to-end remote exercise catalog refresh channel using release assets (`wger-catalog-stable`) with app-side adoption flow.

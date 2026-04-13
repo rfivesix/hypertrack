@@ -174,5 +174,79 @@ void main() {
           .getSingle();
       expect(row.source, 'off');
     });
+
+    test(
+      'country switch keeps historically referenced products resolvable via off_retained',
+      () async {
+        await database.into(database.products).insert(
+              const db.ProductsCompanion(
+                id: drift.Value('off-de-a'),
+                barcode: drift.Value('DE_A'),
+                name: drift.Value('German Product A'),
+                calories: drift.Value(100),
+                protein: drift.Value(1),
+                carbs: drift.Value(10),
+                fat: drift.Value(1),
+                source: drift.Value('off'),
+              ),
+            );
+        await database.into(database.products).insert(
+              const db.ProductsCompanion(
+                id: drift.Value('off-de-b'),
+                barcode: drift.Value('DE_B'),
+                name: drift.Value('German Product B'),
+                calories: drift.Value(100),
+                protein: drift.Value(1),
+                carbs: drift.Value(10),
+                fat: drift.Value(1),
+                source: drift.Value('off'),
+              ),
+            );
+
+        await database.into(database.nutritionLogs).insert(
+              db.NutritionLogsCompanion(
+                legacyBarcode: const drift.Value('DE_A'),
+                consumedAt: drift.Value(DateTime(2026, 4, 13, 10, 0)),
+                amount: const drift.Value(120),
+                mealType: const drift.Value('Dinner'),
+              ),
+            );
+
+        // Simulate an import for a newly selected active country dataset.
+        await database.into(database.products).insert(
+              const db.ProductsCompanion(
+                id: drift.Value('off-us-1'),
+                barcode: drift.Value('US_1'),
+                name: drift.Value('US Product 1'),
+                calories: drift.Value(150),
+                protein: drift.Value(2),
+                carbs: drift.Value(20),
+                fat: drift.Value(2),
+                source: drift.Value('off'),
+              ),
+            );
+
+        await BasisDataManager.instance.retainHistoricallyNeededOffProducts(
+          importedOffBarcodes: {'US_1'},
+          testingDatabase: database,
+        );
+
+        final deA = await productDb.getProductByBarcode('DE_A');
+        final deB = await productDb.getProductByBarcode('DE_B');
+        final us1 = await productDb.getProductByBarcode('US_1');
+
+        expect(deA, isNotNull,
+            reason: 'historically referenced product survives');
+        expect(deB, isNull, reason: 'unreferenced stale product is pruned');
+        expect(us1, isNotNull, reason: 'new country active product is kept');
+
+        final sourceByBarcode = {
+          for (final row in await database.select(database.products).get())
+            row.barcode: row.source,
+        };
+        expect(sourceByBarcode['DE_A'], 'off_retained');
+        expect(sourceByBarcode['US_1'], 'off');
+      },
+    );
   });
 }

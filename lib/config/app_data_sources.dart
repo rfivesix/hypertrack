@@ -58,6 +58,12 @@ class AppDataSources {
       defaultBuildReportPath: 'off_build_report_de.json',
       bundledAssetDbPath: 'assets/db/hypertrack_prep_de.db',
       minimumProductRows: 5000,
+      manifestTimeoutSeconds: 6,
+      downloadTimeoutSeconds: 45,
+      minCheckIntervalHours: 12,
+      localCacheDirectoryName: 'off_catalog_refresh',
+      localCacheDbFileName: 'hypertrack_off_de_remote.db',
+      localManifestFileName: 'off_catalog_manifest_de_cached.json',
     ),
     OffCatalogCountry.us: OffCatalogRemoteSourceConfig(
       enabled: true,
@@ -72,6 +78,12 @@ class AppDataSources {
       defaultBuildReportPath: 'off_build_report_us.json',
       bundledAssetDbPath: 'assets/db/hypertrack_prep_us.db',
       minimumProductRows: 5000,
+      manifestTimeoutSeconds: 6,
+      downloadTimeoutSeconds: 45,
+      minCheckIntervalHours: 12,
+      localCacheDirectoryName: 'off_catalog_refresh',
+      localCacheDbFileName: 'hypertrack_off_us_remote.db',
+      localManifestFileName: 'off_catalog_manifest_us_cached.json',
     ),
     OffCatalogCountry.uk: OffCatalogRemoteSourceConfig(
       enabled: true,
@@ -86,6 +98,12 @@ class AppDataSources {
       defaultBuildReportPath: 'off_build_report_uk.json',
       bundledAssetDbPath: 'assets/db/hypertrack_prep_uk.db',
       minimumProductRows: 5000,
+      manifestTimeoutSeconds: 6,
+      downloadTimeoutSeconds: 45,
+      minCheckIntervalHours: 12,
+      localCacheDirectoryName: 'off_catalog_refresh',
+      localCacheDbFileName: 'hypertrack_off_uk_remote.db',
+      localManifestFileName: 'off_catalog_manifest_uk_cached.json',
     ),
   };
 
@@ -180,6 +198,12 @@ class OffCatalogRemoteSourceConfig {
   final String defaultBuildReportPath;
   final String bundledAssetDbPath;
   final int minimumProductRows;
+  final int manifestTimeoutSeconds;
+  final int downloadTimeoutSeconds;
+  final int minCheckIntervalHours;
+  final String localCacheDirectoryName;
+  final String localCacheDbFileName;
+  final String localManifestFileName;
 
   const OffCatalogRemoteSourceConfig({
     required this.enabled,
@@ -193,5 +217,15 @@ class OffCatalogRemoteSourceConfig {
     required this.defaultBuildReportPath,
     required this.bundledAssetDbPath,
     required this.minimumProductRows,
+    required this.manifestTimeoutSeconds,
+    required this.downloadTimeoutSeconds,
+    required this.minCheckIntervalHours,
+    required this.localCacheDirectoryName,
+    required this.localCacheDbFileName,
+    required this.localManifestFileName,
   });
+
+  Duration get manifestTimeout => Duration(seconds: manifestTimeoutSeconds);
+  Duration get downloadTimeout => Duration(seconds: downloadTimeoutSeconds);
+  Duration get minCheckInterval => Duration(hours: minCheckIntervalHours);
 }

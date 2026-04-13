@@ -9,7 +9,7 @@ Implemented scope:
 - release-style per-country artifact publication
 - manifest-driven distribution contract
 - previous-published-release baseline diffing
-- app-side country selection groundwork
+- app-side country selection + remote adoption flow
 - retained-history compatibility (`off` vs `off_retained`)
 
 ## Source of truth
@@ -163,6 +163,32 @@ Implemented persisted active country selection:
 
 - `lib/services/off_catalog_country_service.dart`
 - preference key: `off_catalog_active_country`
+ - installed version key pattern: `installed_off_version_<country>`
+
+Implemented OFF remote adoption service:
+
+- `lib/services/off_catalog_refresh_service.dart`
+
+Runtime OFF adoption flow at startup:
+
+1. read active OFF country from `OffCatalogCountryService`
+2. resolve country-specific `OffCatalogRemoteSourceConfig`
+3. fetch and validate country manifest
+4. enforce manifest contract checks:
+   - `source_id == off_food_catalog`
+   - `country_code` matches active country
+   - `channel` matches expected channel
+   - `version` non-empty
+   - `db_sha256` valid
+   - `product_count` and `min_product_count` present and consistent
+   - HTTPS-only remote URLs
+5. download remote DB to temp file
+6. verify SHA-256 against manifest
+7. validate DB schema + metadata/version + minimum row floor
+8. cache validated DB as update candidate
+9. `BasisDataManager` imports the candidate DB through the existing OFF import path and retention semantics
+
+If any step fails, the app safely falls back without destructive changes.
 
 Supported OFF countries are centralized as:
 
@@ -171,6 +197,16 @@ Supported OFF countries are centralized as:
 - `UK`
 
 `BasisDataManager` now resolves OFF import source via the active country config and uses country-scoped OFF version keys for import state.
+
+### Missing bundled fallback behavior (US/UK safe handling)
+
+`BasisDataManager` now checks whether a bundled OFF asset exists for the active country.
+
+- if remote candidate exists: use remote candidate
+- if remote candidate is unavailable and bundled asset exists: use bundled asset
+- if neither exists: skip OFF import safely and keep existing local data usable
+
+This prevents startup crashes when a configured bundled asset path is not shipped yet (for example non-DE countries during staged rollout).
 
 ## Active vs retained semantics
 

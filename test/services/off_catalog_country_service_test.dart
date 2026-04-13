@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:hypertrack/config/app_data_sources.dart';
 import 'package:hypertrack/services/off_catalog_country_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,6 +49,32 @@ void main() {
       expect(config.channel, 'stable');
     });
 
+    test('writes and reads installed country-scoped OFF version', () async {
+      final prefs = await SharedPreferences.getInstance();
+
+      await OffCatalogCountryService.writeInstalledVersionForCountry(
+        OffCatalogCountry.uk,
+        version: '202604130101',
+        prefs: prefs,
+      );
+
+      expect(
+        prefs.getString(
+          OffCatalogCountryService.installedVersionKeyForCountry(
+            OffCatalogCountry.uk,
+          ),
+        ),
+        '202604130101',
+      );
+      expect(
+        OffCatalogCountryService.readInstalledVersionForCountryFromPrefs(
+          prefs,
+          OffCatalogCountry.uk,
+        ),
+        '202604130101',
+      );
+    });
+
     test('invalid stored value safely falls back to default', () async {
       SharedPreferences.setMockInitialValues({
         OffCatalogCountryService.preferenceKey: 'fr',
@@ -59,6 +86,28 @@ void main() {
       );
 
       expect(activeCountry, OffCatalogCountry.de);
+    });
+
+    test('missing bundled OFF fallback is handled safely for non-DE countries',
+        () async {
+      final isAvailable =
+          await OffCatalogCountryService.bundledAssetAvailableForCountry(
+        OffCatalogCountry.us,
+        bundle: _AlwaysFailAssetBundle(),
+      );
+
+      expect(isAvailable, isFalse);
+    });
+
+    test('bundled OFF fallback detection returns true when asset loads',
+        () async {
+      final isAvailable =
+          await OffCatalogCountryService.bundledAssetAvailableForCountry(
+        OffCatalogCountry.de,
+        bundle: _AlwaysOkAssetBundle(),
+      );
+
+      expect(isAvailable, isTrue);
     });
   });
 
@@ -81,4 +130,20 @@ void main() {
       expect(uk.bundledAssetDbPath, 'assets/db/hypertrack_prep_uk.db');
     });
   });
+}
+
+class _AlwaysFailAssetBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) {
+    throw Exception('Missing asset: $key');
+  }
+}
+
+class _AlwaysOkAssetBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async {
+    final bytes = ByteData(4);
+    bytes.setUint32(0, 42);
+    return bytes;
+  }
 }

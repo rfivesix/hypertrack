@@ -15,6 +15,7 @@ import 'package:drift/drift.dart' as drift;
 import '../config/app_data_sources.dart';
 import '../services/exercise_catalog_refresh_service.dart';
 import '../services/off_catalog_country_service.dart';
+import '../services/off_catalog_refresh_service.dart';
 
 // Typ-Definition für den Callback
 typedef ProgressCallback = void Function(
@@ -31,8 +32,6 @@ class BasisDataManager {
 
   static const String _keyVersionTraining = 'installed_training_version';
   static const String _keyVersionFood = 'installed_food_version';
-  static const String _legacyKeyVersionOff = 'installed_off_version';
-  static const String _keyVersionOffPrefix = 'installed_off_version_';
   static const String _keyVersionCats = 'installed_cats_version';
   static const String _fallbackInstalledVersion = '000000000001';
 
@@ -65,7 +64,10 @@ class BasisDataManager {
       prefs: prefs,
       country: activeOffCountry,
     );
-    final activeOffVersionKey = _offVersionPrefKey(activeOffCountry);
+    final activeOffVersionKey =
+        OffCatalogCountryService.installedVersionKeyForCountry(
+      activeOffCountry,
+    );
 
     // Hilfsfunktion, um den Code lesbarer zu halten
     Future<void> process(
@@ -148,6 +150,45 @@ class BasisDataManager {
       driftTable: 'food_categories',
     );
 
+    String? remoteOffDbPath;
+    final installedOffVersion = prefs.getString(activeOffVersionKey) ?? '0';
+    try {
+      onProgress?.call(
+        'Prüfe Produktdatenbank (${activeOffCountry.upperCode})...',
+        'Suche nach Remote-OFF-Katalog-Updates...',
+        0.0,
+      );
+      final remoteOffCandidate =
+          await OffCatalogRefreshService.instance.prepareUpdateCandidate(
+        installedVersion: installedOffVersion,
+        force: force,
+      );
+      if (remoteOffCandidate != null) {
+        remoteOffDbPath = remoteOffCandidate.localDbPath;
+        onProgress?.call(
+          'Update Produktdatenbank (${activeOffCountry.upperCode})',
+          'Remote-OFF-Katalog ${remoteOffCandidate.version} gefunden.',
+          0.02,
+        );
+      }
+    } catch (e) {
+      debugPrint('Remote OFF catalog check skipped safely: $e');
+    }
+
+    final hasBundledOffAsset =
+        await OffCatalogCountryService.bundledAssetAvailableForCountry(
+      activeOffCountry,
+    );
+
+    if (remoteOffDbPath == null && !hasBundledOffAsset) {
+      onProgress?.call(
+        'Produktdatenbank (${activeOffCountry.upperCode})',
+        'Kein OFF-Bundle/Remote verfügbar. Vorhandene lokale OFF-Daten bleiben unverändert.',
+        1.0,
+      );
+      return;
+    }
+
     // 3. OFF Datenbank (Das große File)
     await process(
       'Produktdatenbank (${activeOffCountry.upperCode})',
@@ -155,19 +196,19 @@ class BasisDataManager {
       activeOffVersionKey,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'off'),
+      sourceFilePath: remoteOffDbPath,
       enableOffReplacementRetention: true,
     );
   }
 
-  String _offVersionPrefKey(OffCatalogCountry country) {
-    return '$_keyVersionOffPrefix${country.code}';
-  }
-
   Future<void> _clearOffVersionPreferences(SharedPreferences prefs) async {
-    await prefs.remove(_legacyKeyVersionOff);
+    await prefs.remove(OffCatalogCountryService.legacyInstalledVersionKey);
     final offVersionKeys = prefs
         .getKeys()
-        .where((key) => key.startsWith(_keyVersionOffPrefix))
+        .where(
+          (key) => key
+              .startsWith(OffCatalogCountryService.installedVersionKeyPrefix),
+        )
         .toList(growable: false);
     for (final key in offVersionKeys) {
       await prefs.remove(key);
@@ -181,9 +222,13 @@ class BasisDataManager {
     // Keep existing DE installations stable when upgrading from a single OFF
     // version key to country-scoped OFF version keys.
     if (country != OffCatalogCountry.de) return;
-    final targetKey = _offVersionPrefKey(country);
+    final targetKey = OffCatalogCountryService.installedVersionKeyForCountry(
+      country,
+    );
     if (prefs.containsKey(targetKey)) return;
-    final legacyValue = prefs.getString(_legacyKeyVersionOff)?.trim();
+    final legacyValue = prefs
+        .getString(OffCatalogCountryService.legacyInstalledVersionKey)
+        ?.trim();
     if (legacyValue == null || legacyValue.isEmpty) return;
     await prefs.setString(targetKey, legacyValue);
   }
@@ -367,7 +412,7 @@ class BasisDataManager {
           variables: [drift.Variable.withString('base')],
         ).getSingleOrNull();
         return row != null;
-      case _legacyKeyVersionOff:
+      case OffCatalogCountryService.legacyInstalledVersionKey:
         final row = await mainDb.customSelect(
           'SELECT 1 FROM products WHERE source = ? LIMIT 1',
           variables: [drift.Variable.withString('off')],
@@ -379,7 +424,8 @@ class BasisDataManager {
             .getSingleOrNull();
         return row != null;
       default:
-        if (prefKey.startsWith(_keyVersionOffPrefix)) {
+        if (prefKey
+            .startsWith(OffCatalogCountryService.installedVersionKeyPrefix)) {
           final row = await mainDb.customSelect(
             'SELECT 1 FROM products WHERE source = ? LIMIT 1',
             variables: [drift.Variable.withString('off')],
