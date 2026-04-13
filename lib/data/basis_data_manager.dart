@@ -14,6 +14,7 @@ import 'package:drift/drift.dart' as drift;
 
 import '../config/app_data_sources.dart';
 import '../services/exercise_catalog_refresh_service.dart';
+import '../services/off_catalog_country_service.dart';
 
 // Typ-Definition für den Callback
 typedef ProgressCallback = void Function(
@@ -30,7 +31,8 @@ class BasisDataManager {
 
   static const String _keyVersionTraining = 'installed_training_version';
   static const String _keyVersionFood = 'installed_food_version';
-  static const String _keyVersionOff = 'installed_off_version';
+  static const String _legacyKeyVersionOff = 'installed_off_version';
+  static const String _keyVersionOffPrefix = 'installed_off_version_';
   static const String _keyVersionCats = 'installed_cats_version';
   static const String _fallbackInstalledVersion = '000000000001';
 
@@ -51,9 +53,19 @@ class BasisDataManager {
     if (force) {
       await prefs.remove(_keyVersionTraining);
       await prefs.remove(_keyVersionFood);
-      await prefs.remove(_keyVersionOff);
+      await _clearOffVersionPreferences(prefs);
       await prefs.remove(_keyVersionCats);
     }
+
+    final activeOffSource =
+        OffCatalogCountryService.activeSourceFromPrefs(prefs);
+    final activeOffCountry =
+        OffCatalogCountryCodec.parseOrDefault(activeOffSource.countryCode);
+    await _migrateLegacyOffVersionPreference(
+      prefs: prefs,
+      country: activeOffCountry,
+    );
+    final activeOffVersionKey = _offVersionPrefKey(activeOffCountry);
 
     // Hilfsfunktion, um den Code lesbarer zu halten
     Future<void> process(
@@ -138,13 +150,42 @@ class BasisDataManager {
 
     // 3. OFF Datenbank (Das große File)
     await process(
-      'Produktdatenbank',
-      AppDataSources.offFoodsAssetDbPath,
-      _keyVersionOff,
+      'Produktdatenbank (${activeOffCountry.upperCode})',
+      activeOffSource.bundledAssetDbPath,
+      activeOffVersionKey,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'off'),
       enableOffReplacementRetention: true,
     );
+  }
+
+  String _offVersionPrefKey(OffCatalogCountry country) {
+    return '$_keyVersionOffPrefix${country.code}';
+  }
+
+  Future<void> _clearOffVersionPreferences(SharedPreferences prefs) async {
+    await prefs.remove(_legacyKeyVersionOff);
+    final offVersionKeys = prefs
+        .getKeys()
+        .where((key) => key.startsWith(_keyVersionOffPrefix))
+        .toList(growable: false);
+    for (final key in offVersionKeys) {
+      await prefs.remove(key);
+    }
+  }
+
+  Future<void> _migrateLegacyOffVersionPreference({
+    required SharedPreferences prefs,
+    required OffCatalogCountry country,
+  }) async {
+    // Keep existing DE installations stable when upgrading from a single OFF
+    // version key to country-scoped OFF version keys.
+    if (country != OffCatalogCountry.de) return;
+    final targetKey = _offVersionPrefKey(country);
+    if (prefs.containsKey(targetKey)) return;
+    final legacyValue = prefs.getString(_legacyKeyVersionOff)?.trim();
+    if (legacyValue == null || legacyValue.isEmpty) return;
+    await prefs.setString(targetKey, legacyValue);
   }
 
   Future<void> _updateDatabaseFromSource({
@@ -193,6 +234,9 @@ class BasisDataManager {
             ),
           );
         } catch (e) {
+          debugPrint(
+            'Skipping import for $taskLabel because asset source could not be loaded: $assetPath ($e)',
+          );
           return;
         }
 
@@ -323,7 +367,7 @@ class BasisDataManager {
           variables: [drift.Variable.withString('base')],
         ).getSingleOrNull();
         return row != null;
-      case _keyVersionOff:
+      case _legacyKeyVersionOff:
         final row = await mainDb.customSelect(
           'SELECT 1 FROM products WHERE source = ? LIMIT 1',
           variables: [drift.Variable.withString('off')],
@@ -335,6 +379,13 @@ class BasisDataManager {
             .getSingleOrNull();
         return row != null;
       default:
+        if (prefKey.startsWith(_keyVersionOffPrefix)) {
+          final row = await mainDb.customSelect(
+            'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+            variables: [drift.Variable.withString('off')],
+          ).getSingleOrNull();
+          return row != null;
+        }
         return false;
     }
   }

@@ -1,0 +1,255 @@
+name: OFF Foods Refresh
+
+"on":
+  workflow_dispatch:
+    inputs:
+      fail_on_breaking:
+        description: "Fail workflow if diff detects breaking changes"
+        required: false
+        default: true
+        type: boolean
+      publish_release_assets:
+        description: "Publish DB/manifest/build-report to the OFF country release channel"
+        required: false
+        default: true
+        type: boolean
+      parquet_source_url:
+        description: "Open Food Facts parquet source URL"
+        required: false
+        default: "https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet?download=true"
+        type: string
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-off-country:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - country_code: de
+            min_product_count: 5000
+          - country_code: us
+            min_product_count: 5000
+          - country_code: uk
+            min_product_count: 5000
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      COUNTRY_CODE: ${{ matrix.country_code }}
+      OFF_MIN_PRODUCT_COUNT: ${{ matrix.min_product_count }}
+      OFF_BATCH_SIZE: 50000
+      OFF_PARQUET_SOURCE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.parquet_source_url || 'https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet?download=true' }}
+      OFF_PARQUET_LOCAL_PATH: artifacts/food.parquet
+
+      GENERATED_DB_PATH: artifacts/hypertrack_off_${{ matrix.country_code }}.db
+      BUILD_REPORT_PATH: artifacts/off_build_report_${{ matrix.country_code }}.json
+      DIFF_REPORT_PATH: artifacts/off_diff_report_${{ matrix.country_code }}.json
+      MANIFEST_PATH: artifacts/off_catalog_manifest_${{ matrix.country_code }}.json
+      RELEASE_NOTES_PATH: artifacts/off_release_notes_${{ matrix.country_code }}.md
+
+      MANIFEST_FILE_NAME: off_catalog_manifest_${{ matrix.country_code }}.json
+      RELEASE_REFERENCE_MANIFEST_PATH: artifacts/reference_off_catalog_manifest_${{ matrix.country_code }}.json
+      RELEASE_REFERENCE_DB_PATH: artifacts/reference_hypertrack_off_${{ matrix.country_code }}.db
+
+      RELEASE_TAG: off-foods-${{ matrix.country_code }}-stable
+      RELEASE_NAME: Open Food Facts Catalog (${{ matrix.country_code }}, stable channel)
+      RELEASE_CHANNEL: stable
+      RELEASE_DOWNLOAD_BASE: https://github.com/${{ github.repository }}/releases/download/off-foods-${{ matrix.country_code }}-stable/
+      RELEASE_PAGE_URL: https://github.com/${{ github.repository }}/releases/tag/off-foods-${{ matrix.country_code }}-stable
+
+      FAIL_ON_BREAKING: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_breaking || 'true' }}
+      PUBLISH_RELEASE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release_assets || 'true' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas pyarrow
+
+      - name: Validate script syntax
+        run: |
+          python -m py_compile skript/create_off_food_db.py
+          python -m py_compile skript/off_catalog_diff.py
+          python -m py_compile skript/resolve_off_reference_manifest.py
+          python -m py_compile skript/build_off_catalog_manifest.py
+          python -m py_compile skript/build_off_release_notes.py
+          python -m py_compile skript/publish_off_run_summary.py
+
+      - name: Download Open Food Facts parquet source
+        run: |
+          mkdir -p artifacts
+          echo "Downloading OFF parquet from: $OFF_PARQUET_SOURCE_URL"
+          curl -fL --retry 5 --retry-all-errors --retry-delay 5 --continue-at - "$OFF_PARQUET_SOURCE_URL" -o "$OFF_PARQUET_LOCAL_PATH"
+          ls -lh "$OFF_PARQUET_LOCAL_PATH"
+
+      - name: Generate country OFF catalog and build report
+        id: generate
+        run: |
+          python skript/create_off_food_db.py \
+            --country-code "$COUNTRY_CODE" \
+            --parquet-path "$OFF_PARQUET_LOCAL_PATH" \
+            --source-url "$OFF_PARQUET_SOURCE_URL" \
+            --db-out "$GENERATED_DB_PATH" \
+            --report-json-out "$BUILD_REPORT_PATH" \
+            --batch-size "$OFF_BATCH_SIZE" \
+            --min-product-count "$OFF_MIN_PRODUCT_COUNT"
+
+      - name: Mark generator success
+        id: generator_status
+        if: always()
+        run: |
+          if [ -f "$GENERATED_DB_PATH" ] && [ -f "$BUILD_REPORT_PATH" ]; then
+            echo "generator_success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "generator_success=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve previous published OFF baseline manifest
+        id: resolve_reference
+        if: steps.generator_status.outputs.generator_success == 'true'
+        run: |
+          mkdir -p artifacts
+
+          MANIFEST_URL="${RELEASE_DOWNLOAD_BASE}${MANIFEST_FILE_NAME}"
+          echo "Trying release manifest: $MANIFEST_URL"
+
+          if curl -fsSL "$MANIFEST_URL" -o "$RELEASE_REFERENCE_MANIFEST_PATH"; then
+            echo "reference_manifest_found=true" >> "$GITHUB_OUTPUT"
+            python skript/resolve_off_reference_manifest.py
+          else
+            echo "reference_manifest_found=false" >> "$GITHUB_OUTPUT"
+            echo "No previous release manifest found. Diff baseline unavailable." | tee "artifacts/off_reference_missing_${COUNTRY_CODE}.txt"
+          fi
+
+      - name: Download previous published OFF DB
+        id: download_reference
+        if: steps.generator_status.outputs.generator_success == 'true' && steps.resolve_reference.outputs.reference_manifest_found == 'true'
+        continue-on-error: true
+        run: |
+          if curl -fsSL "${{ steps.resolve_reference.outputs.reference_db_url }}" -o "$RELEASE_REFERENCE_DB_PATH"; then
+            echo "reference_db_found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "reference_db_found=false" >> "$GITHUB_OUTPUT"
+            echo "Failed to download previous release DB from ${{ steps.resolve_reference.outputs.reference_db_url }}" | tee "artifacts/off_reference_db_download_failed_${COUNTRY_CODE}.txt"
+          fi
+
+      - name: Diff against previous published OFF catalog (if available)
+        id: diff
+        if: steps.generator_status.outputs.generator_success == 'true'
+        continue-on-error: true
+        run: |
+          mkdir -p artifacts
+
+          if [ -f "$RELEASE_REFERENCE_DB_PATH" ]; then
+            echo "reference_db_found=true" >> "$GITHUB_OUTPUT"
+            DIFF_CMD="python skript/off_catalog_diff.py --old \"$RELEASE_REFERENCE_DB_PATH\" --new \"$GENERATED_DB_PATH\" --json-out \"$DIFF_REPORT_PATH\""
+            if [ "$FAIL_ON_BREAKING" = "true" ]; then
+              DIFF_CMD="$DIFF_CMD --fail-on-breaking"
+            fi
+            echo "Running diff command: $DIFF_CMD"
+            eval "$DIFF_CMD"
+          else
+            echo "reference_db_found=false" >> "$GITHUB_OUTPUT"
+            echo "Published reference DB not available. Skipping diff." | tee "artifacts/off_diff_skipped_${COUNTRY_CODE}.txt"
+            printf '%s\n' \
+              '{' \
+              '  "skipped": true,' \
+              '  "reason": "published_reference_db_missing",' \
+              "  \"reference_db_path\": \"$RELEASE_REFERENCE_DB_PATH\"" \
+              '}' > "$DIFF_REPORT_PATH"
+          fi
+
+      - name: Build OFF catalog manifest artifact
+        if: steps.generator_status.outputs.generator_success == 'true'
+        run: python skript/build_off_catalog_manifest.py
+
+      - name: Build OFF release notes
+        if: steps.generator_status.outputs.generator_success == 'true'
+        run: python skript/build_off_release_notes.py
+
+      - name: Upload generated OFF DB artifact
+        if: always() && steps.generator_status.outputs.generator_success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: off-generated-db-${{ matrix.country_code }}
+          path: ${{ env.GENERATED_DB_PATH }}
+          if-no-files-found: error
+
+      - name: Upload OFF build report artifact
+        if: always() && steps.generator_status.outputs.generator_success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: off-build-report-${{ matrix.country_code }}
+          path: ${{ env.BUILD_REPORT_PATH }}
+          if-no-files-found: error
+
+      - name: Upload OFF catalog manifest artifact
+        if: always() && steps.generator_status.outputs.generator_success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: off-catalog-manifest-${{ matrix.country_code }}
+          path: ${{ env.MANIFEST_PATH }}
+          if-no-files-found: error
+
+      - name: Upload OFF diff report artifact
+        if: always() && steps.generator_status.outputs.generator_success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: off-diff-report-${{ matrix.country_code }}
+          path: ${{ env.DIFF_REPORT_PATH }}
+          if-no-files-found: error
+
+      - name: Upload OFF release notes artifact
+        if: always() && steps.generator_status.outputs.generator_success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: off-release-notes-${{ matrix.country_code }}
+          path: ${{ env.RELEASE_NOTES_PATH }}
+          if-no-files-found: error
+
+      - name: Publish release assets (OFF country channel)
+        id: publish_release
+        if: steps.generator_status.outputs.generator_success == 'true' && env.PUBLISH_RELEASE_ASSETS == 'true' && (steps.diff.outputs.reference_db_found != 'true' || steps.diff.outcome == 'success' || env.FAIL_ON_BREAKING != 'true')
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+          makeLatest: "false"
+          artifacts: |
+            ${{ env.GENERATED_DB_PATH }}
+            ${{ env.BUILD_REPORT_PATH }}
+            ${{ env.DIFF_REPORT_PATH }}
+            ${{ env.MANIFEST_PATH }}
+            ${{ env.RELEASE_NOTES_PATH }}
+          bodyFile: ${{ env.RELEASE_NOTES_PATH }}
+
+      - name: Publish run summary
+        if: always()
+        run: python skript/publish_off_run_summary.py
+        env:
+          PUBLISH_OUTCOME: ${{ steps.publish_release.outcome }}
+          GENERATOR_SUCCESS: ${{ steps.generator_status.outputs.generator_success }}
+          GENERATE_OUTCOME: ${{ steps.generate.outcome }}
+
+      - name: Enforce safety gate result
+        if: always() && steps.generator_status.outputs.generator_success == 'true' && steps.diff.outputs.reference_db_found == 'true' && env.FAIL_ON_BREAKING == 'true' && steps.diff.outcome == 'failure'
+        run: |
+          echo "Diff safety validation failed under --fail-on-breaking."
+          exit 1
