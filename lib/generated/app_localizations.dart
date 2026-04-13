@@ -1772,11 +1772,221 @@ abstract class AppLocalizations {
   /// **'Create backups, restore, and import data.'**
   String get backup_and_import_description;
 
+  /// No description provided for @feedbackReportSettingsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get feedbackReportSettingsSectionTitle;
+
+  /// No description provided for @feedbackReportSettingsEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback'**
+  String get feedbackReportSettingsEntryTitle;
+
+  /// No description provided for @feedbackReportSettingsEntrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a local diagnostic report and choose how to share it.'**
+  String get feedbackReportSettingsEntrySubtitle;
+
   /// No description provided for @about_and_legal_capslock.
   ///
   /// In en, this message translates to:
   /// **'ABOUT & LEGAL'**
   String get about_and_legal_capslock;
+
+  /// No description provided for @feedbackReportScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback report'**
+  String get feedbackReportScreenTitle;
+
+  /// No description provided for @feedbackReportPrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy first'**
+  String get feedbackReportPrivacyTitle;
+
+  /// No description provided for @feedbackReportPrivacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This report is generated locally on your device. Nothing is sent automatically. Only what you see in the preview is included when you choose copy, save, share, or email. Email opens a draft to feedback@schotte.me so you can review, edit, or cancel before sending.'**
+  String get feedbackReportPrivacyBody;
+
+  /// No description provided for @feedbackReportOptionalNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional note'**
+  String get feedbackReportOptionalNoteTitle;
+
+  /// No description provided for @feedbackReportOptionalNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your note (optional)'**
+  String get feedbackReportOptionalNoteLabel;
+
+  /// No description provided for @feedbackReportOptionalNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what happened, expected behavior, and steps to reproduce.'**
+  String get feedbackReportOptionalNoteHint;
+
+  /// No description provided for @feedbackReportIncludeSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Include in report'**
+  String get feedbackReportIncludeSectionTitle;
+
+  /// No description provided for @feedbackReportIncludeAdaptiveNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive nutrition diagnostics'**
+  String get feedbackReportIncludeAdaptiveNutrition;
+
+  /// No description provided for @feedbackReportIncludeBackupRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup / restore diagnostics'**
+  String get feedbackReportIncludeBackupRestore;
+
+  /// No description provided for @feedbackReportIncludeUserNote.
+  ///
+  /// In en, this message translates to:
+  /// **'User note'**
+  String get feedbackReportIncludeUserNote;
+
+  /// No description provided for @feedbackReportGeneratePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate preview'**
+  String get feedbackReportGeneratePreview;
+
+  /// No description provided for @feedbackReportPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get feedbackReportPreviewTitle;
+
+  /// No description provided for @feedbackReportActionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get feedbackReportActionCopy;
+
+  /// No description provided for @feedbackReportActionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get feedbackReportActionSave;
+
+  /// No description provided for @feedbackReportActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get feedbackReportActionShare;
+
+  /// No description provided for @feedbackReportActionEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get feedbackReportActionEmail;
+
+  /// No description provided for @feedbackReportCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Report copied to clipboard.'**
+  String get feedbackReportCopied;
+
+  /// No description provided for @feedbackReportSavedToTemporaryFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to a temporary report file.'**
+  String get feedbackReportSavedToTemporaryFile;
+
+  /// No description provided for @feedbackReportShareCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Share sheet opened.'**
+  String get feedbackReportShareCompleted;
+
+  /// No description provided for @feedbackReportShareCanceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Share canceled.'**
+  String get feedbackReportShareCanceled;
+
+  /// No description provided for @feedbackReportEmailOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open email app.'**
+  String get feedbackReportEmailOpenFailed;
+
+  /// No description provided for @feedbackReportEmailSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Hypertrack feedback report'**
+  String get feedbackReportEmailSubject;
+
+  /// No description provided for @feedbackReportReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hypertrack Feedback Report'**
+  String get feedbackReportReportTitle;
+
+  /// No description provided for @feedbackReportReportGeneratedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated'**
+  String get feedbackReportReportGeneratedAt;
+
+  /// No description provided for @feedbackReportReportAppVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get feedbackReportReportAppVersion;
+
+  /// No description provided for @feedbackReportReportBuildNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Build number'**
+  String get feedbackReportReportBuildNumber;
+
+  /// No description provided for @feedbackReportReportPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get feedbackReportReportPlatform;
+
+  /// No description provided for @feedbackReportReportOsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'OS version'**
+  String get feedbackReportReportOsVersion;
+
+  /// No description provided for @feedbackReportUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'unavailable'**
+  String get feedbackReportUnavailable;
+
+  /// No description provided for @feedbackReportSectionUserNote.
+  ///
+  /// In en, this message translates to:
+  /// **'User note'**
+  String get feedbackReportSectionUserNote;
+
+  /// No description provided for @feedbackReportSectionAdaptiveNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive nutrition diagnostics'**
+  String get feedbackReportSectionAdaptiveNutrition;
+
+  /// No description provided for @feedbackReportSectionBackupRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup / restore diagnostics'**
+  String get feedbackReportSectionBackupRestore;
 
   /// No description provided for @attribution_and_license.
   ///

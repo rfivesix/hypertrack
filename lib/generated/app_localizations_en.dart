@@ -904,7 +904,120 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create backups, restore, and import data.';
 
   @override
+  String get feedbackReportSettingsSectionTitle => 'Support';
+
+  @override
+  String get feedbackReportSettingsEntryTitle => 'Send feedback';
+
+  @override
+  String get feedbackReportSettingsEntrySubtitle =>
+      'Create a local diagnostic report and choose how to share it.';
+
+  @override
   String get about_and_legal_capslock => 'ABOUT & LEGAL';
+
+  @override
+  String get feedbackReportScreenTitle => 'Feedback report';
+
+  @override
+  String get feedbackReportPrivacyTitle => 'Privacy first';
+
+  @override
+  String get feedbackReportPrivacyBody =>
+      'This report is generated locally on your device. Nothing is sent automatically. Only what you see in the preview is included when you choose copy, save, share, or email. Email opens a draft to feedback@schotte.me so you can review, edit, or cancel before sending.';
+
+  @override
+  String get feedbackReportOptionalNoteTitle => 'Optional note';
+
+  @override
+  String get feedbackReportOptionalNoteLabel => 'Your note (optional)';
+
+  @override
+  String get feedbackReportOptionalNoteHint =>
+      'Describe what happened, expected behavior, and steps to reproduce.';
+
+  @override
+  String get feedbackReportIncludeSectionTitle => 'Include in report';
+
+  @override
+  String get feedbackReportIncludeAdaptiveNutrition =>
+      'Adaptive nutrition diagnostics';
+
+  @override
+  String get feedbackReportIncludeBackupRestore =>
+      'Backup / restore diagnostics';
+
+  @override
+  String get feedbackReportIncludeUserNote => 'User note';
+
+  @override
+  String get feedbackReportGeneratePreview => 'Generate preview';
+
+  @override
+  String get feedbackReportPreviewTitle => 'Preview';
+
+  @override
+  String get feedbackReportActionCopy => 'Copy';
+
+  @override
+  String get feedbackReportActionSave => 'Save';
+
+  @override
+  String get feedbackReportActionShare => 'Share';
+
+  @override
+  String get feedbackReportActionEmail => 'Email';
+
+  @override
+  String get feedbackReportCopied => 'Report copied to clipboard.';
+
+  @override
+  String get feedbackReportSavedToTemporaryFile =>
+      'Saved to a temporary report file.';
+
+  @override
+  String get feedbackReportShareCompleted => 'Share sheet opened.';
+
+  @override
+  String get feedbackReportShareCanceled => 'Share canceled.';
+
+  @override
+  String get feedbackReportEmailOpenFailed => 'Could not open email app.';
+
+  @override
+  String get feedbackReportEmailSubject => 'Hypertrack feedback report';
+
+  @override
+  String get feedbackReportReportTitle => 'Hypertrack Feedback Report';
+
+  @override
+  String get feedbackReportReportGeneratedAt => 'Generated';
+
+  @override
+  String get feedbackReportReportAppVersion => 'App version';
+
+  @override
+  String get feedbackReportReportBuildNumber => 'Build number';
+
+  @override
+  String get feedbackReportReportPlatform => 'Platform';
+
+  @override
+  String get feedbackReportReportOsVersion => 'OS version';
+
+  @override
+  String get feedbackReportUnavailable => 'unavailable';
+
+  @override
+  String get feedbackReportSectionUserNote => 'User note';
+
+  @override
+  String get feedbackReportSectionAdaptiveNutrition =>
+      'Adaptive nutrition diagnostics';
+
+  @override
+  String get feedbackReportSectionBackupRestore =>
+      'Backup / restore diagnostics';
 
   @override
   String get attribution_and_license => 'Attribution & Licenses';

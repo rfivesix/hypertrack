@@ -78,6 +78,7 @@ This README is intentionally implementation-focused and reflects the **current w
 - Export of app-recorded measurements, aggregate nutrition, hydration, and session-level workouts
 - CSV export
 - Automatic backups
+- Optional local feedback/diagnostic report flow with preview-first copy/save/share/email actions
 - Offline-first local data handling
 
 ## Current product boundaries
@@ -120,7 +121,6 @@ This README is intentionally implementation-focused and reflects the **current w
 ## Near-term work toward 1.0 (planned, not yet guaranteed in current working copy)
 
 - Onboarding and tutorial polish
-- Widgets
 - App Store release
 - Google Play release
 
