@@ -67,10 +67,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -182,7 +182,7 @@ jobs:
 
       - name: Upload generated OFF DB artifact
         if: always() && steps.generate.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: off-generated-db-${{ matrix.country_code }}
           path: ${{ env.GENERATED_DB_PATH }}
@@ -190,7 +190,7 @@ jobs:
 
       - name: Upload OFF build report artifact
         if: always() && steps.generate.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: off-build-report-${{ matrix.country_code }}
           path: ${{ env.BUILD_REPORT_PATH }}
@@ -198,7 +198,7 @@ jobs:
 
       - name: Upload OFF catalog manifest artifact
         if: always() && steps.generate.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: off-catalog-manifest-${{ matrix.country_code }}
           path: ${{ env.MANIFEST_PATH }}
@@ -206,7 +206,7 @@ jobs:
 
       - name: Upload OFF diff report artifact
         if: always() && steps.generate.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: off-diff-report-${{ matrix.country_code }}
           path: ${{ env.DIFF_REPORT_PATH }}
@@ -214,7 +214,7 @@ jobs:
 
       - name: Upload OFF release notes artifact
         if: always() && steps.generate.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: off-release-notes-${{ matrix.country_code }}
           path: ${{ env.RELEASE_NOTES_PATH }}
