@@ -64,6 +64,7 @@ class BasisDataManager {
       Function(Map<String, dynamic>) mapper, {
       String? sourceFilePath,
       String? driftTable,
+      bool enableOffReplacementRetention = false,
     }) async {
       await _updateDatabaseFromSource(
         assetPath: asset,
@@ -76,6 +77,7 @@ class BasisDataManager {
         taskLabel: label,
         onProgress: onProgress,
         forceImport: force,
+        enableOffReplacementRetention: enableOffReplacementRetention,
       );
     }
 
@@ -141,6 +143,7 @@ class BasisDataManager {
       _keyVersionOff,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'off'),
+      enableOffReplacementRetention: true,
     );
   }
 
@@ -155,6 +158,7 @@ class BasisDataManager {
     required String taskLabel,
     ProgressCallback? onProgress,
     required bool forceImport,
+    required bool enableOffReplacementRetention,
   }) async {
     File? tempFile;
     sqflite.Database? assetDb;
@@ -240,13 +244,21 @@ class BasisDataManager {
       if (shouldImport) {
         onProgress?.call("Update $taskLabel", "Vorbereitung...", 0.05);
 
-        await _performBatchImport(
+        final importedBarcodes = await _performBatchImport(
           assetDb,
           checkTable,
           mapFunction,
           onProgress,
           taskLabel,
+          collectProductBarcodes: enableOffReplacementRetention,
         );
+
+        if (enableOffReplacementRetention) {
+          await retainHistoricallyNeededOffProducts(
+            importedOffBarcodes: importedBarcodes,
+            onProgress: onProgress,
+          );
+        }
 
         await prefs.setString(
           prefKey,
@@ -327,16 +339,18 @@ class BasisDataManager {
     }
   }
 
-  Future<void> _performBatchImport(
+  Future<Set<String>> _performBatchImport(
     sqflite.Database assetDb,
     String tableName,
-    Function(Map<String, dynamic>) mapRowToCompanion,
+    dynamic Function(Map<String, dynamic>) mapRowToCompanion,
     ProgressCallback? onProgress,
-    String taskLabel,
-  ) async {
+    String taskLabel, {
+    required bool collectProductBarcodes,
+  }) async {
     final mainDb = await DatabaseHelper.instance.database;
     const int batchSize = 2000;
     int offset = 0;
+    final importedProductBarcodes = <String>{};
 
     // 1. Gesamtanzahl ermitteln für Progress Bar
     int totalCount = 0;
@@ -349,7 +363,7 @@ class BasisDataManager {
       totalCount = 0;
     }
 
-    if (totalCount == 0) return; // Nichts zu tun
+    if (totalCount == 0) return importedProductBarcodes; // Nichts zu tun
 
     int processed = 0;
 
@@ -366,6 +380,11 @@ class BasisDataManager {
           try {
             final companion = mapRowToCompanion(row);
             if (companion is ProductsCompanion) {
+              if (collectProductBarcodes &&
+                  companion.barcode.present &&
+                  companion.barcode.value.trim().isNotEmpty) {
+                importedProductBarcodes.add(companion.barcode.value.trim());
+              }
               batch.insert(
                 mainDb.products,
                 companion,
@@ -408,6 +427,158 @@ class BasisDataManager {
 
       // UI-Thread atmen lassen
       await Future.delayed(const Duration(milliseconds: 1));
+    }
+
+    return importedProductBarcodes;
+  }
+
+  /// Applies OFF replacement semantics with historical retention:
+  /// - Keep imported barcodes active (`source='off'` via import mapping)
+  /// - Demote historically protected, no-longer-imported rows to `off_retained`
+  /// - Delete no-longer-imported rows that are not historically referenced
+  @visibleForTesting
+  Future<void> retainHistoricallyNeededOffProducts({
+    required Set<String> importedOffBarcodes,
+    ProgressCallback? onProgress,
+    AppDatabase? testingDatabase,
+  }) async {
+    if (importedOffBarcodes.isEmpty) {
+      debugPrint(
+        'Skipping OFF retention pass because imported barcode set is empty.',
+      );
+      return;
+    }
+
+    final mainDb = testingDatabase ?? await DatabaseHelper.instance.database;
+    final protectedBarcodes = await _loadHistoricallyProtectedBarcodes(mainDb);
+
+    final offRows = await (mainDb.select(mainDb.products)
+          ..where((t) => t.source.equals('off')))
+        .get();
+
+    final barcodesToRetain = <String>[];
+    final barcodesToDelete = <String>[];
+
+    for (final row in offRows) {
+      final barcode = row.barcode.trim();
+      if (barcode.isEmpty || importedOffBarcodes.contains(barcode)) continue;
+
+      if (protectedBarcodes.contains(barcode)) {
+        barcodesToRetain.add(barcode);
+      } else {
+        barcodesToDelete.add(barcode);
+      }
+    }
+
+    await _applyOffRetentionUpdates(
+      mainDb: mainDb,
+      barcodesToRetain: barcodesToRetain,
+      barcodesToDelete: barcodesToDelete,
+    );
+
+    onProgress?.call(
+      'Update Produktdatenbank',
+      'OFF-Daten bereinigt: ${barcodesToRetain.length} behalten, ${barcodesToDelete.length} entfernt',
+      1.0,
+    );
+  }
+
+  Future<Set<String>> _loadHistoricallyProtectedBarcodes(
+    AppDatabase mainDb,
+  ) async {
+    final protected = <String>{};
+
+    final nutritionLegacyRows = await mainDb.customSelect(
+      '''
+      SELECT DISTINCT legacy_barcode AS barcode
+      FROM nutrition_logs
+      WHERE legacy_barcode IS NOT NULL AND TRIM(legacy_barcode) != ''
+      ''',
+    ).get();
+    for (final row in nutritionLegacyRows) {
+      final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
+      if (barcode.isNotEmpty) protected.add(barcode);
+    }
+
+    final favoritesRows = await mainDb.customSelect(
+      '''
+      SELECT DISTINCT barcode
+      FROM favorites
+      WHERE barcode IS NOT NULL AND TRIM(barcode) != ''
+      ''',
+    ).get();
+    for (final row in favoritesRows) {
+      final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
+      if (barcode.isNotEmpty) protected.add(barcode);
+    }
+
+    final mealBarcodeRows = await mainDb.customSelect(
+      '''
+      SELECT DISTINCT product_barcode AS barcode
+      FROM meal_items
+      WHERE product_barcode IS NOT NULL AND TRIM(product_barcode) != ''
+      ''',
+    ).get();
+    for (final row in mealBarcodeRows) {
+      final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
+      if (barcode.isNotEmpty) protected.add(barcode);
+    }
+
+    final productRefRows = await mainDb.customSelect(
+      '''
+      SELECT DISTINCT p.barcode AS barcode
+      FROM products p
+      WHERE p.barcode IS NOT NULL
+        AND TRIM(p.barcode) != ''
+        AND (
+          EXISTS (
+            SELECT 1 FROM nutrition_logs nl
+            WHERE nl.product_id = p.id
+          )
+          OR EXISTS (
+            SELECT 1 FROM meal_items mi
+            WHERE mi.product_id = p.id
+          )
+        )
+      ''',
+    ).get();
+    for (final row in productRefRows) {
+      final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
+      if (barcode.isNotEmpty) protected.add(barcode);
+    }
+
+    return protected;
+  }
+
+  Future<void> _applyOffRetentionUpdates({
+    required AppDatabase mainDb,
+    required List<String> barcodesToRetain,
+    required List<String> barcodesToDelete,
+  }) async {
+    const int chunkSize = 900;
+
+    for (var i = 0; i < barcodesToRetain.length; i += chunkSize) {
+      final chunk = barcodesToRetain.sublist(
+        i,
+        i + chunkSize > barcodesToRetain.length
+            ? barcodesToRetain.length
+            : i + chunkSize,
+      );
+      await (mainDb.update(mainDb.products)
+            ..where((t) => t.source.equals('off') & t.barcode.isIn(chunk)))
+          .write(const ProductsCompanion(source: drift.Value('off_retained')));
+    }
+
+    for (var i = 0; i < barcodesToDelete.length; i += chunkSize) {
+      final chunk = barcodesToDelete.sublist(
+        i,
+        i + chunkSize > barcodesToDelete.length
+            ? barcodesToDelete.length
+            : i + chunkSize,
+      );
+      await (mainDb.delete(mainDb.products)
+            ..where((t) => t.source.equals('off') & t.barcode.isIn(chunk)))
+          .go();
     }
   }
 

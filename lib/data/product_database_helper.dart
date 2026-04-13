@@ -32,6 +32,7 @@ class ProductDatabaseHelper {
         source = FoodItemSource.base;
         break;
       case 'off':
+      case 'off_retained':
         source = FoodItemSource.off;
         break;
       default:
@@ -293,6 +294,7 @@ class ProductDatabaseHelper {
       case 'base':
         return FoodItemSource.base;
       case 'off':
+      case 'off_retained':
         return FoodItemSource.off;
       case 'user':
         return FoodItemSource.user;
