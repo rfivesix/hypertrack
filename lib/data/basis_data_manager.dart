@@ -375,7 +375,10 @@ class BasisDataManager {
               batch.insert(
                 mainDb.exercises,
                 companion,
-                mode: drift.InsertMode.insertOrReplace,
+                onConflict: drift.DoUpdate(
+                  (_) => companion,
+                  target: [mainDb.exercises.id],
+                ),
               );
             } else if (companion is FoodCategoriesCompanion) {
               batch.insert(

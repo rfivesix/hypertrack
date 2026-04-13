@@ -1,6 +1,8 @@
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/data/database_helper.dart';
+import 'package:hypertrack/data/drift_database.dart' as db;
 import 'package:hypertrack/data/drift_database.dart' show AppDatabase;
 import 'package:hypertrack/data/workout_database_helper.dart';
 import 'package:hypertrack/models/routine_exercise.dart';
@@ -283,6 +285,103 @@ void main() {
       expect(manager.totalVolume, 1340);
       expect(manager.pauseTimes.values.toSet(), {90, 120});
     });
+
+    test('restoreWorkoutSession resolves exercise by stored exercise_id',
+        () async {
+      await database.into(database.exercises).insert(
+            db.ExercisesCompanion(
+              id: const drift.Value('catalog-bench-1'),
+              nameDe: const drift.Value('Bankdruecken Alt'),
+              nameEn: const drift.Value('Bench Press Old'),
+              descriptionDe: const drift.Value('alt'),
+              descriptionEn: const drift.Value('old'),
+              categoryName: const drift.Value('Strength'),
+              musclesPrimary: const drift.Value('["chest"]'),
+              musclesSecondary: const drift.Value('["triceps"]'),
+              source: const drift.Value('base'),
+              isCustom: const drift.Value(false),
+            ),
+          );
+
+      final log = await workoutDb.startWorkout(routineName: 'Rename Case');
+      await workoutDb.insertSetLog(
+        SetLog(
+          workoutLogId: log.id!,
+          exerciseName: 'Bench Press Old',
+          setType: 'normal',
+          weightKg: 100,
+          reps: 5,
+          restTimeSeconds: 90,
+          isCompleted: true,
+          log_order: 0,
+        ),
+      );
+
+      await (database.update(database.exercises)
+            ..where((tbl) => tbl.id.equals('catalog-bench-1')))
+          .write(
+        const db.ExercisesCompanion(
+          nameDe: drift.Value('Bankdruecken Neu'),
+          nameEn: drift.Value('Bench Press New'),
+          descriptionDe: drift.Value('neu'),
+          descriptionEn: drift.Value('new'),
+        ),
+      );
+
+      await manager.restoreWorkoutSession(log);
+
+      expect(manager.exercises.length, 1);
+      expect(manager.exercises.first.exercise.nameEn, 'Bench Press New');
+      expect(manager.setLogs.length, 1);
+      expect(manager.totalVolume, 500);
+    });
+
+    test(
+      'restoreWorkoutSession keeps historical sets even when exercise row is missing',
+      () async {
+        await database.into(database.exercises).insert(
+              db.ExercisesCompanion(
+                id: const drift.Value('catalog-missing-1'),
+                nameDe: const drift.Value('Historische Uebung'),
+                nameEn: const drift.Value('Historical Exercise'),
+                categoryName: const drift.Value('Strength'),
+                musclesPrimary: const drift.Value('["back"]'),
+                musclesSecondary: const drift.Value('[]'),
+                source: const drift.Value('base'),
+                isCustom: const drift.Value(false),
+              ),
+            );
+
+        final log = await workoutDb.startWorkout(routineName: 'Missing Case');
+        await workoutDb.insertSetLog(
+          SetLog(
+            workoutLogId: log.id!,
+            exerciseName: 'Historical Exercise',
+            setType: 'normal',
+            weightKg: 80,
+            reps: 8,
+            restTimeSeconds: 75,
+            isCompleted: true,
+            log_order: 0,
+          ),
+        );
+
+        await database.customStatement(
+          "UPDATE set_logs SET exercise_id = NULL WHERE exercise_name_snapshot = 'Historical Exercise'",
+        );
+        await (database.delete(
+          database.exercises,
+        )..where((tbl) => tbl.id.equals('catalog-missing-1')))
+            .go();
+
+        await manager.restoreWorkoutSession(log);
+
+        expect(manager.exercises.length, 1);
+        expect(manager.exercises.first.exercise.nameEn, 'Historical Exercise');
+        expect(manager.exercises.first.exercise.categoryName, 'Unknown');
+        expect(manager.setLogs.length, 1);
+      },
+    );
 
     test('finishWorkout deletes incomplete sets and clears manager session',
         () async {

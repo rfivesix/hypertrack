@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
+import '../models/set_log.dart';
 import '../models/workout_log.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
@@ -44,30 +45,24 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     if (data != null) {
       final Map<String, String> summaryMap = {};
 
-      // FIX: Typ-Sicherheit erhöhen: List<SetLog> statt dynamic
-      final groupedSets =
-          <String, List<dynamic>>{}; // Bleibt dynamisch wegen Initialisierung
+      final groupedSets = <String, List<SetLog>>{};
       for (var set in data.sets) {
         groupedSets.putIfAbsent(set.exerciseName, () => []).add(set);
       }
 
       for (var entry in groupedSets.entries) {
         final name = entry.key;
-        final sets = entry.value; // ist List<dynamic>
+        final sets = entry.value;
 
-        final exercise = await db.getExerciseByName(name);
+        final exercise = await db.resolveExerciseForSetLog(sets.first);
         final isCardio = exercise?.categoryName.toLowerCase() == 'cardio';
 
         if (isCardio) {
           double totalDist = 0;
           int totalSeconds = 0;
           for (var s in sets) {
-            // FIX: Expliziter Cast, um Analyzer-Fehler zu vermeiden
-            // Wir wissen, dass 's' ein SetLog ist oder zumindest durationSeconds hat.
-            // Der Fehler kam vermutlich, weil 's' dynamic war und durationSeconds nullable int.
-            // Der Analyzer ist bei dynamic manchmal streng oder verwirrt bei +=.
-            final dist = (s.distanceKm as num?)?.toDouble() ?? 0.0;
-            final dur = (s.durationSeconds as num?)?.toInt() ?? 0;
+            final dist = s.distanceKm ?? 0.0;
+            final dur = s.durationSeconds ?? 0;
 
             totalDist += dist;
             totalSeconds += dur;
@@ -78,8 +73,8 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
         } else {
           double totalVol = 0;
           for (var s in sets) {
-            final w = (s.weightKg as num?)?.toDouble() ?? 0.0;
-            final r = (s.reps as num?)?.toInt() ?? 0;
+            final w = s.weightKg ?? 0.0;
+            final r = s.reps ?? 0;
             totalVol += w * r;
           }
           summaryMap[name] = "${totalVol.toStringAsFixed(0)} kg";

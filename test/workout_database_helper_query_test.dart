@@ -145,5 +145,96 @@ void main() {
         ],
       );
     });
+
+    test('catalog-style upsert updates metadata for existing exercise id',
+        () async {
+      await database.into(database.exercises).insert(
+            db.ExercisesCompanion(
+              id: const drift.Value('catalog-1'),
+              nameDe: const drift.Value('Bankdruecken Alt'),
+              nameEn: const drift.Value('Bench Press Old'),
+              descriptionDe: const drift.Value('alt'),
+              descriptionEn: const drift.Value('old'),
+              categoryName: const drift.Value('Strength'),
+              musclesPrimary: const drift.Value('["chest"]'),
+              musclesSecondary: const drift.Value('["triceps"]'),
+              source: const drift.Value('base'),
+              isCustom: const drift.Value(false),
+            ),
+          );
+
+      final refreshedCompanion = db.ExercisesCompanion(
+        id: const drift.Value('catalog-1'),
+        nameDe: const drift.Value('Bankdruecken Neu'),
+        nameEn: const drift.Value('Bench Press New'),
+        descriptionDe: const drift.Value('neu'),
+        descriptionEn: const drift.Value('new'),
+        categoryName: const drift.Value('Strength'),
+        musclesPrimary: const drift.Value('["chest"]'),
+        musclesSecondary: const drift.Value('["front_delts","triceps"]'),
+        source: const drift.Value('base'),
+        isCustom: const drift.Value(false),
+      );
+
+      await database.into(database.exercises).insert(
+            refreshedCompanion,
+            onConflict: drift.DoUpdate(
+              (_) => refreshedCompanion,
+              target: [database.exercises.id],
+            ),
+          );
+
+      final refreshed = await helper.getExerciseByUuid('catalog-1');
+      expect(refreshed, isNotNull);
+      expect(refreshed!.nameEn, 'Bench Press New');
+      expect(refreshed.secondaryMuscles, contains('front_delts'));
+    });
+
+    test(
+        'catalog-style refresh remains non-destructive for exercises not present',
+        () async {
+      await database.into(database.exercises).insert(
+            db.ExercisesCompanion(
+              id: const drift.Value('catalog-keep'),
+              nameDe: const drift.Value('Historische Uebung'),
+              nameEn: const drift.Value('Historical Exercise'),
+              categoryName: const drift.Value('Strength'),
+              source: const drift.Value('base'),
+              isCustom: const drift.Value(false),
+            ),
+          );
+      await database.into(database.exercises).insert(
+            db.ExercisesCompanion(
+              id: const drift.Value('catalog-update'),
+              nameDe: const drift.Value('Rudern Alt'),
+              nameEn: const drift.Value('Row Old'),
+              categoryName: const drift.Value('Strength'),
+              source: const drift.Value('base'),
+              isCustom: const drift.Value(false),
+            ),
+          );
+
+      final refreshedCompanion = db.ExercisesCompanion(
+        id: const drift.Value('catalog-update'),
+        nameDe: const drift.Value('Rudern Neu'),
+        nameEn: const drift.Value('Row New'),
+        categoryName: const drift.Value('Strength'),
+        source: const drift.Value('base'),
+        isCustom: const drift.Value(false),
+      );
+      await database.into(database.exercises).insert(
+            refreshedCompanion,
+            onConflict: drift.DoUpdate(
+              (_) => refreshedCompanion,
+              target: [database.exercises.id],
+            ),
+          );
+
+      final names = (await helper
+              .searchExercises(query: '', selectedCategories: const []))
+          .map((e) => e.nameEn)
+          .toList();
+      expect(names, containsAll(['Historical Exercise', 'Row New']));
+    });
   });
 }
