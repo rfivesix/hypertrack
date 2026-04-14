@@ -16,6 +16,7 @@ import '../features/nutrition_recommendation/presentation/prior_activity_help_bl
 import '../features/nutrition_recommendation/presentation/recommendation_ui_copy.dart';
 import '../features/nutrition_recommendation/domain/goal_models.dart';
 import '../features/nutrition_recommendation/domain/recommendation_models.dart';
+import '../services/app_tour_service.dart';
 
 /// The initial setup flow for new users.
 ///
@@ -283,6 +284,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     // 5. Fertig markieren
     await prefs.setBool('hasSeenOnboarding', true);
+    await AppTourService.instance.queuePostOnboardingOffer();
 
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -323,6 +325,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (success) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasSeenOnboarding', true);
+      await AppTourService.instance.queuePostOnboardingOffer();
 
       if (!mounted) return;
       ScaffoldMessenger.of(

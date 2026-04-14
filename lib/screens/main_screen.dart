@@ -39,6 +39,9 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/keep_alive_page.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
+import '../navigation/app_route_observer.dart';
+import '../services/app_tour_service.dart';
+import '../widgets/app_tour_overlay.dart';
 
 /// The root scaffold containing the main navigation structure.
 ///
@@ -52,12 +55,24 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen>
+    with TickerProviderStateMixin, RouteAware {
   late PageController _pageController;
   int _currentIndex = 0;
   final GlobalKey<DiaryScreenState> _tagebuchKey =
       GlobalKey<DiaryScreenState>();
+  final GlobalKey _tourNavigationBarKey = GlobalKey();
+  final GlobalKey _tourFabKey = GlobalKey();
+  final GlobalKey _tourDiaryTabKey = GlobalKey();
+  final GlobalKey _tourWorkoutTabKey = GlobalKey();
+  final GlobalKey _tourStatisticsTabKey = GlobalKey();
+  final GlobalKey _tourNutritionTabKey = GlobalKey();
   bool _isAddMenuOpen = false;
+  bool _isTourActive = false;
+  bool _isTourOfferVisible = false;
+  bool _isRouteObserverAttached = false;
+  int _tourStepIndex = 0;
+  Rect? _tourTargetRect;
   late final AnimationController _menuController;
   final StepsAggregationRepository _stepsRepository =
       HealthStepsAggregationRepository();
@@ -86,10 +101,36 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handlePendingAppTourEntry();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (!_isRouteObserverAttached && route is PageRoute<dynamic>) {
+      appRouteObserver.subscribe(this, route);
+      _isRouteObserverAttached = true;
+    }
+  }
+
+  @override
+  void didPush() {
+    _handlePendingAppTourEntry();
+  }
+
+  @override
+  void didPopNext() {
+    _handlePendingAppTourEntry();
   }
 
   @override
   void dispose() {
+    if (_isRouteObserverAttached) {
+      appRouteObserver.unsubscribe(this);
+    }
     _pageController.dispose();
     _menuController.dispose();
     super.dispose();
@@ -768,6 +809,177 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ];
   }
 
+  List<_AppTourStep> _buildAppTourSteps(AppLocalizations l10n) {
+    return [
+      _AppTourStep(
+        anchorKey: _tourNavigationBarKey,
+        tabIndex: 0,
+        title: l10n.appTourStepNavigationTitle,
+        description: l10n.appTourStepNavigationBody,
+      ),
+      _AppTourStep(
+        anchorKey: _tourFabKey,
+        tabIndex: 0,
+        title: l10n.appTourStepQuickActionsTitle,
+        description: l10n.appTourStepQuickActionsBody,
+      ),
+      _AppTourStep(
+        anchorKey: _tourDiaryTabKey,
+        tabIndex: 0,
+        title: l10n.appTourStepDiaryTitle,
+        description: l10n.appTourStepDiaryBody,
+      ),
+      _AppTourStep(
+        anchorKey: _tourWorkoutTabKey,
+        tabIndex: 1,
+        title: l10n.appTourStepWorkoutTitle,
+        description: l10n.appTourStepWorkoutBody,
+      ),
+      _AppTourStep(
+        anchorKey: _tourNutritionTabKey,
+        tabIndex: 3,
+        title: l10n.appTourStepNutritionTitle,
+        description: l10n.appTourStepNutritionBody,
+      ),
+      _AppTourStep(
+        anchorKey: _tourStatisticsTabKey,
+        tabIndex: 2,
+        title: l10n.appTourStepStatisticsTitle,
+        description: l10n.appTourStepStatisticsBody,
+      ),
+    ];
+  }
+
+  Rect? _rectForKey(GlobalKey key) {
+    final targetContext = key.currentContext;
+    if (targetContext == null) return null;
+    final renderObject = targetContext.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return null;
+    final topLeft = renderObject.localToGlobal(Offset.zero);
+    return topLeft & renderObject.size;
+  }
+
+  Future<void> _handlePendingAppTourEntry() async {
+    if (!mounted || _isTourActive || _isTourOfferVisible) return;
+    final entry = await AppTourService.instance.consumePendingEntryPoint();
+    if (!mounted || entry == null) return;
+
+    switch (entry) {
+      case AppTourEntryPoint.postOnboardingOffer:
+        await _showPostOnboardingTourOffer();
+        break;
+      case AppTourEntryPoint.settingsRestart:
+        await _startAppTour();
+        break;
+    }
+  }
+
+  Future<void> _showPostOnboardingTourOffer() async {
+    if (!mounted || _isTourOfferVisible) return;
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _isTourOfferVisible = true);
+    final shouldStartTour = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          key: const Key('app_tour_offer_dialog'),
+          title: Text(l10n.appTourOfferTitle),
+          content: Text(l10n.appTourOfferBody),
+          actions: [
+            TextButton(
+              key: const Key('app_tour_offer_skip_button'),
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.appTourOfferSkip),
+            ),
+            FilledButton(
+              key: const Key('app_tour_offer_start_button'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.appTourOfferStart),
+            ),
+          ],
+        );
+      },
+    );
+    if (!mounted) return;
+    setState(() => _isTourOfferVisible = false);
+    await AppTourService.instance.markOfferShown();
+
+    if (shouldStartTour == true) {
+      await _startAppTour();
+      return;
+    }
+    await AppTourService.instance.markSkipped();
+  }
+
+  Future<void> _startAppTour() async {
+    if (!mounted) return;
+    await AppTourService.instance.markOfferShown();
+    setState(() {
+      _isTourActive = true;
+      _tourStepIndex = 0;
+      _tourTargetRect = null;
+      _isAddMenuOpen = false;
+    });
+    _menuController.reverse();
+    await _showAppTourStep(0);
+  }
+
+  Future<void> _showAppTourStep(int index) async {
+    if (!mounted || !_isTourActive) return;
+    final l10n = AppLocalizations.of(context)!;
+    final steps = _buildAppTourSteps(l10n);
+    if (index < 0 || index >= steps.length) return;
+    final step = steps[index];
+
+    if (_currentIndex != step.tabIndex) {
+      _onNavigationTapped(step.tabIndex);
+    }
+
+    setState(() {
+      _tourStepIndex = index;
+      _tourTargetRect = null;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_isTourActive) return;
+      final targetRect =
+          _rectForKey(step.anchorKey) ?? _rectForKey(_tourNavigationBarKey);
+      setState(() => _tourTargetRect = targetRect);
+    });
+  }
+
+  Future<void> _nextTourStep() async {
+    if (!mounted || !_isTourActive) return;
+    final l10n = AppLocalizations.of(context)!;
+    final steps = _buildAppTourSteps(l10n);
+    final nextIndex = _tourStepIndex + 1;
+    if (nextIndex >= steps.length) {
+      await _completeAppTour();
+      return;
+    }
+    await _showAppTourStep(nextIndex);
+  }
+
+  Future<void> _skipAppTour() async {
+    if (!mounted || !_isTourActive) return;
+    setState(() {
+      _isTourActive = false;
+      _tourTargetRect = null;
+      _tourStepIndex = 0;
+    });
+    await AppTourService.instance.markSkipped();
+  }
+
+  Future<void> _completeAppTour() async {
+    if (!mounted || !_isTourActive) return;
+    setState(() {
+      _isTourActive = false;
+      _tourTargetRect = null;
+      _tourStepIndex = 0;
+    });
+    await AppTourService.instance.markCompleted();
+  }
+
   String _formatDuration(Duration d) {
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
@@ -781,6 +993,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final appTourSteps = _buildAppTourSteps(l10n);
+    final activeTourStep = (_isTourActive &&
+            _tourStepIndex >= 0 &&
+            _tourStepIndex < appTourSteps.length)
+        ? appTourSteps[_tourStepIndex]
+        : null;
 
     final manager = context.watch<WorkoutSessionManager>();
     final bool isWorkoutRunning = manager.isActive;
@@ -880,32 +1098,51 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: GlassBottomNavBar(
-                  currentIndex: _currentIndex,
-                  onTap: _onNavigationTapped,
-                  onFabTap: _toggleAddMenu,
-                  items: [
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.book_outlined),
-                      label: l10n.diary,
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.fitness_center_outlined),
-                      label: l10n.workout,
-                    ),
-                    const BottomNavigationBarItem(
-                      icon: Icon(Icons.bar_chart_outlined),
-                      label: 'Stats',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.restaurant_menu_rounded),
-                      label: l10n.nutrition,
-                    ),
-                  ],
+                child: KeyedSubtree(
+                  key: _tourNavigationBarKey,
+                  child: GlassBottomNavBar(
+                    currentIndex: _currentIndex,
+                    onTap: _onNavigationTapped,
+                    onFabTap: _toggleAddMenu,
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          Icons.book_outlined,
+                          key: _tourDiaryTabKey,
+                        ),
+                        label: l10n.diary,
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          Icons.fitness_center_outlined,
+                          key: _tourWorkoutTabKey,
+                        ),
+                        label: l10n.workout,
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          Icons.bar_chart_outlined,
+                          key: _tourStatisticsTabKey,
+                        ),
+                        label: l10n.statistics,
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          Icons.restaurant_menu_rounded,
+                          key: _tourNutritionTabKey,
+                        ),
+                        label: l10n.nutrition,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SizedBox(width: kBarFabGap),
-              GlassFab(onPressed: _toggleAddMenu, icon: Icons.add),
+              GlassFab(
+                key: _tourFabKey,
+                onPressed: _toggleAddMenu,
+                icon: Icons.add,
+              ),
             ],
           ),
         ),
@@ -1212,6 +1449,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             );
           },
         ),
+        if (_isTourActive && activeTourStep != null)
+          AppTourOverlay(
+            targetRect: _tourTargetRect,
+            title: activeTourStep.title,
+            description: activeTourStep.description,
+            progressLabel: '${_tourStepIndex + 1}/${appTourSteps.length}',
+            nextLabel: _tourStepIndex == appTourSteps.length - 1
+                ? l10n.appTourDone
+                : l10n.appTourNext,
+            skipLabel: l10n.appTourSkip,
+            onNext: _nextTourStep,
+            onSkip: _skipAppTour,
+          ),
       ],
     );
   }
@@ -1244,6 +1494,20 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       ),
     );
   }
+}
+
+class _AppTourStep {
+  final GlobalKey anchorKey;
+  final int tabIndex;
+  final String title;
+  final String description;
+
+  const _AppTourStep({
+    required this.anchorKey,
+    required this.tabIndex,
+    required this.title,
+    required this.description,
+  });
 }
 
 class _FrostedBar extends StatelessWidget {

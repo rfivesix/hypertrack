@@ -891,6 +891,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get settingsGuidedTourSectionTitle => 'Guided tour';
+
+  @override
+  String get settingsRestartAppTourTitle => 'Restart app tour';
+
+  @override
+  String get settingsRestartAppTourSubtitle =>
+      'Run the short in-app walkthrough again.';
+
+  @override
   String get my_goals => 'My goals';
 
   @override
@@ -1067,6 +1077,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onbShowTutorialAgain => 'Show tutorial again';
+
+  @override
+  String get appTourOfferTitle => 'Take a quick app tour?';
+
+  @override
+  String get appTourOfferBody =>
+      'Get a short walkthrough of the main app areas. You can skip now and restart later in Settings.';
+
+  @override
+  String get appTourOfferStart => 'Start tour';
+
+  @override
+  String get appTourOfferSkip => 'Maybe later';
+
+  @override
+  String get appTourSkip => 'Skip';
+
+  @override
+  String get appTourNext => 'Next';
+
+  @override
+  String get appTourDone => 'Done';
+
+  @override
+  String get appTourStepNavigationTitle => 'Main navigation';
+
+  @override
+  String get appTourStepNavigationBody =>
+      'Use the bottom tabs to move between Diary, Workout, Statistics, and Nutrition.';
+
+  @override
+  String get appTourStepQuickActionsTitle => 'Quick actions';
+
+  @override
+  String get appTourStepQuickActionsBody =>
+      'Tap the plus button to quickly add food, fluids, measurements, workouts, and more.';
+
+  @override
+  String get appTourStepDiaryTitle => 'Diary';
+
+  @override
+  String get appTourStepDiaryBody =>
+      'Diary is your daily overview. Track meals, hydration, supplements, and your day at a glance.';
+
+  @override
+  String get appTourStepWorkoutTitle => 'Workout';
+
+  @override
+  String get appTourStepWorkoutBody =>
+      'Workout is where you start sessions, manage routines, and review your training history.';
+
+  @override
+  String get appTourStepNutritionTitle => 'Nutrition';
+
+  @override
+  String get appTourStepNutritionBody =>
+      'Nutrition helps you plan meals, review targets, and access tools like meal templates.';
+
+  @override
+  String get appTourStepStatisticsTitle => 'Statistics';
+
+  @override
+  String get appTourStepStatisticsBody =>
+      'Statistics shows trends and progress so you can understand how your data changes over time.';
 
   @override
   String get onbSetGoalsCta => 'Set goals';
