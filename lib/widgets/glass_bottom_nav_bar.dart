@@ -93,7 +93,7 @@ class GlassBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
     final themeService = context.watch<ThemeService>();
 
     final navItemsRow = Row(
@@ -113,12 +113,12 @@ class GlassBottomNavBar extends StatelessWidget {
       case 1:
         // neutrale Tönung ableiten (funktioniert auf Weiß & Schwarz)
         final Color neutralTint = (isDark ? Colors.white : Colors.black)
-            .withOpacity(isDark ? 0.1 : 0.1);
+            .withValues(alpha: isDark ? 0.1 : 0.1);
 
         // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
         final Color effectiveGlass = Color.alphaBlend(
           neutralTint,
-          bg.withOpacity(isDark ? 0.8 : 0.5),
+          bg.withValues(alpha: isDark ? 0.8 : 0.5),
         );
 
         // Drag-to-select + Release-to-activate: über GestureDetector
@@ -175,7 +175,8 @@ class GlassBottomNavBar extends StatelessWidget {
                   ),
                   shape: const LiquidRoundedSuperellipse(borderRadius: 99),
                   child: GlassGlow(
-                    glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+                    glowColor:
+                        Colors.white.withValues(alpha: isDark ? 0.24 : 0.18),
                     glowRadius: 1.0,
                     child: SizedBox(
                       height: barHeight,
@@ -201,8 +202,8 @@ class GlassBottomNavBar extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(99),
                                   border: Border.all(
                                     color: isDark
-                                        ? Colors.white.withOpacity(0.20)
-                                        : Colors.black.withOpacity(0.08),
+                                        ? Colors.white.withValues(alpha: 0.20)
+                                        : Colors.black.withValues(alpha: 0.08),
                                     width: 1.2,
                                   ),
                                 ),
@@ -229,12 +230,12 @@ class GlassBottomNavBar extends StatelessWidget {
               height: barHeight,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: bg.withOpacity(0.8),
+                color: bg.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withOpacity(0.30)
-                      : Colors.black.withOpacity(0.10),
+                      ? Colors.white.withValues(alpha: 0.30)
+                      : Colors.black.withValues(alpha: 0.10),
                   width: 1.5,
                 ),
               ),

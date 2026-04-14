@@ -218,7 +218,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           Divider(
             height: 1,
             thickness: 1,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
           ),
           Expanded(
             child: _isLoading
@@ -326,7 +326,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           decoration: BoxDecoration(
             color: _selectedCategories.isNotEmpty
                 ? colorScheme.primary
-                : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Row(

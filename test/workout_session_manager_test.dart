@@ -160,7 +160,7 @@ void main() {
       expect(newSet.weightKg, 100);
       expect(newSet.reps, 8);
       expect(newSet.isCompleted, isFalse);
-      expect(newSet.log_order, 1);
+      expect(newSet.logOrder, 1);
       expect(manager.totalSets, 2);
     });
 
@@ -238,7 +238,7 @@ void main() {
           reps: 5,
           restTimeSeconds: 90,
           isCompleted: true,
-          log_order: 0,
+          logOrder: 0,
         ),
       );
       await workoutDb.insertSetLog(
@@ -250,7 +250,7 @@ void main() {
           reps: 4,
           restTimeSeconds: 90,
           isCompleted: true,
-          log_order: 1,
+          logOrder: 1,
         ),
       );
       await workoutDb.insertSetLog(
@@ -262,7 +262,7 @@ void main() {
           reps: 3,
           restTimeSeconds: 120,
           isCompleted: true,
-          log_order: 2,
+          logOrder: 2,
         ),
       );
 
@@ -313,7 +313,7 @@ void main() {
           reps: 5,
           restTimeSeconds: 90,
           isCompleted: true,
-          log_order: 0,
+          logOrder: 0,
         ),
       );
 
@@ -362,7 +362,7 @@ void main() {
             reps: 8,
             restTimeSeconds: 75,
             isCompleted: true,
-            log_order: 0,
+            logOrder: 0,
           ),
         );
 
@@ -442,7 +442,7 @@ void main() {
       expect(storedLog.notes, 'Great session');
       expect(storedSets.length, 1);
       expect(storedSets.first.exerciseName, 'Exercise A');
-      expect(storedSets.first.log_order, 0);
+      expect(storedSets.first.logOrder, 0);
       expect(storedSets.first.isCompleted, isTrue);
     });
   });

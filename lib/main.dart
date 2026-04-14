@@ -186,7 +186,7 @@ class _MyAppState extends State<MyApp> {
           ),
 
           dividerTheme: DividerThemeData(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             thickness: 1,
             space: 24,
           ),
@@ -215,7 +215,7 @@ class _MyAppState extends State<MyApp> {
           ),
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: lightScheme.primary,
-            selectionColor: lightScheme.primary.withOpacity(0.25),
+            selectionColor: lightScheme.primary.withValues(alpha: 0.25),
             selectionHandleColor: lightScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
@@ -229,7 +229,7 @@ class _MyAppState extends State<MyApp> {
               (s) => lightScheme.primary,
             ),
             trackColor: WidgetStateProperty.resolveWith(
-              (s) => lightScheme.primary.withOpacity(0.5),
+              (s) => lightScheme.primary.withValues(alpha: 0.5),
             ),
           ),
           dialogTheme: DialogThemeData(
@@ -302,7 +302,7 @@ class _MyAppState extends State<MyApp> {
           ),
 
           dividerTheme: DividerThemeData(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             thickness: 1,
             space: 24,
           ),
@@ -330,7 +330,7 @@ class _MyAppState extends State<MyApp> {
           ),
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: darkScheme.primary,
-            selectionColor: darkScheme.primary.withOpacity(0.35),
+            selectionColor: darkScheme.primary.withValues(alpha: 0.35),
             selectionHandleColor: darkScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
@@ -344,7 +344,7 @@ class _MyAppState extends State<MyApp> {
               (s) => darkScheme.primary,
             ),
             trackColor: WidgetStateProperty.resolveWith(
-              (s) => darkScheme.primary.withOpacity(0.5),
+              (s) => darkScheme.primary.withValues(alpha: 0.5),
             ),
           ),
           dialogTheme: DialogThemeData(

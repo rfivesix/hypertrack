@@ -111,7 +111,7 @@ class _WorkoutProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bg = Colors.white.withOpacity(0.10); // dezentes Grau
+    final bg = Colors.white.withValues(alpha: 0.10); // dezentes Grau
     final fg = cs.primary;
 
     final bar = ClipRRect(

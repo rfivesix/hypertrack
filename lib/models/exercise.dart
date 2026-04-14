@@ -151,11 +151,12 @@ class Exercise {
   /// Returns the name of the exercise localized to the user's language.
   ///
   /// Currently fallbacks to [nameDe] if available, otherwise [nameEn].
-  String getLocalizedName(context) => nameDe.isNotEmpty ? nameDe : nameEn;
+  String getLocalizedName(Object context) =>
+      nameDe.isNotEmpty ? nameDe : nameEn;
 
   /// Returns the description of the exercise localized to the user's language.
   ///
   /// Currently fallbacks to [descriptionDe] if available, otherwise [descriptionEn].
-  String getLocalizedDescription(context) =>
+  String getLocalizedDescription(Object context) =>
       descriptionDe.isNotEmpty ? descriptionDe : descriptionEn;
 }

@@ -131,9 +131,9 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
   // NEUE METHODEN FÜR DAS MENÜ
   void _duplicateRoutine(int routineId) async {
+    final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
     await WorkoutDatabaseHelper.instance.duplicateRoutine(routineId);
     HapticFeedbackService.instance.confirmationFeedback();
-    final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
     _loadRoutines(l10n); // l10n hier übergeben
   }
 

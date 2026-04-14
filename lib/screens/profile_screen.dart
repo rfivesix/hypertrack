@@ -199,6 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ), // optional, sonst null lassen wenn nicht im UI
                             gender: selectedGender,
                           );
+                          if (!ctx.mounted) return;
                           close();
                           Navigator.of(ctx).pop();
                           // UI neu laden
@@ -283,7 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   radius:
                                       40, // Etwas kleiner als vorher (war 50), passt besser in Row
                                   backgroundColor: theme.colorScheme.primary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   backgroundImage:
                                       profileService.profileImagePath != null
                                           ? FileImage(
@@ -363,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Icon(
                             Icons.edit_outlined,
                             color: theme.colorScheme.onSurfaceVariant
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                           ),
                         ],
                       ),

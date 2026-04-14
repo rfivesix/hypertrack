@@ -54,7 +54,7 @@ class _GlassMenuState extends State<GlassMenu>
     return GestureDetector(
       onTap: widget.onDismiss,
       child: Scaffold(
-        backgroundColor: Colors.black.withOpacity(0.4),
+        backgroundColor: Colors.black.withValues(alpha: 0.4),
         body: Center(
           child: Wrap(
             spacing: 24,
@@ -116,15 +116,15 @@ class _GlassMenuState extends State<GlassMenu>
           width: 76,
           height: 76,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),

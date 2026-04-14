@@ -34,7 +34,7 @@ class ShadowContainer extends StatelessWidget {
             [
               // Standard-Schatten, wenn keiner angegeben ist
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 15,
                 spreadRadius: 0,
                 offset: const Offset(0, 8),

@@ -83,6 +83,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       allowedExtensions: ['json'],
     );
     if (result == null || result.files.single.path == null) return;
+    if (!mounted) return;
 
     final filePath = result.files.single.path!;
     final l10n = AppLocalizations.of(context)!;
@@ -118,6 +119,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten
         final unknown =
             await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+        if (!mounted) return;
         if (mounted && unknown.isNotEmpty) {
           /*final bool? changed = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
@@ -128,16 +130,25 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           // Optional: Nach Anwendung erneut prüfen/refreshen, aber keine Pflicht.
         }
 
-        await showDialog(
+        await showGlassBottomMenu<void>(
           context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: Text(l10n.snackbarImportSuccessTitle),
-            content: Text(l10n.snackbarImportSuccessContent),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.snackbarButtonOK),
+          title: l10n.snackbarImportSuccessTitle,
+          isDismissible: false,
+          enableDrag: false,
+          contentBuilder: (ctx, close) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.snackbarImportSuccessContent,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.snackbarButtonOK),
+                ),
               ),
             ],
           ),
@@ -171,6 +182,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         );
       }
     }
+    if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     if (count > 0) {
       ScaffoldMessenger.of(
@@ -312,7 +324,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                             .exportFullBackupEncrypted(pw);
                         if (!mounted) return;
                         setState(() => _isFullBackupRunning = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        ScaffoldMessenger.of(this.context).showSnackBar(
                           SnackBar(
                             content: Text(
                               ok
@@ -544,7 +556,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                               _lastAutoBackupError!.isNotEmpty
                           ? '${l10n.snackbarAutoBackupFailed}\n$_lastAutoBackupError'
                           : l10n.snackbarAutoBackupFailed);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(this.context).showSnackBar(
                     SnackBar(
                       content: Text(successText),
                       backgroundColor: ok
@@ -583,8 +595,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   Future<void> _openExerciseMapping() async {
     final unknown =
         await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
-    final l10n = AppLocalizations.of(context)!;
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     if (unknown.isEmpty) {
       ScaffoldMessenger.of(
         context,

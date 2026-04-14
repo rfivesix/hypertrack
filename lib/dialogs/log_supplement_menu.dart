@@ -58,8 +58,10 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
           (s) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
             child: Material(
-              color: Colors.white.withOpacity(
-                Theme.of(context).brightness == Brightness.dark ? 0.06 : 0.08,
+              color: Colors.white.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? 0.06
+                    : 0.08,
               ),
               borderRadius: BorderRadius.circular(16),
               child: InkWell(

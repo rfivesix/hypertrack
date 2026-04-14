@@ -31,8 +31,8 @@ class SummaryCard extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
 
     final background = brightness == Brightness.dark
-        ? summary_card_dark_mode
-        : summary_card_white_mode;
+        ? summaryCardDarkMode
+        : summaryCardWhiteMode;
 
     final card = Container(
       margin: margin,
@@ -44,7 +44,7 @@ class SummaryCard extends StatelessWidget {
         /*
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha:0.25),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -73,13 +73,13 @@ class SummaryCard extends StatelessWidget {
 
     // KORREKTUR: Hintergrund im Light Mode weniger transparent für besseren Kontrast
     final backgroundColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.10)
-        : Colors.white.withOpacity(0.65); // War 0.40, jetzt weniger durchsichtig
+        ? Colors.white.withValues(alpha:0.10)
+        : Colors.white.withValues(alpha:0.65); // War 0.40, jetzt weniger durchsichtig
 
     // KORREKTUR: Randfarbe im Light Mode ist jetzt ein dunkles Grau statt Weiß
     final borderColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.20)
-        : Colors.black.withOpacity(0.12); // War Weiß, jetzt dunkles Grau mit Transparenz
+        ? Colors.white.withValues(alpha:0.20)
+        : Colors.black.withValues(alpha:0.12); // War Weiß, jetzt dunkles Grau mit Transparenz
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),

@@ -62,13 +62,13 @@ class _GlassFabState extends State<GlassFab>
   Widget build(BuildContext context) {
     final themeService = context.watch<ThemeService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
     final hasLabel = widget.label != null;
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withValues(alpha: isDark ? 0.1 : 0.1);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      bg.withOpacity(isDark ? 0.8 : 0.5),
+      bg.withValues(alpha: isDark ? 0.8 : 0.5),
     );
 
     final iconAndText = Padding(
@@ -120,7 +120,7 @@ class _GlassFabState extends State<GlassFab>
                 ? const LiquidRoundedSuperellipse(borderRadius: 99)
                 : const LiquidOval(),
             child: GlassGlow(
-              glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+              glowColor: Colors.white.withValues(alpha: isDark ? 0.24 : 0.18),
               glowRadius: 1.0,
               child: hasLabel
                   // PILLE: Breite aus Inhalt + Padding
@@ -136,8 +136,8 @@ class _GlassFabState extends State<GlassFab>
                         borderRadius: BorderRadius.circular(99),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withOpacity(0.20)
-                              : Colors.black.withOpacity(0.08),
+                              ? Colors.white.withValues(alpha: 0.20)
+                              : Colors.black.withValues(alpha: 0.08),
                           width: 1.2,
                         ),
                       ),
@@ -174,8 +174,8 @@ class _GlassFabState extends State<GlassFab>
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withOpacity(0.20)
-                              : Colors.black.withOpacity(0.08),
+                              ? Colors.white.withValues(alpha: 0.20)
+                              : Colors.black.withValues(alpha: 0.08),
                           width: 1.2,
                         ),
                       ),
@@ -200,12 +200,12 @@ class _GlassFabState extends State<GlassFab>
               height: 76,
               width: hasLabel ? null : 76,
               decoration: BoxDecoration(
-                color: bg.withOpacity(0.8),
+                color: bg.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withOpacity(0.3)
-                      : Colors.black.withOpacity(0.1),
+                      ? Colors.white.withValues(alpha: 0.3)
+                      : Colors.black.withValues(alpha: 0.1),
                   width: 1.5,
                 ),
               ),

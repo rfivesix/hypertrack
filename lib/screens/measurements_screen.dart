@@ -302,7 +302,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              : theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
@@ -372,7 +373,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             Divider(
               height: 1,
               thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
             ),
             ...sortedMeasurements.map(
               (measurement) => ListTile(

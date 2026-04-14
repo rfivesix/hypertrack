@@ -245,6 +245,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       name: defaultName,
       notes: '',
     );
+    if (!mounted) return;
 
     final meal = {'id': newMealId, 'name': defaultName, 'notes': ''};
 
@@ -514,6 +515,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               builder: (context) => FoodDetailScreen(foodItem: item),
             ),
           );
+          if (!mounted) return;
 
           if (result is FoodItem) {
             Navigator.of(context).pop(result);
@@ -540,6 +542,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
         barcode,
       );
+      if (!mounted) return;
 
       // Wenn das Produkt gefunden wurde...
       if (foodItem != null) {
@@ -1022,6 +1025,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       'mealtypeDinner': l10n.mealtypeDinner,
       'mealtypeSnack': l10n.mealtypeSnack,
     };
+    if (!mounted) return;
 
     final ok = await showGlassBottomMenu<bool>(
           context: context,
@@ -1109,8 +1113,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                         filled: true,
                         fillColor:
                             Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.black.withValues(alpha: 0.05),
                       ),
                       items: internalTypes
                           .map(
@@ -1164,8 +1168,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                     filled: true,
                                     fillColor: Theme.of(context).brightness ==
                                             Brightness.dark
-                                        ? Colors.white.withOpacity(0.05)
-                                        : Colors.black.withOpacity(0.05),
+                                        ? Colors.white.withValues(alpha: 0.05)
+                                        : Colors.black.withValues(alpha: 0.05),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide.none,
@@ -1280,7 +1284,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        // source_food_entry_id: hier könnten wir verlinken, wenn wir die neue FoodEntry-ID hätten –
+        // sourceFoodEntryId: hier könnten wir verlinken, wenn wir die neue FoodEntry-ID hätten –
         // in diesem Flow buchen wir mehrere; Verlinkung kannst du später erweitern.
       ),
     );

@@ -269,7 +269,7 @@ class _MainScreenState extends State<MainScreen>
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         Widget glassCard({required Widget child, EdgeInsets? padding}) {
           return Material(
-            color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
+            color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.08),
             borderRadius: BorderRadius.circular(18),
             child: Padding(
               padding: padding ??
@@ -337,7 +337,7 @@ class _MainScreenState extends State<MainScreen>
                             .instance
                             .startWorkout(routineName: r.name);
 
-                        if (!context.mounted) return;
+                        if (!mounted) return;
                         Navigator.of(context).pop(); // Ladeindikator schließen
 
                         if (fullRoutine != null && ctx.mounted) {
@@ -497,7 +497,7 @@ class _MainScreenState extends State<MainScreen>
         sugarPer100ml: null,
         carbsPer100ml: null,
         caffeinePer100ml: null,
-        linked_food_entry_id: newFoodEntryId,
+        linkedFoodEntryId: newFoodEntryId,
       );
       await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
     }
@@ -621,8 +621,8 @@ class _MainScreenState extends State<MainScreen>
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        source_food_entry_id: foodEntryId,
-        source_fluid_entry_id: fluidEntryId,
+        sourceFoodEntryId: foodEntryId,
+        sourceFluidEntryId: fluidEntryId,
       ),
     );
   }
@@ -878,27 +878,39 @@ class _MainScreenState extends State<MainScreen>
     if (!mounted || _isTourOfferVisible) return;
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isTourOfferVisible = true);
-    final shouldStartTour = await showDialog<bool>(
+    final shouldStartTour = await showGlassBottomMenu<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          key: const Key('app_tour_offer_dialog'),
-          title: Text(l10n.appTourOfferTitle),
-          content: Text(l10n.appTourOfferBody),
-          actions: [
-            TextButton(
-              key: const Key('app_tour_offer_skip_button'),
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.appTourOfferSkip),
-            ),
-            FilledButton(
-              key: const Key('app_tour_offer_start_button'),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.appTourOfferStart),
-            ),
-          ],
-        );
-      },
+      title: l10n.appTourOfferTitle,
+      contentBuilder: (ctx, close) => Column(
+        key: const Key('app_tour_offer_dialog'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.appTourOfferBody,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  key: const Key('app_tour_offer_skip_button'),
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.appTourOfferSkip),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  key: const Key('app_tour_offer_start_button'),
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(l10n.appTourOfferStart),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
     if (!mounted) return;
     setState(() => _isTourOfferVisible = false);
@@ -1007,7 +1019,7 @@ class _MainScreenState extends State<MainScreen>
     // Parameter für Animation
     // const basePad = 120.0; // Unused locally
     // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
-    // final bg = isDark ? summary_card_dark_mode : summary_card_white_mode; // Unused locally in build, used in GlassNavBar logic internal
+    // final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode; // Unused locally in build, used in GlassNavBar logic internal
 
     // Radius für Liquid Animation (falls aktiv)
     // const double rLiquid = 99; // Unused here directly
@@ -1155,14 +1167,14 @@ class _MainScreenState extends State<MainScreen>
             final bool isDarkLocal =
                 Theme.of(context).brightness == Brightness.dark;
             final Color bgLocal =
-                isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
+                isDarkLocal ? summaryCardDarkMode : summaryCardWhiteMode;
             final Color neutralTintLocal =
-                (isDarkLocal ? Colors.white : Colors.black).withOpacity(
-              isDarkLocal ? 0.10 : 0.10,
+                (isDarkLocal ? Colors.white : Colors.black).withValues(
+              alpha: isDarkLocal ? 0.10 : 0.10,
             );
             final Color effectiveGlassLocal = Color.alphaBlend(
               neutralTintLocal,
-              bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16),
+              bgLocal.withValues(alpha: isDarkLocal ? 0.22 : 0.16),
             );
 
             // Radius für Liquid Animation hier lokal definieren oder aus Konstante
@@ -1189,7 +1201,7 @@ class _MainScreenState extends State<MainScreen>
                             sigmaY: 6.0 * v,
                           ),
                           child: Container(
-                            color: Colors.black.withOpacity(0.4 * v),
+                            color: Colors.black.withValues(alpha: 0.4 * v),
                           ),
                         ),
                       ),
@@ -1284,12 +1296,12 @@ class _MainScreenState extends State<MainScreen>
                                                     border: Border.all(
                                                       color: isDarkLocal
                                                           ? Colors.white
-                                                              .withOpacity(
-                                                              0.20,
+                                                              .withValues(
+                                                              alpha: 0.20,
                                                             )
                                                           : Colors.black
-                                                              .withOpacity(
-                                                              0.08,
+                                                              .withValues(
+                                                              alpha: 0.08,
                                                             ),
                                                       width: 1.2,
                                                     ),
@@ -1353,8 +1365,8 @@ class _MainScreenState extends State<MainScreen>
                                                     width: 76,
                                                     height: 76,
                                                     decoration: BoxDecoration(
-                                                      color: bgLocal
-                                                          .withOpacity(0.80),
+                                                      color: bgLocal.withValues(
+                                                          alpha: 0.80),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                         18,
@@ -1362,20 +1374,20 @@ class _MainScreenState extends State<MainScreen>
                                                       border: Border.all(
                                                         color: isDarkLocal
                                                             ? Colors.white
-                                                                .withOpacity(
-                                                                0.30,
+                                                                .withValues(
+                                                                alpha: 0.30,
                                                               )
                                                             : Colors.black
-                                                                .withOpacity(
-                                                                0.10,
+                                                                .withValues(
+                                                                alpha: 0.10,
                                                               ),
                                                         width: 1.5,
                                                       ),
                                                       boxShadow: [
                                                         BoxShadow(
                                                           color: Colors.black
-                                                              .withOpacity(
-                                                            0.25,
+                                                              .withValues(
+                                                            alpha: 0.25,
                                                           ),
                                                           blurRadius: 10,
                                                           offset: const Offset(
@@ -1517,14 +1529,14 @@ class _FrostedBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
     final themeService = context.watch<ThemeService>();
 
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withValues(alpha: isDark ? 0.1 : 0.1);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      bg.withOpacity(isDark ? 0.8 : 0.5),
+      bg.withValues(alpha: isDark ? 0.8 : 0.5),
     );
 
     if (themeService.visualStyle == 1) {
@@ -1559,8 +1571,8 @@ class _FrostedBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(radius.toDouble()),
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.20)
-                          : Colors.black.withOpacity(0.08),
+                          ? Colors.white.withValues(alpha: 0.20)
+                          : Colors.black.withValues(alpha: 0.08),
                       width: 1.2,
                     ),
                   ),
@@ -1580,19 +1592,19 @@ class _FrostedBar extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: bg.withOpacity(0.80),
+            color: bg.withValues(alpha: 0.80),
             borderRadius: BorderRadius.circular(radius.toDouble()),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.30)
-                  : Colors.black.withOpacity(0.10),
+                  ? Colors.white.withValues(alpha: 0.30)
+                  : Colors.black.withValues(alpha: 0.10),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
                 blurRadius: 12,
                 offset: const Offset(0, 6),
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
               ),
             ],
           ),
@@ -1633,7 +1645,7 @@ class _RunningWorkoutRow extends StatelessWidget {
                   fontSize: 16,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.9),
+                  ).colorScheme.onSurface.withValues(alpha: 0.9),
                   decoration: TextDecoration.none,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),

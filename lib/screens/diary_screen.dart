@@ -500,7 +500,7 @@ class DiaryScreenState extends State<DiaryScreen> {
           sugarPer100ml: result.sugarPer100ml,
           carbsPer100ml: result.sugarPer100ml, // Spiegeln
           caffeinePer100ml: result.caffeinePer100ml,
-          linked_food_entry_id: trackedItem.entry.id, // Verknüpfung beibehalten
+          linkedFoodEntryId: trackedItem.entry.id, // Verknüpfung beibehalten
         );
         await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
       }
@@ -572,7 +572,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         sugarPer100ml: null,
         carbsPer100ml: null,
         caffeinePer100ml: null,
-        linked_food_entry_id: newFoodEntryId,
+        linkedFoodEntryId: newFoodEntryId,
       );
       await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
     }
@@ -698,8 +698,8 @@ class DiaryScreenState extends State<DiaryScreen> {
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        source_food_entry_id: foodEntryId,
-        source_fluid_entry_id: fluidEntryId,
+        sourceFoodEntryId: foodEntryId,
+        sourceFluidEntryId: fluidEntryId,
       ),
     );
   }

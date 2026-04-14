@@ -30,7 +30,7 @@ class SetLog {
   final bool? isCompleted;
 
   /// The order in which this set appears in the workout log.
-  final int? log_order;
+  final int? logOrder;
 
   /// Optional notes about the set.
   final String? notes;
@@ -60,7 +60,7 @@ class SetLog {
     this.reps,
     this.restTimeSeconds,
     this.isCompleted,
-    this.log_order,
+    this.logOrder,
     this.notes,
     this.distanceKm,
     this.durationSeconds,
@@ -81,7 +81,7 @@ class SetLog {
       restTimeSeconds: map['rest_time_seconds'],
       // MODIFIKATION: isCompleted kann null sein, wir mappen 1 zu true, alles andere (0, null) zu false.
       isCompleted: map['is_completed'] == 1,
-      log_order: map['log_order'],
+      logOrder: map['log_order'],
       notes: map['notes'],
       distanceKm: map['distance_km'],
       durationSeconds: map['duration_seconds'],
@@ -103,7 +103,7 @@ class SetLog {
       'rest_time_seconds': restTimeSeconds,
       // MODIFIKATION: Speichere true als 1, false/null als 0.
       'is_completed': isCompleted == true ? 1 : 0,
-      'log_order': log_order,
+      'log_order': logOrder,
       'notes': notes,
       'distance_km': distanceKm,
       'duration_seconds': durationSeconds,
@@ -126,7 +126,7 @@ class SetLog {
     int? reps,
     int? restTimeSeconds,
     bool? isCompleted,
-    int? log_order,
+    int? logOrder,
     String? notes,
     double? distanceKm,
     int? durationSeconds,
@@ -148,7 +148,7 @@ class SetLog {
       reps: clearReps ? null : (reps ?? this.reps),
       restTimeSeconds: restTimeSeconds ?? this.restTimeSeconds,
       isCompleted: isCompleted ?? this.isCompleted,
-      log_order: log_order ?? this.log_order,
+      logOrder: logOrder ?? this.logOrder,
       notes: notes ?? this.notes,
       distanceKm: clearDistance ? null : (distanceKm ?? this.distanceKm),
       durationSeconds:

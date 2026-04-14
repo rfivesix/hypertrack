@@ -159,7 +159,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
           Divider(
             height: 1,
             thickness: 1,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
           ),
           Expanded(
             child: TabBarView(
@@ -243,7 +243,10 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
           l10n.favoritesEmptyState,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
         ),
       );

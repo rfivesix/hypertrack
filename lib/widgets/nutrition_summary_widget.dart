@@ -157,12 +157,12 @@ class _InfoBox extends StatelessWidget {
 
     // Farben für den Glas-Effekt, identisch zur SummaryCard
     final backgroundColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.10)
-        : Colors.white.withOpacity(0.65);
+        ? Colors.white.withValues(alpha:0.10)
+        : Colors.white.withValues(alpha:0.65);
 
     final borderColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.20)
-        : Colors.black.withOpacity(0.12);
+        ? Colors.white.withValues(alpha:0.20)
+        : Colors.black.withValues(alpha:0.12);
 
     return Container(
       // Die Dekoration ist jetzt die Glas-Dekoration
@@ -220,7 +220,7 @@ class _InfoBox extends StatelessWidget {
                           ? '${spec.value.toStringAsFixed(1)} / ${spec.target.toStringAsFixed(0)} ${spec.unit}'
                           : '${spec.value.toStringAsFixed(1)} ${spec.unit}',
                       style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.8),
+                        color: colorScheme.onSurface.withValues(alpha:0.8),
                         fontSize: 14,
                       ),
                     ),

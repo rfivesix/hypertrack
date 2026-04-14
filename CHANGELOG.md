@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.8] - 2026-04-15
+
+### Changed
+- Completed a repo-wide UI consistency pass for app-owned alerts by migrating remaining standard `AlertDialog` flows to the existing Hypertrack glass action-sheet/dialog component.
+- Migrated save/confirm/action dialogs in key flows:
+  - onboarding restore password prompt
+  - post-onboarding app-tour offer
+  - AI key-missing prompts (capture + recommendation)
+  - nutrition edit dialogs (food + fluid) and fluid delete confirmation
+  - settings OFF region picker and attribution/licenses dialog
+  - data import success acknowledgment in Data Management
+- Extended the shared custom dialog helper with optional strict modal behavior (`isDismissible` / `enableDrag`) for critical confirmation flows.
+
+### Fixed
+- Removed remaining app-level default alert style mismatches in migrated screens so action dialogs now follow one consistent Hypertrack UI pattern.
+- Preserved existing action semantics and async handling across migrated flows (confirm/cancel/save/delete outcomes unchanged).
+
+### Internal
+- Cleaned up remaining analyzer issues, including widget constructor keys, naming consistency, model API cleanup, and minor test/dev code refactors.
+
+### Notes
+- Intentionally kept native-style blocking loading overlays (spinner dialogs used during workout-start operations) unchanged, since these are progress overlays rather than app decision dialogs.
+
 ## [0.8.7] - 2026-04-15
 
 ### Added

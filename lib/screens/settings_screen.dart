@@ -29,6 +29,7 @@ import '../services/off_catalog_country_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../features/feedback_report/presentation/feedback_report_screen.dart';
 import '../services/app_tour_service.dart';
+import '../widgets/glass_bottom_menu.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -168,49 +169,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _showOffCatalogRegionPicker() async {
     final l10n = AppLocalizations.of(context)!;
-    final selectedCountry = await showDialog<OffCatalogCountry>(
+    final selectedCountry = await showGlassBottomMenu<OffCatalogCountry>(
       context: context,
-      builder: (dialogContext) {
+      title: l10n.settingsFoodDbRegionDialogTitle,
+      contentBuilder: (dialogContext, close) {
         var draftSelection = _activeOffCatalogCountry;
         return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: Text(l10n.settingsFoodDbRegionDialogTitle),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.settingsFoodDbRegionDialogSubtitle),
-                  const SizedBox(height: 12),
-                  for (final country
-                      in AppDataSources.supportedOffCatalogCountries)
-                    RadioListTile<OffCatalogCountry>(
-                      contentPadding: EdgeInsets.zero,
-                      value: country,
-                      groupValue: draftSelection,
-                      title: Text(_offCountryLabel(country, l10n)),
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setDialogState(() => draftSelection = value);
-                      },
+          builder: (context, setDialogState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.settingsFoodDbRegionDialogSubtitle),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: SingleChildScrollView(
+                  child: RadioGroup<OffCatalogCountry>(
+                    groupValue: draftSelection,
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setDialogState(() => draftSelection = value);
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final country
+                            in AppDataSources.supportedOffCatalogCountries)
+                          RadioListTile<OffCatalogCountry>(
+                            contentPadding: EdgeInsets.zero,
+                            value: country,
+                            title: Text(_offCountryLabel(country, l10n)),
+                          ),
+                      ],
                     ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.settingsFoodDbRegionIssueHint,
-                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.settingsFoodDbRegionIssueHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () =>
+                          Navigator.of(dialogContext).pop(draftSelection),
+                      child: Text(l10n.save),
+                    ),
                   ),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: () =>
-                    Navigator.of(dialogContext).pop(draftSelection),
-                child: Text(l10n.save),
               ),
             ],
           ),
@@ -472,23 +489,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SummaryCard(
             child: Column(
               children: [
-                RadioListTile<ThemeMode>(
-                  title: Text(l10n.themeSystem),
-                  value: ThemeMode.system,
+                RadioGroup<ThemeMode>(
                   groupValue: themeService.themeMode,
-                  onChanged: (value) => themeService.setThemeMode(value!),
-                ),
-                RadioListTile<ThemeMode>(
-                  title: Text(l10n.themeLight),
-                  value: ThemeMode.light,
-                  groupValue: themeService.themeMode,
-                  onChanged: (value) => themeService.setThemeMode(value!),
-                ),
-                RadioListTile<ThemeMode>(
-                  title: Text(l10n.themeDark),
-                  value: ThemeMode.dark,
-                  groupValue: themeService.themeMode,
-                  onChanged: (value) => themeService.setThemeMode(value!),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    themeService.setThemeMode(value);
+                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<ThemeMode>(
+                        title: Text(l10n.themeSystem),
+                        value: ThemeMode.system,
+                      ),
+                      RadioListTile<ThemeMode>(
+                        title: Text(l10n.themeLight),
+                        value: ThemeMode.light,
+                      ),
+                      RadioListTile<ThemeMode>(
+                        title: Text(l10n.themeDark),
+                        value: ThemeMode.dark,
+                      ),
+                    ],
+                  ),
                 ),
                 const Divider(height: 1),
                 Padding(
@@ -510,26 +532,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                         ),
                       ),
-                      RadioListTile<int>(
-                        title: Text(
-                          l10n.settingsVisualStyleStandard,
-                        ), // LOKALISIERT
-                        value: 0,
+                      RadioGroup<int>(
                         groupValue: themeService.visualStyle,
-                        onChanged: (value) =>
-                            themeService.setVisualStyle(value!),
-                      ),
-                      RadioListTile<int>(
-                        title: Text(
-                          l10n.settingsVisualStyleLiquid,
-                        ), // LOKALISIERT
-                        subtitle: Text(
-                          l10n.settingsVisualStyleLiquidDesc,
-                        ), // LOKALISIERT
-                        value: 1,
-                        groupValue: themeService.visualStyle,
-                        onChanged: (value) =>
-                            themeService.setVisualStyle(value!),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          themeService.setVisualStyle(value);
+                        },
+                        child: Column(
+                          children: [
+                            RadioListTile<int>(
+                              title: Text(
+                                l10n.settingsVisualStyleStandard,
+                              ), // LOKALISIERT
+                              value: 0,
+                            ),
+                            RadioListTile<int>(
+                              title: Text(
+                                l10n.settingsVisualStyleLiquid,
+                              ), // LOKALISIERT
+                              subtitle: Text(
+                                l10n.settingsVisualStyleLiquidDesc,
+                              ), // LOKALISIERT
+                              value: 1,
+                            ),
+                          ],
+                        ),
                       ),
                       if (isAndroid) ...[
                         const Divider(height: 1),
@@ -669,18 +696,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
-                RadioListTile<StepsSourcePolicy>(
-                  title: Text(
-                    isGerman
-                        ? 'Auto (dominante Quelle)'
-                        : 'Auto (dominant source)',
-                  ),
-                  subtitle: Text(
-                    isGerman
-                        ? 'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.'
-                        : 'Recommended: use one source per day to avoid overlap inflation.',
-                  ),
-                  value: StepsSourcePolicy.autoDominant,
+                RadioGroup<StepsSourcePolicy>(
                   groupValue: _stepsSourcePolicy,
                   onChanged: (value) async {
                     if (value == null) return;
@@ -689,27 +705,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (!mounted) return;
                     setState(() => _stepsSourcePolicy = value);
                   },
-                ),
-                RadioListTile<StepsSourcePolicy>(
-                  title: Text(
-                    isGerman
-                        ? 'Zusammenführen (max pro Stunde)'
-                        : 'Merge (max per hour)',
+                  child: Column(
+                    children: [
+                      RadioListTile<StepsSourcePolicy>(
+                        title: Text(
+                          isGerman
+                              ? 'Auto (dominante Quelle)'
+                              : 'Auto (dominant source)',
+                        ),
+                        subtitle: Text(
+                          isGerman
+                              ? 'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.'
+                              : 'Recommended: use one source per day to avoid overlap inflation.',
+                        ),
+                        value: StepsSourcePolicy.autoDominant,
+                      ),
+                      RadioListTile<StepsSourcePolicy>(
+                        title: Text(
+                          isGerman
+                              ? 'Zusammenführen (max pro Stunde)'
+                              : 'Merge (max per hour)',
+                        ),
+                        subtitle: Text(
+                          isGerman
+                              ? 'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.'
+                              : 'Combine sources by taking the highest hourly bucket.',
+                        ),
+                        value: StepsSourcePolicy.maxPerHour,
+                      ),
+                    ],
                   ),
-                  subtitle: Text(
-                    isGerman
-                        ? 'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.'
-                        : 'Combine sources by taking the highest hourly bucket.',
-                  ),
-                  value: StepsSourcePolicy.maxPerHour,
-                  groupValue: _stepsSourcePolicy,
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    await _stepsSyncService.setSourcePolicy(value);
-                    hasStepsSettingsChanged = true;
-                    if (!mounted) return;
-                    setState(() => _stepsSourcePolicy = value);
-                  },
                 ),
                 const Divider(height: 1),
                 Padding(
@@ -722,39 +747,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
-                RadioListTile<StepsProviderFilter>(
-                  title: Text(isGerman ? 'Alle' : 'All'),
-                  value: StepsProviderFilter.all,
+                RadioGroup<StepsProviderFilter>(
                   groupValue: _stepsProviderFilter,
                   onChanged: (value) async {
                     if (value == null) return;
                     await _stepsSyncService.setProviderFilter(value);
-                    hasStepsSettingsChanged = true;
+                    if (value == StepsProviderFilter.all) {
+                      hasStepsSettingsChanged = true;
+                    }
                     if (!mounted) return;
                     setState(() => _stepsProviderFilter = value);
                   },
-                ),
-                RadioListTile<StepsProviderFilter>(
-                  title: const Text('Apple Health'),
-                  value: StepsProviderFilter.apple,
-                  groupValue: _stepsProviderFilter,
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    await _stepsSyncService.setProviderFilter(value);
-                    if (!mounted) return;
-                    setState(() => _stepsProviderFilter = value);
-                  },
-                ),
-                RadioListTile<StepsProviderFilter>(
-                  title: const Text('Health Connect'),
-                  value: StepsProviderFilter.google,
-                  groupValue: _stepsProviderFilter,
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    await _stepsSyncService.setProviderFilter(value);
-                    if (!mounted) return;
-                    setState(() => _stepsProviderFilter = value);
-                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<StepsProviderFilter>(
+                        title: Text(isGerman ? 'Alle' : 'All'),
+                        value: StepsProviderFilter.all,
+                      ),
+                      RadioListTile<StepsProviderFilter>(
+                        title: const Text('Apple Health'),
+                        value: StepsProviderFilter.apple,
+                      ),
+                      RadioListTile<StepsProviderFilter>(
+                        title: const Text('Health Connect'),
+                        value: StepsProviderFilter.google,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -866,7 +885,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               );
                               if (!mounted) return;
                               setState(() => _isSleepImporting = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              ScaffoldMessenger.of(this.context).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     result.success
@@ -1098,17 +1117,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: l10n.attribution_and_license,
             subtitle: l10n.data_from_off_and_wger,
             onTap: () {
-              showDialog(
+              showGlassBottomMenu<void>(
                 context: context,
-                builder: (context) => AlertDialog(
-                  title: Text(l10n.attribution_title),
-                  content: SingleChildScrollView(
-                    child: Text(l10n.attributionText),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.snackbar_button_ok),
+                title: l10n.attribution_title,
+                contentBuilder: (ctx, close) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      child: SingleChildScrollView(
+                        child: Text(l10n.attributionText),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: Text(l10n.snackbar_button_ok),
+                      ),
                     ),
                   ],
                 ),

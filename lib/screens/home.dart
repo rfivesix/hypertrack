@@ -403,7 +403,7 @@ class HomeState extends State<Home> {
           if (showLoadingOverlay)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 child: const Center(child: CircularProgressIndicator()),
               ),
             ),
@@ -516,7 +516,8 @@ class HomeState extends State<Home> {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              : theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(

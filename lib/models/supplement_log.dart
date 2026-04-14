@@ -20,10 +20,10 @@ class SupplementLog {
   final DateTime timestamp;
 
   /// Optional identifier linking this log to a food entry.
-  final int? source_food_entry_id;
+  final int? sourceFoodEntryId;
 
   /// Optional identifier linking this log to a fluid entry.
-  final int? source_fluid_entry_id;
+  final int? sourceFluidEntryId;
 
   /// Creates a new [SupplementLog] instance.
   SupplementLog({
@@ -32,8 +32,8 @@ class SupplementLog {
     required this.dose,
     required this.unit,
     required this.timestamp,
-    this.source_food_entry_id, // Jetzt als optionaler Parameter verfügbar
-    this.source_fluid_entry_id, // Jetzt als optionaler Parameter verfügbar
+    this.sourceFoodEntryId, // Jetzt als optionaler Parameter verfügbar
+    this.sourceFluidEntryId, // Jetzt als optionaler Parameter verfügbar
   });
 
   /// Converts the [SupplementLog] instance to a Map for database storage.
@@ -44,8 +44,8 @@ class SupplementLog {
       'dose': dose,
       'unit': unit,
       'timestamp': timestamp.toIso8601String(),
-      'source_food_entry_id': source_food_entry_id,
-      'source_fluid_entry_id': source_fluid_entry_id,
+      'source_food_entry_id': sourceFoodEntryId,
+      'source_fluid_entry_id': sourceFluidEntryId,
     };
   }
 
@@ -57,8 +57,8 @@ class SupplementLog {
       dose: map['dose'],
       unit: map['unit'],
       timestamp: DateTime.parse(map['timestamp']),
-      source_food_entry_id: map['source_food_entry_id'],
-      source_fluid_entry_id: map['source_fluid_entry_id'],
+      sourceFoodEntryId: map['source_food_entry_id'],
+      sourceFluidEntryId: map['source_fluid_entry_id'],
     );
   }
 }
