@@ -29,6 +29,7 @@ import '../services/off_catalog_country_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../features/feedback_report/presentation/feedback_report_screen.dart';
 import '../services/app_tour_service.dart';
+import '../widgets/glass_bottom_menu.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -168,49 +169,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _showOffCatalogRegionPicker() async {
     final l10n = AppLocalizations.of(context)!;
-    final selectedCountry = await showDialog<OffCatalogCountry>(
+    final selectedCountry = await showGlassBottomMenu<OffCatalogCountry>(
       context: context,
-      builder: (dialogContext) {
+      title: l10n.settingsFoodDbRegionDialogTitle,
+      contentBuilder: (dialogContext, close) {
         var draftSelection = _activeOffCatalogCountry;
         return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: Text(l10n.settingsFoodDbRegionDialogTitle),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+          builder: (context, setDialogState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.settingsFoodDbRegionDialogSubtitle),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final country
+                          in AppDataSources.supportedOffCatalogCountries)
+                        RadioListTile<OffCatalogCountry>(
+                          contentPadding: EdgeInsets.zero,
+                          value: country,
+                          groupValue: draftSelection,
+                          title: Text(_offCountryLabel(country, l10n)),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setDialogState(() => draftSelection = value);
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.settingsFoodDbRegionIssueHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  Text(l10n.settingsFoodDbRegionDialogSubtitle),
-                  const SizedBox(height: 12),
-                  for (final country
-                      in AppDataSources.supportedOffCatalogCountries)
-                    RadioListTile<OffCatalogCountry>(
-                      contentPadding: EdgeInsets.zero,
-                      value: country,
-                      groupValue: draftSelection,
-                      title: Text(_offCountryLabel(country, l10n)),
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setDialogState(() => draftSelection = value);
-                      },
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(l10n.cancel),
                     ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.settingsFoodDbRegionIssueHint,
-                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () =>
+                          Navigator.of(dialogContext).pop(draftSelection),
+                      child: Text(l10n.save),
+                    ),
                   ),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: () =>
-                    Navigator.of(dialogContext).pop(draftSelection),
-                child: Text(l10n.save),
               ),
             ],
           ),
@@ -1098,17 +1113,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: l10n.attribution_and_license,
             subtitle: l10n.data_from_off_and_wger,
             onTap: () {
-              showDialog(
+              showGlassBottomMenu<void>(
                 context: context,
-                builder: (context) => AlertDialog(
-                  title: Text(l10n.attribution_title),
-                  content: SingleChildScrollView(
-                    child: Text(l10n.attributionText),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.snackbar_button_ok),
+                title: l10n.attribution_title,
+                contentBuilder: (ctx, close) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      child: SingleChildScrollView(
+                        child: Text(l10n.attributionText),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: Text(l10n.snackbar_button_ok),
+                      ),
                     ),
                   ],
                 ),

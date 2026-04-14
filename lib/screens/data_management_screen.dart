@@ -128,16 +128,25 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           // Optional: Nach Anwendung erneut prüfen/refreshen, aber keine Pflicht.
         }
 
-        await showDialog(
+        await showGlassBottomMenu<void>(
           context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: Text(l10n.snackbarImportSuccessTitle),
-            content: Text(l10n.snackbarImportSuccessContent),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.snackbarButtonOK),
+          title: l10n.snackbarImportSuccessTitle,
+          isDismissible: false,
+          enableDrag: false,
+          contentBuilder: (ctx, close) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.snackbarImportSuccessContent,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.snackbarButtonOK),
+                ),
               ),
             ],
           ),

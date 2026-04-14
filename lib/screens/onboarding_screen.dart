@@ -17,6 +17,7 @@ import '../features/nutrition_recommendation/presentation/recommendation_ui_copy
 import '../features/nutrition_recommendation/domain/goal_models.dart';
 import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 import '../services/app_tour_service.dart';
+import '../widgets/glass_bottom_menu.dart';
 
 /// The initial setup flow for new users.
 ///
@@ -347,23 +348,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<String?> _askRestorePassword(AppLocalizations l10n) async {
     final controller = TextEditingController();
-    return showDialog<String>(
+    return showGlassBottomMenu<String?>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.dialogEnterPasswordImport),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          decoration: InputDecoration(labelText: l10n.passwordLabel),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: Text(l10n.cancel),
+      title: l10n.dialogEnterPasswordImport,
+      contentBuilder: (ctx, close) => Column(
+        key: const Key('onboarding_restore_password_sheet'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: controller,
+            obscureText: true,
+            decoration: InputDecoration(labelText: l10n.passwordLabel),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: Text(l10n.onboardingNext),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(null),
+                  child: Text(l10n.cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () =>
+                      Navigator.of(ctx).pop(controller.text.trim()),
+                  child: Text(l10n.onboardingNext),
+                ),
+              ),
+            ],
           ),
         ],
       ),

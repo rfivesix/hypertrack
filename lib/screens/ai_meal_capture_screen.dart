@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../generated/app_localizations.dart';
 import '../services/ai_service.dart';
 import '../services/haptic_feedback_service.dart';
+import '../widgets/glass_bottom_menu.dart';
 import '../widgets/global_app_bar.dart';
 import 'ai_meal_review_screen.dart';
 import 'ai_settings_screen.dart';
@@ -180,24 +181,39 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
   void _showKeyMissingDialog() {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    showGlassBottomMenu<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('API Key Required'),
-        content: Text(l10n.aiErrorNoKey),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.cancel),
+      title: 'API Key Required',
+      contentBuilder: (ctx, close) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.aiErrorNoKey,
+            textAlign: TextAlign.center,
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AiSettingsScreen()),
-              );
-            },
-            child: Text(l10n.aiSettingsTitle),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const AiSettingsScreen()),
+                    );
+                  },
+                  child: Text(l10n.aiSettingsTitle),
+                ),
+              ),
+            ],
           ),
         ],
       ),

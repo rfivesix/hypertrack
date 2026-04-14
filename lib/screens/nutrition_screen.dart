@@ -292,47 +292,54 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    final result = await showDialog<(int, DateTime, String, double?)?>(
+    final result = await showGlassBottomMenu<(int, DateTime, String, double?)?>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            trackedItem.item.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          content: QuantityDialogContent(
+      title: trackedItem.item.name,
+      contentBuilder: (ctx, close) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          QuantityDialogContent(
             key: dialogStateKey,
             item: trackedItem.item,
             initialQuantity: trackedItem.entry.quantityInGrams,
             initialTimestamp: trackedItem.entry.timestamp,
             initialMealType: trackedItem.entry.mealType,
           ),
-          actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            FilledButton(
-              child: Text(l10n.save),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final quantity = int.tryParse(state.quantityText);
-                  if (quantity != null && quantity > 0) {
-                    Navigator.of(context).pop((
-                      quantity,
-                      state.selectedDateTime,
-                      state.selectedMealType,
-                      double.tryParse(state.caffeineText.replaceAll(',', '.')),
-                    ));
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    final state = dialogStateKey.currentState;
+                    if (state != null) {
+                      final quantity = int.tryParse(state.quantityText);
+                      if (quantity != null && quantity > 0) {
+                        Navigator.of(ctx).pop((
+                          quantity,
+                          state.selectedDateTime,
+                          state.selectedMealType,
+                          double.tryParse(
+                            state.caffeineText.replaceAll(',', '.'),
+                          ),
+                        ));
+                      }
+                    }
+                  },
+                  child: Text(l10n.save),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
 
     if (result != null) {
@@ -348,53 +355,59 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
-  // lib/screens/nutrition_screen.dart - ERSETZE DIE GESAMTE METHODE
   Future<void> _editFluidEntry(FluidEntry fluidEntry) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<FluidDialogContentState> dialogStateKey = GlobalKey();
 
-    final result = await showDialog<(String, int, double?, double?)?>(
+    final result = await showGlassBottomMenu<(String, int, double?, double?)?>(
       context: context,
-      builder: (context) {
-        // ... (Dialog-Aufbau bleibt hier ein AlertDialog, da dies der ältere Screen ist,
-        // aber wir stellen die Dialoge im DiaryScreen auf BottomSheet um.
-        // Um das Problem des Nutzers schnell zu lösen, setzen wir es auf den AlertDialog zurück.
-        // Das ist der Kompromiss für diesen Screen, solange er noch existiert.)
-        return AlertDialog(
-          title: Text(l10n.waterEntryTitle),
-          content: FluidDialogContent(
+      title: l10n.waterEntryTitle,
+      contentBuilder: (ctx, close) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FluidDialogContent(
             key: dialogStateKey,
-            initialName: fluidEntry.name, // HINZUGEFÜGT
+            initialName: fluidEntry.name,
             initialQuantity: fluidEntry.quantityInMl,
             initialTimestamp: fluidEntry.timestamp,
-            initialSugar: fluidEntry.sugarPer100ml, // HINZUGEFÜGT
-            initialCaffeine: fluidEntry.caffeinePer100ml, // HINZUGEFÜGT
+            initialSugar: fluidEntry.sugarPer100ml,
+            initialCaffeine: fluidEntry.caffeinePer100ml,
           ),
-          actions: [
-            TextButton(
-              child: Text(l10n.cancel),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            FilledButton(
-              child: Text(l10n.save),
-              onPressed: () {
-                final state = dialogStateKey.currentState;
-                if (state != null) {
-                  final quantity = int.tryParse(state.quantityText);
-                  if (quantity != null && quantity > 0) {
-                    Navigator.of(context).pop((
-                      state.nameText,
-                      quantity,
-                      double.tryParse(state.sugarText.replaceAll(',', '.')),
-                      double.tryParse(state.caffeineText.replaceAll(',', '.')),
-                    ));
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    final state = dialogStateKey.currentState;
+                    if (state != null) {
+                      final quantity = int.tryParse(state.quantityText);
+                      if (quantity != null && quantity > 0) {
+                        Navigator.of(ctx).pop((
+                          state.nameText,
+                          quantity,
+                          double.tryParse(state.sugarText.replaceAll(',', '.')),
+                          double.tryParse(
+                            state.caffeineText.replaceAll(',', '.'),
+                          ),
+                        ));
+                      }
+                    }
+                  },
+                  child: Text(l10n.save),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
 
     if (result != null) {
@@ -859,34 +872,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                     _editFluidEntry(fluidEntry);
                                     return false;
                                   } else {
-                                    return await showDialog<bool>(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return AlertDialog(
-                                              title: Text(
-                                                l10n.deleteConfirmTitle,
-                                              ),
-                                              content: Text(
-                                                l10n.deleteConfirmContent,
-                                              ),
-                                              actions: <Widget>[
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).pop(false),
-                                                  child: Text(l10n.cancel),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).pop(true),
-                                                  child: Text(l10n.delete),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        ) ??
-                                        false;
+                                    return await showDeleteConfirmation(
+                                      context,
+                                    );
                                   }
                                 },
                                 onDismissed: (direction) {

@@ -878,27 +878,39 @@ class _MainScreenState extends State<MainScreen>
     if (!mounted || _isTourOfferVisible) return;
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isTourOfferVisible = true);
-    final shouldStartTour = await showDialog<bool>(
+    final shouldStartTour = await showGlassBottomMenu<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          key: const Key('app_tour_offer_dialog'),
-          title: Text(l10n.appTourOfferTitle),
-          content: Text(l10n.appTourOfferBody),
-          actions: [
-            TextButton(
-              key: const Key('app_tour_offer_skip_button'),
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.appTourOfferSkip),
-            ),
-            FilledButton(
-              key: const Key('app_tour_offer_start_button'),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.appTourOfferStart),
-            ),
-          ],
-        );
-      },
+      title: l10n.appTourOfferTitle,
+      contentBuilder: (ctx, close) => Column(
+        key: const Key('app_tour_offer_dialog'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.appTourOfferBody,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  key: const Key('app_tour_offer_skip_button'),
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.appTourOfferSkip),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  key: const Key('app_tour_offer_start_button'),
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(l10n.appTourOfferStart),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
     if (!mounted) return;
     setState(() => _isTourOfferVisible = false);

@@ -45,6 +45,8 @@ Future<T?> showGlassBottomMenu<T>({
   String? title,
   List<GlassMenuAction>? actions,
   Widget Function(BuildContext, VoidCallback)? contentBuilder,
+  bool isDismissible = true,
+  bool enableDrag = true,
 }) {
   assert(
     (actions != null && contentBuilder == null) ||
@@ -66,6 +68,8 @@ Future<T?> showGlassBottomMenu<T>({
     context: context,
     isScrollControlled: true,
     useRootNavigator: true,
+    isDismissible: isDismissible,
+    enableDrag: enableDrag,
     backgroundColor: Colors.transparent,
     barrierColor: barrierColor,
     builder: (ctx) {
