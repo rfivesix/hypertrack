@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.7] - 2026-04-15
+
+### Added
+- Added a short optional post-onboarding app tour with spotlight/coach-mark guidance through the main app structure.
+- Added a Settings entry to restart the app tour at any time.
+
+### Changed
+- Polished app-tour coach-mark positioning to keep the explanation panel clear of the bottom navigation area while preserving anchor context.
+- Refreshed the app icon for this release.
+
 ## [0.8.6] - 2026-04-13
 
 ### Added

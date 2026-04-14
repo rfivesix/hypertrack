@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'data/database_helper.dart';
 import 'features/sleep/presentation/sleep_navigation.dart';
 import 'generated/app_localizations.dart';
+import 'navigation/app_route_observer.dart';
 // App startup routing is delegated to the dedicated initializer screen.
 import 'screens/app_initializer_screen.dart';
 import 'services/profile_service.dart';
@@ -356,6 +357,7 @@ class _MyAppState extends State<MyApp> {
 
         return MaterialApp(
           navigatorKey: _navigatorKey,
+          navigatorObservers: [appRouteObserver],
           debugShowCheckedModeBanner: false,
           scrollBehavior: NoGlowScrollBehavior(),
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

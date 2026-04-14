@@ -28,6 +28,7 @@ import '../health_export/models/export_models.dart';
 import '../services/off_catalog_country_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../features/feedback_report/presentation/feedback_report_screen.dart';
+import '../services/app_tour_service.dart';
 
 /// A screen for configuring application-wide preferences.
 ///
@@ -235,6 +236,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _restartAppTour() async {
+    await AppTourService.instance.requestRestartFromSettings();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
@@ -587,6 +594,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 setState(() => _showSugarInDiaryOverview = value);
               },
             ),
+          ),
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(context, l10n.settingsGuidedTourSectionTitle),
+          _buildNavigationCard(
+            context: context,
+            icon: Icons.tour_outlined,
+            title: l10n.settingsRestartAppTourTitle,
+            subtitle: l10n.settingsRestartAppTourSubtitle,
+            tileKey: const Key('settings_restart_app_tour_tile'),
+            onTap: _restartAppTour,
           ),
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(context, l10n.aiSettingsTitle),
@@ -1184,6 +1201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Key? tileKey,
     bool useGradientIcon = false,
   }) {
     Widget iconWidget = Icon(
@@ -1206,6 +1224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return SummaryCard(
       child: ListTile(
+        key: tileKey,
         contentPadding: const EdgeInsets.symmetric(
           vertical: 8.0,
           horizontal: 16.0,

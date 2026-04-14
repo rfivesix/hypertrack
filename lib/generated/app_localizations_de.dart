@@ -896,6 +896,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTitle => 'Einstellungen';
 
   @override
+  String get settingsGuidedTourSectionTitle => 'Geführte Tour';
+
+  @override
+  String get settingsRestartAppTourTitle => 'App-Tour neu starten';
+
+  @override
+  String get settingsRestartAppTourSubtitle =>
+      'Starte die kurze Orientierung durch die App erneut.';
+
+  @override
   String get my_goals => 'Meine Ziele';
 
   @override
@@ -1071,6 +1081,70 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onbShowTutorialAgain => 'Tutorial erneut anzeigen';
+
+  @override
+  String get appTourOfferTitle => 'Kurze App-Tour starten?';
+
+  @override
+  String get appTourOfferBody =>
+      'Du bekommst eine kurze Orientierung zu den wichtigsten Bereichen. Du kannst jetzt überspringen und später in den Einstellungen neu starten.';
+
+  @override
+  String get appTourOfferStart => 'Tour starten';
+
+  @override
+  String get appTourOfferSkip => 'Vielleicht später';
+
+  @override
+  String get appTourSkip => 'Überspringen';
+
+  @override
+  String get appTourNext => 'Weiter';
+
+  @override
+  String get appTourDone => 'Fertig';
+
+  @override
+  String get appTourStepNavigationTitle => 'Hauptnavigation';
+
+  @override
+  String get appTourStepNavigationBody =>
+      'Über die unteren Tabs wechselst du zwischen Tagebuch, Workout, Statistiken und Ernährung.';
+
+  @override
+  String get appTourStepQuickActionsTitle => 'Schnellaktionen';
+
+  @override
+  String get appTourStepQuickActionsBody =>
+      'Mit dem Plus-Button fügst du schnell Essen, Getränke, Messwerte, Workouts und mehr hinzu.';
+
+  @override
+  String get appTourStepDiaryTitle => 'Tagebuch';
+
+  @override
+  String get appTourStepDiaryBody =>
+      'Im Tagebuch siehst du deinen Tag auf einen Blick und erfasst Mahlzeiten, Hydration und Supplements.';
+
+  @override
+  String get appTourStepWorkoutTitle => 'Workout';
+
+  @override
+  String get appTourStepWorkoutBody =>
+      'Im Workout-Bereich startest du Einheiten, verwaltest Routinen und prüfst deinen Trainingsverlauf.';
+
+  @override
+  String get appTourStepNutritionTitle => 'Ernährung';
+
+  @override
+  String get appTourStepNutritionBody =>
+      'Im Ernährungsbereich planst du Mahlzeiten, prüfst Ziele und nutzt Tools wie Meal-Vorlagen.';
+
+  @override
+  String get appTourStepStatisticsTitle => 'Statistiken';
+
+  @override
+  String get appTourStepStatisticsBody =>
+      'Die Statistiken zeigen Trends und Fortschritt, damit du Veränderungen besser verstehst.';
 
   @override
   String get onbSetGoalsCta => 'Ziele festlegen';

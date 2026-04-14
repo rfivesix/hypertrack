@@ -1748,6 +1748,24 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @settingsGuidedTourSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guided tour'**
+  String get settingsGuidedTourSectionTitle;
+
+  /// No description provided for @settingsRestartAppTourTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart app tour'**
+  String get settingsRestartAppTourTitle;
+
+  /// No description provided for @settingsRestartAppTourSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Run the short in-app walkthrough again.'**
+  String get settingsRestartAppTourSubtitle;
+
   /// No description provided for @my_goals.
   ///
   /// In en, this message translates to:
@@ -2077,6 +2095,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show tutorial again'**
   String get onbShowTutorialAgain;
+
+  /// No description provided for @appTourOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a quick app tour?'**
+  String get appTourOfferTitle;
+
+  /// No description provided for @appTourOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a short walkthrough of the main app areas. You can skip now and restart later in Settings.'**
+  String get appTourOfferBody;
+
+  /// No description provided for @appTourOfferStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tour'**
+  String get appTourOfferStart;
+
+  /// No description provided for @appTourOfferSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get appTourOfferSkip;
+
+  /// No description provided for @appTourSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get appTourSkip;
+
+  /// No description provided for @appTourNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get appTourNext;
+
+  /// No description provided for @appTourDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get appTourDone;
+
+  /// No description provided for @appTourStepNavigationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Main navigation'**
+  String get appTourStepNavigationTitle;
+
+  /// No description provided for @appTourStepNavigationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the bottom tabs to move between Diary, Workout, Statistics, and Nutrition.'**
+  String get appTourStepNavigationBody;
+
+  /// No description provided for @appTourStepQuickActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get appTourStepQuickActionsTitle;
+
+  /// No description provided for @appTourStepQuickActionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the plus button to quickly add food, fluids, measurements, workouts, and more.'**
+  String get appTourStepQuickActionsBody;
+
+  /// No description provided for @appTourStepDiaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary'**
+  String get appTourStepDiaryTitle;
+
+  /// No description provided for @appTourStepDiaryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary is your daily overview. Track meals, hydration, supplements, and your day at a glance.'**
+  String get appTourStepDiaryBody;
+
+  /// No description provided for @appTourStepWorkoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get appTourStepWorkoutTitle;
+
+  /// No description provided for @appTourStepWorkoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout is where you start sessions, manage routines, and review your training history.'**
+  String get appTourStepWorkoutBody;
+
+  /// No description provided for @appTourStepNutritionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get appTourStepNutritionTitle;
+
+  /// No description provided for @appTourStepNutritionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition helps you plan meals, review targets, and access tools like meal templates.'**
+  String get appTourStepNutritionBody;
+
+  /// No description provided for @appTourStepStatisticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get appTourStepStatisticsTitle;
+
+  /// No description provided for @appTourStepStatisticsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics shows trends and progress so you can understand how your data changes over time.'**
+  String get appTourStepStatisticsBody;
 
   /// Optional CTA linking to Goals screen from onboarding
   ///
