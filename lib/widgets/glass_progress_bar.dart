@@ -49,8 +49,8 @@ class GlassProgressBar extends StatelessWidget {
     final progress = rawProgress.clamp(0.0, 1.0);
 
     final backgroundColor = brightness == Brightness.dark
-        ? summary_card_dark_mode
-        : summary_card_white_mode;
+        ? summaryCardDarkMode
+        : summaryCardWhiteMode;
 
     return Container(
       height: height,

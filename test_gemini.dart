@@ -4,7 +4,7 @@ import 'dart:io';
 void main() async {
   final apiKey = Platform.environment['GEMINI_API_KEY'];
   if (apiKey == null || apiKey.isEmpty) {
-    print('No GEMINI_API_KEY found in environment');
+    stderr.writeln('No GEMINI_API_KEY found in environment');
     return;
   }
 
@@ -37,9 +37,9 @@ void main() async {
     request.write(body);
     final response = await request.close();
     final responseBody = await response.transform(utf8.decoder).join();
-    print('STATUS: ${response.statusCode}');
-    print('BODY: $responseBody');
+    stdout.writeln('STATUS: ${response.statusCode}');
+    stdout.writeln('BODY: $responseBody');
   } catch (e) {
-    print('Error: $e');
+    stderr.writeln('Error: $e');
   }
 }

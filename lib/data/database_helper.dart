@@ -500,7 +500,7 @@ class DatabaseHelper {
             sugarPer100ml: row.sugarPer100ml,
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
-            linked_food_entry_id: null,
+            linkedFoodEntryId: null,
             updatedAt: row.updatedAt,
           ),
         )
@@ -537,7 +537,7 @@ class DatabaseHelper {
             sugarPer100ml: row.sugarPer100ml,
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
-            linked_food_entry_id: null,
+            linkedFoodEntryId: null,
             updatedAt: row.updatedAt,
           ),
         )
@@ -600,7 +600,7 @@ class DatabaseHelper {
             sugarPer100ml: row.sugarPer100ml,
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
-            linked_food_entry_id: null,
+            linkedFoodEntryId: null,
             updatedAt: row.updatedAt,
           ),
         )

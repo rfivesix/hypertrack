@@ -211,7 +211,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
 
     // Ensure sets are sorted by log_order
     final sortedSets = List<SetLog>.from(savedSets)
-      ..sort((a, b) => (a.log_order ?? 0).compareTo(b.log_order ?? 0));
+      ..sort((a, b) => (a.logOrder ?? 0).compareTo(b.logOrder ?? 0));
 
     // Group SetLogs sequentially into blocks whenever the exercise name changes
     String? currentExerciseName;
@@ -445,7 +445,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       reps: prevSet?.reps,
       restTimeSeconds: re.pauseSeconds,
       isCompleted: false,
-      log_order: _setLogs.length,
+      logOrder: _setLogs.length,
       rir: null,
     );
 
@@ -534,7 +534,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         restTimeSeconds: 90,
         isCompleted: false,
         // Optional: logOrder hier schon setzen, aber Manager macht das nicht explizit bisher
-        log_order: _setLogs.length,
+        logOrder: _setLogs.length,
       );
       final dbId = await _workoutDb.insertSetLog(newSetLog);
       _setLogs[t.id!] = newSetLog.copyWith(id: dbId);
@@ -592,7 +592,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       for (final template in routineExercise.setTemplates) {
         final setLog = _setLogs[template.id];
         if (setLog != null) {
-          final updatedLog = setLog.copyWith(log_order: globalOrderCounter);
+          final updatedLog = setLog.copyWith(logOrder: globalOrderCounter);
           _setLogs[template.id!] = updatedLog;
           setsToUpdate.add(updatedLog);
           globalOrderCounter++;
@@ -730,7 +730,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
           final setLog = _setLogs[template.id];
           // Nur completed Sets werden behalten und neu sortiert
           if (setLog != null && setLog.isCompleted == true) {
-            setsToUpdate.add(setLog.copyWith(log_order: globalOrderCounter));
+            setsToUpdate.add(setLog.copyWith(logOrder: globalOrderCounter));
             globalOrderCounter++;
           }
         }

@@ -497,7 +497,7 @@ class _MainScreenState extends State<MainScreen>
         sugarPer100ml: null,
         carbsPer100ml: null,
         caffeinePer100ml: null,
-        linked_food_entry_id: newFoodEntryId,
+        linkedFoodEntryId: newFoodEntryId,
       );
       await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
     }
@@ -621,8 +621,8 @@ class _MainScreenState extends State<MainScreen>
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        source_food_entry_id: foodEntryId,
-        source_fluid_entry_id: fluidEntryId,
+        sourceFoodEntryId: foodEntryId,
+        sourceFluidEntryId: fluidEntryId,
       ),
     );
   }
@@ -1019,7 +1019,7 @@ class _MainScreenState extends State<MainScreen>
     // Parameter für Animation
     // const basePad = 120.0; // Unused locally
     // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
-    // final bg = isDark ? summary_card_dark_mode : summary_card_white_mode; // Unused locally in build, used in GlassNavBar logic internal
+    // final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode; // Unused locally in build, used in GlassNavBar logic internal
 
     // Radius für Liquid Animation (falls aktiv)
     // const double rLiquid = 99; // Unused here directly
@@ -1167,7 +1167,7 @@ class _MainScreenState extends State<MainScreen>
             final bool isDarkLocal =
                 Theme.of(context).brightness == Brightness.dark;
             final Color bgLocal =
-                isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
+                isDarkLocal ? summaryCardDarkMode : summaryCardWhiteMode;
             final Color neutralTintLocal =
                 (isDarkLocal ? Colors.white : Colors.black).withValues(
               alpha: isDarkLocal ? 0.10 : 0.10,
@@ -1529,7 +1529,7 @@ class _FrostedBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
     final themeService = context.watch<ThemeService>();
 
     final Color neutralTint = (isDark ? Colors.white : Colors.black)

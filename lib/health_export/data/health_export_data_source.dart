@@ -471,7 +471,7 @@ class HealthExportDataSource {
         reps: setRow.reps,
         restTimeSeconds: setRow.restTimeSeconds,
         isCompleted: setRow.isCompleted,
-        log_order: setRow.logOrder,
+        logOrder: setRow.logOrder,
         notes: setRow.notes,
         distanceKm: setRow.distance,
         durationSeconds: setRow.durationSeconds,

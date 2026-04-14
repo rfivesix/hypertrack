@@ -116,7 +116,7 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
 }
 
 class MonthSummaryCard extends StatelessWidget {
-  const MonthSummaryCard({required this.aggregation});
+  const MonthSummaryCard({super.key, required this.aggregation});
 
   final MonthSleepAggregation aggregation;
 
@@ -164,7 +164,11 @@ class MonthSummaryCard extends StatelessWidget {
 }
 
 class MonthCalendarGrid extends StatelessWidget {
-  const MonthCalendarGrid({required this.aggregation, required this.onTapDay});
+  const MonthCalendarGrid({
+    super.key,
+    required this.aggregation,
+    required this.onTapDay,
+  });
 
   final MonthSleepAggregation aggregation;
   final ValueChanged<DateTime> onTapDay;

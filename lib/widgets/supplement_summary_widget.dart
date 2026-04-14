@@ -118,8 +118,8 @@ class _CheckmarkCard extends StatelessWidget {
     }
 
     final backgroundColor = brightness == Brightness.dark
-        ? summary_card_dark_mode
-        : summary_card_white_mode;
+        ? summaryCardDarkMode
+        : summaryCardWhiteMode;
 
     return Container(
       height: 50,

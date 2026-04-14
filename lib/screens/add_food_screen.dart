@@ -1284,7 +1284,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        // source_food_entry_id: hier könnten wir verlinken, wenn wir die neue FoodEntry-ID hätten –
+        // sourceFoodEntryId: hier könnten wir verlinken, wenn wir die neue FoodEntry-ID hätten –
         // in diesem Flow buchen wir mehrere; Verlinkung kannst du später erweitern.
       ),
     );

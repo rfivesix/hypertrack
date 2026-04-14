@@ -426,8 +426,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
         carbsPer100ml: sugarPer100ml, // Spiegeln
         caffeinePer100ml: result.$4,
         timestamp: fluidEntry.timestamp,
-        linked_food_entry_id:
-            fluidEntry.linked_food_entry_id, // Wichtig: beibehalten
+        linkedFoodEntryId: fluidEntry.linkedFoodEntryId, // Wichtig: beibehalten
       );
       await DatabaseHelper.instance.updateFluidEntry(updatedEntry);
 
@@ -467,8 +466,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        source_food_entry_id: foodEntryId,
-        source_fluid_entry_id: fluidEntryId,
+        sourceFoodEntryId: foodEntryId,
+        sourceFluidEntryId: fluidEntryId,
       ),
     );
   }

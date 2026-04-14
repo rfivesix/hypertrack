@@ -126,7 +126,7 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
 }
 
 class WeekSummaryCard extends StatelessWidget {
-  const WeekSummaryCard({required this.aggregation});
+  const WeekSummaryCard({super.key, required this.aggregation});
 
   final WeekSleepAggregation aggregation;
 
@@ -174,7 +174,7 @@ class WeekSummaryCard extends StatelessWidget {
 }
 
 class WeekWindowCard extends StatelessWidget {
-  const WeekWindowCard({required this.aggregation});
+  const WeekWindowCard({super.key, required this.aggregation});
 
   final WeekSleepAggregation aggregation;
   static const int _fallbackMinMinutes = 20 * 60;
@@ -563,7 +563,11 @@ String _weekdayShort(int weekday, String locale) {
 }
 
 class WeekScoreStrip extends StatelessWidget {
-  const WeekScoreStrip({required this.aggregation, required this.onTapDay});
+  const WeekScoreStrip({
+    super.key,
+    required this.aggregation,
+    required this.onTapDay,
+  });
 
   final WeekSleepAggregation aggregation;
   final ValueChanged<DateTime> onTapDay;

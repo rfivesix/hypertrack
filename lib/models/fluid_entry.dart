@@ -29,7 +29,7 @@ class FluidEntry {
   final double? caffeinePer100ml;
 
   /// Optional identifier linking this fluid entry to a food entry.
-  final int? linked_food_entry_id; // *** NEU ***
+  final int? linkedFoodEntryId; // *** NEU ***
 
   /// Last modification timestamp from persistence when available.
   final DateTime? updatedAt;
@@ -44,7 +44,7 @@ class FluidEntry {
     this.sugarPer100ml,
     this.carbsPer100ml,
     this.caffeinePer100ml,
-    this.linked_food_entry_id, // *** NEU ***
+    this.linkedFoodEntryId, // *** NEU ***
     this.updatedAt,
   });
 
@@ -59,7 +59,7 @@ class FluidEntry {
       'sugar_per_100ml': sugarPer100ml,
       'carbs_per_100ml': carbsPer100ml,
       'caffeine_per_100ml': caffeinePer100ml,
-      'linked_food_entry_id': linked_food_entry_id, // *** NEU ***
+      'linked_food_entry_id': linkedFoodEntryId, // *** NEU ***
     };
   }
 
@@ -74,7 +74,7 @@ class FluidEntry {
       sugarPer100ml: map['sugar_per_100ml'],
       carbsPer100ml: map['carbs_per_100ml'],
       caffeinePer100ml: map['caffeine_per_100ml'],
-      linked_food_entry_id: map['linked_food_entry_id'], // *** NEU ***
+      linkedFoodEntryId: map['linked_food_entry_id'], // *** NEU ***
     );
   }
 }

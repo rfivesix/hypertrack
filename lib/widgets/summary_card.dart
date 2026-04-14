@@ -31,8 +31,8 @@ class SummaryCard extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
 
     final background = brightness == Brightness.dark
-        ? summary_card_dark_mode
-        : summary_card_white_mode;
+        ? summaryCardDarkMode
+        : summaryCardWhiteMode;
 
     final card = Container(
       margin: margin,

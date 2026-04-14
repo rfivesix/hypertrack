@@ -125,7 +125,7 @@ class ImportManager {
             ),
             rpe: int.tryParse(row['rpe']?.toString() ?? ''),
 
-            log_order: setOrder++,
+            logOrder: setOrder++,
             notes: row['exercise_notes'],
             isCompleted: true, // Importierte Sets sind immer fertig
           );

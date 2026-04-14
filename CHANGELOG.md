@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed remaining app-level default alert style mismatches in migrated screens so action dialogs now follow one consistent Hypertrack UI pattern.
 - Preserved existing action semantics and async handling across migrated flows (confirm/cancel/save/delete outcomes unchanged).
 
+### Internal
+- Cleaned up remaining analyzer issues, including widget constructor keys, naming consistency, model API cleanup, and minor test/dev code refactors.
+
 ### Notes
 - Intentionally kept native-style blocking loading overlays (spinner dialogs used during workout-start operations) unchanged, since these are progress overlays rather than app decision dialogs.
 

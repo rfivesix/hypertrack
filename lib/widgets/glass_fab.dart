@@ -62,7 +62,7 @@ class _GlassFabState extends State<GlassFab>
   Widget build(BuildContext context) {
     final themeService = context.watch<ThemeService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
+    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
     final hasLabel = widget.label != null;
     final Color neutralTint = (isDark ? Colors.white : Colors.black)
         .withValues(alpha: isDark ? 0.1 : 0.1);

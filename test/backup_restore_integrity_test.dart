@@ -376,7 +376,7 @@ void main() {
                 reps: 5,
                 restTimeSeconds: 180,
                 isCompleted: false,
-                log_order: 2,
+                logOrder: 2,
                 notes: 'paused reps',
                 distanceKm: 0.1,
                 durationSeconds: 75,
