@@ -409,7 +409,7 @@ class _WeekWindowChart extends StatelessWidget {
                           maxMinutes: maxMinutes,
                           color: Theme.of(
                             context,
-                          ).colorScheme.outlineVariant.withOpacity(0.6),
+                          ).colorScheme.outlineVariant.withValues(alpha: 0.6),
                         ),
                       ),
                     ),

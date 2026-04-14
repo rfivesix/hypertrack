@@ -269,7 +269,7 @@ class _MainScreenState extends State<MainScreen>
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         Widget glassCard({required Widget child, EdgeInsets? padding}) {
           return Material(
-            color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
+            color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.08),
             borderRadius: BorderRadius.circular(18),
             child: Padding(
               padding: padding ??
@@ -337,7 +337,7 @@ class _MainScreenState extends State<MainScreen>
                             .instance
                             .startWorkout(routineName: r.name);
 
-                        if (!context.mounted) return;
+                        if (!mounted) return;
                         Navigator.of(context).pop(); // Ladeindikator schließen
 
                         if (fullRoutine != null && ctx.mounted) {
@@ -1169,12 +1169,12 @@ class _MainScreenState extends State<MainScreen>
             final Color bgLocal =
                 isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
             final Color neutralTintLocal =
-                (isDarkLocal ? Colors.white : Colors.black).withOpacity(
-              isDarkLocal ? 0.10 : 0.10,
+                (isDarkLocal ? Colors.white : Colors.black).withValues(
+              alpha: isDarkLocal ? 0.10 : 0.10,
             );
             final Color effectiveGlassLocal = Color.alphaBlend(
               neutralTintLocal,
-              bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16),
+              bgLocal.withValues(alpha: isDarkLocal ? 0.22 : 0.16),
             );
 
             // Radius für Liquid Animation hier lokal definieren oder aus Konstante
@@ -1201,7 +1201,7 @@ class _MainScreenState extends State<MainScreen>
                             sigmaY: 6.0 * v,
                           ),
                           child: Container(
-                            color: Colors.black.withOpacity(0.4 * v),
+                            color: Colors.black.withValues(alpha: 0.4 * v),
                           ),
                         ),
                       ),
@@ -1296,12 +1296,12 @@ class _MainScreenState extends State<MainScreen>
                                                     border: Border.all(
                                                       color: isDarkLocal
                                                           ? Colors.white
-                                                              .withOpacity(
-                                                              0.20,
+                                                              .withValues(
+                                                              alpha: 0.20,
                                                             )
                                                           : Colors.black
-                                                              .withOpacity(
-                                                              0.08,
+                                                              .withValues(
+                                                              alpha: 0.08,
                                                             ),
                                                       width: 1.2,
                                                     ),
@@ -1365,8 +1365,8 @@ class _MainScreenState extends State<MainScreen>
                                                     width: 76,
                                                     height: 76,
                                                     decoration: BoxDecoration(
-                                                      color: bgLocal
-                                                          .withOpacity(0.80),
+                                                      color: bgLocal.withValues(
+                                                          alpha: 0.80),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                         18,
@@ -1374,20 +1374,20 @@ class _MainScreenState extends State<MainScreen>
                                                       border: Border.all(
                                                         color: isDarkLocal
                                                             ? Colors.white
-                                                                .withOpacity(
-                                                                0.30,
+                                                                .withValues(
+                                                                alpha: 0.30,
                                                               )
                                                             : Colors.black
-                                                                .withOpacity(
-                                                                0.10,
+                                                                .withValues(
+                                                                alpha: 0.10,
                                                               ),
                                                         width: 1.5,
                                                       ),
                                                       boxShadow: [
                                                         BoxShadow(
                                                           color: Colors.black
-                                                              .withOpacity(
-                                                            0.25,
+                                                              .withValues(
+                                                            alpha: 0.25,
                                                           ),
                                                           blurRadius: 10,
                                                           offset: const Offset(
@@ -1532,11 +1532,11 @@ class _FrostedBar extends StatelessWidget {
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     final themeService = context.watch<ThemeService>();
 
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+    final Color neutralTint = (isDark ? Colors.white : Colors.black)
+        .withValues(alpha: isDark ? 0.1 : 0.1);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      bg.withOpacity(isDark ? 0.8 : 0.5),
+      bg.withValues(alpha: isDark ? 0.8 : 0.5),
     );
 
     if (themeService.visualStyle == 1) {
@@ -1571,8 +1571,8 @@ class _FrostedBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(radius.toDouble()),
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.20)
-                          : Colors.black.withOpacity(0.08),
+                          ? Colors.white.withValues(alpha: 0.20)
+                          : Colors.black.withValues(alpha: 0.08),
                       width: 1.2,
                     ),
                   ),
@@ -1592,19 +1592,19 @@ class _FrostedBar extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: bg.withOpacity(0.80),
+            color: bg.withValues(alpha: 0.80),
             borderRadius: BorderRadius.circular(radius.toDouble()),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.30)
-                  : Colors.black.withOpacity(0.10),
+                  ? Colors.white.withValues(alpha: 0.30)
+                  : Colors.black.withValues(alpha: 0.10),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
                 blurRadius: 12,
                 offset: const Offset(0, 6),
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
               ),
             ],
           ),
@@ -1645,7 +1645,7 @@ class _RunningWorkoutRow extends StatelessWidget {
                   fontSize: 16,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.9),
+                  ).colorScheme.onSurface.withValues(alpha: 0.9),
                   decoration: TextDecoration.none,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),

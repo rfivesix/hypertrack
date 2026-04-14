@@ -207,8 +207,8 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
     await DatabaseHelper.instance.deleteSupplementLog(id);
     await _loadData(_selectedDate);
 
-    final l10n = AppLocalizations.of(context)!;
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -258,7 +258,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
@@ -301,7 +301,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.8),
+                      ).colorScheme.onSurface.withValues(alpha: 0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -441,7 +441,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                     thickness: 1,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                   ),
                   const SizedBox(height: DesignConstants.spacingL),
 

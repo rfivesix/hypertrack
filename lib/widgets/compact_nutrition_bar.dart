@@ -87,7 +87,7 @@ class CompactNutritionBar extends StatelessWidget {
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: progress,
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           color: color,
           minHeight: 8,
           borderRadius: BorderRadius.circular(4),

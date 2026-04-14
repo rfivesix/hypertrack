@@ -67,8 +67,9 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
 
     // Farbe für das durchscheinende "Glas"
-    final Color glassColor =
-        isDark ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.3);
+    final Color glassColor = isDark
+        ? Colors.black.withValues(alpha: 0.5)
+        : Colors.white.withValues(alpha: 0.3);
 
     // Die finale Struktur mit statischem Blur
     return ClipRect(

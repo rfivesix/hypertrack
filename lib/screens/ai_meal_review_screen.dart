@@ -428,7 +428,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
               color: theme.scaffoldBackgroundColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, -2),
                 ),
@@ -540,7 +540,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: confidenceColor.withOpacity(0.15),
+                            color: confidenceColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

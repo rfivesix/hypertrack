@@ -60,9 +60,9 @@ Future<T?> showGlassBottomMenu<T>({
 
   final Color barrierColor = isDark
       ? (!isLiquid
-          ? Colors.grey.withOpacity(0.187)
-          : Colors.black.withOpacity(0.5))
-      : Colors.black.withOpacity(0.3);
+          ? Colors.grey.withValues(alpha: 0.187)
+          : Colors.black.withValues(alpha: 0.5))
+      : Colors.black.withValues(alpha: 0.3);
 
   return showModalBottomSheet<T>(
     context: context,
@@ -110,12 +110,12 @@ class _GlassBottomMenuSheet extends StatelessWidget {
     final themeService = context.watch<ThemeService>();
 
     final Color neutralTint = (isDark
-        ? Colors.white.withOpacity(0.05)
-        : Colors.white.withOpacity(0.22));
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.white.withValues(alpha: 0.22));
 
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.5),
+      theme.colorScheme.surface.withValues(alpha: isDark ? 0.8 : 0.5),
     );
 
     const double r = 24;
@@ -132,7 +132,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
               width: 44,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.75),
+                color: Colors.white.withValues(alpha: 0.75),
                 borderRadius: BorderRadius.circular(100),
               ),
             ),
@@ -206,7 +206,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withValues(alpha: 0.18),
                     blurRadius: 30,
                     spreadRadius: 4,
                     offset: const Offset(0, 14),
@@ -241,8 +241,8 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(r),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withOpacity(0.20)
-                              : Colors.black.withOpacity(0.08),
+                              ? Colors.white.withValues(alpha: 0.20)
+                              : Colors.black.withValues(alpha: 0.08),
                           width: 1.2,
                         ),
                       ),
@@ -266,7 +266,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withValues(alpha: 0.18),
                     blurRadius: 30,
                     spreadRadius: 4,
                     offset: const Offset(0, 14),
@@ -281,8 +281,8 @@ class _GlassBottomMenuSheet extends StatelessWidget {
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(
-                    isDark ? 0.80 : 0.92,
+                  color: theme.colorScheme.surface.withValues(
+                    alpha: isDark ? 0.80 : 0.92,
                   ),
                 ),
                 child: contentColumn(),
@@ -335,11 +335,11 @@ class _GlassTile extends StatelessWidget {
 
     // Hintergrund-Tint etwas anpassen
     final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.05);
+        (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05);
 
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      Colors.white.withOpacity(isDark ? 0.10 : 0.12),
+      Colors.white.withValues(alpha: isDark ? 0.10 : 0.12),
     );
 
     final Widget leadingWidget =
@@ -355,10 +355,10 @@ class _GlassTile extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.white.withOpacity(0.2),
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.2),
               border: Border.all(
-                color: Colors.white.withOpacity(isDark ? 0.14 : 0.18),
+                color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.18),
                 width: 1,
               ),
             ),
@@ -384,7 +384,7 @@ class _GlassTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall?.copyWith(
-                      color: textTheme.bodySmall?.color?.withOpacity(0.8),
+                      color: textTheme.bodySmall?.color?.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -395,7 +395,7 @@ class _GlassTile extends StatelessWidget {
           Icon(
             Icons.chevron_right_rounded,
             size: 22,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ],
       ),
@@ -443,8 +443,8 @@ class _GlassTile extends StatelessWidget {
 
     return Material(
       color: isDark
-          ? Colors.white.withOpacity(0.06)
-          : Colors.white.withOpacity(0.08),
+          ? Colors.white.withValues(alpha: 0.06)
+          : Colors.white.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(onTap: onTap, child: tileContent),

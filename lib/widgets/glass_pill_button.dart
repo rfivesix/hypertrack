@@ -88,10 +88,10 @@ class _GlassPillButtonState extends State<GlassPillButton>
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
 
     final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.10);
+        (isDark ? Colors.white : Colors.black).withValues(alpha: 0.10);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      bg.withOpacity(isDark ? 0.8 : 0.5),
+      bg.withValues(alpha: isDark ? 0.8 : 0.5),
     );
 
     // Adaptive border radius: round if not Row, pill if Row
@@ -116,7 +116,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
           ),
           shape: LiquidRoundedSuperellipse(borderRadius: effectiveRadius),
           child: GlassGlow(
-            glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+            glowColor: Colors.white.withValues(alpha: isDark ? 0.24 : 0.18),
             glowRadius: 1.0,
             child: Container(
               // height and width removed here; enforced outside with SizedBox
@@ -129,8 +129,8 @@ class _GlassPillButtonState extends State<GlassPillButton>
                 borderRadius: BorderRadius.circular(effectiveRadius),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withOpacity(0.20)
-                      : Colors.black.withOpacity(0.08),
+                      ? Colors.white.withValues(alpha: 0.20)
+                      : Colors.black.withValues(alpha: 0.08),
                   width: 1.2,
                 ),
               ),
@@ -149,12 +149,12 @@ class _GlassPillButtonState extends State<GlassPillButton>
             // height and width removed here; enforced outside with SizedBox
             padding: isCircle ? EdgeInsets.zero : widget.padding,
             decoration: BoxDecoration(
-              color: bg.withOpacity(0.80),
+              color: bg.withValues(alpha: 0.80),
               borderRadius: BorderRadius.circular(effectiveRadius),
               border: Border.all(
                 color: isDark
-                    ? Colors.white.withOpacity(0.30)
-                    : Colors.black.withOpacity(0.10),
+                    ? Colors.white.withValues(alpha: 0.30)
+                    : Colors.black.withValues(alpha: 0.10),
                 width: 1.5,
               ),
             ),

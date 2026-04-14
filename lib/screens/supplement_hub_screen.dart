@@ -133,6 +133,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                 timestamp: ts,
               ),
             );
+            if (!ctx.mounted) return;
             close();
             Navigator.of(ctx).pop(true);
           },
@@ -260,7 +261,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
@@ -301,7 +302,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.8),
+                      ).colorScheme.onSurface.withValues(alpha: 0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -504,7 +505,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
             thickness: 1,
             color: Theme.of(
               context,
-            ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
           ),
           Expanded(
             child: _isLoading

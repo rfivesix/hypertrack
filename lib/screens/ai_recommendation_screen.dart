@@ -87,6 +87,8 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   // ---------------------------------------------------------------------------
 
   Future<void> _generate() async {
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
     setState(() {
       _isGenerating = true;
       _errorMessage = null;
@@ -194,8 +196,6 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       if (_selectedSituation != null) prefs.add(_selectedSituation!);
 
       // 3. Call AI
-      final l10n = AppLocalizations.of(context)!;
-      final languageCode = Localizations.localeOf(context).languageCode;
       final result = await AiService.instance.generateMealRecommendation(
         targetMacros: targetMacros,
         preferences: prefs,

@@ -47,7 +47,7 @@ class AppSheetScaffold extends StatelessWidget {
     Widget surface = Container(
       decoration: BoxDecoration(
         color: style == AppSheetStyle.glass
-            ? Colors.white.withOpacity(0.20)
+            ? Colors.white.withValues(alpha: 0.20)
             : theme.colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -55,13 +55,13 @@ class AppSheetScaffold extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
         ],
         border: style == AppSheetStyle.glass
-            ? Border.all(color: Colors.white.withOpacity(0.25), width: 1)
+            ? Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1)
             : null,
       ),
       padding: const EdgeInsets.fromLTRB(

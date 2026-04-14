@@ -384,8 +384,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 suffixText: "s",
                 filled: true,
                 fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.05),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -508,7 +508,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           Divider(
             height: 1,
             thickness: 1,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
           ),
           Expanded(
             child: _isLoading
@@ -734,8 +734,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final Color rowColor;
     if (isColoredRow) {
       rowColor = isLightMode
-          ? Colors.grey.withOpacity(0.08)
-          : Colors.white.withOpacity(0.05);
+          ? Colors.grey.withValues(alpha: 0.08)
+          : Colors.white.withValues(alpha: 0.05);
     } else {
       rowColor = Colors.transparent;
     }

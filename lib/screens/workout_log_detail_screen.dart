@@ -200,6 +200,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       lastDate: DateTime.now().add(const Duration(days: 1)),
     );
     if (date == null) return;
+    if (!mounted) return;
 
     final time = await showTimePicker(
       context: context,
@@ -358,7 +359,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                     Divider(
                       height: 1,
                       thickness: 1,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                      color:
+                          colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                     ),
                     Expanded(
                       child: ListView(
@@ -762,8 +764,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
+            ? Colors.grey.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.1))
         : Colors.transparent;
 
     // View Values

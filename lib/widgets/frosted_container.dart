@@ -43,11 +43,11 @@ class FrostedContainer extends StatelessWidget {
             padding: padding,
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withOpacity(0.6)
-                  : Colors.white.withOpacity(0.7),
+                  ? Colors.black.withValues(alpha: 0.6)
+                  : Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(radius),
               border: Border.all(
-                color: cs.onSurface.withOpacity(0.08),
+                color: cs.onSurface.withValues(alpha: 0.08),
                 width: 1,
               ),
               boxShadow: const [

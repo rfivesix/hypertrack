@@ -553,8 +553,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
+            ? Colors.grey.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.1))
         : Colors.transparent;
 
     // Hint Logic
@@ -622,7 +622,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               isDense: true,
               fillColor: Colors.transparent,
               hintText: weightHint,
-              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
             ),
             enabled: !isCompleted,
           ),
@@ -642,7 +642,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               fillColor: Colors.transparent,
               hintText: repHint,
               hintStyle: TextStyle(
-                color: Colors.grey.withOpacity(0.5),
+                color: Colors.grey.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
             ),
@@ -664,7 +664,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               isDense: true,
               fillColor: Colors.transparent,
               hintText: rirHint,
-              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
             ),
             enabled: !isCompleted,
           ),
@@ -731,7 +731,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         children: [
           Positioned.fill(
             child: Container(
-              color: isCompleted ? Colors.green.withOpacity(0.2) : rowColor,
+              color:
+                  isCompleted ? Colors.green.withValues(alpha: 0.2) : rowColor,
             ),
           ),
           rowWithE1rm,
@@ -952,7 +953,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                   thickness: 1,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                 ),
                 Expanded(
                   child: manager.exercises.isEmpty

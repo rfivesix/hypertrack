@@ -277,7 +277,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             Divider(
               height: 32,
               thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
             ),
             if (_hasPortionInfo)
               SummaryCard(
@@ -456,13 +456,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary.withOpacity(0.2)
+                ? theme.colorScheme.primary.withValues(alpha: 0.2)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
             border: Border.all(
               color: isSelected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
             ),
           ),
           child: Text(

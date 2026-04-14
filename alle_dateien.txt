@@ -239,7 +239,7 @@ class MyApp extends StatelessWidget {
           ),
 
           dividerTheme: DividerThemeData(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha:0.08),
             thickness: 1,
             space: 24,
           ),
@@ -268,7 +268,7 @@ class MyApp extends StatelessWidget {
           ),
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: lightScheme.primary,
-            selectionColor: lightScheme.primary.withOpacity(0.25),
+            selectionColor: lightScheme.primary.withValues(alpha:0.25),
             selectionHandleColor: lightScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
@@ -282,7 +282,7 @@ class MyApp extends StatelessWidget {
               (s) => lightScheme.primary,
             ),
             trackColor: WidgetStateProperty.resolveWith(
-              (s) => lightScheme.primary.withOpacity(0.5),
+              (s) => lightScheme.primary.withValues(alpha:0.5),
             ),
           ),
           dialogTheme: DialogThemeData(
@@ -355,7 +355,7 @@ class MyApp extends StatelessWidget {
           ),
 
           dividerTheme: DividerThemeData(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha:0.08),
             thickness: 1,
             space: 24,
           ),
@@ -383,7 +383,7 @@ class MyApp extends StatelessWidget {
           ),
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: darkScheme.primary,
-            selectionColor: darkScheme.primary.withOpacity(0.35),
+            selectionColor: darkScheme.primary.withValues(alpha:0.35),
             selectionHandleColor: darkScheme.primary,
           ),
           checkboxTheme: CheckboxThemeData(
@@ -397,7 +397,7 @@ class MyApp extends StatelessWidget {
               (s) => darkScheme.primary,
             ),
             trackColor: WidgetStateProperty.resolveWith(
-              (s) => darkScheme.primary.withOpacity(0.5),
+              (s) => darkScheme.primary.withValues(alpha:0.5),
             ),
           ),
           dialogTheme: DialogThemeData(
@@ -10315,7 +10315,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
                 ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
@@ -10386,7 +10386,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
                 ),
                 Expanded(
                   child: _displayItems.isEmpty
@@ -10674,7 +10674,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
             if (_isLoading)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha:0.5),
                   child: const Center(child: CircularProgressIndicator()),
                 ),
               ),
@@ -10696,7 +10696,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                : theme.colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Text(
@@ -11069,7 +11069,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                     Divider(
                       height: 1,
                       thickness: 1,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                      color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
                     ),
                     Expanded(
                       child: ListView(
@@ -11466,8 +11466,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
+            ? Colors.grey.withValues(alpha:0.1)
+            : Colors.white.withValues(alpha:0.1))
         : Colors.transparent;
 
     // View Values
@@ -12060,7 +12060,7 @@ class HomeState extends State<Home> {
           if (showLoadingOverlay)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha:0.5),
                 child: const Center(child: CircularProgressIndicator()),
               ),
             ),
@@ -12173,7 +12173,7 @@ class HomeState extends State<Home> {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              : theme.colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
@@ -12527,7 +12527,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha:0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
@@ -12568,7 +12568,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.8),
+                      ).colorScheme.onSurface.withValues(alpha:0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -12773,7 +12773,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
             thickness: 1,
             color: Theme.of(
               context,
-            ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+            ).colorScheme.onSurfaceVariant.withValues(alpha:0.1),
           ),
           Expanded(
             child: _isLoading
@@ -13130,7 +13130,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             Divider(
               height: 32,
               thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+              color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
             ),
             if (_hasPortionInfo)
               SummaryCard(
@@ -13309,13 +13309,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary.withOpacity(0.2)
+                ? theme.colorScheme.primary.withValues(alpha:0.2)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
             border: Border.all(
               color: isSelected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha:0.3),
             ),
           ),
           child: Text(
@@ -14477,8 +14477,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                         filled: true,
                         fillColor:
                             Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
+                                ? Colors.white.withValues(alpha:0.05)
+                                : Colors.black.withValues(alpha:0.05),
                       ),
                       items: internalTypes
                           .map(
@@ -14532,8 +14532,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                                     filled: true,
                                     fillColor: Theme.of(context).brightness ==
                                             Brightness.dark
-                                        ? Colors.white.withOpacity(0.05)
-                                        : Colors.black.withOpacity(0.05),
+                                        ? Colors.white.withValues(alpha:0.05)
+                                        : Colors.black.withValues(alpha:0.05),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide.none,
@@ -15046,7 +15046,7 @@ class ScannerOverlay extends CustomPainter {
     final backgroundPath = Path()..addRect(Rect.largest);
     final cutoutPath = Path()..addRect(scanWindow);
     final backgroundPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withValues(alpha:0.5)
       ..style = PaintingStyle.fill
       ..blendMode = BlendMode.dstOut;
 
@@ -16039,7 +16039,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              : theme.colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
@@ -17479,7 +17479,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
           Divider(
             height: 1,
             thickness: 1,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
           ),
           Expanded(
             child: TabBarView(
@@ -17563,7 +17563,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
           l10n.favoritesEmptyState,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.6),
               ),
         ),
       );
@@ -18320,8 +18320,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                 suffixText: "s",
                 filled: true,
                 fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.05),
+                    ? Colors.white.withValues(alpha:0.05)
+                    : Colors.black.withValues(alpha:0.05),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none),
@@ -18447,7 +18447,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           Divider(
             height: 1,
             thickness: 1,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
           ),
           Expanded(
             child: _isLoading
@@ -18668,8 +18668,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final Color rowColor;
     if (isColoredRow) {
       rowColor = isLightMode
-          ? Colors.grey.withOpacity(0.08)
-          : Colors.white.withOpacity(0.05);
+          ? Colors.grey.withValues(alpha:0.08)
+          : Colors.white.withValues(alpha:0.05);
     } else {
       rowColor = Colors.transparent;
     }
@@ -19737,7 +19737,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   radius:
                                       40, // Etwas kleiner als vorher (war 50), passt besser in Row
                                   backgroundColor: theme.colorScheme.primary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha:0.1),
                                   backgroundImage:
                                       profileService.profileImagePath != null
                                           ? FileImage(File(
@@ -19812,7 +19812,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Icon(
                             Icons.edit_outlined,
                             color: theme.colorScheme.onSurfaceVariant
-                                .withOpacity(0.5),
+                                .withValues(alpha:0.5),
                           ),
                         ],
                       ),
@@ -20183,7 +20183,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha:0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
@@ -20226,7 +20226,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.8),
+                      ).colorScheme.onSurface.withValues(alpha:0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -20366,7 +20366,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                     thickness: 1,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurfaceVariant.withOpacity(0.1),
+                    ).colorScheme.onSurfaceVariant.withValues(alpha:0.1),
                   ),
                   const SizedBox(height: DesignConstants.spacingL),
 
@@ -23270,7 +23270,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           Divider(
             height: 1,
             thickness: 1,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+            color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
           ),
           Expanded(
             child: _isLoading
@@ -23378,7 +23378,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           decoration: BoxDecoration(
             color: _selectedCategories.isNotEmpty
                 ? colorScheme.primary
-                : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                : colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Row(
@@ -24263,8 +24263,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
     final Color rowColor = isColoredRow
         ? (isLightMode
-            ? Colors.grey.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1))
+            ? Colors.grey.withValues(alpha:0.1)
+            : Colors.white.withValues(alpha:0.1))
         : Colors.transparent;
 
     // Hint Logic
@@ -24332,7 +24332,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               isDense: true,
               fillColor: Colors.transparent,
               hintText: weightHint,
-              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.grey.withValues(alpha:0.5)),
             ),
             enabled: !isCompleted,
           ),
@@ -24352,7 +24352,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               fillColor: Colors.transparent,
               hintText: repHint,
               hintStyle:
-                  TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 14),
+                  TextStyle(color: Colors.grey.withValues(alpha:0.5), fontSize: 14),
             ),
             enabled: !isCompleted,
           ),
@@ -24372,7 +24372,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               isDense: true,
               fillColor: Colors.transparent,
               hintText: rirHint,
-              hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.grey.withValues(alpha:0.5)),
             ),
             enabled: !isCompleted,
           ),
@@ -24412,7 +24412,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         children: [
           Positioned.fill(
             child: Container(
-              color: isCompleted ? Colors.green.withOpacity(0.2) : rowColor,
+              color: isCompleted ? Colors.green.withValues(alpha:0.2) : rowColor,
             ),
           ),
           rowContent,
@@ -24580,7 +24580,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.1),
+                      .withValues(alpha:0.1),
                 ),
                 Expanded(
                   child: manager.exercises.isEmpty
@@ -27121,7 +27121,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              : theme.colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
@@ -27181,7 +27181,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             Divider(
               height: 1,
               thickness: 1,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+              color: colorScheme.onSurfaceVariant.withValues(alpha:0.1),
             ),
             ...sortedMeasurements.map(
               (measurement) => ListTile(
@@ -27673,7 +27673,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
               color: theme.scaffoldBackgroundColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha:0.1),
                   blurRadius: 8,
                   offset: const Offset(0, -2),
                 ),
@@ -27785,7 +27785,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: confidenceColor.withOpacity(0.15),
+                            color: confidenceColor.withValues(alpha:0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -28938,7 +28938,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         Widget glassCard({required Widget child, EdgeInsets? padding}) {
           return Material(
-            color: Colors.white.withOpacity(isDark ? 0.06 : 0.08),
+            color: Colors.white.withValues(alpha:isDark ? 0.06 : 0.08),
             borderRadius: BorderRadius.circular(18),
             child: Padding(
               padding: padding ??
@@ -29613,9 +29613,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 isDarkLocal ? summary_card_dark_mode : summary_card_white_mode;
             final Color neutralTintLocal =
                 (isDarkLocal ? Colors.white : Colors.black)
-                    .withOpacity(isDarkLocal ? 0.10 : 0.10);
+                    .withValues(alpha:isDarkLocal ? 0.10 : 0.10);
             final Color effectiveGlassLocal = Color.alphaBlend(neutralTintLocal,
-                bgLocal.withOpacity(isDarkLocal ? 0.22 : 0.16));
+                bgLocal.withValues(alpha:isDarkLocal ? 0.22 : 0.16));
 
             // Radius für Liquid Animation hier lokal definieren oder aus Konstante
             const double rLiquid = 99;
@@ -29641,7 +29641,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             sigmaY: 6.0 * v,
                           ),
                           child: Container(
-                            color: Colors.black.withOpacity(0.4 * v),
+                            color: Colors.black.withValues(alpha:0.4 * v),
                           ),
                         ),
                       ),
@@ -29735,9 +29735,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     border: Border.all(
                                                       color: isDarkLocal
                                                           ? Colors.white
-                                                              .withOpacity(0.20)
+                                                              .withValues(alpha:0.20)
                                                           : Colors.black
-                                                              .withOpacity(
+                                                              .withValues(alpha:
                                                                   0.08),
                                                       width: 1.2,
                                                     ),
@@ -29789,24 +29789,24 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                     height: 76,
                                                     decoration: BoxDecoration(
                                                       color: bgLocal
-                                                          .withOpacity(0.80),
+                                                          .withValues(alpha:0.80),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               18),
                                                       border: Border.all(
                                                         color: isDarkLocal
                                                             ? Colors.white
-                                                                .withOpacity(
+                                                                .withValues(alpha:
                                                                     0.30)
                                                             : Colors.black
-                                                                .withOpacity(
+                                                                .withValues(alpha:
                                                                     0.10),
                                                         width: 1.5,
                                                       ),
                                                       boxShadow: [
                                                         BoxShadow(
                                                           color: Colors.black
-                                                              .withOpacity(
+                                                              .withValues(alpha:
                                                                   0.25),
                                                           blurRadius: 10,
                                                           offset: const Offset(
@@ -29915,9 +29915,9 @@ class _FrostedBar extends StatelessWidget {
     final themeService = context.watch<ThemeService>();
 
     final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+        (isDark ? Colors.white : Colors.black).withValues(alpha:isDark ? 0.1 : 0.1);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
+        Color.alphaBlend(neutralTint, bg.withValues(alpha:isDark ? 0.8 : 0.5));
 
     if (themeService.visualStyle == 1) {
       double radius = 99;
@@ -29949,8 +29949,8 @@ class _FrostedBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(radius.toDouble()),
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.20)
-                          : Colors.black.withOpacity(0.08),
+                          ? Colors.white.withValues(alpha:0.20)
+                          : Colors.black.withValues(alpha:0.08),
                       width: 1.2,
                     ),
                   ),
@@ -29970,19 +29970,19 @@ class _FrostedBar extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: bg.withOpacity(0.80),
+            color: bg.withValues(alpha:0.80),
             borderRadius: BorderRadius.circular(radius.toDouble()),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.30)
-                  : Colors.black.withOpacity(0.10),
+                  ? Colors.white.withValues(alpha:0.30)
+                  : Colors.black.withValues(alpha:0.10),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
                 blurRadius: 12,
                 offset: const Offset(0, 6),
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha:0.3),
               ),
             ],
           ),
@@ -30023,7 +30023,7 @@ class _RunningWorkoutRow extends StatelessWidget {
                   fontSize: 16,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.9),
+                  ).colorScheme.onSurface.withValues(alpha:0.9),
                   decoration: TextDecoration.none,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
@@ -31708,7 +31708,7 @@ class AppSheetScaffold extends StatelessWidget {
     Widget surface = Container(
       decoration: BoxDecoration(
         color: style == AppSheetStyle.glass
-            ? Colors.white.withOpacity(0.20)
+            ? Colors.white.withValues(alpha:0.20)
             : theme.colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -31716,14 +31716,14 @@ class AppSheetScaffold extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha:0.08),
             blurRadius: 16,
             offset: const Offset(0, 8),
           )
         ],
         border: style == AppSheetStyle.glass
             ? Border.all(
-                color: Colors.white.withOpacity(0.25),
+                color: Colors.white.withValues(alpha:0.25),
                 width: 1,
               )
             : null,
@@ -32118,7 +32118,7 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
           (s) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
             child: Material(
-              color: Colors.white.withOpacity(
+              color: Colors.white.withValues(alpha:
                 Theme.of(context).brightness == Brightness.dark ? 0.06 : 0.08,
               ),
               borderRadius: BorderRadius.circular(16),
@@ -60924,7 +60924,7 @@ class CompactNutritionBar extends StatelessWidget {
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: progress,
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha:0.2),
           color: color,
           minHeight: 8,
           borderRadius: BorderRadius.circular(4),
@@ -61050,7 +61050,7 @@ class _WorkoutProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bg = Colors.white.withOpacity(0.10); // dezentes Grau
+    final bg = Colors.white.withValues(alpha:0.10); // dezentes Grau
     final fg = cs.primary;
 
     final bar = ClipRRect(
@@ -61320,7 +61320,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha:0.6),
                     ),
               ),
             ],
@@ -61352,7 +61352,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                   horizontalLines: [
                     HorizontalLine(
                       y: _dataPoints.first.value,
-                      color: Colors.grey.withOpacity(0.5),
+                      color: Colors.grey.withValues(alpha:0.5),
                       strokeWidth: 1,
                       dashArray: [3, 4],
                     ),
@@ -61446,10 +61446,10 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                         colors: [
                           Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.3),
+                          ).colorScheme.primary.withValues(alpha:0.3),
                           Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.0),
+                          ).colorScheme.primary.withValues(alpha:0.0),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -61539,7 +61539,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     // Farbe für das durchscheinende "Glas"
     final Color glassColor =
-        isDark ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.3);
+        isDark ? Colors.black.withValues(alpha:0.5) : Colors.white.withValues(alpha:0.3);
 
     // Die finale Struktur mit statischem Blur
     return ClipRect(
@@ -61617,11 +61617,11 @@ class FrostedContainer extends StatelessWidget {
             padding: padding,
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withOpacity(0.6)
-                  : Colors.white.withOpacity(0.7),
+                  ? Colors.black.withValues(alpha:0.6)
+                  : Colors.white.withValues(alpha:0.7),
               borderRadius: BorderRadius.circular(radius),
               border: Border.all(
-                color: cs.onSurface.withOpacity(0.08),
+                color: cs.onSurface.withValues(alpha:0.08),
                 width: 1,
               ),
               boxShadow: const [
@@ -61763,11 +61763,11 @@ class GlassBottomNavBar extends StatelessWidget {
       case 1:
         // neutrale Tönung ableiten (funktioniert auf Weiß & Schwarz)
         final Color neutralTint = (isDark ? Colors.white : Colors.black)
-            .withOpacity(isDark ? 0.1 : 0.1);
+            .withValues(alpha:isDark ? 0.1 : 0.1);
 
         // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
         final Color effectiveGlass =
-            Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
+            Color.alphaBlend(neutralTint, bg.withValues(alpha:isDark ? 0.8 : 0.5));
 
         // Drag-to-select + Release-to-activate: über GestureDetector
         return LayoutBuilder(
@@ -61822,7 +61822,7 @@ class GlassBottomNavBar extends StatelessWidget {
                   ),
                   shape: const LiquidRoundedSuperellipse(borderRadius: 99),
                   child: GlassGlow(
-                    glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+                    glowColor: Colors.white.withValues(alpha:isDark ? 0.24 : 0.18),
                     glowRadius: 1.0,
                     child: SizedBox(
                       height: barHeight,
@@ -61847,8 +61847,8 @@ class GlassBottomNavBar extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(99),
                                   border: Border.all(
                                     color: isDark
-                                        ? Colors.white.withOpacity(0.20)
-                                        : Colors.black.withOpacity(0.08),
+                                        ? Colors.white.withValues(alpha:0.20)
+                                        : Colors.black.withValues(alpha:0.08),
                                     width: 1.2,
                                   ),
                                 ),
@@ -61875,12 +61875,12 @@ class GlassBottomNavBar extends StatelessWidget {
               height: barHeight,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: bg.withOpacity(0.8),
+                color: bg.withValues(alpha:0.8),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withOpacity(0.30)
-                      : Colors.black.withOpacity(0.10),
+                      ? Colors.white.withValues(alpha:0.30)
+                      : Colors.black.withValues(alpha:0.10),
                   width: 1.5,
                 ),
               ),
@@ -62150,7 +62150,7 @@ class _CheckmarkCard extends StatelessWidget {
           Text(
             displayText,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
+              color: theme.colorScheme.onSurface.withValues(alpha:0.8),
               fontSize: 14,
             ),
           ),
@@ -62246,7 +62246,7 @@ class AddMenuSheet extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ),
-      tileColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+      tileColor: colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: onTap,
     );
@@ -62444,7 +62444,7 @@ class _GlassMenuState extends State<GlassMenu>
     return GestureDetector(
       onTap: widget.onDismiss,
       child: Scaffold(
-        backgroundColor: Colors.black.withOpacity(0.4),
+        backgroundColor: Colors.black.withValues(alpha:0.4),
         body: Center(
           child: Wrap(
             spacing: 24,
@@ -62506,15 +62506,15 @@ class _GlassMenuState extends State<GlassMenu>
           width: 76,
           height: 76,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha:0.15),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha:0.3),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha:0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -62572,7 +62572,7 @@ class SummaryCard extends StatelessWidget {
         /*
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha:0.25),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -62601,13 +62601,13 @@ class SummaryCard extends StatelessWidget {
 
     // KORREKTUR: Hintergrund im Light Mode weniger transparent für besseren Kontrast
     final backgroundColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.10)
-        : Colors.white.withOpacity(0.65); // War 0.40, jetzt weniger durchsichtig
+        ? Colors.white.withValues(alpha:0.10)
+        : Colors.white.withValues(alpha:0.65); // War 0.40, jetzt weniger durchsichtig
 
     // KORREKTUR: Randfarbe im Light Mode ist jetzt ein dunkles Grau statt Weiß
     final borderColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.20)
-        : Colors.black.withOpacity(0.12); // War Weiß, jetzt dunkles Grau mit Transparenz
+        ? Colors.white.withValues(alpha:0.20)
+        : Colors.black.withValues(alpha:0.12); // War Weiß, jetzt dunkles Grau mit Transparenz
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -62851,7 +62851,7 @@ class ShadowContainer extends StatelessWidget {
             [
               // Standard-Schatten, wenn keiner angegeben ist
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha:0.08),
                 blurRadius: 15,
                 spreadRadius: 0,
                 offset: const Offset(0, 8),
@@ -62937,9 +62937,9 @@ class _GlassFabState extends State<GlassFab>
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
     final hasLabel = widget.label != null;
     final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.1 : 0.1);
+        (isDark ? Colors.white : Colors.black).withValues(alpha:isDark ? 0.1 : 0.1);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
+        Color.alphaBlend(neutralTint, bg.withValues(alpha:isDark ? 0.8 : 0.5));
 
     final iconAndText = Padding(
       padding: hasLabel
@@ -62990,7 +62990,7 @@ class _GlassFabState extends State<GlassFab>
                 ? const LiquidRoundedSuperellipse(borderRadius: 99)
                 : const LiquidOval(),
             child: GlassGlow(
-              glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+              glowColor: Colors.white.withValues(alpha:isDark ? 0.24 : 0.18),
               glowRadius: 1.0,
               child: hasLabel
                   // PILLE: Breite aus Inhalt + Padding
@@ -63006,8 +63006,8 @@ class _GlassFabState extends State<GlassFab>
                         borderRadius: BorderRadius.circular(99),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withOpacity(0.20)
-                              : Colors.black.withOpacity(0.08),
+                              ? Colors.white.withValues(alpha:0.20)
+                              : Colors.black.withValues(alpha:0.08),
                           width: 1.2,
                         ),
                       ),
@@ -63042,8 +63042,8 @@ class _GlassFabState extends State<GlassFab>
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withOpacity(0.20)
-                              : Colors.black.withOpacity(0.08),
+                              ? Colors.white.withValues(alpha:0.20)
+                              : Colors.black.withValues(alpha:0.08),
                           width: 1.2,
                         ),
                       ),
@@ -63066,12 +63066,12 @@ class _GlassFabState extends State<GlassFab>
               height: 76,
               width: hasLabel ? null : 76,
               decoration: BoxDecoration(
-                color: bg.withOpacity(0.8),
+                color: bg.withValues(alpha:0.8),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withOpacity(0.3)
-                      : Colors.black.withOpacity(0.1),
+                      ? Colors.white.withValues(alpha:0.3)
+                      : Colors.black.withValues(alpha:0.1),
                   width: 1.5,
                 ),
               ),
@@ -63259,12 +63259,12 @@ class _InfoBox extends StatelessWidget {
 
     // Farben für den Glas-Effekt, identisch zur SummaryCard
     final backgroundColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.10)
-        : Colors.white.withOpacity(0.65);
+        ? Colors.white.withValues(alpha:0.10)
+        : Colors.white.withValues(alpha:0.65);
 
     final borderColor = brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.20)
-        : Colors.black.withOpacity(0.12);
+        ? Colors.white.withValues(alpha:0.20)
+        : Colors.black.withValues(alpha:0.12);
 
     return Container(
       // Die Dekoration ist jetzt die Glas-Dekoration
@@ -63322,7 +63322,7 @@ class _InfoBox extends StatelessWidget {
                           ? '${spec.value.toStringAsFixed(1)} / ${spec.target.toStringAsFixed(0)} ${spec.unit}'
                           : '${spec.value.toStringAsFixed(1)} ${spec.unit}',
                       style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.8),
+                        color: colorScheme.onSurface.withValues(alpha:0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -63552,9 +63552,9 @@ Future<T?> showGlassBottomMenu<T>({
 
   final Color barrierColor = isDark
       ? (!isLiquid
-          ? Colors.grey.withOpacity(0.187)
-          : Colors.black.withOpacity(0.5))
-      : Colors.black.withOpacity(0.3);
+          ? Colors.grey.withValues(alpha:0.187)
+          : Colors.black.withValues(alpha:0.5))
+      : Colors.black.withValues(alpha:0.3);
 
   return showModalBottomSheet<T>(
     context: context,
@@ -63600,11 +63600,11 @@ class _GlassBottomMenuSheet extends StatelessWidget {
     final themeService = context.watch<ThemeService>();
 
     final Color neutralTint = (isDark
-        ? Colors.white.withOpacity(0.05)
-        : Colors.white.withOpacity(0.22));
+        ? Colors.white.withValues(alpha:0.05)
+        : Colors.white.withValues(alpha:0.22));
 
     final Color effectiveGlass = Color.alphaBlend(
-        neutralTint, theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.5));
+        neutralTint, theme.colorScheme.surface.withValues(alpha:isDark ? 0.8 : 0.5));
 
     const double r = 24;
     const EdgeInsets outerMargin = EdgeInsets.fromLTRB(16, 0, 16, 16);
@@ -63620,7 +63620,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
               width: 44,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.75),
+                color: Colors.white.withValues(alpha:0.75),
                 borderRadius: BorderRadius.circular(100),
               ),
             ),
@@ -63693,7 +63693,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withValues(alpha:0.18),
                     blurRadius: 30,
                     spreadRadius: 4,
                     offset: const Offset(0, 14),
@@ -63728,8 +63728,8 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(r),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withOpacity(0.20)
-                              : Colors.black.withOpacity(0.08),
+                              ? Colors.white.withValues(alpha:0.20)
+                              : Colors.black.withValues(alpha:0.08),
                           width: 1.2,
                         ),
                       ),
@@ -63753,7 +63753,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withValues(alpha:0.18),
                     blurRadius: 30,
                     spreadRadius: 4,
                     offset: const Offset(0, 14),
@@ -63768,7 +63768,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(
+                  color: theme.colorScheme.surface.withValues(alpha:
                     isDark ? 0.80 : 0.92,
                   ),
                 ),
@@ -63822,10 +63822,10 @@ class _GlassTile extends StatelessWidget {
 
     // Hintergrund-Tint etwas anpassen
     final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.05);
+        (isDark ? Colors.white : Colors.black).withValues(alpha:0.05);
 
     final Color effectiveGlass = Color.alphaBlend(
-        neutralTint, Colors.white.withOpacity(isDark ? 0.10 : 0.12));
+        neutralTint, Colors.white.withValues(alpha:isDark ? 0.10 : 0.12));
 
     final Widget leadingWidget =
         customIcon != null ? customIcon! : Icon(icon, size: 22);
@@ -63840,10 +63840,10 @@ class _GlassTile extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.white.withOpacity(0.2),
+                  ? Colors.white.withValues(alpha:0.1)
+                  : Colors.white.withValues(alpha:0.2),
               border: Border.all(
-                color: Colors.white.withOpacity(isDark ? 0.14 : 0.18),
+                color: Colors.white.withValues(alpha:isDark ? 0.14 : 0.18),
                 width: 1,
               ),
             ),
@@ -63869,7 +63869,7 @@ class _GlassTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall?.copyWith(
-                      color: textTheme.bodySmall?.color?.withOpacity(0.8),
+                      color: textTheme.bodySmall?.color?.withValues(alpha:0.8),
                     ),
                   ),
                 ],
@@ -63880,7 +63880,7 @@ class _GlassTile extends StatelessWidget {
           Icon(
             Icons.chevron_right_rounded,
             size: 22,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha:0.8),
           ),
         ],
       ),
@@ -63928,8 +63928,8 @@ class _GlassTile extends StatelessWidget {
 
     return Material(
       color: isDark
-          ? Colors.white.withOpacity(0.06)
-          : Colors.white.withOpacity(0.08),
+          ? Colors.white.withValues(alpha:0.06)
+          : Colors.white.withValues(alpha:0.08),
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -64143,7 +64143,7 @@ class GlassProgressBar extends StatelessWidget {
                         ? '${value.toStringAsFixed(1)} / ${target.toStringAsFixed(0)} $unit'
                         : '${value.toStringAsFixed(1)} $unit',
                     style: TextStyle(
-                      color: colorScheme.onSurface.withOpacity(0.8),
+                      color: colorScheme.onSurface.withValues(alpha:0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -64250,9 +64250,9 @@ class _GlassPillButtonState extends State<GlassPillButton>
     final bg = isDark ? summary_card_dark_mode : summary_card_white_mode;
 
     final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withOpacity(0.10);
+        (isDark ? Colors.white : Colors.black).withValues(alpha:0.10);
     final Color effectiveGlass =
-        Color.alphaBlend(neutralTint, bg.withOpacity(isDark ? 0.8 : 0.5));
+        Color.alphaBlend(neutralTint, bg.withValues(alpha:isDark ? 0.8 : 0.5));
 
     // Adaptive border radius: round if not Row, pill if Row
     final bool isCircle = widget.child is! Row;
@@ -64276,7 +64276,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
           ),
           shape: LiquidRoundedSuperellipse(borderRadius: effectiveRadius),
           child: GlassGlow(
-            glowColor: Colors.white.withOpacity(isDark ? 0.24 : 0.18),
+            glowColor: Colors.white.withValues(alpha:isDark ? 0.24 : 0.18),
             glowRadius: 1.0,
             child: Container(
               // height and width removed here; enforced outside with SizedBox
@@ -64289,8 +64289,8 @@ class _GlassPillButtonState extends State<GlassPillButton>
                 borderRadius: BorderRadius.circular(effectiveRadius),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withOpacity(0.20)
-                      : Colors.black.withOpacity(0.08),
+                      ? Colors.white.withValues(alpha:0.20)
+                      : Colors.black.withValues(alpha:0.08),
                   width: 1.2,
                 ),
               ),
@@ -64309,12 +64309,12 @@ class _GlassPillButtonState extends State<GlassPillButton>
             // height and width removed here; enforced outside with SizedBox
             padding: isCircle ? EdgeInsets.zero : widget.padding,
             decoration: BoxDecoration(
-              color: bg.withOpacity(0.80),
+              color: bg.withValues(alpha:0.80),
               borderRadius: BorderRadius.circular(effectiveRadius),
               border: Border.all(
                 color: isDark
-                    ? Colors.white.withOpacity(0.30)
-                    : Colors.black.withOpacity(0.10),
+                    ? Colors.white.withValues(alpha:0.30)
+                    : Colors.black.withValues(alpha:0.10),
                 width: 1.5,
               ),
             ),

@@ -58,9 +58,10 @@ class _MealsScreenState extends State<MealsScreen> {
                           ),
                         ),
                       );
-                      if (result == true && context.mounted) {
+                      if (result == true) {
                         await _reloadMeals();
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(this.context).showSnackBar(
                           const SnackBar(content: Text('Meal gespeichert')),
                         );
                       }
@@ -73,11 +74,12 @@ class _MealsScreenState extends State<MealsScreen> {
             context,
             MaterialPageRoute(builder: (_) => const MealEditorScreen()),
           );
-          if (result == true && context.mounted) {
+          if (result == true) {
             await _reloadMeals();
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Meal gespeichert')));
+            if (!mounted) return;
+            ScaffoldMessenger.of(this.context).showSnackBar(
+              const SnackBar(content: Text('Meal gespeichert')),
+            );
           }
         },
         child: const Icon(Icons.add),

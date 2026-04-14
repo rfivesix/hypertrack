@@ -581,7 +581,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                 ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
@@ -652,7 +652,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.1),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                 ),
                 Expanded(
                   child: _displayItems.isEmpty
@@ -917,7 +917,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
             if (_isLoading)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   child: const Center(child: CircularProgressIndicator()),
                 ),
               ),
@@ -939,7 +939,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                : theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(10.0),
           ),
           child: Text(

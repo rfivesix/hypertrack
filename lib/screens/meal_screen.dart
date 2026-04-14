@@ -619,6 +619,7 @@ class _MealScreenState extends State<MealScreen> {
       'mealtypeDinner': l10n.mealtypeDinner,
       'mealtypeSnack': l10n.mealtypeSnack,
     };
+    if (!mounted) return;
 
     final ok = await showGlassBottomMenu<bool>(
           context: context,
