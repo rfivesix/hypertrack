@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.10] - 2026-04-15
+
+### Fixed
+- Improved backup/restore robustness so malformed or legacy-shaped payload rows no longer abort the full import as easily.
+- Hardened supplement settings/history restore handling for legacy ID mappings and more tolerant type parsing.
+- Improved body/nutrition trend loading stability so outdated async responses no longer overwrite newer range selections.
+- Prevented malformed analytics chart inputs from causing unstable rendering in normalized trend charts.
+- Reduced small-screen layout issues in the body/nutrition trend legend by switching to a wrapping layout.
+- Reduced the risk of synthetic workout-session ID collisions in edge cases.
+
+### Improved
+- Polished the body/nutrition drill-down fallback state with clearer empty/error messaging.
+- Improved resilience of health-step-segment restore by sanitizing malformed rows before database upsert.
+- Replaced remaining raw debug print behavior in workout session restore with safer debug logging.
+
+### Notes
+- This release focuses on stability, restore safety, analytics robustness, and small UI polish improvements.
+
 ## [0.8.9] - 2026-04-15
 
 ### Changed

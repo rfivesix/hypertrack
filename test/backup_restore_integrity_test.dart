@@ -548,5 +548,139 @@ void main() {
         DateTime.parse('2026-03-05T18:15:00.000Z').toUtc(),
       );
     });
+
+    test(
+        'restore skips malformed daily goals history rows instead of failing import',
+        () async {
+      final payload = <String, dynamic>{
+        'schemaVersion': BackupManager.currentSchemaVersion,
+        'foodEntries': const <dynamic>[],
+        'mealTemplates': const <dynamic>[],
+        'fluidEntries': const <dynamic>[],
+        'favoriteBarcodes': const <dynamic>[],
+        'customFoodItems': const <dynamic>[],
+        'measurementSessions': const <dynamic>[],
+        'routines': const <dynamic>[],
+        'workoutLogs': const <dynamic>[],
+        'userPreferences': const <String, dynamic>{},
+        'supplements': const <dynamic>[],
+        'supplementLogs': const <dynamic>[],
+        'customExercises': const <dynamic>[],
+        'supplementSettingsHistory': const <dynamic>[],
+        'dailyGoalsHistory': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'targetCalories': 'invalid',
+            'targetProtein': 155,
+            'targetCarbs': 210,
+            'targetFat': 68,
+            'targetWater': 2600,
+            'targetSteps': 7000,
+            'createdAt': '2026-01-10T08:30:00.000Z',
+          },
+          <String, dynamic>{
+            'targetCalories': '2400',
+            'targetProtein': '175',
+            'targetCarbs': 250,
+            'targetFat': '78',
+            'targetWater': 3100,
+            'targetSteps': '9500',
+            'createdAt': '2026-03-05T18:15:00.000Z',
+          },
+        ],
+        'appSettings': <String, dynamic>{
+          'userId': 'hist-user-2',
+          'themeMode': 'system',
+          'unitSystem': 'metric',
+          'targetCalories': 2400,
+          'targetProtein': 175,
+          'targetCarbs': 250,
+          'targetFat': 78,
+          'targetWater': 3100,
+          'targetSteps': 9500,
+        },
+        'profile': null,
+        'healthStepSegments': const <dynamic>[],
+      };
+
+      final imported =
+          await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
+
+      final historyRows = await db.select(db.dailyGoalsHistory).get();
+      expect(historyRows.length, 1);
+      expect(historyRows.first.targetCalories, 2400);
+      expect(historyRows.first.targetProtein, 175);
+      expect(historyRows.first.targetSteps, 9500);
+    });
+
+    test(
+        'restore maps supplement settings history via legacy local id and tolerates string-typed values',
+        () async {
+      final payload = <String, dynamic>{
+        'schemaVersion': BackupManager.currentSchemaVersion,
+        'foodEntries': const <dynamic>[],
+        'mealTemplates': const <dynamic>[],
+        'fluidEntries': const <dynamic>[],
+        'favoriteBarcodes': const <dynamic>[],
+        'customFoodItems': const <dynamic>[],
+        'measurementSessions': const <dynamic>[],
+        'routines': const <dynamic>[],
+        'workoutLogs': const <dynamic>[],
+        'userPreferences': const <String, dynamic>{},
+        'supplements': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 1,
+            'code': 'creatine',
+            'name': 'Creatine',
+            'default_dose': 5,
+            'unit': 'g',
+            'daily_goal': 5,
+            'daily_limit': 10,
+            'notes': null,
+            'is_builtin': 0,
+            'is_tracked': 1,
+          },
+        ],
+        'supplementLogs': const <dynamic>[],
+        'customExercises': const <dynamic>[],
+        'dailyGoalsHistory': const <dynamic>[],
+        'supplementSettingsHistory': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'supplementId': 'legacy-uuid-not-present-anymore',
+            'supplementLegacyLocalId': '1',
+            'isTracked': 'true',
+            'dose': '5.5',
+            'dailyGoal': '4.0',
+            'dailyLimit': '9.5',
+            'createdAt': '2026-03-06T10:00:00.000Z',
+          },
+        ],
+        'appSettings': <String, dynamic>{
+          'userId': 'supp-user-1',
+          'themeMode': 'system',
+          'unitSystem': 'metric',
+          'targetCalories': 2500,
+          'targetProtein': 180,
+          'targetCarbs': 250,
+          'targetFat': 80,
+          'targetWater': 3000,
+          'targetSteps': 8000,
+        },
+        'profile': null,
+        'healthStepSegments': const <dynamic>[],
+      };
+
+      final imported =
+          await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
+
+      final rows = await db.select(db.supplementSettingsHistory).get();
+      expect(rows.length, 1);
+      expect(rows.first.supplementId, '1');
+      expect(rows.first.isTracked, isTrue);
+      expect(rows.first.dose, closeTo(5.5, 0.0001));
+      expect(rows.first.dailyGoal, closeTo(4.0, 0.0001));
+      expect(rows.first.dailyLimit, closeTo(9.5, 0.0001));
+    });
   });
 }

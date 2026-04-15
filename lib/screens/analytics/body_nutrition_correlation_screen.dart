@@ -26,6 +26,8 @@ class _BodyNutritionCorrelationScreenState
   bool _isLoading = true;
   late int _rangeIndex;
   BodyNutritionAnalyticsResult? _analytics;
+  bool _loadFailed = false;
+  int _loadEpoch = 0;
 
   @override
   void initState() {
@@ -35,15 +37,26 @@ class _BodyNutritionCorrelationScreenState
   }
 
   Future<void> _load() async {
+    final loadEpoch = ++_loadEpoch;
     setState(() => _isLoading = true);
-    final analytics = await BodyNutritionAnalyticsUtils.build(
-      rangeIndex: _rangeIndex,
-    );
-    if (!mounted) return;
-    setState(() {
-      _analytics = analytics;
-      _isLoading = false;
-    });
+    try {
+      final analytics = await BodyNutritionAnalyticsUtils.build(
+        rangeIndex: _rangeIndex,
+      );
+      if (!mounted || loadEpoch != _loadEpoch) return;
+      setState(() {
+        _analytics = analytics;
+        _loadFailed = false;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || loadEpoch != _loadEpoch) return;
+      setState(() {
+        _analytics = null;
+        _loadFailed = true;
+        _isLoading = false;
+      });
+    }
   }
 
   List<String> _ranges(AppLocalizations l10n) => [
@@ -65,7 +78,7 @@ class _BodyNutritionCorrelationScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _analytics == null
-              ? const SizedBox.shrink()
+              ? _buildUnavailableState(l10n)
               : SingleChildScrollView(
                   padding: DesignConstants.screenPadding.copyWith(
                     top: DesignConstants.screenPadding.top + topPadding,
@@ -90,6 +103,38 @@ class _BodyNutritionCorrelationScreenState
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildUnavailableState(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: DesignConstants.screenPadding,
+        child: SummaryCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _loadFailed ? l10n.error : l10n.analyticsInsightNotEnoughData,
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _loadFailed
+                      ? l10n.aiErrorNetwork
+                      : l10n.analyticsInsightNotEnoughData,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -274,13 +319,14 @@ class _BodyNutritionCorrelationScreenState
                   ),
             ),
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
               children: [
                 _legendDot(
                   color: Theme.of(context).colorScheme.primary,
                   label: l10n.analyticsWeightTrendLabel,
                 ),
-                const SizedBox(width: 12),
                 _legendDot(
                   color: Theme.of(context).colorScheme.secondary,
                   label: l10n.analyticsCaloriesTrendLabel,
