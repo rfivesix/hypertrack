@@ -147,8 +147,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     final ongoingWorkout = await _workoutDb.getOngoingWorkout();
 
     if (ongoingWorkout != null) {
-      // ignore: avoid_print
-      print(
+      debugPrint(
         "Laufendes Workout gefunden (ID: ${ongoingWorkout.id}). Stelle Session wieder her...",
       );
       await restoreWorkoutSession(ongoingWorkout);
@@ -413,7 +412,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     if (reIndex == -1) return;
     final re = _exercises[reIndex];
 
-    final tempTemplateId = DateTime.now().millisecondsSinceEpoch;
+    final existingTemplateIds = _allTemplateIds()..addAll(_setLogs.keys);
+    final tempTemplateId = _nextSyntheticId(existingTemplateIds);
 
     final newTemplate = SetTemplate(
       id: tempTemplateId,
@@ -496,7 +496,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   ///
   /// Automatically generates initial set templates and logs based on the exercise category.
   Future<void> addExercise(Exercise exercise) async {
-    final tempReId = DateTime.now().millisecondsSinceEpoch;
+    final tempReId = _nextSyntheticId(_allRoutineExerciseIds());
 
     // FIX: Cardio Check für Anzahl der Sets
     final isCardio = exercise.categoryName.toLowerCase() == 'cardio';
@@ -504,15 +504,23 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     final initialReps =
         isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
 
-    final templates = List.generate(
-      initialSetCount,
-      (index) => SetTemplate(
-        id: tempReId + index + 1,
-        setType: 'normal',
-        targetReps: initialReps,
-        targetWeight: null,
-      ),
-    );
+    final existingTemplateIds = _allTemplateIds()..addAll(_setLogs.keys);
+    final templates = <SetTemplate>[];
+    for (var index = 0; index < initialSetCount; index++) {
+      final templateId = _nextSyntheticId(
+        existingTemplateIds,
+        seed: tempReId + index + 1,
+      );
+      existingTemplateIds.add(templateId);
+      templates.add(
+        SetTemplate(
+          id: templateId,
+          setType: 'normal',
+          targetReps: initialReps,
+          targetWeight: null,
+        ),
+      );
+    }
 
     final re = RoutineExercise(
       id: tempReId,
@@ -542,6 +550,36 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     notifyListeners();
+  }
+
+  Set<int> _allTemplateIds() {
+    final ids = <int>{};
+    for (final exercise in _exercises) {
+      for (final template in exercise.setTemplates) {
+        if (template.id != null) {
+          ids.add(template.id!);
+        }
+      }
+    }
+    return ids;
+  }
+
+  Set<int> _allRoutineExerciseIds() {
+    final ids = <int>{...pauseTimes.keys};
+    for (final exercise in _exercises) {
+      if (exercise.id != null) {
+        ids.add(exercise.id!);
+      }
+    }
+    return ids;
+  }
+
+  int _nextSyntheticId(Set<int> existingIds, {int? seed}) {
+    var candidate = seed ?? DateTime.now().microsecondsSinceEpoch;
+    while (existingIds.contains(candidate)) {
+      candidate += 1;
+    }
+    return candidate;
   }
 
   /// Removes an exercise and all its associated sets from the session.

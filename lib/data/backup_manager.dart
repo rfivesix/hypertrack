@@ -483,20 +483,35 @@ class BackupManager {
     // Import DailyGoalsHistory
     if (backup.dailyGoalsHistory.isNotEmpty) {
       for (final row in backup.dailyGoalsHistory) {
+        final targetCalories = _asInt(row['targetCalories']);
+        final targetProtein = _asInt(row['targetProtein']);
+        final targetCarbs = _asInt(row['targetCarbs']);
+        final targetFat = _asInt(row['targetFat']);
+        final targetWater = _asInt(row['targetWater']);
+        final createdAt = _asDateTime(row['createdAt']);
+        if (targetCalories == null ||
+            targetProtein == null ||
+            targetCarbs == null ||
+            targetFat == null ||
+            targetWater == null ||
+            createdAt == null) {
+          debugPrint(
+            'Skipping malformed daily_goals_history row during backup import.',
+          );
+          continue;
+        }
         await db.into(db.dailyGoalsHistory).insert(
               DailyGoalsHistoryCompanion(
-                targetCalories: drift.Value(row['targetCalories'] as int),
-                targetProtein: drift.Value(row['targetProtein'] as int),
-                targetCarbs: drift.Value(row['targetCarbs'] as int),
-                targetFat: drift.Value(row['targetFat'] as int),
-                targetWater: drift.Value(row['targetWater'] as int),
+                targetCalories: drift.Value(targetCalories),
+                targetProtein: drift.Value(targetProtein),
+                targetCarbs: drift.Value(targetCarbs),
+                targetFat: drift.Value(targetFat),
+                targetWater: drift.Value(targetWater),
                 targetSteps: drift.Value(
-                  row['targetSteps'] as int? ??
+                  _asInt(row['targetSteps']) ??
                       StepsSyncService.defaultStepsGoal,
                 ),
-                createdAt: drift.Value(
-                  DateTime.parse(row['createdAt'] as String),
-                ),
+                createdAt: drift.Value(createdAt),
               ),
               mode: drift.InsertMode.insertOrReplace,
             );
@@ -505,35 +520,44 @@ class BackupManager {
 
     // Import SupplementSettingsHistory
     if (backup.supplementSettingsHistory.isNotEmpty) {
-      final validSupplementIds =
-          (await db.select(db.supplements).get()).map((s) => s.id).toSet();
+      final supplementRows = await db.select(db.supplements).get();
+      final validSupplementIds = supplementRows.map((s) => s.id).toSet();
+      final supplementIdByLegacyLocalId = <String, String>{
+        for (final row in supplementRows) row.localId.toString(): row.id,
+      };
       await db.batch((batch) {
         for (final row in backup.supplementSettingsHistory) {
-          final mappedId = row['supplementLegacyLocalId'] != null
-              ? row['supplementLegacyLocalId'].toString()
-              : (row['supplementId'] as String?);
-          if (mappedId == null || !validSupplementIds.contains(mappedId)) {
+          final supplementIdRaw = row['supplementId']?.toString().trim();
+          final legacyLocalIdRaw = row['supplementLegacyLocalId'];
+          final legacyLocalId = _asInt(legacyLocalIdRaw)?.toString() ??
+              legacyLocalIdRaw?.toString().trim();
+          final mappedId = (supplementIdRaw != null &&
+                  validSupplementIds.contains(supplementIdRaw))
+              ? supplementIdRaw
+              : (legacyLocalId != null
+                  ? supplementIdByLegacyLocalId[legacyLocalId]
+                  : null);
+          final isTracked = _asBool(row['isTracked']);
+          final dose = _asDouble(row['dose']);
+          final createdAt = _asDateTime(row['createdAt']);
+          if (mappedId == null ||
+              isTracked == null ||
+              dose == null ||
+              createdAt == null) {
+            debugPrint(
+              'Skipping malformed supplement_settings_history row during backup import.',
+            );
             continue;
           }
           batch.insert(
             db.supplementSettingsHistory,
             SupplementSettingsHistoryCompanion(
               supplementId: drift.Value(mappedId),
-              isTracked: drift.Value(row['isTracked'] as bool),
-              dose: drift.Value((row['dose'] as num).toDouble()),
-              dailyGoal: drift.Value(
-                row['dailyGoal'] != null
-                    ? (row['dailyGoal'] as num).toDouble()
-                    : null,
-              ),
-              dailyLimit: drift.Value(
-                row['dailyLimit'] != null
-                    ? (row['dailyLimit'] as num).toDouble()
-                    : null,
-              ),
-              createdAt: drift.Value(
-                DateTime.parse(row['createdAt'] as String),
-              ),
+              isTracked: drift.Value(isTracked),
+              dose: drift.Value(dose),
+              dailyGoal: drift.Value(_asDouble(row['dailyGoal'])),
+              dailyLimit: drift.Value(_asDouble(row['dailyLimit'])),
+              createdAt: drift.Value(createdAt),
             ),
             mode: drift.InsertMode.insertOrReplace,
           );
@@ -546,26 +570,22 @@ class BackupManager {
     // Import Profile
     if (backup.profile != null) {
       final p = backup.profile!;
-      final profileId = p['id'] as String?;
+      final profileId = p['id']?.toString().trim();
       if (profileId != null && profileId.isNotEmpty) {
         restoredUserId = profileId;
         await db.into(db.profiles).insert(
               ProfilesCompanion(
                 id: drift.Value(profileId),
-                username: drift.Value(p['username'] as String?),
-                isCoach: drift.Value(p['isCoach'] as bool? ?? false),
+                username: drift.Value(p['username']?.toString()),
+                isCoach: drift.Value(_asBool(p['isCoach']) ?? false),
                 visibility: drift.Value(
-                  p['visibility'] as String? ?? 'private',
+                  p['visibility']?.toString() ?? 'private',
                 ),
-                birthday: drift.Value(
-                  p['birthday'] != null
-                      ? DateTime.parse(p['birthday'] as String)
-                      : null,
-                ),
-                height: drift.Value(p['height'] as int?),
-                gender: drift.Value(p['gender'] as String?),
+                birthday: drift.Value(_asDateTime(p['birthday'])),
+                height: drift.Value(_asInt(p['height'])),
+                gender: drift.Value(p['gender']?.toString()),
                 profileImagePath: drift.Value(
-                  p['profileImagePath'] as String?,
+                  p['profileImagePath']?.toString(),
                 ),
               ),
               mode: drift.InsertMode.insertOrReplace,
@@ -576,7 +596,12 @@ class BackupManager {
     // Import AppSettings
     if (backup.appSettings != null) {
       final s = backup.appSettings!;
-      restoredUserId ??= s['userId'] as String?;
+      final candidateUserId = s['userId']?.toString().trim();
+      if (restoredUserId == null &&
+          candidateUserId != null &&
+          candidateUserId.isNotEmpty) {
+        restoredUserId = candidateUserId;
+      }
 
       if (restoredUserId != null) {
         final userId = restoredUserId;
@@ -600,17 +625,18 @@ class BackupManager {
         await db.into(db.appSettings).insert(
               AppSettingsCompanion(
                 userId: drift.Value(userId),
-                themeMode: drift.Value(s['themeMode'] as String? ?? 'system'),
-                unitSystem: drift.Value(s['unitSystem'] as String? ?? 'metric'),
+                themeMode: drift.Value(s['themeMode']?.toString() ?? 'system'),
+                unitSystem:
+                    drift.Value(s['unitSystem']?.toString() ?? 'metric'),
                 targetCalories: drift.Value(
-                  s['targetCalories'] as int? ?? 2500,
+                  _asInt(s['targetCalories']) ?? 2500,
                 ),
-                targetProtein: drift.Value(s['targetProtein'] as int? ?? 180),
-                targetCarbs: drift.Value(s['targetCarbs'] as int? ?? 250),
-                targetFat: drift.Value(s['targetFat'] as int? ?? 80),
-                targetWater: drift.Value(s['targetWater'] as int? ?? 3000),
+                targetProtein: drift.Value(_asInt(s['targetProtein']) ?? 180),
+                targetCarbs: drift.Value(_asInt(s['targetCarbs']) ?? 250),
+                targetFat: drift.Value(_asInt(s['targetFat']) ?? 80),
+                targetWater: drift.Value(_asInt(s['targetWater']) ?? 3000),
                 targetSteps: drift.Value(
-                  s['targetSteps'] as int? ?? StepsSyncService.defaultStepsGoal,
+                  _asInt(s['targetSteps']) ?? StepsSyncService.defaultStepsGoal,
                 ),
               ),
               mode: drift.InsertMode.insertOrReplace,
@@ -619,11 +645,87 @@ class BackupManager {
     }
 
     if (backup.healthStepSegments.isNotEmpty) {
-      await _userDb.upsertHealthStepSegments(backup.healthStepSegments);
+      final sanitizedSegments = _sanitizeHealthSegments(
+        backup.healthStepSegments,
+      );
+      if (sanitizedSegments.isNotEmpty) {
+        await _userDb.upsertHealthStepSegments(sanitizedSegments);
+      }
     }
 
     debugPrint("Backup import succeeded.");
     return true;
+  }
+
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      final normalized = value.trim();
+      return int.tryParse(normalized) ?? double.tryParse(normalized)?.toInt();
+    }
+    return null;
+  }
+
+  double? _asDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.trim());
+    return null;
+  }
+
+  bool? _asBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1') return true;
+      if (normalized == 'false' || normalized == '0') return false;
+    }
+    return null;
+  }
+
+  DateTime? _asDateTime(dynamic value) {
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value.trim());
+    return null;
+  }
+
+  List<Map<String, dynamic>> _sanitizeHealthSegments(
+    List<Map<String, dynamic>> rawSegments,
+  ) {
+    final sanitized = <Map<String, dynamic>>[];
+    for (final row in rawSegments) {
+      final provider = row['provider']?.toString().trim();
+      final externalKey = row['externalKey']?.toString().trim();
+      final startAt = _asDateTime(row['startAt']);
+      final endAt = _asDateTime(row['endAt']);
+      final stepCount = _asInt(row['stepCount']);
+      if (provider == null ||
+          provider.isEmpty ||
+          externalKey == null ||
+          externalKey.isEmpty ||
+          startAt == null ||
+          endAt == null ||
+          !endAt.isAfter(startAt) ||
+          stepCount == null ||
+          stepCount < 0) {
+        debugPrint(
+          'Skipping malformed health_step_segments row during backup import.',
+        );
+        continue;
+      }
+      final sourceId = row['sourceId']?.toString().trim();
+      sanitized.add(<String, dynamic>{
+        'provider': provider,
+        'sourceId': (sourceId == null || sourceId.isEmpty) ? null : sourceId,
+        'startAt': startAt.toUtc().toIso8601String(),
+        'endAt': endAt.toUtc().toIso8601String(),
+        'stepCount': stepCount,
+        'externalKey': externalKey,
+      });
+    }
+    return sanitized;
   }
 
   // ---------------------------------------------------------------------------

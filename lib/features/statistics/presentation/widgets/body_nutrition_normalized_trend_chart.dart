@@ -49,20 +49,36 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
     );
     final maxX = math.max(1, spanDays - 1).toDouble();
 
-    final weightSpots = weightSeries
-        .map((point) => FlSpot(_xOf(point.day, firstDay), point.value))
-        .toList(growable: false);
-    final calorieSpots = calorieSeries
-        .map((point) => FlSpot(_xOf(point.day, firstDay), point.value))
-        .toList(growable: false);
+    final weightSpots = _buildSpots(
+      series: weightSeries,
+      firstDay: firstDay,
+      maxX: maxX,
+    );
+    final calorieSpots = _buildSpots(
+      series: calorieSeries,
+      firstDay: firstDay,
+      maxX: maxX,
+    );
+    if (weightSpots.isEmpty || calorieSpots.isEmpty) {
+      return AnalyticsChartDefaults.stateView(
+        context: context,
+        l10n: l10n,
+        status: AnalyticsStatus.insufficient,
+        insufficientLabel: l10n.analyticsInsightNotEnoughData,
+      );
+    }
 
     final allYValues = [
-      ...weightSeries.map((point) => point.value),
-      ...calorieSeries.map((point) => point.value),
+      ...weightSpots.map((spot) => spot.y),
+      ...calorieSpots.map((spot) => spot.y),
     ];
+    final finiteYValues = allYValues.where((value) => value.isFinite);
     final maxAbs =
-        allYValues.map((value) => value.abs()).fold<double>(0.0, math.max);
-    final yLimit = math.max(0.6, maxAbs * 1.15);
+        finiteYValues.map((value) => value.abs()).fold<double>(0.0, math.max);
+    final rawLimit = maxAbs * 1.15;
+    final yLimit =
+        (rawLimit.isFinite && rawLimit > 0) ? math.max(0.6, rawLimit) : 0.6;
+    final xLabelPositions = _xLabelPositions(spanDays);
 
     final chartData = LineChartData(
       minX: 0,
@@ -116,9 +132,8 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
                   showTitles: true,
                   reservedSize: 26,
                   getTitlesWidget: (value, meta) {
-                    final positions = _xLabelPositions(spanDays);
                     final rounded = value.round();
-                    if (!positions.contains(rounded)) {
+                    if (!xLabelPositions.contains(rounded)) {
                       return const SizedBox.shrink();
                     }
                     final day = firstDay.add(Duration(days: rounded));
@@ -150,6 +165,32 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
   double _xOf(DateTime day, DateTime firstDay) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
     return normalizedDay.difference(firstDay).inDays.toDouble();
+  }
+
+  List<FlSpot> _buildSpots({
+    required List<DailyValuePoint> series,
+    required DateTime firstDay,
+    required double maxX,
+  }) {
+    final deduplicatedByX = <double, double>{};
+    for (final point in series) {
+      final x = _xOf(point.day, firstDay);
+      final y = point.value;
+      if (!x.isFinite ||
+          !y.isFinite ||
+          x < 0 ||
+          x > maxX ||
+          y.isNaN ||
+          y.isInfinite) {
+        continue;
+      }
+      deduplicatedByX[x] = y;
+    }
+    final entries = deduplicatedByX.entries.toList(growable: false)
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return entries
+        .map((entry) => FlSpot(entry.key, entry.value))
+        .toList(growable: false);
   }
 
   Set<int> _xLabelPositions(int spanDays) {
