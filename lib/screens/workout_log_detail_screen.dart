@@ -5,14 +5,18 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
+import '../models/chart_data_point.dart';
 import '../models/exercise.dart';
 import '../models/set_log.dart';
 import '../models/workout_log.dart';
+import '../services/health/workout_heart_rate_models.dart';
+import '../services/health/workout_heart_rate_service.dart';
 import '../services/haptic_feedback_service.dart';
 import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
+import '../widgets/measurement_chart_widget.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
@@ -34,6 +38,9 @@ class WorkoutLogDetailScreen extends StatefulWidget {
 class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   bool _isLoading = true;
   WorkoutLog? _log;
+  final WorkoutHeartRateService _heartRateService =
+      const WorkoutHeartRateService();
+  WorkoutHeartRateSummary? _heartRateSummary;
   Map<String, List<SetLog>> _groupedSets = {};
   Map<String, Exercise> _exerciseDetails = {};
   bool _isEditMode = false;
@@ -105,9 +112,19 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       widget.logId,
     );
     if (data == null) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _heartRateSummary = null;
+          _isLoading = false;
+        });
+      }
       return;
     }
+
+    final heartRateFuture = _heartRateService.loadForWorkoutWindow(
+      startTime: data.startTime,
+      endTime: data.endTime,
+    );
 
     final groups = <String, List<SetLog>>{};
     for (var set in data.sets) {
@@ -170,11 +187,15 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     }
 
     if (!mounted) return;
+    final heartRateSummary = await heartRateFuture;
+    if (!mounted) return;
+
     setState(() {
       _log = data;
       _groupedSets = groups;
       _exerciseDetails = details;
       _categoryVolume = catVol;
+      _heartRateSummary = heartRateSummary;
       if (!preserveEditState) {
         _isLoading = false;
       }
@@ -441,6 +462,17 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                               ),
                             ),
                           ),
+                          if (_heartRateSummary != null)
+                            Padding(
+                              padding: DesignConstants.cardPadding.copyWith(
+                                top: 0,
+                              ),
+                              child: _buildHeartRateSection(
+                                context,
+                                l10n,
+                                _heartRateSummary!,
+                              ),
+                            ),
 
                           // Sets
                           ..._buildSetList(context, l10n),
@@ -542,6 +574,159 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         ),
       );
     }).toList();
+  }
+
+  Widget _buildHeartRateSection(
+    BuildContext context,
+    AppLocalizations l10n,
+    WorkoutHeartRateSummary summary,
+  ) {
+    final locale = Localizations.localeOf(context).toString();
+    final timeFormatter = DateFormat.Hm(locale);
+    final points = summary.chartSamples
+        .map(
+          (sample) => ChartDataPoint(
+            date: sample.sampledAtUtc.toLocal(),
+            value: sample.bpm,
+          ),
+        )
+        .toList(growable: false);
+
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.workoutHeartRateSectionTitle,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 10),
+            if (summary.hasSummaryMetrics)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildHeartRateMetricTile(
+                    label: l10n.workoutHeartRateAverageLabel,
+                    value:
+                        '${summary.averageBpm!.round()} ${l10n.sleepBpmUnit}',
+                  ),
+                  _buildHeartRateMetricTile(
+                    label: l10n.workoutHeartRateMaxLabel,
+                    value: '${summary.maxBpm!.round()} ${l10n.sleepBpmUnit}',
+                  ),
+                  _buildHeartRateMetricTile(
+                    label: l10n.workoutHeartRateMinLabel,
+                    value: '${summary.minBpm!.round()} ${l10n.sleepBpmUnit}',
+                  ),
+                ],
+              )
+            else
+              Text(
+                _heartRateNoDataMessage(l10n, summary.noDataReason),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            const SizedBox(height: 10),
+            if (summary.canRenderChart)
+              SizedBox(
+                height: 220,
+                child: MeasurementChartWidget.fromData(
+                  dataPoints: points,
+                  unit: l10n.sleepBpmUnit,
+                  axisMode: MeasurementChartAxisMode.time,
+                  valueFractionDigits: 0,
+                  valueLabelBuilder: (value, unit) => '${value.round()} $unit',
+                  selectedDateLabelBuilder: (value) =>
+                      timeFormatter.format(value),
+                  axisLabelBuilder: (value, _) => timeFormatter.format(value),
+                ),
+              )
+            else if (summary.hasSummaryMetrics)
+              Text(
+                summary.quality == WorkoutHeartRateDataQuality.insufficient
+                    ? l10n.workoutHeartRateLimitedChartHint
+                    : _heartRateNoDataMessage(l10n, summary.noDataReason),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            const SizedBox(height: 8),
+            Text(
+              '${l10n.workoutHeartRateSampleCount(summary.sampleCount)} • ${_heartRateQualityLabel(l10n, summary.quality)}',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeartRateMetricTile({
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _heartRateQualityLabel(
+    AppLocalizations l10n,
+    WorkoutHeartRateDataQuality quality,
+  ) {
+    return switch (quality) {
+      WorkoutHeartRateDataQuality.ready => l10n.workoutHeartRateQualityReady,
+      WorkoutHeartRateDataQuality.limited =>
+        l10n.workoutHeartRateQualityLimited,
+      WorkoutHeartRateDataQuality.insufficient =>
+        l10n.workoutHeartRateQualityInsufficient,
+      WorkoutHeartRateDataQuality.noData => l10n.workoutHeartRateQualityNoData,
+    };
+  }
+
+  String _heartRateNoDataMessage(
+    AppLocalizations l10n,
+    WorkoutHeartRateNoDataReason reason,
+  ) {
+    return switch (reason) {
+      WorkoutHeartRateNoDataReason.permissionDenied =>
+        l10n.workoutHeartRateNoDataPermission,
+      WorkoutHeartRateNoDataReason.platformUnavailable =>
+        l10n.workoutHeartRateNoDataUnavailable,
+      WorkoutHeartRateNoDataReason.workoutNotFinished =>
+        l10n.workoutHeartRateNoDataWorkoutNotFinished,
+      WorkoutHeartRateNoDataReason.invalidWorkoutWindow =>
+        l10n.workoutHeartRateNoDataInvalidWindow,
+      WorkoutHeartRateNoDataReason.queryFailed =>
+        l10n.workoutHeartRateNoDataQueryFailed,
+      _ => l10n.workoutHeartRateNoDataGeneral,
+    };
   }
 
   List<Widget> _buildSetList(BuildContext context, AppLocalizations l10n) {

@@ -7,7 +7,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.8.9] - 2026-04-15
 
 ### Changed
+- Reworked the **Bodyweight ↔ Calorie analytics feature** from a simple correlation approach to a more robust **trend-summary model**.
+- Replaced correlation-style interpretation with clearer classification of observed patterns:
+  - cut-like (lower intake + falling weight)
+  - bulk-like (higher intake + rising weight)
+  - maintenance-like (stable/stable)
+  - mixed or unclear signals
+- Improved wording and interpretation to avoid overconfident or misleading conclusions and emphasize non-causality.
 - Reused the weekly sleep-window chart pattern in the Sleep regularity detail view for more consistent sleep-timing visualization and reduced duplicated chart logic.
+
+### Added
+- Introduced a **normalized dual-line trend chart** (weight + calories) where both series start at the same baseline, making relative trend comparison significantly clearer.
+- Added explicit **confidence levels** (`high`, `moderate`, `low`, `insufficient`) based on data quality.
+- Added **data-quality diagnostics**, including coverage, overlap, and gap awareness, to support more honest insights.
+- Added workout heart-rate summaries and charts to make already recorded heart-rate data visible after training.
+- Added basic workout heart-rate metrics including average, maximum, and minimum heart rate where data is available.
+- Added a dedicated heart-rate section to the workout detail screen with a session heart-rate line chart.
+- Added a compact heart-rate summary block to the post-workout summary screen.
+
+### Improved
+- Significantly strengthened **data sufficiency and quality gating**:
+  - minimum time span and data coverage requirements
+  - overlap validation between weight and calorie logs
+  - gap penalties and noise handling
+- Redesigned the **Statistics hub Body & Nutrition card**:
+  - clearer quick-scan summary
+  - compact trend labels and relationship classification
+  - embedded normalized mini chart
+  - explicit confidence and data basis indicators (e.g. number of weigh-ins and logged days)
+- Reworked the **Body & Nutrition detail screen**:
+  - replaced separate charts with a single combined normalized comparison chart
+  - simplified and clarified the interpretation section
+  - removed the body-measurements shortcut to reduce visual noise and improve focus
+- Added workout heart-rate data-quality handling with clearer fallback states for missing, sparse, or limited samples.
+- Reused existing health-platform data flows with lightweight workout-window matching instead of introducing a heavier persistence layer for the MVP.
+
+### Fixed
+- Eliminated misleading or weak “correlation” outputs in sparse or noisy datasets.
+- Reduced risk of overinterpreting incomplete or low-quality data by enforcing stricter gating and clearer fallback states.
+
+### Notes
+- This feature focuses on **trend context, not causal inference**.  
+  Observed relationships between calorie intake and bodyweight should be interpreted as patterns, not direct cause-effect conclusions.
 
 ## [0.8.8] - 2026-04-15
 

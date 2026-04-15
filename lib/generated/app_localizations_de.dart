@@ -448,6 +448,70 @@ class AppLocalizationsDe extends AppLocalizations {
   String get workoutDetailsTitle => 'Workout-Details';
 
   @override
+  String get workoutHeartRateSectionTitle => 'Herzfrequenz';
+
+  @override
+  String get workoutHeartRateAverageLabel => 'Ø';
+
+  @override
+  String get workoutHeartRateMaxLabel => 'Max';
+
+  @override
+  String get workoutHeartRateMinLabel => 'Min';
+
+  @override
+  String get workoutHeartRateQualityReady => 'Gute Abdeckung';
+
+  @override
+  String get workoutHeartRateQualityLimited => 'Begrenzte Daten';
+
+  @override
+  String get workoutHeartRateQualityInsufficient => 'Sehr spärlich';
+
+  @override
+  String get workoutHeartRateQualityNoData => 'Keine Daten';
+
+  @override
+  String get workoutHeartRateNoDataGeneral =>
+      'Für dieses Workout-Fenster wurden keine Herzfrequenzdaten gefunden.';
+
+  @override
+  String get workoutHeartRateNoDataPermission =>
+      'Für Workout-Herzfrequenz wird eine Herzfrequenz-Berechtigung benötigt.';
+
+  @override
+  String get workoutHeartRateNoDataUnavailable =>
+      'Herzfrequenzdaten sind auf diesem Gerät aktuell nicht verfügbar.';
+
+  @override
+  String get workoutHeartRateNoDataWorkoutNotFinished =>
+      'Die Herzfrequenz-Zusammenfassung erscheint nach einem abgeschlossenen Workout.';
+
+  @override
+  String get workoutHeartRateNoDataInvalidWindow =>
+      'Das Workout-Zeitfenster ist ungültig, daher kann die Herzfrequenz nicht ausgewertet werden.';
+
+  @override
+  String get workoutHeartRateNoDataQueryFailed =>
+      'Herzfrequenzdaten für dieses Workout konnten nicht gelesen werden.';
+
+  @override
+  String get workoutHeartRateLimitedChartHint =>
+      'Zu wenige konsistente Messpunkte für einen verlässlichen Chart.';
+
+  @override
+  String workoutHeartRateSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Samples',
+      one: '1 Sample',
+      zero: 'Keine Samples',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get workoutNotFound => 'Workout nicht gefunden.';
 
   @override

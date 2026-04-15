@@ -932,6 +932,102 @@ abstract class AppLocalizations {
   /// **'Workout Details'**
   String get workoutDetailsTitle;
 
+  /// No description provided for @workoutHeartRateSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate'**
+  String get workoutHeartRateSectionTitle;
+
+  /// No description provided for @workoutHeartRateAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg'**
+  String get workoutHeartRateAverageLabel;
+
+  /// No description provided for @workoutHeartRateMaxLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get workoutHeartRateMaxLabel;
+
+  /// No description provided for @workoutHeartRateMinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get workoutHeartRateMinLabel;
+
+  /// No description provided for @workoutHeartRateQualityReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Good coverage'**
+  String get workoutHeartRateQualityReady;
+
+  /// No description provided for @workoutHeartRateQualityLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited data'**
+  String get workoutHeartRateQualityLimited;
+
+  /// No description provided for @workoutHeartRateQualityInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Very sparse'**
+  String get workoutHeartRateQualityInsufficient;
+
+  /// No description provided for @workoutHeartRateQualityNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get workoutHeartRateQualityNoData;
+
+  /// No description provided for @workoutHeartRateNoDataGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'No heart-rate samples were found for this workout window.'**
+  String get workoutHeartRateNoDataGeneral;
+
+  /// No description provided for @workoutHeartRateNoDataPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate permission is required to show workout HR.'**
+  String get workoutHeartRateNoDataPermission;
+
+  /// No description provided for @workoutHeartRateNoDataUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate data is currently unavailable on this device.'**
+  String get workoutHeartRateNoDataUnavailable;
+
+  /// No description provided for @workoutHeartRateNoDataWorkoutNotFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate summary appears after a finished workout.'**
+  String get workoutHeartRateNoDataWorkoutNotFinished;
+
+  /// No description provided for @workoutHeartRateNoDataInvalidWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout time window is invalid, so HR cannot be analyzed.'**
+  String get workoutHeartRateNoDataInvalidWindow;
+
+  /// No description provided for @workoutHeartRateNoDataQueryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read heart-rate data for this workout.'**
+  String get workoutHeartRateNoDataQueryFailed;
+
+  /// No description provided for @workoutHeartRateLimitedChartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough consistent samples for a reliable chart.'**
+  String get workoutHeartRateLimitedChartHint;
+
+  /// No description provided for @workoutHeartRateSampleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No samples} one{1 sample} other{{count} samples}}'**
+  String workoutHeartRateSampleCount(int count);
+
   /// No description provided for @workoutNotFound.
   ///
   /// In en, this message translates to:

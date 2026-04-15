@@ -163,6 +163,29 @@
   "skipButton": "Überspringen",
   "emptyHistory": "Noch keine Workouts abgeschlossen.",
   "workoutDetailsTitle": "Workout-Details",
+  "workoutHeartRateSectionTitle": "Herzfrequenz",
+  "workoutHeartRateAverageLabel": "Ø",
+  "workoutHeartRateMaxLabel": "Max",
+  "workoutHeartRateMinLabel": "Min",
+  "workoutHeartRateQualityReady": "Gute Abdeckung",
+  "workoutHeartRateQualityLimited": "Begrenzte Daten",
+  "workoutHeartRateQualityInsufficient": "Sehr spärlich",
+  "workoutHeartRateQualityNoData": "Keine Daten",
+  "workoutHeartRateNoDataGeneral": "Für dieses Workout-Fenster wurden keine Herzfrequenzdaten gefunden.",
+  "workoutHeartRateNoDataPermission": "Für Workout-Herzfrequenz wird eine Herzfrequenz-Berechtigung benötigt.",
+  "workoutHeartRateNoDataUnavailable": "Herzfrequenzdaten sind auf diesem Gerät aktuell nicht verfügbar.",
+  "workoutHeartRateNoDataWorkoutNotFinished": "Die Herzfrequenz-Zusammenfassung erscheint nach einem abgeschlossenen Workout.",
+  "workoutHeartRateNoDataInvalidWindow": "Das Workout-Zeitfenster ist ungültig, daher kann die Herzfrequenz nicht ausgewertet werden.",
+  "workoutHeartRateNoDataQueryFailed": "Herzfrequenzdaten für dieses Workout konnten nicht gelesen werden.",
+  "workoutHeartRateLimitedChartHint": "Zu wenige konsistente Messpunkte für einen verlässlichen Chart.",
+  "workoutHeartRateSampleCount": "{count, plural, =0{Keine Samples} one{1 Sample} other{{count} Samples}}",
+  "@workoutHeartRateSampleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "workoutNotFound": "Workout nicht gefunden.",
   "totalVolumeLabel": "Gesamtvolumen",
   "notesLabel": "Notizen",

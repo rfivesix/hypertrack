@@ -5,6 +5,8 @@ import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/set_log.dart';
 import '../models/workout_log.dart';
+import '../services/health/workout_heart_rate_models.dart';
+import '../services/health/workout_heart_rate_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -27,6 +29,9 @@ class WorkoutSummaryScreen extends StatefulWidget {
 class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   bool _isLoading = true;
   WorkoutLog? _log;
+  final WorkoutHeartRateService _heartRateService =
+      const WorkoutHeartRateService();
+  WorkoutHeartRateSummary? _heartRateSummary;
 
   // Wir speichern jetzt einen formatierten String pro Übung,
   // da Cardio und Kraft unterschiedliche Einheiten haben.
@@ -43,6 +48,10 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     final data = await db.getWorkoutLogById(widget.logId);
 
     if (data != null) {
+      final heartRateFuture = _heartRateService.loadForWorkoutWindow(
+        startTime: data.startTime,
+        endTime: data.endTime,
+      );
       final Map<String, String> summaryMap = {};
 
       final groupedSets = <String, List<SetLog>>{};
@@ -81,10 +90,13 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
         }
       }
 
+      final heartRate = await heartRateFuture;
+
       if (mounted) {
         setState(() {
           _log = data;
           _summaryPerExercise = summaryMap;
+          _heartRateSummary = heartRate;
           _isLoading = false;
         });
       }
@@ -127,6 +139,10 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                         progress: null,
                       ),
                       const SizedBox(height: DesignConstants.spacingXL),
+                      if (_heartRateSummary != null) ...[
+                        _buildHeartRateCard(l10n, _heartRateSummary!),
+                        const SizedBox(height: DesignConstants.spacingL),
+                      ],
 
                       // Liste der Übungen
                       Expanded(
@@ -201,5 +217,121 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                   ),
                 ),
     );
+  }
+
+  Widget _buildHeartRateCard(
+    AppLocalizations l10n,
+    WorkoutHeartRateSummary summary,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+    final hasMetrics = summary.hasSummaryMetrics;
+    final qualityLabel = _qualityLabel(l10n, summary.quality);
+
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.workoutHeartRateSectionTitle,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (hasMetrics)
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: l10n.workoutHeartRateAverageLabel,
+                      value:
+                          '${summary.averageBpm!.round()} ${l10n.sleepBpmUnit}',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: l10n.workoutHeartRateMaxLabel,
+                      value: '${summary.maxBpm!.round()} ${l10n.sleepBpmUnit}',
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                _noDataMessage(l10n, summary.noDataReason),
+                style: textTheme.bodyMedium,
+              ),
+            const SizedBox(height: 8),
+            Text(
+              '${l10n.workoutHeartRateSampleCount(summary.sampleCount)} • $qualityLabel',
+              style: textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricTile({required String label, required String value}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _qualityLabel(
+    AppLocalizations l10n,
+    WorkoutHeartRateDataQuality quality,
+  ) {
+    return switch (quality) {
+      WorkoutHeartRateDataQuality.ready => l10n.workoutHeartRateQualityReady,
+      WorkoutHeartRateDataQuality.limited =>
+        l10n.workoutHeartRateQualityLimited,
+      WorkoutHeartRateDataQuality.insufficient =>
+        l10n.workoutHeartRateQualityInsufficient,
+      WorkoutHeartRateDataQuality.noData => l10n.workoutHeartRateQualityNoData,
+    };
+  }
+
+  String _noDataMessage(
+    AppLocalizations l10n,
+    WorkoutHeartRateNoDataReason reason,
+  ) {
+    return switch (reason) {
+      WorkoutHeartRateNoDataReason.permissionDenied =>
+        l10n.workoutHeartRateNoDataPermission,
+      WorkoutHeartRateNoDataReason.platformUnavailable =>
+        l10n.workoutHeartRateNoDataUnavailable,
+      WorkoutHeartRateNoDataReason.workoutNotFinished =>
+        l10n.workoutHeartRateNoDataWorkoutNotFinished,
+      WorkoutHeartRateNoDataReason.invalidWorkoutWindow =>
+        l10n.workoutHeartRateNoDataInvalidWindow,
+      WorkoutHeartRateNoDataReason.queryFailed =>
+        l10n.workoutHeartRateNoDataQueryFailed,
+      _ => l10n.workoutHeartRateNoDataGeneral,
+    };
   }
 }

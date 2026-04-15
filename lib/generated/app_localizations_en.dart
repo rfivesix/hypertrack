@@ -446,6 +446,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutDetailsTitle => 'Workout Details';
 
   @override
+  String get workoutHeartRateSectionTitle => 'Heart Rate';
+
+  @override
+  String get workoutHeartRateAverageLabel => 'Avg';
+
+  @override
+  String get workoutHeartRateMaxLabel => 'Max';
+
+  @override
+  String get workoutHeartRateMinLabel => 'Min';
+
+  @override
+  String get workoutHeartRateQualityReady => 'Good coverage';
+
+  @override
+  String get workoutHeartRateQualityLimited => 'Limited data';
+
+  @override
+  String get workoutHeartRateQualityInsufficient => 'Very sparse';
+
+  @override
+  String get workoutHeartRateQualityNoData => 'No data';
+
+  @override
+  String get workoutHeartRateNoDataGeneral =>
+      'No heart-rate samples were found for this workout window.';
+
+  @override
+  String get workoutHeartRateNoDataPermission =>
+      'Heart-rate permission is required to show workout HR.';
+
+  @override
+  String get workoutHeartRateNoDataUnavailable =>
+      'Heart-rate data is currently unavailable on this device.';
+
+  @override
+  String get workoutHeartRateNoDataWorkoutNotFinished =>
+      'Heart-rate summary appears after a finished workout.';
+
+  @override
+  String get workoutHeartRateNoDataInvalidWindow =>
+      'Workout time window is invalid, so HR cannot be analyzed.';
+
+  @override
+  String get workoutHeartRateNoDataQueryFailed =>
+      'Could not read heart-rate data for this workout.';
+
+  @override
+  String get workoutHeartRateLimitedChartHint =>
+      'Not enough consistent samples for a reliable chart.';
+
+  @override
+  String workoutHeartRateSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samples',
+      one: '1 sample',
+      zero: 'No samples',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get workoutNotFound => 'Workout not found.';
 
   @override
