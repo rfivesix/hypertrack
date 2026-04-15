@@ -163,6 +163,29 @@
   "skipButton": "Skip",
   "emptyHistory": "No completed workouts yet.",
   "workoutDetailsTitle": "Workout Details",
+  "workoutHeartRateSectionTitle": "Heart Rate",
+  "workoutHeartRateAverageLabel": "Avg",
+  "workoutHeartRateMaxLabel": "Max",
+  "workoutHeartRateMinLabel": "Min",
+  "workoutHeartRateQualityReady": "Good coverage",
+  "workoutHeartRateQualityLimited": "Limited data",
+  "workoutHeartRateQualityInsufficient": "Very sparse",
+  "workoutHeartRateQualityNoData": "No data",
+  "workoutHeartRateNoDataGeneral": "No heart-rate samples were found for this workout window.",
+  "workoutHeartRateNoDataPermission": "Heart-rate permission is required to show workout HR.",
+  "workoutHeartRateNoDataUnavailable": "Heart-rate data is currently unavailable on this device.",
+  "workoutHeartRateNoDataWorkoutNotFinished": "Heart-rate summary appears after a finished workout.",
+  "workoutHeartRateNoDataInvalidWindow": "Workout time window is invalid, so HR cannot be analyzed.",
+  "workoutHeartRateNoDataQueryFailed": "Could not read heart-rate data for this workout.",
+  "workoutHeartRateLimitedChartHint": "Not enough consistent samples for a reliable chart.",
+  "workoutHeartRateSampleCount": "{count, plural, =0{No samples} one{1 sample} other{{count} samples}}",
+  "@workoutHeartRateSampleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "workoutNotFound": "Workout not found.",
   "totalVolumeLabel": "Total Volume",
   "notesLabel": "Notes",
@@ -1056,22 +1079,42 @@
   ,"analyticsLowConfidenceLabel": "Lower-confidence pattern"
   ,"analyticsObservedPatternLabel": "Observed pattern"
   ,"analyticsBodyNutritionTrendContext": "Body weight and calorie trends"
-  ,"analyticsBodyNutritionTrendContextHint": "These lines show nearby trend movement over the same period for context."
+  ,"analyticsBodyNutritionTrendContextHint": "These lines show relative trend movement over the same period."
+  ,"analyticsBodyNutritionNormalizedHint": "Both lines are normalized to the same starting baseline to compare relative direction."
   ,"analyticsWeightTrendLabel": "Body weight (smoothed)"
   ,"analyticsCaloriesTrendLabel": "Calories (daily avg trend)"
   ,"analyticsInterpretationTitle": "Interpretation"
   ,"analyticsBodyNutritionConfidenceHighHint": "Data coverage in this range is strong enough for a more reliable pattern read."
+  ,"analyticsBodyNutritionConfidenceModerateHint": "Data coverage is moderate. Trends are useful context, but keep logging for stronger confidence."
   ,"analyticsBodyNutritionConfidenceLowHint": "Data coverage in this range is still limited, so treat this as early context."
   ,"analyticsBodyNutritionLowConfidenceNudge": "Keep logging weight and calories regularly to improve confidence."
   ,"analyticsBodyNutritionInterpretationConfidenceHigh": "Interpretation confidence: higher. Use this as trend context, not a direct cause statement."
   ,"analyticsBodyNutritionInterpretationConfidenceLow": "Interpretation confidence: lower. Use this as an early pattern signal and keep tracking."
-  ,"analyticsCorrelationDisclaimer": "This view shows trend correlation over time. It does not prove that calorie changes directly caused weight changes."
+  ,"analyticsCorrelationDisclaimer": "This view provides trend context. It does not prove that calorie changes directly caused weight changes."
   ,"analyticsInsightStableWeightCaloriesUp": "Weight trend is stable while average calories increased."
   ,"analyticsInsightWeightUpCaloriesUp": "Weight is trending upward alongside higher average calorie intake."
   ,"analyticsInsightCaloriesDownWeightStable": "Recent calorie reduction has not yet clearly changed the weight trend."
   ,"analyticsInsightWeightDownCaloriesDown": "Weight is trending downward alongside lower average calorie intake."
-  ,"analyticsInsightMixedPattern": "Weight and calorie trends move in mixed directions without a clear correlation pattern yet."
-  ,"analyticsInsightNotEnoughData": "Not enough data yet for meaningful correlation insight."
+  ,"analyticsInsightMixedPattern": "Weight and calorie trends are mixed without a clear relationship yet."
+  ,"analyticsInsightNotEnoughData": "Not enough consistent data yet for a meaningful trend read."
+  ,"analyticsModerateConfidenceLabel": "Moderate-confidence pattern"
+  ,"analyticsInsufficientConfidenceLabel": "Insufficient data confidence"
+  ,"analyticsTrendRising": "Rising"
+  ,"analyticsTrendFalling": "Falling"
+  ,"analyticsTrendStable": "Stable"
+  ,"analyticsTrendUnclear": "Unclear"
+  ,"analyticsRelationshipAlignedCut": "Lower intake and falling bodyweight are aligned."
+  ,"analyticsRelationshipAlignedBulk": "Higher intake and rising bodyweight are aligned."
+  ,"analyticsRelationshipStableMaintenance": "Weight and intake look broadly stable."
+  ,"analyticsRelationshipMixed": "Signals are mixed or delayed."
+  ,"analyticsRelationshipInsufficient": "Not enough consistent overlap to classify the pattern yet."
+  ,"analyticsBasedOnDataCoverage": "Based on {weightDays} weigh-ins and {calorieDays} calorie days"
+  ,"@analyticsBasedOnDataCoverage": {
+    "placeholders": {
+      "weightDays": { "type": "int" },
+      "calorieDays": { "type": "int" }
+    }
+  }
   ,"restTimerNotificationTitle": "Rest finished"
   ,"restTimerNotificationBody": "Your pause timer is over. Ready for the next set."
   ,"onboardingContinueSetup": "Set Up Profile"

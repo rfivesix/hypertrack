@@ -932,6 +932,102 @@ abstract class AppLocalizations {
   /// **'Workout Details'**
   String get workoutDetailsTitle;
 
+  /// No description provided for @workoutHeartRateSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate'**
+  String get workoutHeartRateSectionTitle;
+
+  /// No description provided for @workoutHeartRateAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg'**
+  String get workoutHeartRateAverageLabel;
+
+  /// No description provided for @workoutHeartRateMaxLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get workoutHeartRateMaxLabel;
+
+  /// No description provided for @workoutHeartRateMinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get workoutHeartRateMinLabel;
+
+  /// No description provided for @workoutHeartRateQualityReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Good coverage'**
+  String get workoutHeartRateQualityReady;
+
+  /// No description provided for @workoutHeartRateQualityLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited data'**
+  String get workoutHeartRateQualityLimited;
+
+  /// No description provided for @workoutHeartRateQualityInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Very sparse'**
+  String get workoutHeartRateQualityInsufficient;
+
+  /// No description provided for @workoutHeartRateQualityNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get workoutHeartRateQualityNoData;
+
+  /// No description provided for @workoutHeartRateNoDataGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'No heart-rate samples were found for this workout window.'**
+  String get workoutHeartRateNoDataGeneral;
+
+  /// No description provided for @workoutHeartRateNoDataPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate permission is required to show workout HR.'**
+  String get workoutHeartRateNoDataPermission;
+
+  /// No description provided for @workoutHeartRateNoDataUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate data is currently unavailable on this device.'**
+  String get workoutHeartRateNoDataUnavailable;
+
+  /// No description provided for @workoutHeartRateNoDataWorkoutNotFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate summary appears after a finished workout.'**
+  String get workoutHeartRateNoDataWorkoutNotFinished;
+
+  /// No description provided for @workoutHeartRateNoDataInvalidWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout time window is invalid, so HR cannot be analyzed.'**
+  String get workoutHeartRateNoDataInvalidWindow;
+
+  /// No description provided for @workoutHeartRateNoDataQueryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read heart-rate data for this workout.'**
+  String get workoutHeartRateNoDataQueryFailed;
+
+  /// No description provided for @workoutHeartRateLimitedChartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough consistent samples for a reliable chart.'**
+  String get workoutHeartRateLimitedChartHint;
+
+  /// No description provided for @workoutHeartRateSampleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No samples} one{1 sample} other{{count} samples}}'**
+  String workoutHeartRateSampleCount(int count);
+
   /// No description provided for @workoutNotFound.
   ///
   /// In en, this message translates to:
@@ -4829,8 +4925,14 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsBodyNutritionTrendContextHint.
   ///
   /// In en, this message translates to:
-  /// **'These lines show nearby trend movement over the same period for context.'**
+  /// **'These lines show relative trend movement over the same period.'**
   String get analyticsBodyNutritionTrendContextHint;
+
+  /// No description provided for @analyticsBodyNutritionNormalizedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Both lines are normalized to the same starting baseline to compare relative direction.'**
+  String get analyticsBodyNutritionNormalizedHint;
 
   /// No description provided for @analyticsWeightTrendLabel.
   ///
@@ -4855,6 +4957,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data coverage in this range is strong enough for a more reliable pattern read.'**
   String get analyticsBodyNutritionConfidenceHighHint;
+
+  /// No description provided for @analyticsBodyNutritionConfidenceModerateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Data coverage is moderate. Trends are useful context, but keep logging for stronger confidence.'**
+  String get analyticsBodyNutritionConfidenceModerateHint;
 
   /// No description provided for @analyticsBodyNutritionConfidenceLowHint.
   ///
@@ -4883,7 +4991,7 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsCorrelationDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'This view shows trend correlation over time. It does not prove that calorie changes directly caused weight changes.'**
+  /// **'This view provides trend context. It does not prove that calorie changes directly caused weight changes.'**
   String get analyticsCorrelationDisclaimer;
 
   /// No description provided for @analyticsInsightStableWeightCaloriesUp.
@@ -4913,14 +5021,86 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsInsightMixedPattern.
   ///
   /// In en, this message translates to:
-  /// **'Weight and calorie trends move in mixed directions without a clear correlation pattern yet.'**
+  /// **'Weight and calorie trends are mixed without a clear relationship yet.'**
   String get analyticsInsightMixedPattern;
 
   /// No description provided for @analyticsInsightNotEnoughData.
   ///
   /// In en, this message translates to:
-  /// **'Not enough data yet for meaningful correlation insight.'**
+  /// **'Not enough consistent data yet for a meaningful trend read.'**
   String get analyticsInsightNotEnoughData;
+
+  /// No description provided for @analyticsModerateConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate-confidence pattern'**
+  String get analyticsModerateConfidenceLabel;
+
+  /// No description provided for @analyticsInsufficientConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient data confidence'**
+  String get analyticsInsufficientConfidenceLabel;
+
+  /// No description provided for @analyticsTrendRising.
+  ///
+  /// In en, this message translates to:
+  /// **'Rising'**
+  String get analyticsTrendRising;
+
+  /// No description provided for @analyticsTrendFalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Falling'**
+  String get analyticsTrendFalling;
+
+  /// No description provided for @analyticsTrendStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get analyticsTrendStable;
+
+  /// No description provided for @analyticsTrendUnclear.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclear'**
+  String get analyticsTrendUnclear;
+
+  /// No description provided for @analyticsRelationshipAlignedCut.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower intake and falling bodyweight are aligned.'**
+  String get analyticsRelationshipAlignedCut;
+
+  /// No description provided for @analyticsRelationshipAlignedBulk.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher intake and rising bodyweight are aligned.'**
+  String get analyticsRelationshipAlignedBulk;
+
+  /// No description provided for @analyticsRelationshipStableMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight and intake look broadly stable.'**
+  String get analyticsRelationshipStableMaintenance;
+
+  /// No description provided for @analyticsRelationshipMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Signals are mixed or delayed.'**
+  String get analyticsRelationshipMixed;
+
+  /// No description provided for @analyticsRelationshipInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough consistent overlap to classify the pattern yet.'**
+  String get analyticsRelationshipInsufficient;
+
+  /// No description provided for @analyticsBasedOnDataCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {weightDays} weigh-ins and {calorieDays} calorie days'**
+  String analyticsBasedOnDataCoverage(int weightDays, int calorieDays);
 
   /// No description provided for @restTimerNotificationTitle.
   ///

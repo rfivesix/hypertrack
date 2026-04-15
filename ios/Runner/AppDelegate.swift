@@ -107,6 +107,8 @@ import UIKit
       requestHealthKitPermissions(result: result)
     case "readStepSegments":
       readStepSegments(call: call, result: result)
+    case "readHeartRateSamples":
+      readHeartRateSamples(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -180,6 +182,83 @@ import UIKit
           "stepCount": Int(sample.quantity.doubleValue(for: HKUnit.count())),
           "sourceId": sample.sourceRevision.source.bundleIdentifier,
           "nativeId": sample.uuid.uuidString
+        ] as [String: Any]
+      }
+      result(mapped)
+    }
+    healthStore.execute(query)
+  }
+
+  private func readHeartRateSamples(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard HKHealthStore.isHealthDataAvailable() else {
+      result(FlutterError(code: "not_available", message: "HealthKit unavailable", details: nil))
+      return
+    }
+
+    guard
+      let args = call.arguments as? [String: Any],
+      let fromIso = args["fromUtcIso"] as? String,
+      let toIso = args["toUtcIso"] as? String
+    else {
+      result([])
+      return
+    }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let fromDate = formatter.date(from: fromIso),
+          let toDate = formatter.date(from: toIso),
+          let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate)
+    else {
+      result([])
+      return
+    }
+
+    let heartRateAuthorized =
+      healthStore.authorizationStatus(for: heartRateType) == .sharingAuthorized
+    if !heartRateAuthorized {
+      result(
+        FlutterError(
+          code: "permission_denied",
+          message: "Heart rate permission not granted",
+          details: nil
+        )
+      )
+      return
+    }
+
+    let predicate = HKQuery.predicateForSamples(
+      withStart: fromDate,
+      end: toDate,
+      options: [.strictStartDate]
+    )
+    let sortDescriptors = [
+      NSSortDescriptor(
+        key: HKSampleSortIdentifierStartDate,
+        ascending: true
+      )
+    ]
+    let query = HKSampleQuery(
+      sampleType: heartRateType,
+      predicate: predicate,
+      limit: HKObjectQueryNoLimit,
+      sortDescriptors: sortDescriptors
+    ) { _, samples, error in
+      if let error = error {
+        result(FlutterError(code: "query_failed", message: error.localizedDescription, details: nil))
+        return
+      }
+
+      let formatterOut = ISO8601DateFormatter()
+      formatterOut.timeZone = TimeZone(secondsFromGMT: 0)
+      formatterOut.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+      let mapped = (samples as? [HKQuantitySample] ?? []).map { sample in
+        [
+          "sampledAtUtcIso": formatterOut.string(from: sample.startDate),
+          "bpm": sample.quantity.doubleValue(for: HKUnit.count().unitDivided(by: HKUnit.minute())),
+          "sourceId": sample.sourceRevision.source.bundleIdentifier,
+          "nativeId": sample.uuid.uuidString,
         ] as [String: Any]
       }
       result(mapped)

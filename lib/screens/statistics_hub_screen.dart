@@ -9,6 +9,7 @@ import '../features/statistics/domain/recovery_payload_models.dart';
 import '../features/statistics/domain/hub_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
+import '../features/statistics/presentation/widgets/body_nutrition_normalized_trend_chart.dart';
 import '../features/sleep/data/sleep_hub_summary_repository.dart';
 import '../features/sleep/presentation/sleep_navigation.dart';
 import '../features/sleep/platform/sleep_sync_service.dart';
@@ -25,7 +26,6 @@ import 'analytics/consistency_tracker_screen.dart';
 import 'analytics/muscle_group_analytics_screen.dart';
 import 'analytics/pr_dashboard_screen.dart';
 import 'analytics/recovery_tracker_screen.dart';
-import 'measurements_screen.dart';
 import '../widgets/statistics_steps_card.dart';
 import '../data/database_helper.dart';
 import '../services/health/steps_sync_service.dart';
@@ -71,7 +71,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   static const int _days180 = 180;
   static const _miniSignalPoints = 8;
   static const _fixedConsistencyWeeks = 6;
-  static const _bodyTrendPoints = 10;
   static const _chipBackgroundOpacity = 0.14;
   static const _miniBarOpacity = 0.75;
   static const Duration _sleepSyncInterval = Duration(hours: 6);
@@ -987,102 +986,126 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Widget _buildBodyMetricsSection() {
     final body = _bodyNutrition;
-    final currentWeight = body?.currentWeightKg;
-    final weightChange = body?.weightChangeKg;
-    final avgCalories = body?.avgDailyCalories;
-    final weightTrend =
-        body?.smoothedWeight.map((p) => p.value).toList(growable: false) ??
-            const <double>[];
-
-    final weightValue = currentWeight == null
+    final weightValue = body?.currentWeightKg == null
         ? '-'
-        : '${currentWeight.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
-    final caloriesValue =
-        avgCalories == null ? '-' : avgCalories.round().toString();
+        : '${body!.currentWeightKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+    final weightChangeValue = body?.weightChangeKg == null
+        ? '-'
+        : '${body!.weightChangeKg! >= 0 ? '+' : ''}${body.weightChangeKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+    final caloriesValue = body == null || body.loggedCalorieDays <= 0
+        ? '-'
+        : '${body.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';
+    final relationship = body == null
+        ? l10n.analyticsInsightNotEnoughData
+        : StatisticsPresentationFormatter.bodyNutritionRelationshipLabel(
+            l10n,
+            body.relationship,
+          );
+    final confidenceLabel = body == null
+        ? l10n.analyticsInsufficientConfidenceLabel
+        : StatisticsPresentationFormatter.bodyNutritionConfidenceLabel(
+            l10n,
+            body.confidence,
+          );
 
-    return Column(
-      children: [
-        SummaryCard(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => BodyNutritionCorrelationScreen(
-                  initialRangeIndex: _selectedTimeRangeIndex,
-                ),
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return SummaryCard(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => BodyNutritionCorrelationScreen(
+              initialRangeIndex: _selectedTimeRangeIndex,
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeaderWithChevron(
+              label: l10n.sectionBodyNutrition,
+              chipText: _effectiveBodyRangeLabel(),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                _buildHeaderWithChevron(
-                  label: l10n.metricsCurrentWeight,
-                  chipText: _effectiveBodyRangeLabel(),
+                _buildBodyTrendPill(l10n.metricsCurrentWeight, weightValue),
+                _buildBodyTrendPill(
+                    l10n.metricsWeightChange, weightChangeValue),
+                _buildBodyTrendPill(l10n.metricsAvgCalories, caloriesValue),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildBodyTrendPill(
+                  l10n.analyticsWeightTrendLabel,
+                  body == null
+                      ? l10n.analyticsTrendUnclear
+                      : StatisticsPresentationFormatter
+                          .bodyNutritionTrendDirectionLabel(
+                          l10n,
+                          body.weightTrend.direction,
+                        ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  weightValue,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _buildBodyMetricsSupportingText(
-                    body,
-                    caloriesValue,
-                    weightChange,
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                _buildMicroCaption(_effectiveBodyRangeLabel()),
-                const SizedBox(height: 4),
-                _buildMiniBars(
-                  values: weightTrend
-                      .take(_bodyTrendPoints)
-                      .toList(growable: false),
-                  color: Theme.of(context).colorScheme.secondary,
-                  semanticsLabel: l10n.sectionBodyNutrition,
+                _buildBodyTrendPill(
+                  l10n.analyticsCaloriesTrendLabel,
+                  body == null
+                      ? l10n.analyticsTrendUnclear
+                      : StatisticsPresentationFormatter
+                          .bodyNutritionTrendDirectionLabel(
+                          l10n,
+                          body.calorieTrend.direction,
+                        ),
                 ),
               ],
             ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SummaryCard(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const MeasurementsScreen()),
-            );
-          },
-          child: ListTile(
-            leading: Icon(
-              Icons.straighten,
-              color: Theme.of(context).colorScheme.primary,
+            const SizedBox(height: 10),
+            Text(
+              relationship,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            title: Text(
-              l10n.body_measurements,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _legendDot(
+                  color: Theme.of(context).colorScheme.primary,
+                  label: l10n.analyticsWeightTrendLabel,
+                ),
+                const SizedBox(width: 12),
+                _legendDot(
+                  color: Theme.of(context).colorScheme.secondary,
+                  label: l10n.analyticsCaloriesTrendLabel,
+                ),
+              ],
             ),
-            subtitle: Text(l10n.measurements_description),
-            trailing: Icon(
-              Icons.chevron_right,
-              size: DesignConstants.iconSizeM,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                DesignConstants.borderRadiusM,
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 84,
+              child: BodyNutritionNormalizedTrendChart(
+                range: body?.normalizedTrendRange,
+                weightSeries: body?.normalizedWeightTrend ?? const [],
+                calorieSeries: body?.normalizedCaloriesTrend ?? const [],
+                compact: true,
               ),
             ),
-          ),
+            const SizedBox(height: 6),
+            Text(
+              body == null
+                  ? confidenceLabel
+                  : '$confidenceLabel • ${l10n.analyticsBasedOnDataCoverage(body.weightDays, body.loggedCalorieDays)}',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -1100,19 +1123,44 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     return _timeRanges[_selectedTimeRangeIndex];
   }
 
-  String _buildBodyMetricsSupportingText(
-    BodyNutritionAnalyticsResult? body,
-    String caloriesValue,
-    double? weightChange,
-  ) {
-    if (body == null) return l10n.analyticsInsightNotEnoughData;
-    final changeText = weightChange == null
-        ? null
-        : '${l10n.metricsWeightChange}: ${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
-    if (changeText == null) {
-      return '${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay}';
-    }
-    return '$changeText • ${l10n.metricsAvgCalories}: $caloriesValue ${l10n.analyticsKcalPerDay}';
+  Widget _buildBodyTrendPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendDot({required Color color, required String label}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: Theme.of(context).textTheme.labelSmall),
+      ],
+    );
   }
 
   String _formatPerWeek(String valueText) {

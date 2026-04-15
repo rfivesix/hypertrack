@@ -58,6 +58,9 @@ class MainActivity : FlutterFragmentActivity() {
     private val requiredPermissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
     )
+    private val requiredHeartRatePermissions = setOf(
+        HealthPermission.getReadPermission(HeartRateRecord::class),
+    )
     private val requiredSleepPermissions = setOf(
         HealthPermission.getReadPermission(SleepSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
@@ -120,6 +123,7 @@ class MainActivity : FlutterFragmentActivity() {
                 "getAvailability" -> handleAvailability(result)
                 "requestPermissions" -> handleRequestPermissions(result)
                 "readStepSegments" -> handleReadSegments(call, result)
+                "readHeartRateSamples" -> handleReadHeartRateSamples(call, result)
                 else -> result.notImplemented()
             }
         }
@@ -1116,6 +1120,71 @@ class MainActivity : FlutterFragmentActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     result.error("permission_denied", e.message, null)
+                }
+            }
+        }
+    }
+
+    private fun handleReadHeartRateSamples(call: MethodCall, result: MethodChannel.Result) {
+        val status = HealthConnectClient.getSdkStatus(this)
+        if (status != HealthConnectClient.SDK_AVAILABLE) {
+            result.error("not_available", "Health Connect not available", null)
+            return
+        }
+
+        val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
+        val fromIso = args["fromUtcIso"] as? String
+        val toIso = args["toUtcIso"] as? String
+        if (fromIso == null || toIso == null) {
+            result.success(emptyList<Map<String, Any?>>())
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val hasPermission = hasPermissions(requiredHeartRatePermissions)
+            if (!hasPermission) {
+                withContext(Dispatchers.Main) {
+                    result.error("permission_denied", "Permissions not granted", null)
+                }
+                return@launch
+            }
+
+            try {
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                val from = Instant.parse(fromIso)
+                val to = Instant.parse(toIso)
+                val allRecords = mutableListOf<HeartRateRecord>()
+                var pageToken: String? = null
+                do {
+                    val response = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = HeartRateRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(from, to),
+                            pageToken = pageToken,
+                        ),
+                    )
+                    allRecords.addAll(response.records)
+                    pageToken = response.pageToken
+                } while (pageToken != null)
+
+                val payload = allRecords
+                    .flatMap { record ->
+                        record.samples.mapIndexed { index, sample ->
+                            mapOf(
+                                "sampledAtUtcIso" to sample.time.toString(),
+                                "bpm" to sample.beatsPerMinute.toDouble(),
+                                "sourceId" to record.metadata.dataOrigin.packageName,
+                                "nativeId" to "${record.metadata.id}-$index",
+                            )
+                        }
+                    }
+                    .sortedBy { row -> row["sampledAtUtcIso"] as String }
+                withContext(Dispatchers.Main) {
+                    result.success(payload)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("query_failed", e.message, null)
                 }
             }
         }

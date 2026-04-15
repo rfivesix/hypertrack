@@ -446,6 +446,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutDetailsTitle => 'Workout Details';
 
   @override
+  String get workoutHeartRateSectionTitle => 'Heart Rate';
+
+  @override
+  String get workoutHeartRateAverageLabel => 'Avg';
+
+  @override
+  String get workoutHeartRateMaxLabel => 'Max';
+
+  @override
+  String get workoutHeartRateMinLabel => 'Min';
+
+  @override
+  String get workoutHeartRateQualityReady => 'Good coverage';
+
+  @override
+  String get workoutHeartRateQualityLimited => 'Limited data';
+
+  @override
+  String get workoutHeartRateQualityInsufficient => 'Very sparse';
+
+  @override
+  String get workoutHeartRateQualityNoData => 'No data';
+
+  @override
+  String get workoutHeartRateNoDataGeneral =>
+      'No heart-rate samples were found for this workout window.';
+
+  @override
+  String get workoutHeartRateNoDataPermission =>
+      'Heart-rate permission is required to show workout HR.';
+
+  @override
+  String get workoutHeartRateNoDataUnavailable =>
+      'Heart-rate data is currently unavailable on this device.';
+
+  @override
+  String get workoutHeartRateNoDataWorkoutNotFinished =>
+      'Heart-rate summary appears after a finished workout.';
+
+  @override
+  String get workoutHeartRateNoDataInvalidWindow =>
+      'Workout time window is invalid, so HR cannot be analyzed.';
+
+  @override
+  String get workoutHeartRateNoDataQueryFailed =>
+      'Could not read heart-rate data for this workout.';
+
+  @override
+  String get workoutHeartRateLimitedChartHint =>
+      'Not enough consistent samples for a reliable chart.';
+
+  @override
+  String workoutHeartRateSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samples',
+      one: '1 sample',
+      zero: 'No samples',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get workoutNotFound => 'Workout not found.';
 
   @override
@@ -2559,7 +2623,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsBodyNutritionTrendContextHint =>
-      'These lines show nearby trend movement over the same period for context.';
+      'These lines show relative trend movement over the same period.';
+
+  @override
+  String get analyticsBodyNutritionNormalizedHint =>
+      'Both lines are normalized to the same starting baseline to compare relative direction.';
 
   @override
   String get analyticsWeightTrendLabel => 'Body weight (smoothed)';
@@ -2573,6 +2641,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get analyticsBodyNutritionConfidenceHighHint =>
       'Data coverage in this range is strong enough for a more reliable pattern read.';
+
+  @override
+  String get analyticsBodyNutritionConfidenceModerateHint =>
+      'Data coverage is moderate. Trends are useful context, but keep logging for stronger confidence.';
 
   @override
   String get analyticsBodyNutritionConfidenceLowHint =>
@@ -2592,7 +2664,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsCorrelationDisclaimer =>
-      'This view shows trend correlation over time. It does not prove that calorie changes directly caused weight changes.';
+      'This view provides trend context. It does not prove that calorie changes directly caused weight changes.';
 
   @override
   String get analyticsInsightStableWeightCaloriesUp =>
@@ -2612,11 +2684,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsInsightMixedPattern =>
-      'Weight and calorie trends move in mixed directions without a clear correlation pattern yet.';
+      'Weight and calorie trends are mixed without a clear relationship yet.';
 
   @override
   String get analyticsInsightNotEnoughData =>
-      'Not enough data yet for meaningful correlation insight.';
+      'Not enough consistent data yet for a meaningful trend read.';
+
+  @override
+  String get analyticsModerateConfidenceLabel => 'Moderate-confidence pattern';
+
+  @override
+  String get analyticsInsufficientConfidenceLabel =>
+      'Insufficient data confidence';
+
+  @override
+  String get analyticsTrendRising => 'Rising';
+
+  @override
+  String get analyticsTrendFalling => 'Falling';
+
+  @override
+  String get analyticsTrendStable => 'Stable';
+
+  @override
+  String get analyticsTrendUnclear => 'Unclear';
+
+  @override
+  String get analyticsRelationshipAlignedCut =>
+      'Lower intake and falling bodyweight are aligned.';
+
+  @override
+  String get analyticsRelationshipAlignedBulk =>
+      'Higher intake and rising bodyweight are aligned.';
+
+  @override
+  String get analyticsRelationshipStableMaintenance =>
+      'Weight and intake look broadly stable.';
+
+  @override
+  String get analyticsRelationshipMixed => 'Signals are mixed or delayed.';
+
+  @override
+  String get analyticsRelationshipInsufficient =>
+      'Not enough consistent overlap to classify the pattern yet.';
+
+  @override
+  String analyticsBasedOnDataCoverage(int weightDays, int calorieDays) {
+    return 'Based on $weightDays weigh-ins and $calorieDays calorie days';
+  }
 
   @override
   String get restTimerNotificationTitle => 'Rest finished';

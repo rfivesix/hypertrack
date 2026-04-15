@@ -9,6 +9,19 @@ int unwrapWakeMinutes({required int bedtimeMinutes, required int wakeMinutes}) {
   return wake;
 }
 
+({int startMinutes, int endMinutes}) regularityToSleepWindowMinutes({
+  required int bedtimeMinutes,
+  required int wakeMinutes,
+}) {
+  final bed = _normalizeMinutes(bedtimeMinutes);
+  final wake = _normalizeMinutes(wakeMinutes);
+
+  final sameDateAsWake = bed <= wake;
+  final startMinutes = sameDateAsWake ? bed + 1440 : bed;
+  final endMinutes = wake + 1440;
+  return (startMinutes: startMinutes, endMinutes: endMinutes);
+}
+
 int circularAverageMinutes(Iterable<int> minutesValues) {
   final values = minutesValues.toList(growable: false);
   if (values.isEmpty) return 0;

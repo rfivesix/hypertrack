@@ -163,6 +163,29 @@
   "skipButton": "Überspringen",
   "emptyHistory": "Noch keine Workouts abgeschlossen.",
   "workoutDetailsTitle": "Workout-Details",
+  "workoutHeartRateSectionTitle": "Herzfrequenz",
+  "workoutHeartRateAverageLabel": "Ø",
+  "workoutHeartRateMaxLabel": "Max",
+  "workoutHeartRateMinLabel": "Min",
+  "workoutHeartRateQualityReady": "Gute Abdeckung",
+  "workoutHeartRateQualityLimited": "Begrenzte Daten",
+  "workoutHeartRateQualityInsufficient": "Sehr spärlich",
+  "workoutHeartRateQualityNoData": "Keine Daten",
+  "workoutHeartRateNoDataGeneral": "Für dieses Workout-Fenster wurden keine Herzfrequenzdaten gefunden.",
+  "workoutHeartRateNoDataPermission": "Für Workout-Herzfrequenz wird eine Herzfrequenz-Berechtigung benötigt.",
+  "workoutHeartRateNoDataUnavailable": "Herzfrequenzdaten sind auf diesem Gerät aktuell nicht verfügbar.",
+  "workoutHeartRateNoDataWorkoutNotFinished": "Die Herzfrequenz-Zusammenfassung erscheint nach einem abgeschlossenen Workout.",
+  "workoutHeartRateNoDataInvalidWindow": "Das Workout-Zeitfenster ist ungültig, daher kann die Herzfrequenz nicht ausgewertet werden.",
+  "workoutHeartRateNoDataQueryFailed": "Herzfrequenzdaten für dieses Workout konnten nicht gelesen werden.",
+  "workoutHeartRateLimitedChartHint": "Zu wenige konsistente Messpunkte für einen verlässlichen Chart.",
+  "workoutHeartRateSampleCount": "{count, plural, =0{Keine Samples} one{1 Sample} other{{count} Samples}}",
+  "@workoutHeartRateSampleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "workoutNotFound": "Workout nicht gefunden.",
   "totalVolumeLabel": "Gesamtvolumen",
   "notesLabel": "Notizen",
@@ -1061,22 +1084,42 @@
   ,"analyticsLowConfidenceLabel": "Muster mit niedrigerer Verlässlichkeit"
   ,"analyticsObservedPatternLabel": "Beobachtetes Muster"
   ,"analyticsBodyNutritionTrendContext": "Gewichts- und Kalorientrends"
-  ,"analyticsBodyNutritionTrendContextHint": "Diese Linien zeigen die Trendbewegung im gleichen Zeitraum als Kontext."
+  ,"analyticsBodyNutritionTrendContextHint": "Diese Linien zeigen die relative Trendbewegung im gleichen Zeitraum."
+  ,"analyticsBodyNutritionNormalizedHint": "Beide Linien starten auf derselben Basis, damit du die relative Richtung direkt vergleichen kannst."
   ,"analyticsWeightTrendLabel": "Körpergewicht (geglattet)"
-  ,"analyticsCaloriesTrendLabel": "Kalorien (täglicher Trend)"
+  ,"analyticsCaloriesTrendLabel": "Kalorien (tägl. Trend)"
   ,"analyticsInterpretationTitle": "Interpretation"
   ,"analyticsBodyNutritionConfidenceHighHint": "Die Datenabdeckung in diesem Bereich ist stark genug für eine verlässlichere Muster-Einordnung."
+  ,"analyticsBodyNutritionConfidenceModerateHint": "Die Datenabdeckung ist mittel. Nützlich als Kontext, aber weiteres Logging erhöht die Verlässlichkeit."
   ,"analyticsBodyNutritionConfidenceLowHint": "Die Datenabdeckung in diesem Bereich ist noch begrenzt, daher als frühen Kontext lesen."
   ,"analyticsBodyNutritionLowConfidenceNudge": "Regelmäßiges Logging von Gewicht und Kalorien verbessert die Verlässlichkeit."
   ,"analyticsBodyNutritionInterpretationConfidenceHigh": "Interpretations-Verlässlichkeit: höher. Als Trend-Kontext nutzen, nicht als direkten Ursache-Beleg."
   ,"analyticsBodyNutritionInterpretationConfidenceLow": "Interpretations-Verlässlichkeit: niedriger. Als frühes Muster-Signal nutzen und weiter tracken."
-  ,"analyticsCorrelationDisclaimer": "Diese Ansicht zeigt zeitliche Trend-Korrelationen. Sie beweist nicht, dass Kalorienveränderungen direkt Gewichtsveränderungen verursacht haben."
+  ,"analyticsCorrelationDisclaimer": "Diese Ansicht liefert Trend-Kontext. Sie beweist nicht, dass Kalorienveränderungen direkt Gewichtsveränderungen verursacht haben."
   ,"analyticsInsightStableWeightCaloriesUp": "Der Gewichtstrend ist stabil, während die durchschnittlichen Kalorien gestiegen sind."
   ,"analyticsInsightWeightUpCaloriesUp": "Das Gewicht zeigt einen Aufwärtstrend zusammen mit höherer durchschnittlicher Kalorienaufnahme."
   ,"analyticsInsightCaloriesDownWeightStable": "Die jüngste Kalorienreduktion hat den Gewichtstrend noch nicht klar verändert."
   ,"analyticsInsightWeightDownCaloriesDown": "Das Gewicht zeigt einen Abwärtstrend zusammen mit niedrigerer durchschnittlicher Kalorienaufnahme."
-  ,"analyticsInsightMixedPattern": "Gewichts- und Kalorientrends bewegen sich gemischt, noch ohne klares Korrelationsmuster."
-  ,"analyticsInsightNotEnoughData": "Noch nicht genug Daten für eine aussagekräftige Korrelations-Einschätzung."
+  ,"analyticsInsightMixedPattern": "Gewichts- und Kalorientrends sind gemischt und noch nicht klar einzuordnen."
+  ,"analyticsInsightNotEnoughData": "Noch nicht genug konsistente Daten für eine sinnvolle Trend-Einschätzung."
+  ,"analyticsModerateConfidenceLabel": "Muster mit mittlerer Verlässlichkeit"
+  ,"analyticsInsufficientConfidenceLabel": "Unzureichende Daten-Verlässlichkeit"
+  ,"analyticsTrendRising": "Steigend"
+  ,"analyticsTrendFalling": "Fallend"
+  ,"analyticsTrendStable": "Stabil"
+  ,"analyticsTrendUnclear": "Unklar"
+  ,"analyticsRelationshipAlignedCut": "Niedrigere Kalorien und fallendes Gewicht sind konsistent."
+  ,"analyticsRelationshipAlignedBulk": "Höhere Kalorien und steigendes Gewicht sind konsistent."
+  ,"analyticsRelationshipStableMaintenance": "Gewicht und Kalorien wirken insgesamt stabil."
+  ,"analyticsRelationshipMixed": "Signale sind gemischt oder verzögert."
+  ,"analyticsRelationshipInsufficient": "Noch nicht genug konsistente Überlappung für eine klare Einordnung."
+  ,"analyticsBasedOnDataCoverage": "Basierend auf {weightDays} Gewichtseinträgen und {calorieDays} Kalorientagen"
+  ,"@analyticsBasedOnDataCoverage": {
+    "placeholders": {
+      "weightDays": { "type": "int" },
+      "calorieDays": { "type": "int" }
+    }
+  }
   ,"restTimerNotificationTitle": "Pause beendet"
   ,"restTimerNotificationBody": "Dein Pausentimer ist abgelaufen. Bereit für den nächsten Satz."
   ,"onboardingContinueSetup": "Profil einrichten"

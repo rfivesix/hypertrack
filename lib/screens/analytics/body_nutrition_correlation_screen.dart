@@ -1,15 +1,11 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-import '../../features/statistics/domain/analytics_state.dart';
+import '../../features/statistics/presentation/widgets/body_nutrition_normalized_trend_chart.dart';
 import '../../features/statistics/domain/statistics_range_policy.dart';
 import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
-import '../../screens/measurements_screen.dart';
 import '../../util/body_nutrition_analytics_utils.dart';
 import '../../util/design_constants.dart';
-import '../../widgets/analytics_chart_defaults.dart';
 import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
@@ -61,9 +57,7 @@ class _BodyNutritionCorrelationScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    final double topPadding =
-        MediaQuery.of(context).padding.top + kToolbarHeight;
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -82,42 +76,17 @@ class _BodyNutritionCorrelationScreenState
                     children: [
                       _buildRangeChips(l10n),
                       const SizedBox(height: DesignConstants.spacingM),
-                      _buildSummaryKpis(l10n, _analytics!),
+                      _buildSummaryCard(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
                       AnalyticsSectionHeader(
                         title: l10n.analyticsBodyNutritionTrendContext,
                       ),
-                      _buildStackedCharts(l10n, _analytics!),
+                      _buildTrendComparisonCard(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
                       AnalyticsSectionHeader(
                         title: l10n.analyticsInterpretationTitle,
                       ),
                       _buildInterpretationCard(l10n, _analytics!),
-                      const SizedBox(height: 8),
-                      SummaryCard(
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.straighten,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          title: Text(
-                            l10n.body_measurements,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.measurements_description),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const MeasurementsScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -147,86 +116,119 @@ class _BodyNutritionCorrelationScreenState
     );
   }
 
-  Widget _buildSummaryKpis(
+  Widget _buildSummaryCard(
     AppLocalizations l10n,
     BodyNutritionAnalyticsResult data,
   ) {
-    final confidenceHigh = data.insightDataQuality.hasSufficientData;
     final currentWeight = data.currentWeightKg == null
         ? '-'
         : '${data.currentWeightKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
     final weightChange = data.weightChangeKg == null
         ? '-'
         : '${data.weightChangeKg! >= 0 ? '+' : ''}${data.weightChangeKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
-    final avgCalories = '${data.avgDailyCalories.round()} kcal';
+    final avgCalories = data.loggedCalorieDays <= 0
+        ? '-'
+        : '${data.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';
+
+    final confidenceLabel =
+        StatisticsPresentationFormatter.bodyNutritionConfidenceLabel(
+            l10n, data.confidence);
+
+    final relationship =
+        StatisticsPresentationFormatter.bodyNutritionRelationshipLabel(
+      l10n,
+      data.relationship,
+    );
 
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(14.0),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _primaryMetricItem(
-              l10n.metricsCurrentWeight,
-              currentWeight,
-              '${data.weightDays} ${l10n.analyticsDaysWithWeightData}',
+            Text(
+              l10n.sectionBodyNutrition,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
+                _kpiPill(l10n.metricsCurrentWeight, currentWeight),
                 _kpiPill(l10n.metricsWeightChange, weightChange),
                 _kpiPill(l10n.metricsAvgCalories, avgCalories),
-                _kpiPill(
-                  l10n.analyticsEffectiveRangeLabel,
-                  _effectiveRangeDisclosure(),
-                ),
               ],
             ),
             const SizedBox(height: 10),
-            _confidenceIndicator(l10n, confidenceHigh),
-            const SizedBox(height: 6),
+            _trendChipRow(l10n, data),
+            const SizedBox(height: 10),
             Text(
-              _insightText(l10n, data),
+              relationship,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${l10n.analyticsEffectiveRangeLabel}: ${_effectiveRangeDisclosure()}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
             ),
-            if (!confidenceHigh) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.analyticsBodyNutritionLowConfidenceNudge,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-              ),
-            ],
+            Text(
+              '$confidenceLabel • ${l10n.analyticsBasedOnDataCoverage(data.weightDays, data.loggedCalorieDays)}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _primaryMetricItem(String label, String value, String subLabel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _trendChipRow(
+      AppLocalizations l10n, BodyNutritionAnalyticsResult data) {
+    final weightLabel =
+        StatisticsPresentationFormatter.bodyNutritionTrendDirectionLabel(
+            l10n, data.weightTrend.direction);
+    final calorieLabel =
+        StatisticsPresentationFormatter.bodyNutritionTrendDirectionLabel(
+            l10n, data.calorieTrend.direction);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        Text(
-          subLabel,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
-        ),
+        _trendChip(l10n.analyticsWeightTrendLabel, weightLabel),
+        _trendChip(l10n.analyticsCaloriesTrendLabel, calorieLabel),
       ],
+    );
+  }
+
+  Widget _trendChip(String title, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
     );
   }
 
@@ -245,239 +247,76 @@ class _BodyNutritionCorrelationScreenState
           const SizedBox(height: 2),
           Text(
             value,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
     );
   }
 
-  Widget _confidenceIndicator(AppLocalizations l10n, bool highConfidence) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final color = highConfidence ? Colors.green : Colors.orange;
-    final icon = highConfidence ? Icons.check_circle : Icons.info_outline;
-    final label = highConfidence
-        ? l10n.analyticsHighConfidenceLabel
-        : l10n.analyticsLowConfidenceLabel;
-    final subtitle = highConfidence
-        ? l10n.analyticsBodyNutritionConfidenceHighHint
-        : l10n.analyticsBodyNutritionConfidenceLowHint;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStackedCharts(
+  Widget _buildTrendComparisonCard(
     AppLocalizations l10n,
     BodyNutritionAnalyticsResult data,
   ) {
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.analyticsBodyNutritionTrendContextHint,
+              l10n.analyticsBodyNutritionNormalizedHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
             ),
             const SizedBox(height: 8),
-            _buildChartTitle(l10n.analyticsWeightTrendLabel),
-            AnalyticsChartDefaults.axisTitleLabel(
-              context,
-              '${l10n.analyticsAxisYLabel}: ${l10n.analyticsUnitKg}   ${l10n.analyticsAxisXLabel}: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
+            Row(
+              children: [
+                _legendDot(
+                  color: Theme.of(context).colorScheme.primary,
+                  label: l10n.analyticsWeightTrendLabel,
+                ),
+                const SizedBox(width: 12),
+                _legendDot(
+                  color: Theme.of(context).colorScheme.secondary,
+                  label: l10n.analyticsCaloriesTrendLabel,
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            SizedBox(height: 170, child: _buildWeightChart(data)),
             const SizedBox(height: 10),
-            _buildChartTitle(l10n.analyticsCaloriesTrendLabel),
-            AnalyticsChartDefaults.axisTitleLabel(
-              context,
-              '${l10n.analyticsAxisYLabel}: kcal   ${l10n.analyticsAxisXLabel}: ${l10n.analyticsDayUnitLabel.toLowerCase()}',
+            SizedBox(
+              height: 220,
+              child: BodyNutritionNormalizedTrendChart(
+                range: data.normalizedTrendRange,
+                weightSeries: data.normalizedWeightTrend,
+                calorieSeries: data.normalizedCaloriesTrend,
+              ),
             ),
-            const SizedBox(height: 4),
-            SizedBox(height: 170, child: _buildCaloriesChart(data)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildChartTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6.0),
-      child: Text(
-        title,
-        style: Theme.of(
-          context,
-        ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  Widget _buildWeightChart(BodyNutritionAnalyticsResult data) {
-    if (data.weightDaily.isEmpty) {
-      return AnalyticsChartDefaults.stateView(
-        context: context,
-        l10n: AppLocalizations.of(context)!,
-        status: AnalyticsStatus.empty,
-      );
-    }
-
-    final firstDay = data.range.start;
-    final points = (data.smoothedWeight.isNotEmpty
-            ? data.smoothedWeight
-            : data.weightDaily)
-        .map((p) => FlSpot(_xOf(p.day, firstDay), p.value))
-        .toList(growable: false);
-
-    final labels = _xLabelPositions(data.range);
-
-    return LineChart(
-      LineChartData(
-        minX: 0,
-        maxX: (data.totalDays - 1).toDouble().clamp(1, 100000),
-        gridData: AnalyticsChartDefaults.compactGrid,
-        borderData: AnalyticsChartDefaults.noBorder,
-        lineTouchData: const LineTouchData(enabled: false),
-        titlesData: AnalyticsChartDefaults.standardTitles(
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 40,
-              getTitlesWidget: (value, meta) =>
-                  AnalyticsChartDefaults.tickLabel(
-                context,
-                value.toStringAsFixed(1),
-              ),
-            ),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 26,
-              getTitlesWidget: (value, meta) {
-                final rounded = value.round();
-                if (!labels.contains(rounded)) return const SizedBox.shrink();
-                final day = firstDay.add(Duration(days: rounded));
-                return AnalyticsChartDefaults.tickLabel(
-                  context,
-                  DateFormat('MMMd').format(day),
-                );
-              },
-            ),
-          ),
+  Widget _legendDot({required Color color, required String label}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        lineBarsData: [
-          AnalyticsChartDefaults.straightLine(
-            spots: points,
-            barWidth: 2.5,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCaloriesChart(BodyNutritionAnalyticsResult data) {
-    if (data.caloriesDaily.isEmpty) {
-      return AnalyticsChartDefaults.stateView(
-        context: context,
-        l10n: AppLocalizations.of(context)!,
-        status: AnalyticsStatus.empty,
-      );
-    }
-
-    final firstDay = data.range.start;
-    final series = data.smoothedCalories.isNotEmpty
-        ? data.smoothedCalories
-        : data.caloriesDaily;
-    final points = series
-        .map((p) => FlSpot(_xOf(p.day, firstDay), p.value))
-        .toList(growable: false);
-
-    final labels = _xLabelPositions(data.range);
-
-    return LineChart(
-      LineChartData(
-        minX: 0,
-        maxX: (data.totalDays - 1).toDouble().clamp(1, 100000),
-        gridData: AnalyticsChartDefaults.compactGrid,
-        borderData: AnalyticsChartDefaults.noBorder,
-        lineTouchData: const LineTouchData(enabled: false),
-        titlesData: AnalyticsChartDefaults.standardTitles(
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 42,
-              getTitlesWidget: (value, meta) =>
-                  AnalyticsChartDefaults.tickLabel(
-                context,
-                value.toStringAsFixed(0),
-              ),
-            ),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 26,
-              getTitlesWidget: (value, meta) {
-                final rounded = value.round();
-                if (!labels.contains(rounded)) return const SizedBox.shrink();
-                final day = firstDay.add(Duration(days: rounded));
-                return AnalyticsChartDefaults.tickLabel(
-                  context,
-                  DateFormat('MMMd').format(day),
-                );
-              },
-            ),
-          ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall,
         ),
-        lineBarsData: [
-          AnalyticsChartDefaults.straightLine(
-            spots: points,
-            barWidth: 2.5,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -487,31 +326,43 @@ class _BodyNutritionCorrelationScreenState
   ) {
     return SummaryCard(
       child: Padding(
-        padding: const EdgeInsets.all(14.0),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.analyticsObservedPatternLabel,
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(
-              _insightText(l10n, data),
+              StatisticsPresentationFormatter.bodyNutritionRelationshipLabel(
+                l10n,
+                data.relationship,
+              ),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
-              data.insightDataQuality.hasSufficientData
-                  ? l10n.analyticsBodyNutritionInterpretationConfidenceHigh
-                  : l10n.analyticsBodyNutritionInterpretationConfidenceLow,
+              StatisticsPresentationFormatter.bodyNutritionConfidenceLabel(
+                l10n,
+                data.confidence,
+              ),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
+            Text(
+              _confidenceHint(l10n, data.confidence),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+            const SizedBox(height: 10),
             Text(
               l10n.analyticsCorrelationDisclaimer,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -524,37 +375,25 @@ class _BodyNutritionCorrelationScreenState
     );
   }
 
-  String _insightText(
+  String _confidenceHint(
     AppLocalizations l10n,
-    BodyNutritionAnalyticsResult data,
+    BodyNutritionConfidence confidence,
   ) {
-    return StatisticsPresentationFormatter.bodyNutritionInsightLabel(
-      l10n,
-      data.insightType,
-    );
-  }
-
-  double _xOf(DateTime day, DateTime firstDay) {
-    final d0 = DateTime(firstDay.year, firstDay.month, firstDay.day);
-    final d = DateTime(day.year, day.month, day.day);
-    return d.difference(d0).inDays.toDouble();
-  }
-
-  Set<int> _xLabelPositions(DateTimeRange range) {
-    final span = range.end.difference(range.start).inDays + 1;
-    if (span <= 1) return {0};
-    final interval = (span / 4).ceil().clamp(1, 10000);
-
-    final positions = <int>{0, span - 1};
-    for (var i = interval; i < span - 1; i += interval) {
-      positions.add(i);
-    }
-    return positions;
+    return switch (confidence) {
+      BodyNutritionConfidence.high =>
+        l10n.analyticsBodyNutritionConfidenceHighHint,
+      BodyNutritionConfidence.moderate =>
+        l10n.analyticsBodyNutritionConfidenceModerateHint,
+      BodyNutritionConfidence.low =>
+        l10n.analyticsBodyNutritionConfidenceLowHint,
+      BodyNutritionConfidence.insufficient =>
+        l10n.analyticsInsightNotEnoughData,
+    };
   }
 
   String _effectiveRangeDisclosure() {
     final resolved = _rangePolicy.resolve(
-      metricId: StatisticsMetricId.bodyNutritionInsightKpi,
+      metricId: StatisticsMetricId.bodyNutritionTrend,
       selectedRangeIndex: _rangeIndex,
       earliestAvailableDay: _analytics?.range.start,
     );

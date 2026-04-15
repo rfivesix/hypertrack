@@ -2,286 +2,162 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hypertrack/features/statistics/domain/body_nutrition_analytics_engine.dart';
 import 'package:hypertrack/features/statistics/domain/body_nutrition_analytics_models.dart';
-import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
 import 'package:hypertrack/models/chart_data_point.dart';
 
 void main() {
-  group('BodyNutritionAnalyticsEngine', () {
-    test('build keeps daily alignment and averages', () {
+  group('BodyNutritionAnalyticsEngine trend summary', () {
+    test('classifies clear cut-like pattern as aligned', () {
       final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 1, 3));
+      final range = DateTimeRange(start: start, end: DateTime(2026, 2, 14));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
-        weightPoints: [
-          ChartDataPoint(date: DateTime(2026, 1, 1, 8), value: 80),
-          ChartDataPoint(date: DateTime(2026, 1, 2, 8), value: 79.8),
-          ChartDataPoint(date: DateTime(2026, 1, 3, 8), value: 79.6),
-        ],
+        weightPoints: List.generate(
+          18,
+          (i) => ChartDataPoint(
+            date: start.add(Duration(days: i * 2)),
+            value: 84.0 - (i * 0.22),
+          ),
+        ),
         caloriesByDay: {
-          DateTime(2026, 1, 1): 2000,
-          DateTime(2026, 1, 2): 2100,
-          DateTime(2026, 1, 3): 2200,
+          for (var i = 0; i < 45; i++)
+            start.add(Duration(days: i)): 2500 - (i * 10.0),
         },
       );
 
-      expect(result.totalDays, 3);
-      expect(result.weightDays, 3);
-      expect(result.loggedCalorieDays, 3);
-      expect(result.avgDailyCalories, closeTo(2100.0, 0.0001));
-      expect(result.currentWeightKg, closeTo(79.6, 0.0001));
-      expect(result.caloriesDaily.map((e) => e.value), [2000, 2100, 2200]);
-      expect(result.insightDataQuality.hasSufficientData, isFalse);
+      expect(result.weightTrend.direction, BodyNutritionTrendDirection.falling);
+      expect(
+          result.calorieTrend.direction, BodyNutritionTrendDirection.falling);
+      expect(
+        result.relationship,
+        BodyNutritionRelationshipType.alignedCutLike,
+      );
+      expect(
+        result.confidence != BodyNutritionConfidence.insufficient,
+        isTrue,
+      );
     });
 
-    test(
-      'deriveInsight returns stableWeightCaloriesUp for matching thresholds',
-      () {
-        final start = DateTime(2026, 1, 1);
-        final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-        final calories = List.generate(
-          14,
-          (i) => DailyValuePoint(
-            day: start.add(Duration(days: i)),
-            value: i < 7 ? 1800 : 2000,
-          ),
-        );
-        final weights = List.generate(
-          14,
-          (i) => DailyValuePoint(
-            day: start.add(Duration(days: i)),
-            value: 80 + (i * 0.01),
-          ),
-        );
-
-        final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-          range: range,
-          totalDays: 14,
-          weightDaily: weights,
-          smoothedWeight: weights,
-          caloriesDaily: calories,
-          smoothedCalories: calories,
-          loggedCalorieDays: 14,
-          weightChangeKg: 0.12,
-        );
-
-        expect(insight, BodyNutritionInsightType.stableWeightCaloriesUp);
-      },
-    );
-
-    test(
-      'deriveInsight returns weightUpCaloriesUp at threshold boundaries',
-      () {
-        final start = DateTime(2026, 1, 1);
-        final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-        final calories = List.generate(
-          14,
-          (i) => DailyValuePoint(
-            day: start.add(Duration(days: i)),
-            value: i < 7 ? 1900 : 1980,
-          ),
-        );
-        final weights = List.generate(
-          14,
-          (i) => DailyValuePoint(
-            day: start.add(Duration(days: i)),
-            value: 80 + (i * 0.04),
-          ),
-        );
-
-        final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-          range: range,
-          totalDays: 14,
-          weightDaily: weights,
-          smoothedWeight: weights,
-          caloriesDaily: calories,
-          smoothedCalories: calories,
-          loggedCalorieDays: 14,
-          weightChangeKg: 0.45,
-        );
-
-        expect(insight, BodyNutritionInsightType.weightUpCaloriesUp);
-      },
-    );
-
-    test('deriveInsight returns caloriesDownWeightNotYetChanged', () {
-      final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-      final calories = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: i < 7 ? 2100 : 1980,
-        ),
-      );
-      final weights = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: 80 - (i * 0.005),
-        ),
-      );
-
-      final insight = BodyNutritionAnalyticsEngine.deriveInsight(
+    test('classifies stable maintenance-like pattern', () {
+      final start = DateTime(2026, 3, 1);
+      final range = DateTimeRange(start: start, end: DateTime(2026, 4, 10));
+      final result = BodyNutritionAnalyticsEngine.build(
         range: range,
-        totalDays: 14,
-        weightDaily: weights,
-        smoothedWeight: weights,
-        caloriesDaily: calories,
-        smoothedCalories: calories,
-        loggedCalorieDays: 14,
-        weightChangeKg: -0.1,
-      );
-
-      expect(insight, BodyNutritionInsightType.caloriesDownWeightNotYetChanged);
-    });
-
-    test('deriveInsight returns weightDownCaloriesDown at thresholds', () {
-      final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-      final calories = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: i < 7 ? 2200 : 2120,
-        ),
-      );
-      final weights = List.generate(
-        14,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: 80 - (i * 0.04),
-        ),
-      );
-
-      final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-        range: range,
-        totalDays: 14,
-        weightDaily: weights,
-        smoothedWeight: weights,
-        caloriesDaily: calories,
-        smoothedCalories: calories,
-        loggedCalorieDays: 14,
-        weightChangeKg: -0.45,
-      );
-
-      expect(insight, BodyNutritionInsightType.weightDownCaloriesDown);
-    });
-
-    test('deriveInsight returns notEnoughData when data quality is low', () {
-      final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 1, 10));
-      final shortSeries = List.generate(
-        7,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: 1800 + i.toDouble(),
-        ),
-      );
-
-      final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-        range: range,
-        totalDays: 10,
-        weightDaily: shortSeries,
-        smoothedWeight: shortSeries,
-        caloriesDaily: shortSeries,
-        smoothedCalories: shortSeries,
-        loggedCalorieDays: 6,
-        weightChangeKg: 0.1,
-      );
-
-      expect(insight, BodyNutritionInsightType.notEnoughData);
-    });
-
-    test(
-      'deriveInsight returns mixed for sufficient but non-matching pattern',
-      () {
-        final start = DateTime(2026, 1, 1);
-        final range = DateTimeRange(start: start, end: DateTime(2026, 1, 14));
-        final calories = List.generate(
+        weightPoints: List.generate(
           14,
-          (i) => DailyValuePoint(
-            day: start.add(Duration(days: i)),
-            value: i < 7 ? 2000 : 2040,
+          (i) => ChartDataPoint(
+            date: start.add(Duration(days: i * 3)),
+            value: 78.0 + ((i.isEven ? 1 : -1) * 0.05),
           ),
-        );
-        final weights = List.generate(
-          14,
-          (i) => DailyValuePoint(
-            day: start.add(Duration(days: i)),
-            value: 80 + (i * 0.02),
-          ),
-        );
-
-        final insight = BodyNutritionAnalyticsEngine.deriveInsight(
-          range: range,
-          totalDays: 14,
-          weightDaily: weights,
-          smoothedWeight: weights,
-          caloriesDaily: calories,
-          smoothedCalories: calories,
-          loggedCalorieDays: 14,
-          weightChangeKg: 0.28,
-        );
-
-        expect(insight, BodyNutritionInsightType.mixed);
-      },
-    );
-
-    test('seriesHalfDelta returns null for insufficient series length', () {
-      final start = DateTime(2026, 1, 1);
-      final series = List.generate(
-        7,
-        (i) => DailyValuePoint(
-          day: start.add(Duration(days: i)),
-          value: i + 1,
         ),
+        caloriesByDay: {
+          for (var i = 0; i < 41; i++)
+            start.add(Duration(days: i)): 2200 + ((i.isEven ? 1 : -1) * 30),
+        },
       );
-      expect(BodyNutritionAnalyticsEngine.seriesHalfDelta(series), isNull);
-    });
 
-    test('weightChange uses raw points when smoothed has < 2 points', () {
-      final raw = [
-        DailyValuePoint(day: DateTime(2026, 1, 1), value: 80),
-        DailyValuePoint(day: DateTime(2026, 1, 2), value: 79.5),
-      ];
-      final delta = BodyNutritionAnalyticsEngine.weightChange(const [], raw);
-      expect(delta, closeTo(-0.5, 0.0001));
-    });
-
-    test('normalizedSeries returns 0.5 for flat values', () {
-      final series = [
-        DailyValuePoint(day: DateTime(2026, 1, 1), value: 42),
-        DailyValuePoint(day: DateTime(2026, 1, 2), value: 42),
-      ];
-      final normalized = BodyNutritionAnalyticsEngine.normalizedSeries(series);
-      expect(normalized.map((e) => e.value), [0.5, 0.5]);
-    });
-
-    test('data quality policy marks sufficient ranges correctly', () {
-      final assessment =
-          StatisticsDataQualityPolicy.instance.bodyNutritionInsight(
-        spanDays: 30,
-        totalDays: 30,
-        weightDays: 10,
-        loggedCalorieDays: 10,
+      expect(result.weightTrend.direction, BodyNutritionTrendDirection.stable);
+      expect(result.calorieTrend.direction, BodyNutritionTrendDirection.stable);
+      expect(
+        result.relationship,
+        BodyNutritionRelationshipType.stableMaintenanceLike,
       );
-      expect(assessment.hasSufficientData, isTrue);
     });
 
-    test('build keeps latest weight point per day when duplicates exist', () {
-      final day = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: day, end: day);
+    test('classifies clear bulk-like pattern as aligned', () {
+      final start = DateTime(2026, 5, 1);
+      final range = DateTimeRange(start: start, end: DateTime(2026, 6, 20));
+      final result = BodyNutritionAnalyticsEngine.build(
+        range: range,
+        weightPoints: List.generate(
+          17,
+          (i) => ChartDataPoint(
+            date: start.add(Duration(days: i * 3)),
+            value: 72.0 + (i * 0.18),
+          ),
+        ),
+        caloriesByDay: {
+          for (var i = 0; i < 51; i++)
+            start.add(Duration(days: i)): 2350 + (i * 9.0),
+        },
+      );
+
+      expect(result.weightTrend.direction, BodyNutritionTrendDirection.rising);
+      expect(result.calorieTrend.direction, BodyNutritionTrendDirection.rising);
+      expect(
+        result.relationship,
+        BodyNutritionRelationshipType.alignedBulkLike,
+      );
+    });
+
+    test('gates sparse data as insufficient', () {
+      final start = DateTime(2026, 7, 1);
+      final range = DateTimeRange(start: start, end: DateTime(2026, 7, 14));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: [
-          ChartDataPoint(date: DateTime(2026, 1, 1, 8), value: 80.2),
-          ChartDataPoint(date: DateTime(2026, 1, 1, 18), value: 79.9),
+          ChartDataPoint(date: start.add(const Duration(days: 1)), value: 80),
+          ChartDataPoint(
+              date: start.add(const Duration(days: 12)), value: 79.8),
         ],
-        caloriesByDay: const {},
+        caloriesByDay: {
+          start.add(const Duration(days: 2)): 2000,
+          start.add(const Duration(days: 10)): 2100,
+        },
       );
 
-      expect(result.weightDays, 1);
-      expect(result.currentWeightKg, 79.9);
+      expect(result.confidence, BodyNutritionConfidence.insufficient);
+      expect(
+        result.relationship,
+        BodyNutritionRelationshipType.insufficientData,
+      );
+    });
+
+    test('classifies opposing trends as mixed or unclear', () {
+      final start = DateTime(2026, 8, 1);
+      final range = DateTimeRange(start: start, end: DateTime(2026, 9, 15));
+      final result = BodyNutritionAnalyticsEngine.build(
+        range: range,
+        weightPoints: List.generate(
+          18,
+          (i) => ChartDataPoint(
+            date: start.add(Duration(days: i * 2)),
+            value: 80.0 + (i * 0.12),
+          ),
+        ),
+        caloriesByDay: {
+          for (var i = 0; i < 46; i++)
+            start.add(Duration(days: i)): 2500 - (i * 8.5),
+        },
+      );
+
+      expect(
+        result.relationship,
+        BodyNutritionRelationshipType.mixedOrUnclear,
+      );
+    });
+
+    test('normalized comparison starts both series from same baseline', () {
+      final start = DateTime(2026, 10, 1);
+      final range = DateTimeRange(start: start, end: DateTime(2026, 10, 30));
+      final result = BodyNutritionAnalyticsEngine.build(
+        range: range,
+        weightPoints: List.generate(
+          10,
+          (i) => ChartDataPoint(
+            date: start.add(Duration(days: i * 3)),
+            value: 90.0 - (i * 0.15),
+          ),
+        ),
+        caloriesByDay: {
+          for (var i = 0; i < 30; i++)
+            start.add(Duration(days: i)): 2500 - i * 8,
+        },
+      );
+
+      expect(result.hasComparableTrend, isTrue);
+      expect(result.normalizedWeightTrend.first.value, closeTo(0, 0.0001));
+      expect(result.normalizedCaloriesTrend.first.value, closeTo(0, 0.0001));
+      expect(result.normalizedTrendRange, isNotNull);
     });
   });
 }
