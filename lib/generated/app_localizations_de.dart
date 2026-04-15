@@ -2573,13 +2573,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsBodyNutritionTrendContextHint =>
-      'Diese Linien zeigen die Trendbewegung im gleichen Zeitraum als Kontext.';
+      'Diese Linien zeigen die relative Trendbewegung im gleichen Zeitraum.';
+
+  @override
+  String get analyticsBodyNutritionNormalizedHint =>
+      'Beide Linien starten auf derselben Basis, damit du die relative Richtung direkt vergleichen kannst.';
 
   @override
   String get analyticsWeightTrendLabel => 'Körpergewicht (geglattet)';
 
   @override
-  String get analyticsCaloriesTrendLabel => 'Kalorien (täglicher Trend)';
+  String get analyticsCaloriesTrendLabel => 'Kalorien (tägl. Trend)';
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';
@@ -2587,6 +2591,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get analyticsBodyNutritionConfidenceHighHint =>
       'Die Datenabdeckung in diesem Bereich ist stark genug für eine verlässlichere Muster-Einordnung.';
+
+  @override
+  String get analyticsBodyNutritionConfidenceModerateHint =>
+      'Die Datenabdeckung ist mittel. Nützlich als Kontext, aber weiteres Logging erhöht die Verlässlichkeit.';
 
   @override
   String get analyticsBodyNutritionConfidenceLowHint =>
@@ -2606,7 +2614,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsCorrelationDisclaimer =>
-      'Diese Ansicht zeigt zeitliche Trend-Korrelationen. Sie beweist nicht, dass Kalorienveränderungen direkt Gewichtsveränderungen verursacht haben.';
+      'Diese Ansicht liefert Trend-Kontext. Sie beweist nicht, dass Kalorienveränderungen direkt Gewichtsveränderungen verursacht haben.';
 
   @override
   String get analyticsInsightStableWeightCaloriesUp =>
@@ -2626,11 +2634,56 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsInsightMixedPattern =>
-      'Gewichts- und Kalorientrends bewegen sich gemischt, noch ohne klares Korrelationsmuster.';
+      'Gewichts- und Kalorientrends sind gemischt und noch nicht klar einzuordnen.';
 
   @override
   String get analyticsInsightNotEnoughData =>
-      'Noch nicht genug Daten für eine aussagekräftige Korrelations-Einschätzung.';
+      'Noch nicht genug konsistente Daten für eine sinnvolle Trend-Einschätzung.';
+
+  @override
+  String get analyticsModerateConfidenceLabel =>
+      'Muster mit mittlerer Verlässlichkeit';
+
+  @override
+  String get analyticsInsufficientConfidenceLabel =>
+      'Unzureichende Daten-Verlässlichkeit';
+
+  @override
+  String get analyticsTrendRising => 'Steigend';
+
+  @override
+  String get analyticsTrendFalling => 'Fallend';
+
+  @override
+  String get analyticsTrendStable => 'Stabil';
+
+  @override
+  String get analyticsTrendUnclear => 'Unklar';
+
+  @override
+  String get analyticsRelationshipAlignedCut =>
+      'Niedrigere Kalorien und fallendes Gewicht sind konsistent.';
+
+  @override
+  String get analyticsRelationshipAlignedBulk =>
+      'Höhere Kalorien und steigendes Gewicht sind konsistent.';
+
+  @override
+  String get analyticsRelationshipStableMaintenance =>
+      'Gewicht und Kalorien wirken insgesamt stabil.';
+
+  @override
+  String get analyticsRelationshipMixed =>
+      'Signale sind gemischt oder verzögert.';
+
+  @override
+  String get analyticsRelationshipInsufficient =>
+      'Noch nicht genug konsistente Überlappung für eine klare Einordnung.';
+
+  @override
+  String analyticsBasedOnDataCoverage(int weightDays, int calorieDays) {
+    return 'Basierend auf $weightDays Gewichtseinträgen und $calorieDays Kalorientagen';
+  }
 
   @override
   String get restTimerNotificationTitle => 'Pause beendet';

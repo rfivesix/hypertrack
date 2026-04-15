@@ -76,6 +76,32 @@ void main() {
       );
     });
 
+    test('maps body nutrition trend, relationship, and confidence labels', () {
+      final l10n = AppLocalizationsEn();
+
+      expect(
+        StatisticsPresentationFormatter.bodyNutritionTrendDirectionLabel(
+          l10n,
+          BodyNutritionTrendDirection.rising,
+        ),
+        l10n.analyticsTrendRising,
+      );
+      expect(
+        StatisticsPresentationFormatter.bodyNutritionRelationshipLabel(
+          l10n,
+          BodyNutritionRelationshipType.alignedCutLike,
+        ),
+        l10n.analyticsRelationshipAlignedCut,
+      );
+      expect(
+        StatisticsPresentationFormatter.bodyNutritionConfidenceLabel(
+          l10n,
+          BodyNutritionConfidence.moderate,
+        ),
+        l10n.analyticsModerateConfidenceLabel,
+      );
+    });
+
     test('maps muscle guidance label', () {
       final l10n = AppLocalizationsEn();
 

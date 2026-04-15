@@ -4829,8 +4829,14 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsBodyNutritionTrendContextHint.
   ///
   /// In en, this message translates to:
-  /// **'These lines show nearby trend movement over the same period for context.'**
+  /// **'These lines show relative trend movement over the same period.'**
   String get analyticsBodyNutritionTrendContextHint;
+
+  /// No description provided for @analyticsBodyNutritionNormalizedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Both lines are normalized to the same starting baseline to compare relative direction.'**
+  String get analyticsBodyNutritionNormalizedHint;
 
   /// No description provided for @analyticsWeightTrendLabel.
   ///
@@ -4855,6 +4861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data coverage in this range is strong enough for a more reliable pattern read.'**
   String get analyticsBodyNutritionConfidenceHighHint;
+
+  /// No description provided for @analyticsBodyNutritionConfidenceModerateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Data coverage is moderate. Trends are useful context, but keep logging for stronger confidence.'**
+  String get analyticsBodyNutritionConfidenceModerateHint;
 
   /// No description provided for @analyticsBodyNutritionConfidenceLowHint.
   ///
@@ -4883,7 +4895,7 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsCorrelationDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'This view shows trend correlation over time. It does not prove that calorie changes directly caused weight changes.'**
+  /// **'This view provides trend context. It does not prove that calorie changes directly caused weight changes.'**
   String get analyticsCorrelationDisclaimer;
 
   /// No description provided for @analyticsInsightStableWeightCaloriesUp.
@@ -4913,14 +4925,86 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsInsightMixedPattern.
   ///
   /// In en, this message translates to:
-  /// **'Weight and calorie trends move in mixed directions without a clear correlation pattern yet.'**
+  /// **'Weight and calorie trends are mixed without a clear relationship yet.'**
   String get analyticsInsightMixedPattern;
 
   /// No description provided for @analyticsInsightNotEnoughData.
   ///
   /// In en, this message translates to:
-  /// **'Not enough data yet for meaningful correlation insight.'**
+  /// **'Not enough consistent data yet for a meaningful trend read.'**
   String get analyticsInsightNotEnoughData;
+
+  /// No description provided for @analyticsModerateConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate-confidence pattern'**
+  String get analyticsModerateConfidenceLabel;
+
+  /// No description provided for @analyticsInsufficientConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient data confidence'**
+  String get analyticsInsufficientConfidenceLabel;
+
+  /// No description provided for @analyticsTrendRising.
+  ///
+  /// In en, this message translates to:
+  /// **'Rising'**
+  String get analyticsTrendRising;
+
+  /// No description provided for @analyticsTrendFalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Falling'**
+  String get analyticsTrendFalling;
+
+  /// No description provided for @analyticsTrendStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get analyticsTrendStable;
+
+  /// No description provided for @analyticsTrendUnclear.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclear'**
+  String get analyticsTrendUnclear;
+
+  /// No description provided for @analyticsRelationshipAlignedCut.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower intake and falling bodyweight are aligned.'**
+  String get analyticsRelationshipAlignedCut;
+
+  /// No description provided for @analyticsRelationshipAlignedBulk.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher intake and rising bodyweight are aligned.'**
+  String get analyticsRelationshipAlignedBulk;
+
+  /// No description provided for @analyticsRelationshipStableMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight and intake look broadly stable.'**
+  String get analyticsRelationshipStableMaintenance;
+
+  /// No description provided for @analyticsRelationshipMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Signals are mixed or delayed.'**
+  String get analyticsRelationshipMixed;
+
+  /// No description provided for @analyticsRelationshipInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough consistent overlap to classify the pattern yet.'**
+  String get analyticsRelationshipInsufficient;
+
+  /// No description provided for @analyticsBasedOnDataCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {weightDays} weigh-ins and {calorieDays} calorie days'**
+  String analyticsBasedOnDataCoverage(int weightDays, int calorieDays);
 
   /// No description provided for @restTimerNotificationTitle.
   ///

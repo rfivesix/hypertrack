@@ -2559,7 +2559,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsBodyNutritionTrendContextHint =>
-      'These lines show nearby trend movement over the same period for context.';
+      'These lines show relative trend movement over the same period.';
+
+  @override
+  String get analyticsBodyNutritionNormalizedHint =>
+      'Both lines are normalized to the same starting baseline to compare relative direction.';
 
   @override
   String get analyticsWeightTrendLabel => 'Body weight (smoothed)';
@@ -2573,6 +2577,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get analyticsBodyNutritionConfidenceHighHint =>
       'Data coverage in this range is strong enough for a more reliable pattern read.';
+
+  @override
+  String get analyticsBodyNutritionConfidenceModerateHint =>
+      'Data coverage is moderate. Trends are useful context, but keep logging for stronger confidence.';
 
   @override
   String get analyticsBodyNutritionConfidenceLowHint =>
@@ -2592,7 +2600,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsCorrelationDisclaimer =>
-      'This view shows trend correlation over time. It does not prove that calorie changes directly caused weight changes.';
+      'This view provides trend context. It does not prove that calorie changes directly caused weight changes.';
 
   @override
   String get analyticsInsightStableWeightCaloriesUp =>
@@ -2612,11 +2620,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsInsightMixedPattern =>
-      'Weight and calorie trends move in mixed directions without a clear correlation pattern yet.';
+      'Weight and calorie trends are mixed without a clear relationship yet.';
 
   @override
   String get analyticsInsightNotEnoughData =>
-      'Not enough data yet for meaningful correlation insight.';
+      'Not enough consistent data yet for a meaningful trend read.';
+
+  @override
+  String get analyticsModerateConfidenceLabel => 'Moderate-confidence pattern';
+
+  @override
+  String get analyticsInsufficientConfidenceLabel =>
+      'Insufficient data confidence';
+
+  @override
+  String get analyticsTrendRising => 'Rising';
+
+  @override
+  String get analyticsTrendFalling => 'Falling';
+
+  @override
+  String get analyticsTrendStable => 'Stable';
+
+  @override
+  String get analyticsTrendUnclear => 'Unclear';
+
+  @override
+  String get analyticsRelationshipAlignedCut =>
+      'Lower intake and falling bodyweight are aligned.';
+
+  @override
+  String get analyticsRelationshipAlignedBulk =>
+      'Higher intake and rising bodyweight are aligned.';
+
+  @override
+  String get analyticsRelationshipStableMaintenance =>
+      'Weight and intake look broadly stable.';
+
+  @override
+  String get analyticsRelationshipMixed => 'Signals are mixed or delayed.';
+
+  @override
+  String get analyticsRelationshipInsufficient =>
+      'Not enough consistent overlap to classify the pattern yet.';
+
+  @override
+  String analyticsBasedOnDataCoverage(int weightDays, int calorieDays) {
+    return 'Based on $weightDays weigh-ins and $calorieDays calorie days';
+  }
 
   @override
   String get restTimerNotificationTitle => 'Rest finished';

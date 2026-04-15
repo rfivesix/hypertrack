@@ -82,6 +82,49 @@ class StatisticsPresentationFormatter implements StatisticsFormatter {
     };
   }
 
+  static String bodyNutritionTrendDirectionLabel(
+    AppLocalizations l10n,
+    BodyNutritionTrendDirection direction,
+  ) {
+    return switch (direction) {
+      BodyNutritionTrendDirection.rising => l10n.analyticsTrendRising,
+      BodyNutritionTrendDirection.falling => l10n.analyticsTrendFalling,
+      BodyNutritionTrendDirection.stable => l10n.analyticsTrendStable,
+      BodyNutritionTrendDirection.unclear => l10n.analyticsTrendUnclear,
+    };
+  }
+
+  static String bodyNutritionRelationshipLabel(
+    AppLocalizations l10n,
+    BodyNutritionRelationshipType relationship,
+  ) {
+    return switch (relationship) {
+      BodyNutritionRelationshipType.alignedCutLike =>
+        l10n.analyticsRelationshipAlignedCut,
+      BodyNutritionRelationshipType.alignedBulkLike =>
+        l10n.analyticsRelationshipAlignedBulk,
+      BodyNutritionRelationshipType.stableMaintenanceLike =>
+        l10n.analyticsRelationshipStableMaintenance,
+      BodyNutritionRelationshipType.mixedOrUnclear =>
+        l10n.analyticsRelationshipMixed,
+      BodyNutritionRelationshipType.insufficientData =>
+        l10n.analyticsRelationshipInsufficient,
+    };
+  }
+
+  static String bodyNutritionConfidenceLabel(
+    AppLocalizations l10n,
+    BodyNutritionConfidence confidence,
+  ) {
+    return switch (confidence) {
+      BodyNutritionConfidence.high => l10n.analyticsHighConfidenceLabel,
+      BodyNutritionConfidence.moderate => l10n.analyticsModerateConfidenceLabel,
+      BodyNutritionConfidence.low => l10n.analyticsLowConfidenceLabel,
+      BodyNutritionConfidence.insufficient =>
+        l10n.analyticsInsufficientConfidenceLabel,
+    };
+  }
+
   static String muscleGuidanceLabel(
     AppLocalizations l10n,
     bool dataQualityOk,

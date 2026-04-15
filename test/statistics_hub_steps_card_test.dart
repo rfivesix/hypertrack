@@ -200,6 +200,31 @@ void main() {
         smoothedWeight: const [],
         caloriesDaily: const [],
         smoothedCalories: const [],
+        weightTrend: const BodyNutritionTrendSnapshot(
+          direction: BodyNutritionTrendDirection.unclear,
+          slopePerWeek: null,
+          netChange: null,
+          signalToNoise: 0,
+        ),
+        calorieTrend: const BodyNutritionTrendSnapshot(
+          direction: BodyNutritionTrendDirection.unclear,
+          slopePerWeek: null,
+          netChange: null,
+          signalToNoise: 0,
+        ),
+        relationship: BodyNutritionRelationshipType.insufficientData,
+        confidence: BodyNutritionConfidence.insufficient,
+        qualitySummary: const BodyNutritionDataQualitySummary(
+          spanDays: 30,
+          weightDays: 0,
+          calorieDays: 0,
+          overlapDays: 0,
+          weightCoverage: 0,
+          calorieCoverage: 0,
+          overlapCoverage: 0,
+          weightLargestGapDays: 30,
+          calorieLargestGapDays: 30,
+        ),
         insightType: BodyNutritionInsightType.notEnoughData,
         insightDataQuality: const StatisticsDataQualityAssessment(
           hasSufficientData: false,
@@ -355,5 +380,24 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byType(SleepDayOverviewPage), findsOneWidget);
+  });
+
+  testWidgets('statistics hub body section no longer shows measurements link', (
+    WidgetTester tester,
+  ) async {
+    await StepsSyncService().setTrackingEnabled(true);
+    await tester.pumpWidget(
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(stepsRepository: _FakeStepsRepository()),
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+
+    expect(find.text('Body measurements'), findsNothing);
   });
 }

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.9] - 2026-04-15
+
+### Changed
+- Reused the weekly sleep-window chart pattern in the Sleep regularity detail view for more consistent sleep-timing visualization and reduced duplicated chart logic.
+
 ## [0.8.8] - 2026-04-15
 
 ### Changed
