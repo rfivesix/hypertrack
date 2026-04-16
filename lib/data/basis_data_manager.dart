@@ -18,8 +18,8 @@ import '../services/off_catalog_country_service.dart';
 import '../services/off_catalog_refresh_service.dart';
 
 // Typ-Definition für den Callback
-typedef ProgressCallback = void Function(
-    String task, String detail, double progress);
+typedef ProgressCallback =
+    void Function(String task, String detail, double progress);
 
 /// Manager responsible for initializing and updating the application's base data.
 ///
@@ -56,18 +56,20 @@ class BasisDataManager {
       await prefs.remove(_keyVersionCats);
     }
 
-    final activeOffSource =
-        OffCatalogCountryService.activeSourceFromPrefs(prefs);
-    final activeOffCountry =
-        OffCatalogCountryCodec.parseOrDefault(activeOffSource.countryCode);
+    final activeOffSource = OffCatalogCountryService.activeSourceFromPrefs(
+      prefs,
+    );
+    final activeOffCountry = OffCatalogCountryCodec.parseOrDefault(
+      activeOffSource.countryCode,
+    );
     await _migrateLegacyOffVersionPreference(
       prefs: prefs,
       country: activeOffCountry,
     );
     final activeOffVersionKey =
         OffCatalogCountryService.installedVersionKeyForCountry(
-      activeOffCountry,
-    );
+          activeOffCountry,
+        );
 
     // Hilfsfunktion, um den Code lesbarer zu halten
     Future<void> process(
@@ -104,11 +106,11 @@ class BasisDataManager {
         "Suche nach Remote-Katalog-Updates...",
         0.0,
       );
-      final remoteCandidate =
-          await ExerciseCatalogRefreshService.instance.prepareUpdateCandidate(
-        installedVersion: installedTrainingVersion,
-        force: force,
-      );
+      final remoteCandidate = await ExerciseCatalogRefreshService.instance
+          .prepareUpdateCandidate(
+            installedVersion: installedTrainingVersion,
+            force: force,
+          );
       if (remoteCandidate != null) {
         remoteTrainingDbPath = remoteCandidate.localDbPath;
         onProgress?.call(
@@ -158,11 +160,11 @@ class BasisDataManager {
         'Suche nach Remote-OFF-Katalog-Updates...',
         0.0,
       );
-      final remoteOffCandidate =
-          await OffCatalogRefreshService.instance.prepareUpdateCandidate(
-        installedVersion: installedOffVersion,
-        force: force,
-      );
+      final remoteOffCandidate = await OffCatalogRefreshService.instance
+          .prepareUpdateCandidate(
+            installedVersion: installedOffVersion,
+            force: force,
+          );
       if (remoteOffCandidate != null) {
         remoteOffDbPath = remoteOffCandidate.localDbPath;
         onProgress?.call(
@@ -177,8 +179,8 @@ class BasisDataManager {
 
     final hasBundledOffAsset =
         await OffCatalogCountryService.bundledAssetAvailableForCountry(
-      activeOffCountry,
-    );
+          activeOffCountry,
+        );
 
     if (remoteOffDbPath == null && !hasBundledOffAsset) {
       onProgress?.call(
@@ -206,8 +208,9 @@ class BasisDataManager {
     final offVersionKeys = prefs
         .getKeys()
         .where(
-          (key) => key
-              .startsWith(OffCatalogCountryService.installedVersionKeyPrefix),
+          (key) => key.startsWith(
+            OffCatalogCountryService.installedVersionKeyPrefix,
+          ),
         )
         .toList(growable: false);
     for (final key in offVersionKeys) {
@@ -290,13 +293,19 @@ class BasisDataManager {
 
       var checkTable = tableName;
       if (tableName == 'exercises') {
-        final tables = await assetDb.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name='exercises'",
+        final tables = await assetDb.query(
+          'sqlite_master',
+          columns: ['name'],
+          where: "type = ? AND name = ?",
+          whereArgs: ['table', 'exercises'],
         );
         if (tables.isEmpty) checkTable = 'exercise';
       } else {
-        final tables = await assetDb.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'",
+        final tables = await assetDb.query(
+          'sqlite_master',
+          columns: ['name'],
+          where: "type = ? AND name = ?",
+          whereArgs: ['table', tableName],
         );
         if (tables.isEmpty) {
           return;
@@ -407,16 +416,20 @@ class BasisDataManager {
             .getSingleOrNull();
         return row != null;
       case _keyVersionFood:
-        final row = await mainDb.customSelect(
-          'SELECT 1 FROM products WHERE source = ? LIMIT 1',
-          variables: [drift.Variable.withString('base')],
-        ).getSingleOrNull();
+        final row = await mainDb
+            .customSelect(
+              'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+              variables: [drift.Variable.withString('base')],
+            )
+            .getSingleOrNull();
         return row != null;
       case OffCatalogCountryService.legacyInstalledVersionKey:
-        final row = await mainDb.customSelect(
-          'SELECT 1 FROM products WHERE source = ? LIMIT 1',
-          variables: [drift.Variable.withString('off')],
-        ).getSingleOrNull();
+        final row = await mainDb
+            .customSelect(
+              'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+              variables: [drift.Variable.withString('off')],
+            )
+            .getSingleOrNull();
         return row != null;
       case _keyVersionCats:
         final row = await mainDb
@@ -424,12 +437,15 @@ class BasisDataManager {
             .getSingleOrNull();
         return row != null;
       default:
-        if (prefKey
-            .startsWith(OffCatalogCountryService.installedVersionKeyPrefix)) {
-          final row = await mainDb.customSelect(
-            'SELECT 1 FROM products WHERE source = ? LIMIT 1',
-            variables: [drift.Variable.withString('off')],
-          ).getSingleOrNull();
+        if (prefKey.startsWith(
+          OffCatalogCountryService.installedVersionKeyPrefix,
+        )) {
+          final row = await mainDb
+              .customSelect(
+                'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+                variables: [drift.Variable.withString('off')],
+              )
+              .getSingleOrNull();
           return row != null;
         }
         return false;
@@ -452,8 +468,9 @@ class BasisDataManager {
     // 1. Gesamtanzahl ermitteln für Progress Bar
     int totalCount = 0;
     try {
-      final countResult = await assetDb.rawQuery(
-        'SELECT COUNT(*) as c FROM $tableName',
+      final countResult = await assetDb.query(
+        tableName,
+        columns: ['COUNT(*) as c'],
       );
       totalCount = sqflite.Sqflite.firstIntValue(countResult) ?? 0;
     } catch (_) {
@@ -549,9 +566,9 @@ class BasisDataManager {
     final mainDb = testingDatabase ?? await DatabaseHelper.instance.database;
     final protectedBarcodes = await _loadHistoricallyProtectedBarcodes(mainDb);
 
-    final offRows = await (mainDb.select(mainDb.products)
-          ..where((t) => t.source.equals('off')))
-        .get();
+    final offRows = await (mainDb.select(
+      mainDb.products,
+    )..where((t) => t.source.equals('off'))).get();
 
     final barcodesToRetain = <String>[];
     final barcodesToDelete = <String>[];
@@ -585,44 +602,37 @@ class BasisDataManager {
   ) async {
     final protected = <String>{};
 
-    final nutritionLegacyRows = await mainDb.customSelect(
-      '''
+    final nutritionLegacyRows = await mainDb.customSelect('''
       SELECT DISTINCT legacy_barcode AS barcode
       FROM nutrition_logs
       WHERE legacy_barcode IS NOT NULL AND TRIM(legacy_barcode) != ''
-      ''',
-    ).get();
+      ''').get();
     for (final row in nutritionLegacyRows) {
       final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
       if (barcode.isNotEmpty) protected.add(barcode);
     }
 
-    final favoritesRows = await mainDb.customSelect(
-      '''
+    final favoritesRows = await mainDb.customSelect('''
       SELECT DISTINCT barcode
       FROM favorites
       WHERE barcode IS NOT NULL AND TRIM(barcode) != ''
-      ''',
-    ).get();
+      ''').get();
     for (final row in favoritesRows) {
       final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
       if (barcode.isNotEmpty) protected.add(barcode);
     }
 
-    final mealBarcodeRows = await mainDb.customSelect(
-      '''
+    final mealBarcodeRows = await mainDb.customSelect('''
       SELECT DISTINCT product_barcode AS barcode
       FROM meal_items
       WHERE product_barcode IS NOT NULL AND TRIM(product_barcode) != ''
-      ''',
-    ).get();
+      ''').get();
     for (final row in mealBarcodeRows) {
       final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
       if (barcode.isNotEmpty) protected.add(barcode);
     }
 
-    final productRefRows = await mainDb.customSelect(
-      '''
+    final productRefRows = await mainDb.customSelect('''
       SELECT DISTINCT p.barcode AS barcode
       FROM products p
       WHERE p.barcode IS NOT NULL
@@ -637,8 +647,7 @@ class BasisDataManager {
             WHERE mi.product_id = p.id
           )
         )
-      ''',
-    ).get();
+      ''').get();
     for (final row in productRefRows) {
       final barcode = (row.data['barcode'] as String?)?.trim() ?? '';
       if (barcode.isNotEmpty) protected.add(barcode);
@@ -673,9 +682,9 @@ class BasisDataManager {
             ? barcodesToDelete.length
             : i + chunkSize,
       );
-      await (mainDb.delete(mainDb.products)
-            ..where((t) => t.source.equals('off') & t.barcode.isIn(chunk)))
-          .go();
+      await (mainDb.delete(
+        mainDb.products,
+      )..where((t) => t.source.equals('off') & t.barcode.isIn(chunk))).go();
     }
   }
 
