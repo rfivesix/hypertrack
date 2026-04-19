@@ -1,128 +1,155 @@
+
 # Hypertrack
+Hypertrack is an offline-first fitness app for **workouts, nutrition, analytics, sleep, steps, measurements, and supplements**.
 
-Hypertrack is an offline-first Flutter app for workout, nutrition, measurements, steps, sleep, supplements, and one-way health-platform export.
+It is designed primarily for **experienced lifters and gym-focused athletes** who want structured tracking, clear long-term progress analysis, and practical recommendations **without gamification**. Hypertrack focuses on **privacy-friendly local data handling**, **transparent analytics**, and features that are intended to be understandable, evidence-informed, and mathematically grounded where appropriate. It can be used as a simple logging app but its main goal is to go beyond logging without becoming noisy, gimmicky, or opaque.
 
-This README is intentionally implementation-focused and reflects the **current working copy** of the codebase. Planned work toward `1.0` is listed separately and is **not** described as implemented behavior.
-
-> **Note:** Hypertrack is built with heavy AI assistance across implementation, refactoring, and documentation. I’m very happy with the result, but as with any fast-moving AI-assisted codebase, I cannot guarantee that every detail is perfect.
 ## Install
 
-[![Get it on Obtainium](https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png)](http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/hypertrack/releases)
+<table align="center">
+  <tr>
+    <td align="center" valign="middle" width="420">
+      <a href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo7lpaRmW36htMaT8R6q4qOQlJ3A5-wvvdJg&s">
+        <img
+          src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+          alt="Download on the App Store"
+          width="100%"
+        />
+      </a>
+    </td>
+    <td width="28"></td>
+    <td align="center" valign="middle" width="420">
+      <a href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo7lpaRmW36htMaT8R6q4qOQlJ3A5-wvvdJg&s">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+          alt="Get it on Google Play"
+          width="100%"
+        />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center">
+      <sub><b>Official app stores</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3" height="18"></td>
+  </tr>
+  <tr>
+    <td align="center" valign="middle" width="420">
+      <a href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo7lpaRmW36htMaT8R6q4qOQlJ3A5-wvvdJg&s">
+        <img
+          src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+          alt="Get it on F-Droid"
+          width="100%"
+        />
+      </a>
+    </td>
+    <td width="28"></td>
+    <td align="center" valign="middle" width="420">
+      <a href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/hypertrack/releases">
+        <img
+          src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png"
+          alt="Get it on Obtainium"
+          width="100%"
+        />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center">
+      <sub><b>Alternative Android distribution</b></sub>
+    </td>
+  </tr>
+</table>
 
-- App Store and Play store release follows soon
+## Highlights
+
+- **Workout tracking** with structured sets, history, and session review
+- **Nutrition tracking** with calories, macros, and adaptive weekly intake guidance
+- **Statistics and analytics** for performance, consistency, muscle volume, recovery, and body/nutrition trends
+- **Sleep and steps integration** for broader recovery and activity context
+- **Supplement tracking**, including caffeine, creatine, and custom supplements
+- **Offline-first local data handling**
+- **One-way export** to Apple Health and Google Health Connect
+- **Optional AI meal features** with BYOK setup  
+  - AI is **disabled by default**
+  - no mandatory cloud account
+  - no provider-managed in-app billing flow
+
+## Core features
+
+### Workouts
+- Log full workout sessions
+- Track exercises set by set
+- Support warm-up, standard, failure, and dropset-style set logging
+- Track reps, weight, and RIR
+- Review workout history and post-workout summaries
+- View workout heart-rate summaries and workout-detail heart-rate charts where data is available
+
+### Nutrition
+- Log foods, meals, and nutrition entries
+- Track calories and core macros
+- Track additional nutrition values such as fiber, sugar, and salt/sodium where available
+- Use adaptive weekly nutrition recommendations based on the current Bayesian estimator
+- Use optional AI-assisted meal capture with your own API key
+- Export aggregate nutrition data to Apple Health and Google Health Connect
+
+### Statistics
+- Performance and PR-oriented views
+- Consistency tracking
+- Muscle-volume-related analysis
+- Recovery-focused insights
+- Bodyweight and calorie trend analysis
+- Sleep and steps context inside the statistics area
+
+### Sleep and steps
+- Import and aggregate step data
+- Import, process, and visualize sleep data
+- Sleep day, week, and month views
+- Sleep detail screens and scoring
+- Sleep and steps integration into the broader analytics experience
+
+### Measurements
+- Log bodyweight and body measurements
+- Track changes over time in charts
+- Export supported measurements to Apple Health and Google Health Connect
+
+### Supplements
+- Track caffeine and creatine
+- Track custom supplements
+- Review supplement intake over time
+
+## Health integrations
+
+Hypertrack supports **one-way export** to:
+
+- **Apple Health**
+- **Google Health Connect**
+
+This includes supported app-recorded data such as:
+- measurements
+- aggregate nutrition
+- hydration
+- workout sessions
+
+Hypertrack remains the source of truth for its own tracking and analytics.
+
+## Privacy and local-first philosophy
+
+- Hypertrack is **offline-first**
+- app data is handled locally by default
+- AI meal features are **optional** and **disabled by default**
+- AI usage is **BYOK only** (bring your own API key)
+- no mandatory cloud account is required to use the app
 
 ## Documentation
 
 - [Project Overview](documentation/overview.md)
-- [Adaptive Nutrition Recommendation (Current Bayesian Architecture)](documentation/adaptive_nutrition_recommendation_current_state.md)
-- [Statistics Module (Current Implementation)](documentation/statistics_module.md)
-- [Sleep Module (Current Source of Truth)](documentation/sleep/sleep_current_state.md)
-- [Sleep Health Score V2 (Current Canonical)](documentation/sleep/sleep_health_score_v2.md)
+- [Adaptive Nutrition Recommendation](documentation/adaptive_nutrition_recommendation_current_state.md)
+- [Statistics Module](documentation/statistics_module.md)
 - [System Architecture](documentation/architecture.md)
-- [Data Models & Storage](documentation/data_models_and_storage.md)
-- [UI & Widgets](documentation/ui_and_widgets.md)
-- [Health Steps Module (Current Implementation)](documentation/health_steps_alpha.md)
-- [One-way Health Export (Current Implementation)](documentation/health_export_one_way.md)
-- [Wger Catalog Refresh & Distribution](documentation/wger_catalog_refresh_system.md)
-- [OFF Catalog Refresh & Distribution](documentation/off_catalog_refresh_system.md)
-- [Shared Analytics Definitions (Legacy Reference)](documentation/analytics_definitions.md)
-
-## What Hypertrack currently supports
-
-### Workout tracking
-- Logging full workout sessions
-- Exercise-by-exercise set tracking
-- Support for set types such as warm-up, normal, failure, and dropset
-- Tracking of reps, weight, and RIR
-- Workout history and session review
-- Session-level export to Apple Health and Google Health Connect
-
-### Nutrition tracking
-- Logging foods and nutrition entries
-- Tracking calories and core macros
-- Tracking additional nutrition fields such as fiber, sugar, and salt/sodium where available
-- Adaptive weekly nutrition recommendation (Bayesian recursive estimator) with explicit manual apply
-- Optional AI-assisted meal tracking
-  - BYOK (bring your own API key) only
-  - user-controlled provider + model setup
-  - providers: OpenAI, Gemini, Anthropic/Claude, Mistral, xAI/Grok
-  - test status in current working copy: OpenAI + Gemini tested; Anthropic, Mistral, and xAI not yet end-to-end verified in this environment
-  - provider-native login/billing is intentionally not implemented
-- Aggregate nutrition export to Apple Health and Google Health Connect
-
-### Measurements
-- Logging body measurements and body-weight-related entries
-- Tracking values over time in charts
-- Export of supported measurements to Apple Health and Google Health Connect
-
-### Supplements
-- Tracking caffeine and creatine
-- Support for user-defined custom supplements
-- Supplement logging over time
-
-### Steps and sleep
-- Step data import and aggregation
-- Sleep data import, processing, scoring, and visualization
-- Sleep day/week/month views and detail screens
-- Sleep statistics integration
-
-### Statistics and analysis
-- Workout and body analytics
-- Performance and consistency views
-- Muscle-volume-related analysis
-- Body/nutrition analysis
-- Sleep and steps integration in the statistics area
-
-### Sync, export, and safety
-- One-way health-platform sync/export to Apple Health and Google Health Connect
-- Export of app-recorded measurements, aggregate nutrition, hydration, and session-level workouts
-- CSV export
-- Automatic backups
-- Optional local feedback/diagnostic report flow with preview-first copy/save/share/email actions
-- Offline-first local data handling
-
-## Current product boundaries
-
-### Implemented
-- Workout tracking
-- Nutrition tracking
-- Measurement tracking
-- Supplement tracking
-- Steps import and aggregation
-- Sleep import, processing, and scoring
-- One-way export to Apple Health / Google Health Connect
-- Automatic backups
-- CSV export
-- Export/sync of supported app-recorded health data
-- Optional AI-assisted meal tracking with user-provided API key
-
-### Explicit non-goals of the current health-platform integration
-- No back-sync/import from Apple Health or Google Health Connect into Hypertrack
-- No bidirectional merge/conflict handling
-- No ingredient-level meal export
-- No detailed workout-structure export (sets/exercises/RIR/supersets as structured health-platform data)
-
-## Statistics / Sleep integration (implemented)
-
-- Statistics hub includes:
-  - steps
-  - sleep
-  - recovery
-  - consistency
-  - performance
-  - muscle volume
-  - body/nutrition analytics
-
-## Current defaults
-
-- Sleep tracking defaults to disabled in settings (`sleep_tracking_enabled` default `false`)
-- Steps tracking defaults to enabled (`steps_tracking_enabled` default `true`)
-
-## Near-term work toward 1.0 (planned, not yet guaranteed in current working copy)
-
-- Onboarding and tutorial polish
-- App Store release
-- Google Play release
 
 ## Credits
 
