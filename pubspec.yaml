@@ -19,7 +19,7 @@ dependencies:
   path: ^1.8.3
 
   cupertino_icons: ^1.0.8
-  flutter_gen: ^5.11.0
+  flutter_gen: ^5.14.0
   shared_preferences: ^2.2.3
   dynamic_color: ^1.7.0
   url_launcher: ^6.2.6
