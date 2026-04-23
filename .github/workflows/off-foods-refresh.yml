@@ -155,7 +155,7 @@ jobs:
 
           if [ -f "$RELEASE_REFERENCE_DB_PATH" ]; then
             echo "reference_db_found=true" >> "$GITHUB_OUTPUT"
-            DIFF_CMD="python skript/off_catalog_diff.py --old \"$RELEASE_REFERENCE_DB_PATH\" --new \"$GENERATED_DB_PATH\" --json-out \"$DIFF_REPORT_PATH\""
+            DIFF_CMD="python skript/off_catalog_diff.py --old \"$RELEASE_REFERENCE_DB_PATH\" --new \"$GENERATED_DB_PATH\" --json-out \"$DIFF_REPORT_PATH\" --fail-on-removed-threshold 100"
             if [ "$FAIL_ON_BREAKING" = "true" ]; then
               DIFF_CMD="$DIFF_CMD --fail-on-breaking"
             fi

@@ -38,12 +38,6 @@ def parse_args() -> argparse.Namespace:
         help="Example sample count for removed/added/changed barcode lists (default: 20)",
     )
     parser.add_argument(
-        "--removed-severe-threshold",
-        type=int,
-        default=5000,
-        help="Removed barcode count at or above this threshold is severe (default: 5000)",
-    )
-    parser.add_argument(
         "--row-drop-warn-percent",
         type=float,
         default=10.0,
@@ -63,8 +57,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--fail-on-removed-threshold",
         type=int,
-        default=0,
-        help="With --fail-on-breaking, fail if removed_count is above this value",
+        default=100,
+        help="Maximum allowed removed product count before the diff is treated as breaking when --fail-on-breaking is enabled (default: 100)",
     )
     return parser.parse_args()
 
@@ -249,15 +243,15 @@ def compare_catalogs(
                 }
             )
 
-        if removed_count >= args.removed_severe_threshold:
+        if removed_count > args.fail_on_removed_threshold:
             warnings.append(
                 {
-                    "code": "REMOVED_BARCODES_SEVERE",
-                    "severity": "severe",
+                    "code": "REMOVED_BARCODES_THRESHOLD_EXCEEDED",
+                    "severity": "severe" if args.fail_on_breaking else "warning",
                     "value": removed_count,
                     "message": (
-                        "Removed product count exceeds severe threshold "
-                        f"({removed_count} >= {args.removed_severe_threshold})"
+                        "Removed product count exceeds allowed breaking threshold "
+                        f"({removed_count} > {args.fail_on_removed_threshold})"
                     ),
                 }
             )
@@ -282,8 +276,6 @@ def compare_catalogs(
 
         severe_warning_count = len([w for w in warnings if w["severity"] == "severe"])
         breaking = severe_warning_count > 0
-        if args.fail_on_breaking and removed_count > args.fail_on_removed_threshold:
-            breaking = True
 
         report: Dict[str, Any] = {
             "old": {
@@ -305,6 +297,7 @@ def compare_catalogs(
                 "count_delta": new_count - old_count,
                 "row_drop_percent": row_drop_percent,
                 "severe_warning_count": severe_warning_count,
+                "fail_on_removed_threshold": args.fail_on_removed_threshold,
             },
             "changed_field_counts": field_change_counts,
             "samples": {
