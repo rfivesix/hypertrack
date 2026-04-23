@@ -9,10 +9,12 @@ class WorkoutHeartRateService {
   const WorkoutHeartRateService({
     HealthHeartRateDataSource? dataSource,
     this.maxChartPoints = 240,
+    this.fallbackQueryPadding = const Duration(hours: 24),
   }) : _dataSource = dataSource ?? const HealthPlatformHeartRate();
 
   final HealthHeartRateDataSource _dataSource;
   final int maxChartPoints;
+  final Duration fallbackQueryPadding;
 
   Future<WorkoutHeartRateSummary> loadForWorkoutWindow({
     required DateTime startTime,
@@ -39,9 +41,9 @@ class WorkoutHeartRateService {
 
     List<HealthHeartRateSampleDto> raw;
     try {
-      raw = await _dataSource.readHeartRateSamples(
-        fromUtc: startUtc,
-        toUtc: endUtc,
+      raw = await _readSamplesWithVendorSafeFallback(
+        startUtc: startUtc,
+        endUtc: endUtc,
       );
     } on MissingPluginException {
       return _emptySummary(
@@ -116,6 +118,28 @@ class WorkoutHeartRateService {
       minBpm: minBpm,
       quality: quality,
       noDataReason: WorkoutHeartRateNoDataReason.none,
+    );
+  }
+
+  Future<List<HealthHeartRateSampleDto>> _readSamplesWithVendorSafeFallback({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final direct = await _dataSource.readHeartRateSamples(
+      fromUtc: startUtc,
+      toUtc: endUtc,
+    );
+    if (direct.isNotEmpty || fallbackQueryPadding <= Duration.zero) {
+      return direct;
+    }
+
+    // Some Health Connect providers emit long-interval HR series records where
+    // the record boundary can sit outside the workout window although sample
+    // timestamps are inside. Retry with a wider read window, then keep strict
+    // workout-window filtering in _sanitizeAndSort.
+    return _dataSource.readHeartRateSamples(
+      fromUtc: startUtc.subtract(fallbackQueryPadding),
+      toUtc: endUtc.add(fallbackQueryPadding),
     );
   }
 

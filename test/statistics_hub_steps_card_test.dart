@@ -13,8 +13,10 @@ import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_pa
 import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
 import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
 import 'package:hypertrack/features/sleep/data/sleep_hub_summary_repository.dart';
+import 'package:hypertrack/screens/measurements_screen.dart';
 import 'package:hypertrack/screens/statistics_hub_screen.dart';
 import 'package:hypertrack/services/health/steps_sync_service.dart';
+import 'package:hypertrack/services/theme_service.dart';
 import 'package:hypertrack/services/workout_session_manager.dart';
 import 'package:hypertrack/widgets/analytics_section_header.dart';
 import 'package:provider/provider.dart';
@@ -235,8 +237,13 @@ void main() {
   }
 
   Widget wrapWithSessionManager(Widget child) {
-    return ChangeNotifierProvider<WorkoutSessionManager>.value(
-      value: WorkoutSessionManager(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<WorkoutSessionManager>.value(
+          value: WorkoutSessionManager(),
+        ),
+        ChangeNotifierProvider<ThemeService>(create: (_) => ThemeService()),
+      ],
       child: child,
     );
   }
@@ -382,9 +389,12 @@ void main() {
     expect(find.byType(SleepDayOverviewPage), findsOneWidget);
   });
 
-  testWidgets('statistics hub body section no longer shows measurements link', (
+  testWidgets('statistics hub body section shows measurements link', (
     WidgetTester tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 5000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await StepsSyncService().setTrackingEnabled(true);
     await tester.pumpWidget(
       wrapWithSessionManager(
@@ -398,6 +408,40 @@ void main() {
     );
     await pumpLoaded(tester);
 
-    expect(find.text('Body measurements'), findsNothing);
+    final measurementsLink = find.byKey(
+      const Key('statistics_measurements_link_card'),
+    );
+    expect(measurementsLink, findsOneWidget);
+    expect(find.text('Body measurements'), findsWidgets);
+  });
+
+  testWidgets('statistics hub measurements link opens measurements screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 5000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await StepsSyncService().setTrackingEnabled(true);
+    await tester.pumpWidget(
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(stepsRepository: _FakeStepsRepository()),
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+
+    final measurementsLink = find.byKey(
+      const Key('statistics_measurements_link_card'),
+    );
+    expect(measurementsLink, findsOneWidget);
+    await tester.tap(measurementsLink);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.byType(MeasurementsScreen), findsOneWidget);
   });
 }

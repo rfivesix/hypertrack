@@ -459,6 +459,7 @@
   "data_from_off_and_wger":"Data from Open Food Facts and wger.",
   "app_version":"App version",
   "all_measurements":"ALL MEASUREMENTS",
+  "all_measurements_no_cap":"All measurements",
   "date_and_time_of_measurement":"Date & time of measurement",
   "onbWelcomeTitle": "Welcome to Hypertrack",
   "@onbWelcomeTitle": { "description": "Onboarding slide 1 title" },
