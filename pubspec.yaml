@@ -1,7 +1,8 @@
 name: hypertrack
-description: "A modern, privacy-first fitness and nutrition tracking app. Offline-first, no cloud dependency, built with Flutter."
+description: "A modern, privacy-first fitness and nutrition tracking app.
+  Offline-first, no cloud dependency, built with Flutter."
 publish_to: "none"
-version: 0.8.10+80018
+version: 0.8.11+80019
 environment:
   sdk: ">=3.0.0 <4.0.0" # Angepasst für moderne SDKs
 

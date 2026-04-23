@@ -5,7 +5,7 @@ import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_
 import 'package:hypertrack/features/sleep/platform/permissions/sleep_permissions_service.dart';
 import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
 import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/screens/settings_screen.dart';
+import 'package:hypertrack/screens/sleep_settings_screen.dart';
 import 'package:hypertrack/services/theme_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -94,15 +94,16 @@ void main() {
         const SleepPermissionOutcome.state(SleepPermissionState.partial),
       ),
     );
-    final service = _FakeSleepSettingsService(controller: controller);
-    service.importResult = const SleepSyncResult(
-      success: true,
-      permissionState: SleepPermissionState.ready,
-      importedSessions: 1,
-    );
+    final service = _FakeSleepSettingsService(controller: controller)
+      ..importResult = const SleepSyncResult(
+        success: true,
+        permissionState: SleepPermissionState.ready,
+        importedSessions: 1,
+      );
+
     await tester.pumpWidget(
       _wrap(
-        SettingsScreen(
+        SleepSettingsScreen(
           sleepSyncService: service,
           sleepPermissionController: controller,
         ),
@@ -110,11 +111,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.text('SLEEP'),
-      500,
-      scrollable: find.byType(Scrollable),
-    );
     expect(find.text('SLEEP'), findsOneWidget);
     expect(find.text('Enable sleep tracking'), findsOneWidget);
     expect(find.text('Health connection status'), findsOneWidget);
@@ -133,10 +129,16 @@ void main() {
         const SleepPermissionOutcome.ready(),
       ),
     );
-    final service = _FakeSleepSettingsService(controller: controller);
+    final service = _FakeSleepSettingsService(controller: controller)
+      ..importResult = const SleepSyncResult(
+        success: true,
+        permissionState: SleepPermissionState.ready,
+        importedSessions: 1,
+      );
+
     await tester.pumpWidget(
       _wrap(
-        SettingsScreen(
+        SleepSettingsScreen(
           sleepSyncService: service,
           sleepPermissionController: controller,
         ),
@@ -147,10 +149,11 @@ void main() {
     final requestAccessTile = find.widgetWithText(ListTile, 'Request access');
     await tester.scrollUntilVisible(
       requestAccessTile,
-      500,
+      300,
+      scrollable: find.byType(Scrollable),
     );
+
     expect(find.text('Denied'), findsOneWidget);
-    await tester.ensureVisible(requestAccessTile);
     await tester.tap(requestAccessTile);
     await tester.pumpAndSettle();
     expect(find.text('Ready'), findsOneWidget);
@@ -168,15 +171,16 @@ void main() {
         const SleepPermissionOutcome.ready(),
       ),
     );
-    final service = _FakeSleepSettingsService(controller: controller);
-    service.importResult = const SleepSyncResult(
-      success: true,
-      permissionState: SleepPermissionState.ready,
-      importedSessions: 1,
-    );
+    final service = _FakeSleepSettingsService(controller: controller)
+      ..importResult = const SleepSyncResult(
+        success: true,
+        permissionState: SleepPermissionState.ready,
+        importedSessions: 1,
+      );
+
     await tester.pumpWidget(
       _wrap(
-        SettingsScreen(
+        SleepSettingsScreen(
           sleepSyncService: service,
           sleepPermissionController: controller,
         ),
@@ -187,13 +191,10 @@ void main() {
     final importTile = find.widgetWithText(ListTile, 'Import sleep data now');
     await tester.scrollUntilVisible(
       importTile,
-      500,
+      300,
+      scrollable: find.byType(Scrollable),
     );
-    await tester.ensureVisible(importTile);
-    // Keep the tile away from the exact viewport edge to avoid flaky hit tests
-    // when settings sections above grow.
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -120));
-    await tester.pumpAndSettle();
+
     await tester.tap(importTile);
     await tester.pumpAndSettle();
     expect(service.importCalls, 1);
@@ -206,10 +207,16 @@ void main() {
         const SleepPermissionOutcome.state(SleepPermissionState.notInstalled),
       ),
     );
-    final service = _FakeSleepSettingsService(controller: controller);
+    final service = _FakeSleepSettingsService(controller: controller)
+      ..importResult = const SleepSyncResult(
+        success: true,
+        permissionState: SleepPermissionState.ready,
+        importedSessions: 1,
+      );
+
     await tester.pumpWidget(
       _wrap(
-        SettingsScreen(
+        SleepSettingsScreen(
           sleepSyncService: service,
           sleepPermissionController: controller,
         ),
@@ -217,11 +224,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.text('Health connection status'),
-      500,
-      scrollable: find.byType(Scrollable),
-    );
     expect(find.text('Health Connect not installed'), findsOneWidget);
   });
 }

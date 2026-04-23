@@ -1110,6 +1110,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get all_measurements => 'ALLE MESSWERTE';
 
   @override
+  String get all_measurements_no_cap => 'Alle Messwerte';
+
+  @override
   String get date_and_time_of_measurement => 'Datum & Uhrzeit der Messung';
 
   @override

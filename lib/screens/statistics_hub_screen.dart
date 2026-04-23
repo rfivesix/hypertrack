@@ -26,6 +26,7 @@ import 'analytics/consistency_tracker_screen.dart';
 import 'analytics/muscle_group_analytics_screen.dart';
 import 'analytics/pr_dashboard_screen.dart';
 import 'analytics/recovery_tracker_screen.dart';
+import 'measurements_screen.dart';
 import '../widgets/statistics_steps_card.dart';
 import '../data/database_helper.dart';
 import '../services/health/steps_sync_service.dart';
@@ -296,6 +297,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.statisticsSectionBody),
                 _buildBodyMetricsSection(),
+                const SizedBox(height: 8),
+                _buildMeasurementsShortcutCard(),
                 const BottomContentSpacer(),
               ]),
             ),
@@ -1103,6 +1106,50 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     color: Theme.of(context).colorScheme.outline,
                   ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMeasurementsShortcutCard() {
+    return SummaryCard(
+      key: const Key('statistics_measurements_link_card'),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const MeasurementsScreen()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.straighten_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.body_measurements,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.all_measurements_no_cap,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right),
           ],
         ),
       ),

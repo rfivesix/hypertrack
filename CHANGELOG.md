@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.8.11] - 2026-04-23
+
+### Fixed
+- Improved workout heart-rate retrieval reliability for vendor-originated Health Connect data by adding a safe fallback query window when the strict workout window returns no records.
+- Restored the missing Measurements shortcut on the Statistics hub so body measurements are reachable again from the Body section.
+
+### Changed
+- Continued the Settings IA cleanup with a conservative extraction pass:
+  - moved Appearance settings into a dedicated sub-screen
+  - moved Steps settings into a dedicated sub-screen
+  - moved Sleep settings into a dedicated sub-screen
+  - kept Health export in its dedicated sub-screen for consistent structure
+- Reorganized top-level Settings into broader sections for better scanability:
+  - App
+  - Health & Tracking
+  - Nutrition & Data
+  - Support / About
+- Moved “Restart app tour” to the bottom of the App section.
+- Refined a few Settings entry icons for better visual consistency.
+
+### Notes
+- This release focuses on low-risk UX structure improvements and targeted compatibility fixes without changing settings persistence semantics.
+
 ## [0.8.10] - 2026-04-15
 
 ### Fixed

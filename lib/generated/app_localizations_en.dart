@@ -1106,6 +1106,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get all_measurements => 'ALL MEASUREMENTS';
 
   @override
+  String get all_measurements_no_cap => 'All measurements';
+
+  @override
   String get date_and_time_of_measurement => 'Date & time of measurement';
 
   @override

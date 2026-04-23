@@ -2126,6 +2126,12 @@ abstract class AppLocalizations {
   /// **'ALL MEASUREMENTS'**
   String get all_measurements;
 
+  /// No description provided for @all_measurements_no_cap.
+  ///
+  /// In en, this message translates to:
+  /// **'All measurements'**
+  String get all_measurements_no_cap;
+
   /// No description provided for @date_and_time_of_measurement.
   ///
   /// In en, this message translates to:
