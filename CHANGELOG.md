@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-alpha.1] - 2026-04-25
+
+### Internal
+- Modernized the Android app module Java/Kotlin compile target from 8 to 17 to match the current Gradle/AGP/JDK toolchain and reduce app-owned build warnings.
+- Replaced the foreground rest-timer sound cue with Flutter's built-in system alert sound and removed the `flutter_ringtone_player` dependency to eliminate its Android Java 8/deprecated API build warnings.
+
+### Notes
+- The former `flutter_ringtone_player` warning source was reviewed: version 4.0.0+4 still declares Java 8 compatibility and uses the deprecated Android `Ringtone.setStreamType(...)` API. The app only used it for the foreground rest-timer notification sound, so replacing that single call was lower-risk than keeping or suppressing the plugin warning.
+
 ## [0.8.11] - 2026-04-23
 
 ### Fixed

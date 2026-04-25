@@ -2,7 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:flutter/services.dart';
 import '../models/exercise.dart';
 import 'package:vibration/vibration.dart';
 import '../models/routine_exercise.dart';
@@ -688,7 +688,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         if (_remainingRestSeconds == 0) {
           if (_isAppInForeground) {
             LocalNotificationService.instance.cancelRestTimerNotification();
-            FlutterRingtonePlayer().playNotification();
+            unawaited(SystemSound.play(SystemSoundType.alert));
             Vibration.vibrate(duration: 500);
           } else {
             LocalNotificationService.instance.showRestTimerDoneNotification();
