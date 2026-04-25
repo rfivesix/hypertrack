@@ -1,10 +1,18 @@
 {
-  "fill" : "automatic",
+  "fill" : "system-dark",
   "groups" : [
     {
       "layers" : [
         {
-          "blend-mode" : "normal",
+          "blend-mode-specializations" : [
+            {
+              "value" : "lighten"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "darken"
+            }
+          ],
           "fill" : {
             "solid" : "srgb:0.86667,1.00000,0.00000,1.00000"
           },
