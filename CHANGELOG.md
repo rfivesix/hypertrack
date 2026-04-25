@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-alpha.2] - 2026-04-25
+
+### Fixed
+- Fixed Pulse day-scope handling so the current day is now included as a partial-day window (`start of day -> now`) instead of behaving like a fully completed 24-hour period.
+- Added a small guard against zero-length Pulse day windows around local midnight rollover.
+- Improved sleep heart-rate fallback behavior on Android / Health Connect setups by deriving sleep HR from the general heart-rate stream when strict sleep-session-linked heart-rate samples are unavailable.
+- Improved robustness for vendor/device combinations such as Xiaomi Band setups where valid heart-rate samples may exist but are not reliably linked to sleep-session records.
+
+### Changed
+- Sleep heart-rate fallback now intersects general heart-rate samples with imported sleep-session time windows and remaps matched samples to the corresponding sleep session before use.
+- The fallback path is still conservative: strict session-linked sleep HR remains preferred, and derived-by-window HR is only used when that stricter result is empty.
+
+### Internal
+- Added focused regression tests for:
+  - Pulse current-day partial-window behavior
+  - Health Connect sleep-HR derivation from general HR samples filtered by sleep windows
+
+### Notes
+- This release is a targeted reliability follow-up to `0.9.0-alpha.1`.
+- Real-device validation remains especially important for Xiaomi Band / Health Connect combinations and for edge cases such as overlapping or adjacent sleep sessions.
+
 ## [0.9.0-alpha.1] - 2026-04-25
 
 ### Added
