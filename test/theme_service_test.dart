@@ -20,6 +20,7 @@ void main() {
       expect(service.themeMode, ThemeMode.system);
       expect(service.visualStyle, 0);
       expect(service.isAiEnabled, false);
+      expect(service.isAiRecommendationContextEnabled, false);
       expect(service.materialColorsEnabled, false);
     });
 
@@ -28,6 +29,7 @@ void main() {
         'theme_mode': ThemeMode.dark.index,
         'visual_style': 1,
         'ai_enabled': true,
+        'ai_recommendation_context_enabled': true,
         'material_colors_enabled': true,
       });
 
@@ -37,6 +39,7 @@ void main() {
       expect(service.themeMode, ThemeMode.dark);
       expect(service.visualStyle, 1);
       expect(service.isAiEnabled, true);
+      expect(service.isAiRecommendationContextEnabled, true);
       expect(service.materialColorsEnabled, true);
     });
 
@@ -49,16 +52,19 @@ void main() {
       await service.setThemeMode(ThemeMode.light);
       await service.setVisualStyle(1);
       await service.setAiEnabled(true);
+      await service.setAiRecommendationContextEnabled(true);
       await service.setMaterialColorsEnabled(true);
 
       final prefs = await SharedPreferences.getInstance();
       expect(service.themeMode, ThemeMode.light);
       expect(service.visualStyle, 1);
       expect(service.isAiEnabled, true);
+      expect(service.isAiRecommendationContextEnabled, true);
       expect(service.materialColorsEnabled, true);
       expect(prefs.getInt('theme_mode'), ThemeMode.light.index);
       expect(prefs.getInt('visual_style'), 1);
       expect(prefs.getBool('ai_enabled'), true);
+      expect(prefs.getBool('ai_recommendation_context_enabled'), true);
       expect(prefs.getBool('material_colors_enabled'), true);
     });
 
@@ -67,6 +73,7 @@ void main() {
         'theme_mode': ThemeMode.dark.index,
         'visual_style': 1,
         'ai_enabled': true,
+        'ai_recommendation_context_enabled': true,
         'material_colors_enabled': true,
       });
 
@@ -80,6 +87,7 @@ void main() {
       await service.setThemeMode(ThemeMode.dark);
       await service.setVisualStyle(1);
       await service.setAiEnabled(true);
+      await service.setAiRecommendationContextEnabled(true);
       await service.setMaterialColorsEnabled(true);
 
       expect(notifications, 0);

@@ -260,6 +260,25 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                         ),
                         if (aiEnabled) ...[
                           const SizedBox(height: 8),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            secondary: Icon(
+                              Icons.history_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                            title: Text(
+                              l10n.aiRecommendationContextTitle,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle:
+                                Text(l10n.aiRecommendationContextSubtitle),
+                            value:
+                                themeService.isAiRecommendationContextEnabled,
+                            onChanged: (value) => themeService
+                                .setAiRecommendationContextEnabled(value),
+                          ),
+                          const SizedBox(height: 8),
                           DropdownButtonFormField<AiProvider>(
                             initialValue: _selectedProvider,
                             decoration: InputDecoration(

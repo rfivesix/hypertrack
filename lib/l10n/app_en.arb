@@ -789,7 +789,7 @@
   "aiTestSuccess": "Connection successful!",
   "aiKeySaved": "API key saved securely.",
   "aiPrivacySection": "Privacy",
-  "aiPrivacyDisclosure": "Your images and text are sent to the selected AI provider only when you tap Analyze. Data is never stored on external servers beyond processing your request. Your API key is stored encrypted on this device only.",
+  "aiPrivacyDisclosure": "Images, text, and generated recommendation prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider's terms. Your API key is stored encrypted on this device only.",
   "aiMealCapture": "AI Meal",
   "aiCaptureTitle": "AI Meal Capture",
   "aiCaptureTabPhoto": "Photo",
@@ -822,6 +822,8 @@
 
   "aiEnableTitle": "Enable AI Features",
   "aiEnableSubtitle": "Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.",
+  "aiRecommendationContextTitle": "Send recent meals for recommendations",
+  "aiRecommendationContextSubtitle": "Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.",
 
   "aiRecommendationTitle": "AI Meal Coach",
   "aiRecommendDietary": "Dietary",
@@ -836,6 +838,146 @@
   "aiRecommendGenerating": "Thinking…",
   "aiRecommendSaveToDiary": "Save to Diary",
   "aiRecommendNoMatch": "No database match",
+  "aiValidationNoMatchedItemsSaveYet": "No matched items can be saved yet.",
+  "aiValidationNoMatchedIngredientsSaveYet": "No matched ingredients can be saved yet.",
+  "aiValidationSomeItemsNeedReviewTitle": "Some items need review",
+  "aiValidationSomeIngredientsNeedReviewTitle": "Some ingredients need review",
+  "aiValidationSaveMatchedItemsButton": "Save matched items",
+  "aiValidationSaveMatchedIngredientsButton": "Save matched ingredients",
+  "aiValidationValidationPassedTitle": "Validation passed",
+  "aiValidationReviewSuggestedTitle": "Review suggested",
+  "aiValidationMacroFitValidatedTitle": "Macro fit validated",
+  "aiValidationNeedsReviewTitle": "Needs review",
+  "aiValidationRepairLimitReachedReview": "Automatic repair limit reached. Please review before saving.",
+  "aiValidationRepairLimitReachedRecommendation": "Automatic repair limit reached. Review matches and portions before saving.",
+  "aiValidationRecentMealContextIncluded": "Recent meal context was included.",
+  "aiValidationGeneratedWithoutRecentMealHistory": "Generated without recent meal history.",
+  "aiValidationApiKeyRequiredTitle": "API Key Required",
+  "aiValidationScoreLabel": "Score {score}/100",
+  "@aiValidationScoreLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationDeltaSummary": "Delta: {kcalDelta} kcal · {proteinDelta}g Protein · {carbsDelta}g Carbs · {fatDelta}g Fat",
+  "@aiValidationDeltaSummary": {
+    "placeholders": {
+      "kcalDelta": {
+        "type": "int"
+      },
+      "proteinDelta": {
+        "type": "int"
+      },
+      "carbsDelta": {
+        "type": "int"
+      },
+      "fatDelta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveItemsMessage": "{unmatchedCount, plural, =1{1 item does not have a local database match and will not be saved.} other{{unmatchedCount} items do not have a local database match and will not be saved.}} Save the {matchedCount} matched item(s) only?",
+  "@aiValidationPartialSaveItemsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveIngredientsMessage": "{unmatchedCount, plural, =1{1 ingredient does not have a local database match and will not be saved.} other{{unmatchedCount} ingredients do not have a local database match and will not be saved.}} Save the {matchedCount} matched ingredient(s) only?",
+  "@aiValidationPartialSaveIngredientsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationEmptyItemName": "An item has no food name.",
+  "aiValidationDuplicateItemMerged": "Duplicate \"{name}\" entries were merged before validation.",
+  "@aiValidationDuplicateItemMerged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiValidationInvalidQuantity": "Quantity must be greater than 0g.",
+  "aiValidationTinyQuantity": "Quantity is very small; review the gram amount.",
+  "aiValidationExtremeQuantity": "Quantity is implausibly high for one meal item.",
+  "aiValidationLargeQuantity": "Quantity is unusually large; review the gram amount.",
+  "aiValidationLowAiConfidence": "AI confidence is low for this item.",
+  "aiValidationUnmatchedItem": "No local database match was found.",
+  "aiValidationWeakDbMatch": "The local database match is weak.",
+  "aiValidationPartialDbMatch": "The local database match is partial.",
+  "aiValidationAmbiguousDbMatch": "Several local database matches look similarly plausible.",
+  "aiValidationStateMismatch": "The AI item state may not match the database entry.",
+  "aiValidationZeroNutritionMatch": "The matched database entry has no usable nutrition data.",
+  "aiValidationImplausibleFoodDensity": "Matched food has unusually high kcal per 100g.",
+  "aiValidationMacroEnergyMismatch": "Matched food macros do not align well with kcal.",
+  "aiValidationImplausibleItemNutrition": "Nutrition for this quantity is unusually high.",
+  "aiValidationEmptyMeal": "The AI returned no meal items.",
+  "aiValidationAllItemsUnmatched": "No item could be matched to the local food database.",
+  "aiValidationPartialUnmatchedItems": "{count, plural, =1{1 item cannot be saved until matched.} other{{count} items cannot be saved until matched.}}",
+  "@aiValidationPartialUnmatchedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationZeroTotalKcal": "Matched items produce 0 kcal.",
+  "aiValidationCaptureTotalKcalExtreme": "Total kcal is implausibly high for one captured meal.",
+  "aiValidationCaptureTotalKcalHigh": "Total kcal is unusually high; review portions.",
+  "aiValidationMacroTotalExtreme": "Total macros are implausibly high.",
+  "aiValidationMacroTotalHigh": "Total macros are unusually high; review portions.",
+  "aiValidationTargetKcalMismatch": "Calories miss the target by {delta} kcal.",
+  "@aiValidationTargetKcalMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetProteinMismatch": "Protein misses the target by {delta}g.",
+  "@aiValidationTargetProteinMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetCarbsMismatch": "Carbs miss the target by {delta}g.",
+  "@aiValidationTargetCarbsMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetFatMismatch": "Fat misses the target by {delta}g.",
+  "@aiValidationTargetFatMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationUnknownIssue": "Validation issue: {code}",
+  "@aiValidationUnknownIssue": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecommendRemainingMacros": "Remaining today",
   "aiRecommendCustomRequest": "Custom request",
   "aiRecommendCustomRequestHint": "e.g. Include leftover rice, high protein, etc.",

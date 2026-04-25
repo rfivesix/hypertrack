@@ -94,7 +94,7 @@ Current patterns in use:
 - `Provider`/`ChangeNotifier` for app-level services (`ThemeService`, `WorkoutSessionManager`, etc.)
 - local `StatefulWidget` state for most screen-level state
 - feature-local `ChangeNotifier` for Sleep day VM (`SleepDayViewModel`)
-- `SharedPreferences` for feature toggles/sync metadata (Steps/Sleep) and adaptive nutrition recommendation state/settings (`adaptive_nutrition_recommendation.*`)
+- `SharedPreferences` for feature toggles/sync metadata (Steps/Sleep), AI feature/context toggles (`ai_enabled`, `ai_recommendation_context_enabled`), and adaptive nutrition recommendation state/settings (`adaptive_nutrition_recommendation.*`)
 
 ## Persistence model
 

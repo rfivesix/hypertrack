@@ -142,11 +142,13 @@ Hypertrack remains the source of truth for its own tracking and analytics.
 - app data is handled locally by default
 - AI meal features are **optional** and **disabled by default**
 - AI usage is **BYOK only** (bring your own API key)
+- optional AI recommendation history/context sharing is a separate opt-in
 - no mandatory cloud account is required to use the app
 
 ## Documentation
 
 - [Project Overview](documentation/overview.md)
+- [AI Meal Features Architecture](documentation/ai_meal_features_architecture.md)
 - [Adaptive Nutrition Recommendation](documentation/adaptive_nutrition_recommendation_current_state.md)
 - [Statistics Module](documentation/statistics_module.md)
 - [System Architecture](documentation/architecture.md)

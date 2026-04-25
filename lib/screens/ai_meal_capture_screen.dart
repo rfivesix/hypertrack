@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../generated/app_localizations.dart';
+import '../services/ai_meal_validation.dart';
 import '../services/ai_service.dart';
 import '../services/haptic_feedback_service.dart';
 import '../widgets/glass_bottom_menu.dart';
@@ -141,6 +142,8 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
         );
       }
 
+      final validationOutcome = await _validateAndRepair(results, languageCode);
+
       if (!mounted) return;
 
       _stopAiWaitingHaptics();
@@ -151,7 +154,17 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
       final saved = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           builder: (_) => AiMealReviewScreen(
-            suggestions: results,
+            suggestions: validationOutcome.validation.candidate.items
+                .map(
+                  (item) => AiSuggestedItem(
+                    name: item.name,
+                    estimatedGrams: item.grams,
+                    confidence: item.confidence ?? 1.0,
+                    matchedBarcode: item.matchedBarcode,
+                  ),
+                )
+                .toList(growable: false),
+            initialValidation: validationOutcome.validation,
             originalImages: _images,
             initialDate: widget.initialDate,
             initialMealType: widget.initialMealType,
@@ -179,11 +192,43 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     }
   }
 
+  Future<AiRepairOutcome> _validateAndRepair(
+    List<AiSuggestedItem> results,
+    String languageCode,
+  ) {
+    final candidate = AiMealCandidate(
+      items: results
+          .map(
+            (item) => AiMealCandidateItem(
+              name: item.name,
+              grams: item.estimatedGrams,
+              confidence: item.confidence,
+              matchedBarcode: item.matchedBarcode,
+            ),
+          )
+          .toList(growable: false),
+    );
+    final engine = AiMealValidationEngine();
+    final orchestrator = AiRepairOrchestrator(validationEngine: engine);
+    return orchestrator.run(
+      initialCandidate: candidate,
+      mode: AiValidationMode.capture,
+      repairer: (candidate, validation, attempt) {
+        return AiService.instance.repairMealCaptureCandidate(
+          candidate: candidate,
+          validation: validation,
+          images: _images.isNotEmpty ? _images : null,
+          languageCode: languageCode,
+        );
+      },
+    );
+  }
+
   void _showKeyMissingDialog() {
     final l10n = AppLocalizations.of(context)!;
     showGlassBottomMenu<void>(
       context: context,
-      title: 'API Key Required',
+      title: l10n.aiValidationApiKeyRequiredTitle,
       contentBuilder: (ctx, close) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [

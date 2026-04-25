@@ -9,11 +9,14 @@ class ThemeService extends ChangeNotifier {
   static const _themeKey = 'theme_mode';
   static const _styleKey = 'visual_style';
   static const _aiEnabledKey = 'ai_enabled';
+  static const _aiRecommendationContextEnabledKey =
+      'ai_recommendation_context_enabled';
   static const _materialColorsEnabledKey = 'material_colors_enabled';
   static const _hapticsEnabledKey = 'haptics_enabled';
   ThemeMode _themeMode = ThemeMode.system;
   int _visualStyle = 0; // 0 = Standard, 1 = Liquid
   bool _isAiEnabled = false;
+  bool _isAiRecommendationContextEnabled = false;
   bool _materialColorsEnabled = false;
   bool _hapticsEnabled = true;
 
@@ -26,6 +29,10 @@ class ThemeService extends ChangeNotifier {
   /// Whether AI features are enabled globally.
   bool get isAiEnabled => _isAiEnabled;
 
+  /// Whether recent meal context may be sent for AI recommendations.
+  bool get isAiRecommendationContextEnabled =>
+      _isAiRecommendationContextEnabled;
+
   /// Whether Android dynamic Material colors are enabled.
   bool get materialColorsEnabled => _materialColorsEnabled;
 
@@ -37,6 +44,7 @@ class ThemeService extends ChangeNotifier {
     _loadThemeMode();
     _loadVisualStyle();
     _loadAiEnabled();
+    _loadAiRecommendationContextEnabled();
     _loadMaterialColorsEnabled();
     _loadHapticsEnabled();
   }
@@ -79,6 +87,13 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _loadAiRecommendationContextEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isAiRecommendationContextEnabled =
+        prefs.getBool(_aiRecommendationContextEnabledKey) ?? false;
+    notifyListeners();
+  }
+
   Future<void> _loadMaterialColorsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     _materialColorsEnabled = prefs.getBool(_materialColorsEnabledKey) ?? false;
@@ -99,6 +114,15 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_aiEnabledKey, enabled);
+  }
+
+  /// Sets whether recommendation prompts may include recent meal context.
+  Future<void> setAiRecommendationContextEnabled(bool enabled) async {
+    if (enabled == _isAiRecommendationContextEnabled) return;
+    _isAiRecommendationContextEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_aiRecommendationContextEnabledKey, enabled);
   }
 
   /// Sets whether Android dynamic Material colors should be used.

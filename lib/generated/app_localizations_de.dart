@@ -1953,7 +1953,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiPrivacyDisclosure =>
-      'Deine Bilder und Texte werden nur an den gewählten KI-Anbieter gesendet, wenn du auf Analysieren tippst. Daten werden über die Verarbeitung hinaus nicht auf externen Servern gespeichert. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.';
+      'Bilder, Texte und erzeugte Empfehlungs-Prompts werden nur an den gewählten KI-Anbieter gesendet, wenn du eine KI-Aktion nutzt. Speicherung und Verarbeitung beim Anbieter richten sich nach dessen Bedingungen. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.';
 
   @override
   String get aiMealCapture => 'KI-Mahlzeit';
@@ -2045,6 +2045,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.';
 
   @override
+  String get aiRecommendationContextTitle =>
+      'Letzte Mahlzeiten für Empfehlungen senden';
+
+  @override
+  String get aiRecommendationContextSubtitle =>
+      'Optional. Kann Vorschläge verbessern, indem eine kurze Zusammenfassung letzter Mahlzeiten an den gewählten KI-Anbieter gesendet wird. Standardmäßig aus.';
+
+  @override
   String get aiRecommendationTitle => 'KI-Mahlzeitcoach';
 
   @override
@@ -2082,6 +2090,229 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiRecommendNoMatch => 'Kein Datenbank-Treffer';
+
+  @override
+  String get aiValidationNoMatchedItemsSaveYet =>
+      'Noch keine zugeordneten Einträge können gespeichert werden.';
+
+  @override
+  String get aiValidationNoMatchedIngredientsSaveYet =>
+      'Noch keine zugeordneten Zutaten können gespeichert werden.';
+
+  @override
+  String get aiValidationSomeItemsNeedReviewTitle =>
+      'Einige Einträge müssen geprüft werden';
+
+  @override
+  String get aiValidationSomeIngredientsNeedReviewTitle =>
+      'Einige Zutaten müssen geprüft werden';
+
+  @override
+  String get aiValidationSaveMatchedItemsButton =>
+      'Zuordnete Einträge speichern';
+
+  @override
+  String get aiValidationSaveMatchedIngredientsButton =>
+      'Zuordnete Zutaten speichern';
+
+  @override
+  String get aiValidationValidationPassedTitle => 'Validierung bestanden';
+
+  @override
+  String get aiValidationReviewSuggestedTitle => 'Überprüfung empfohlen';
+
+  @override
+  String get aiValidationMacroFitValidatedTitle => 'Makro-Fit bestätigt';
+
+  @override
+  String get aiValidationNeedsReviewTitle => 'Prüfung nötig';
+
+  @override
+  String get aiValidationRepairLimitReachedReview =>
+      'Automatische Reparaturgrenze erreicht. Bitte vor dem Speichern prüfen.';
+
+  @override
+  String get aiValidationRepairLimitReachedRecommendation =>
+      'Automatische Reparaturgrenze erreicht. Bitte Zuordnungen und Portionsgrößen vor dem Speichern prüfen.';
+
+  @override
+  String get aiValidationRecentMealContextIncluded =>
+      'Der Kontext letzter Mahlzeiten wurde einbezogen.';
+
+  @override
+  String get aiValidationGeneratedWithoutRecentMealHistory =>
+      'Ohne Verlauf letzter Mahlzeiten erzeugt.';
+
+  @override
+  String get aiValidationApiKeyRequiredTitle => 'API-Schlüssel erforderlich';
+
+  @override
+  String aiValidationScoreLabel(int score) {
+    return 'Punktzahl $score/100';
+  }
+
+  @override
+  String aiValidationDeltaSummary(
+      int kcalDelta, int proteinDelta, int carbsDelta, int fatDelta) {
+    return 'Differenz: $kcalDelta kcal · ${proteinDelta}g Protein · ${carbsDelta}g Kohlenhydrate · ${fatDelta}g Fett';
+  }
+
+  @override
+  String aiValidationPartialSaveItemsMessage(
+      int unmatchedCount, int matchedCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      unmatchedCount,
+      locale: localeName,
+      other:
+          '$unmatchedCount Einträge haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.',
+      one:
+          '1 Eintrag hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.',
+    );
+    return '$_temp0 Die $matchedCount zugeordneten Einträge speichern?';
+  }
+
+  @override
+  String aiValidationPartialSaveIngredientsMessage(
+      int unmatchedCount, int matchedCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      unmatchedCount,
+      locale: localeName,
+      other:
+          '$unmatchedCount Zutaten haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.',
+      one:
+          '1 Zutat hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.',
+    );
+    return '$_temp0 Die $matchedCount zugeordneten Zutaten speichern?';
+  }
+
+  @override
+  String get aiValidationEmptyItemName =>
+      'Ein Eintrag hat keinen Lebensmittelnamen.';
+
+  @override
+  String aiValidationDuplicateItemMerged(String name) {
+    return 'Doppelte Einträge für \"$name\" wurden vor der Validierung zusammengeführt.';
+  }
+
+  @override
+  String get aiValidationInvalidQuantity =>
+      'Die Menge muss größer als 0 g sein.';
+
+  @override
+  String get aiValidationTinyQuantity =>
+      'Die Menge ist sehr klein; bitte die Grammangabe prüfen.';
+
+  @override
+  String get aiValidationExtremeQuantity =>
+      'Die Menge ist für ein einzelnes Mahlzeiten-Element unrealistisch hoch.';
+
+  @override
+  String get aiValidationLargeQuantity =>
+      'Die Menge ist ungewöhnlich groß; bitte die Grammangabe prüfen.';
+
+  @override
+  String get aiValidationLowAiConfidence =>
+      'Die KI-Konfidenz für diesen Eintrag ist niedrig.';
+
+  @override
+  String get aiValidationUnmatchedItem =>
+      'Kein Treffer in der lokalen Datenbank gefunden.';
+
+  @override
+  String get aiValidationWeakDbMatch => 'Der Datenbank-Treffer ist schwach.';
+
+  @override
+  String get aiValidationPartialDbMatch =>
+      'Der Datenbank-Treffer ist teilweise passend.';
+
+  @override
+  String get aiValidationAmbiguousDbMatch =>
+      'Mehrere lokale Datenbank-Treffer wirken ähnlich plausibel.';
+
+  @override
+  String get aiValidationStateMismatch =>
+      'Der Zustand des KI-Eintrags passt möglicherweise nicht zum Datenbankeintrag.';
+
+  @override
+  String get aiValidationZeroNutritionMatch =>
+      'Der zugeordnete Datenbankeintrag enthält keine nutzbaren Nährwertdaten.';
+
+  @override
+  String get aiValidationImplausibleFoodDensity =>
+      'Das zugeordnete Lebensmittel hat ungewöhnlich viele kcal pro 100 g.';
+
+  @override
+  String get aiValidationMacroEnergyMismatch =>
+      'Die Makros des zugeordneten Lebensmittels passen nicht gut zu den kcal.';
+
+  @override
+  String get aiValidationImplausibleItemNutrition =>
+      'Die Nährwerte für diese Menge sind ungewöhnlich hoch.';
+
+  @override
+  String get aiValidationEmptyMeal =>
+      'Die KI hat keine Mahlzeiten-Elemente zurückgegeben.';
+
+  @override
+  String get aiValidationAllItemsUnmatched =>
+      'Kein Element konnte der lokalen Lebensmitteldatenbank zugeordnet werden.';
+
+  @override
+  String aiValidationPartialUnmatchedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Elemente können erst gespeichert werden, wenn sie zugeordnet sind.',
+      one: '1 Element kann erst gespeichert werden, wenn es zugeordnet ist.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiValidationZeroTotalKcal =>
+      'Die zugeordneten Elemente ergeben 0 kcal.';
+
+  @override
+  String get aiValidationCaptureTotalKcalExtreme =>
+      'Die Gesamt-kcal sind für eine erfasste Mahlzeit unrealistisch hoch.';
+
+  @override
+  String get aiValidationCaptureTotalKcalHigh =>
+      'Die Gesamt-kcal sind ungewöhnlich hoch; bitte die Portionen prüfen.';
+
+  @override
+  String get aiValidationMacroTotalExtreme =>
+      'Die Gesamt-Makros sind unrealistisch hoch.';
+
+  @override
+  String get aiValidationMacroTotalHigh =>
+      'Die Gesamt-Makros sind ungewöhnlich hoch; bitte die Portionen prüfen.';
+
+  @override
+  String aiValidationTargetKcalMismatch(int delta) {
+    return 'Die Kalorien weichen um $delta kcal vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationTargetProteinMismatch(int delta) {
+    return 'Das Protein weicht um $delta g vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationTargetCarbsMismatch(int delta) {
+    return 'Die Kohlenhydrate weichen um $delta g vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationTargetFatMismatch(int delta) {
+    return 'Das Fett weicht um $delta g vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationUnknownIssue(String code) {
+    return 'Validierungsproblem: $code';
+  }
 
   @override
   String get aiRecommendRemainingMacros => 'Heute noch übrig';

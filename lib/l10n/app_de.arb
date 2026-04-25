@@ -794,7 +794,7 @@
   "aiTestSuccess": "Verbindung erfolgreich!",
   "aiKeySaved": "API-Schlüssel sicher gespeichert.",
   "aiPrivacySection": "Datenschutz",
-  "aiPrivacyDisclosure": "Deine Bilder und Texte werden nur an den gewählten KI-Anbieter gesendet, wenn du auf Analysieren tippst. Daten werden über die Verarbeitung hinaus nicht auf externen Servern gespeichert. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.",
+  "aiPrivacyDisclosure": "Bilder, Texte und erzeugte Empfehlungs-Prompts werden nur an den gewählten KI-Anbieter gesendet, wenn du eine KI-Aktion nutzt. Speicherung und Verarbeitung beim Anbieter richten sich nach dessen Bedingungen. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.",
   "aiMealCapture": "KI-Mahlzeit",
   "aiCaptureTitle": "KI-Mahlzeitenerkennung",
   "aiCaptureTabPhoto": "Foto",
@@ -827,6 +827,8 @@
 
   "aiEnableTitle": "KI-Funktionen aktivieren",
   "aiEnableSubtitle": "Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.",
+  "aiRecommendationContextTitle": "Letzte Mahlzeiten für Empfehlungen senden",
+  "aiRecommendationContextSubtitle": "Optional. Kann Vorschläge verbessern, indem eine kurze Zusammenfassung letzter Mahlzeiten an den gewählten KI-Anbieter gesendet wird. Standardmäßig aus.",
 
   "aiRecommendationTitle": "KI-Mahlzeitcoach",
   "aiRecommendDietary": "Ernährungsweise",
@@ -841,6 +843,146 @@
   "aiRecommendGenerating": "Denke nach…",
   "aiRecommendSaveToDiary": "Im Tagebuch speichern",
   "aiRecommendNoMatch": "Kein Datenbank-Treffer",
+  "aiValidationNoMatchedItemsSaveYet": "Noch keine zugeordneten Einträge können gespeichert werden.",
+  "aiValidationNoMatchedIngredientsSaveYet": "Noch keine zugeordneten Zutaten können gespeichert werden.",
+  "aiValidationSomeItemsNeedReviewTitle": "Einige Einträge müssen geprüft werden",
+  "aiValidationSomeIngredientsNeedReviewTitle": "Einige Zutaten müssen geprüft werden",
+  "aiValidationSaveMatchedItemsButton": "Zuordnete Einträge speichern",
+  "aiValidationSaveMatchedIngredientsButton": "Zuordnete Zutaten speichern",
+  "aiValidationValidationPassedTitle": "Validierung bestanden",
+  "aiValidationReviewSuggestedTitle": "Überprüfung empfohlen",
+  "aiValidationMacroFitValidatedTitle": "Makro-Fit bestätigt",
+  "aiValidationNeedsReviewTitle": "Prüfung nötig",
+  "aiValidationRepairLimitReachedReview": "Automatische Reparaturgrenze erreicht. Bitte vor dem Speichern prüfen.",
+  "aiValidationRepairLimitReachedRecommendation": "Automatische Reparaturgrenze erreicht. Bitte Zuordnungen und Portionsgrößen vor dem Speichern prüfen.",
+  "aiValidationRecentMealContextIncluded": "Der Kontext letzter Mahlzeiten wurde einbezogen.",
+  "aiValidationGeneratedWithoutRecentMealHistory": "Ohne Verlauf letzter Mahlzeiten erzeugt.",
+  "aiValidationApiKeyRequiredTitle": "API-Schlüssel erforderlich",
+  "aiValidationScoreLabel": "Punktzahl {score}/100",
+  "@aiValidationScoreLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationDeltaSummary": "Differenz: {kcalDelta} kcal · {proteinDelta}g Protein · {carbsDelta}g Kohlenhydrate · {fatDelta}g Fett",
+  "@aiValidationDeltaSummary": {
+    "placeholders": {
+      "kcalDelta": {
+        "type": "int"
+      },
+      "proteinDelta": {
+        "type": "int"
+      },
+      "carbsDelta": {
+        "type": "int"
+      },
+      "fatDelta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveItemsMessage": "{unmatchedCount, plural, =1{1 Eintrag hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.} other{{unmatchedCount} Einträge haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.}} Die {matchedCount} zugeordneten Einträge speichern?",
+  "@aiValidationPartialSaveItemsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveIngredientsMessage": "{unmatchedCount, plural, =1{1 Zutat hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.} other{{unmatchedCount} Zutaten haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.}} Die {matchedCount} zugeordneten Zutaten speichern?",
+  "@aiValidationPartialSaveIngredientsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationEmptyItemName": "Ein Eintrag hat keinen Lebensmittelnamen.",
+  "aiValidationDuplicateItemMerged": "Doppelte Einträge für \"{name}\" wurden vor der Validierung zusammengeführt.",
+  "@aiValidationDuplicateItemMerged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiValidationInvalidQuantity": "Die Menge muss größer als 0 g sein.",
+  "aiValidationTinyQuantity": "Die Menge ist sehr klein; bitte die Grammangabe prüfen.",
+  "aiValidationExtremeQuantity": "Die Menge ist für ein einzelnes Mahlzeiten-Element unrealistisch hoch.",
+  "aiValidationLargeQuantity": "Die Menge ist ungewöhnlich groß; bitte die Grammangabe prüfen.",
+  "aiValidationLowAiConfidence": "Die KI-Konfidenz für diesen Eintrag ist niedrig.",
+  "aiValidationUnmatchedItem": "Kein Treffer in der lokalen Datenbank gefunden.",
+  "aiValidationWeakDbMatch": "Der Datenbank-Treffer ist schwach.",
+  "aiValidationPartialDbMatch": "Der Datenbank-Treffer ist teilweise passend.",
+  "aiValidationAmbiguousDbMatch": "Mehrere lokale Datenbank-Treffer wirken ähnlich plausibel.",
+  "aiValidationStateMismatch": "Der Zustand des KI-Eintrags passt möglicherweise nicht zum Datenbankeintrag.",
+  "aiValidationZeroNutritionMatch": "Der zugeordnete Datenbankeintrag enthält keine nutzbaren Nährwertdaten.",
+  "aiValidationImplausibleFoodDensity": "Das zugeordnete Lebensmittel hat ungewöhnlich viele kcal pro 100 g.",
+  "aiValidationMacroEnergyMismatch": "Die Makros des zugeordneten Lebensmittels passen nicht gut zu den kcal.",
+  "aiValidationImplausibleItemNutrition": "Die Nährwerte für diese Menge sind ungewöhnlich hoch.",
+  "aiValidationEmptyMeal": "Die KI hat keine Mahlzeiten-Elemente zurückgegeben.",
+  "aiValidationAllItemsUnmatched": "Kein Element konnte der lokalen Lebensmitteldatenbank zugeordnet werden.",
+  "aiValidationPartialUnmatchedItems": "{count, plural, =1{1 Element kann erst gespeichert werden, wenn es zugeordnet ist.} other{{count} Elemente können erst gespeichert werden, wenn sie zugeordnet sind.}}",
+  "@aiValidationPartialUnmatchedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationZeroTotalKcal": "Die zugeordneten Elemente ergeben 0 kcal.",
+  "aiValidationCaptureTotalKcalExtreme": "Die Gesamt-kcal sind für eine erfasste Mahlzeit unrealistisch hoch.",
+  "aiValidationCaptureTotalKcalHigh": "Die Gesamt-kcal sind ungewöhnlich hoch; bitte die Portionen prüfen.",
+  "aiValidationMacroTotalExtreme": "Die Gesamt-Makros sind unrealistisch hoch.",
+  "aiValidationMacroTotalHigh": "Die Gesamt-Makros sind ungewöhnlich hoch; bitte die Portionen prüfen.",
+  "aiValidationTargetKcalMismatch": "Die Kalorien weichen um {delta} kcal vom Ziel ab.",
+  "@aiValidationTargetKcalMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetProteinMismatch": "Das Protein weicht um {delta} g vom Ziel ab.",
+  "@aiValidationTargetProteinMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetCarbsMismatch": "Die Kohlenhydrate weichen um {delta} g vom Ziel ab.",
+  "@aiValidationTargetCarbsMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetFatMismatch": "Das Fett weicht um {delta} g vom Ziel ab.",
+  "@aiValidationTargetFatMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationUnknownIssue": "Validierungsproblem: {code}",
+  "@aiValidationUnknownIssue": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecommendRemainingMacros": "Heute noch übrig",
   "aiRecommendCustomRequest": "Eigener Wunsch",
   "aiRecommendCustomRequestHint": "z. B. auf restlichen Reis achten, viel Protein, usw.",

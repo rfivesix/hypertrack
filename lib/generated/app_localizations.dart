@@ -3701,7 +3701,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiPrivacyDisclosure.
   ///
   /// In en, this message translates to:
-  /// **'Your images and text are sent to the selected AI provider only when you tap Analyze. Data is never stored on external servers beyond processing your request. Your API key is stored encrypted on this device only.'**
+  /// **'Images, text, and generated recommendation prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider\'s terms. Your API key is stored encrypted on this device only.'**
   String get aiPrivacyDisclosure;
 
   /// No description provided for @aiMealCapture.
@@ -3860,6 +3860,18 @@ abstract class AppLocalizations {
   /// **'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.'**
   String get aiEnableSubtitle;
 
+  /// No description provided for @aiRecommendationContextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send recent meals for recommendations'**
+  String get aiRecommendationContextTitle;
+
+  /// No description provided for @aiRecommendationContextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.'**
+  String get aiRecommendationContextSubtitle;
+
   /// No description provided for @aiRecommendationTitle.
   ///
   /// In en, this message translates to:
@@ -3937,6 +3949,297 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No database match'**
   String get aiRecommendNoMatch;
+
+  /// No description provided for @aiValidationNoMatchedItemsSaveYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No matched items can be saved yet.'**
+  String get aiValidationNoMatchedItemsSaveYet;
+
+  /// No description provided for @aiValidationNoMatchedIngredientsSaveYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No matched ingredients can be saved yet.'**
+  String get aiValidationNoMatchedIngredientsSaveYet;
+
+  /// No description provided for @aiValidationSomeItemsNeedReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some items need review'**
+  String get aiValidationSomeItemsNeedReviewTitle;
+
+  /// No description provided for @aiValidationSomeIngredientsNeedReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some ingredients need review'**
+  String get aiValidationSomeIngredientsNeedReviewTitle;
+
+  /// No description provided for @aiValidationSaveMatchedItemsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save matched items'**
+  String get aiValidationSaveMatchedItemsButton;
+
+  /// No description provided for @aiValidationSaveMatchedIngredientsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save matched ingredients'**
+  String get aiValidationSaveMatchedIngredientsButton;
+
+  /// No description provided for @aiValidationValidationPassedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Validation passed'**
+  String get aiValidationValidationPassedTitle;
+
+  /// No description provided for @aiValidationReviewSuggestedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review suggested'**
+  String get aiValidationReviewSuggestedTitle;
+
+  /// No description provided for @aiValidationMacroFitValidatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro fit validated'**
+  String get aiValidationMacroFitValidatedTitle;
+
+  /// No description provided for @aiValidationNeedsReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get aiValidationNeedsReviewTitle;
+
+  /// No description provided for @aiValidationRepairLimitReachedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic repair limit reached. Please review before saving.'**
+  String get aiValidationRepairLimitReachedReview;
+
+  /// No description provided for @aiValidationRepairLimitReachedRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic repair limit reached. Review matches and portions before saving.'**
+  String get aiValidationRepairLimitReachedRecommendation;
+
+  /// No description provided for @aiValidationRecentMealContextIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent meal context was included.'**
+  String get aiValidationRecentMealContextIncluded;
+
+  /// No description provided for @aiValidationGeneratedWithoutRecentMealHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated without recent meal history.'**
+  String get aiValidationGeneratedWithoutRecentMealHistory;
+
+  /// No description provided for @aiValidationApiKeyRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key Required'**
+  String get aiValidationApiKeyRequiredTitle;
+
+  /// No description provided for @aiValidationScoreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Score {score}/100'**
+  String aiValidationScoreLabel(int score);
+
+  /// No description provided for @aiValidationDeltaSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Delta: {kcalDelta} kcal · {proteinDelta}g Protein · {carbsDelta}g Carbs · {fatDelta}g Fat'**
+  String aiValidationDeltaSummary(
+      int kcalDelta, int proteinDelta, int carbsDelta, int fatDelta);
+
+  /// No description provided for @aiValidationPartialSaveItemsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{unmatchedCount, plural, =1{1 item does not have a local database match and will not be saved.} other{{unmatchedCount} items do not have a local database match and will not be saved.}} Save the {matchedCount} matched item(s) only?'**
+  String aiValidationPartialSaveItemsMessage(
+      int unmatchedCount, int matchedCount);
+
+  /// No description provided for @aiValidationPartialSaveIngredientsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{unmatchedCount, plural, =1{1 ingredient does not have a local database match and will not be saved.} other{{unmatchedCount} ingredients do not have a local database match and will not be saved.}} Save the {matchedCount} matched ingredient(s) only?'**
+  String aiValidationPartialSaveIngredientsMessage(
+      int unmatchedCount, int matchedCount);
+
+  /// No description provided for @aiValidationEmptyItemName.
+  ///
+  /// In en, this message translates to:
+  /// **'An item has no food name.'**
+  String get aiValidationEmptyItemName;
+
+  /// No description provided for @aiValidationDuplicateItemMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate \"{name}\" entries were merged before validation.'**
+  String aiValidationDuplicateItemMerged(String name);
+
+  /// No description provided for @aiValidationInvalidQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity must be greater than 0g.'**
+  String get aiValidationInvalidQuantity;
+
+  /// No description provided for @aiValidationTinyQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity is very small; review the gram amount.'**
+  String get aiValidationTinyQuantity;
+
+  /// No description provided for @aiValidationExtremeQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity is implausibly high for one meal item.'**
+  String get aiValidationExtremeQuantity;
+
+  /// No description provided for @aiValidationLargeQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity is unusually large; review the gram amount.'**
+  String get aiValidationLargeQuantity;
+
+  /// No description provided for @aiValidationLowAiConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'AI confidence is low for this item.'**
+  String get aiValidationLowAiConfidence;
+
+  /// No description provided for @aiValidationUnmatchedItem.
+  ///
+  /// In en, this message translates to:
+  /// **'No local database match was found.'**
+  String get aiValidationUnmatchedItem;
+
+  /// No description provided for @aiValidationWeakDbMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The local database match is weak.'**
+  String get aiValidationWeakDbMatch;
+
+  /// No description provided for @aiValidationPartialDbMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The local database match is partial.'**
+  String get aiValidationPartialDbMatch;
+
+  /// No description provided for @aiValidationAmbiguousDbMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Several local database matches look similarly plausible.'**
+  String get aiValidationAmbiguousDbMatch;
+
+  /// No description provided for @aiValidationStateMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI item state may not match the database entry.'**
+  String get aiValidationStateMismatch;
+
+  /// No description provided for @aiValidationZeroNutritionMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The matched database entry has no usable nutrition data.'**
+  String get aiValidationZeroNutritionMatch;
+
+  /// No description provided for @aiValidationImplausibleFoodDensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched food has unusually high kcal per 100g.'**
+  String get aiValidationImplausibleFoodDensity;
+
+  /// No description provided for @aiValidationMacroEnergyMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched food macros do not align well with kcal.'**
+  String get aiValidationMacroEnergyMismatch;
+
+  /// No description provided for @aiValidationImplausibleItemNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition for this quantity is unusually high.'**
+  String get aiValidationImplausibleItemNutrition;
+
+  /// No description provided for @aiValidationEmptyMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI returned no meal items.'**
+  String get aiValidationEmptyMeal;
+
+  /// No description provided for @aiValidationAllItemsUnmatched.
+  ///
+  /// In en, this message translates to:
+  /// **'No item could be matched to the local food database.'**
+  String get aiValidationAllItemsUnmatched;
+
+  /// No description provided for @aiValidationPartialUnmatchedItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item cannot be saved until matched.} other{{count} items cannot be saved until matched.}}'**
+  String aiValidationPartialUnmatchedItems(int count);
+
+  /// No description provided for @aiValidationZeroTotalKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched items produce 0 kcal.'**
+  String get aiValidationZeroTotalKcal;
+
+  /// No description provided for @aiValidationCaptureTotalKcalExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'Total kcal is implausibly high for one captured meal.'**
+  String get aiValidationCaptureTotalKcalExtreme;
+
+  /// No description provided for @aiValidationCaptureTotalKcalHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Total kcal is unusually high; review portions.'**
+  String get aiValidationCaptureTotalKcalHigh;
+
+  /// No description provided for @aiValidationMacroTotalExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'Total macros are implausibly high.'**
+  String get aiValidationMacroTotalExtreme;
+
+  /// No description provided for @aiValidationMacroTotalHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Total macros are unusually high; review portions.'**
+  String get aiValidationMacroTotalHigh;
+
+  /// No description provided for @aiValidationTargetKcalMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories miss the target by {delta} kcal.'**
+  String aiValidationTargetKcalMismatch(int delta);
+
+  /// No description provided for @aiValidationTargetProteinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein misses the target by {delta}g.'**
+  String aiValidationTargetProteinMismatch(int delta);
+
+  /// No description provided for @aiValidationTargetCarbsMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs miss the target by {delta}g.'**
+  String aiValidationTargetCarbsMismatch(int delta);
+
+  /// No description provided for @aiValidationTargetFatMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat misses the target by {delta}g.'**
+  String aiValidationTargetFatMismatch(int delta);
+
+  /// No description provided for @aiValidationUnknownIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Validation issue: {code}'**
+  String aiValidationUnknownIssue(String code);
 
   /// No description provided for @aiRecommendRemainingMacros.
   ///

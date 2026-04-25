@@ -142,6 +142,7 @@ Implemented controls include:
 ## Related docs
 
 - [Adaptive nutrition recommendation current state](adaptive_nutrition_recommendation_current_state.md)
+- [AI meal features architecture](ai_meal_features_architecture.md)
 - [Statistics module](statistics_module.md)
 - [Sleep current state](sleep/sleep_current_state.md)
 - [Health steps integration](health_steps_alpha.md)

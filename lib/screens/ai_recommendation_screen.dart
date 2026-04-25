@@ -1,13 +1,16 @@
 // lib/screens/ai_recommendation_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../data/database_helper.dart';
-import '../data/product_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/food_entry.dart';
 import '../models/food_item.dart';
+import '../services/ai_meal_validation.dart';
 import '../services/ai_service.dart';
 import '../services/haptic_feedback_service.dart';
+import '../services/theme_service.dart';
+import '../util/ai_validation_localization.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/global_app_bar.dart';
 import 'ai_settings_screen.dart';
@@ -48,6 +51,9 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   AiMealRecommendation? _recommendation;
   List<_MatchedIngredient> _matchedIngredients = [];
   Map<String, int>? _remainingMacros;
+  AiMacroTargetContext? _targetContext;
+  AiValidationResult? _validation;
+  bool _contextSharingEnabled = false;
 
   // ── Animation ──
   late final AnimationController _shimmerController;
@@ -94,18 +100,23 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       _errorMessage = null;
       _recommendation = null;
       _matchedIngredients = [];
+      _validation = null;
     });
     _startAiWaitingHaptics();
 
     try {
       final db = DatabaseHelper.instance;
+      final includeRecommendationContext =
+          context.read<ThemeService>().isAiRecommendationContextEnabled;
 
       // 1. Gather context
       final macros = await db.getRemainingMacrosForDate(widget.date);
-      final history = await db.getMealHistorySummary();
+      final history = includeRecommendationContext
+          ? await db.getMealHistorySummary()
+          : null;
       final goals = await db.getGoalsForDate(widget.date);
 
-      // Ensure we have some safe fallbacks for daily targets
+      // App-settings fallback only applies when no goal history exists.
       final dailyKcal = goals?.targetCalories ?? 2500;
       final dailyP = goals?.targetProtein ?? 180;
       final dailyC = goals?.targetCarbs ?? 250;
@@ -113,82 +124,19 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
       // 1b. Apportion Macros
       // Calculate target macros specifically for this meal based on the slot.
-      Map<String, int> targetMacros = {
-        'kcal': macros['kcal'] ?? 0,
-        'protein': macros['protein'] ?? 0,
-        'carbs': macros['carbs'] ?? 0,
-        'fat': macros['fat'] ?? 0,
-      };
-
-      if (widget.mealType == 'mealtypeBreakfast') {
-        // Breakfast: Target 1/3 of daily goals (clamped to remaining)
-        targetMacros['kcal'] = ((dailyKcal / 3.0).round()).clamp(
-          0,
-          targetMacros['kcal']!,
-        );
-        targetMacros['protein'] = ((dailyP / 3.0).round()).clamp(
-          0,
-          targetMacros['protein']!,
-        );
-        targetMacros['carbs'] = ((dailyC / 3.0).round()).clamp(
-          0,
-          targetMacros['carbs']!,
-        );
-        targetMacros['fat'] = ((dailyF / 3.0).round()).clamp(
-          0,
-          targetMacros['fat']!,
-        );
-      } else if (widget.mealType == 'mealtypeLunch') {
-        // Lunch: Fill up until 1/3 of daily goals is left for dinner
-        // E.g., target = remaining - (daily / 3)
-        targetMacros['kcal'] =
-            (targetMacros['kcal']! - (dailyKcal / 3.0).round()).clamp(
-          0,
-          targetMacros['kcal']!,
-        );
-        targetMacros['protein'] =
-            (targetMacros['protein']! - (dailyP / 3.0).round()).clamp(
-          0,
-          targetMacros['protein']!,
-        );
-        targetMacros['carbs'] =
-            (targetMacros['carbs']! - (dailyC / 3.0).round()).clamp(
-          0,
-          targetMacros['carbs']!,
-        );
-        targetMacros['fat'] = (targetMacros['fat']! - (dailyF / 3.0).round())
-            .clamp(0, targetMacros['fat']!);
-      } else if (widget.mealType == 'mealtypeDinner') {
-        // Dinner: Eat 100% of whatever is remaining to hit daily goal
-        // Already assigned above. (targetMacros == macros)
-      } else if (widget.mealType == 'mealtypeSnack') {
-        // Snack: Target roughly 10% of daily goals (clamped to remaining)
-        targetMacros['kcal'] = ((dailyKcal * 0.1).round()).clamp(
-          0,
-          targetMacros['kcal']!,
-        );
-        targetMacros['protein'] = ((dailyP * 0.1).round()).clamp(
-          0,
-          targetMacros['protein']!,
-        );
-        targetMacros['carbs'] = ((dailyC * 0.1).round()).clamp(
-          0,
-          targetMacros['carbs']!,
-        );
-        targetMacros['fat'] = ((dailyF * 0.1).round()).clamp(
-          0,
-          targetMacros['fat']!,
-        );
-      }
-
-      // If user literally has 0 calories left, provide a tiny hardcoded floor
-      // so the AI still suggests something (like a 100kcal snack).
-      if (targetMacros['kcal']! <= 50) {
-        targetMacros['kcal'] = 150;
-        targetMacros['protein'] = 15;
-        targetMacros['carbs'] = 10;
-        targetMacros['fat'] = 5;
-      }
+      final remainingContext = AiMacroTargetContext.fromMap(macros);
+      final dailyContext = AiMacroTargetContext(
+        kcal: dailyKcal,
+        protein: dailyP,
+        carbs: dailyC,
+        fat: dailyF,
+      );
+      final targetContext = AiMealTargetPlanner.computeMealTarget(
+        remaining: remainingContext,
+        dailyGoal: dailyContext,
+        mealType: widget.mealType,
+      );
+      final targetMacros = targetContext.toMap();
 
       // 2. Build preference list
       final prefs = <String>[];
@@ -205,25 +153,40 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         languageCode: languageCode,
       );
 
-      // 4. Fuzzy-match ingredients
-      final matched = <_MatchedIngredient>[];
-      for (final ingredient in result.ingredients) {
-        final matches = await ProductDatabaseHelper.instance.fuzzyMatchForAi(
-          ingredient.name,
-        );
-        matched.add(
-          _MatchedIngredient(
-            ingredient: ingredient,
-            matchedFood: matches.isNotEmpty ? matches.first : null,
-          ),
-        );
-      }
+      // 4. Validate local DB mapping and deterministic target fit.
+      final orchestrator = AiRepairOrchestrator(
+        validationEngine: AiMealValidationEngine(),
+      );
+      final outcome = await orchestrator.run(
+        initialCandidate: result.toMealCandidate(),
+        mode: AiValidationMode.recommendation,
+        targetContext: targetContext,
+        repairer: (candidate, validation, attempt) {
+          return AiService.instance.repairMealRecommendationCandidate(
+            candidate: candidate,
+            validation: validation,
+            targetMacros: targetMacros,
+            preferences: prefs,
+            recentHistory: history,
+            mealTypeLabel: _getMealLabel(l10n, widget.mealType),
+            customRequest: _customRequestController.text,
+            languageCode: languageCode,
+          );
+        },
+      );
+
+      final validatedRecommendation =
+          _recommendationFromCandidate(outcome.validation.candidate);
+      final matched = _matchedIngredientsFromValidation(outcome.validation);
 
       if (!mounted) return;
       setState(() {
-        _recommendation = result;
+        _recommendation = validatedRecommendation;
         _matchedIngredients = matched;
         _remainingMacros = macros;
+        _targetContext = targetContext;
+        _validation = outcome.validation;
+        _contextSharingEnabled = includeRecommendationContext;
         _isGenerating = false;
       });
     } on AiKeyMissingException {
@@ -252,7 +215,27 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   // ---------------------------------------------------------------------------
 
   Future<void> _saveToDiary() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_matchedIngredients.isEmpty) return;
+    final validation = _validation;
+    if (validation != null) {
+      final savePlan = AiDiarySavePlan.fromValidation(validation);
+      if (!savePlan.canSaveAny) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.aiValidationNoMatchedIngredientsSaveYet),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      if (savePlan.isPartial) {
+        final confirmed = await _confirmPartialSave(savePlan);
+        if (confirmed != true) return;
+      }
+    }
+
     setState(() => _isSaving = true);
 
     final db = DatabaseHelper.instance;
@@ -275,6 +258,50 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
     }
   }
 
+  Future<bool?> _confirmPartialSave(AiDiarySavePlan savePlan) {
+    final l10n = AppLocalizations.of(context)!;
+    return showGlassBottomMenu<bool>(
+      context: context,
+      title: l10n.aiValidationSomeIngredientsNeedReviewTitle,
+      contentBuilder: (ctx, close) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.aiValidationPartialSaveIngredientsMessage(
+              savePlan.unmatchedItems.length,
+              savePlan.matchedItems.length,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    close();
+                    Navigator.of(ctx).pop(false);
+                  },
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    close();
+                    Navigator.of(ctx).pop(true);
+                  },
+                  child: Text(l10n.aiValidationSaveMatchedIngredientsButton),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Dialogs
   // ---------------------------------------------------------------------------
@@ -283,7 +310,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
     final l10n = AppLocalizations.of(context)!;
     showGlassBottomMenu<void>(
       context: context,
-      title: 'API Key Required',
+      title: l10n.aiValidationApiKeyRequiredTitle,
       contentBuilder: (ctx, close) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -337,6 +364,40 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       default:
         return key;
     }
+  }
+
+  AiMealRecommendation _recommendationFromCandidate(AiMealCandidate candidate) {
+    return AiMealRecommendation(
+      mealName:
+          candidate.mealName?.isNotEmpty == true ? candidate.mealName! : 'Meal',
+      description: candidate.description ?? '',
+      ingredients: candidate.items
+          .map(
+            (item) => AiRecommendedIngredient(
+              name: item.name,
+              amountInGrams: item.grams,
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  List<_MatchedIngredient> _matchedIngredientsFromValidation(
+    AiValidationResult validation,
+  ) {
+    return validation.items
+        .map(
+          (item) => _MatchedIngredient(
+            ingredient: AiRecommendedIngredient(
+              name: item.candidate.name,
+              amountInGrams: item.candidate.grams,
+            ),
+            matchedFood: item.match.bestMatch,
+            issues: item.issues,
+            nutrition: item.nutrition,
+          ),
+        )
+        .toList(growable: false);
   }
 
   // ---------------------------------------------------------------------------
@@ -588,6 +649,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
   Widget _buildRemainingMacrosCard(ThemeData theme) {
     final m = _remainingMacros!;
+    final target = _targetContext;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -595,13 +657,27 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _macroColumn('${m['kcal']}', 'kcal', theme),
-          _macroColumn('${m['protein']}g', 'P', theme),
-          _macroColumn('${m['carbs']}g', 'C', theme),
-          _macroColumn('${m['fat']}g', 'F', theme),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _macroColumn('${m['kcal']}', 'kcal', theme),
+              _macroColumn('${m['protein']}g', 'P', theme),
+              _macroColumn('${m['carbs']}g', 'C', theme),
+              _macroColumn('${m['fat']}g', 'F', theme),
+            ],
+          ),
+          if (target != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Meal target: ${target.kcal} kcal · ${target.protein}g P · ${target.carbs}g C · ${target.fat}g F',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -624,6 +700,106 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildValidationSummary(
+    AiValidationResult validation,
+    ThemeData theme,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final fit = validation.macroFit;
+    final color = validation.passed
+        ? Colors.green
+        : validation.errors.isNotEmpty
+            ? theme.colorScheme.error
+            : Colors.orange;
+    final issues = validation.allIssues
+        .where((issue) => issue.severity != AiValidationSeverity.info)
+        .take(4)
+        .toList(growable: false);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                validation.passed
+                    ? Icons.verified_rounded
+                    : Icons.warning_amber_rounded,
+                color: color,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  validation.passed
+                      ? l10n.aiValidationMacroFitValidatedTitle
+                      : '${l10n.aiValidationNeedsReviewTitle} · ${l10n.aiValidationScoreLabel(validation.score)}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _contextSharingEnabled
+                ? l10n.aiValidationRecentMealContextIncluded
+                : l10n.aiValidationGeneratedWithoutRecentMealHistory,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (fit != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              l10n.aiValidationDeltaSummary(
+                fit.kcalDelta.round(),
+                fit.proteinDelta.round(),
+                fit.carbsDelta.round(),
+                fit.fatDelta.round(),
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (validation.repairLimitReached) ...[
+            const SizedBox(height: 6),
+            Text(
+              l10n.aiValidationRepairLimitReachedRecommendation,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (issues.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...issues.map(
+              (issue) => Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '• ${aiValidationIssueText(l10n, issue)}',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -661,22 +837,16 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
   Widget _buildResultCard(AppLocalizations l10n, ThemeData theme) {
     final rec = _recommendation!;
-    // Calculate total macros from matched ingredients
-    int totalKcal = 0, totalP = 0, totalC = 0, totalF = 0;
-    for (final item in _matchedIngredients) {
-      if (item.matchedFood != null) {
-        final food = item.matchedFood!;
-        final factor = item.ingredient.amountInGrams / 100.0;
-        totalKcal += (food.calories * factor).round();
-        totalP += (food.protein * factor).round();
-        totalC += (food.carbs * factor).round();
-        totalF += (food.fat * factor).round();
-      }
-    }
+    final validation = _validation;
+    final totals = validation?.totals ?? AiNutritionTotals.zero;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (validation != null) ...[
+          _buildValidationSummary(validation, theme),
+          const SizedBox(height: 12),
+        ],
         // Meal name + description
         Container(
           width: double.infinity,
@@ -722,7 +892,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
               const SizedBox(height: 12),
               // Total macros
               Text(
-                '$totalKcal kcal · ${totalP}g P · ${totalC}g C · ${totalF}g F',
+                '${totals.kcalRounded} kcal · ${totals.proteinRounded}g P · ${totals.carbsRounded}g C · ${totals.fatRounded}g F',
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.primary,
@@ -765,8 +935,8 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                       if (food != null)
                         Text(
                           '${ing.amountInGrams}g · '
-                          '${(food.calories / 100 * ing.amountInGrams).round()} kcal · '
-                          '${(food.protein / 100 * ing.amountInGrams).round()}g P',
+                          '${item.nutrition.kcalRounded} kcal · '
+                          '${item.nutrition.proteinRounded}g P',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -778,6 +948,31 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                             color: theme.colorScheme.error,
                           ),
                         ),
+                      if (item.issues
+                          .where(
+                            (issue) =>
+                                issue.severity != AiValidationSeverity.info,
+                          )
+                          .isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        ...item.issues
+                            .where(
+                              (issue) =>
+                                  issue.severity != AiValidationSeverity.info,
+                            )
+                            .take(2)
+                            .map(
+                              (issue) => Text(
+                                aiValidationIssueText(l10n, issue),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: issue.severity ==
+                                          AiValidationSeverity.error
+                                      ? theme.colorScheme.error
+                                      : Colors.orange[800],
+                                ),
+                              ),
+                            ),
+                      ],
                     ],
                   ),
                 ),
@@ -978,6 +1173,13 @@ class _AiGradientButton extends StatelessWidget {
 class _MatchedIngredient {
   final AiRecommendedIngredient ingredient;
   FoodItem? matchedFood;
+  final List<AiValidationIssue> issues;
+  final AiNutritionTotals nutrition;
 
-  _MatchedIngredient({required this.ingredient, this.matchedFood});
+  _MatchedIngredient({
+    required this.ingredient,
+    this.matchedFood,
+    this.issues = const [],
+    this.nutrition = AiNutritionTotals.zero,
+  });
 }
