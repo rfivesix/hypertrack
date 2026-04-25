@@ -109,11 +109,55 @@ class HealthConnectSleepAdapter {
           !sampledAt.isAfter(session.endAtUtc.toUtc());
     }).toList(growable: false);
 
-    if (strictHeartRates.isEmpty) return batch;
+    final derivedHeartRates = strictHeartRates.isNotEmpty
+        ? strictHeartRates
+        : _deriveHeartRatesFromSleepWindows(
+            samples: fallback.heartRateSamples,
+            sessions: batch.sessions,
+          );
+    if (derivedHeartRates.isEmpty) return batch;
     return SleepRawIngestionBatch(
       sessions: batch.sessions,
       stageSegments: batch.stageSegments,
-      heartRateSamples: strictHeartRates,
+      heartRateSamples: derivedHeartRates,
     );
+  }
+
+  List<SleepIngestionHeartRateSample> _deriveHeartRatesFromSleepWindows({
+    required List<SleepIngestionHeartRateSample> samples,
+    required List<SleepIngestionSession> sessions,
+  }) {
+    if (samples.isEmpty || sessions.isEmpty) return const [];
+    final sortedSessions = List<SleepIngestionSession>.from(sessions)
+      ..sort((a, b) => a.startAtUtc.compareTo(b.startAtUtc));
+    final resolved = <SleepIngestionHeartRateSample>[];
+    for (final sample in samples) {
+      final sampledAt = sample.sampledAtUtc.toUtc();
+      for (final session in sortedSessions) {
+        final startUtc = session.startAtUtc.toUtc();
+        final endUtc = session.endAtUtc.toUtc();
+        if (sampledAt.isBefore(startUtc)) break;
+        final inWindow =
+            !sampledAt.isBefore(startUtc) && !sampledAt.isAfter(endUtc);
+        if (!inWindow) {
+          continue;
+        }
+        resolved.add(
+          SleepIngestionHeartRateSample(
+            recordId: sample.recordId,
+            sessionRecordId: session.recordId,
+            sampledAtUtc: sample.sampledAtUtc,
+            bpm: sample.bpm,
+            sourcePlatform: sample.sourcePlatform,
+            sourceAppId: sample.sourceAppId,
+            sourceDevice: sample.sourceDevice,
+            sourceRecordHash: sample.sourceRecordHash,
+            sourceConfidence: sample.sourceConfidence,
+          ),
+        );
+        break;
+      }
+    }
+    return resolved;
   }
 }
