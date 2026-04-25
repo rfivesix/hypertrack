@@ -27,6 +27,7 @@ class PulseAnalysisScreen extends StatefulWidget {
 }
 
 class _PulseAnalysisScreenState extends State<PulseAnalysisScreen> {
+  static const Duration _minimumCurrentDayWindow = Duration(minutes: 1);
   late final PulseAnalysisRepository _repository;
   late SleepPeriodScope _scope;
   late DateTime _anchorDate;
@@ -111,6 +112,7 @@ class _PulseAnalysisScreenState extends State<PulseAnalysisScreen> {
     required SleepPeriodScope scope,
     required DateTime anchorDate,
   }) {
+    final localNow = DateTime.now();
     final localStart = switch (scope) {
       SleepPeriodScope.day =>
         DateTime(anchorDate.year, anchorDate.month, anchorDate.day),
@@ -121,11 +123,21 @@ class _PulseAnalysisScreenState extends State<PulseAnalysisScreen> {
         ).subtract(Duration(days: anchorDate.weekday - DateTime.monday)),
       SleepPeriodScope.month => DateTime(anchorDate.year, anchorDate.month, 1),
     };
-    final localEndExclusive = switch (scope) {
+    final fullLocalEndExclusive = switch (scope) {
       SleepPeriodScope.day => localStart.add(const Duration(days: 1)),
       SleepPeriodScope.week => localStart.add(const Duration(days: 7)),
       SleepPeriodScope.month => DateTime(localStart.year, localStart.month + 1),
     };
+    final isCurrentLocalDay = scope == SleepPeriodScope.day &&
+        anchorDate.year == localNow.year &&
+        anchorDate.month == localNow.month &&
+        anchorDate.day == localNow.day;
+    final localEndExclusive = isCurrentLocalDay
+        ? (localNow.isAfter(localStart)
+            ? localNow
+            // Guard against zero-length windows during local midnight rollover.
+            : localStart.add(_minimumCurrentDayWindow))
+        : fullLocalEndExclusive;
     return PulseAnalysisWindow(
       startUtc: localStart.toUtc(),
       endUtc: localEndExclusive.toUtc(),

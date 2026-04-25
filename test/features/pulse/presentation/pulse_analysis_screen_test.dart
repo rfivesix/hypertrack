@@ -134,4 +134,35 @@ void main() {
         find.text('Pulse analysis is disabled in Settings.'), findsOneWidget);
     expect(find.byType(MeasurementChartWidget), findsNothing);
   });
+
+  testWidgets('uses partial-day end for current local day scope', (tester) async {
+    final repository = _FakePulseRepository(_summaryWithSamples);
+    final nowLocal = DateTime.now();
+    final expectedStartUtc = DateTime(
+      nowLocal.year,
+      nowLocal.month,
+      nowLocal.day,
+    ).toUtc();
+    final beforeBuild = DateTime.now().toUtc();
+
+    await tester.pumpWidget(
+      _wrap(
+        PulseAnalysisScreen(
+          repository: repository,
+          initialDate: nowLocal,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final afterBuild = DateTime.now().toUtc();
+
+    final window = repository.windows.single;
+    expect(window.startUtc, expectedStartUtc);
+    expect(window.endUtc.isAfter(beforeBuild), isTrue);
+    expect(
+      window.endUtc.isBefore(afterBuild) ||
+          window.endUtc.isAtSameMomentAs(afterBuild),
+      isTrue,
+    );
+  });
 }
