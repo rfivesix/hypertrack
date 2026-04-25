@@ -3650,4 +3650,231 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get adaptiveRecommendationNotAvailableSnack =>
       'Keine Empfehlung zum Anwenden verfügbar.';
+
+  @override
+  String get settingsSectionApp => 'App';
+
+  @override
+  String get settingsAppearanceSubtitle => 'Design, Stil und Haptik anpassen';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewTitle =>
+      'Zucker in Tagebuch-Übersicht anzeigen';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewSubtitle =>
+      'Blendet Zucker in der oberen Tagesübersicht ein';
+
+  @override
+  String get settingsSectionHealthTracking => 'Gesundheit & Tracking';
+
+  @override
+  String get settingsStepsSubtitle =>
+      'Tracking, Quellenrichtlinie und Provider';
+
+  @override
+  String get settingsSleepSubtitle => 'Import, Berechtigungen und Schlafstatus';
+
+  @override
+  String get settingsPulseSubtitle =>
+      'Opt-in Pulsauswertung und Herzfrequenz-Zugriff';
+
+  @override
+  String get settingsHealthExportSubtitle =>
+      'Apple Health und Health Connect Export verwalten';
+
+  @override
+  String get settingsSectionNutritionAndData => 'Ernährung & Daten';
+
+  @override
+  String get settingsSectionSupportAbout => 'Support & Info';
+
+  @override
+  String get settingsHapticFeedbackTitle => 'Haptisches Feedback';
+
+  @override
+  String get settingsHapticFeedbackSubtitle =>
+      'Leichte Vibrationen bei Bestätigungen und KI-Warten';
+
+  @override
+  String get stepsSettingsEnableTrackingTitle => 'Schritte-Tracking aktivieren';
+
+  @override
+  String get stepsSettingsEnableTrackingSubtitle =>
+      'Schrittdaten aus Apple Health / Health Connect lesen';
+
+  @override
+  String get stepsSettingsSourcePolicyTitle => 'Quellenrichtlinie';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominant => 'Auto (dominante Quelle)';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominantSubtitle =>
+      'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHour =>
+      'Zusammenführen (max pro Stunde)';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHourSubtitle =>
+      'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.';
+
+  @override
+  String get stepsSettingsProviderFilterTitle => 'Provider-Filter';
+
+  @override
+  String get pulseTitle => 'Puls';
+
+  @override
+  String get pulseChartTitle => 'Pulsverlauf';
+
+  @override
+  String get pulseRangeLabel => 'Bereich';
+
+  @override
+  String get pulseAverageLabel => 'Durchschnitt';
+
+  @override
+  String get pulseRestingLabel => 'Ruhepuls';
+
+  @override
+  String get pulseInsufficientData =>
+      'Zu wenige Pulswerte für eine verlässliche Kurve.';
+
+  @override
+  String get pulseMethodNote =>
+      'Der Durchschnitt ist zeitgewichtet. Der Ruhepuls ist ein vorsichtiger Schätzwert aus den niedrigsten 20% der Werte im gewählten Zeitraum.';
+
+  @override
+  String pulseSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Werte',
+      one: '1 Wert',
+      zero: 'Keine Werte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pulseQualityReady => 'Gute Abdeckung';
+
+  @override
+  String get pulseQualityLimited => 'Begrenzte Daten';
+
+  @override
+  String get pulseQualityInsufficient => 'Sehr wenige Daten';
+
+  @override
+  String get pulseQualityNoData => 'Keine Daten';
+
+  @override
+  String get pulseNoDataDisabled =>
+      'Pulsauswertung ist in den Einstellungen deaktiviert.';
+
+  @override
+  String get pulseNoDataPermissionDenied =>
+      'Pulserlaubnis ist erforderlich, um diese Auswertung zu zeigen.';
+
+  @override
+  String get pulseNoDataUnavailable =>
+      'Pulswerte sind auf diesem Gerät derzeit nicht verfügbar.';
+
+  @override
+  String get pulseNoDataQueryFailed =>
+      'Pulswerte konnten nicht gelesen werden.';
+
+  @override
+  String get pulseNoDataDefault =>
+      'Keine Pulswerte für diesen Zeitraum gefunden.';
+
+  @override
+  String get pulseSettingsEnableTitle => 'Pulsauswertung aktivieren';
+
+  @override
+  String get pulseSettingsEnableSubtitle =>
+      'Liest Herzfrequenzdaten nur für die Pulsansicht, wenn du es einschaltest.';
+
+  @override
+  String get pulseSettingsPermissionTitle => 'Herzfrequenz-Zugriff erlauben';
+
+  @override
+  String get pulseSettingsPermissionSubtitle =>
+      'Öffnet Apple Health oder Health Connect, um Pulswerte zu lesen.';
+
+  @override
+  String get pulseSettingsAnalysisSubtitle =>
+      'Zeigt Bereich, zeitgewichteten Durchschnitt und einen konservativen Ruhepuls-Schätzwert. Keine medizinische Diagnose.';
+
+  @override
+  String get pulseSettingsPermissionGranted =>
+      'Herzfrequenz-Zugriff ist bereit.';
+
+  @override
+  String get pulseSettingsPermissionFailed =>
+      'Herzfrequenz-Zugriff wurde nicht erteilt.';
+
+  @override
+  String get pulseOptInChip => 'Opt-in';
+
+  @override
+  String get statisticsPulseDescription =>
+      'Bereich, zeitgewichteter Durchschnitt und Ruhepuls für ausgewählte Zeiträume.';
+
+  @override
+  String get statisticsPulseOpenCaption => 'Öffnet die Pulsauswertung';
+
+  @override
+  String get healthExportTitle => 'Health Export';
+
+  @override
+  String get healthExportAppleHealthTitle => 'Apple Health Export';
+
+  @override
+  String get healthExportHealthConnectTitle => 'Health Connect Export';
+
+  @override
+  String get healthExportDomainNutritionHydration => 'Ernährung & Hydration';
+
+  @override
+  String get healthExportDomainWorkouts => 'Workouts';
+
+  @override
+  String get healthExportStateIdle => 'Leerlauf';
+
+  @override
+  String get healthExportStateExporting => 'Export läuft';
+
+  @override
+  String get healthExportStateSuccess => 'Erfolgreich';
+
+  @override
+  String get healthExportStateFailed => 'Fehlgeschlagen';
+
+  @override
+  String get healthExportStateDisabled => 'Deaktiviert';
+
+  @override
+  String get healthExportResultComplete => 'Export abgeschlossen';
+
+  @override
+  String get healthExportResultFailed => 'Export fehlgeschlagen';
+
+  @override
+  String get healthExportAppleHealthSubtitle =>
+      'Einweg-Export von Hypertrack nach Apple Health';
+
+  @override
+  String get healthExportHealthConnectSubtitle =>
+      'Einweg-Export von Hypertrack nach Health Connect';
+
+  @override
+  String get healthExportAppleHealthStatusTitle => 'Export-Status Apple Health';
+
+  @override
+  String get healthExportHealthConnectStatusTitle =>
+      'Export-Status Health Connect';
 }

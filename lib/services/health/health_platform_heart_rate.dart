@@ -37,6 +37,19 @@ class HealthPlatformHeartRate implements HealthHeartRateDataSource {
 
   const HealthPlatformHeartRate();
 
+  Future<bool> requestPermissions() async {
+    try {
+      final granted = await _channel.invokeMethod<bool>(
+        'requestHeartRatePermissions',
+      );
+      return granted == true;
+    } on PlatformException catch (e) {
+      if (e.code == 'permission_denied') return false;
+      if (e.code == 'not_available') return false;
+      rethrow;
+    }
+  }
+
   @override
   Future<List<HealthHeartRateSampleDto>> readHeartRateSamples({
     required DateTime fromUtc,

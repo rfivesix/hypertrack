@@ -6,9 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.9.0-alpha.1] - 2026-04-25
 
+### Added
+- Added opt-in Pulse analysis with a Settings toggle, heart-rate permission request, and a Statistics hub entry that appears only when enabled.
+- Added a dedicated Pulse analysis screen with day/week/month period controls, pulse range, time-weighted average pulse, conservative resting-pulse estimate, and the existing line-chart pattern.
+
+### Fixed
+- Improved Android sleep heart-rate retrieval for Health Connect providers that store valid in-session samples inside longer heart-rate records whose record window can sit outside the strict sleep/import window.
+
+### Changed
+- Updated Apple Health usage copy to mention enabled health views that read steps, sleep, and heart-rate data.
+
 ### Internal
 - Modernized the Android app module Java/Kotlin compile target from 8 to 17 to match the current Gradle/AGP/JDK toolchain and reduce app-owned build warnings.
 - Replaced the foreground rest-timer sound cue with Flutter's built-in system alert sound and removed the `flutter_ringtone_player` dependency to eliminate its Android Java 8/deprecated API build warnings.
+- Documented the Pulse MVP boundaries and the Health Connect sleep HR fallback behavior.
 
 ### Notes
 - The former `flutter_ringtone_player` warning source was reviewed: version 4.0.0+4 still declares Java 8 compatibility and uses the deprecated Android `Ringtone.setStreamType(...)` API. The app only used it for the foreground rest-timer notification sound, so replacing that single call was lower-risk than keeping or suppressing the plugin warning.

@@ -7,13 +7,14 @@ This document is implementation-grounded and reflects the **current working copy
 Statistics currently spans two kinds of behavior:
 
 1. Workout/body analytics (core statistics domains)
-2. Integration cards for Steps and Sleep inside the hub
+2. Integration cards for Steps, Sleep, and opt-in Pulse inside the hub
 
 Boundaries in code:
 
 - Statistics owns workout/body analytics composition and drill-down navigation.
 - Steps logic is owned by the Steps feature and services.
 - Sleep logic is owned by the Sleep feature and services.
+- Pulse logic is owned by the Pulse feature and platform heart-rate service.
 
 ## Entry points and navigation
 
@@ -37,6 +38,7 @@ Cross-feature links from hub:
 
 - Steps card tap -> `StepsModuleScreen` (`lib/features/steps/presentation/steps_module_screen.dart`)
 - Sleep card tap -> `SleepNavigation.openDay(context)` -> `/sleep/day`
+- Pulse card tap -> `PulseAnalysisScreen` (`lib/features/pulse/presentation/pulse_analysis_screen.dart`)
 
 ## Hub sections currently implemented
 
@@ -46,10 +48,11 @@ Cross-feature links from hub:
 2. Steps (only if steps tracking enabled)
 3. Recovery
 4. Sleep (only if sleep tracking enabled)
-5. Consistency
-6. Performance records
-7. Volume/muscles
-8. Body/nutrition
+5. Pulse (only if pulse analysis is enabled)
+6. Consistency
+7. Performance records
+8. Volume/muscles
+9. Body/nutrition
 
 ## Data sources actually used
 
@@ -69,6 +72,13 @@ Cross-feature links from hub:
 
 - Summary repo: `lib/features/sleep/data/sleep_hub_summary_repository.dart`
 - Tracking setting source: `SleepSyncService.isTrackingEnabled()`
+
+### Pulse card integration
+
+- Settings/source: `lib/features/pulse/application/pulse_tracking_service.dart`
+- Analysis repo: `lib/features/pulse/data/pulse_repository.dart`
+- Engine: `lib/features/pulse/domain/pulse_analysis_engine.dart`
+- Platform HR bridge: `lib/services/health/health_platform_heart_rate.dart`
 
 ## Range handling (implemented)
 
@@ -134,6 +144,20 @@ Current Sleep support in Statistics includes:
 No Sleep calculations are performed in Statistics UI; values come from `SleepHubSummaryRepository`.
 Score values consumed by Statistics are produced in the Sleep pipeline (`Sleep Health Score V2` in current implementation).
 
+## Pulse coverage inside Statistics
+
+Current Pulse support in Statistics includes:
+
+- Optional section gated by `pulse_tracking_enabled` (default off)
+- Tap-through to a dedicated day/week/month Pulse analysis screen
+- The Pulse screen reuses the existing period switcher/navigation pattern and `MeasurementChartWidget.fromData(...)`
+- Metrics shown:
+  - pulse range
+  - time-weighted average pulse
+  - conservative resting-pulse estimate from the lowest 20% of samples
+
+Pulse analysis reads platform heart-rate samples on demand and does not persist a new canonical pulse table in the current MVP.
+
 ## Integration boundaries (explicit)
 
 Statistics does **not** own or compute:
@@ -143,11 +167,14 @@ Statistics does **not** own or compute:
 - Sleep score algorithm
 - Sleep permission/import orchestration
 - Steps sync/import orchestration
+- Pulse permission/settings state
+- Pulse sample aggregation
 
 Those are owned by feature modules/services under:
 
 - Sleep: `lib/features/sleep/**`
 - Steps: `lib/features/steps/**` and `lib/services/health/**`
+- Pulse: `lib/features/pulse/**` and `lib/services/health/health_platform_heart_rate.dart`
 
 ## Current limitations and ambiguities
 

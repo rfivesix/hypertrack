@@ -122,6 +122,7 @@ class MainActivity : FlutterFragmentActivity() {
             when (call.method) {
                 "getAvailability" -> handleAvailability(result)
                 "requestPermissions" -> handleRequestPermissions(result)
+                "requestHeartRatePermissions" -> handleRequestHeartRatePermissions(result)
                 "readStepSegments" -> handleReadSegments(call, result)
                 "readHeartRateSamples" -> handleReadHeartRateSamples(call, result)
                 else -> result.notImplemented()
@@ -195,6 +196,28 @@ class MainActivity : FlutterFragmentActivity() {
                 pendingPermissionResult = result
                 pendingPermissionRequestSet = requiredPermissions
                 permissionLauncher.launch(requiredPermissions)
+            }
+        }
+    }
+
+    private fun handleRequestHeartRatePermissions(result: MethodChannel.Result) {
+        val status = HealthConnectClient.getSdkStatus(this)
+        if (status != HealthConnectClient.SDK_AVAILABLE) {
+            result.error("not_available", "Health Connect not available", null)
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val alreadyGranted = hasPermissions(requiredHeartRatePermissions)
+            if (alreadyGranted) {
+                withContext(Dispatchers.Main) { result.success(true) }
+                return@launch
+            }
+
+            withContext(Dispatchers.Main) {
+                pendingPermissionResult = result
+                pendingPermissionRequestSet = requiredHeartRatePermissions
+                permissionLauncher.launch(requiredHeartRatePermissions)
             }
         }
     }
@@ -384,13 +407,20 @@ class MainActivity : FlutterFragmentActivity() {
                     sessionsPageToken = sessionsResponse.pageToken
                 } while (sessionsPageToken != null)
 
+                val hrFrom = sessionsRecords.minOfOrNull { it.startTime }
+                    ?.minusSeconds(24 * 60 * 60)
+                    ?: from
+                val hrTo = sessionsRecords.maxOfOrNull { it.endTime }
+                    ?.plusSeconds(24 * 60 * 60)
+                    ?: to
+
                 val hrRecords = mutableListOf<HeartRateRecord>()
                 var hrPageToken: String? = null
                 do {
                     val hrResponse = client.readRecords(
                         ReadRecordsRequest(
                             recordType = HeartRateRecord::class,
-                            timeRangeFilter = TimeRangeFilter.between(from, to),
+                            timeRangeFilter = TimeRangeFilter.between(hrFrom, hrTo),
                             pageToken = hrPageToken,
                         ),
                     )

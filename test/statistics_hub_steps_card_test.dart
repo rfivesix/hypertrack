@@ -7,6 +7,8 @@ import 'package:hypertrack/features/statistics/domain/consistency_payload_models
 import 'package:hypertrack/features/statistics/domain/hub_payload_models.dart';
 import 'package:hypertrack/features/statistics/domain/recovery_payload_models.dart';
 import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
+import 'package:hypertrack/features/pulse/data/pulse_repository.dart';
+import 'package:hypertrack/features/pulse/domain/pulse_models.dart';
 import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
 import 'package:hypertrack/features/steps/domain/steps_models.dart';
 import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
@@ -107,6 +109,32 @@ class _FakeSleepSummaryRepository extends SleepHubSummaryRepository {
 
   @override
   Future<void> dispose() async {}
+}
+
+class _FakePulseRepository implements PulseAnalysisRepository {
+  const _FakePulseRepository({
+    this.summary,
+  });
+
+  final PulseAnalysisSummary? summary;
+
+  @override
+  Future<PulseAnalysisSummary> getAnalysis({
+    required PulseAnalysisWindow window,
+  }) async {
+    return summary ??
+        PulseAnalysisSummary(
+          window: window,
+          samples: const [],
+          chartSamples: const [],
+          sampleCount: 0,
+          quality: PulseDataQuality.noData,
+          noDataReason: PulseNoDataReason.noSamples,
+        );
+  }
+
+  @override
+  Future<bool> isTrackingEnabled() async => true;
 }
 
 const _sleepConnectChannel =
@@ -257,9 +285,11 @@ void main() {
 
   StatisticsHubScreen buildHub({
     required StepsAggregationRepository stepsRepository,
+    PulseAnalysisRepository? pulseRepository,
   }) {
     return StatisticsHubScreen(
       stepsRepository: stepsRepository,
+      pulseRepository: pulseRepository,
       sleepSummaryRepository: _FakeSleepSummaryRepository(
         const SleepHubSummary(
           averageScore: 79,
@@ -387,6 +417,85 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byType(SleepDayOverviewPage), findsOneWidget);
+  });
+
+  testWidgets('statistics hub pulse card shows selected range and KPI values', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 5000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await StepsSyncService().setTrackingEnabled(true);
+    final window = PulseAnalysisWindow(
+      startUtc: DateTime.utc(2026, 1),
+      endUtc: DateTime.utc(2026, 1, 31),
+    );
+    await tester.pumpWidget(
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(
+            stepsRepository: _FakeStepsRepository(),
+            pulseRepository: _FakePulseRepository(
+              summary: PulseAnalysisSummary(
+                window: window,
+                samples: const [],
+                chartSamples: const [],
+                sampleCount: 12,
+                quality: PulseDataQuality.ready,
+                noDataReason: PulseNoDataReason.none,
+                minBpm: 50,
+                maxBpm: 90,
+                averageBpm: 70,
+                restingBpm: 55,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+
+    final pulseCard = find.byKey(const Key('statistics_pulse_card'));
+    expect(pulseCard, findsOneWidget);
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Jan 1 - Jan 30')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Range')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('50-90 bpm')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Average')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('70 bpm')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Resting')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('55 bpm')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: pulseCard,
+        matching: find.text('12 samples - Good coverage'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Opt-in'), findsNothing);
   });
 
   testWidgets('statistics hub body section shows measurements link', (

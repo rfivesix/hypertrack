@@ -6596,6 +6596,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No recommendation available to apply.'**
   String get adaptiveRecommendationNotAvailableSnack;
+
+  /// No description provided for @settingsSectionApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get settingsSectionApp;
+
+  /// No description provided for @settingsAppearanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust theme, visual style, and haptics'**
+  String get settingsAppearanceSubtitle;
+
+  /// No description provided for @settingsShowSugarInDiaryOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show sugar in Diary overview'**
+  String get settingsShowSugarInDiaryOverviewTitle;
+
+  /// No description provided for @settingsShowSugarInDiaryOverviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows sugar in the top daily overview section'**
+  String get settingsShowSugarInDiaryOverviewSubtitle;
+
+  /// No description provided for @settingsSectionHealthTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Health & Tracking'**
+  String get settingsSectionHealthTracking;
+
+  /// No description provided for @settingsStepsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking, source policy, and providers'**
+  String get settingsStepsSubtitle;
+
+  /// No description provided for @settingsSleepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import, permissions, and sleep status'**
+  String get settingsSleepSubtitle;
+
+  /// No description provided for @settingsPulseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opt-in pulse analysis and heart-rate access'**
+  String get settingsPulseSubtitle;
+
+  /// No description provided for @settingsHealthExportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Apple Health and Health Connect export'**
+  String get settingsHealthExportSubtitle;
+
+  /// No description provided for @settingsSectionNutritionAndData.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition & Data'**
+  String get settingsSectionNutritionAndData;
+
+  /// No description provided for @settingsSectionSupportAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Support / About'**
+  String get settingsSectionSupportAbout;
+
+  /// No description provided for @settingsHapticFeedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptic feedback'**
+  String get settingsHapticFeedbackTitle;
+
+  /// No description provided for @settingsHapticFeedbackSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Light vibrations for confirmations and AI waiting'**
+  String get settingsHapticFeedbackSubtitle;
+
+  /// No description provided for @stepsSettingsEnableTrackingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable steps tracking'**
+  String get stepsSettingsEnableTrackingTitle;
+
+  /// No description provided for @stepsSettingsEnableTrackingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read step data from Apple Health / Health Connect'**
+  String get stepsSettingsEnableTrackingSubtitle;
+
+  /// No description provided for @stepsSettingsSourcePolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Source policy'**
+  String get stepsSettingsSourcePolicyTitle;
+
+  /// No description provided for @stepsSettingsSourcePolicyAutoDominant.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (dominant source)'**
+  String get stepsSettingsSourcePolicyAutoDominant;
+
+  /// No description provided for @stepsSettingsSourcePolicyAutoDominantSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended: use one source per day to avoid overlap inflation.'**
+  String get stepsSettingsSourcePolicyAutoDominantSubtitle;
+
+  /// No description provided for @stepsSettingsSourcePolicyMaxPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge (max per hour)'**
+  String get stepsSettingsSourcePolicyMaxPerHour;
+
+  /// No description provided for @stepsSettingsSourcePolicyMaxPerHourSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Combine sources by taking the highest hourly bucket.'**
+  String get stepsSettingsSourcePolicyMaxPerHourSubtitle;
+
+  /// No description provided for @stepsSettingsProviderFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider filter'**
+  String get stepsSettingsProviderFilterTitle;
+
+  /// No description provided for @pulseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse'**
+  String get pulseTitle;
+
+  /// No description provided for @pulseChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse over time'**
+  String get pulseChartTitle;
+
+  /// No description provided for @pulseRangeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Range'**
+  String get pulseRangeLabel;
+
+  /// No description provided for @pulseAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get pulseAverageLabel;
+
+  /// No description provided for @pulseRestingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting'**
+  String get pulseRestingLabel;
+
+  /// No description provided for @pulseInsufficientData.
+  ///
+  /// In en, this message translates to:
+  /// **'Too few pulse samples for a reliable chart.'**
+  String get pulseInsufficientData;
+
+  /// No description provided for @pulseMethodNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Average pulse is time-weighted. Resting pulse is a conservative estimate from the lowest 20% of samples in the selected period.'**
+  String get pulseMethodNote;
+
+  /// No description provided for @pulseSampleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No samples} one{1 sample} other{{count} samples}}'**
+  String pulseSampleCount(int count);
+
+  /// No description provided for @pulseQualityReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Good coverage'**
+  String get pulseQualityReady;
+
+  /// No description provided for @pulseQualityLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited data'**
+  String get pulseQualityLimited;
+
+  /// No description provided for @pulseQualityInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Very sparse'**
+  String get pulseQualityInsufficient;
+
+  /// No description provided for @pulseQualityNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get pulseQualityNoData;
+
+  /// No description provided for @pulseNoDataDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse analysis is disabled in Settings.'**
+  String get pulseNoDataDisabled;
+
+  /// No description provided for @pulseNoDataPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate permission is required to show pulse analysis.'**
+  String get pulseNoDataPermissionDenied;
+
+  /// No description provided for @pulseNoDataUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse data is currently unavailable on this device.'**
+  String get pulseNoDataUnavailable;
+
+  /// No description provided for @pulseNoDataQueryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read pulse data.'**
+  String get pulseNoDataQueryFailed;
+
+  /// No description provided for @pulseNoDataDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'No pulse samples were found for this period.'**
+  String get pulseNoDataDefault;
+
+  /// No description provided for @pulseSettingsEnableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable pulse analysis'**
+  String get pulseSettingsEnableTitle;
+
+  /// No description provided for @pulseSettingsEnableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads heart-rate data for the pulse view only when you turn this on.'**
+  String get pulseSettingsEnableSubtitle;
+
+  /// No description provided for @pulseSettingsPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow heart-rate access'**
+  String get pulseSettingsPermissionTitle;
+
+  /// No description provided for @pulseSettingsPermissionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens Apple Health or Health Connect so Hypertrack can read pulse samples.'**
+  String get pulseSettingsPermissionSubtitle;
+
+  /// No description provided for @pulseSettingsAnalysisSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows range, time-weighted average, and a conservative resting-pulse estimate. Not a medical diagnosis.'**
+  String get pulseSettingsAnalysisSubtitle;
+
+  /// No description provided for @pulseSettingsPermissionGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate access is ready.'**
+  String get pulseSettingsPermissionGranted;
+
+  /// No description provided for @pulseSettingsPermissionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate access was not granted.'**
+  String get pulseSettingsPermissionFailed;
+
+  /// No description provided for @pulseOptInChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Opt-in'**
+  String get pulseOptInChip;
+
+  /// No description provided for @statisticsPulseDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Range, time-weighted average, and resting pulse for selected periods.'**
+  String get statisticsPulseDescription;
+
+  /// No description provided for @statisticsPulseOpenCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens pulse analysis'**
+  String get statisticsPulseOpenCaption;
+
+  /// No description provided for @healthExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health export'**
+  String get healthExportTitle;
+
+  /// No description provided for @healthExportAppleHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health export'**
+  String get healthExportAppleHealthTitle;
+
+  /// No description provided for @healthExportHealthConnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect export'**
+  String get healthExportHealthConnectTitle;
+
+  /// No description provided for @healthExportDomainNutritionHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition & hydration'**
+  String get healthExportDomainNutritionHydration;
+
+  /// No description provided for @healthExportDomainWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get healthExportDomainWorkouts;
+
+  /// No description provided for @healthExportStateIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get healthExportStateIdle;
+
+  /// No description provided for @healthExportStateExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting'**
+  String get healthExportStateExporting;
+
+  /// No description provided for @healthExportStateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get healthExportStateSuccess;
+
+  /// No description provided for @healthExportStateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get healthExportStateFailed;
+
+  /// No description provided for @healthExportStateDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get healthExportStateDisabled;
+
+  /// No description provided for @healthExportResultComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Export complete'**
+  String get healthExportResultComplete;
+
+  /// No description provided for @healthExportResultFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed'**
+  String get healthExportResultFailed;
+
+  /// No description provided for @healthExportAppleHealthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-way export from Hypertrack to Apple Health'**
+  String get healthExportAppleHealthSubtitle;
+
+  /// No description provided for @healthExportHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-way export from Hypertrack to Health Connect'**
+  String get healthExportHealthConnectSubtitle;
+
+  /// No description provided for @healthExportAppleHealthStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health export status'**
+  String get healthExportAppleHealthStatusTitle;
+
+  /// No description provided for @healthExportHealthConnectStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect export status'**
+  String get healthExportHealthConnectStatusTitle;
 }
 
 class _AppLocalizationsDelegate

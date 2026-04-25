@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../generated/app_localizations.dart';
 import '../services/health/health_models.dart';
 import '../services/health/health_platform_steps.dart';
 import '../services/health/steps_sync_service.dart';
@@ -41,7 +42,7 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isGerman = Localizations.localeOf(context).languageCode == 'de';
+    final l10n = AppLocalizations.of(context)!;
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return PopScope(
@@ -53,7 +54,7 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: GlobalAppBar(
-          title: isGerman ? 'Schritte' : 'Steps',
+          title: l10n.steps,
           leading: BackButton(
             onPressed: () => Navigator.of(context).pop(_hasChanges),
           ),
@@ -63,23 +64,17 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
             top: DesignConstants.cardPadding.top + topPadding,
           ),
           children: [
-            _buildSectionTitle(context, isGerman ? 'Schritte' : 'Steps'),
+            _buildSectionTitle(context, l10n.steps),
             SummaryCard(
               child: Column(
                 children: [
                   SwitchListTile(
                     secondary: const Icon(Icons.directions_walk_rounded),
                     title: Text(
-                      isGerman
-                          ? 'Schritte-Tracking aktivieren'
-                          : 'Enable steps tracking',
+                      l10n.stepsSettingsEnableTrackingTitle,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(
-                      isGerman
-                          ? 'Schrittdaten aus Apple Health / Health Connect lesen'
-                          : 'Read step data from Apple Health / Health Connect',
-                    ),
+                    subtitle: Text(l10n.stepsSettingsEnableTrackingSubtitle),
                     value: _stepsTrackingEnabled,
                     onChanged: (value) async {
                       await _stepsSyncService.setTrackingEnabled(value);
@@ -105,7 +100,7 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        isGerman ? 'Quellenrichtlinie' : 'Source policy',
+                        l10n.stepsSettingsSourcePolicyTitle,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -125,27 +120,19 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
                       children: [
                         RadioListTile<StepsSourcePolicy>(
                           title: Text(
-                            isGerman
-                                ? 'Auto (dominante Quelle)'
-                                : 'Auto (dominant source)',
+                            l10n.stepsSettingsSourcePolicyAutoDominant,
                           ),
                           subtitle: Text(
-                            isGerman
-                                ? 'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.'
-                                : 'Recommended: use one source per day to avoid overlap inflation.',
+                            l10n.stepsSettingsSourcePolicyAutoDominantSubtitle,
                           ),
                           value: StepsSourcePolicy.autoDominant,
                         ),
                         RadioListTile<StepsSourcePolicy>(
                           title: Text(
-                            isGerman
-                                ? 'Zusammenführen (max pro Stunde)'
-                                : 'Merge (max per hour)',
+                            l10n.stepsSettingsSourcePolicyMaxPerHour,
                           ),
                           subtitle: Text(
-                            isGerman
-                                ? 'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.'
-                                : 'Combine sources by taking the highest hourly bucket.',
+                            l10n.stepsSettingsSourcePolicyMaxPerHourSubtitle,
                           ),
                           value: StepsSourcePolicy.maxPerHour,
                         ),
@@ -158,7 +145,7 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        isGerman ? 'Provider-Filter' : 'Provider filter',
+                        l10n.stepsSettingsProviderFilterTitle,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -177,7 +164,7 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
                     child: Column(
                       children: [
                         RadioListTile<StepsProviderFilter>(
-                          title: Text(isGerman ? 'Alle' : 'All'),
+                          title: Text(l10n.filterAll),
                           value: StepsProviderFilter.all,
                         ),
                         RadioListTile<StepsProviderFilter>(

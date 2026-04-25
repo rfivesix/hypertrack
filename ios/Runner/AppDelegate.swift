@@ -105,6 +105,8 @@ import UIKit
       result(HKHealthStore.isHealthDataAvailable())
     case "requestPermissions":
       requestHealthKitPermissions(result: result)
+    case "requestHeartRatePermissions":
+      requestHeartRatePermissions(result: result)
     case "readStepSegments":
       readStepSegments(call: call, result: result)
     case "readHeartRateSamples":
@@ -126,6 +128,26 @@ import UIKit
     }
 
     healthStore.requestAuthorization(toShare: nil, read: [stepType]) { success, error in
+      if let error = error {
+        result(FlutterError(code: "permission_denied", message: error.localizedDescription, details: nil))
+        return
+      }
+      result(success)
+    }
+  }
+
+  private func requestHeartRatePermissions(result: @escaping FlutterResult) {
+    guard HKHealthStore.isHealthDataAvailable() else {
+      result(FlutterError(code: "not_available", message: "HealthKit unavailable", details: nil))
+      return
+    }
+
+    guard let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else {
+      result(FlutterError(code: "not_available", message: "Heart rate type unavailable", details: nil))
+      return
+    }
+
+    healthStore.requestAuthorization(toShare: nil, read: [heartRateType]) { success, error in
       if let error = error {
         result(FlutterError(code: "permission_denied", message: error.localizedDescription, details: nil))
         return

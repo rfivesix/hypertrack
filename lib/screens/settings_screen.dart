@@ -19,6 +19,7 @@ import 'ai_settings_screen.dart';
 import 'appearance_settings_screen.dart';
 import 'data_management_screen.dart';
 import 'health_export_settings_screen.dart';
+import 'pulse_settings_screen.dart';
 import 'sleep_settings_screen.dart';
 import 'steps_settings_screen.dart';
 
@@ -203,13 +204,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  bool _isGerman(BuildContext context) =>
-      Localizations.localeOf(context).languageCode.toLowerCase() == 'de';
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isGerman = _isGerman(context);
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
@@ -227,16 +224,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _buildSectionTitle(
             context,
-            isGerman ? 'App' : 'App',
+            l10n.settingsSectionApp,
             key: const Key('settings_section_app'),
           ),
           _buildNavigationCard(
             context: context,
             icon: Icons.palette_outlined,
             title: l10n.settingsAppearance,
-            subtitle: isGerman
-                ? 'Design, Stil und Haptik anpassen'
-                : 'Adjust theme, visual style, and haptics',
+            subtitle: l10n.settingsAppearanceSubtitle,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -254,15 +249,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Theme.of(context).colorScheme.primary,
               ),
               title: Text(
-                isGerman
-                    ? 'Zucker in Tagebuch-Übersicht anzeigen'
-                    : 'Show sugar in Diary overview',
+                l10n.settingsShowSugarInDiaryOverviewTitle,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
-                isGerman
-                    ? 'Blendet Zucker in der oberen Tagesübersicht ein'
-                    : 'Shows sugar in the top daily overview section',
+                l10n.settingsShowSugarInDiaryOverviewSubtitle,
               ),
               value: _showSugarInDiaryOverview,
               onChanged: (value) async {
@@ -285,16 +276,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(
             context,
-            isGerman ? 'Gesundheit & Tracking' : 'Health & Tracking',
+            l10n.settingsSectionHealthTracking,
             key: const Key('settings_section_health_tracking'),
           ),
           _buildNavigationCard(
             context: context,
             icon: Icons.directions_walk_rounded,
-            title: isGerman ? 'Schritte' : 'Steps',
-            subtitle: isGerman
-                ? 'Tracking, Quellenrichtlinie und Provider'
-                : 'Tracking, source policy, and providers',
+            title: l10n.steps,
+            subtitle: l10n.settingsStepsSubtitle,
             tileKey: const Key('settings_steps_entry'),
             onTap: () async {
               final changed = await Navigator.of(context).push<bool>(
@@ -311,9 +300,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context: context,
             icon: Icons.bedtime_outlined,
             title: l10n.sleepSettingsSectionTitle,
-            subtitle: isGerman
-                ? 'Import, Berechtigungen und Schlafstatus'
-                : 'Import, permissions, and sleep status',
+            subtitle: l10n.settingsSleepSubtitle,
             tileKey: const Key('settings_sleep_entry'),
             onTap: () async {
               final changed = await Navigator.of(context).push<bool>(
@@ -331,11 +318,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildNavigationCard(
             context: context,
+            icon: Icons.favorite_border_rounded,
+            title: l10n.pulseTitle,
+            subtitle: l10n.settingsPulseSubtitle,
+            tileKey: const Key('settings_pulse_entry'),
+            onTap: () async {
+              final changed = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                  builder: (context) => const PulseSettingsScreen(),
+                ),
+              );
+              if (changed == true) {
+                hasStepsSettingsChanged = true;
+              }
+            },
+          ),
+          _buildNavigationCard(
+            context: context,
             icon: Icons.favorite_outline,
-            title: isGerman ? 'Health Export' : 'Health export',
-            subtitle: isGerman
-                ? 'Apple Health und Health Connect Export verwalten'
-                : 'Manage Apple Health and Health Connect export',
+            title: l10n.healthExportTitle,
+            subtitle: l10n.settingsHealthExportSubtitle,
             tileKey: const Key('settings_health_export_entry'),
             onTap: () async {
               final changed = await Navigator.of(context).push<bool>(
@@ -351,7 +353,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(
             context,
-            isGerman ? 'Ernährung & Daten' : 'Nutrition & Data',
+            l10n.settingsSectionNutritionAndData,
             key: const Key('settings_section_nutrition_data'),
           ),
           _buildNavigationCard(
@@ -407,7 +409,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: DesignConstants.spacingXL),
           _buildSectionTitle(
             context,
-            isGerman ? 'Support & Info' : 'Support / About',
+            l10n.settingsSectionSupportAbout,
             key: const Key('settings_section_support_about'),
           ),
           _buildNavigationCard(

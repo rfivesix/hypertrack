@@ -3626,4 +3626,227 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adaptiveRecommendationNotAvailableSnack =>
       'No recommendation available to apply.';
+
+  @override
+  String get settingsSectionApp => 'App';
+
+  @override
+  String get settingsAppearanceSubtitle =>
+      'Adjust theme, visual style, and haptics';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewTitle =>
+      'Show sugar in Diary overview';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewSubtitle =>
+      'Shows sugar in the top daily overview section';
+
+  @override
+  String get settingsSectionHealthTracking => 'Health & Tracking';
+
+  @override
+  String get settingsStepsSubtitle => 'Tracking, source policy, and providers';
+
+  @override
+  String get settingsSleepSubtitle => 'Import, permissions, and sleep status';
+
+  @override
+  String get settingsPulseSubtitle =>
+      'Opt-in pulse analysis and heart-rate access';
+
+  @override
+  String get settingsHealthExportSubtitle =>
+      'Manage Apple Health and Health Connect export';
+
+  @override
+  String get settingsSectionNutritionAndData => 'Nutrition & Data';
+
+  @override
+  String get settingsSectionSupportAbout => 'Support / About';
+
+  @override
+  String get settingsHapticFeedbackTitle => 'Haptic feedback';
+
+  @override
+  String get settingsHapticFeedbackSubtitle =>
+      'Light vibrations for confirmations and AI waiting';
+
+  @override
+  String get stepsSettingsEnableTrackingTitle => 'Enable steps tracking';
+
+  @override
+  String get stepsSettingsEnableTrackingSubtitle =>
+      'Read step data from Apple Health / Health Connect';
+
+  @override
+  String get stepsSettingsSourcePolicyTitle => 'Source policy';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominant => 'Auto (dominant source)';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominantSubtitle =>
+      'Recommended: use one source per day to avoid overlap inflation.';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHour => 'Merge (max per hour)';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHourSubtitle =>
+      'Combine sources by taking the highest hourly bucket.';
+
+  @override
+  String get stepsSettingsProviderFilterTitle => 'Provider filter';
+
+  @override
+  String get pulseTitle => 'Pulse';
+
+  @override
+  String get pulseChartTitle => 'Pulse over time';
+
+  @override
+  String get pulseRangeLabel => 'Range';
+
+  @override
+  String get pulseAverageLabel => 'Average';
+
+  @override
+  String get pulseRestingLabel => 'Resting';
+
+  @override
+  String get pulseInsufficientData =>
+      'Too few pulse samples for a reliable chart.';
+
+  @override
+  String get pulseMethodNote =>
+      'Average pulse is time-weighted. Resting pulse is a conservative estimate from the lowest 20% of samples in the selected period.';
+
+  @override
+  String pulseSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samples',
+      one: '1 sample',
+      zero: 'No samples',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pulseQualityReady => 'Good coverage';
+
+  @override
+  String get pulseQualityLimited => 'Limited data';
+
+  @override
+  String get pulseQualityInsufficient => 'Very sparse';
+
+  @override
+  String get pulseQualityNoData => 'No data';
+
+  @override
+  String get pulseNoDataDisabled => 'Pulse analysis is disabled in Settings.';
+
+  @override
+  String get pulseNoDataPermissionDenied =>
+      'Heart-rate permission is required to show pulse analysis.';
+
+  @override
+  String get pulseNoDataUnavailable =>
+      'Pulse data is currently unavailable on this device.';
+
+  @override
+  String get pulseNoDataQueryFailed => 'Could not read pulse data.';
+
+  @override
+  String get pulseNoDataDefault =>
+      'No pulse samples were found for this period.';
+
+  @override
+  String get pulseSettingsEnableTitle => 'Enable pulse analysis';
+
+  @override
+  String get pulseSettingsEnableSubtitle =>
+      'Reads heart-rate data for the pulse view only when you turn this on.';
+
+  @override
+  String get pulseSettingsPermissionTitle => 'Allow heart-rate access';
+
+  @override
+  String get pulseSettingsPermissionSubtitle =>
+      'Opens Apple Health or Health Connect so Hypertrack can read pulse samples.';
+
+  @override
+  String get pulseSettingsAnalysisSubtitle =>
+      'Shows range, time-weighted average, and a conservative resting-pulse estimate. Not a medical diagnosis.';
+
+  @override
+  String get pulseSettingsPermissionGranted => 'Heart-rate access is ready.';
+
+  @override
+  String get pulseSettingsPermissionFailed =>
+      'Heart-rate access was not granted.';
+
+  @override
+  String get pulseOptInChip => 'Opt-in';
+
+  @override
+  String get statisticsPulseDescription =>
+      'Range, time-weighted average, and resting pulse for selected periods.';
+
+  @override
+  String get statisticsPulseOpenCaption => 'Opens pulse analysis';
+
+  @override
+  String get healthExportTitle => 'Health export';
+
+  @override
+  String get healthExportAppleHealthTitle => 'Apple Health export';
+
+  @override
+  String get healthExportHealthConnectTitle => 'Health Connect export';
+
+  @override
+  String get healthExportDomainNutritionHydration => 'Nutrition & hydration';
+
+  @override
+  String get healthExportDomainWorkouts => 'Workouts';
+
+  @override
+  String get healthExportStateIdle => 'Idle';
+
+  @override
+  String get healthExportStateExporting => 'Exporting';
+
+  @override
+  String get healthExportStateSuccess => 'Success';
+
+  @override
+  String get healthExportStateFailed => 'Failed';
+
+  @override
+  String get healthExportStateDisabled => 'Disabled';
+
+  @override
+  String get healthExportResultComplete => 'Export complete';
+
+  @override
+  String get healthExportResultFailed => 'Export failed';
+
+  @override
+  String get healthExportAppleHealthSubtitle =>
+      'One-way export from Hypertrack to Apple Health';
+
+  @override
+  String get healthExportHealthConnectSubtitle =>
+      'One-way export from Hypertrack to Health Connect';
+
+  @override
+  String get healthExportAppleHealthStatusTitle => 'Apple Health export status';
+
+  @override
+  String get healthExportHealthConnectStatusTitle =>
+      'Health Connect export status';
 }

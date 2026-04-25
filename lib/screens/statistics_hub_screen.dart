@@ -10,6 +10,10 @@ import '../features/statistics/domain/hub_payload_models.dart';
 import '../features/statistics/domain/statistics_range_policy.dart';
 import '../features/statistics/presentation/statistics_formatter.dart';
 import '../features/statistics/presentation/widgets/body_nutrition_normalized_trend_chart.dart';
+import '../features/pulse/application/pulse_tracking_service.dart';
+import '../features/pulse/data/pulse_repository.dart';
+import '../features/pulse/domain/pulse_models.dart';
+import '../features/pulse/presentation/pulse_analysis_screen.dart';
 import '../features/sleep/data/sleep_hub_summary_repository.dart';
 import '../features/sleep/presentation/sleep_navigation.dart';
 import '../features/sleep/platform/sleep_sync_service.dart';
@@ -37,6 +41,7 @@ class StatisticsHubScreen extends StatefulWidget {
     StatisticsHubDataAdapter? hubDataAdapter,
     StepsAggregationRepository? stepsRepository,
     SleepHubSummaryRepository? sleepSummaryRepository,
+    PulseAnalysisRepository? pulseRepository,
     this.fetchHubAnalytics,
     this.importSleepIfDue,
     this.isSleepTrackingEnabled,
@@ -44,11 +49,13 @@ class StatisticsHubScreen extends StatefulWidget {
     this.stepsProviderNameLoader,
   })  : _hubDataAdapter = hubDataAdapter,
         _stepsRepository = stepsRepository,
-        _sleepSummaryRepository = sleepSummaryRepository;
+        _sleepSummaryRepository = sleepSummaryRepository,
+        _pulseRepository = pulseRepository;
 
   final StatisticsHubDataAdapter? _hubDataAdapter;
   final StepsAggregationRepository? _stepsRepository;
   final SleepHubSummaryRepository? _sleepSummaryRepository;
+  final PulseAnalysisRepository? _pulseRepository;
   final Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(
     int selectedTimeRangeIndex,
   )? fetchHubAnalytics;
@@ -81,6 +88,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   final _rangePolicy = StatisticsRangePolicyService.instance;
   late final StepsAggregationRepository _stepsRepository;
   late final SleepHubSummaryRepository _sleepSummaryRepository;
+  late final PulseAnalysisRepository _pulseRepository;
   final StepsSyncService _stepsSyncService = StepsSyncService();
   final SleepSyncService _sleepSyncService = SleepSyncService();
 
@@ -110,8 +118,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   BodyNutritionAnalyticsResult? _bodyNutrition;
   RangeStepsAggregation? _stepsRange;
   SleepHubSummary? _sleepSummary;
+  PulseAnalysisSummary? _pulseSummary;
   bool _stepsTrackingEnabled = false;
   bool _sleepTrackingEnabled = false;
+  bool _pulseTrackingEnabled = false;
   int _targetSteps = 8000;
   String _stepsProviderName = '';
   @override
@@ -125,8 +135,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         widget._stepsRepository ?? HealthStepsAggregationRepository();
     _sleepSummaryRepository =
         widget._sleepSummaryRepository ?? SleepHubSummaryRepository();
+    _pulseRepository =
+        widget._pulseRepository ?? HealthPulseAnalysisRepository();
     StepsSyncService.trackingEnabledListenable.addListener(
       _onTrackingEnabledChanged,
+    );
+    PulseTrackingService.trackingEnabledListenable.addListener(
+      _onPulseTrackingEnabledChanged,
     );
     _syncTrackingEnabledFromSettings();
     _loadHubAnalytics();
@@ -136,6 +151,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   void dispose() {
     StepsSyncService.trackingEnabledListenable.removeListener(
       _onTrackingEnabledChanged,
+    );
+    PulseTrackingService.trackingEnabledListenable.removeListener(
+      _onPulseTrackingEnabledChanged,
     );
     _sleepSummaryRepository.dispose();
     super.dispose();
@@ -154,6 +172,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       setState(() => _stepsTrackingEnabled = true);
     }
     _loadHubAnalytics();
+  }
+
+  void _onPulseTrackingEnabledChanged() {
+    final enabled = PulseTrackingService.trackingEnabledListenable.value;
+    if (enabled == null || !mounted) return;
+    setState(() => _pulseTrackingEnabled = enabled);
   }
 
   Future<void> _syncTrackingEnabledFromSettings() async {
@@ -192,6 +216,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final stepsTrackingFuture = _stepsRepository.isTrackingEnabled();
     final sleepTrackingFuture = widget.isSleepTrackingEnabled?.call() ??
         _sleepSyncService.isTrackingEnabled();
+    final pulseTrackingFuture = _pulseRepository.isTrackingEnabled();
     final targetStepsFuture = widget.targetStepsLoader?.call() ??
         DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
     final providerNameFuture =
@@ -202,6 +227,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final sleepSummary = await sleepSummaryFuture;
     final stepsTrackingEnabled = await stepsTrackingFuture;
     final sleepTrackingEnabled = await sleepTrackingFuture;
+    final pulseTrackingEnabled = await pulseTrackingFuture;
+    final pulseSummary = pulseTrackingEnabled
+        ? await _pulseRepository.getAnalysis(
+            window: _pulseWindowForDaysBack(daysBack),
+          )
+        : null;
     final targetSteps = await targetStepsFuture;
     final providerName = await providerNameFuture;
 
@@ -221,12 +252,26 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _bodyNutrition = bodyNutrition;
       _stepsRange = stepsRange;
       _sleepSummary = sleepSummary;
+      _pulseSummary = pulseSummary;
       _stepsTrackingEnabled = effectiveStepsTrackingEnabled;
       _sleepTrackingEnabled = sleepTrackingEnabled;
+      _pulseTrackingEnabled = pulseTrackingEnabled;
       _targetSteps = targetSteps;
       _stepsProviderName = providerName;
       _isLoadingStats = false;
     });
+  }
+
+  PulseAnalysisWindow _pulseWindowForDaysBack(int daysBack) {
+    final safeDays = daysBack < 1 ? 1 : daysBack;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = today.subtract(Duration(days: safeDays - 1));
+    final endExclusive = today.add(const Duration(days: 1));
+    return PulseAnalysisWindow(
+      startUtc: start.toUtc(),
+      endUtc: endExclusive.toUtc(),
+    );
   }
 
   Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)>
@@ -286,6 +331,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 if (_sleepTrackingEnabled) ...[
                   const SizedBox(height: 8),
                   _buildSleepSection(),
+                ],
+                if (_pulseTrackingEnabled) ...[
+                  const SizedBox(height: 8),
+                  _buildPulseSection(),
                 ],
                 const SizedBox(height: DesignConstants.spacingL),
                 _buildSectionTitle(context, l10n.statisticsSectionTraining),
@@ -825,6 +874,127 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPulseSection() {
+    final l10n = AppLocalizations.of(context)!;
+    final selectedDays = _rangePolicy.selectedDaysFromIndex(
+      _selectedTimeRangeIndex,
+    );
+    final rangeLabel = _rangeSubtitle(selectedDays, _stepsRange);
+    final summary = _pulseSummary;
+    final chipLabel = summary == null ? rangeLabel : _pulseRangeLabel(summary);
+    final hasMetrics = summary?.hasCoreMetrics ?? false;
+    final rangeValue = !hasMetrics
+        ? '--'
+        : '${summary!.minBpm!.round()}-${summary.maxBpm!.round()} ${l10n.sleepBpmUnit}';
+    final averageValue = summary?.averageBpm == null
+        ? '--'
+        : '${summary!.averageBpm!.round()} ${l10n.sleepBpmUnit}';
+    final restingValue = summary?.restingBpm == null
+        ? '--'
+        : '${summary!.restingBpm!.round()} ${l10n.sleepBpmUnit}';
+    final stateText = summary == null
+        ? l10n.load_dots
+        : summary.hasData
+            ? '${l10n.pulseSampleCount(summary.sampleCount)} - ${_pulseQualityLabel(summary.quality)}'
+            : _pulseNoDataMessage(summary.noDataReason);
+    return SummaryCard(
+      key: const Key('statistics_pulse_card'),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PulseAnalysisScreen()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeaderWithChevron(
+              label: l10n.pulseTitle,
+              chipText: chipLabel,
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildPulseMetricTile(l10n.pulseRangeLabel, rangeValue),
+                _buildPulseMetricTile(l10n.pulseAverageLabel, averageValue),
+                _buildPulseMetricTile(l10n.pulseRestingLabel, restingValue),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              stateText,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _pulseRangeLabel(PulseAnalysisSummary summary) {
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final start = summary.window.startUtc.toLocal();
+    final endExclusive = summary.window.endUtc.toLocal();
+    final end = DateTime(
+      endExclusive.year,
+      endExclusive.month,
+      endExclusive.day,
+    ).subtract(const Duration(days: 1));
+    final startDay = DateTime(start.year, start.month, start.day);
+    final spansYear = startDay.year != end.year;
+    final formatter =
+        spansYear ? DateFormat.yMMMd(localeCode) : DateFormat.MMMd(localeCode);
+    return '${formatter.format(startDay)} - ${formatter.format(end)}';
+  }
+
+  Widget _buildPulseMetricTile(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _pulseQualityLabel(PulseDataQuality quality) {
+    return switch (quality) {
+      PulseDataQuality.ready => l10n.pulseQualityReady,
+      PulseDataQuality.limited => l10n.pulseQualityLimited,
+      PulseDataQuality.insufficient => l10n.pulseQualityInsufficient,
+      PulseDataQuality.noData => l10n.pulseQualityNoData,
+    };
+  }
+
+  String _pulseNoDataMessage(PulseNoDataReason reason) {
+    return switch (reason) {
+      PulseNoDataReason.disabled => l10n.pulseNoDataDisabled,
+      PulseNoDataReason.permissionDenied => l10n.pulseNoDataPermissionDenied,
+      PulseNoDataReason.platformUnavailable => l10n.pulseNoDataUnavailable,
+      PulseNoDataReason.queryFailed => l10n.pulseNoDataQueryFailed,
+      _ => l10n.pulseNoDataDefault,
+    };
   }
 
   Widget _buildSleepScoreRing(

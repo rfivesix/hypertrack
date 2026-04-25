@@ -183,6 +183,12 @@ Flow:
 - HealthKit adapter: `lib/features/sleep/platform/healthkit/healthkit_sleep_adapter.dart`
 - Channel bridges/data sources: `lib/features/sleep/platform/sleep_platform_channel.dart`
 
+Health Connect heart-rate robustness:
+
+- Android native sleep import reads sleep sessions first, then reads heart-rate records from a padded session-derived window.
+- The Dart Health Connect adapter has a best-effort fallback: if the strict sleep import contains sessions but no HR samples, it retries with a 24-hour padded import window and keeps only HR samples that still fall inside the strict imported sleep sessions.
+- This is intended to support providers that store HR in long interval records whose record bounds sit outside a sleep/import window. It does not synthesize or interpolate missing data.
+
 ### Mapping
 
 - Health Connect mapping: `lib/features/sleep/data/mapping/health_connect_mapper.dart`
@@ -299,6 +305,7 @@ Important implementation detail:
 
 - HR samples are imported with sessions and stages through platform batch
 - Persisted to `sleep_canonical_heart_rate_samples`
+- Health Connect HR retrieval uses wider read windows with strict final session-window filtering to avoid losing valid in-session samples from long provider records.
 
 ### Derived nightly HR in pipeline
 

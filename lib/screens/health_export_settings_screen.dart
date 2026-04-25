@@ -4,6 +4,7 @@ import '../health_export/adapters/apple_health/apple_health_export_adapter.dart'
 import '../health_export/adapters/health_connect/health_connect_export_adapter.dart';
 import '../health_export/export_service.dart';
 import '../health_export/models/export_models.dart';
+import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -103,35 +104,32 @@ class _HealthExportSettingsScreenState
     );
   }
 
-  bool _isGerman(BuildContext context) =>
-      Localizations.localeOf(context).languageCode.toLowerCase() == 'de';
-
-  String _exportPlatformTitle(HealthExportPlatform platform, bool isGerman) {
+  String _exportPlatformTitle(
+    HealthExportPlatform platform,
+    AppLocalizations l10n,
+  ) {
     return switch (platform) {
-      HealthExportPlatform.appleHealth =>
-        isGerman ? 'Apple Health Export' : 'Apple Health export',
-      HealthExportPlatform.healthConnect =>
-        isGerman ? 'Health Connect Export' : 'Health Connect export',
+      HealthExportPlatform.appleHealth => l10n.healthExportAppleHealthTitle,
+      HealthExportPlatform.healthConnect => l10n.healthExportHealthConnectTitle,
     };
   }
 
-  String _domainLabel(HealthExportDomain domain, bool isGerman) {
+  String _domainLabel(HealthExportDomain domain, AppLocalizations l10n) {
     return switch (domain) {
-      HealthExportDomain.measurements =>
-        isGerman ? 'Messwerte' : 'Measurements',
+      HealthExportDomain.measurements => l10n.measurementsScreenTitle,
       HealthExportDomain.nutritionHydration =>
-        isGerman ? 'Ernährung & Hydration' : 'Nutrition & hydration',
-      HealthExportDomain.workouts => isGerman ? 'Workouts' : 'Workouts',
+        l10n.healthExportDomainNutritionHydration,
+      HealthExportDomain.workouts => l10n.healthExportDomainWorkouts,
     };
   }
 
-  String _stateLabel(HealthExportState state, bool isGerman) {
+  String _stateLabel(HealthExportState state, AppLocalizations l10n) {
     return switch (state) {
-      HealthExportState.idle => isGerman ? 'Leerlauf' : 'Idle',
-      HealthExportState.exporting => isGerman ? 'Export läuft' : 'Exporting',
-      HealthExportState.success => isGerman ? 'Erfolgreich' : 'Success',
-      HealthExportState.failed => isGerman ? 'Fehlgeschlagen' : 'Failed',
-      HealthExportState.disabled => isGerman ? 'Deaktiviert' : 'Disabled',
+      HealthExportState.idle => l10n.healthExportStateIdle,
+      HealthExportState.exporting => l10n.healthExportStateExporting,
+      HealthExportState.success => l10n.healthExportStateSuccess,
+      HealthExportState.failed => l10n.healthExportStateFailed,
+      HealthExportState.disabled => l10n.healthExportStateDisabled,
     };
   }
 
@@ -160,16 +158,16 @@ class _HealthExportSettingsScreenState
     HealthExportResult result,
     BuildContext context,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     if (result.success) {
-      return _isGerman(context) ? 'Export abgeschlossen' : 'Export complete';
+      return l10n.healthExportResultComplete;
     }
-    return result.message ??
-        (_isGerman(context) ? 'Export fehlgeschlagen' : 'Export failed');
+    return result.message ?? l10n.healthExportResultFailed;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isGerman = _isGerman(context);
+    final l10n = AppLocalizations.of(context)!;
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return PopScope(
@@ -181,7 +179,7 @@ class _HealthExportSettingsScreenState
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: GlobalAppBar(
-          title: isGerman ? 'Health Export' : 'Health export',
+          title: l10n.healthExportTitle,
           leading: BackButton(
             onPressed: () => Navigator.of(context).pop(_hasChanges),
           ),
@@ -193,7 +191,7 @@ class _HealthExportSettingsScreenState
           children: [
             _buildSectionTitle(
               context,
-              isGerman ? 'Health Export' : 'Health export',
+              l10n.healthExportTitle,
             ),
             SummaryCard(
               child: Column(
@@ -203,14 +201,12 @@ class _HealthExportSettingsScreenState
                     title: Text(
                       _exportPlatformTitle(
                         HealthExportPlatform.appleHealth,
-                        isGerman,
+                        l10n,
                       ),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      isGerman
-                          ? 'Einweg-Export von Hypertrack nach Apple Health'
-                          : 'One-way export from Hypertrack to Apple Health',
+                      l10n.healthExportAppleHealthSubtitle,
                     ),
                     value: _appleExportEnabled,
                     onChanged: (value) => _toggleHealthExport(
@@ -235,16 +231,14 @@ class _HealthExportSettingsScreenState
                       ),
                     ),
                     title: Text(
-                      isGerman
-                          ? 'Export-Status Apple Health'
-                          : 'Apple Health export status',
+                      l10n.healthExportAppleHealthStatusTitle,
                     ),
                     subtitle: Text(
                       HealthExportDomain.values.map((domain) {
                         final status =
                             _exportStatuses[HealthExportPlatform.appleHealth]
                                 ?.statusFor(domain);
-                        return '${_domainLabel(domain, isGerman)}: ${_stateLabel(status?.state ?? HealthExportState.idle, isGerman)}';
+                        return '${_domainLabel(domain, l10n)}: ${_stateLabel(status?.state ?? HealthExportState.idle, l10n)}';
                       }).join(' · '),
                     ),
                     trailing: _isAppleExporting
@@ -264,14 +258,12 @@ class _HealthExportSettingsScreenState
                     title: Text(
                       _exportPlatformTitle(
                         HealthExportPlatform.healthConnect,
-                        isGerman,
+                        l10n,
                       ),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      isGerman
-                          ? 'Einweg-Export von Hypertrack nach Health Connect'
-                          : 'One-way export from Hypertrack to Health Connect',
+                      l10n.healthExportHealthConnectSubtitle,
                     ),
                     value: _healthConnectExportEnabled,
                     onChanged: (value) => _toggleHealthExport(
@@ -296,16 +288,14 @@ class _HealthExportSettingsScreenState
                       ),
                     ),
                     title: Text(
-                      isGerman
-                          ? 'Export-Status Health Connect'
-                          : 'Health Connect export status',
+                      l10n.healthExportHealthConnectStatusTitle,
                     ),
                     subtitle: Text(
                       HealthExportDomain.values.map((domain) {
                         final status =
                             _exportStatuses[HealthExportPlatform.healthConnect]
                                 ?.statusFor(domain);
-                        return '${_domainLabel(domain, isGerman)}: ${_stateLabel(status?.state ?? HealthExportState.idle, isGerman)}';
+                        return '${_domainLabel(domain, l10n)}: ${_stateLabel(status?.state ?? HealthExportState.idle, l10n)}';
                       }).join(' · '),
                     ),
                     trailing: _isHealthConnectExporting

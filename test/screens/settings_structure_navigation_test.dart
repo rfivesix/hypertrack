@@ -8,6 +8,7 @@ import 'package:hypertrack/generated/app_localizations.dart';
 import 'package:hypertrack/screens/appearance_settings_screen.dart';
 import 'package:hypertrack/screens/settings_screen.dart';
 import 'package:hypertrack/screens/sleep_settings_screen.dart';
+import 'package:hypertrack/screens/pulse_settings_screen.dart';
 import 'package:hypertrack/screens/steps_settings_screen.dart';
 import 'package:hypertrack/services/theme_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -124,6 +125,7 @@ void main() {
     expect(find.byKey(const Key('settings_appearance_entry')), findsOneWidget);
     expect(find.byKey(const Key('settings_steps_entry')), findsOneWidget);
     expect(find.byKey(const Key('settings_sleep_entry')), findsOneWidget);
+    expect(find.byKey(const Key('settings_pulse_entry')), findsOneWidget);
     expect(
       find.byKey(const Key('settings_health_export_entry')),
       findsOneWidget,
@@ -196,6 +198,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SleepSettingsScreen), findsOneWidget);
+  });
+
+  testWidgets('pulse entry opens pulse settings sub-screen', (tester) async {
+    final controller =
+        SleepPermissionController(const _StubPermissionService());
+
+    await tester.pumpWidget(
+      _wrap(
+        SettingsScreen(
+          sleepSyncService: _FakeSleepSettingsService(controller: controller),
+          sleepPermissionController: controller,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pulseEntry = find.byKey(const Key('settings_pulse_entry'));
+    await tester.scrollUntilVisible(
+      pulseEntry,
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.tap(pulseEntry);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PulseSettingsScreen), findsOneWidget);
   });
 
   testWidgets(

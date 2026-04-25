@@ -14,11 +14,13 @@ class HealthConnectSleepAdapter {
   const HealthConnectSleepAdapter({
     required SleepPermissionsService permissionsService,
     required HealthConnectDataSource dataSource,
+    this.heartRateFallbackPadding = const Duration(hours: 24),
   })  : _permissionsService = permissionsService,
         _dataSource = dataSource;
 
   final SleepPermissionsService _permissionsService;
   final HealthConnectDataSource _dataSource;
+  final Duration heartRateFallbackPadding;
 
   Future<SleepIngestionResult> importRange({
     required DateTime fromUtc,
@@ -59,7 +61,13 @@ class HealthConnectSleepAdapter {
         fromUtc: fromUtc,
         toUtc: toUtc,
       );
-      return SleepIngestionResult.success(batch);
+      return SleepIngestionResult.success(
+        await _withHeartRateFallbackIfNeeded(
+          batch: batch,
+          fromUtc: fromUtc,
+          toUtc: toUtc,
+        ),
+      );
     } catch (error) {
       return SleepIngestionResult.failure(
         SleepIngestionFailure(
@@ -68,5 +76,44 @@ class HealthConnectSleepAdapter {
         ),
       );
     }
+  }
+
+  Future<SleepRawIngestionBatch> _withHeartRateFallbackIfNeeded({
+    required SleepRawIngestionBatch batch,
+    required DateTime fromUtc,
+    required DateTime toUtc,
+  }) async {
+    if (batch.sessions.isEmpty ||
+        batch.heartRateSamples.isNotEmpty ||
+        heartRateFallbackPadding <= Duration.zero) {
+      return batch;
+    }
+
+    final SleepRawIngestionBatch fallback;
+    try {
+      fallback = await _dataSource.readSleepAndHeartRate(
+        fromUtc: fromUtc.subtract(heartRateFallbackPadding),
+        toUtc: toUtc.add(heartRateFallbackPadding),
+      );
+    } catch (_) {
+      return batch;
+    }
+    final sessionsById = {
+      for (final session in batch.sessions) session.recordId: session,
+    };
+    final strictHeartRates = fallback.heartRateSamples.where((sample) {
+      final session = sessionsById[sample.sessionRecordId];
+      if (session == null) return false;
+      final sampledAt = sample.sampledAtUtc.toUtc();
+      return !sampledAt.isBefore(session.startAtUtc.toUtc()) &&
+          !sampledAt.isAfter(session.endAtUtc.toUtc());
+    }).toList(growable: false);
+
+    if (strictHeartRates.isEmpty) return batch;
+    return SleepRawIngestionBatch(
+      sessions: batch.sessions,
+      stageSegments: batch.stageSegments,
+      heartRateSamples: strictHeartRates,
+    );
   }
 }
