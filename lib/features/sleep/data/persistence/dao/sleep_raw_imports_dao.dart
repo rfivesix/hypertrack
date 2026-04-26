@@ -14,42 +14,42 @@ class SleepRawImportsDao {
       DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
 
   Future<void> upsert(SleepRawImportCompanion row) async {
-    await _db.customStatement(
-      '''
-      INSERT OR REPLACE INTO sleep_raw_imports (
-        id,
-        source_platform,
-        source_app_id,
-        source_confidence,
-        source_record_hash,
-        import_status,
-        error_code,
-        error_message,
-        imported_at,
-        payload_json,
-        updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ''',
-      <Object?>[
-        row.id,
-        row.sourcePlatform,
-        row.sourceAppId,
-        row.sourceConfidence,
-        row.sourceRecordHash,
-        row.importStatus,
-        row.errorCode,
-        row.errorMessage,
-        _toEpochMillis(row.importedAt),
-        row.payloadJson,
-        _toEpochMillis(DateTime.now()),
-      ],
-    );
+    await upsertBatch([row]);
   }
 
   Future<void> upsertBatch(List<SleepRawImportCompanion> rows) async {
-    await _db.transaction(() async {
+    await _db.batch((batch) {
       for (final row in rows) {
-        await upsert(row);
+        batch.customStatement(
+          '''
+          INSERT OR REPLACE INTO sleep_raw_imports (
+            id,
+            source_platform,
+            source_app_id,
+            source_confidence,
+            source_record_hash,
+            import_status,
+            error_code,
+            error_message,
+            imported_at,
+            payload_json,
+            updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ''',
+          <Object?>[
+            row.id,
+            row.sourcePlatform,
+            row.sourceAppId,
+            row.sourceConfidence,
+            row.sourceRecordHash,
+            row.importStatus,
+            row.errorCode,
+            row.errorMessage,
+            _toEpochMillis(row.importedAt),
+            row.payloadJson,
+            _toEpochMillis(DateTime.now()),
+          ],
+        );
       }
     });
   }

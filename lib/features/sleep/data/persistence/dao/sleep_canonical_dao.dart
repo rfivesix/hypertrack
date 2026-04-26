@@ -14,48 +14,48 @@ class SleepCanonicalSessionsDao {
       DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
 
   Future<void> upsert(SleepCanonicalSessionCompanion row) async {
-    await _db.customStatement(
-      '''
-      INSERT OR REPLACE INTO sleep_canonical_sessions (
-        id,
-        raw_import_id,
-        source_platform,
-        source_app_id,
-        source_confidence,
-        source_record_hash,
-        normalization_version,
-        session_type,
-        started_at,
-        ended_at,
-        timezone,
-        imported_at,
-        normalized_at,
-        updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ''',
-      <Object?>[
-        row.id,
-        row.rawImportId,
-        row.sourcePlatform,
-        row.sourceAppId,
-        row.sourceConfidence,
-        row.sourceRecordHash,
-        row.normalizationVersion,
-        row.sessionType,
-        _toEpochMillis(row.startedAt),
-        _toEpochMillis(row.endedAt),
-        row.timezone,
-        _toEpochMillis(row.importedAt),
-        _toEpochMillis(row.normalizedAt),
-        _toEpochMillis(DateTime.now()),
-      ],
-    );
+    await upsertBatch([row]);
   }
 
   Future<void> upsertBatch(List<SleepCanonicalSessionCompanion> rows) async {
-    await _db.transaction(() async {
+    await _db.batch((batch) {
       for (final row in rows) {
-        await upsert(row);
+        batch.customStatement(
+          '''
+          INSERT OR REPLACE INTO sleep_canonical_sessions (
+            id,
+            raw_import_id,
+            source_platform,
+            source_app_id,
+            source_confidence,
+            source_record_hash,
+            normalization_version,
+            session_type,
+            started_at,
+            ended_at,
+            timezone,
+            imported_at,
+            normalized_at,
+            updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ''',
+          <Object?>[
+            row.id,
+            row.rawImportId,
+            row.sourcePlatform,
+            row.sourceAppId,
+            row.sourceConfidence,
+            row.sourceRecordHash,
+            row.normalizationVersion,
+            row.sessionType,
+            _toEpochMillis(row.startedAt),
+            _toEpochMillis(row.endedAt),
+            row.timezone,
+            _toEpochMillis(row.importedAt),
+            _toEpochMillis(row.normalizedAt),
+            _toEpochMillis(DateTime.now()),
+          ],
+        );
       }
     });
   }
@@ -152,9 +152,9 @@ class SleepCanonicalStageSegmentsDao {
   Future<void> upsertBatch(
     List<SleepCanonicalStageSegmentCompanion> rows,
   ) async {
-    await _db.transaction(() async {
+    await _db.batch((batch) {
       for (final row in rows) {
-        await _db.customStatement(
+        batch.customStatement(
           '''
           INSERT OR REPLACE INTO sleep_canonical_stage_segments (
             id,
@@ -248,9 +248,9 @@ class SleepCanonicalHeartRateSamplesDao {
   Future<void> upsertBatch(
     List<SleepCanonicalHeartRateSampleCompanion> rows,
   ) async {
-    await _db.transaction(() async {
+    await _db.batch((batch) {
       for (final row in rows) {
-        await _db.customStatement(
+        batch.customStatement(
           '''
           INSERT OR REPLACE INTO sleep_canonical_heart_rate_samples (
             id,
