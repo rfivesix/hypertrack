@@ -20,7 +20,7 @@ dependencies:
   path: ^1.8.3
 
   cupertino_icons: ^1.0.8
-  flutter_gen: ^5.14.0
+  flutter_gen: ^5.14.1
   shared_preferences: ^2.2.3
   dynamic_color: ^1.7.0
   url_launcher: ^6.2.6
@@ -62,7 +62,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  build_runner: ^2.4.8
+  build_runner: ^2.14.1
   drift_dev: ^2.20.0
 flutter_launcher_icons:
   android: true # Icon für Android generieren
