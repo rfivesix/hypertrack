@@ -14,64 +14,64 @@ class SleepNightlyAnalysesDao {
       DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
 
   Future<void> upsert(SleepNightlyAnalysisCompanion row) async {
-    await _db.customStatement(
-      '''
-      INSERT OR REPLACE INTO sleep_nightly_analyses (
-        id,
-        session_id,
-        source_platform,
-        source_app_id,
-        source_confidence,
-        source_record_hash,
-        normalization_version,
-        analysis_version,
-        night_date,
-        score,
-        total_sleep_minutes,
-        sleep_efficiency_pct,
-        resting_heart_rate_bpm,
-        interruptions_count,
-        interruptions_wake_minutes,
-        score_completeness,
-        regularity_sri,
-        regularity_valid_days,
-        regularity_is_stable,
-        analyzed_at,
-        updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ''',
-      <Object?>[
-        row.id,
-        row.sessionId,
-        row.sourcePlatform,
-        row.sourceAppId,
-        row.sourceConfidence,
-        row.sourceRecordHash,
-        row.normalizationVersion,
-        row.analysisVersion,
-        row.nightDate,
-        row.score,
-        row.totalSleepMinutes,
-        row.sleepEfficiencyPct,
-        row.restingHeartRateBpm,
-        row.interruptionsCount,
-        row.interruptionsWakeMinutes,
-        row.scoreCompleteness,
-        row.regularitySri,
-        row.regularityValidDays,
-        row.regularityIsStable == null
-            ? null
-            : (row.regularityIsStable! ? 1 : 0),
-        _toEpochMillis(row.analyzedAt),
-        _toEpochMillis(DateTime.now()),
-      ],
-    );
+    await upsertBatch([row]);
   }
 
   Future<void> upsertBatch(List<SleepNightlyAnalysisCompanion> rows) async {
-    await _db.transaction(() async {
+    await _db.batch((batch) {
       for (final row in rows) {
-        await upsert(row);
+        batch.customStatement(
+          '''
+          INSERT OR REPLACE INTO sleep_nightly_analyses (
+            id,
+            session_id,
+            source_platform,
+            source_app_id,
+            source_confidence,
+            source_record_hash,
+            normalization_version,
+            analysis_version,
+            night_date,
+            score,
+            total_sleep_minutes,
+            sleep_efficiency_pct,
+            resting_heart_rate_bpm,
+            interruptions_count,
+            interruptions_wake_minutes,
+            score_completeness,
+            regularity_sri,
+            regularity_valid_days,
+            regularity_is_stable,
+            analyzed_at,
+            updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ''',
+          <Object?>[
+            row.id,
+            row.sessionId,
+            row.sourcePlatform,
+            row.sourceAppId,
+            row.sourceConfidence,
+            row.sourceRecordHash,
+            row.normalizationVersion,
+            row.analysisVersion,
+            row.nightDate,
+            row.score,
+            row.totalSleepMinutes,
+            row.sleepEfficiencyPct,
+            row.restingHeartRateBpm,
+            row.interruptionsCount,
+            row.interruptionsWakeMinutes,
+            row.scoreCompleteness,
+            row.regularitySri,
+            row.regularityValidDays,
+            row.regularityIsStable == null
+                ? null
+                : (row.regularityIsStable! ? 1 : 0),
+            _toEpochMillis(row.analyzedAt),
+            _toEpochMillis(DateTime.now()),
+          ],
+        );
       }
     });
   }
