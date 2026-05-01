@@ -45,10 +45,10 @@ Cross-feature links from hub:
 `StatisticsHubScreen` renders sections in this order:
 
 1. Time-range chips (`7d`, `30d`, `3m`, `6m`, `All`)
-2. Steps (only if steps tracking enabled)
+2. Steps (only when steps tracking is enabled)
 3. Recovery
-4. Sleep (only if sleep tracking enabled)
-5. Pulse (only if pulse analysis is enabled)
+4. Sleep (only when sleep tracking is enabled)
+5. Pulse (only when pulse analysis is enabled)
 6. Consistency
 7. Performance records
 8. Volume/muscles
