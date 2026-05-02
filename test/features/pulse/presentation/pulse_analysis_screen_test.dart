@@ -135,7 +135,8 @@ void main() {
     expect(find.byType(MeasurementChartWidget), findsNothing);
   });
 
-  testWidgets('uses partial-day end for current local day scope', (tester) async {
+  testWidgets('uses partial-day end for current local day scope',
+      (tester) async {
     final repository = _FakePulseRepository(_summaryWithSamples);
     final nowLocal = DateTime.now();
     final expectedStartUtc = DateTime(
