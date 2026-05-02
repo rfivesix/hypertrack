@@ -46,7 +46,7 @@ class FeedbackReportActions {
     final stamp =
         '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}-${now.second.toString().padLeft(2, '0')}';
     final file = File(
-      p.join(tempDir.path, 'hypertrack_feedback_report_$stamp.txt'),
+      p.join(tempDir.path, 'train-libre_feedback_report_$stamp.txt'),
     );
     await file.writeAsString(reportText, flush: true);
     return file;
@@ -94,7 +94,7 @@ class FeedbackReportActions {
   }) {
     final trimmedNote = userNote?.trim() ?? '';
     final bodyBuffer = StringBuffer()
-      ..writeln('Hypertrack feedback report')
+      ..writeln('Train Libre feedback report')
       ..writeln();
 
     if (trimmedNote.isNotEmpty) {

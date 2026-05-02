@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_engine.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/confidence_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_engine.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_models.dart';
 
 void main() {
   group('AdaptiveNutritionRecommendationEngine projection', () {

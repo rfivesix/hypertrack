@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/presentation/details/regularity_chart_math.dart';
+import 'package:train_libre/features/sleep/presentation/details/regularity_chart_math.dart';
 
 void main() {
   test('unwrapWakeMinutes wraps midnight correctly', () {

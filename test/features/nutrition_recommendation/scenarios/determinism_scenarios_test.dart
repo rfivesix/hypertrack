@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
 
 import 'scenario_test_harness.dart';
 

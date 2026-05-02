@@ -1,13 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_recommendation_snapshot.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/data/recommendation_repository.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/adaptive_recommendation_snapshot.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/confidence_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/domain/sleep_enums.dart';
-import 'package:hypertrack/features/sleep/domain/scoring/sleep_scoring_engine.dart';
+import 'package:train_libre/features/sleep/domain/sleep_enums.dart';
+import 'package:train_libre/features/sleep/domain/scoring/sleep_scoring_engine.dart';
 
 void main() {
   group('component scoring v2', () {

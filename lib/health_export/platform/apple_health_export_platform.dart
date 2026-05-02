@@ -4,7 +4,7 @@ class AppleHealthExportPlatform {
   const AppleHealthExportPlatform();
 
   static const MethodChannel _channel = MethodChannel(
-    'hypertrack.health/export_apple_health',
+    'trainlibre.health/export_apple_health',
   );
 
   Future<bool> isAvailable() async {

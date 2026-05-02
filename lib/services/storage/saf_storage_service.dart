@@ -12,7 +12,7 @@ class SafStorageService {
 
   static final SafStorageService instance = SafStorageService._();
 
-  static const MethodChannel _channel = MethodChannel('hypertrack.storage/saf');
+  static const MethodChannel _channel = MethodChannel('trainlibre.storage/saf');
 
   Future<SafPickedDirectory?> pickDirectory() async {
     final raw = await _channel.invokeMethod<dynamic>('pickDirectory');

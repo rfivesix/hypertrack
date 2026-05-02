@@ -1,14 +1,14 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/database_helper.dart';
-import 'package:hypertrack/data/drift_database.dart';
-import 'package:hypertrack/data/product_database_helper.dart';
-import 'package:hypertrack/features/statistics/data/body_nutrition_analytics_data_adapter.dart';
-import 'package:hypertrack/models/fluid_entry.dart';
-import 'package:hypertrack/models/food_entry.dart';
-import 'package:hypertrack/models/food_item.dart';
-import 'package:hypertrack/models/measurement.dart' as model;
-import 'package:hypertrack/models/measurement_session.dart';
+import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/data/drift_database.dart';
+import 'package:train_libre/data/product_database_helper.dart';
+import 'package:train_libre/features/statistics/data/body_nutrition_analytics_data_adapter.dart';
+import 'package:train_libre/models/fluid_entry.dart';
+import 'package:train_libre/models/food_entry.dart';
+import 'package:train_libre/models/food_item.dart';
+import 'package:train_libre/models/measurement.dart' as model;
+import 'package:train_libre/models/measurement_session.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,10 +1,10 @@
 # One-way health export architecture
 
-This document describes the export-only health integration shipped for Hypertrack as source-of-truth.
+This document describes the export-only health integration shipped for Train Libre as source-of-truth.
 
 ## Scope implemented
 
-Hypertrack exports one-way to:
+Train Libre exports one-way to:
 
 - Apple Health (HealthKit)
 - Google Health Connect
@@ -35,7 +35,7 @@ Export domains:
 ### Domain extraction and mapping
 
 - `lib/health_export/data/health_export_data_source.dart`
-- Reads Hypertrack data from existing DB helpers and maps to explicit export models.
+- Reads Train Libre data from existing DB helpers and maps to explicit export models.
 - Normalizes units:
   - weight → kg
   - hydration → liters
@@ -49,8 +49,8 @@ Export domains:
 
 ### Native bridges
 
-- iOS: `ios/Runner/AppDelegate.swift` channel `hypertrack.health/export_apple_health`
-- Android: `android/app/src/main/kotlin/com/rfivesix/hypertrack/MainActivity.kt` channel `hypertrack.health/export_health_connect`
+- iOS: `ios/Runner/AppDelegate.swift` channel `trainlibre.health/export_apple_health`
+- Android: `android/app/src/main/kotlin/com/rfivesix/trainlibre/MainActivity.kt` channel `trainlibre.health/export_health_connect`
 
 Note:
 - Android Health Connect export currently writes weight and body-fat measurements.
@@ -61,11 +61,11 @@ Note:
 
 - Initial manual export now performs an all-time backfill (no 30-day cap).
 - Follow-up exports are incremental and load only records updated since the most recent successful full-domain export checkpoint.
-- Export remains one-way and scoped to Hypertrack-owned local records.
+- Export remains one-way and scoped to Train Libre-owned local records.
 
 ## Idempotency and retry safety
 
-Stable Hypertrack-owned export keys are used per record:
+Stable Train Libre-owned export keys are used per record:
 
 - measurement: `measurement:<local_id>`
 - nutrition: `nutrition_entry:<local_id>`
@@ -111,5 +111,5 @@ Stored in shared preferences (status payload) and shown in Settings.
 
 - Workout calories are only exported if already present in payload.
 - Health platform write metadata is still conservative (`manualEntry`) and does not yet set richer client/device metadata fields such as `clientRecordId`/`clientRecordVersion`.
-- Google Fit presentation is external to Hypertrack: if `title`/`notes` are written into Health Connect but not displayed in Google Fit UI, this is a downstream display limitation rather than a Hypertrack write-path failure.
+- Google Fit presentation is external to Train Libre: if `title`/`notes` are written into Health Connect but not displayed in Google Fit UI, this is a downstream display limitation rather than a Train Libre write-path failure.
 - Android background/periodic export scheduling via WorkManager is not implemented in this module yet; export remains user-triggered foreground flow.

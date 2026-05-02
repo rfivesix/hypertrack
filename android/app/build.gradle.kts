@@ -14,12 +14,12 @@ plugins {
 }
 
 android {
-    namespace = "com.rfivesix.hypertrack"
+    namespace = "com.rfivesix.trainlibre"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-         applicationId = "com.rfivesix.hypertrack"
+         applicationId = "com.rfivesix.trainlibre"
         versionName = flutterVersionName
         versionCode = flutterVersionCode
 

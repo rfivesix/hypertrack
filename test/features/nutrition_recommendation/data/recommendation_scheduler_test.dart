@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_scheduler.dart';
+import 'package:train_libre/features/nutrition_recommendation/data/recommendation_scheduler.dart';
 
 void main() {
   group('RecommendationScheduler', () {

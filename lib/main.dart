@@ -61,7 +61,7 @@ void main() async {
   // Background update checks are handled by AppInitializerScreen.
 }
 
-/// The entry point of the Hypertrack application.
+/// The entry point of the Train Libre application.
 ///
 /// This application is a fitness tracker that allows users to log workouts,
 /// manage supplements, and track body measurements.
@@ -363,7 +363,7 @@ class _MyAppState extends State<MyApp> {
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          title: "Hypertrack",
+          title: "Train Libre",
           theme: baseLightTheme,
           darkTheme: baseDarkTheme,
           themeMode: themeService.themeMode,

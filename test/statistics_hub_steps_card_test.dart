@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/features/statistics/domain/body_nutrition_analytics_models.dart';
-import 'package:hypertrack/features/statistics/domain/consistency_payload_models.dart';
-import 'package:hypertrack/features/statistics/domain/hub_payload_models.dart';
-import 'package:hypertrack/features/statistics/domain/recovery_payload_models.dart';
-import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
-import 'package:hypertrack/features/pulse/data/pulse_repository.dart';
-import 'package:hypertrack/features/pulse/domain/pulse_models.dart';
-import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
-import 'package:hypertrack/features/steps/domain/steps_models.dart';
-import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
-import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
-import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
-import 'package:hypertrack/features/sleep/data/sleep_hub_summary_repository.dart';
-import 'package:hypertrack/screens/measurements_screen.dart';
-import 'package:hypertrack/screens/statistics_hub_screen.dart';
-import 'package:hypertrack/services/health/steps_sync_service.dart';
-import 'package:hypertrack/services/theme_service.dart';
-import 'package:hypertrack/services/workout_session_manager.dart';
-import 'package:hypertrack/widgets/analytics_section_header.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/features/statistics/domain/body_nutrition_analytics_models.dart';
+import 'package:train_libre/features/statistics/domain/consistency_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/hub_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/recovery_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/statistics_data_quality_policy.dart';
+import 'package:train_libre/features/pulse/data/pulse_repository.dart';
+import 'package:train_libre/features/pulse/domain/pulse_models.dart';
+import 'package:train_libre/features/steps/data/steps_aggregation_repository.dart';
+import 'package:train_libre/features/steps/domain/steps_models.dart';
+import 'package:train_libre/features/sleep/presentation/day/sleep_day_overview_page.dart';
+import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
+import 'package:train_libre/features/sleep/presentation/sleep_navigation.dart';
+import 'package:train_libre/features/sleep/data/sleep_hub_summary_repository.dart';
+import 'package:train_libre/screens/measurements_screen.dart';
+import 'package:train_libre/screens/statistics_hub_screen.dart';
+import 'package:train_libre/services/health/steps_sync_service.dart';
+import 'package:train_libre/services/theme_service.dart';
+import 'package:train_libre/services/workout_session_manager.dart';
+import 'package:train_libre/widgets/analytics_section_header.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -138,7 +138,7 @@ class _FakePulseRepository implements PulseAnalysisRepository {
 }
 
 const _sleepConnectChannel =
-    MethodChannel('hypertrack.health/sleep_health_connect');
+    MethodChannel('trainlibre.health/sleep_health_connect');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

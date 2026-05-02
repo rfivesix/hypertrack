@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/statistics/domain/recovery_domain_service.dart';
-import 'package:hypertrack/features/statistics/domain/statistics_range_policy.dart';
+import 'package:train_libre/features/statistics/domain/recovery_domain_service.dart';
+import 'package:train_libre/features/statistics/domain/statistics_range_policy.dart';
 
 void main() {
   group('StatisticsRangePolicyService', () {

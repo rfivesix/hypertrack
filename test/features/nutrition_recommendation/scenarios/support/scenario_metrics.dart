@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/confidence_models.dart';
 
 import '../scenario_test_harness.dart';
 import 'synthetic_truth_simulation.dart';

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+### Changed
+- Renamed the app and repository branding from Hypertrack to Train Libre across Flutter, Android, iOS, widgets, documentation, and package metadata.
+
+### Fixed
+- Preserved restore compatibility for legacy Hypertrack backups while creating new backups under the Train Libre name.
+
 ## [0.9.0-alpha.4] - 2026-05-02
 ### Fixed
 - Hardened Sleep Health Score handling for ambiguous and missing stage data.

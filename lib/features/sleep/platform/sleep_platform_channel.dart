@@ -11,7 +11,7 @@ class HealthConnectSleepMethodChannelBridge
   const HealthConnectSleepMethodChannelBridge();
 
   static const MethodChannel _channel = MethodChannel(
-    'hypertrack.health/sleep_health_connect',
+    'trainlibre.health/sleep_health_connect',
   );
 
   @override
@@ -58,7 +58,7 @@ class HealthKitSleepMethodChannelBridge implements HealthKitPermissionBridge {
   const HealthKitSleepMethodChannelBridge();
 
   static const MethodChannel _channel = MethodChannel(
-    'hypertrack.health/sleep_healthkit',
+    'trainlibre.health/sleep_healthkit',
   );
 
   @override
@@ -95,7 +95,7 @@ class HealthConnectSleepMethodChannelDataSource
   const HealthConnectSleepMethodChannelDataSource();
 
   static const MethodChannel _channel = MethodChannel(
-    'hypertrack.health/sleep_health_connect',
+    'trainlibre.health/sleep_health_connect',
   );
 
   @override
@@ -119,7 +119,7 @@ class HealthKitSleepMethodChannelDataSource implements HealthKitDataSource {
   const HealthKitSleepMethodChannelDataSource();
 
   static const MethodChannel _channel = MethodChannel(
-    'hypertrack.health/sleep_healthkit',
+    'trainlibre.health/sleep_healthkit',
   );
 
   @override

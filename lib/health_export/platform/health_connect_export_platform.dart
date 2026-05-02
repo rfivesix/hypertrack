@@ -4,7 +4,7 @@ class HealthConnectExportPlatform {
   const HealthConnectExportPlatform();
 
   static const MethodChannel _channel = MethodChannel(
-    'hypertrack.health/export_health_connect',
+    'trainlibre.health/export_health_connect',
   );
 
   Future<String> getAvailability() async {

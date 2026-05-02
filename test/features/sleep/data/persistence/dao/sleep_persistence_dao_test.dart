@@ -1,10 +1,10 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/drift_database.dart';
-import 'package:hypertrack/features/sleep/data/persistence/dao/sleep_canonical_dao.dart';
-import 'package:hypertrack/features/sleep/data/persistence/dao/sleep_nightly_analyses_dao.dart';
-import 'package:hypertrack/features/sleep/data/persistence/dao/sleep_raw_imports_dao.dart';
-import 'package:hypertrack/features/sleep/data/persistence/sleep_persistence_models.dart';
+import 'package:train_libre/data/drift_database.dart';
+import 'package:train_libre/features/sleep/data/persistence/dao/sleep_canonical_dao.dart';
+import 'package:train_libre/features/sleep/data/persistence/dao/sleep_nightly_analyses_dao.dart';
+import 'package:train_libre/features/sleep/data/persistence/dao/sleep_raw_imports_dao.dart';
+import 'package:train_libre/features/sleep/data/persistence/sleep_persistence_models.dart';
 
 void main() {
   late AppDatabase database;

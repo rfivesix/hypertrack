@@ -4,7 +4,7 @@ This document describes the current AI meal capture and AI meal recommendation a
 
 ## Scope
 
-Hypertrack AI meal features remain optional and BYOK-based:
+Train Libre AI meal features remain optional and BYOK-based:
 
 - global AI features are off by default
 - provider/model/key selection stays in `AiService`

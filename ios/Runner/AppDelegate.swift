@@ -5,9 +5,9 @@ import UIKit
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private let healthStore = HKHealthStore()
-  private let stepsChannelName = "hypertrack.health/steps"
-  private let sleepHealthKitChannelName = "hypertrack.health/sleep_healthkit"
-  private let exportAppleHealthChannelName = "hypertrack.health/export_apple_health"
+  private let stepsChannelName = "trainlibre.health/steps"
+  private let sleepHealthKitChannelName = "trainlibre.health/sleep_healthkit"
+  private let exportAppleHealthChannelName = "trainlibre.health/export_apple_health"
   private var channelsConfigured = false
 
   override func application(
@@ -515,7 +515,7 @@ import UIKit
     let metadata: [String: Any]? = {
       guard let summaryNotes, !summaryNotes.isEmpty else { return nil }
       // HealthKit workout has no dedicated notes field; persist summary in metadata.
-      return ["hypertrack_workout_summary": summaryNotes]
+      return ["trainlibre_workout_summary": summaryNotes]
     }()
     let duration = end.timeIntervalSince(start)
     let workout = HKWorkout(

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/statistics/domain/recovery_domain_service.dart';
+import 'package:train_libre/features/statistics/domain/recovery_domain_service.dart';
 
 void main() {
   group('RecoveryDomainService', () {

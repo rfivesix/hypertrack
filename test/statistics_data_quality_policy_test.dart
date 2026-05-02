@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
+import 'package:train_libre/features/statistics/domain/statistics_data_quality_policy.dart';
 
 void main() {
   group('StatisticsDataQualityPolicy.bodyNutritionInsight', () {

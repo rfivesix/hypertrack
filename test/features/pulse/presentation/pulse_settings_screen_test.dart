@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/pulse/application/pulse_tracking_service.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/screens/pulse_settings_screen.dart';
+import 'package:train_libre/features/pulse/application/pulse_tracking_service.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/screens/pulse_settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakePulseTrackingService implements PulseTrackingSettingsService {

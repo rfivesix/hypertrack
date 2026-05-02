@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/domain/aggregation/sleep_period_aggregations.dart';
-import 'package:hypertrack/features/sleep/domain/derived/nightly_sleep_analysis.dart';
-import 'package:hypertrack/features/sleep/domain/sleep_enums.dart';
+import 'package:train_libre/features/sleep/domain/aggregation/sleep_period_aggregations.dart';
+import 'package:train_libre/features/sleep/domain/derived/nightly_sleep_analysis.dart';
+import 'package:train_libre/features/sleep/domain/sleep_enums.dart';
 
 NightlySleepAnalysis _analysis({
   required DateTime date,

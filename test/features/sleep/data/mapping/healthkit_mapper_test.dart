@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/data/mapping/healthkit_mapper.dart';
-import 'package:hypertrack/features/sleep/domain/sleep_enums.dart';
-import 'package:hypertrack/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
+import 'package:train_libre/features/sleep/data/mapping/healthkit_mapper.dart';
+import 'package:train_libre/features/sleep/domain/sleep_enums.dart';
+import 'package:train_libre/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
 
 void main() {
   const mapper = HealthKitMapper();
