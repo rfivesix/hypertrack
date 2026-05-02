@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Made RIR/RPE fatigue detection more robust and fixed inclusive recovery-state boundary behavior.
 - Added robust recovery timestamp parsing and clarified fixed current-state recovery lookback behavior.
 
+### Changed
+- Refined muscle recovery analytics by separating current readiness from last-load pressure in the Recovery Tracker.
+- Updated recovery UI copy to show actual effective recovery windows and localized load-pressure levels.
+- Improved recovery heuristic documentation for muscle-specific windows, readiness scoring, and load-pressure semantics.
+
 ### Internal
 - Expanded recovery regression coverage for equivalent-set pressure, bodyweight/cardio filtering, RIR/RPE fatigue thresholds, muscle-specific windows, boundary behavior, timestamp parsing, and recovery range policy.
 - Updated statistics/recovery documentation to frame readiness as a transparent training-log heuristic rather than a clinical recovery prediction.

@@ -57,6 +57,26 @@ void main() {
       );
     });
 
+    test('maps recovery pressure level labels', () {
+      final en = AppLocalizationsEn();
+      final de = AppLocalizationsDe();
+
+      expect(
+        StatisticsPresentationFormatter.recoveryPressureLevelLabel(
+          en,
+          RecoveryPressureLevel.low,
+        ),
+        en.recoveryPressureLow,
+      );
+      expect(
+        StatisticsPresentationFormatter.recoveryPressureLevelLabel(
+          de,
+          RecoveryPressureLevel.veryHigh,
+        ),
+        de.recoveryPressureVeryHigh,
+      );
+    });
+
     test('maps body nutrition insight labels', () {
       final l10n = AppLocalizationsDe();
 

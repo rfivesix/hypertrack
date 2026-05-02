@@ -148,10 +148,19 @@ Current implementation:
 - State boundaries are inclusive: at exactly the recovering upper boundary the
   muscle is still `recovering`; at exactly the ready upper boundary it is still
   `ready`.
-- Recovery pressure uses a piecewise equivalent-set curve calibrated for a
-  single muscle in a session: `0 -> 0`, `1 -> 10`, `2 -> 18`, `3 -> 26`,
-  `4 -> 34`, `5 -> 41`, `6 -> 47`, `8 -> 55`, `10 -> 60`,
-  `12+ -> 65`, plus a recency component and a small high-fatigue component.
+- The status badge is the primary current readiness state.
+- The visible per-muscle readiness score is current-state progress through the
+  effective window: low while recovering, around `60` at the recovering
+  boundary, around `85` at the ready boundary, and approaching `100` after the
+  ready window has passed.
+- Last-load pressure is shown separately as recent stimulus/recovery demand. It
+  uses the equivalent-set load curve calibrated for a single muscle in a
+  session: `0 -> 0`, `1 -> 10`, `2 -> 18`, `3 -> 26`, `4 -> 34`,
+  `5 -> 41`, `6 -> 47`, `8 -> 55`, `10 -> 60`, `12+ -> 65`, plus a small
+  high-fatigue component. Pressure labels are intentionally separate from
+  readiness labels.
+- Effective windows displayed in the UI include the muscle profile, load-based
+  extension, and intensity/RIR/RPE extension.
 
 Known limitations:
 

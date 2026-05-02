@@ -1029,22 +1029,22 @@
   "recoveryStateReady": "Ready",
   "recoveryStateFresh": "Fresh",
   "recoveryStateUnknown": "Unknown",
-  "recoveryLastLoadedHours": "Last significant loading: {hours}h ago",
+  "recoveryLastLoadedHours": "Last significantly loaded: {hours} h ago",
   "@recoveryLastLoadedHours": {
     "placeholders": {
       "hours": { "type": "int" }
     }
   },
-  "recoveryFatigueContextHigh": "Recent fatigue context: high session fatigue",
-  "recoveryFatigueContextBaseline": "Recent fatigue context: baseline session fatigue",
-  "recoveryExplanationWithHighFatigue": "{muscle}: last significantly loaded {hours}h ago, with high session fatigue.",
+  "recoveryFatigueContextHigh": "Fatigue context: high session fatigue",
+  "recoveryFatigueContextBaseline": "Fatigue context: baseline session fatigue",
+  "recoveryExplanationWithHighFatigue": "{muscle}: last significantly loaded {hours} h ago, with high session fatigue.",
   "@recoveryExplanationWithHighFatigue": {
     "placeholders": {
       "muscle": { "type": "String" },
       "hours": { "type": "int" }
     }
   },
-  "recoveryExplanationBasic": "{muscle}: last significantly loaded {hours}h ago.",
+  "recoveryExplanationBasic": "{muscle}: last significantly loaded {hours} h ago.",
   "@recoveryExplanationBasic": {
     "placeholders": {
       "muscle": { "type": "String" },
@@ -1052,20 +1052,38 @@
     }
   },
   "recoveryHeuristicDisclaimer": "This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.",
-  "recoveryRecentLoad": "Recent load amount: {sets} equivalent sets",
+  "recoveryReadinessLabel": "Readiness",
+  "recoveryRecentLoad": "Last load: {sets} equivalent sets",
   "@recoveryRecentLoad": {
     "placeholders": {
       "sets": { "type": "String" }
     }
   },
-  "recoveryWindowHeuristic": "Heuristic window: often around {from} to {to} hours, depending on context.",
+  "recoveryLastLoadPressure": "Last load pressure: {level}",
+  "@recoveryLastLoadPressure": {
+    "placeholders": {
+      "level": { "type": "String" }
+    }
+  },
+  "recoveryPressureLow": "low",
+  "recoveryPressureModerate": "moderate",
+  "recoveryPressureHigh": "high",
+  "recoveryPressureVeryHigh": "very high",
+  "recoveryCurrentWindow": "Current window: recovering until about {recoveringUpper} h, ready until about {readyUpper} h.",
+  "@recoveryCurrentWindow": {
+    "placeholders": {
+      "recoveringUpper": { "type": "int" },
+      "readyUpper": { "type": "int" }
+    }
+  },
+  "recoveryWindowHeuristic": "Current window: recovering until about {from} h, ready until about {to} h.",
   "@recoveryWindowHeuristic": {
     "placeholders": {
       "from": { "type": "int" },
       "to": { "type": "int" }
     }
   },
-  "recoveryRadarHeuristicCaption": "Radar overview of recent recovery pressure by muscle. It is directional and heuristic.",
+  "recoveryRadarHeuristicCaption": "Radar overview of current readiness by muscle. Status badges remain the primary signal.",
   "recoveryNoDataBody": "Not enough significant training load has been logged yet to estimate muscle recovery.",
   "sectionBodyNutrition": "Body & Nutrition",
   "statisticsSectionTraining": "Training",

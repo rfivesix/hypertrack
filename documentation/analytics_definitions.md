@@ -129,10 +129,18 @@ Current rules:
 - Final state uses inclusive boundaries:
   `<= recoveringUpperHours` -> `recovering`,
   `<= readyUpperHours` -> `ready`, otherwise `fresh`.
-- Recovery pressure uses a piecewise load curve for equivalent sets per muscle
-  per session: `0 -> 0`, `1 -> 10`, `2 -> 18`, `3 -> 26`, `4 -> 34`,
-  `5 -> 41`, `6 -> 47`, `8 -> 55`, `10 -> 60`, `12+ -> 65`, with additional
-  recency and high-fatigue components.
+- The status badge is the primary current readiness state.
+- The visible per-muscle readiness score is current-state progress through the
+  effective window. It is low near `0h`, around `60` at the recovering boundary,
+  around `85` at the ready boundary, and approaches `100` after the ready window
+  has passed. Longer effective windows lower readiness at the same elapsed time.
+- Last-load pressure is a separate recent stimulus/recovery-demand label. It
+  uses the piecewise load curve for equivalent sets per muscle per session:
+  `0 -> 0`, `1 -> 10`, `2 -> 18`, `3 -> 26`, `4 -> 34`, `5 -> 41`,
+  `6 -> 47`, `8 -> 55`, `10 -> 60`, `12+ -> 65`, plus a small high-fatigue
+  component.
+- Displayed effective windows include the muscle profile, load-based extension,
+  and intensity/RIR/RPE extension.
 
 Known limitations:
 

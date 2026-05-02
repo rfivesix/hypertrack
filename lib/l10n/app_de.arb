@@ -1034,22 +1034,22 @@
   "recoveryStateReady": "Bereit",
   "recoveryStateFresh": "Frisch",
   "recoveryStateUnknown": "Unbekannt",
-  "recoveryLastLoadedHours": "Letzte signifikante Belastung: vor {hours}h",
+  "recoveryLastLoadedHours": "Zuletzt signifikant belastet: vor {hours} h",
   "@recoveryLastLoadedHours": {
     "placeholders": {
       "hours": { "type": "int" }
     }
   },
-  "recoveryFatigueContextHigh": "Letzter Ermüdungs-Kontext: hohe Session-Ermüdung",
-  "recoveryFatigueContextBaseline": "Letzter Ermüdungs-Kontext: normale Session-Ermüdung",
-  "recoveryExplanationWithHighFatigue": "{muscle}: zuletzt vor {hours}h signifikant belastet, mit hoher Session-Ermüdung.",
+  "recoveryFatigueContextHigh": "Ermüdungskontext: hohe Session-Ermüdung",
+  "recoveryFatigueContextBaseline": "Ermüdungskontext: normale Session-Ermüdung",
+  "recoveryExplanationWithHighFatigue": "{muscle}: zuletzt vor {hours} h signifikant belastet, mit hoher Session-Ermüdung.",
   "@recoveryExplanationWithHighFatigue": {
     "placeholders": {
       "muscle": { "type": "String" },
       "hours": { "type": "int" }
     }
   },
-  "recoveryExplanationBasic": "{muscle}: zuletzt vor {hours}h signifikant belastet.",
+  "recoveryExplanationBasic": "{muscle}: zuletzt vor {hours} h signifikant belastet.",
   "@recoveryExplanationBasic": {
     "placeholders": {
       "muscle": { "type": "String" },
@@ -1057,20 +1057,38 @@
     }
   },
   "recoveryHeuristicDisclaimer": "Dies ist eine konservative Heuristik auf Basis kürzlich signifikanter Belastung und Session-Anstrengung. Keine medizinische Erholungs-Messung.",
-  "recoveryRecentLoad": "Letzte Belastungsmenge: {sets} äquivalente Sätze",
+  "recoveryReadinessLabel": "Bereitschaft",
+  "recoveryRecentLoad": "Letzte Belastung: {sets} äquivalente Sätze",
   "@recoveryRecentLoad": {
     "placeholders": {
       "sets": { "type": "String" }
     }
   },
-  "recoveryWindowHeuristic": "Heuristisches Zeitfenster: häufig etwa {from} bis {to} Stunden, abhängig vom Kontext.",
+  "recoveryLastLoadPressure": "Letzter Belastungsdruck: {level}",
+  "@recoveryLastLoadPressure": {
+    "placeholders": {
+      "level": { "type": "String" }
+    }
+  },
+  "recoveryPressureLow": "niedrig",
+  "recoveryPressureModerate": "moderat",
+  "recoveryPressureHigh": "hoch",
+  "recoveryPressureVeryHigh": "sehr hoch",
+  "recoveryCurrentWindow": "Aktuelles Zeitfenster: erholt sich bis ca. {recoveringUpper} h, bereit bis ca. {readyUpper} h.",
+  "@recoveryCurrentWindow": {
+    "placeholders": {
+      "recoveringUpper": { "type": "int" },
+      "readyUpper": { "type": "int" }
+    }
+  },
+  "recoveryWindowHeuristic": "Aktuelles Zeitfenster: erholt sich bis ca. {from} h, bereit bis ca. {to} h.",
   "@recoveryWindowHeuristic": {
     "placeholders": {
       "from": { "type": "int" },
       "to": { "type": "int" }
     }
   },
-  "recoveryRadarHeuristicCaption": "Radar-Überblick zum jüngsten Erholungsdruck je Muskel. Richtungsweisend und heuristisch.",
+  "recoveryRadarHeuristicCaption": "Radar-Überblick zur aktuellen Bereitschaft je Muskel. Die Status-Badges bleiben das wichtigste Signal.",
   "recoveryNoDataBody": "Es wurden noch nicht genug signifikante Trainingsbelastungen erfasst, um die Muskel-Erholung einzuordnen.",
   "sectionBodyNutrition": "Körper & Ernährung",
   "statisticsSectionTraining": "Training",

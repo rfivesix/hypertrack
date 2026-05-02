@@ -8,6 +8,8 @@ class RecoveryWindowProfile {
   });
 }
 
+enum RecoveryPressureLevel { low, moderate, high, veryHigh }
+
 class RecoveryDomainService {
   static const String stateRecovering = 'recovering';
   static const String stateReady = 'ready';
@@ -272,6 +274,56 @@ class RecoveryDomainService {
     return normalized == 'brachialis';
   }
 
+  static double readinessScore({
+    required double hoursSinceLastSignificantLoad,
+    required double recoveringUpperHours,
+    required double readyUpperHours,
+  }) {
+    final hours = hoursSinceLastSignificantLoad.isFinite
+        ? hoursSinceLastSignificantLoad
+        : 0.0;
+    final recoveringUpper = recoveringUpperHours.isFinite
+        ? recoveringUpperHours.clamp(0.0, double.infinity).toDouble()
+        : 0.0;
+    final readyUpper = readyUpperHours.isFinite
+        ? readyUpperHours.clamp(recoveringUpper, double.infinity).toDouble()
+        : recoveringUpper;
+
+    if (hours <= 0) return 5.0;
+
+    if (hours <= recoveringUpper) {
+      final progress = recoveringUpper <= 0 ? 1.0 : hours / recoveringUpper;
+      return _lerp(10.0, 60.0, progress);
+    }
+
+    if (hours <= readyUpper) {
+      final span = readyUpper - recoveringUpper;
+      final progress = span <= 0 ? 1.0 : (hours - recoveringUpper) / span;
+      return _lerp(60.0, 85.0, progress);
+    }
+
+    final overtime = hours - readyUpper;
+    final extraProgress = (overtime / 48.0).clamp(0.0, 1.0).toDouble();
+    return _lerp(85.0, 100.0, extraProgress);
+  }
+
+  static double lastLoadPressureScore({
+    required double lastEquivalentSets,
+    required bool highSessionFatigue,
+  }) {
+    final loadComponent = _interpolateLoadPressure(lastEquivalentSets);
+    final fatiguePenalty = highSessionFatigue ? 10.0 : 0.0;
+    return (loadComponent + fatiguePenalty).clamp(0.0, 100.0).toDouble();
+  }
+
+  static RecoveryPressureLevel pressureLevelForScore(double score) {
+    final normalized = score.isFinite ? score.clamp(0.0, 100.0) : 0.0;
+    if (normalized < 25.0) return RecoveryPressureLevel.low;
+    if (normalized < 50.0) return RecoveryPressureLevel.moderate;
+    if (normalized < 75.0) return RecoveryPressureLevel.high;
+    return RecoveryPressureLevel.veryHigh;
+  }
+
   static double recoveryPressureScore(Map<String, dynamic> muscle) {
     final eqSets = (muscle['lastEquivalentSets'] as num?)?.toDouble() ?? 0.0;
     final hours =
@@ -285,6 +337,11 @@ class RecoveryDomainService {
       0.0,
       100.0,
     );
+  }
+
+  static double _lerp(double start, double end, double progress) {
+    final t = progress.clamp(0.0, 1.0).toDouble();
+    return start + (end - start) * t;
   }
 
   static double _interpolateLoadPressure(double equivalentSets) {

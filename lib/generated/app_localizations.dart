@@ -4508,31 +4508,31 @@ abstract class AppLocalizations {
   /// No description provided for @recoveryLastLoadedHours.
   ///
   /// In en, this message translates to:
-  /// **'Last significant loading: {hours}h ago'**
+  /// **'Last significantly loaded: {hours} h ago'**
   String recoveryLastLoadedHours(int hours);
 
   /// No description provided for @recoveryFatigueContextHigh.
   ///
   /// In en, this message translates to:
-  /// **'Recent fatigue context: high session fatigue'**
+  /// **'Fatigue context: high session fatigue'**
   String get recoveryFatigueContextHigh;
 
   /// No description provided for @recoveryFatigueContextBaseline.
   ///
   /// In en, this message translates to:
-  /// **'Recent fatigue context: baseline session fatigue'**
+  /// **'Fatigue context: baseline session fatigue'**
   String get recoveryFatigueContextBaseline;
 
   /// No description provided for @recoveryExplanationWithHighFatigue.
   ///
   /// In en, this message translates to:
-  /// **'{muscle}: last significantly loaded {hours}h ago, with high session fatigue.'**
+  /// **'{muscle}: last significantly loaded {hours} h ago, with high session fatigue.'**
   String recoveryExplanationWithHighFatigue(String muscle, int hours);
 
   /// No description provided for @recoveryExplanationBasic.
   ///
   /// In en, this message translates to:
-  /// **'{muscle}: last significantly loaded {hours}h ago.'**
+  /// **'{muscle}: last significantly loaded {hours} h ago.'**
   String recoveryExplanationBasic(String muscle, int hours);
 
   /// No description provided for @recoveryHeuristicDisclaimer.
@@ -4541,22 +4541,64 @@ abstract class AppLocalizations {
   /// **'This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.'**
   String get recoveryHeuristicDisclaimer;
 
+  /// No description provided for @recoveryReadinessLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Readiness'**
+  String get recoveryReadinessLabel;
+
   /// No description provided for @recoveryRecentLoad.
   ///
   /// In en, this message translates to:
-  /// **'Recent load amount: {sets} equivalent sets'**
+  /// **'Last load: {sets} equivalent sets'**
   String recoveryRecentLoad(String sets);
+
+  /// No description provided for @recoveryLastLoadPressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Last load pressure: {level}'**
+  String recoveryLastLoadPressure(String level);
+
+  /// No description provided for @recoveryPressureLow.
+  ///
+  /// In en, this message translates to:
+  /// **'low'**
+  String get recoveryPressureLow;
+
+  /// No description provided for @recoveryPressureModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'moderate'**
+  String get recoveryPressureModerate;
+
+  /// No description provided for @recoveryPressureHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'high'**
+  String get recoveryPressureHigh;
+
+  /// No description provided for @recoveryPressureVeryHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'very high'**
+  String get recoveryPressureVeryHigh;
+
+  /// No description provided for @recoveryCurrentWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Current window: recovering until about {recoveringUpper} h, ready until about {readyUpper} h.'**
+  String recoveryCurrentWindow(int recoveringUpper, int readyUpper);
 
   /// No description provided for @recoveryWindowHeuristic.
   ///
   /// In en, this message translates to:
-  /// **'Heuristic window: often around {from} to {to} hours, depending on context.'**
+  /// **'Current window: recovering until about {from} h, ready until about {to} h.'**
   String recoveryWindowHeuristic(int from, int to);
 
   /// No description provided for @recoveryRadarHeuristicCaption.
   ///
   /// In en, this message translates to:
-  /// **'Radar overview of recent recovery pressure by muscle. It is directional and heuristic.'**
+  /// **'Radar overview of current readiness by muscle. Status badges remain the primary signal.'**
   String get recoveryRadarHeuristicCaption;
 
   /// No description provided for @recoveryNoDataBody.

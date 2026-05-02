@@ -213,6 +213,78 @@ void main() {
       expect(olderSession, greaterThan(staleSession));
     });
 
+    test('computes monotonic readiness score through effective window', () {
+      final samples = [0.0, 12.0, 24.0, 48.0, 60.0, 72.0, 96.0, 120.0];
+      var previous = -1.0;
+
+      for (final hours in samples) {
+        final score = readiness(
+          hours: hours,
+          recoveringUpper: 48,
+          readyUpper: 72,
+        );
+        expect(score, greaterThanOrEqualTo(previous));
+        previous = score;
+      }
+    });
+
+    test('calibrates readiness score at boundaries', () {
+      expect(
+        readiness(hours: 0, recoveringUpper: 48, readyUpper: 72),
+        closeTo(5, 0.001),
+      );
+      expect(
+        readiness(hours: 48, recoveringUpper: 48, readyUpper: 72),
+        closeTo(60, 0.001),
+      );
+      expect(
+        readiness(hours: 72, recoveringUpper: 48, readyUpper: 72),
+        closeTo(85, 0.001),
+      );
+      expect(
+        readiness(hours: 120, recoveringUpper: 48, readyUpper: 72),
+        closeTo(100, 0.001),
+      );
+    });
+
+    test('longer effective windows lower readiness for same elapsed hours', () {
+      final normalWindow = readiness(
+        hours: 48,
+        recoveringUpper: 48,
+        readyUpper: 72,
+      );
+      final extendedWindow = readiness(
+        hours: 48,
+        recoveringUpper: 96,
+        readyUpper: 120,
+      );
+
+      expect(extendedWindow, lessThan(normalWindow));
+    });
+
+    test('maps last-load pressure score to display levels', () {
+      expect(
+        RecoveryDomainService.pressureLevelForScore(0),
+        RecoveryPressureLevel.low,
+      );
+      expect(
+        RecoveryDomainService.pressureLevelForScore(24.9),
+        RecoveryPressureLevel.low,
+      );
+      expect(
+        RecoveryDomainService.pressureLevelForScore(25),
+        RecoveryPressureLevel.moderate,
+      );
+      expect(
+        RecoveryDomainService.pressureLevelForScore(50),
+        RecoveryPressureLevel.high,
+      );
+      expect(
+        RecoveryDomainService.pressureLevelForScore(75),
+        RecoveryPressureLevel.veryHigh,
+      );
+    });
+
     test('uses parity-safe defaults in recovery pressure score', () {
       final score = RecoveryDomainService.recoveryPressureScore(const {});
       expect(score, 0);
@@ -295,4 +367,16 @@ double pressure({
     'hoursSinceLastSignificantLoad': hours,
     'highSessionFatigue': highSessionFatigue,
   });
+}
+
+double readiness({
+  required double hours,
+  required double recoveringUpper,
+  required double readyUpper,
+}) {
+  return RecoveryDomainService.readinessScore(
+    hoursSinceLastSignificantLoad: hours,
+    recoveringUpperHours: recoveringUpper,
+    readyUpperHours: readyUpper,
+  );
 }

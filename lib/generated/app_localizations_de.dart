@@ -2457,25 +2457,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String recoveryLastLoadedHours(int hours) {
-    return 'Letzte signifikante Belastung: vor ${hours}h';
+    return 'Zuletzt signifikant belastet: vor $hours h';
   }
 
   @override
   String get recoveryFatigueContextHigh =>
-      'Letzter Ermüdungs-Kontext: hohe Session-Ermüdung';
+      'Ermüdungskontext: hohe Session-Ermüdung';
 
   @override
   String get recoveryFatigueContextBaseline =>
-      'Letzter Ermüdungs-Kontext: normale Session-Ermüdung';
+      'Ermüdungskontext: normale Session-Ermüdung';
 
   @override
   String recoveryExplanationWithHighFatigue(String muscle, int hours) {
-    return '$muscle: zuletzt vor ${hours}h signifikant belastet, mit hoher Session-Ermüdung.';
+    return '$muscle: zuletzt vor $hours h signifikant belastet, mit hoher Session-Ermüdung.';
   }
 
   @override
   String recoveryExplanationBasic(String muscle, int hours) {
-    return '$muscle: zuletzt vor ${hours}h signifikant belastet.';
+    return '$muscle: zuletzt vor $hours h signifikant belastet.';
   }
 
   @override
@@ -2483,18 +2483,43 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dies ist eine konservative Heuristik auf Basis kürzlich signifikanter Belastung und Session-Anstrengung. Keine medizinische Erholungs-Messung.';
 
   @override
+  String get recoveryReadinessLabel => 'Bereitschaft';
+
+  @override
   String recoveryRecentLoad(String sets) {
-    return 'Letzte Belastungsmenge: $sets äquivalente Sätze';
+    return 'Letzte Belastung: $sets äquivalente Sätze';
+  }
+
+  @override
+  String recoveryLastLoadPressure(String level) {
+    return 'Letzter Belastungsdruck: $level';
+  }
+
+  @override
+  String get recoveryPressureLow => 'niedrig';
+
+  @override
+  String get recoveryPressureModerate => 'moderat';
+
+  @override
+  String get recoveryPressureHigh => 'hoch';
+
+  @override
+  String get recoveryPressureVeryHigh => 'sehr hoch';
+
+  @override
+  String recoveryCurrentWindow(int recoveringUpper, int readyUpper) {
+    return 'Aktuelles Zeitfenster: erholt sich bis ca. $recoveringUpper h, bereit bis ca. $readyUpper h.';
   }
 
   @override
   String recoveryWindowHeuristic(int from, int to) {
-    return 'Heuristisches Zeitfenster: häufig etwa $from bis $to Stunden, abhängig vom Kontext.';
+    return 'Aktuelles Zeitfenster: erholt sich bis ca. $from h, bereit bis ca. $to h.';
   }
 
   @override
   String get recoveryRadarHeuristicCaption =>
-      'Radar-Überblick zum jüngsten Erholungsdruck je Muskel. Richtungsweisend und heuristisch.';
+      'Radar-Überblick zur aktuellen Bereitschaft je Muskel. Die Status-Badges bleiben das wichtigste Signal.';
 
   @override
   String get recoveryNoDataBody =>
