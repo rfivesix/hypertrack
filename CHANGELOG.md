@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-alpha.4] - 2026-05-02
+### Fixed
+- Hardened Sleep Health Score handling for ambiguous and missing stage data.
+- Prevented `unknown` and ambiguous `inBedOnly` stages from inflating wake duration, WASO, interruptions, and sleep-efficiency penalties.
+- Improved REM-missing and low-fidelity stage guardrails so scores do not imply unsupported certainty.
+- Made Sleep Regularity Index availability depend on valid consecutive comparison pairs, not just raw valid-day count.
+- Marked synthesized duration-only sleep windows as estimated instead of treating them like observed session bounds.
+- Added targeted regression tests for missing-stage handling, stage guardrails, SRI coverage, and sleep-window fallback behavior.
+
 ## [0.9.0-alpha.3] - 2026-04-26
 ### Internal
 - updated the base nutrition database

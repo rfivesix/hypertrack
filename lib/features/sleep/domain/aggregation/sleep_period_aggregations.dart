@@ -23,12 +23,14 @@ class SleepWindowSegment {
     this.startMinutes,
     this.endMinutes,
     this.hasData = false,
+    this.isEstimatedWindow = false,
   });
 
   final DateTime date;
   final int? startMinutes;
   final int? endMinutes;
   final bool hasData;
+  final bool isEstimatedWindow;
 }
 
 class WeekSleepAggregation {
@@ -177,6 +179,7 @@ class SleepPeriodAggregationEngine {
         startMinutes: start,
         endMinutes: end,
         hasData: true,
+        isEstimatedWindow: false,
       );
     }
 
@@ -192,6 +195,7 @@ class SleepPeriodAggregationEngine {
       startMinutes: start,
       endMinutes: end,
       hasData: true,
+      isEstimatedWindow: true,
     );
   }
 

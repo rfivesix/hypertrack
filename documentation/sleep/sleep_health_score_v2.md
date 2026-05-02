@@ -109,6 +109,8 @@ Implementation path:
 - Pipeline builds 1-minute sleep/wake vectors (`0` wake, `1` sleep) per day.
 - Vectors are built from repaired canonical stage segments.
 - Sleep stages counted as sleep: `light`, `deep`, `rem`, `asleepUnspecified`.
+- Definite wake stages counted for WASO/interruptions include `awake` and `outOfBed`.
+- `unknown` and ambiguous `inBedOnly` are not treated as definite wake; they reduce data support/coverage rather than inflating WASO or interruption counts.
 - Minutes not covered by those sleep stages are treated as wake in the binary series.
 - SRI is computed from minute-wise equality across matching clock minutes on true 24h pairs (consecutive calendar days).
 - Non-consecutive valid days are not compared as SRI pairs.
@@ -121,28 +123,33 @@ Current data windowing behavior:
 
 Minimum data rules:
 
-- `<5` valid days: regularity unavailable
-- `5..6` valid days: regularity available, marked as preliminary (not stable)
-- `>=7` valid days: regularity marked stable
+- `<5` valid days or `<4` valid consecutive comparison pairs: regularity unavailable
+- `5..6` valid days with enough comparison pairs: regularity available, marked as preliminary (not stable)
+- `>=7` valid days and `>=6` valid comparison pairs: regularity marked stable
 
 If regularity is unavailable, top-level score renormalizes across Duration and Continuity only.
 
 ## Score completeness indicator
 
-`score_completeness` is persisted as active top-level weight before renormalization:
+`score_completeness` is persisted as active top-level weight before renormalization, adjusted down when stage support is absent or low-fidelity:
 
 - all components available: `1.0`
 - regularity missing: `0.75`
 - continuity missing: `0.65`
 - no components: `0.0` (score unavailable)
+- no stage data, 100% `asleepUnspecified`, missing REM, or low-confidence stage data can lower completeness without necessarily making the score unavailable
 
-This is a data completeness indicator, not a certainty metric.
+This is a data completeness indicator, not clinical certainty.
+
+## Stage-data guardrail
+
+Sleep-stage/depth composition is a source-fidelity-sensitive guardrail, not a PSG-equivalent judgment. Good duration and continuity without stages may still score reasonably, but with limited support. Low-fidelity or REM-blind sources can be less punitive on the score than high-fidelity sources with genuinely missing REM, but they should not imply high certainty.
 
 ## Explicit exclusions from V2 main score
 
-The following are not used in V2 score computation:
+The following are not used as weighted top-level V2 components:
 
-- sleep stage percentages/depth as a weighted top-level component
+- sleep stage percentages/depth; they are used only as a conservative guardrail/completeness signal
 - SOL
 - heart-rate and HRV metrics/deltas
 - interruption count as a standalone component (continuity uses WASO directly)

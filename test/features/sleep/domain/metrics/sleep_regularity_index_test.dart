@@ -51,6 +51,7 @@ void main() {
     expect(result.available, isFalse);
     expect(result.stable, isFalse);
     expect(result.validDays, 4);
+    expect(result.validComparisonPairs, 0);
     expect(result.sri, isNull);
   });
 
@@ -87,6 +88,7 @@ void main() {
     expect(result.available, isTrue);
     expect(result.stable, isFalse);
     expect(result.validDays, 5);
+    expect(result.validComparisonPairs, 4);
     expect(result.sri, closeTo(100, 0.0001));
   });
 
@@ -133,6 +135,7 @@ void main() {
     expect(result.available, isTrue);
     expect(result.stable, isTrue);
     expect(result.validDays, 7);
+    expect(result.validComparisonPairs, 6);
     expect(result.sri, isNotNull);
     expect(result.sri!, inInclusiveRange(0, 100));
     expect(result.sri!, lessThan(100));
@@ -169,6 +172,55 @@ void main() {
       ],
     );
     expect(result.validDays, 5);
+    expect(result.validComparisonPairs, 0);
+    expect(result.available, isFalse);
+    expect(result.stable, isFalse);
+    expect(result.sri, isNull);
+  });
+
+  test('valid days are not stable without enough consecutive pairs', () {
+    final result = calculateSleepRegularityIndex(
+      dailyStates: [
+        dayState(
+          DateTime.utc(2026, 3, 1),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 2),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 4),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 5),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 7),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 8),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+        dayState(
+          DateTime.utc(2026, 3, 10),
+          sleepStartMinute: 1320,
+          sleepEndMinuteExclusive: 1440,
+        ),
+      ],
+    );
+
+    expect(result.validDays, 7);
+    expect(result.validComparisonPairs, 3);
     expect(result.available, isFalse);
     expect(result.stable, isFalse);
     expect(result.sri, isNull);

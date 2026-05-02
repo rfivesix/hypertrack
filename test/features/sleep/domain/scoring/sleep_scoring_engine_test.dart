@@ -53,7 +53,7 @@ void main() {
       );
       expect(result.continuityScore, 100);
       expect(result.score, 100);
-      expect(result.completeness, closeTo(0.35, 0.0001));
+      expect(result.completeness, closeTo(0.2975, 0.0001));
     });
 
     test('renormalizes top-level score when regularity is unavailable', () {
@@ -66,7 +66,7 @@ void main() {
       );
       expect(result.score, 100);
       expect(result.state, SleepScoreState.good);
-      expect(result.completeness, closeTo(0.75, 0.0001));
+      expect(result.completeness, closeTo(0.6375, 0.0001));
       expect(result.regularityUsed, isFalse);
     });
 
@@ -93,7 +93,7 @@ void main() {
         expect(available.regularityUsed, isTrue);
         expect(available.regularityStable, isFalse);
         expect(available.score, closeTo(82, 0.01));
-        expect(available.completeness, closeTo(0.25, 0.0001));
+        expect(available.completeness, closeTo(0.2125, 0.0001));
 
         final stable = calculateSleepScore(
           const SleepScoringInput(regularitySri: 82, regularityValidDays: 7),
@@ -101,7 +101,7 @@ void main() {
         expect(stable.regularityUsed, isTrue);
         expect(stable.regularityStable, isTrue);
         expect(stable.score, closeTo(82, 0.01));
-        expect(stable.completeness, closeTo(0.25, 0.0001));
+        expect(stable.completeness, closeTo(0.2125, 0.0001));
       },
     );
 
@@ -213,6 +213,86 @@ void main() {
       expect(result.stageScoreCap, isNotNull);
       expect(result.stageScoreCap!, lessThan(94));
     });
+
+    test('100% asleepUnspecified is deterministic and conservative', () {
+      const input = SleepScoringInput(
+        durationMinutes: 480,
+        sleepEfficiencyPct: 94,
+        wasoMinutes: 20,
+        regularitySri: 90,
+        regularityValidDays: 7,
+        asleepUnspecifiedPct: 100,
+        stageDataConfidence: SleepStageConfidence.low,
+      );
+
+      final result = calculateSleepScore(input);
+      expect(result.stageDepthScore, closeTo(54, 0.01));
+      expect(result.stageScoreCap, closeTo(81.6, 0.01));
+      expect(result.completeness, lessThan(0.75));
+    });
+
+    test('no-stage night can score but has limited support', () {
+      const noStages = SleepScoringInput(
+        durationMinutes: 480,
+        sleepEfficiencyPct: 94,
+        wasoMinutes: 20,
+        regularitySri: 90,
+        regularityValidDays: 7,
+      );
+      const balancedStages = SleepScoringInput(
+        durationMinutes: 480,
+        sleepEfficiencyPct: 94,
+        wasoMinutes: 20,
+        regularitySri: 90,
+        regularityValidDays: 7,
+        lightSleepPct: 56,
+        deepSleepPct: 22,
+        remSleepPct: 20,
+        stageDataConfidence: SleepStageConfidence.high,
+      );
+
+      final noStageResult = calculateSleepScore(noStages);
+      final balancedResult = calculateSleepScore(balancedStages);
+      expect(noStageResult.score, greaterThan(90));
+      expect(noStageResult.completeness, lessThan(balancedResult.completeness));
+      expect(noStageResult.stageDepthScore, isNull);
+    });
+
+    test(
+      'high-fidelity missing REM is penalized more than low-fidelity missing REM',
+      () {
+        const highFidelity = SleepScoringInput(
+          durationMinutes: 480,
+          sleepEfficiencyPct: 94,
+          wasoMinutes: 20,
+          regularitySri: 90,
+          regularityValidDays: 7,
+          lightSleepPct: 62,
+          deepSleepPct: 38,
+          remSleepPct: 0,
+          stageDataConfidence: SleepStageConfidence.high,
+        );
+        const lowFidelity = SleepScoringInput(
+          durationMinutes: 480,
+          sleepEfficiencyPct: 94,
+          wasoMinutes: 20,
+          regularitySri: 90,
+          regularityValidDays: 7,
+          lightSleepPct: 62,
+          deepSleepPct: 38,
+          remSleepPct: 0,
+          stageDataConfidence: SleepStageConfidence.unknown,
+          sourcePlatform: 'health_connect',
+          sourceAppId: 'com.withings.mobile',
+        );
+
+        final high = calculateSleepScore(highFidelity);
+        final low = calculateSleepScore(lowFidelity);
+        expect(high.stageDepthScore, lessThan(low.stageDepthScore!));
+        expect(high.stageScoreCap, lessThan(low.stageScoreCap!));
+        expect(low.completeness, lessThan(0.9));
+      },
+    );
 
     test('normal staged night regression stays stable', () {
       const withoutStages = SleepScoringInput(

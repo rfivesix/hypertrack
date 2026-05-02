@@ -232,6 +232,7 @@ Current scoring inputs provided by pipeline:
 - `wasoMinutes` from nightly metrics (`wakeAfterSleepOnset`)
 - `regularitySri` from 1-minute sleep/wake state matching across true 24h pairs (consecutive calendar days only)
 - `regularityValidDays` for availability/stability thresholds
+- Regularity availability/stability also depends on valid consecutive comparison pairs; sparse non-consecutive days do not become stable just from raw day count.
 
 Explicitly excluded from V2 main score:
 
@@ -275,6 +276,8 @@ Implemented threshold mapping in repositories:
 - Qualifying wake segment threshold: `>= 3 minutes`
 - Distinct interruption requires sleep gap `> 2 minutes` between wake segments
 - Interruption counting starts after sleep onset
+- `unknown` and ambiguous `inBedOnly` are not definite wake for WASO/interruption scoring; explicit `awake` and `outOfBed` remain wake.
+- Consumer sleep stages are treated as imperfect source data. Missing/no-stage nights can still score from duration and continuity, but completeness is lowered when stage support is limited.
 
 ### Persistence
 
@@ -364,7 +367,7 @@ Week/month scope uses `SleepPeriodAggregationEngine` (`lib/features/sleep/domain
 
 Important implementation detail:
 
-- Week window bars use a synthetic wake anchor at `06:00` and back-calculate bedtime from duration (`_toWindow(...)`), not real bedtime/wake timestamps.
+- Week window bars use real session bounds when available. If bounds are missing, `_toWindow(...)` uses a synthetic wake anchor at `06:00` and back-calculates bedtime from duration; those windows are marked as estimated in the domain model.
 
 ## Statistics integration boundaries
 

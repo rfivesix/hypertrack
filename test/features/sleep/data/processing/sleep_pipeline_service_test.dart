@@ -100,7 +100,7 @@ void main() {
       expect(analysis.readNullable<int>('interruptions_wake_minutes'), 5);
       expect(
         analysis.readNullable<double>('score_completeness'),
-        closeTo(0.75, 0.0001),
+        closeTo(0.615, 0.0001),
       );
       expect(analysis.readNullable<double>('regularity_sri'), isNull);
       expect(analysis.readNullable<int>('regularity_valid_days'), lessThan(5));
@@ -168,7 +168,7 @@ void main() {
       expect(score!, lessThan(94));
       expect(
         analysis.readNullable<double>('score_completeness'),
-        closeTo(0.75, 0.0001),
+        closeTo(0.615, 0.0001),
       );
 
       await db.close();
@@ -305,7 +305,7 @@ void main() {
       expect(latest.readNullable<double>('score'), isNotNull);
       expect(
         latest.readNullable<double>('score_completeness'),
-        closeTo(1.0, 0.0001),
+        closeTo(0.82, 0.0001),
       );
       expect(latest.readNullable<double>('regularity_sri'), isNotNull);
       expect(

@@ -237,6 +237,9 @@ class SleepPipelineService {
             regularitySri: regularityByNight[_nightKey(session.endAtUtc)]?.sri,
             regularityValidDays:
                 regularityByNight[_nightKey(session.endAtUtc)]?.validDays ?? 0,
+            regularityValidComparisonPairs:
+                regularityByNight[_nightKey(session.endAtUtc)]
+                    ?.validComparisonPairs,
             lightSleepPct: metrics.stagePercentages[CanonicalSleepStage.light],
             deepSleepPct: metrics.stagePercentages[CanonicalSleepStage.deep],
             remSleepPct: metrics.stagePercentages[CanonicalSleepStage.rem],
