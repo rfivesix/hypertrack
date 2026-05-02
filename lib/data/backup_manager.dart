@@ -808,9 +808,12 @@ class BackupManager {
       }
 
       final docs = await getApplicationDocumentsDirectory();
-      final external = await getExternalStorageDirectory();
-      final externalFallbackDir =
-          external != null ? p.join(external.path, 'Backups') : null;
+      String? externalFallbackDir;
+      if (Platform.isAndroid) {
+        final external = await getExternalStorageDirectory();
+        externalFallbackDir =
+            external != null ? p.join(external.path, 'Backups') : null;
+      }
       final baseDir = await resolveWritableBackupDirectory(
         docsDir: docs,
         dirPath: configuredDirPath,
