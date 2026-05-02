@@ -1,6 +1,6 @@
-# System Architecture (Current Implementation)
+# System Architecture
 
-This document reflects architecture as implemented in the **current working copy**.
+This document reflects architecture as currently implemented.
 
 ## High-level layering
 

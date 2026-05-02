@@ -64,6 +64,16 @@ It is designed primarily for **experienced lifters and gym-focused athletes** wh
   </tr>
 </table>
 
+## Platform support
+
+Hypertrack is a Flutter app with active mobile targets:
+
+- iOS
+- Android
+
+Desktop platform folders are present for Flutter compatibility but are not the
+primary production targets.
+
 ## Highlights
 
 - **Workout tracking** with structured sets, history, and session review
@@ -134,7 +144,7 @@ This includes supported app-recorded data such as:
 - hydration
 - workout sessions
 
-Hypertrack remains the source of truth for its own tracking and analytics.
+Hypertrack remains the authoritative record for its own tracking and analytics.
 
 ## Privacy and local-first philosophy
 
@@ -152,6 +162,10 @@ Hypertrack remains the source of truth for its own tracking and analytics.
 - [Adaptive Nutrition Recommendation](documentation/adaptive_nutrition_recommendation_current_state.md)
 - [Statistics Module](documentation/statistics_module.md)
 - [System Architecture](documentation/architecture.md)
+- [Data Models & Storage](documentation/data_models_and_storage.md)
+- [Sleep Module](documentation/sleep/sleep_current_state.md)
+- [Health Steps Integration](documentation/health_steps.md)
+- [Health Export](documentation/health_export_one_way.md)
 
 ## Credits
 

@@ -1,6 +1,6 @@
-# Data Models & Storage (Current Implementation)
+# Data Models & Storage
 
-This document summarizes the active persistence model in the current working copy.
+This document summarizes the active persistence model.
 
 ## Storage architecture
 

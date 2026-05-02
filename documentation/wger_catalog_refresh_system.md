@@ -180,15 +180,12 @@ Startup integration:
 - Payload integrity currently uses SHA-256 checksums from the manifest.
 - Digital signature verification is intentionally not implemented yet.
 
-## Operational testing checklist (before broader rollout)
+## Release validation
 
-1. Run workflow manually with `publish_release_assets=true`.
-2. Verify release `wger-catalog-stable` assets were replaced.
-3. Verify manifest version/URLs match uploaded assets.
-4. Install app build using this code.
-5. Trigger app startup with network enabled and confirm remote catalog adoption.
-6. Confirm startup remains stable with network disabled or manifest fetch failure.
-7. Verify routines/history still resolve exercises and analytics remain functional.
+For catalog-channel changes, validate that the workflow publishes the expected
+release assets, the manifest points to those assets, startup can adopt a valid
+remote catalog, fallback behavior remains stable when the remote channel is
+unavailable, and existing routines/history still resolve exercises.
 
 ## Changing source/channel configuration
 

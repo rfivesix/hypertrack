@@ -1,6 +1,6 @@
-# Statistics Module — Current Implementation (Code-Audited)
+# Statistics Module
 
-This document is implementation-grounded and reflects the **current working copy**.
+This document is implementation-grounded and reflects current behavior.
 
 ## Module boundaries
 
@@ -256,7 +256,7 @@ Those are owned by feature modules/services under:
 
 ### Currently ambiguous from code
 
-- `StatisticsHubScreen` contains provider display-name branches for `withings`, `garmin`, and `fitbit`, but the active `StepsProviderFilter` enum currently exposes only `all`, `apple`, `google`. This appears transitional and is ambiguous as settled architecture.
+- `StatisticsHubScreen` contains provider display-name branches for `withings`, `garmin`, and `fitbit`, but the active `StepsProviderFilter` enum currently exposes only `all`, `apple`, `google`. These branches are not treated as settled architecture.
 
 ## File map
 

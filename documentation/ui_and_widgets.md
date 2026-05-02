@@ -5,7 +5,7 @@ It is a broad UI reference; for current Statistics/Sleep implementation specific
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
 - [Design Philosophy](#design-philosophy)
 - [Theme System](#theme-system)

@@ -1,6 +1,6 @@
-# Hypertrack: Project Overview (Current Implementation)
+# Hypertrack: Project Overview
 
-This document describes the app as implemented in the **current working copy**.
+This document describes the app as currently implemented.
 
 ## Scope
 
@@ -100,7 +100,7 @@ Current entry points:
 - Statistics hub sleep card -> `/sleep/day`
 - Diary sleep summary card -> `/sleep/day` for selected date
 
-Canonical source-of-truth for Sleep implementation details:
+Canonical Sleep implementation references:
 
 - `documentation/sleep/sleep_current_state.md`
 - `documentation/sleep/sleep_health_score_v2.md`
@@ -135,17 +135,13 @@ Implemented controls include:
 - Pulse: opt-in analysis toggle and heart-rate permission request
 - Health export: one-way platform export toggles (Apple Health / Health Connect), permission flow, per-domain status summary, and manual export trigger
 
-## Notes on working-copy state
-
-- This overview follows the current checked-out source tree.
-
 ## Related docs
 
 - [Adaptive nutrition recommendation current state](adaptive_nutrition_recommendation_current_state.md)
 - [AI meal features architecture](ai_meal_features_architecture.md)
 - [Statistics module](statistics_module.md)
 - [Sleep current state](sleep/sleep_current_state.md)
-- [Health steps integration](health_steps_alpha.md)
+- [Health steps integration](health_steps.md)
 - [Health export one-way](health_export_one_way.md)
 - [Wger catalog refresh & distribution](wger_catalog_refresh_system.md)
 - [OFF catalog refresh & distribution](off_catalog_refresh_system.md)

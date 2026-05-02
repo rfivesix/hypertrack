@@ -107,9 +107,8 @@ Stored in shared preferences (status payload) and shown in Settings.
 - per-domain status summary
 - manual retry/export action
 
-## Operational limits / follow-ups
+## Known limitations
 
-- This batch intentionally exports only data that maps cleanly from existing model fields.
 - Workout calories are only exported if already present in payload.
 - Health platform write metadata is still conservative (`manualEntry`) and does not yet set richer client/device metadata fields such as `clientRecordId`/`clientRecordVersion`.
 - Google Fit presentation is external to Hypertrack: if `title`/`notes` are written into Health Connect but not displayed in Google Fit UI, this is a downstream display limitation rather than a Hypertrack write-path failure.

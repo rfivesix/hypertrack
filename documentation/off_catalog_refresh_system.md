@@ -1,6 +1,7 @@
 # OFF Catalog Refresh & Distribution (Multi-Country Release Channels)
 
-This document describes the v0.8.5 Open Food Facts (OFF) infrastructure wave.
+This document describes the Open Food Facts (OFF) catalog refresh and
+distribution system.
 
 Implemented scope:
 
@@ -12,7 +13,7 @@ Implemented scope:
 - app-side country selection + remote adoption flow
 - retained-history compatibility (`off` vs `off_retained`)
 
-## Source of truth
+## Data source
 
 OFF generation is driven from the official bulk export parquet source:
 

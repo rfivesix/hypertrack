@@ -1,4 +1,4 @@
-# Health Steps Module (Current Implementation Notes)
+# Health Steps Module
 
 This file documents the currently implemented steps integration behavior.
 

@@ -1,6 +1,6 @@
 # Sleep Health Score V2 (Current Canonical Implementation)
 
-This document describes the implemented V2 Sleep Health Score in the current working copy.
+This document describes the implemented V2 Sleep Health Score.
 
 ## Scope
 
@@ -200,7 +200,3 @@ Stage depth and HR signals remain available for detailed drill-down and future m
 - SRI depends on available canonical stage timeline coverage; sparse/missing stage days reduce availability.
 - `night_date` is UTC-day keyed in current pipeline, while some UI date handling is local-day keyed.
 - Statistics hub currently consumes aggregate score outputs only; it does not expose component-level attribution.
-
-## References placeholder
-
-- Add epidemiology and sleep-regularity references here when repository citation style is finalized.

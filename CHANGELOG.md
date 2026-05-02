@@ -504,7 +504,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Documented Bayesian estimator tuning parameters
 
 ### Changed
-- Bayesian experimental state now uses atomic snapshot persistence as single source of truth
+- Bayesian experimental state now uses atomic snapshot persistence as unified state storage
 - Due-notification logic now requires:
   - recommendation is currently due
   - no recommendation has yet been generated for that due week
@@ -904,7 +904,7 @@ This release completes the main **sleep module rollout** and adds the first full
 ### Notes
 
 - **Sleep export/import scope remains unchanged**: the sleep module is about processing and analytics inside Hypertrack, not external sleep write-back.
-- **Health export is one-way only**. Hypertrack remains the source of truth.
+- **Health export is one-way only**. Hypertrack remains the authoritative record.
 - **Nutrition export is aggregate-based only**. No ingredient or individual food-item reconstruction is exported.
 - **Workout export is session-level only**. Internal workout structure is not exported as structured native workout data.
 - Some downstream behavior, especially in **Google Fit**, may differ from what is actually stored in **Health Connect**. If a field is written correctly but not surfaced there, that is a downstream display limitation rather than a Hypertrack write failure.
@@ -953,7 +953,7 @@ This beta focuses on **one-way health platform export** and the final stabilizat
 - Fixed incremental export behavior so one failed domain does not force unnecessary full-history reloads for all other domains
 
 ### Notes
-- Export remains **one-way only**. Hypertrack is the source of truth.
+- Export remains **one-way only**. Hypertrack is the authoritative record.
 - Nutrition export remains **aggregate-based only**. No ingredient- or food-item reconstruction is exported.
 - Workout export remains **session-level only**. Internal workout structure is not exported as native structured workout content.
 - Some downstream display behavior, especially in **Google Fit**, may differ from what is stored in Health Connect. If a field is written correctly but not shown in Google Fit, this is a platform display limitation rather than a Hypertrack write failure.
@@ -1021,7 +1021,7 @@ This stable release includes all `0.7.3-alpha.*` and `0.7.3-beta.1` changes sinc
 - Sleep benchmark bars (duration/heart-rate detail views) updated for better contrast in light/dark mode.
 - Statistics-to-Sleep integration refined while preserving clear feature ownership boundaries.
 - Settings section labels updated to release wording (`Sleep/Schlaf`, `Steps/Schritte`).
-- Project docs rewritten and consolidated around implementation-first “current source of truth” references.
+- Project docs rewritten and consolidated around implementation-first references.
 
 ### Fixed
 - Manual `Import sleep data now` now performs full-history backfill import.
@@ -1077,11 +1077,11 @@ This release promotes the current Sleep feature set from alpha toward beta by fi
 
 ## [0.7.3-alpha.4] - 2026-04-02
 
-This alpha finalizes the current Sleep health-score pass in the working copy. It documents and ships the implemented V1 scoring model, persists additional nightly analysis fields for score completeness and regularity, expands Sleep day/detail messaging and localization, and refreshes core documentation so release notes and docs align with the current source of truth.
+This alpha finalizes the Sleep health-score pass. It documents and ships the implemented V1 scoring model, persists additional nightly analysis fields for score completeness and regularity, expands Sleep day/detail messaging and localization, and refreshes core documentation so release notes and docs align with implementation.
 
 ### Added
 - Sleep Health Score V1 documentation describing the implemented scoring model, component weights, regularity rules, completeness semantics, and known limitations.
-- A canonical Sleep current-state document that describes the routed screens, repositories, pipeline flow, persistence layers, and implementation boundaries in the current working copy.
+- A canonical Sleep current-state document that describes the routed screens, repositories, pipeline flow, persistence layers, and implementation boundaries.
 - Persisted nightly-analysis fields for score completeness and regularity outputs, including SRI, valid-day count, and stable/preliminary state.
 - Additional localized Sleep copy for empty states, timeline/status labels, sleep-score messaging, regularity messaging, heart-rate messaging, and raw-import metadata in English and German.
 - Targeted regression coverage for the updated sleep scoring engine, nightly analysis persistence, pipeline processing, navigation, settings, and regularity index calculation.
@@ -1094,7 +1094,7 @@ This alpha finalizes the current Sleep health-score pass in the working copy. It
 - Project documentation was rewritten to be implementation-focused and current-state-first across the README, architecture, data/storage, overview, statistics, and sleep technical references.
 
 ### Fixed
-- Fixed release/documentation accuracy by replacing stale or historical descriptions with working-copy-based documentation and clearer boundaries around what is actually implemented.
+- Fixed release/documentation accuracy by replacing stale or historical descriptions with implementation-grounded documentation and clearer boundaries around what is actually implemented.
 - Fixed nightly-analysis persistence gaps so newly computed score completeness and regularity fields round-trip through schema migration, DAO writes, and repository mapping.
 - Fixed score-model consistency by aligning the pipeline, persisted analysis version, and documentation around the same Sleep Health Score V1 behavior.
 ## [0.7.3-alpha.3] - 2026-04-01
@@ -1510,7 +1510,7 @@ This release represents a complete modernization of Hypertrack's core architectu
 ### 💾 Database & Architecture
 
 - **Schema v6 Migration**: Major database overhaul adding `height`, `gender`, `birthday` to Profiles, `carbsPer100ml` to FluidLogs, and `rir`/`pauseSeconds` columns for workout tracking.
-- **Single Source of Truth**: User goals (Calories, Macros, Water) migrated from `SharedPreferences` to the SQLite database (`app_settings` table). Changing goals now updates the Dashboard instantly without restart.
+- **Unified goal storage**: User goals (Calories, Macros, Water) migrated from `SharedPreferences` to the SQLite database (`app_settings` table). Changing goals now updates the Dashboard instantly without restart.
 
 ### 🎨 UI/UX Improvements
 
@@ -1601,7 +1601,7 @@ This release represents a complete modernization of Hypertrack's core architectu
     - Added `birthday` (datetime) to `Profiles`.
     - Added `carbsPer100ml` to `FluidLogs`.
     - Added `rir` (Reps in Reserve) and `pauseSeconds` columns (backend preparation).
-- **Single Source of Truth:**
+- **Unified storage:**
     - Migrated user goals (Calories, Macros, Water) from `SharedPreferences` to the local SQLite database (`app_settings` table).
     - Enabled "Live Updates": Changing goals in Settings or Onboarding now updates the Dashboard immediately without a restart.
 
