@@ -442,6 +442,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get skipButton => 'Überspringen';
 
   @override
+  String get appInitStarting => 'App wird gestartet...';
+
+  @override
+  String get appInitInitializing => 'Initialisierung läuft...';
+
+  @override
+  String get appInitFinalizing => 'Abschluss';
+
+  @override
+  String get appInitCheckingBackups => 'Backups werden geprüft...';
+
+  @override
+  String get appInitSkipDownload => 'Download überspringen';
+
+  @override
+  String get appInitSkippingRemoteDownload =>
+      'Remote-Download wird übersprungen...';
+
+  @override
   String get emptyHistory => 'Noch keine Workouts abgeschlossen.';
 
   @override

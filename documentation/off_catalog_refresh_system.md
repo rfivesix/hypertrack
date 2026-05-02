@@ -184,11 +184,20 @@ Runtime OFF adoption flow at startup:
    - HTTPS-only remote URLs
 5. download remote DB to temp file
 6. verify SHA-256 against manifest
-7. validate DB schema + metadata/version + minimum row floor
-8. cache validated DB as update candidate
-9. `BasisDataManager` imports the candidate DB through the existing OFF import path and retention semantics
+7. normalize legacy WAL-mode single-file SQLite artifacts after checksum verification
+8. validate DB schema + metadata/version + minimum row floor
+9. cache validated DB as update candidate
+10. `BasisDataManager` imports the candidate DB through the existing OFF import path and retention semantics
 
 If any step fails, the app safely falls back without destructive changes.
+Failed remote refreshes bypass the normal minimum-check interval on the next
+startup so a fixed artifact can be retried without clearing app data.
+
+Published `.db` artifacts should be portable single-file SQLite databases. Build
+scripts should checkpoint any WAL writes and switch back to `journal_mode=DELETE`
+before publishing. For compatibility with older published artifacts, the app can
+normalize a downloaded WAL-mode header after SHA-256 verification and before
+schema validation/import.
 
 Supported OFF countries are centralized as:
 
@@ -223,9 +232,14 @@ Switch behavior is intentionally safe:
 
 This prevents startup crashes when a configured bundled asset path is not shipped yet (for example non-DE countries during staged rollout).
 
-Current staged-rollout note:
+Current APK-size rollout note:
 
-- bundled DE OFF fallback (`assets/db/hypertrack_prep_de.db`) is intentionally kept.
+- the legacy DE OFF fallback path (`assets/db/hypertrack_prep_de.db`) remains
+  configured, but the large asset does not need to be bundled.
+- when no remote candidate is available and that optional asset is absent,
+  startup skips OFF import and continues with the bundled base-foods catalog.
+- startup remote catalog downloads can be skipped from the initializer screen;
+  skipped downloads fall back to existing local OFF data or base foods.
 
 ## Active vs retained semantics
 

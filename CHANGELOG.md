@@ -17,15 +17,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added muscle-specific recovery windows plus load- and intensity-based recovery extensions.
 - Made RIR/RPE fatigue detection more robust and fixed inclusive recovery-state boundary behavior.
 - Added robust recovery timestamp parsing and clarified fixed current-state recovery lookback behavior.
+- Fixed remote OFF catalog import for currently published single-file SQLite artifacts that still use WAL header mode.
+- Prevented remote catalog normalization from truncating downloaded DB files before import validation.
+- Added startup retry behavior so failed remote refresh attempts bypass the normal minimum check interval on the next app launch.
 
 ### Changed
 - Refined muscle recovery analytics by separating current readiness from last-load pressure in the Recovery Tracker.
 - Updated recovery UI copy to show actual effective recovery windows and localized load-pressure levels.
 - Improved recovery heuristic documentation for muscle-specific windows, readiness scoring, and load-pressure semantics.
+- Startup loading status now reflects remote catalog preparation details during OFF/training refresh checks.
 
 ### Internal
 - Expanded recovery regression coverage for equivalent-set pressure, bodyweight/cardio filtering, RIR/RPE fatigue thresholds, muscle-specific windows, boundary behavior, timestamp parsing, and recovery range policy.
 - Updated statistics/recovery documentation to frame readiness as a transparent training-log heuristic rather than a clinical recovery prediction.
+- Hardened remote catalog refresh services with WAL-header normalization, size-integrity guards, and focused regression coverage for OFF refresh edge cases.
+- Updated OFF/WGER catalog refresh docs and generator scripts to enforce portable published SQLite artifacts (`journal_mode=DELETE`).
 
 ## [0.9.0-alpha.3] - 2026-04-26
 ### Internal

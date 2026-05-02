@@ -440,6 +440,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get skipButton => 'Skip';
 
   @override
+  String get appInitStarting => 'Starting app...';
+
+  @override
+  String get appInitInitializing => 'Initializing...';
+
+  @override
+  String get appInitFinalizing => 'Finalizing';
+
+  @override
+  String get appInitCheckingBackups => 'Checking backups...';
+
+  @override
+  String get appInitSkipDownload => 'Skip download';
+
+  @override
+  String get appInitSkippingRemoteDownload => 'Skipping remote download...';
+
+  @override
   String get emptyHistory => 'No completed workouts yet.';
 
   @override

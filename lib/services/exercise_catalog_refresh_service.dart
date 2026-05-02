@@ -71,6 +71,13 @@ typedef NowProvider = DateTime Function();
 typedef SupportDirectoryProvider = Future<Directory> Function();
 typedef TempDirectoryProvider = Future<Directory> Function();
 typedef PrefsProvider = Future<SharedPreferences> Function();
+typedef ExerciseCatalogRefreshProgress = void Function(
+  String task,
+  String detail,
+  double progress, {
+  required bool canSkip,
+});
+typedef ExerciseRemoteRefreshSkipRequested = bool Function();
 
 /// Handles remote exercise-catalog update discovery, download, and validation.
 ///
@@ -143,6 +150,8 @@ class ExerciseCatalogRefreshService {
   Future<ExerciseCatalogUpdateCandidate?> prepareUpdateCandidate({
     required String installedVersion,
     bool force = false,
+    ExerciseCatalogRefreshProgress? onProgress,
+    ExerciseRemoteRefreshSkipRequested? isSkipRequested,
   }) async {
     if (!_config.enabled) {
       return null;
@@ -180,7 +189,9 @@ class ExerciseCatalogRefreshService {
 
     final now = _nowProvider();
     final lastCheckedMs = prefs.getInt(_keyLastCheckedAtMs);
+    final hasLastError = prefs.getString(_keyLastError) != null;
     if (!force &&
+        !hasLastError &&
         !shouldCheckRemoteNow(
           now: now,
           lastCheckedEpochMs: lastCheckedMs,
@@ -191,6 +202,19 @@ class ExerciseCatalogRefreshService {
     await prefs.setInt(_keyLastCheckedAtMs, now.millisecondsSinceEpoch);
 
     try {
+      if (isSkipRequested?.call() ?? false) {
+        await prefs.setString(
+          _keyLastError,
+          'Remote exercise catalog update skipped by user.',
+        );
+        return null;
+      }
+      onProgress?.call(
+        'Prüfe Übungen...',
+        'Remote-Manifest wird geladen...',
+        0.0,
+        canSkip: true,
+      );
       final manifest = await _fetchManifest(manifestUri);
       if (manifest == null) {
         await prefs.setString(
@@ -209,6 +233,20 @@ class ExerciseCatalogRefreshService {
           );
       if (!shouldDownload) {
         await prefs.remove(_keyLastError);
+        onProgress?.call(
+          'Übungen aktuell',
+          'Kein Remote-Download erforderlich.',
+          1.0,
+          canSkip: false,
+        );
+        return null;
+      }
+
+      if (isSkipRequested?.call() ?? false) {
+        await prefs.setString(
+          _keyLastError,
+          'Remote exercise catalog download skipped by user.',
+        );
         return null;
       }
 
@@ -222,15 +260,32 @@ class ExerciseCatalogRefreshService {
         manifest.dbUri,
         tempDbPath,
         timeout: _config.downloadTimeout,
+        onProgress: (progress) {
+          onProgress?.call(
+            'Lade Übungen...',
+            'Remote-Übungskatalog ${manifest.version} wird heruntergeladen.',
+            progress,
+            canSkip: true,
+          );
+        },
+        isSkipRequested: isSkipRequested,
       );
       if (!downloaded) {
         await prefs.setString(
           _keyLastError,
-          'Download failed for ${manifest.dbUri}',
+          (isSkipRequested?.call() ?? false)
+              ? 'Remote exercise catalog download skipped by user.'
+              : 'Download failed for ${manifest.dbUri}',
         );
         return null;
       }
 
+      onProgress?.call(
+        'Prüfe Übungen...',
+        'Download wird verifiziert...',
+        0.92,
+        canSkip: false,
+      );
       final actualDbSha256 = await _computeFileSha256(tempDbPath);
       if (!_sha256Equals(actualDbSha256, manifest.dbSha256)) {
         await prefs.setString(
@@ -239,6 +294,26 @@ class ExerciseCatalogRefreshService {
         );
         await _deleteIfExists(tempDbPath);
         return null;
+      }
+
+      if (await _usesWalJournalMode(tempDbPath)) {
+        onProgress?.call(
+          'Prüfe Übungen...',
+          'Download wird für den Import vorbereitet...',
+          0.94,
+          canSkip: false,
+        );
+        final beforeSize = await File(tempDbPath).length();
+        await _normalizeSingleFileWalDatabase(tempDbPath);
+        final afterSize = await File(tempDbPath).length();
+        if (afterSize <= 0 || afterSize < beforeSize) {
+          await prefs.setString(
+            _keyLastError,
+            'Downloaded catalog DB was modified unexpectedly during WAL normalization. before=$beforeSize after=$afterSize',
+          );
+          await _deleteIfExists(tempDbPath);
+          return null;
+        }
       }
 
       final validated = await _validateCatalogDb(
@@ -267,6 +342,13 @@ class ExerciseCatalogRefreshService {
       await _cacheManifestJson(
         manifestUri: manifestUri,
         manifest: manifest,
+      );
+
+      onProgress?.call(
+        'Übungen bereit',
+        'Remote-Übungskatalog ${manifest.version} wird importiert.',
+        1.0,
+        canSkip: false,
       );
 
       return ExerciseCatalogUpdateCandidate(
@@ -505,14 +587,38 @@ class ExerciseCatalogRefreshService {
     Uri uri,
     String destinationPath, {
     required Duration timeout,
+    ValueChanged<double>? onProgress,
+    ExerciseRemoteRefreshSkipRequested? isSkipRequested,
   }) async {
-    final response = await _httpClient.get(uri).timeout(timeout);
+    if (isSkipRequested?.call() ?? false) return false;
+    final request = http.Request('GET', uri);
+    final response = await _httpClient.send(request).timeout(timeout);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       return false;
     }
     final file = File(destinationPath);
     await file.parent.create(recursive: true);
-    await file.writeAsBytes(response.bodyBytes, flush: true);
+    final sink = file.openWrite();
+    var received = 0;
+    final total = response.contentLength;
+    try {
+      await for (final chunk in response.stream.timeout(timeout)) {
+        if (isSkipRequested?.call() ?? false) {
+          return false;
+        }
+        received += chunk.length;
+        sink.add(chunk);
+        if (total != null && total > 0) {
+          onProgress?.call((received / total).clamp(0.0, 0.9));
+        } else {
+          onProgress?.call(0.0);
+        }
+      }
+    } finally {
+      await sink.close();
+    }
+    if (isSkipRequested?.call() ?? false) return false;
+    onProgress?.call(0.9);
     return true;
   }
 
@@ -615,6 +721,35 @@ class ExerciseCatalogRefreshService {
   Future<String> _computeFileSha256(String filePath) async {
     final bytes = await File(filePath).readAsBytes();
     return sha256.convert(bytes).toString();
+  }
+
+  Future<bool> _usesWalJournalMode(String filePath) async {
+    final file = File(filePath);
+    final length = await file.length();
+    if (length < 20) return false;
+
+    final handle = await file.open();
+    try {
+      final header = await handle.read(20);
+      if (header.length < 20) return false;
+      final isSqlite =
+          String.fromCharCodes(header.take(16)) == 'SQLite format 3\u0000';
+      if (!isSqlite) return false;
+      return header[18] == 2 || header[19] == 2;
+    } finally {
+      await handle.close();
+    }
+  }
+
+  Future<void> _normalizeSingleFileWalDatabase(String filePath) async {
+    final handle = await File(filePath).open(mode: FileMode.writeOnlyAppend);
+    try {
+      await handle.setPosition(18);
+      await handle.writeFrom(const [1, 1]);
+      await handle.flush();
+    } finally {
+      await handle.close();
+    }
   }
 
   static bool _sha256Equals(String a, String b) {

@@ -421,6 +421,13 @@ def initialize_output_db(db_path: str) -> sqlite3.Connection:
     return conn
 
 
+def finalize_portable_db(conn: sqlite3.Connection) -> None:
+    conn.commit()
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    conn.execute("PRAGMA journal_mode=DELETE")
+    conn.execute("PRAGMA optimize")
+
+
 def build_records(
     df: pd.DataFrame,
     preferred_languages: Sequence[str],
@@ -637,6 +644,7 @@ def process(ctx: BuildContext) -> int:
             },
         )
         conn.commit()
+        finalize_portable_db(conn)
 
     finally:
         conn.close()

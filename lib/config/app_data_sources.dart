@@ -10,7 +10,7 @@ class AppDataSources {
   static const String baseFoodsAssetDbPath =
       'assets/db/hypertrack_base_foods.db';
   static const String offFoodsAssetDbPath =
-      'assets/db/hypertrack_prep_de.db'; // Legacy default (DE)
+      'assets/db/hypertrack_prep_de.db'; // Optional legacy DE OFF fallback.
   static const String foodCategoriesAssetDbPath =
       'assets/db/hypertrack_base_foods.db';
 
@@ -56,6 +56,9 @@ class AppDataSources {
       manifestPath: 'off_catalog_manifest_de.json',
       defaultDbPath: 'hypertrack_off_de.db',
       defaultBuildReportPath: 'off_build_report_de.json',
+      // This asset path is intentionally allowed to be absent in release
+      // builds. Startup will use a remote OFF DB when available; otherwise the
+      // smaller bundled base-foods catalog remains usable.
       bundledAssetDbPath: 'assets/db/hypertrack_prep_de.db',
       minimumProductRows: 5000,
       manifestTimeoutSeconds: 6,

@@ -153,9 +153,18 @@ Responsibilities:
 - fetch manifest
 - decide if remote version is newer
 - download DB
+- normalize legacy WAL-mode single-file SQLite artifacts after checksum verification
 - validate DB file/tables/columns/version/row-count threshold
 - cache validated DB + manifest snapshot
 - track last-check/last-error/version state in `SharedPreferences`
+
+Failed remote refreshes bypass the normal minimum-check interval on the next
+startup so a fixed artifact can be retried without clearing app data.
+
+Published `.db` artifacts should be portable single-file SQLite databases. Build
+scripts should checkpoint WAL writes and publish with `journal_mode=DELETE`. For
+compatibility with older published artifacts, the app can normalize a downloaded
+WAL-mode header after SHA-256 verification and before schema validation/import.
 
 Startup integration:
 

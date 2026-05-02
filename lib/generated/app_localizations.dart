@@ -920,6 +920,42 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get skipButton;
 
+  /// No description provided for @appInitStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting app...'**
+  String get appInitStarting;
+
+  /// No description provided for @appInitInitializing.
+  ///
+  /// In en, this message translates to:
+  /// **'Initializing...'**
+  String get appInitInitializing;
+
+  /// No description provided for @appInitFinalizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing'**
+  String get appInitFinalizing;
+
+  /// No description provided for @appInitCheckingBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking backups...'**
+  String get appInitCheckingBackups;
+
+  /// No description provided for @appInitSkipDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip download'**
+  String get appInitSkipDownload;
+
+  /// No description provided for @appInitSkippingRemoteDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipping remote download...'**
+  String get appInitSkippingRemoteDownload;
+
   /// No description provided for @emptyHistory.
   ///
   /// In en, this message translates to:
