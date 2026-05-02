@@ -52,7 +52,7 @@ class RecoveryMusclePayload {
       state: data['state'] as String? ?? '',
       hoursSinceLastSignificantLoad:
           (data['hoursSinceLastSignificantLoad'] as num?)?.toDouble() ?? 0.0,
-      lastSignificantLoadAt: data['lastSignificantLoadAt'] as DateTime?,
+      lastSignificantLoadAt: _parseDateTime(data['lastSignificantLoadAt']),
       lastEquivalentSets: (data['lastEquivalentSets'] as num?)?.toDouble() ?? 0,
       avgRir: (data['avgRir'] as num?)?.toDouble(),
       avgRpe: (data['avgRpe'] as num?)?.toDouble(),
@@ -61,6 +61,17 @@ class RecoveryMusclePayload {
           (data['recoveringUpperHours'] as num?)?.toInt() ?? 48,
       readyUpperHours: (data['readyUpperHours'] as num?)?.toInt() ?? 72,
     );
+  }
+
+  static DateTime? _parseDateTime(Object? value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    if (value is int) {
+      final milliseconds = value.abs() < 100000000000 ? value * 1000 : value;
+      return DateTime.fromMillisecondsSinceEpoch(milliseconds);
+    }
+    return null;
   }
 }
 

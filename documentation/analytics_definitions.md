@@ -20,7 +20,11 @@ A set is considered a **Work Set** (also known as a "Hard Set") and included in 
 *(Note: Field names map exactly to the `SetLog` database model properties: `isCompleted`, `setType`, `weightKg`, `reps`, `distanceKm`, `durationSeconds`, `rir`, `rpe`.)*
 - `isCompleted == true` (has actually been performed).
 - `setType` is **not** `"warmup"` (must be `"normal"`, `"failure"`, `"dropset"`, etc.).
-- `weightKg` is not null and `> 0` (or `distanceKm > 0` for cardio).
+- For tonnage/PR metrics, `weightKg` is not null and `> 0`.
+- For muscle recovery equivalent-set stimulus, completed rep-based strength
+  work can count even when `weightKg` is null or `0` (bodyweight strength work).
+  Obvious cardio categories/names are excluded from muscle recovery even when
+  they carry muscle mappings.
 - `reps` is not null and `> 0` (or `durationSeconds > 0` for cardio or isometric).
 
 ### Handling of Specific Set Types
@@ -94,15 +98,50 @@ Raw fitness data is highly volatile. Trend charts (e.g., Estimated 1RM over time
 
 ## 6. Recovery Heuristics
 
-*(Note: These are v1 heuristics for baseline functionality.)*
+*(Note: Current recovery remains a consumer training-log heuristic for planning.
+It is not a physiological diagnosis or clinical prediction.)*
 
-Recovery is calculated as a high-level heuristic based on the time elapsed since a muscle group was last trained with significant volume:
+Recovery is calculated from recent significant equivalent-set loading per
+muscle. It should be interpreted alongside subjective readiness, soreness,
+sleep, injury status, and coaching judgment.
 
-- **< 48 hours:** Categorized as "Recovering" (High Fatigue).
-- **48 - 72 hours:** Categorized as "Ready/Recovered" (Moderate Fatigue).
-- **> 72 hours:** Categorized as "Fresh" (Low Fatigue).
+Current rules:
 
-*Modifiers:* If average `RIR` for the session was `0` (high exhaustion) or average `RPE` was `≥ 9`, recovery thresholds are extended by +24 hours.
+- Recovery uses a fixed recent lookback (`RecoveryDomainService.recoveryLookbackDays`,
+  currently 14 days), not the selected Statistics time-range chip.
+- Significant load threshold:
+  `RecoveryDomainService.minimumSignificantEquivalentSets = 1.0`.
+- Primary muscle set contribution: `1.0` equivalent set.
+- Secondary muscle set contribution: `0.5` equivalent sets.
+- Completed non-warmup strength sets with `reps > 0` count for recovery,
+  including bodyweight work with null/zero `weightKg`.
+- Pure cardio is excluded from muscle recovery stimulus. Distance/duration does
+  not reset a muscle's recovery clock.
+- High fatigue is detected when average `RIR <= 0.5` or average `RPE >= 8.5`;
+  high fatigue extends both boundaries by +24 hours.
+- Load-based extension by last-session equivalent sets:
+  `1.0-2.99: +0h`, `3.0-4.99: +6h`, `5.0-7.99: +12h`,
+  `8.0-10.99: +24h`, `>= 11.0: +36h`.
+- Base windows are muscle-specific product heuristics:
+  delts/biceps/triceps/forearms/calves `36h/60h`; chest/lats/upper back/traps/
+  abs/core `48h/72h`; quads/hamstrings/glutes/adductors `60h/96h`; lower back/
+  spinal erectors `72h/120h`; unknown labels fall back to `48h/72h`.
+- Final state uses inclusive boundaries:
+  `<= recoveringUpperHours` -> `recovering`,
+  `<= readyUpperHours` -> `ready`, otherwise `fresh`.
+- Recovery pressure uses a piecewise load curve for equivalent sets per muscle
+  per session: `0 -> 0`, `1 -> 10`, `2 -> 18`, `3 -> 26`, `4 -> 34`,
+  `5 -> 41`, `6 -> 47`, `8 -> 55`, `10 -> 60`, `12+ -> 65`, with additional
+  recency and high-fatigue components.
+
+Known limitations:
+
+- Secondary muscles still use coarse mapping unless a future patch introduces
+  per-exercise coefficients.
+- No systemic fatigue, sleep debt, soreness, pain, injury, deload, or training
+  age model is included.
+- Exercise mapping changes may affect history unless historical muscle mappings
+  are snapshotted in a future schema.
 
 ---
 

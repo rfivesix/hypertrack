@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'recovery_domain_service.dart';
+
 enum StatisticsRangeSemantics { selected, fixed, capped, dynamicAll }
 
 enum StatisticsMetricId {
@@ -13,6 +15,7 @@ enum StatisticsMetricId {
   hubWeeklyVolume,
   hubWorkoutsPerWeek,
   hubConsistencyMetrics,
+  hubRecoveryReadiness,
   bodyNutritionInsightKpi,
 }
 
@@ -116,6 +119,12 @@ class StatisticsRangePolicyService {
       semantics: StatisticsRangeSemantics.fixed,
       fixedWeeks: 6,
       disclosureHook: 'range:fixed-6w',
+    ),
+    StatisticsMetricId.hubRecoveryReadiness: StatisticsMetricRangeMetadata(
+      metricId: StatisticsMetricId.hubRecoveryReadiness,
+      semantics: StatisticsRangeSemantics.fixed,
+      fixedDays: RecoveryDomainService.recoveryLookbackDays,
+      disclosureHook: 'range:fixed-current-recovery-14d',
     ),
     StatisticsMetricId.bodyNutritionInsightKpi: StatisticsMetricRangeMetadata(
       metricId: StatisticsMetricId.bodyNutritionInsightKpi,

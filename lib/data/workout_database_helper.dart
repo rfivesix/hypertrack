@@ -73,6 +73,74 @@ class WorkoutDatabaseHelper {
     return [];
   }
 
+  String _normalizeAnalyticsToken(String? value) {
+    if (value == null) return '';
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[/\\]+'), ' ')
+        .replaceAll(RegExp(r'[_\-]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  bool _looksLikeCardioToken(String? value) {
+    final normalized = _normalizeAnalyticsToken(value);
+    if (normalized.isEmpty) return false;
+
+    const exactCardioTokens = {
+      'cardio',
+      'run',
+      'running',
+      'jog',
+      'jogging',
+      'walk',
+      'walking',
+      'hike',
+      'hiking',
+      'bike',
+      'biking',
+      'cycling',
+      'cycle',
+      'swim',
+      'swimming',
+      'rower',
+      'rowing',
+      'elliptical',
+      'treadmill',
+      'stairmaster',
+      'stepper',
+    };
+
+    if (exactCardioTokens.contains(normalized)) return true;
+
+    return normalized.contains('cardio') ||
+        normalized.contains('treadmill') ||
+        normalized.contains('elliptical') ||
+        normalized.contains('stationary bike') ||
+        normalized.contains('exercise bike') ||
+        normalized.contains('indoor cycling') ||
+        normalized.contains('stair master') ||
+        normalized.contains('stair climber');
+  }
+
+  bool _isRecoveryStrengthWorkSet({
+    required db.SetLog setRow,
+    required db.Exercise? exerciseRow,
+  }) {
+    final reps = setRow.reps ?? 0;
+    if (reps <= 0) return false;
+
+    if (_looksLikeCardioToken(setRow.setType)) return false;
+    if (_looksLikeCardioToken(exerciseRow?.categoryName)) return false;
+    if (_looksLikeCardioToken(exerciseRow?.nameDe) ||
+        _looksLikeCardioToken(exerciseRow?.nameEn) ||
+        _looksLikeCardioToken(setRow.exerciseNameSnapshot)) {
+      return false;
+    }
+
+    return true;
+  }
+
   /// Maps a Drift exercise row to the app-level [Exercise] model.
   Exercise _mapExerciseToModel(db.Exercise row) {
     return Exercise(
@@ -1697,17 +1765,25 @@ class WorkoutDatabaseHelper {
   /// Recovery analytics based on shared v1 heuristics.
   ///
   /// Rules:
-  /// - Significant loading for a muscle session is >= 1.0 equivalent sets
-  /// - Base thresholds: <48h recovering, 48-72h ready, >72h fresh
-  /// - Modifier: +24h when avg RIR == 0 or avg RPE >= 9 for that muscle session
+  /// - Uses a fixed recent lookback, independent from Statistics range chips
+  /// - Significant loading for a muscle session is >=
+  ///   [RecoveryDomainService.minimumSignificantEquivalentSets] equivalent sets
+  /// - Completed, rep-based, non-warmup strength sets count, including
+  ///   bodyweight sets with null/zero weight
+  /// - Obvious cardio exercise/set categories are excluded from muscle recovery
+  /// - Base thresholds, load extension, and intensity extension are owned by
+  ///   [RecoveryDomainService]
   ///
   /// Returns:
   /// - `muscles`: per-muscle recovery rows with explainability fields
   /// - `totals`: aggregate counts for recovering/ready/fresh
   /// - `overallState`: low-precision overall summary key
   /// - `hasData`: false when no significant loading exists
-  Future<Map<String, dynamic>> getRecoveryAnalytics() async {
+  Future<Map<String, dynamic>> getRecoveryAnalytics({
+    int lookbackDays = RecoveryDomainService.recoveryLookbackDays,
+  }) async {
     final now = DateTime.now();
+    final since = now.subtract(Duration(days: lookbackDays));
     final dbInstance = await database;
 
     final query = dbInstance.select(dbInstance.setLogs).join([
@@ -1725,9 +1801,12 @@ class WorkoutDatabaseHelper {
       ..where(
         dbInstance.setLogs.isCompleted.equals(true) &
             dbInstance.setLogs.setType.isNotIn(['warmup']) &
-            dbInstance.setLogs.weight.isBiggerThanValue(0) &
             dbInstance.setLogs.reps.isBiggerThanValue(0) &
-            dbInstance.workoutLogs.status.equals('completed'),
+            dbInstance.workoutLogs.status.equals('completed') &
+            dbInstance.workoutLogs.startTime.isBetweenValues(
+              since,
+              now.add(const Duration(days: 1)),
+            ),
       );
 
     final rows = await query.get();
@@ -1779,6 +1858,10 @@ class WorkoutDatabaseHelper {
       final setRow = row.readTable(dbInstance.setLogs);
       final exRow = row.readTableOrNull(dbInstance.exercises);
 
+      if (!_isRecoveryStrengthWorkSet(setRow: setRow, exerciseRow: exRow)) {
+        continue;
+      }
+
       final primary = <String>{
         ..._parseMuscleList(
           exRow?.musclesPrimary,
@@ -1817,7 +1900,9 @@ class WorkoutDatabaseHelper {
 
     for (final session in muscleSessionMap.values) {
       final eqSets = (session['equivalentSets'] as double);
-      if (eqSets < 1.0) continue;
+      if (eqSets < RecoveryDomainService.minimumSignificantEquivalentSets) {
+        continue;
+      }
 
       final muscle = session['muscleGroup'] as String;
       significantByMuscle.putIfAbsent(muscle, () => []).add(session);
@@ -1849,17 +1934,24 @@ class WorkoutDatabaseHelper {
         avgRir: avgRir,
         avgRpe: avgRpe,
       );
+      final lastEquivalentSets = lastSession['equivalentSets'] as double;
 
       final recoveringUpper = RecoveryDomainService.recoveringUpperHours(
         highSessionFatigue: highSessionFatigue,
+        muscleGroup: muscle,
+        lastEquivalentSets: lastEquivalentSets,
       );
       final readyUpper = RecoveryDomainService.readyUpperHours(
         highSessionFatigue: highSessionFatigue,
+        muscleGroup: muscle,
+        lastEquivalentSets: lastEquivalentSets,
       );
 
       final state = RecoveryDomainService.muscleState(
         hoursSinceLastSignificantLoad: hoursSince,
         highSessionFatigue: highSessionFatigue,
+        muscleGroup: muscle,
+        lastEquivalentSets: lastEquivalentSets,
       );
 
       muscles.add({
@@ -1867,7 +1959,7 @@ class WorkoutDatabaseHelper {
         'state': state,
         'hoursSinceLastSignificantLoad': hoursSince,
         'lastSignificantLoadAt': lastTime,
-        'lastEquivalentSets': lastSession['equivalentSets'] as double,
+        'lastEquivalentSets': lastEquivalentSets,
         'avgRir': avgRir,
         'avgRpe': avgRpe,
         'highSessionFatigue': highSessionFatigue,

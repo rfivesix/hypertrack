@@ -95,12 +95,73 @@ Metric windows currently configured:
 - Hub weekly volume: fixed 6 weeks
 - Hub workouts/week: fixed 6 weeks
 - Hub consistency metrics: fixed 6 weeks
+- Hub recovery/readiness: fixed 14-day current-state lookback
 - Consistency weekly metrics: fixed 12 weeks
 - Consistency calendar: fixed 120 days
 - Hub notable PR improvements: capped to 90 days
 - PR notable improvements: selected range (`7/30/90` in PR screen)
 - Muscle analytics: selected days; weeks resolved via policy (`4..16` clamp)
 - Body/nutrition trend + insight KPI: `dynamicAll`
+
+### Recovery range behavior
+
+Recovery is intentionally treated as a current-state metric, not a normal
+historical chart. The hub and recovery tracker use
+`RecoveryDomainService.recoveryLookbackDays` (currently 14 days) to find recent
+significant muscle loads. Selecting `6m` or `All` in the Statistics hub must not
+make readiness depend on stale historical workouts.
+
+Disclosure hook: `range:fixed-current-recovery-14d`.
+
+## Recovery/readiness heuristic
+
+Recovery is a transparent training-log heuristic for planning. It is not a
+physiological diagnosis, clinical recovery prediction, injury assessment, or a
+replacement for subjective readiness, soreness, sleep, injury status, or
+coaching judgment.
+
+Current implementation:
+
+- Significant muscle load threshold:
+  `RecoveryDomainService.minimumSignificantEquivalentSets = 1.0`.
+- Completed, non-warmup, rep-based strength sets count for muscle recovery even
+  when `weight` is null or `0`, so bodyweight work such as push-ups, pull-ups,
+  dips, squats, lunges, rows, and calisthenics can affect readiness.
+- Added-weight bodyweight sets count normally.
+- Obvious cardio set/exercise categories and names are excluded from muscle
+  recovery stimulus, even when a catalog entry has muscle mappings.
+- Equivalent sets use the existing coarse mapping: primary muscles receive
+  `1.0`, secondary muscles receive `0.5`.
+- A muscle session below `1.0` equivalent sets does not reset the recovery
+  clock.
+- High session fatigue is detected when average `RIR <= 0.5` or average
+  `RPE >= 8.5`; this currently adds 24 hours to both recovery boundaries.
+- Load-based boundary extension uses last-session equivalent sets:
+  `1.0-2.99: +0h`, `3.0-4.99: +6h`, `5.0-7.99: +12h`,
+  `8.0-10.99: +24h`, `>= 11.0: +36h`.
+- Muscle-specific base windows are simple product heuristics:
+  fast groups such as delts, biceps, triceps, forearms, and calves use
+  `36h/60h`; default groups such as chest, lats, upper back, traps, abs, and
+  core use `48h/72h`; larger lower-body groups such as quads, hamstrings,
+  glutes, and adductors use `60h/96h`; lower back/spinal erectors use
+  `72h/120h`.
+- State boundaries are inclusive: at exactly the recovering upper boundary the
+  muscle is still `recovering`; at exactly the ready upper boundary it is still
+  `ready`.
+- Recovery pressure uses a piecewise equivalent-set curve calibrated for a
+  single muscle in a session: `0 -> 0`, `1 -> 10`, `2 -> 18`, `3 -> 26`,
+  `4 -> 34`, `5 -> 41`, `6 -> 47`, `8 -> 55`, `10 -> 60`,
+  `12+ -> 65`, plus a recency component and a small high-fatigue component.
+
+Known limitations:
+
+- Secondary muscles still use coarse `0.5` mapping.
+- No systemic fatigue, sleep debt, soreness, pain, injury, stress, deload, or
+  training-age model is included.
+- Exercise mapping changes can still affect analytics history unless historical
+  mappings are explicitly snapshotted in a future schema.
+- Logged set quality matters. Missing RIR/RPE, incorrect muscle mappings, or
+  mislabeled cardio/strength categories can change the heuristic output.
 
 ### Steps + Sleep hub range behavior
 

@@ -12,6 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Made Sleep Regularity Index availability depend on valid consecutive comparison pairs, not just raw valid-day count.
 - Marked synthesized duration-only sleep windows as estimated instead of treating them like observed session bounds.
 - Added targeted regression tests for missing-stage handling, stage guardrails, SRI coverage, and sleep-window fallback behavior.
+- Improved Muscle Recovery readiness semantics with bodyweight strength support, explicit cardio exclusion, and centralized significant-load handling.
+- Recalibrated recovery pressure so equivalent-set load no longer saturates after very small stimuli.
+- Added muscle-specific recovery windows plus load- and intensity-based recovery extensions.
+- Made RIR/RPE fatigue detection more robust and fixed inclusive recovery-state boundary behavior.
+- Added robust recovery timestamp parsing and clarified fixed current-state recovery lookback behavior.
+
+### Internal
+- Expanded recovery regression coverage for equivalent-set pressure, bodyweight/cardio filtering, RIR/RPE fatigue thresholds, muscle-specific windows, boundary behavior, timestamp parsing, and recovery range policy.
+- Updated statistics/recovery documentation to frame readiness as a transparent training-log heuristic rather than a clinical recovery prediction.
 
 ## [0.9.0-alpha.3] - 2026-04-26
 ### Internal
