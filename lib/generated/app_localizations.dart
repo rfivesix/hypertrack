@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack'**
+  /// **'Train Libre'**
   String get appTitle;
 
   /// No description provided for @bannerText.
@@ -605,7 +605,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerMenuTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack Menu'**
+  /// **'Train Libre Menu'**
   String get drawerMenuTitle;
 
   /// No description provided for @drawerDashboard.
@@ -1217,7 +1217,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupFileSubject.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack App Backup - {timestamp}'**
+  /// **'Train Libre App Backup - {timestamp}'**
   String backupFileSubject(String timestamp);
 
   /// No description provided for @foodItemSubtitle.
@@ -2075,13 +2075,13 @@ abstract class AppLocalizations {
   /// No description provided for @feedbackReportEmailSubject.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack feedback report'**
+  /// **'Train Libre feedback report'**
   String get feedbackReportEmailSubject;
 
   /// No description provided for @feedbackReportReportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack Feedback Report'**
+  /// **'Train Libre Feedback Report'**
   String get feedbackReportReportTitle;
 
   /// No description provided for @feedbackReportReportGeneratedAt.
@@ -2177,7 +2177,7 @@ abstract class AppLocalizations {
   /// Onboarding slide 1 title
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Hypertrack'**
+  /// **'Welcome to Train Libre'**
   String get onbWelcomeTitle;
 
   /// Onboarding slide 1 description
@@ -2531,7 +2531,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataManagementBackupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack Data Backup'**
+  /// **'Train Libre Data Backup'**
   String get dataManagementBackupTitle;
 
   /// No description provided for @dataManagementBackupDescription.
@@ -3371,7 +3371,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMaterialColorsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent'**
+  /// **'Use Android dynamic colors (Material You) instead of the Train Libre brand accent'**
   String get settingsMaterialColorsSubtitle;
 
   /// No description provided for @settingsFoodDbSectionTitle.
@@ -3509,7 +3509,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Hypertrack'**
+  /// **'Welcome to Train Libre'**
   String get onboardingWelcomeTitle;
 
   /// No description provided for @onboardingWelcomeSubtitle.
@@ -6518,7 +6518,7 @@ abstract class AppLocalizations {
   /// No description provided for @adaptiveExtraCardioHelp.
   ///
   /// In en, this message translates to:
-  /// **'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts.'**
+  /// **'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Train Libre workouts.'**
   String get adaptiveExtraCardioHelp;
 
   /// No description provided for @onboardingAdaptiveGoalTitle.
@@ -7227,7 +7227,7 @@ abstract class AppLocalizations {
   /// No description provided for @pulseSettingsPermissionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Opens Apple Health or Health Connect so Hypertrack can read pulse samples.'**
+  /// **'Opens Apple Health or Health Connect so Train Libre can read pulse samples.'**
   String get pulseSettingsPermissionSubtitle;
 
   /// No description provided for @pulseSettingsAnalysisSubtitle.
@@ -7341,13 +7341,13 @@ abstract class AppLocalizations {
   /// No description provided for @healthExportAppleHealthSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'One-way export from Hypertrack to Apple Health'**
+  /// **'One-way export from Train Libre to Apple Health'**
   String get healthExportAppleHealthSubtitle;
 
   /// No description provided for @healthExportHealthConnectSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'One-way export from Hypertrack to Health Connect'**
+  /// **'One-way export from Train Libre to Health Connect'**
   String get healthExportHealthConnectSubtitle;
 
   /// No description provided for @healthExportAppleHealthStatusTitle.

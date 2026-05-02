@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/data/processing/timeline_repair.dart';
-import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
+import 'package:train_libre/features/sleep/data/processing/timeline_repair.dart';
+import 'package:train_libre/features/sleep/domain/sleep_domain.dart';
 
 void main() {
   SleepSession session() => SleepSession(

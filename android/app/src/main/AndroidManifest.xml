@@ -22,7 +22,7 @@
 
     <!-- HIER DIE ÄNDERUNG: android:enableOnBackInvokedCallback="true" hinzugefügt -->
     <application
-        android:label="Hypertrack"
+        android:label="Train Libre"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">

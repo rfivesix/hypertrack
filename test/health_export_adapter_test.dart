@@ -1,17 +1,17 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/health_export/adapters/apple_health/apple_health_export_adapter.dart';
-import 'package:hypertrack/health_export/adapters/health_connect/health_connect_export_adapter.dart';
-import 'package:hypertrack/health_export/contracts/health_export_adapter.dart';
-import 'package:hypertrack/health_export/models/export_models.dart';
+import 'package:train_libre/health_export/adapters/apple_health/apple_health_export_adapter.dart';
+import 'package:train_libre/health_export/adapters/health_connect/health_connect_export_adapter.dart';
+import 'package:train_libre/health_export/contracts/health_export_adapter.dart';
+import 'package:train_libre/health_export/models/export_models.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Health export adapters', () {
-    const appleChannel = MethodChannel('hypertrack.health/export_apple_health');
+    const appleChannel = MethodChannel('trainlibre.health/export_apple_health');
     const connectChannel = MethodChannel(
-      'hypertrack.health/export_health_connect',
+      'trainlibre.health/export_health_connect',
     );
 
     final appleCalls = <MethodCall>[];

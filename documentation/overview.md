@@ -1,10 +1,10 @@
-# Hypertrack: Project Overview
+# Train Libre: Project Overview
 
 This document describes the app as currently implemented.
 
 ## Scope
 
-Hypertrack currently implements:
+Train Libre currently implements:
 
 - Workout tracking and analytics
 - Exercise catalog refresh via release-distributed wger data artifacts

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/services/ai_meal_validation.dart';
-import 'package:hypertrack/util/ai_validation_localization.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/services/ai_meal_validation.dart';
+import 'package:train_libre/util/ai_validation_localization.dart';
 
 Future<String> _localizedIssueText(
   WidgetTester tester,

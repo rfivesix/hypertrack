@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'Hypertrack';
+  String get appTitle => 'Train Libre';
 
   @override
   String get bannerText => 'Empfehlung / Aktuelles Workout';
@@ -269,7 +269,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get measurementRightCalf => 'Rechte Wade';
 
   @override
-  String get drawerMenuTitle => 'Hypertrack Menü';
+  String get drawerMenuTitle => 'Train Libre Menü';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -613,7 +613,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Hypertrack App Backup - $timestamp';
+    return 'Train Libre App Backup - $timestamp';
   }
 
   @override
@@ -1083,10 +1083,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'E-Mail-App konnte nicht geöffnet werden.';
 
   @override
-  String get feedbackReportEmailSubject => 'Hypertrack Feedback-Bericht';
+  String get feedbackReportEmailSubject => 'Train Libre Feedback-Bericht';
 
   @override
-  String get feedbackReportReportTitle => 'Hypertrack Feedback-Bericht';
+  String get feedbackReportReportTitle => 'Train Libre Feedback-Bericht';
 
   @override
   String get feedbackReportReportGeneratedAt => 'Erstellt';
@@ -1135,7 +1135,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get date_and_time_of_measurement => 'Datum & Uhrzeit der Messung';
 
   @override
-  String get onbWelcomeTitle => 'Willkommen bei Hypertrack';
+  String get onbWelcomeTitle => 'Willkommen bei Train Libre';
 
   @override
   String get onbWelcomeBody =>
@@ -1331,7 +1331,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dialogEnterPasswordImport => 'Passwort für den Import eingeben';
 
   @override
-  String get dataManagementBackupTitle => 'Hypertrack Datensicherung';
+  String get dataManagementBackupTitle => 'Train Libre Datensicherung';
 
   @override
   String get dataManagementBackupDescription =>
@@ -1773,7 +1773,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsMaterialColorsSubtitle =>
-      'Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents';
+      'Verwende dynamische Android-Farben (Material You) statt des Train Libre-Markenakzents';
 
   @override
   String get settingsFoodDbSectionTitle => 'Lebensmittel-Datenbank';
@@ -1854,7 +1854,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get resumeButton => 'Fortsetzen';
 
   @override
-  String get onboardingWelcomeTitle => 'Willkommen bei Hypertrack';
+  String get onboardingWelcomeTitle => 'Willkommen bei Train Libre';
 
   @override
   String get onboardingWelcomeSubtitle =>
@@ -3627,7 +3627,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adaptiveExtraCardioHelp =>
-      'Berücksichtige Joggen, Laufen, Radfahren, Schwimmen oder andere Ausdauer-Einheiten, die nicht als Hypertrack-Workout erfasst sind.';
+      'Berücksichtige Joggen, Laufen, Radfahren, Schwimmen oder andere Ausdauer-Einheiten, die nicht als Train Libre-Workout erfasst sind.';
 
   @override
   String get onboardingAdaptiveGoalTitle => 'Adaptive Ernährungsempfehlung';
@@ -4140,11 +4140,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthExportAppleHealthSubtitle =>
-      'Einweg-Export von Hypertrack nach Apple Health';
+      'Einweg-Export von Train Libre nach Apple Health';
 
   @override
   String get healthExportHealthConnectSubtitle =>
-      'Einweg-Export von Hypertrack nach Health Connect';
+      'Einweg-Export von Train Libre nach Health Connect';
 
   @override
   String get healthExportAppleHealthStatusTitle => 'Export-Status Apple Health';

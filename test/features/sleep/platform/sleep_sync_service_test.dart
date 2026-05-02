@@ -1,12 +1,12 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/drift_database.dart';
-import 'package:hypertrack/features/sleep/platform/health_connect/health_connect_sleep_adapter.dart';
-import 'package:hypertrack/features/sleep/platform/healthkit/healthkit_sleep_adapter.dart';
-import 'package:hypertrack/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permissions_service.dart';
-import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
+import 'package:train_libre/data/drift_database.dart';
+import 'package:train_libre/features/sleep/platform/health_connect/health_connect_sleep_adapter.dart';
+import 'package:train_libre/features/sleep/platform/healthkit/healthkit_sleep_adapter.dart';
+import 'package:train_libre/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_models.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permissions_service.dart';
+import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _PermissionService implements SleepPermissionsService {

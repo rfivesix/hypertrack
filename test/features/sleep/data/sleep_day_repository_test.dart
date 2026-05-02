@@ -1,9 +1,9 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/drift_database.dart';
-import 'package:hypertrack/features/sleep/data/processing/sleep_pipeline_service.dart';
-import 'package:hypertrack/features/sleep/data/sleep_day_repository.dart';
-import 'package:hypertrack/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
+import 'package:train_libre/data/drift_database.dart';
+import 'package:train_libre/features/sleep/data/processing/sleep_pipeline_service.dart';
+import 'package:train_libre/features/sleep/data/sleep_day_repository.dart';
+import 'package:train_libre/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
 
 SleepRawIngestionBatch _batchForNight({
   required int index,

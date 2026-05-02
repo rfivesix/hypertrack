@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
-import 'package:hypertrack/features/steps/domain/steps_models.dart';
-import 'package:hypertrack/widgets/statistics_steps_card.dart';
+import 'package:train_libre/features/steps/domain/steps_models.dart';
+import 'package:train_libre/widgets/statistics_steps_card.dart';
 
 void main() {
   final buckets = List<StepsBucket>.generate(

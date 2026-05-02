@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Hypertrack",
+  "appTitle": "Train Libre",
   "bannerText": "Recommendation / Current Workout",
   "calories": "Calories",
   "water": "Water",
@@ -91,7 +91,7 @@
   "measurementRightThigh": "Right Thigh",
   "measurementLeftCalf": "Left Calf",
   "measurementRightCalf": "Right Calf",
-  "drawerMenuTitle": "Hypertrack Menu",
+  "drawerMenuTitle": "Train Libre Menu",
   "drawerDashboard": "Dashboard",
   "drawerFoodExplorer": "Food Explorer",
   "drawerDataManagement": "Data Backup",
@@ -222,7 +222,7 @@
   "baseFoodsEmptyState": "This section will soon be filled with a curated list of base foods like fruits, vegetables, and more.",
   "noBrand": "No Brand",
   "unknown": "Unknown",
-  "backupFileSubject": "Hypertrack App Backup - {timestamp}",
+  "backupFileSubject": "Train Libre App Backup - {timestamp}",
   "@backupFileSubject": {
     "placeholders": {
       "timestamp": {
@@ -450,8 +450,8 @@
   "feedbackReportShareCompleted": "Share sheet opened.",
   "feedbackReportShareCanceled": "Share canceled.",
   "feedbackReportEmailOpenFailed": "Could not open email app.",
-  "feedbackReportEmailSubject": "Hypertrack feedback report",
-  "feedbackReportReportTitle": "Hypertrack Feedback Report",
+  "feedbackReportEmailSubject": "Train Libre feedback report",
+  "feedbackReportReportTitle": "Train Libre Feedback Report",
   "feedbackReportReportGeneratedAt": "Generated",
   "feedbackReportReportAppVersion": "App version",
   "feedbackReportReportBuildNumber": "Build number",
@@ -467,7 +467,7 @@
   "all_measurements":"ALL MEASUREMENTS",
   "all_measurements_no_cap":"All measurements",
   "date_and_time_of_measurement":"Date & time of measurement",
-  "onbWelcomeTitle": "Welcome to Hypertrack",
+  "onbWelcomeTitle": "Welcome to Train Libre",
   "@onbWelcomeTitle": { "description": "Onboarding slide 1 title" },
   "onbWelcomeBody": "Let’s start by setting personal goals to guide training and nutrition.",
   "@onbWelcomeBody": { "description": "Onboarding slide 1 description" },
@@ -568,7 +568,7 @@
   "categoryHint": "e.g. Chest, Back, Legs...",
   "validatorPleaseEnterCategory": "Please enter a category.",
   "dialogEnterPasswordImport": "Enter password to import backup",
-  "dataManagementBackupTitle": "Hypertrack Data Backup",
+  "dataManagementBackupTitle": "Train Libre Data Backup",
   "dataManagementBackupDescription": "Back up or restore all your app data. Ideal for changing devices.",
   "exportEncrypted": "Export Encrypted",
   "dialogPasswordForExport": "Password for encrypted export",
@@ -720,7 +720,7 @@
   "settingsVisualStyleLiquid": "Fluid (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Rounded, floating UI elements",
   "settingsMaterialColorsTitle": "Material colors",
-  "settingsMaterialColorsSubtitle": "Use Android dynamic colors (Material You) instead of the Hypertrack brand accent",
+  "settingsMaterialColorsSubtitle": "Use Android dynamic colors (Material You) instead of the Train Libre brand accent",
   "settingsFoodDbSectionTitle": "Food database",
   "settingsFoodDbRegionTitle": "Food database region",
   "settingsFoodDbRegionSubtitle": "Select which Open Food Facts product catalog region is used for food search.",
@@ -750,7 +750,7 @@
   "onbBodyAppLayout": "The bottom bar allows quick switching between areas. Use the large [+] button to log everything instantly.",
   "dataHubTitle": "Data Hub",
   "resumeButton": "Resume",
-  "onboardingWelcomeTitle": "Welcome to Hypertrack",
+  "onboardingWelcomeTitle": "Welcome to Train Libre",
   "onboardingWelcomeSubtitle": "Let's set up your profile to get the best results.",
   
   "onboardingNameTitle": "What's your name?",
@@ -1522,7 +1522,7 @@
   ,"adaptiveExtraCardioOption3": "3 h/week"
   ,"adaptiveExtraCardioOption5": "5 h/week"
   ,"adaptiveExtraCardioOption7Plus": "7+ h/week"
-  ,"adaptiveExtraCardioHelp": "Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts."
+  ,"adaptiveExtraCardioHelp": "Include jogging, running, cycling, swimming, or other endurance sessions not logged as Train Libre workouts."
   ,"onboardingAdaptiveGoalTitle": "Adaptive nutrition recommendation"
   ,"onboardingAdaptiveGoalSubtitle": "Set your direction and weekly rate. We create a conservative starting recommendation and adapt it with your logs."
   ,"adaptiveRecommendationGenerating": "Generating..."
@@ -1741,7 +1741,7 @@
   ,"pulseSettingsEnableTitle": "Enable pulse analysis"
   ,"pulseSettingsEnableSubtitle": "Reads heart-rate data for the pulse view only when you turn this on."
   ,"pulseSettingsPermissionTitle": "Allow heart-rate access"
-  ,"pulseSettingsPermissionSubtitle": "Opens Apple Health or Health Connect so Hypertrack can read pulse samples."
+  ,"pulseSettingsPermissionSubtitle": "Opens Apple Health or Health Connect so Train Libre can read pulse samples."
   ,"pulseSettingsAnalysisSubtitle": "Shows range, time-weighted average, and a conservative resting-pulse estimate. Not a medical diagnosis."
   ,"pulseSettingsPermissionGranted": "Heart-rate access is ready."
   ,"pulseSettingsPermissionFailed": "Heart-rate access was not granted."
@@ -1760,8 +1760,8 @@
   ,"healthExportStateDisabled": "Disabled"
   ,"healthExportResultComplete": "Export complete"
   ,"healthExportResultFailed": "Export failed"
-  ,"healthExportAppleHealthSubtitle": "One-way export from Hypertrack to Apple Health"
-  ,"healthExportHealthConnectSubtitle": "One-way export from Hypertrack to Health Connect"
+  ,"healthExportAppleHealthSubtitle": "One-way export from Train Libre to Apple Health"
+  ,"healthExportHealthConnectSubtitle": "One-way export from Train Libre to Health Connect"
   ,"healthExportAppleHealthStatusTitle": "Apple Health export status"
   ,"healthExportHealthConnectStatusTitle": "Health Connect export status"
 }

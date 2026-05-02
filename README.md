@@ -1,8 +1,8 @@
 
-# Hypertrack
-Hypertrack is an offline-first fitness app for **workouts, nutrition, analytics, sleep, steps, measurements, and supplements**.
+# Train Libre
+Train Libre is an offline-first fitness app for **workouts, nutrition, analytics, sleep, steps, measurements, and supplements**.
 
-It is designed primarily for **experienced lifters and gym-focused athletes** who want structured tracking, clear long-term progress analysis, and practical recommendations **without gamification**. Hypertrack focuses on **privacy-friendly local data handling**, **transparent analytics**, and features that are intended to be understandable, evidence-informed, and mathematically grounded where appropriate. It can be used as a simple logging app but its main goal is to go beyond logging without becoming noisy, gimmicky, or opaque.
+It is designed primarily for **experienced lifters and gym-focused athletes** who want structured tracking, clear long-term progress analysis, and practical recommendations **without gamification**. Train Libre focuses on **privacy-friendly local data handling**, **transparent analytics**, and features that are intended to be understandable, evidence-informed, and mathematically grounded where appropriate. It can be used as a simple logging app but its main goal is to go beyond logging without becoming noisy, gimmicky, or opaque.
 
 ## Install
 
@@ -48,7 +48,7 @@ It is designed primarily for **experienced lifters and gym-focused athletes** wh
     </td>
     <td width="28"></td>
     <td align="center" valign="middle" width="420">
-      <a href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/hypertrack/releases">
+      <a href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/train-libre/releases">
         <img
           src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png"
           alt="Get it on Obtainium"
@@ -66,7 +66,7 @@ It is designed primarily for **experienced lifters and gym-focused athletes** wh
 
 ## Platform support
 
-Hypertrack is a Flutter app with active mobile targets:
+Train Libre is a Flutter app with active mobile targets:
 
 - iOS
 - Android
@@ -133,7 +133,7 @@ primary production targets.
 
 ## Health integrations
 
-Hypertrack supports **one-way export** to:
+Train Libre supports **one-way export** to:
 
 - **Apple Health**
 - **Google Health Connect**
@@ -144,11 +144,11 @@ This includes supported app-recorded data such as:
 - hydration
 - workout sessions
 
-Hypertrack remains the authoritative record for its own tracking and analytics.
+Train Libre remains the authoritative record for its own tracking and analytics.
 
 ## Privacy and local-first philosophy
 
-- Hypertrack is **offline-first**
+- Train Libre is **offline-first**
 - app data is handled locally by default
 - AI meal features are **optional** and **disabled by default**
 - AI usage is **BYOK only** (bring your own API key)

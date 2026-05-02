@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/domain/metrics/sleep_regularity_index.dart';
+import 'package:train_libre/features/sleep/domain/metrics/sleep_regularity_index.dart';
 
 void main() {
   DailySleepWakeState dayState(

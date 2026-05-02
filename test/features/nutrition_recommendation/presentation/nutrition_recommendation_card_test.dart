@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/presentation/nutrition_recommendation_card.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/confidence_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/presentation/nutrition_recommendation_card.dart';
+import 'package:train_libre/generated/app_localizations.dart';
 
 void main() {
   testWidgets('renders empty state without recommendation', (tester) async {

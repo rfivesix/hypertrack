@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/config/app_data_sources.dart';
-import 'package:hypertrack/services/exercise_catalog_refresh_service.dart';
+import 'package:train_libre/config/app_data_sources.dart';
+import 'package:train_libre/services/exercise_catalog_refresh_service.dart';
 
 void main() {
   const config = ExerciseCatalogRemoteSourceConfig(

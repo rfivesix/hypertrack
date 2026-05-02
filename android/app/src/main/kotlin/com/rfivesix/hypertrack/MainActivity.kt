@@ -1,6 +1,6 @@
-// android/app/src/main/kotlin/com/rfivesix/hypertrack/MainActivity.kt
+// android/app/src/main/kotlin/com/rfivesix/trainlibre/MainActivity.kt
 
-package com.rfivesix.hypertrack
+package com.rfivesix.trainlibre
 
 import android.content.Intent
 import android.net.Uri
@@ -48,10 +48,10 @@ class MainActivity : FlutterFragmentActivity() {
         private const val quotaRetryBackoffMs = 300L
     }
 
-    private val healthChannelName = "hypertrack.health/steps"
-    private val sleepHealthConnectChannelName = "hypertrack.health/sleep_health_connect"
-    private val exportHealthConnectChannelName = "hypertrack.health/export_health_connect"
-    private val storageChannelName = "hypertrack.storage/saf"
+    private val healthChannelName = "trainlibre.health/steps"
+    private val sleepHealthConnectChannelName = "trainlibre.health/sleep_health_connect"
+    private val exportHealthConnectChannelName = "trainlibre.health/export_health_connect"
+    private val storageChannelName = "trainlibre.storage/saf"
     private var pendingPermissionResult: MethodChannel.Result? = null
     private var pendingPermissionRequestSet: Set<String>? = null
     private var pendingDirectoryPickerResult: MethodChannel.Result? = null
@@ -1291,7 +1291,7 @@ class MainActivity : FlutterFragmentActivity() {
     private fun handlePruneAutoBackupsInTree(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
         val treeUriRaw = args["treeUri"] as? String
-        val filePrefix = (args["filePrefix"] as? String) ?: "hypertrack_auto"
+        val filePrefix = (args["filePrefix"] as? String) ?: "train-libre-auto"
         val retention = (args["retention"] as? Int) ?: 7
 
         if (treeUriRaw.isNullOrBlank()) {

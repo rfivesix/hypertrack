@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/models/food_item.dart';
-import 'package:hypertrack/services/ai_meal_validation.dart';
-import 'package:hypertrack/services/ai_service.dart';
+import 'package:train_libre/models/food_item.dart';
+import 'package:train_libre/services/ai_meal_validation.dart';
+import 'package:train_libre/services/ai_service.dart';
 
 FoodItem food(
   String name, {

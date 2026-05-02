@@ -32,7 +32,7 @@ abstract class HealthHeartRateDataSource {
 
 class HealthPlatformHeartRate implements HealthHeartRateDataSource {
   static const MethodChannel _channel = MethodChannel(
-    'hypertrack.health/steps',
+    'trainlibre.health/steps',
   );
 
   const HealthPlatformHeartRate();

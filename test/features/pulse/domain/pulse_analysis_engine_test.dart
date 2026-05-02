@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/pulse/domain/pulse_analysis_engine.dart';
-import 'package:hypertrack/features/pulse/domain/pulse_models.dart';
+import 'package:train_libre/features/pulse/domain/pulse_analysis_engine.dart';
+import 'package:train_libre/features/pulse/domain/pulse_models.dart';
 
 void main() {
   const engine = PulseAnalysisEngine();

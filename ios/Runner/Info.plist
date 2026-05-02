@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Hypertrack</string>
+	<string>Train Libre</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Hypertrack</string>
+	<string>Train Libre</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -31,6 +31,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>trainlibre</string>
 				<string>hypertrack</string>
 			</array>
 		</dict>
@@ -40,15 +41,15 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Diese App benötigt Zugriff auf die Kamera, um Barcodes von Lebensmitteln zu scannen.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Hypertrack benötigt Zugriff auf das Mikrofon für die Spracheingabe bei der KI-Mahlzeitenerkennung.</string>
+	<string>Train Libre benötigt Zugriff auf das Mikrofon für die Spracheingabe bei der KI-Mahlzeitenerkennung.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Hypertrack benötigt Lesezugriff auf Schritte, Schlaf und Herzfrequenz aus Apple Health, um aktivierte Gesundheitsansichten anzuzeigen.</string>
+	<string>Train Libre benötigt Lesezugriff auf Schritte, Schlaf und Herzfrequenz aus Apple Health, um aktivierte Gesundheitsansichten anzuzeigen.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Hypertrack benötigt Schreibzugriff auf Apple Health, um Messwerte, Ernährung, Flüssigkeit und Workouts einseitig zu exportieren.</string>
+	<string>Train Libre benötigt Schreibzugriff auf Apple Health, um Messwerte, Ernährung, Flüssigkeit und Workouts einseitig zu exportieren.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Diese App benötigt Zugriff auf deine Galerie, damit du ein Profilbild auswählen kannst.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Hypertrack nutzt Spracherkennung, um deine Mahlzeiten per Sprache zu erfassen.</string>
+	<string>Train Libre nutzt Spracherkennung, um deine Mahlzeiten per Sprache zu erfassen.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

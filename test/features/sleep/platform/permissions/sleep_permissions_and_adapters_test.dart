@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/platform/health_connect/health_connect_sleep_adapter.dart';
-import 'package:hypertrack/features/sleep/platform/healthkit/healthkit_sleep_adapter.dart';
-import 'package:hypertrack/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/health_connect_sleep_permissions_service.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/healthkit_sleep_permissions_service.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_controller.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permissions_service.dart';
+import 'package:train_libre/features/sleep/platform/health_connect/health_connect_sleep_adapter.dart';
+import 'package:train_libre/features/sleep/platform/healthkit/healthkit_sleep_adapter.dart';
+import 'package:train_libre/features/sleep/platform/ingestion/sleep_ingestion_models.dart';
+import 'package:train_libre/features/sleep/platform/permissions/health_connect_sleep_permissions_service.dart';
+import 'package:train_libre/features/sleep/platform/permissions/healthkit_sleep_permissions_service.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_controller.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_models.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permissions_service.dart';
 
 class _FakeHealthKitPermissionBridge implements HealthKitPermissionBridge {
   _FakeHealthKitPermissionBridge({

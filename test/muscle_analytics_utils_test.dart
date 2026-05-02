@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/util/muscle_analytics_utils.dart';
+import 'package:train_libre/util/muscle_analytics_utils.dart';
 
 void main() {
   group('MuscleAnalyticsUtils', () {

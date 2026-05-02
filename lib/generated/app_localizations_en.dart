@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Hypertrack';
+  String get appTitle => 'Train Libre';
 
   @override
   String get bannerText => 'Recommendation / Current Workout';
@@ -269,7 +269,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get measurementRightCalf => 'Right Calf';
 
   @override
-  String get drawerMenuTitle => 'Hypertrack Menu';
+  String get drawerMenuTitle => 'Train Libre Menu';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -608,7 +608,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Hypertrack App Backup - $timestamp';
+    return 'Train Libre App Backup - $timestamp';
   }
 
   @override
@@ -1077,10 +1077,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackReportEmailOpenFailed => 'Could not open email app.';
 
   @override
-  String get feedbackReportEmailSubject => 'Hypertrack feedback report';
+  String get feedbackReportEmailSubject => 'Train Libre feedback report';
 
   @override
-  String get feedbackReportReportTitle => 'Hypertrack Feedback Report';
+  String get feedbackReportReportTitle => 'Train Libre Feedback Report';
 
   @override
   String get feedbackReportReportGeneratedAt => 'Generated';
@@ -1130,7 +1130,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get date_and_time_of_measurement => 'Date & time of measurement';
 
   @override
-  String get onbWelcomeTitle => 'Welcome to Hypertrack';
+  String get onbWelcomeTitle => 'Welcome to Train Libre';
 
   @override
   String get onbWelcomeBody =>
@@ -1326,7 +1326,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogEnterPasswordImport => 'Enter password to import backup';
 
   @override
-  String get dataManagementBackupTitle => 'Hypertrack Data Backup';
+  String get dataManagementBackupTitle => 'Train Libre Data Backup';
 
   @override
   String get dataManagementBackupDescription =>
@@ -1765,7 +1765,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMaterialColorsSubtitle =>
-      'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent';
+      'Use Android dynamic colors (Material You) instead of the Train Libre brand accent';
 
   @override
   String get settingsFoodDbSectionTitle => 'Food database';
@@ -1845,7 +1845,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resumeButton => 'Resume';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Hypertrack';
+  String get onboardingWelcomeTitle => 'Welcome to Train Libre';
 
   @override
   String get onboardingWelcomeSubtitle =>
@@ -3594,7 +3594,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptiveExtraCardioHelp =>
-      'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts.';
+      'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Train Libre workouts.';
 
   @override
   String get onboardingAdaptiveGoalTitle => 'Adaptive nutrition recommendation';
@@ -4041,7 +4041,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pulseSettingsPermissionSubtitle =>
-      'Opens Apple Health or Health Connect so Hypertrack can read pulse samples.';
+      'Opens Apple Health or Health Connect so Train Libre can read pulse samples.';
 
   @override
   String get pulseSettingsAnalysisSubtitle =>
@@ -4102,11 +4102,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthExportAppleHealthSubtitle =>
-      'One-way export from Hypertrack to Apple Health';
+      'One-way export from Train Libre to Apple Health';
 
   @override
   String get healthExportHealthConnectSubtitle =>
-      'One-way export from Hypertrack to Health Connect';
+      'One-way export from Train Libre to Health Connect';
 
   @override
   String get healthExportAppleHealthStatusTitle => 'Apple Health export status';

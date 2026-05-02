@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:hypertrack/main.dart';
-import 'package:hypertrack/services/theme_service.dart';
+import 'package:train_libre/main.dart';
+import 'package:train_libre/services/theme_service.dart';
 
 void main() {
   testWidgets('MyApp smoke test builds MaterialApp', (

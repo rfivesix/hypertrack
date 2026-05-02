@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/domain/metrics/nightly_metrics_calculator.dart';
-import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
+import 'package:train_libre/features/sleep/domain/metrics/nightly_metrics_calculator.dart';
+import 'package:train_libre/features/sleep/domain/sleep_domain.dart';
 
 void main() {
   test('computes TIB, TST, SOL, WASO and interruptions deterministically', () {
