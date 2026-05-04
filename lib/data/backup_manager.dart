@@ -19,12 +19,48 @@ import 'drift_database.dart'; // Access to Drift tables and companions.
 import 'product_database_helper.dart';
 import 'workout_database_helper.dart';
 import '../models/food_item.dart';
-import '../models/hypertrack_backup.dart';
+import '../models/train_libre_backup.dart';
 import '../services/health/steps_sync_service.dart';
 import '../services/storage/saf_storage_service.dart';
 import '../util/encryption_util.dart';
 
 typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
+
+String _encodeBackupJsonPayload(Map<String, dynamic> payload) {
+  return jsonEncode(payload);
+}
+
+Map<String, dynamic> _decodeBackupJsonPayload(String source) {
+  final decoded = jsonDecode(source);
+  if (decoded is! Map) {
+    throw const FormatException('Backup JSON root must be an object.');
+  }
+  return decoded.cast<String, dynamic>();
+}
+
+Future<String> _encodeBackupJsonPayloadInBackground(
+  Map<String, dynamic> payload,
+) {
+  return compute(_encodeBackupJsonPayload, payload);
+}
+
+Future<Map<String, dynamic>> _decodeBackupJsonPayloadInBackground(
+  String source,
+) {
+  return compute(_decodeBackupJsonPayload, source);
+}
+
+@visibleForTesting
+Future<String> encodeBackupJsonPayloadForTesting(
+  Map<String, dynamic> payload,
+) {
+  return _encodeBackupJsonPayloadInBackground(payload);
+}
+
+@visibleForTesting
+Future<Map<String, dynamic>> decodeBackupJsonPayloadForTesting(String source) {
+  return _decodeBackupJsonPayloadInBackground(source);
+}
 
 /// Manager responsible for application backup, restoration, and data export.
 ///
@@ -33,6 +69,15 @@ typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
 class BackupManager {
   /// Singleton instance of [BackupManager].
   static final BackupManager instance = BackupManager();
+
+  static const String currentBackupAppName = 'Train Libre';
+  static const List<String> legacyBackupAppNames = ['Hypertrack'];
+  static const String currentBackupFilePrefix = 'train-libre-backup';
+  static const List<String> legacyBackupFilePrefixes = ['hypertrack-backup'];
+  static const String currentAutoBackupFilePrefix = 'train-libre-auto';
+  static const List<String> legacyAutoBackupFilePrefixes = ['hypertrack_auto'];
+  static const String currentApplicationId = 'com.rfivesix.trainlibre';
+  static const List<String> legacyApplicationIds = ['com.rfivesix.hypertrack'];
 
   final DatabaseHelper _userDb;
   final ProductDatabaseHelper _productDb;
@@ -89,7 +134,7 @@ class BackupManager {
         if (!await directory.exists()) {
           await directory.create(recursive: true);
         }
-        final probe = File(p.join(directory.path, '.hypertrack_write_probe'));
+        final probe = File(p.join(directory.path, '.train-libre-write-probe'));
         await probe.writeAsString('ok', flush: true);
         if (await probe.exists()) {
           await probe.delete();
@@ -111,7 +156,7 @@ class BackupManager {
   Future<bool> exportFullBackup() async {
     try {
       final jsonString = await _generateBackupJson();
-      return await _writeAndShareFile(jsonString, 'hypertrack_backup');
+      return await _writeAndShareFile(jsonString, currentBackupFilePrefix);
     } catch (e) {
       debugPrint("Backup export failed: $e");
       return false;
@@ -130,9 +175,12 @@ class BackupManager {
         jsonString,
         passphrase,
       );
-      final wrappedJson = jsonEncode(wrapper);
+      final wrappedJson = await _encodeBackupJsonPayloadInBackground(wrapper);
 
-      return await _writeAndShareFile(wrappedJson, 'hypertrack_backup_enc');
+      return await _writeAndShareFile(
+        wrappedJson,
+        '$currentBackupFilePrefix-enc',
+      );
     } catch (e) {
       debugPrint("Encrypted backup export failed: $e");
       return false;
@@ -291,7 +339,7 @@ class BackupManager {
     }
 
     // 6) Build backup object.
-    final backup = HypertrackBackup(
+    final backup = TrainLibreBackup(
       schemaVersion: currentSchemaVersion,
       foodEntries: foodEntries,
       mealTemplates: mealTemplates,
@@ -312,12 +360,17 @@ class BackupManager {
       healthStepSegments: healthStepSegments,
     );
 
-    return jsonEncode(backup.toJson());
+    final payload = backup.toJson();
+    payload['appName'] = currentBackupAppName;
+    payload['applicationId'] = currentApplicationId;
+    payload['backupFilePrefix'] = currentBackupFilePrefix;
+    payload['generatedAtUtc'] = DateTime.now().toUtc().toIso8601String();
+    return _encodeBackupJsonPayloadInBackground(payload);
   }
 
   @visibleForTesting
   Future<Map<String, dynamic>> generateBackupPayloadForTesting() async {
-    return jsonDecode(await _generateBackupJson()) as Map<String, dynamic>;
+    return decodeBackupJsonPayloadForTesting(await _generateBackupJson());
   }
 
   Future<bool> _writeAndShareFile(String content, String baseName) async {
@@ -333,7 +386,7 @@ class BackupManager {
         files: [
           XFile(tempFile.path, mimeType: 'application/json'),
         ],
-        subject: 'Hypertrack Backup $timestamp',
+        subject: '$currentBackupAppName Backup $timestamp',
         sharePositionOrigin: _sharePositionOrigin(),
       ),
     );
@@ -361,28 +414,31 @@ class BackupManager {
     try {
       final file = File(filePath);
       final rawString = await file.readAsString();
-      final jsonMapRaw = jsonDecode(rawString);
+      final jsonMapRaw = await _decodeBackupJsonPayloadInBackground(rawString);
 
       Map<String, dynamic> payload;
 
-      if (jsonMapRaw is Map &&
-          (jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV1 ||
-              jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV2)) {
+      if (jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV1 ||
+          jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV2) {
         final effectivePw = passphrase ?? "";
         try {
           final clearText = await EncryptionUtil.decryptToString(
             Map<String, dynamic>.from(jsonMapRaw),
             effectivePw,
           );
-          payload = jsonDecode(clearText) as Map<String, dynamic>;
+          payload = await _decodeBackupJsonPayloadInBackground(clearText);
         } catch (e) {
           debugPrint('Backup decryption failed: $e');
           return false;
         }
       } else {
-        payload = (jsonMapRaw as Map).cast<String, dynamic>();
+        payload = jsonMapRaw;
       }
 
+      if (!_isAcceptedBackupMetadata(payload)) {
+        debugPrint('Backup metadata rejected.');
+        return false;
+      }
       return await _importBackupPayload(payload);
     } catch (e) {
       debugPrint("Backup import failed: $e");
@@ -398,7 +454,7 @@ class BackupManager {
   }
 
   Future<bool> _importBackupPayload(Map<String, dynamic> payload) async {
-    final backup = HypertrackBackup.fromJson(payload);
+    final backup = TrainLibreBackup.fromJson(payload);
 
     if (backup.schemaVersion > currentSchemaVersion) {
       debugPrint("Backup version is newer than supported schema.");
@@ -657,6 +713,42 @@ class BackupManager {
     return true;
   }
 
+  bool _isAcceptedBackupMetadata(Map<String, dynamic> payload) {
+    final rawAppName = payload['appName']?.toString().trim();
+    final rawApplicationId = payload['applicationId']?.toString().trim();
+    final rawFilePrefix = payload['backupFilePrefix']?.toString().trim();
+
+    final allowedAppNames = <String>{
+      currentBackupAppName,
+      ...legacyBackupAppNames,
+    };
+    final allowedApplicationIds = <String>{
+      currentApplicationId,
+      ...legacyApplicationIds,
+    };
+    final allowedFilePrefixes = <String>{
+      currentBackupFilePrefix,
+      ...legacyBackupFilePrefixes,
+    };
+
+    if (rawAppName != null &&
+        rawAppName.isNotEmpty &&
+        !allowedAppNames.contains(rawAppName)) {
+      return false;
+    }
+    if (rawApplicationId != null &&
+        rawApplicationId.isNotEmpty &&
+        !allowedApplicationIds.contains(rawApplicationId)) {
+      return false;
+    }
+    if (rawFilePrefix != null &&
+        rawFilePrefix.isNotEmpty &&
+        !allowedFilePrefixes.contains(rawFilePrefix)) {
+      return false;
+    }
+    return true;
+  }
+
   int? _asInt(dynamic value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
@@ -753,14 +845,14 @@ class BackupManager {
       }
 
       String content = await _generateBackupJson();
-      String fileName = 'hypertrack_auto_v$currentSchemaVersion';
+      String fileName = '$currentAutoBackupFilePrefix-v$currentSchemaVersion';
 
       // Only encrypt when explicitly requested.
       if (encrypted) {
         if (passphrase == null || passphrase.isEmpty) return false;
         final wrapper = await EncryptionUtil.encryptString(content, passphrase);
-        content = jsonEncode(wrapper);
-        fileName = 'hypertrack_auto_enc_v$currentSchemaVersion';
+        content = await _encodeBackupJsonPayloadInBackground(wrapper);
+        fileName = '$currentAutoBackupFilePrefix-enc-v$currentSchemaVersion';
       }
 
       final ts = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
@@ -779,7 +871,7 @@ class BackupManager {
           );
           await SafStorageService.instance.pruneAutoBackupsInTree(
             treeUri: treeUri.trim(),
-            filePrefix: 'hypertrack_auto',
+            filePrefix: currentAutoBackupFilePrefix,
             retention: retention,
           );
           await prefs.setInt('auto_backup_last_ms', nowMs);
@@ -808,9 +900,12 @@ class BackupManager {
       }
 
       final docs = await getApplicationDocumentsDirectory();
-      final external = await getExternalStorageDirectory();
-      final externalFallbackDir =
-          external != null ? p.join(external.path, 'Backups') : null;
+      String? externalFallbackDir;
+      if (Platform.isAndroid) {
+        final external = await getExternalStorageDirectory();
+        externalFallbackDir =
+            external != null ? p.join(external.path, 'Backups') : null;
+      }
       final baseDir = await resolveWritableBackupDirectory(
         docsDir: docs,
         dirPath: configuredDirPath,
@@ -829,7 +924,14 @@ class BackupManager {
         final files = baseDir
             .listSync()
             .whereType<File>()
-            .where((f) => p.basename(f.path).startsWith('hypertrack_auto'))
+            .where(
+              (f) =>
+                  p.basename(f.path).startsWith(currentAutoBackupFilePrefix) ||
+                  legacyAutoBackupFilePrefixes.any(
+                    (legacyPrefix) =>
+                        p.basename(f.path).startsWith(legacyPrefix),
+                  ),
+            )
             .toList()
           ..sort(
             (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
@@ -905,7 +1007,7 @@ class BackupManager {
           entry.barcode,
         ]);
       }
-      return await _createAndShareCsv(rows, 'hypertrack_nutrition_export');
+      return await _createAndShareCsv(rows, 'train-libre-nutrition-export');
     } catch (e) {
       debugPrint("CSV export failed (nutrition): $e");
       return false;
@@ -949,7 +1051,7 @@ class BackupManager {
           ]);
         }
       }
-      return await _createAndShareCsv(rows, 'hypertrack_workouts_export');
+      return await _createAndShareCsv(rows, 'train-libre-workouts-export');
     } catch (e) {
       debugPrint("CSV export failed (workout): $e");
       return false;
@@ -976,7 +1078,7 @@ class BackupManager {
           ]);
         }
       }
-      return await _createAndShareCsv(rows, 'hypertrack_measurements_export');
+      return await _createAndShareCsv(rows, 'train-libre-measurements-export');
     } catch (e) {
       debugPrint("CSV export failed (measurements): $e");
       return false;

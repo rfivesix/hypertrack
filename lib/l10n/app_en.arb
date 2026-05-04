@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Hypertrack",
+  "appTitle": "Train Libre",
   "bannerText": "Recommendation / Current Workout",
   "calories": "Calories",
   "water": "Water",
@@ -91,7 +91,7 @@
   "measurementRightThigh": "Right Thigh",
   "measurementLeftCalf": "Left Calf",
   "measurementRightCalf": "Right Calf",
-  "drawerMenuTitle": "Hypertrack Menu",
+  "drawerMenuTitle": "Train Libre Menu",
   "drawerDashboard": "Dashboard",
   "drawerFoodExplorer": "Food Explorer",
   "drawerDataManagement": "Data Backup",
@@ -161,6 +161,12 @@
   "cardioIntensityShortLabel": "Int.",
   "restTimerLabel": "Rest",
   "skipButton": "Skip",
+  "appInitStarting": "Starting app...",
+  "appInitInitializing": "Initializing...",
+  "appInitFinalizing": "Finalizing",
+  "appInitCheckingBackups": "Checking backups...",
+  "appInitSkipDownload": "Skip download",
+  "appInitSkippingRemoteDownload": "Skipping remote download...",
   "emptyHistory": "No completed workouts yet.",
   "workoutDetailsTitle": "Workout Details",
   "workoutHeartRateSectionTitle": "Heart Rate",
@@ -212,11 +218,69 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "save": "Save",
+  "share": "Share",
+  "shareWorkout": "Share workout",
+  "shareRoutine": "Share routine",
+  "shareAsImage": "Share as image",
+  "shareAsText": "Share as text",
+  "sharedFromTrainLibre": "Shared from Train Libre",
+  "sharedWithTrainLibre": "Shared with Train Libre",
+  "shareImageSummary": "Summary",
+  "shareImageExercises": "Exercises",
+  "shareImageMuscleFocus": "Muscle focus",
+  "shareImageMinimal": "Minimal",
+  "volume": "Volume",
+  "moreExercises": "+ {count} more exercises",
+  "@moreExercises": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareSetNumber": "Set {number}",
+  "@shareSetNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "repsShort": "reps",
+  "shareFailed": "Sharing failed",
+  "workoutShareTitle": "Workout",
+  "routineShareTitle": "Routine",
+  "setTypeWarmup": "Warm-up",
+  "setTypeWork": "Work sets",
+  "setTypeFailure": "Failure",
+  "setTypeDropset": "Dropset",
+  "setTypeSuperset": "Superset",
+  "setTypeOther": "Other",
+  "setTypeWarmupSuffix": "Warm-up",
+  "setTypeFailureSuffix": "Failure",
+  "setTypeDropsetSuffix": "Dropset",
+  "setTypeSupersetSuffix": "Superset",
+  "setTypeOtherSuffix": "Other",
+  "warmupSetCount": "{count, plural, =1{1 warm-up set} other{{count} warm-up sets}}",
+  "workSetCount": "{count, plural, =1{1 work set} other{{count} work sets}}",
+  "failureSetCount": "{count, plural, =1{1 failure set} other{{count} failure sets}}",
+  "dropsetCount": "{count, plural, =1{1 dropset} other{{count} dropsets}}",
+  "supersetSetCount": "{count, plural, =1{1 superset} other{{count} supersets}}",
+  "otherSetCount": "{count, plural, =1{1 other set} other{{count} other sets}}",
+  "warmupCompactCount": "{count, plural, =1{1 warm-up} other{{count} warm-up}}",
+  "workCompactCount": "{count, plural, =1{1 work} other{{count} work}}",
+  "failureCompactCount": "{count, plural, =1{1 failure} other{{count} failure}}",
+  "dropsetCompactCount": "{count, plural, =1{1 dropset} other{{count} dropsets}}",
+  "supersetCompactCount": "{count, plural, =1{1 superset} other{{count} supersets}}",
+  "otherCompactCount": "{count, plural, =1{1 other} other{{count} other}}",
+  "shareExercisesLabel": "exercises",
+  "shareSetsLabel": "sets",
+  "shareSetLabel": "set",
   "tabBaseFoods": "Base Foods",
   "baseFoodsEmptyState": "This section will soon be filled with a curated list of base foods like fruits, vegetables, and more.",
   "noBrand": "No Brand",
   "unknown": "Unknown",
-  "backupFileSubject": "Hypertrack App Backup - {timestamp}",
+  "backupFileSubject": "Train Libre App Backup - {timestamp}",
   "@backupFileSubject": {
     "placeholders": {
       "timestamp": {
@@ -444,8 +508,8 @@
   "feedbackReportShareCompleted": "Share sheet opened.",
   "feedbackReportShareCanceled": "Share canceled.",
   "feedbackReportEmailOpenFailed": "Could not open email app.",
-  "feedbackReportEmailSubject": "Hypertrack feedback report",
-  "feedbackReportReportTitle": "Hypertrack Feedback Report",
+  "feedbackReportEmailSubject": "Train Libre feedback report",
+  "feedbackReportReportTitle": "Train Libre Feedback Report",
   "feedbackReportReportGeneratedAt": "Generated",
   "feedbackReportReportAppVersion": "App version",
   "feedbackReportReportBuildNumber": "Build number",
@@ -461,7 +525,7 @@
   "all_measurements":"ALL MEASUREMENTS",
   "all_measurements_no_cap":"All measurements",
   "date_and_time_of_measurement":"Date & time of measurement",
-  "onbWelcomeTitle": "Welcome to Hypertrack",
+  "onbWelcomeTitle": "Welcome to Train Libre",
   "@onbWelcomeTitle": { "description": "Onboarding slide 1 title" },
   "onbWelcomeBody": "Let’s start by setting personal goals to guide training and nutrition.",
   "@onbWelcomeBody": { "description": "Onboarding slide 1 description" },
@@ -562,7 +626,7 @@
   "categoryHint": "e.g. Chest, Back, Legs...",
   "validatorPleaseEnterCategory": "Please enter a category.",
   "dialogEnterPasswordImport": "Enter password to import backup",
-  "dataManagementBackupTitle": "Hypertrack Data Backup",
+  "dataManagementBackupTitle": "Train Libre Data Backup",
   "dataManagementBackupDescription": "Back up or restore all your app data. Ideal for changing devices.",
   "exportEncrypted": "Export Encrypted",
   "dialogPasswordForExport": "Password for encrypted export",
@@ -714,7 +778,7 @@
   "settingsVisualStyleLiquid": "Fluid (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Rounded, floating UI elements",
   "settingsMaterialColorsTitle": "Material colors",
-  "settingsMaterialColorsSubtitle": "Use Android dynamic colors (Material You) instead of the Hypertrack brand accent",
+  "settingsMaterialColorsSubtitle": "Use Android dynamic colors (Material You) instead of the Train Libre brand accent",
   "settingsFoodDbSectionTitle": "Food database",
   "settingsFoodDbRegionTitle": "Food database region",
   "settingsFoodDbRegionSubtitle": "Select which Open Food Facts product catalog region is used for food search.",
@@ -744,7 +808,7 @@
   "onbBodyAppLayout": "The bottom bar allows quick switching between areas. Use the large [+] button to log everything instantly.",
   "dataHubTitle": "Data Hub",
   "resumeButton": "Resume",
-  "onboardingWelcomeTitle": "Welcome to Hypertrack",
+  "onboardingWelcomeTitle": "Welcome to Train Libre",
   "onboardingWelcomeSubtitle": "Let's set up your profile to get the best results.",
   
   "onboardingNameTitle": "What's your name?",
@@ -789,7 +853,7 @@
   "aiTestSuccess": "Connection successful!",
   "aiKeySaved": "API key saved securely.",
   "aiPrivacySection": "Privacy",
-  "aiPrivacyDisclosure": "Your images and text are sent to the selected AI provider only when you tap Analyze. Data is never stored on external servers beyond processing your request. Your API key is stored encrypted on this device only.",
+  "aiPrivacyDisclosure": "Images, text, and generated recommendation prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider's terms. Your API key is stored encrypted on this device only.",
   "aiMealCapture": "AI Meal",
   "aiCaptureTitle": "AI Meal Capture",
   "aiCaptureTabPhoto": "Photo",
@@ -822,6 +886,8 @@
 
   "aiEnableTitle": "Enable AI Features",
   "aiEnableSubtitle": "Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.",
+  "aiRecommendationContextTitle": "Send recent meals for recommendations",
+  "aiRecommendationContextSubtitle": "Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.",
 
   "aiRecommendationTitle": "AI Meal Coach",
   "aiRecommendDietary": "Dietary",
@@ -836,6 +902,146 @@
   "aiRecommendGenerating": "Thinking…",
   "aiRecommendSaveToDiary": "Save to Diary",
   "aiRecommendNoMatch": "No database match",
+  "aiValidationNoMatchedItemsSaveYet": "No matched items can be saved yet.",
+  "aiValidationNoMatchedIngredientsSaveYet": "No matched ingredients can be saved yet.",
+  "aiValidationSomeItemsNeedReviewTitle": "Some items need review",
+  "aiValidationSomeIngredientsNeedReviewTitle": "Some ingredients need review",
+  "aiValidationSaveMatchedItemsButton": "Save matched items",
+  "aiValidationSaveMatchedIngredientsButton": "Save matched ingredients",
+  "aiValidationValidationPassedTitle": "Validation passed",
+  "aiValidationReviewSuggestedTitle": "Review suggested",
+  "aiValidationMacroFitValidatedTitle": "Macro fit validated",
+  "aiValidationNeedsReviewTitle": "Needs review",
+  "aiValidationRepairLimitReachedReview": "Automatic repair limit reached. Please review before saving.",
+  "aiValidationRepairLimitReachedRecommendation": "Automatic repair limit reached. Review matches and portions before saving.",
+  "aiValidationRecentMealContextIncluded": "Recent meal context was included.",
+  "aiValidationGeneratedWithoutRecentMealHistory": "Generated without recent meal history.",
+  "aiValidationApiKeyRequiredTitle": "API Key Required",
+  "aiValidationScoreLabel": "Score {score}/100",
+  "@aiValidationScoreLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationDeltaSummary": "Delta: {kcalDelta} kcal · {proteinDelta}g Protein · {carbsDelta}g Carbs · {fatDelta}g Fat",
+  "@aiValidationDeltaSummary": {
+    "placeholders": {
+      "kcalDelta": {
+        "type": "int"
+      },
+      "proteinDelta": {
+        "type": "int"
+      },
+      "carbsDelta": {
+        "type": "int"
+      },
+      "fatDelta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveItemsMessage": "{unmatchedCount, plural, =1{1 item does not have a local database match and will not be saved.} other{{unmatchedCount} items do not have a local database match and will not be saved.}} Save the {matchedCount} matched item(s) only?",
+  "@aiValidationPartialSaveItemsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveIngredientsMessage": "{unmatchedCount, plural, =1{1 ingredient does not have a local database match and will not be saved.} other{{unmatchedCount} ingredients do not have a local database match and will not be saved.}} Save the {matchedCount} matched ingredient(s) only?",
+  "@aiValidationPartialSaveIngredientsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationEmptyItemName": "An item has no food name.",
+  "aiValidationDuplicateItemMerged": "Duplicate \"{name}\" entries were merged before validation.",
+  "@aiValidationDuplicateItemMerged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiValidationInvalidQuantity": "Quantity must be greater than 0g.",
+  "aiValidationTinyQuantity": "Quantity is very small; review the gram amount.",
+  "aiValidationExtremeQuantity": "Quantity is implausibly high for one meal item.",
+  "aiValidationLargeQuantity": "Quantity is unusually large; review the gram amount.",
+  "aiValidationLowAiConfidence": "AI confidence is low for this item.",
+  "aiValidationUnmatchedItem": "No local database match was found.",
+  "aiValidationWeakDbMatch": "The local database match is weak.",
+  "aiValidationPartialDbMatch": "The local database match is partial.",
+  "aiValidationAmbiguousDbMatch": "Several local database matches look similarly plausible.",
+  "aiValidationStateMismatch": "The AI item state may not match the database entry.",
+  "aiValidationZeroNutritionMatch": "The matched database entry has no usable nutrition data.",
+  "aiValidationImplausibleFoodDensity": "Matched food has unusually high kcal per 100g.",
+  "aiValidationMacroEnergyMismatch": "Matched food macros do not align well with kcal.",
+  "aiValidationImplausibleItemNutrition": "Nutrition for this quantity is unusually high.",
+  "aiValidationEmptyMeal": "The AI returned no meal items.",
+  "aiValidationAllItemsUnmatched": "No item could be matched to the local food database.",
+  "aiValidationPartialUnmatchedItems": "{count, plural, =1{1 item cannot be saved until matched.} other{{count} items cannot be saved until matched.}}",
+  "@aiValidationPartialUnmatchedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationZeroTotalKcal": "Matched items produce 0 kcal.",
+  "aiValidationCaptureTotalKcalExtreme": "Total kcal is implausibly high for one captured meal.",
+  "aiValidationCaptureTotalKcalHigh": "Total kcal is unusually high; review portions.",
+  "aiValidationMacroTotalExtreme": "Total macros are implausibly high.",
+  "aiValidationMacroTotalHigh": "Total macros are unusually high; review portions.",
+  "aiValidationTargetKcalMismatch": "Calories miss the target by {delta} kcal.",
+  "@aiValidationTargetKcalMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetProteinMismatch": "Protein misses the target by {delta}g.",
+  "@aiValidationTargetProteinMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetCarbsMismatch": "Carbs miss the target by {delta}g.",
+  "@aiValidationTargetCarbsMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetFatMismatch": "Fat misses the target by {delta}g.",
+  "@aiValidationTargetFatMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationUnknownIssue": "Validation issue: {code}",
+  "@aiValidationUnknownIssue": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecommendRemainingMacros": "Remaining today",
   "aiRecommendCustomRequest": "Custom request",
   "aiRecommendCustomRequestHint": "e.g. Include leftover rice, high protein, etc.",
@@ -887,22 +1093,22 @@
   "recoveryStateReady": "Ready",
   "recoveryStateFresh": "Fresh",
   "recoveryStateUnknown": "Unknown",
-  "recoveryLastLoadedHours": "Last significant loading: {hours}h ago",
+  "recoveryLastLoadedHours": "Last significantly loaded: {hours} h ago",
   "@recoveryLastLoadedHours": {
     "placeholders": {
       "hours": { "type": "int" }
     }
   },
-  "recoveryFatigueContextHigh": "Recent fatigue context: high session fatigue",
-  "recoveryFatigueContextBaseline": "Recent fatigue context: baseline session fatigue",
-  "recoveryExplanationWithHighFatigue": "{muscle}: last significantly loaded {hours}h ago, with high session fatigue.",
+  "recoveryFatigueContextHigh": "Fatigue context: high session fatigue",
+  "recoveryFatigueContextBaseline": "Fatigue context: baseline session fatigue",
+  "recoveryExplanationWithHighFatigue": "{muscle}: last significantly loaded {hours} h ago, with high session fatigue.",
   "@recoveryExplanationWithHighFatigue": {
     "placeholders": {
       "muscle": { "type": "String" },
       "hours": { "type": "int" }
     }
   },
-  "recoveryExplanationBasic": "{muscle}: last significantly loaded {hours}h ago.",
+  "recoveryExplanationBasic": "{muscle}: last significantly loaded {hours} h ago.",
   "@recoveryExplanationBasic": {
     "placeholders": {
       "muscle": { "type": "String" },
@@ -910,20 +1116,38 @@
     }
   },
   "recoveryHeuristicDisclaimer": "This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.",
-  "recoveryRecentLoad": "Recent load amount: {sets} equivalent sets",
+  "recoveryReadinessLabel": "Readiness",
+  "recoveryRecentLoad": "Last load: {sets} equivalent sets",
   "@recoveryRecentLoad": {
     "placeholders": {
       "sets": { "type": "String" }
     }
   },
-  "recoveryWindowHeuristic": "Heuristic window: often around {from} to {to} hours, depending on context.",
+  "recoveryLastLoadPressure": "Last load pressure: {level}",
+  "@recoveryLastLoadPressure": {
+    "placeholders": {
+      "level": { "type": "String" }
+    }
+  },
+  "recoveryPressureLow": "low",
+  "recoveryPressureModerate": "moderate",
+  "recoveryPressureHigh": "high",
+  "recoveryPressureVeryHigh": "very high",
+  "recoveryCurrentWindow": "Current window: recovering until about {recoveringUpper} h, ready until about {readyUpper} h.",
+  "@recoveryCurrentWindow": {
+    "placeholders": {
+      "recoveringUpper": { "type": "int" },
+      "readyUpper": { "type": "int" }
+    }
+  },
+  "recoveryWindowHeuristic": "Current window: recovering until about {from} h, ready until about {to} h.",
   "@recoveryWindowHeuristic": {
     "placeholders": {
       "from": { "type": "int" },
       "to": { "type": "int" }
     }
   },
-  "recoveryRadarHeuristicCaption": "Radar overview of recent recovery pressure by muscle. It is directional and heuristic.",
+  "recoveryRadarHeuristicCaption": "Radar overview of current readiness by muscle. Status badges remain the primary signal.",
   "recoveryNoDataBody": "Not enough significant training load has been logged yet to estimate muscle recovery.",
   "sectionBodyNutrition": "Body & Nutrition",
   "statisticsSectionTraining": "Training",
@@ -1356,7 +1580,7 @@
   ,"adaptiveExtraCardioOption3": "3 h/week"
   ,"adaptiveExtraCardioOption5": "5 h/week"
   ,"adaptiveExtraCardioOption7Plus": "7+ h/week"
-  ,"adaptiveExtraCardioHelp": "Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts."
+  ,"adaptiveExtraCardioHelp": "Include jogging, running, cycling, swimming, or other endurance sessions not logged as Train Libre workouts."
   ,"onboardingAdaptiveGoalTitle": "Adaptive nutrition recommendation"
   ,"onboardingAdaptiveGoalSubtitle": "Set your direction and weekly rate. We create a conservative starting recommendation and adapt it with your logs."
   ,"adaptiveRecommendationGenerating": "Generating..."
@@ -1527,4 +1751,75 @@
   ,"adaptiveRecommendationRecalculatedSnack": "Recommendation recalculated."
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Recommendation applied to active goals."
   ,"adaptiveRecommendationNotAvailableSnack": "No recommendation available to apply."
+  ,"settingsSectionApp": "App"
+  ,"settingsAppearanceSubtitle": "Adjust theme, visual style, and haptics"
+  ,"settingsShowSugarInDiaryOverviewTitle": "Show sugar in Diary overview"
+  ,"settingsShowSugarInDiaryOverviewSubtitle": "Shows sugar in the top daily overview section"
+  ,"settingsSectionHealthTracking": "Health & Tracking"
+  ,"settingsStepsSubtitle": "Tracking, source policy, and providers"
+  ,"settingsSleepSubtitle": "Import, permissions, and sleep status"
+  ,"settingsPulseSubtitle": "Opt-in pulse analysis and heart-rate access"
+  ,"settingsHealthExportSubtitle": "Manage Apple Health and Health Connect export"
+  ,"settingsSectionNutritionAndData": "Nutrition & Data"
+  ,"settingsSectionSupportAbout": "Support / About"
+  ,"settingsHapticFeedbackTitle": "Haptic feedback"
+  ,"settingsHapticFeedbackSubtitle": "Light vibrations for confirmations and AI waiting"
+  ,"stepsSettingsEnableTrackingTitle": "Enable steps tracking"
+  ,"stepsSettingsEnableTrackingSubtitle": "Read step data from Apple Health / Health Connect"
+  ,"stepsSettingsSourcePolicyTitle": "Source policy"
+  ,"stepsSettingsSourcePolicyAutoDominant": "Auto (dominant source)"
+  ,"stepsSettingsSourcePolicyAutoDominantSubtitle": "Recommended: use one source per day to avoid overlap inflation."
+  ,"stepsSettingsSourcePolicyMaxPerHour": "Merge (max per hour)"
+  ,"stepsSettingsSourcePolicyMaxPerHourSubtitle": "Combine sources by taking the highest hourly bucket."
+  ,"stepsSettingsProviderFilterTitle": "Provider filter"
+  ,"pulseTitle": "Pulse"
+  ,"pulseChartTitle": "Pulse over time"
+  ,"pulseRangeLabel": "Range"
+  ,"pulseAverageLabel": "Average"
+  ,"pulseRestingLabel": "Resting"
+  ,"pulseInsufficientData": "Too few pulse samples for a reliable chart."
+  ,"pulseMethodNote": "Average pulse is time-weighted. Resting pulse is a conservative estimate from the lowest 20% of samples in the selected period."
+  ,"pulseSampleCount": "{count, plural, =0{No samples} one{1 sample} other{{count} samples}}"
+  ,"@pulseSampleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+  ,"pulseQualityReady": "Good coverage"
+  ,"pulseQualityLimited": "Limited data"
+  ,"pulseQualityInsufficient": "Very sparse"
+  ,"pulseQualityNoData": "No data"
+  ,"pulseNoDataDisabled": "Pulse analysis is disabled in Settings."
+  ,"pulseNoDataPermissionDenied": "Heart-rate permission is required to show pulse analysis."
+  ,"pulseNoDataUnavailable": "Pulse data is currently unavailable on this device."
+  ,"pulseNoDataQueryFailed": "Could not read pulse data."
+  ,"pulseNoDataDefault": "No pulse samples were found for this period."
+  ,"pulseSettingsEnableTitle": "Enable pulse analysis"
+  ,"pulseSettingsEnableSubtitle": "Reads heart-rate data for the pulse view only when you turn this on."
+  ,"pulseSettingsPermissionTitle": "Allow heart-rate access"
+  ,"pulseSettingsPermissionSubtitle": "Opens Apple Health or Health Connect so Train Libre can read pulse samples."
+  ,"pulseSettingsAnalysisSubtitle": "Shows range, time-weighted average, and a conservative resting-pulse estimate. Not a medical diagnosis."
+  ,"pulseSettingsPermissionGranted": "Heart-rate access is ready."
+  ,"pulseSettingsPermissionFailed": "Heart-rate access was not granted."
+  ,"pulseOptInChip": "Opt-in"
+  ,"statisticsPulseDescription": "Range, time-weighted average, and resting pulse for selected periods."
+  ,"statisticsPulseOpenCaption": "Opens pulse analysis"
+  ,"healthExportTitle": "Health export"
+  ,"healthExportAppleHealthTitle": "Apple Health export"
+  ,"healthExportHealthConnectTitle": "Health Connect export"
+  ,"healthExportDomainNutritionHydration": "Nutrition & hydration"
+  ,"healthExportDomainWorkouts": "Workouts"
+  ,"healthExportStateIdle": "Idle"
+  ,"healthExportStateExporting": "Exporting"
+  ,"healthExportStateSuccess": "Success"
+  ,"healthExportStateFailed": "Failed"
+  ,"healthExportStateDisabled": "Disabled"
+  ,"healthExportResultComplete": "Export complete"
+  ,"healthExportResultFailed": "Export failed"
+  ,"healthExportAppleHealthSubtitle": "One-way export from Train Libre to Apple Health"
+  ,"healthExportHealthConnectSubtitle": "One-way export from Train Libre to Health Connect"
+  ,"healthExportAppleHealthStatusTitle": "Apple Health export status"
+  ,"healthExportHealthConnectStatusTitle": "Health Connect export status"
 }

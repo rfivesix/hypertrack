@@ -399,6 +399,7 @@ def process_and_create_db(
         os.remove(db_out)
 
     conn = sqlite3.connect(db_out)
+    conn.execute("PRAGMA journal_mode=DELETE")
     cursor = conn.cursor()
 
     cursor.execute(
@@ -449,6 +450,7 @@ def process_and_create_db(
     )
 
     conn.commit()
+    conn.execute("PRAGMA optimize")
     conn.close()
 
     raw_exercise_count = len(exercises_info_data)

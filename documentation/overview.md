@@ -1,10 +1,10 @@
-# Hypertrack: Project Overview (Current Implementation)
+# Train Libre: Project Overview
 
-This document describes the app as implemented in the **current working copy**.
+This document describes the app as currently implemented.
 
 ## Scope
 
-Hypertrack currently implements:
+Train Libre currently implements:
 
 - Workout tracking and analytics
 - Exercise catalog refresh via release-distributed wger data artifacts
@@ -16,6 +16,7 @@ Hypertrack currently implements:
 - Supplements
 - Health steps import + aggregation
 - Sleep import + derived nightly analysis + day/week/month scoped sleep UI
+- Opt-in pulse analysis from platform heart-rate samples
 
 ## App shell and navigation
 
@@ -48,10 +49,11 @@ Hub sections currently rendered (in order):
 2. Steps (only when steps tracking is enabled)
 3. Recovery
 4. Sleep (only when sleep tracking is enabled)
-5. Consistency
-6. Performance records
-7. Volume/muscles
-8. Body/nutrition
+5. Pulse (only when pulse analysis is enabled)
+6. Consistency
+7. Performance records
+8. Volume/muscles
+9. Body/nutrition
 
 Drill-down screens (all under `lib/screens/analytics/`):
 
@@ -98,10 +100,27 @@ Current entry points:
 - Statistics hub sleep card -> `/sleep/day`
 - Diary sleep summary card -> `/sleep/day` for selected date
 
-Canonical source-of-truth for Sleep implementation details:
+Canonical Sleep implementation references:
 
 - `documentation/sleep/sleep_current_state.md`
 - `documentation/sleep/sleep_health_score_v2.md`
+
+## Pulse analysis (implemented)
+
+Core files:
+
+- Settings service: `lib/features/pulse/application/pulse_tracking_service.dart`
+- Analysis repository: `lib/features/pulse/data/pulse_repository.dart`
+- Analysis engine: `lib/features/pulse/domain/pulse_analysis_engine.dart`
+- Dedicated screen: `lib/features/pulse/presentation/pulse_analysis_screen.dart`
+- Shared platform bridge: `lib/services/health/health_platform_heart_rate.dart`
+
+Current behavior:
+
+- Pulse analysis is opt-in through Settings and defaults off.
+- The dedicated screen supports day/week/month period selection using the existing sleep-style scope controls.
+- Metrics are limited to pulse range, time-weighted average pulse, and a conservative resting-pulse estimate.
+- The chart reuses `MeasurementChartWidget.fromData(...)`.
 
 ## Settings integration (implemented)
 
@@ -113,19 +132,19 @@ Implemented controls include:
 
 - Steps: tracking toggle, provider filter, source policy
 - Sleep: tracking toggle, permission status, request access, import now, raw import viewer
+- Pulse: opt-in analysis toggle and heart-rate permission request
 - Health export: one-way platform export toggles (Apple Health / Health Connect), permission flow, per-domain status summary, and manual export trigger
-
-## Notes on working-copy state
-
-- This overview follows the current checked-out source tree.
 
 ## Related docs
 
 - [Adaptive nutrition recommendation current state](adaptive_nutrition_recommendation_current_state.md)
+- [AI meal features architecture](ai_meal_features_architecture.md)
 - [Statistics module](statistics_module.md)
 - [Sleep current state](sleep/sleep_current_state.md)
+- [Health steps integration](health_steps.md)
 - [Health export one-way](health_export_one_way.md)
 - [Wger catalog refresh & distribution](wger_catalog_refresh_system.md)
 - [OFF catalog refresh & distribution](off_catalog_refresh_system.md)
 - [Architecture](architecture.md)
 - [Data models and storage](data_models_and_storage.md)
+- [UI and widgets](ui_and_widgets.md)

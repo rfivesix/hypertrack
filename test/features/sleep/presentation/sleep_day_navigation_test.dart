@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/features/sleep/data/sleep_day_repository.dart';
-import 'package:hypertrack/features/sleep/data/repository/sleep_query_repository.dart';
-import 'package:hypertrack/features/sleep/domain/sleep_domain.dart';
-import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
-import 'package:hypertrack/features/sleep/presentation/day/sleep_day_view_model.dart';
-import 'package:hypertrack/features/sleep/presentation/month/sleep_month_overview_page.dart';
-import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
-import 'package:hypertrack/features/sleep/presentation/week/sleep_week_overview_page.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
-import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
-import 'package:hypertrack/widgets/measurement_chart_widget.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/features/sleep/data/sleep_day_repository.dart';
+import 'package:train_libre/features/sleep/data/repository/sleep_query_repository.dart';
+import 'package:train_libre/features/sleep/domain/sleep_domain.dart';
+import 'package:train_libre/features/sleep/presentation/day/sleep_day_overview_page.dart';
+import 'package:train_libre/features/sleep/presentation/day/sleep_day_view_model.dart';
+import 'package:train_libre/features/sleep/presentation/month/sleep_month_overview_page.dart';
+import 'package:train_libre/features/sleep/presentation/sleep_navigation.dart';
+import 'package:train_libre/features/sleep/presentation/week/sleep_week_overview_page.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_models.dart';
+import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
+import 'package:train_libre/widgets/measurement_chart_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -270,8 +270,8 @@ SleepDayOverviewData _lowConfidenceDepthOverview() {
 void main() {
   setUp(() {
     PackageInfo.setMockInitialValues(
-      appName: 'HyperTrack',
-      packageName: 'com.rfivesix.hypertrack',
+      appName: 'Train Libre',
+      packageName: 'com.rfivesix.trainlibre',
       version: '1.0.0',
       buildNumber: '1',
       buildSignature: '',

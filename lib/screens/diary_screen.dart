@@ -44,13 +44,36 @@ import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
 
+DateTime resolveDiaryInitialDate({DateTime? initialDate, DateTime? now}) {
+  return (initialDate ?? now ?? DateTime.now()).dateOnly;
+}
+
+DateTime normalizeDiaryDate(DateTime date) => date.dateOnly;
+
+class DiaryLoadCoordinator {
+  int _generation = 0;
+  DateTime? _activeDate;
+
+  int begin(DateTime date) {
+    _activeDate = normalizeDiaryDate(date);
+    return ++_generation;
+  }
+
+  bool isCurrent(int generation, DateTime date) {
+    return generation == _generation &&
+        (_activeDate?.isSameDate(normalizeDiaryDate(date)) ?? false);
+  }
+}
+
 /// The central hub for tracking and viewing daily nutritional and activity data.
 ///
 /// Displays a comprehensive overview of calories, macros, supplements, and workouts
 /// for a selected date. Allows users to manage food entries, fluid intake, and
 /// view historical measurements like weight.
 class DiaryScreen extends StatefulWidget {
-  const DiaryScreen({super.key});
+  final DateTime? initialDate;
+
+  const DiaryScreen({super.key, this.initialDate});
 
   @override
   State<DiaryScreen> createState() => DiaryScreenState();
@@ -62,9 +85,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   static const String _showSugarInDiaryOverviewPrefKey =
       'showSugarInDiaryOverview';
   bool _isLoading = true;
-  final ValueNotifier<DateTime> selectedDateNotifier = ValueNotifier(
-    DateTime.now(),
-  );
+  late final ValueNotifier<DateTime> selectedDateNotifier;
   DateTime get _selectedDate => selectedDateNotifier.value;
   DailyNutrition? _dailyNutrition;
   Map<String, List<TrackedFoodItem>> _entriesByMeal = {};
@@ -83,6 +104,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   bool _isSleepWidgetLoading = false;
   bool _sleepTrackingEnabled = false;
   bool _showSugarInOverview = false;
+  final DiaryLoadCoordinator _loadCoordinator = DiaryLoadCoordinator();
 
   // Workout summary state used by the daily overview card.
   Map<String, dynamic>? _workoutSummary;
@@ -99,6 +121,9 @@ class DiaryScreenState extends State<DiaryScreen> {
   @override
   void initState() {
     super.initState();
+    selectedDateNotifier = ValueNotifier(
+      resolveDiaryInitialDate(initialDate: widget.initialDate),
+    );
     loadDataForDate(_selectedDate);
   }
 
@@ -114,182 +139,197 @@ class DiaryScreenState extends State<DiaryScreen> {
     bool forceStepsRefresh = false,
   }) async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    final diaryDate = normalizeDiaryDate(date);
+    final loadGeneration = _loadCoordinator.begin(diaryDate);
+    setState(() {
+      selectedDateNotifier.value = diaryDate;
+      _isLoading = true;
+      _isStepsWidgetLoading = false;
+      _isSleepWidgetLoading = false;
+    });
 
-    final dbHelper = DatabaseHelper.instance;
-
-    // 1. Load goals from DB (historically accurate for the selected date)
-    final goals = await dbHelper.getGoalsForDate(date);
-
-    // 2. Prefs only for "Extra" values not in the DB schema
-    final prefs = await SharedPreferences.getInstance();
-    final stepsEnabled = await _stepsSyncService.isTrackingEnabled();
-    final providerFilter = await _stepsSyncService.getProviderFilter();
-    final providerFilterRaw = StepsSyncService.providerFilterToRaw(
-      providerFilter,
-    );
-
-    // 3. Use values from DB or fallbacks
-    final targetCalories = goals?.targetCalories ?? 2500;
-    final targetProtein = goals?.targetProtein ?? 180;
-    final targetCarbs = goals?.targetCarbs ?? 250;
-    final targetFat = goals?.targetFat ?? 80;
-    final targetWater = goals?.targetWater ?? 3000;
-    final targetSugar = prefs.getInt('targetSugar') ?? 50;
-    final showSugarInOverview =
-        prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
-
-    // Caffeine and related targets still come from prefs (not in AppSettings yet).
-    final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
-    final foodEntries = await DatabaseHelper.instance.getEntriesForDate(date);
-    final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(
-      date,
-    );
-    final waterIntake = fluidEntries.fold<int>(
-      0,
-      (sum, entry) => sum + entry.quantityInMl,
-    );
-
-    final summary = DailyNutrition(
-      targetCalories: targetCalories,
-      targetProtein: targetProtein,
-      targetCarbs: targetCarbs,
-      targetFat: targetFat,
-      targetWater: targetWater,
-      targetSugar: targetSugar,
-      targetCaffeine: targetCaffeine,
-    );
-    summary.water = waterIntake;
-
-    for (final entry in fluidEntries) {
-      summary.calories += entry.kcal ?? 0;
-      final factor = entry.quantityInMl / 100.0;
-      summary.sugar += (entry.sugarPer100ml ?? 0) * factor;
-      summary.carbs += ((entry.carbsPer100ml ?? 0) * factor).round();
-    }
-
-    final Map<String, List<TrackedFoodItem>> groupedEntries = {
-      'mealtypeBreakfast': [],
-      'mealtypeLunch': [],
-      'mealtypeDinner': [],
-      'mealtypeSnack': [],
-    };
-
-    for (final entry in foodEntries) {
-      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
-        entry.barcode,
-      );
-      if (foodItem != null) {
-        summary.calories +=
-            (foodItem.calories / 100 * entry.quantityInGrams).round();
-        summary.protein +=
-            (foodItem.protein / 100 * entry.quantityInGrams).round();
-        summary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
-        summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
-        summary.sugar +=
-            (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
-
-        final trackedItem = TrackedFoodItem(entry: entry, item: foodItem);
-        groupedEntries[entry.mealType]?.add(trackedItem);
-      }
-    }
-
-    for (var meal in groupedEntries.values) {
-      meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
-    }
-
-    final supplementsForDate =
-        await DatabaseHelper.instance.getSupplementsForDate(date);
-    final allSupplements = await DatabaseHelper.instance.getAllSupplements();
-    final todaysSupplementLogs =
-        await DatabaseHelper.instance.getSupplementLogsForDate(date);
-
-    final Map<int, double> todaysDoses = {};
-    for (final log in todaysSupplementLogs) {
-      todaysDoses.update(
-        log.supplementId,
-        (value) => value + log.dose,
-        ifAbsent: () => log.dose,
-      );
-    }
-
-    Supplement? caffeineSupplement;
     try {
-      caffeineSupplement = allSupplements.firstWhere(
-        (s) => s.code == 'caffeine',
+      final dbHelper = DatabaseHelper.instance;
+
+      // 1. Load goals from DB (historically accurate for the selected date)
+      final goals = await dbHelper.getGoalsForDate(diaryDate);
+
+      // 2. Prefs only for "Extra" values not in the DB schema
+      final prefs = await SharedPreferences.getInstance();
+      final stepsEnabled = await _stepsSyncService.isTrackingEnabled();
+      final providerFilter = await _stepsSyncService.getProviderFilter();
+      final providerFilterRaw = StepsSyncService.providerFilterToRaw(
+        providerFilter,
       );
-    } catch (e) {
-      caffeineSupplement = null;
-    }
 
-    if (caffeineSupplement != null && caffeineSupplement.id != null) {
-      summary.caffeine = todaysDoses[caffeineSupplement.id] ?? 0.0;
-    }
+      // 3. Use values from DB or fallbacks
+      final targetCalories = goals?.targetCalories ?? 2500;
+      final targetProtein = goals?.targetProtein ?? 180;
+      final targetCarbs = goals?.targetCarbs ?? 250;
+      final targetFat = goals?.targetFat ?? 80;
+      final targetWater = goals?.targetWater ?? 3000;
+      final targetSugar = prefs.getInt('targetSugar') ?? 50;
+      final showSugarInOverview =
+          prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
 
-    final Map<int, Supplement> byId = {
-      for (final s in allSupplements)
-        if (s.id != null) s.id!: s,
-    };
+      // Caffeine and related targets still come from prefs (not in AppSettings yet).
+      final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
+      final foodEntries = await DatabaseHelper.instance.getEntriesForDate(
+        diaryDate,
+      );
+      final foodProducts =
+          await ProductDatabaseHelper.instance.getProductsByBarcodes(
+        foodEntries.map((entry) => entry.barcode).toSet().toList(),
+      );
+      final foodProductsByBarcode = {
+        for (final product in foodProducts) product.barcode: product,
+      };
+      final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(
+        diaryDate,
+      );
+      final waterIntake = fluidEntries.fold<int>(
+        0,
+        (sum, entry) => sum + entry.quantityInMl,
+      );
 
-    final List<TrackedSupplement> trackedSupps = [];
-    for (final s in supplementsForDate) {
-      final hasLog = todaysDoses.containsKey(s.id);
-      if (s.isTracked || hasLog) {
-        trackedSupps.add(
-          TrackedSupplement(
-            supplement: s,
-            totalDosedToday: todaysDoses[s.id] ?? 0.0,
-          ),
+      final summary = DailyNutrition(
+        targetCalories: targetCalories,
+        targetProtein: targetProtein,
+        targetCarbs: targetCarbs,
+        targetFat: targetFat,
+        targetWater: targetWater,
+        targetSugar: targetSugar,
+        targetCaffeine: targetCaffeine,
+      );
+      summary.water = waterIntake;
+
+      for (final entry in fluidEntries) {
+        summary.calories += entry.kcal ?? 0;
+        final factor = entry.quantityInMl / 100.0;
+        summary.sugar += (entry.sugarPer100ml ?? 0) * factor;
+        summary.carbs += ((entry.carbsPer100ml ?? 0) * factor).round();
+      }
+
+      final Map<String, List<TrackedFoodItem>> groupedEntries = {
+        'mealtypeBreakfast': [],
+        'mealtypeLunch': [],
+        'mealtypeDinner': [],
+        'mealtypeSnack': [],
+      };
+
+      for (final entry in foodEntries) {
+        final foodItem = foodProductsByBarcode[entry.barcode];
+        if (foodItem != null) {
+          summary.calories +=
+              (foodItem.calories / 100 * entry.quantityInGrams).round();
+          summary.protein +=
+              (foodItem.protein / 100 * entry.quantityInGrams).round();
+          summary.carbs +=
+              (foodItem.carbs / 100 * entry.quantityInGrams).round();
+          summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
+          summary.sugar +=
+              (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
+
+          final trackedItem = TrackedFoodItem(entry: entry, item: foodItem);
+          groupedEntries[entry.mealType]?.add(trackedItem);
+        }
+      }
+
+      for (var meal in groupedEntries.values) {
+        meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
+      }
+
+      final supplementsForDate =
+          await DatabaseHelper.instance.getSupplementsForDate(diaryDate);
+      final allSupplements = await DatabaseHelper.instance.getAllSupplements();
+      final todaysSupplementLogs =
+          await DatabaseHelper.instance.getSupplementLogsForDate(diaryDate);
+
+      final Map<int, double> todaysDoses = {};
+      for (final log in todaysSupplementLogs) {
+        todaysDoses.update(
+          log.supplementId,
+          (value) => value + log.dose,
+          ifAbsent: () => log.dose,
         );
       }
-    }
-    for (final id in todaysDoses.keys) {
-      if (!trackedSupps.any((ts) => ts.supplement.id == id)) {
-        if (byId.containsKey(id)) {
+
+      Supplement? caffeineSupplement;
+      try {
+        caffeineSupplement = allSupplements.firstWhere(
+          (s) => s.code == 'caffeine',
+        );
+      } catch (e) {
+        caffeineSupplement = null;
+      }
+
+      if (caffeineSupplement != null && caffeineSupplement.id != null) {
+        summary.caffeine = todaysDoses[caffeineSupplement.id] ?? 0.0;
+      }
+
+      final Map<int, Supplement> byId = {
+        for (final s in allSupplements)
+          if (s.id != null) s.id!: s,
+      };
+
+      final List<TrackedSupplement> trackedSupps = [];
+      for (final s in supplementsForDate) {
+        final hasLog = todaysDoses.containsKey(s.id);
+        if (s.isTracked || hasLog) {
           trackedSupps.add(
             TrackedSupplement(
-              supplement: byId[id]!,
-              totalDosedToday: todaysDoses[id]!,
+              supplement: s,
+              totalDosedToday: todaysDoses[s.id] ?? 0.0,
             ),
           );
         }
       }
-    }
-
-    final workoutLogs = await WorkoutDatabaseHelper.instance
-        .getWorkoutLogsForDateRange(date, date);
-    final completedLogs =
-        workoutLogs.where((log) => log.endTime != null).toList();
-    Map<String, dynamic>? workoutSummary;
-
-    if (completedLogs.isNotEmpty) {
-      // --- KORREKTUR START ---
-      Duration totalDuration = Duration.zero;
-      double totalVolume = 0.0;
-      int totalSets = 0;
-
-      for (final log in completedLogs) {
-        totalDuration += log.endTime!.difference(
-          log.startTime,
-        ); // Addiert die volle Dauer
-        totalSets += log.sets.length;
-        for (final set in log.sets) {
-          totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
+      for (final id in todaysDoses.keys) {
+        if (!trackedSupps.any((ts) => ts.supplement.id == id)) {
+          if (byId.containsKey(id)) {
+            trackedSupps.add(
+              TrackedSupplement(
+                supplement: byId[id]!,
+                totalDosedToday: todaysDoses[id]!,
+              ),
+            );
+          }
         }
       }
 
-      workoutSummary = {
-        'duration': totalDuration, // Verwendet die korrekte Summe
-        'volume': totalVolume,
-        'sets': totalSets,
-        'count': completedLogs.length,
-      };
-      // --- KORREKTUR ENDE ---
-    }
+      final workoutLogs = await WorkoutDatabaseHelper.instance
+          .getWorkoutLogsForDateRange(diaryDate, diaryDate);
+      final completedLogs =
+          workoutLogs.where((log) => log.endTime != null).toList();
+      Map<String, dynamic>? workoutSummary;
 
-    if (mounted) {
+      if (completedLogs.isNotEmpty) {
+        // --- KORREKTUR START ---
+        Duration totalDuration = Duration.zero;
+        double totalVolume = 0.0;
+        int totalSets = 0;
+
+        for (final log in completedLogs) {
+          totalDuration += log.endTime!.difference(
+            log.startTime,
+          ); // Addiert die volle Dauer
+          totalSets += log.sets.length;
+          for (final set in log.sets) {
+            totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
+          }
+        }
+
+        workoutSummary = {
+          'duration': totalDuration, // Verwendet die korrekte Summe
+          'volume': totalVolume,
+          'sets': totalSets,
+          'count': completedLogs.length,
+        };
+        // --- KORREKTUR ENDE ---
+      }
+
+      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
       setState(() {
-        selectedDateNotifier.value = date;
         _dailyNutrition = summary;
         _entriesByMeal = groupedEntries;
         _fluidEntries = fluidEntries;
@@ -300,18 +340,36 @@ class DiaryScreenState extends State<DiaryScreen> {
         _showSugarInOverview = showSugarInOverview;
         _isLoading = false;
       });
+      await _loadStepsForDate(
+        diaryDate,
+        providerFilterRaw: providerFilterRaw,
+        loadGeneration: loadGeneration,
+      );
+      await _syncSleepIfDue(force: forceStepsRefresh);
+      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
+      await _loadSleepForDate(diaryDate, loadGeneration: loadGeneration);
+      await _syncStepsIfDue(
+        diaryDate,
+        force: forceStepsRefresh,
+        loadGeneration: loadGeneration,
+      );
+    } catch (_) {
+      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
+      setState(() {
+        _isLoading = false;
+        _isStepsWidgetLoading = false;
+        _isSleepWidgetLoading = false;
+      });
     }
-    await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
-    await _syncSleepIfDue(force: forceStepsRefresh);
-    await _loadSleepForDate(date);
-    await _syncStepsIfDue(date, force: forceStepsRefresh);
   }
 
   Future<void> _loadStepsForDate(
     DateTime date, {
     required String providerFilterRaw,
+    int? loadGeneration,
   }) async {
     final enabled = await _stepsSyncService.isTrackingEnabled();
+    if (!_isCurrentLoad(loadGeneration, date)) return;
     if (!enabled) {
       if (!mounted) return;
       setState(() {
@@ -330,7 +388,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       providerFilter: providerFilterRaw,
       sourcePolicy: sourcePolicyRaw,
     );
-    if (!mounted) return;
+    if (!_isCurrentLoad(loadGeneration, date)) return;
     setState(() {
       _stepsForSelectedDay = total;
       _stepsTrackingEnabled = true;
@@ -338,8 +396,9 @@ class DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  Future<void> _loadSleepForDate(DateTime date) async {
+  Future<void> _loadSleepForDate(DateTime date, {int? loadGeneration}) async {
     final enabled = await _sleepSyncService.isTrackingEnabled();
+    if (!_isCurrentLoad(loadGeneration, date)) return;
     if (!enabled) {
       if (!mounted) return;
       setState(() {
@@ -352,7 +411,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     if (!mounted) return;
     setState(() => _isSleepWidgetLoading = true);
     final overview = await _sleepRepository.fetchOverview(date);
-    if (!mounted) return;
+    if (!_isCurrentLoad(loadGeneration, date)) return;
     setState(() {
       _sleepOverview = overview;
       _sleepTrackingEnabled = true;
@@ -360,8 +419,13 @@ class DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  Future<void> _syncStepsIfDue(DateTime date, {bool force = false}) async {
+  Future<void> _syncStepsIfDue(
+    DateTime date, {
+    bool force = false,
+    int? loadGeneration,
+  }) async {
     final enabled = await _stepsSyncService.isTrackingEnabled();
+    if (!_isCurrentLoad(loadGeneration, date)) return;
     if (!enabled) return;
     final lastSync = await _stepsSyncService.getLastSyncAt();
     final shouldSync = force ||
@@ -371,11 +435,22 @@ class DiaryScreenState extends State<DiaryScreen> {
     if (!mounted) return;
     setState(() => _isStepsWidgetLoading = true);
     await _stepsRepository.refresh(force: force);
+    if (!_isCurrentLoad(loadGeneration, date)) return;
     final providerFilter = await _stepsSyncService.getProviderFilter();
     final providerFilterRaw = StepsSyncService.providerFilterToRaw(
       providerFilter,
     );
-    await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
+    await _loadStepsForDate(
+      date,
+      providerFilterRaw: providerFilterRaw,
+      loadGeneration: loadGeneration,
+    );
+  }
+
+  bool _isCurrentLoad(int? loadGeneration, DateTime date) {
+    if (!mounted) return false;
+    return loadGeneration == null ||
+        _loadCoordinator.isCurrent(loadGeneration, date);
   }
 
   Future<void> _syncSleepIfDue({bool force = false}) async {
@@ -712,13 +787,13 @@ class DiaryScreenState extends State<DiaryScreen> {
       // Erlaube Auswahl in der Zukunft, z.B. für Vorausplanung
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && !picked.isSameDate(_selectedDate)) {
       loadDataForDate(picked);
     }
   }
 
   void navigateDay(bool forward) {
-    final newDay = _selectedDate.add(Duration(days: forward ? 1 : -1));
+    final newDay = _selectedDate.dateOnly.add(Duration(days: forward ? 1 : -1));
     // Im Gegensatz zum NutritionScreen erlauben wir hier die Navigation in die Zukunft
     // if (forward && newDay.isAfter(DateTime.now())) return;
 
@@ -807,10 +882,15 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   DateTimeRange _calculateDateRange() {
     final now = DateTime.now();
+    final end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
     DateTime start;
     switch (_selectedChartRangeKey) {
       case '90D':
-        start = now.subtract(const Duration(days: 89));
+        start = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 89));
         break;
       case 'All':
         // Für "Alle" setzen wir ein sehr frühes Datum,
@@ -819,9 +899,13 @@ class DiaryScreenState extends State<DiaryScreen> {
         break;
       case '30D':
       default:
-        start = now.subtract(const Duration(days: 29));
+        start = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 29));
     }
-    return DateTimeRange(start: start, end: now);
+    return DateTimeRange(start: start, end: end);
   }
 
   @override

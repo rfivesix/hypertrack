@@ -32,7 +32,6 @@ class _GeneralFoodSelectionScreenState
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() => setState(() {}));
     _loadBaseCategories();
   }
 

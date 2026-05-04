@@ -158,7 +158,5 @@ bool _isSleep(CanonicalSleepStage stage) {
 
 bool _isWake(CanonicalSleepStage stage) {
   return stage == CanonicalSleepStage.awake ||
-      stage == CanonicalSleepStage.outOfBed ||
-      stage == CanonicalSleepStage.inBedOnly ||
-      stage == CanonicalSleepStage.unknown;
+      stage == CanonicalSleepStage.outOfBed;
 }

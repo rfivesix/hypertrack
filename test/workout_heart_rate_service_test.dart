@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/services/health/health_platform_heart_rate.dart';
-import 'package:hypertrack/services/health/workout_heart_rate_models.dart';
-import 'package:hypertrack/services/health/workout_heart_rate_service.dart';
+import 'package:train_libre/services/health/health_platform_heart_rate.dart';
+import 'package:train_libre/services/health/workout_heart_rate_models.dart';
+import 'package:train_libre/services/health/workout_heart_rate_service.dart';
 
 class _FakeHeartRateDataSource implements HealthHeartRateDataSource {
   _FakeHeartRateDataSource({

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
-import 'package:hypertrack/config/app_data_sources.dart';
-import 'package:hypertrack/services/off_catalog_country_service.dart';
+import 'package:train_libre/config/app_data_sources.dart';
+import 'package:train_libre/services/off_catalog_country_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

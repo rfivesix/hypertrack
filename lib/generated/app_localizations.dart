@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack'**
+  /// **'Train Libre'**
   String get appTitle;
 
   /// No description provided for @bannerText.
@@ -605,7 +605,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerMenuTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack Menu'**
+  /// **'Train Libre Menu'**
   String get drawerMenuTitle;
 
   /// No description provided for @drawerDashboard.
@@ -920,6 +920,42 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get skipButton;
 
+  /// No description provided for @appInitStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting app...'**
+  String get appInitStarting;
+
+  /// No description provided for @appInitInitializing.
+  ///
+  /// In en, this message translates to:
+  /// **'Initializing...'**
+  String get appInitInitializing;
+
+  /// No description provided for @appInitFinalizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing'**
+  String get appInitFinalizing;
+
+  /// No description provided for @appInitCheckingBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking backups...'**
+  String get appInitCheckingBackups;
+
+  /// No description provided for @appInitSkipDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip download'**
+  String get appInitSkipDownload;
+
+  /// No description provided for @appInitSkippingRemoteDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipping remote download...'**
+  String get appInitSkippingRemoteDownload;
+
   /// No description provided for @emptyHistory.
   ///
   /// In en, this message translates to:
@@ -1154,6 +1190,270 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @shareWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Share workout'**
+  String get shareWorkout;
+
+  /// No description provided for @shareRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Share routine'**
+  String get shareRoutine;
+
+  /// No description provided for @shareAsImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as image'**
+  String get shareAsImage;
+
+  /// No description provided for @shareAsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as text'**
+  String get shareAsText;
+
+  /// No description provided for @sharedFromTrainLibre.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared from Train Libre'**
+  String get sharedFromTrainLibre;
+
+  /// No description provided for @sharedWithTrainLibre.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with Train Libre'**
+  String get sharedWithTrainLibre;
+
+  /// No description provided for @shareImageSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get shareImageSummary;
+
+  /// No description provided for @shareImageExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises'**
+  String get shareImageExercises;
+
+  /// No description provided for @shareImageMuscleFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle focus'**
+  String get shareImageMuscleFocus;
+
+  /// No description provided for @shareImageMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get shareImageMinimal;
+
+  /// No description provided for @volume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get volume;
+
+  /// No description provided for @moreExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'+ {count} more exercises'**
+  String moreExercises(int count);
+
+  /// No description provided for @shareSetNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}'**
+  String shareSetNumber(int number);
+
+  /// No description provided for @repsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'reps'**
+  String get repsShort;
+
+  /// No description provided for @shareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing failed'**
+  String get shareFailed;
+
+  /// No description provided for @workoutShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workoutShareTitle;
+
+  /// No description provided for @routineShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine'**
+  String get routineShareTitle;
+
+  /// No description provided for @setTypeWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get setTypeWarmup;
+
+  /// No description provided for @setTypeWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work sets'**
+  String get setTypeWork;
+
+  /// No description provided for @setTypeFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get setTypeFailure;
+
+  /// No description provided for @setTypeDropset.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropset'**
+  String get setTypeDropset;
+
+  /// No description provided for @setTypeSuperset.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset'**
+  String get setTypeSuperset;
+
+  /// No description provided for @setTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get setTypeOther;
+
+  /// No description provided for @setTypeWarmupSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get setTypeWarmupSuffix;
+
+  /// No description provided for @setTypeFailureSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get setTypeFailureSuffix;
+
+  /// No description provided for @setTypeDropsetSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropset'**
+  String get setTypeDropsetSuffix;
+
+  /// No description provided for @setTypeSupersetSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset'**
+  String get setTypeSupersetSuffix;
+
+  /// No description provided for @setTypeOtherSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get setTypeOtherSuffix;
+
+  /// No description provided for @warmupSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 warm-up set} other{{count} warm-up sets}}'**
+  String warmupSetCount(num count);
+
+  /// No description provided for @workSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 work set} other{{count} work sets}}'**
+  String workSetCount(num count);
+
+  /// No description provided for @failureSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 failure set} other{{count} failure sets}}'**
+  String failureSetCount(num count);
+
+  /// No description provided for @dropsetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 dropset} other{{count} dropsets}}'**
+  String dropsetCount(num count);
+
+  /// No description provided for @supersetSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 superset} other{{count} supersets}}'**
+  String supersetSetCount(num count);
+
+  /// No description provided for @otherSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other set} other{{count} other sets}}'**
+  String otherSetCount(num count);
+
+  /// No description provided for @warmupCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 warm-up} other{{count} warm-up}}'**
+  String warmupCompactCount(num count);
+
+  /// No description provided for @workCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 work} other{{count} work}}'**
+  String workCompactCount(num count);
+
+  /// No description provided for @failureCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 failure} other{{count} failure}}'**
+  String failureCompactCount(num count);
+
+  /// No description provided for @dropsetCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 dropset} other{{count} dropsets}}'**
+  String dropsetCompactCount(num count);
+
+  /// No description provided for @supersetCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 superset} other{{count} supersets}}'**
+  String supersetCompactCount(num count);
+
+  /// No description provided for @otherCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other} other{{count} other}}'**
+  String otherCompactCount(num count);
+
+  /// No description provided for @shareExercisesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'exercises'**
+  String get shareExercisesLabel;
+
+  /// No description provided for @shareSetsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'sets'**
+  String get shareSetsLabel;
+
+  /// No description provided for @shareSetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'set'**
+  String get shareSetLabel;
+
   /// No description provided for @tabBaseFoods.
   ///
   /// In en, this message translates to:
@@ -1181,7 +1481,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupFileSubject.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack App Backup - {timestamp}'**
+  /// **'Train Libre App Backup - {timestamp}'**
   String backupFileSubject(String timestamp);
 
   /// No description provided for @foodItemSubtitle.
@@ -2039,13 +2339,13 @@ abstract class AppLocalizations {
   /// No description provided for @feedbackReportEmailSubject.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack feedback report'**
+  /// **'Train Libre feedback report'**
   String get feedbackReportEmailSubject;
 
   /// No description provided for @feedbackReportReportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack Feedback Report'**
+  /// **'Train Libre Feedback Report'**
   String get feedbackReportReportTitle;
 
   /// No description provided for @feedbackReportReportGeneratedAt.
@@ -2141,7 +2441,7 @@ abstract class AppLocalizations {
   /// Onboarding slide 1 title
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Hypertrack'**
+  /// **'Welcome to Train Libre'**
   String get onbWelcomeTitle;
 
   /// Onboarding slide 1 description
@@ -2495,7 +2795,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataManagementBackupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hypertrack Data Backup'**
+  /// **'Train Libre Data Backup'**
   String get dataManagementBackupTitle;
 
   /// No description provided for @dataManagementBackupDescription.
@@ -3335,7 +3635,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMaterialColorsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent'**
+  /// **'Use Android dynamic colors (Material You) instead of the Train Libre brand accent'**
   String get settingsMaterialColorsSubtitle;
 
   /// No description provided for @settingsFoodDbSectionTitle.
@@ -3473,7 +3773,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Hypertrack'**
+  /// **'Welcome to Train Libre'**
   String get onboardingWelcomeTitle;
 
   /// No description provided for @onboardingWelcomeSubtitle.
@@ -3701,7 +4001,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiPrivacyDisclosure.
   ///
   /// In en, this message translates to:
-  /// **'Your images and text are sent to the selected AI provider only when you tap Analyze. Data is never stored on external servers beyond processing your request. Your API key is stored encrypted on this device only.'**
+  /// **'Images, text, and generated recommendation prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider\'s terms. Your API key is stored encrypted on this device only.'**
   String get aiPrivacyDisclosure;
 
   /// No description provided for @aiMealCapture.
@@ -3860,6 +4160,18 @@ abstract class AppLocalizations {
   /// **'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.'**
   String get aiEnableSubtitle;
 
+  /// No description provided for @aiRecommendationContextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send recent meals for recommendations'**
+  String get aiRecommendationContextTitle;
+
+  /// No description provided for @aiRecommendationContextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.'**
+  String get aiRecommendationContextSubtitle;
+
   /// No description provided for @aiRecommendationTitle.
   ///
   /// In en, this message translates to:
@@ -3937,6 +4249,297 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No database match'**
   String get aiRecommendNoMatch;
+
+  /// No description provided for @aiValidationNoMatchedItemsSaveYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No matched items can be saved yet.'**
+  String get aiValidationNoMatchedItemsSaveYet;
+
+  /// No description provided for @aiValidationNoMatchedIngredientsSaveYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No matched ingredients can be saved yet.'**
+  String get aiValidationNoMatchedIngredientsSaveYet;
+
+  /// No description provided for @aiValidationSomeItemsNeedReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some items need review'**
+  String get aiValidationSomeItemsNeedReviewTitle;
+
+  /// No description provided for @aiValidationSomeIngredientsNeedReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some ingredients need review'**
+  String get aiValidationSomeIngredientsNeedReviewTitle;
+
+  /// No description provided for @aiValidationSaveMatchedItemsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save matched items'**
+  String get aiValidationSaveMatchedItemsButton;
+
+  /// No description provided for @aiValidationSaveMatchedIngredientsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save matched ingredients'**
+  String get aiValidationSaveMatchedIngredientsButton;
+
+  /// No description provided for @aiValidationValidationPassedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Validation passed'**
+  String get aiValidationValidationPassedTitle;
+
+  /// No description provided for @aiValidationReviewSuggestedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review suggested'**
+  String get aiValidationReviewSuggestedTitle;
+
+  /// No description provided for @aiValidationMacroFitValidatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro fit validated'**
+  String get aiValidationMacroFitValidatedTitle;
+
+  /// No description provided for @aiValidationNeedsReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get aiValidationNeedsReviewTitle;
+
+  /// No description provided for @aiValidationRepairLimitReachedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic repair limit reached. Please review before saving.'**
+  String get aiValidationRepairLimitReachedReview;
+
+  /// No description provided for @aiValidationRepairLimitReachedRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic repair limit reached. Review matches and portions before saving.'**
+  String get aiValidationRepairLimitReachedRecommendation;
+
+  /// No description provided for @aiValidationRecentMealContextIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent meal context was included.'**
+  String get aiValidationRecentMealContextIncluded;
+
+  /// No description provided for @aiValidationGeneratedWithoutRecentMealHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated without recent meal history.'**
+  String get aiValidationGeneratedWithoutRecentMealHistory;
+
+  /// No description provided for @aiValidationApiKeyRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API Key Required'**
+  String get aiValidationApiKeyRequiredTitle;
+
+  /// No description provided for @aiValidationScoreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Score {score}/100'**
+  String aiValidationScoreLabel(int score);
+
+  /// No description provided for @aiValidationDeltaSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Delta: {kcalDelta} kcal · {proteinDelta}g Protein · {carbsDelta}g Carbs · {fatDelta}g Fat'**
+  String aiValidationDeltaSummary(
+      int kcalDelta, int proteinDelta, int carbsDelta, int fatDelta);
+
+  /// No description provided for @aiValidationPartialSaveItemsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{unmatchedCount, plural, =1{1 item does not have a local database match and will not be saved.} other{{unmatchedCount} items do not have a local database match and will not be saved.}} Save the {matchedCount} matched item(s) only?'**
+  String aiValidationPartialSaveItemsMessage(
+      int unmatchedCount, int matchedCount);
+
+  /// No description provided for @aiValidationPartialSaveIngredientsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{unmatchedCount, plural, =1{1 ingredient does not have a local database match and will not be saved.} other{{unmatchedCount} ingredients do not have a local database match and will not be saved.}} Save the {matchedCount} matched ingredient(s) only?'**
+  String aiValidationPartialSaveIngredientsMessage(
+      int unmatchedCount, int matchedCount);
+
+  /// No description provided for @aiValidationEmptyItemName.
+  ///
+  /// In en, this message translates to:
+  /// **'An item has no food name.'**
+  String get aiValidationEmptyItemName;
+
+  /// No description provided for @aiValidationDuplicateItemMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate \"{name}\" entries were merged before validation.'**
+  String aiValidationDuplicateItemMerged(String name);
+
+  /// No description provided for @aiValidationInvalidQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity must be greater than 0g.'**
+  String get aiValidationInvalidQuantity;
+
+  /// No description provided for @aiValidationTinyQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity is very small; review the gram amount.'**
+  String get aiValidationTinyQuantity;
+
+  /// No description provided for @aiValidationExtremeQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity is implausibly high for one meal item.'**
+  String get aiValidationExtremeQuantity;
+
+  /// No description provided for @aiValidationLargeQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity is unusually large; review the gram amount.'**
+  String get aiValidationLargeQuantity;
+
+  /// No description provided for @aiValidationLowAiConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'AI confidence is low for this item.'**
+  String get aiValidationLowAiConfidence;
+
+  /// No description provided for @aiValidationUnmatchedItem.
+  ///
+  /// In en, this message translates to:
+  /// **'No local database match was found.'**
+  String get aiValidationUnmatchedItem;
+
+  /// No description provided for @aiValidationWeakDbMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The local database match is weak.'**
+  String get aiValidationWeakDbMatch;
+
+  /// No description provided for @aiValidationPartialDbMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The local database match is partial.'**
+  String get aiValidationPartialDbMatch;
+
+  /// No description provided for @aiValidationAmbiguousDbMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Several local database matches look similarly plausible.'**
+  String get aiValidationAmbiguousDbMatch;
+
+  /// No description provided for @aiValidationStateMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI item state may not match the database entry.'**
+  String get aiValidationStateMismatch;
+
+  /// No description provided for @aiValidationZeroNutritionMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The matched database entry has no usable nutrition data.'**
+  String get aiValidationZeroNutritionMatch;
+
+  /// No description provided for @aiValidationImplausibleFoodDensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched food has unusually high kcal per 100g.'**
+  String get aiValidationImplausibleFoodDensity;
+
+  /// No description provided for @aiValidationMacroEnergyMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched food macros do not align well with kcal.'**
+  String get aiValidationMacroEnergyMismatch;
+
+  /// No description provided for @aiValidationImplausibleItemNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition for this quantity is unusually high.'**
+  String get aiValidationImplausibleItemNutrition;
+
+  /// No description provided for @aiValidationEmptyMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI returned no meal items.'**
+  String get aiValidationEmptyMeal;
+
+  /// No description provided for @aiValidationAllItemsUnmatched.
+  ///
+  /// In en, this message translates to:
+  /// **'No item could be matched to the local food database.'**
+  String get aiValidationAllItemsUnmatched;
+
+  /// No description provided for @aiValidationPartialUnmatchedItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item cannot be saved until matched.} other{{count} items cannot be saved until matched.}}'**
+  String aiValidationPartialUnmatchedItems(int count);
+
+  /// No description provided for @aiValidationZeroTotalKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched items produce 0 kcal.'**
+  String get aiValidationZeroTotalKcal;
+
+  /// No description provided for @aiValidationCaptureTotalKcalExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'Total kcal is implausibly high for one captured meal.'**
+  String get aiValidationCaptureTotalKcalExtreme;
+
+  /// No description provided for @aiValidationCaptureTotalKcalHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Total kcal is unusually high; review portions.'**
+  String get aiValidationCaptureTotalKcalHigh;
+
+  /// No description provided for @aiValidationMacroTotalExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'Total macros are implausibly high.'**
+  String get aiValidationMacroTotalExtreme;
+
+  /// No description provided for @aiValidationMacroTotalHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Total macros are unusually high; review portions.'**
+  String get aiValidationMacroTotalHigh;
+
+  /// No description provided for @aiValidationTargetKcalMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories miss the target by {delta} kcal.'**
+  String aiValidationTargetKcalMismatch(int delta);
+
+  /// No description provided for @aiValidationTargetProteinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein misses the target by {delta}g.'**
+  String aiValidationTargetProteinMismatch(int delta);
+
+  /// No description provided for @aiValidationTargetCarbsMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs miss the target by {delta}g.'**
+  String aiValidationTargetCarbsMismatch(int delta);
+
+  /// No description provided for @aiValidationTargetFatMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat misses the target by {delta}g.'**
+  String aiValidationTargetFatMismatch(int delta);
+
+  /// No description provided for @aiValidationUnknownIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Validation issue: {code}'**
+  String aiValidationUnknownIssue(String code);
 
   /// No description provided for @aiRecommendRemainingMacros.
   ///
@@ -4205,31 +4808,31 @@ abstract class AppLocalizations {
   /// No description provided for @recoveryLastLoadedHours.
   ///
   /// In en, this message translates to:
-  /// **'Last significant loading: {hours}h ago'**
+  /// **'Last significantly loaded: {hours} h ago'**
   String recoveryLastLoadedHours(int hours);
 
   /// No description provided for @recoveryFatigueContextHigh.
   ///
   /// In en, this message translates to:
-  /// **'Recent fatigue context: high session fatigue'**
+  /// **'Fatigue context: high session fatigue'**
   String get recoveryFatigueContextHigh;
 
   /// No description provided for @recoveryFatigueContextBaseline.
   ///
   /// In en, this message translates to:
-  /// **'Recent fatigue context: baseline session fatigue'**
+  /// **'Fatigue context: baseline session fatigue'**
   String get recoveryFatigueContextBaseline;
 
   /// No description provided for @recoveryExplanationWithHighFatigue.
   ///
   /// In en, this message translates to:
-  /// **'{muscle}: last significantly loaded {hours}h ago, with high session fatigue.'**
+  /// **'{muscle}: last significantly loaded {hours} h ago, with high session fatigue.'**
   String recoveryExplanationWithHighFatigue(String muscle, int hours);
 
   /// No description provided for @recoveryExplanationBasic.
   ///
   /// In en, this message translates to:
-  /// **'{muscle}: last significantly loaded {hours}h ago.'**
+  /// **'{muscle}: last significantly loaded {hours} h ago.'**
   String recoveryExplanationBasic(String muscle, int hours);
 
   /// No description provided for @recoveryHeuristicDisclaimer.
@@ -4238,22 +4841,64 @@ abstract class AppLocalizations {
   /// **'This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.'**
   String get recoveryHeuristicDisclaimer;
 
+  /// No description provided for @recoveryReadinessLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Readiness'**
+  String get recoveryReadinessLabel;
+
   /// No description provided for @recoveryRecentLoad.
   ///
   /// In en, this message translates to:
-  /// **'Recent load amount: {sets} equivalent sets'**
+  /// **'Last load: {sets} equivalent sets'**
   String recoveryRecentLoad(String sets);
+
+  /// No description provided for @recoveryLastLoadPressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Last load pressure: {level}'**
+  String recoveryLastLoadPressure(String level);
+
+  /// No description provided for @recoveryPressureLow.
+  ///
+  /// In en, this message translates to:
+  /// **'low'**
+  String get recoveryPressureLow;
+
+  /// No description provided for @recoveryPressureModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'moderate'**
+  String get recoveryPressureModerate;
+
+  /// No description provided for @recoveryPressureHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'high'**
+  String get recoveryPressureHigh;
+
+  /// No description provided for @recoveryPressureVeryHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'very high'**
+  String get recoveryPressureVeryHigh;
+
+  /// No description provided for @recoveryCurrentWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Current window: recovering until about {recoveringUpper} h, ready until about {readyUpper} h.'**
+  String recoveryCurrentWindow(int recoveringUpper, int readyUpper);
 
   /// No description provided for @recoveryWindowHeuristic.
   ///
   /// In en, this message translates to:
-  /// **'Heuristic window: often around {from} to {to} hours, depending on context.'**
+  /// **'Current window: recovering until about {from} h, ready until about {to} h.'**
   String recoveryWindowHeuristic(int from, int to);
 
   /// No description provided for @recoveryRadarHeuristicCaption.
   ///
   /// In en, this message translates to:
-  /// **'Radar overview of recent recovery pressure by muscle. It is directional and heuristic.'**
+  /// **'Radar overview of current readiness by muscle. Status badges remain the primary signal.'**
   String get recoveryRadarHeuristicCaption;
 
   /// No description provided for @recoveryNoDataBody.
@@ -6137,7 +6782,7 @@ abstract class AppLocalizations {
   /// No description provided for @adaptiveExtraCardioHelp.
   ///
   /// In en, this message translates to:
-  /// **'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts.'**
+  /// **'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Train Libre workouts.'**
   String get adaptiveExtraCardioHelp;
 
   /// No description provided for @onboardingAdaptiveGoalTitle.
@@ -6596,6 +7241,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No recommendation available to apply.'**
   String get adaptiveRecommendationNotAvailableSnack;
+
+  /// No description provided for @settingsSectionApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get settingsSectionApp;
+
+  /// No description provided for @settingsAppearanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust theme, visual style, and haptics'**
+  String get settingsAppearanceSubtitle;
+
+  /// No description provided for @settingsShowSugarInDiaryOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show sugar in Diary overview'**
+  String get settingsShowSugarInDiaryOverviewTitle;
+
+  /// No description provided for @settingsShowSugarInDiaryOverviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows sugar in the top daily overview section'**
+  String get settingsShowSugarInDiaryOverviewSubtitle;
+
+  /// No description provided for @settingsSectionHealthTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Health & Tracking'**
+  String get settingsSectionHealthTracking;
+
+  /// No description provided for @settingsStepsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking, source policy, and providers'**
+  String get settingsStepsSubtitle;
+
+  /// No description provided for @settingsSleepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import, permissions, and sleep status'**
+  String get settingsSleepSubtitle;
+
+  /// No description provided for @settingsPulseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opt-in pulse analysis and heart-rate access'**
+  String get settingsPulseSubtitle;
+
+  /// No description provided for @settingsHealthExportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Apple Health and Health Connect export'**
+  String get settingsHealthExportSubtitle;
+
+  /// No description provided for @settingsSectionNutritionAndData.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition & Data'**
+  String get settingsSectionNutritionAndData;
+
+  /// No description provided for @settingsSectionSupportAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Support / About'**
+  String get settingsSectionSupportAbout;
+
+  /// No description provided for @settingsHapticFeedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptic feedback'**
+  String get settingsHapticFeedbackTitle;
+
+  /// No description provided for @settingsHapticFeedbackSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Light vibrations for confirmations and AI waiting'**
+  String get settingsHapticFeedbackSubtitle;
+
+  /// No description provided for @stepsSettingsEnableTrackingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable steps tracking'**
+  String get stepsSettingsEnableTrackingTitle;
+
+  /// No description provided for @stepsSettingsEnableTrackingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read step data from Apple Health / Health Connect'**
+  String get stepsSettingsEnableTrackingSubtitle;
+
+  /// No description provided for @stepsSettingsSourcePolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Source policy'**
+  String get stepsSettingsSourcePolicyTitle;
+
+  /// No description provided for @stepsSettingsSourcePolicyAutoDominant.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (dominant source)'**
+  String get stepsSettingsSourcePolicyAutoDominant;
+
+  /// No description provided for @stepsSettingsSourcePolicyAutoDominantSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended: use one source per day to avoid overlap inflation.'**
+  String get stepsSettingsSourcePolicyAutoDominantSubtitle;
+
+  /// No description provided for @stepsSettingsSourcePolicyMaxPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge (max per hour)'**
+  String get stepsSettingsSourcePolicyMaxPerHour;
+
+  /// No description provided for @stepsSettingsSourcePolicyMaxPerHourSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Combine sources by taking the highest hourly bucket.'**
+  String get stepsSettingsSourcePolicyMaxPerHourSubtitle;
+
+  /// No description provided for @stepsSettingsProviderFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider filter'**
+  String get stepsSettingsProviderFilterTitle;
+
+  /// No description provided for @pulseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse'**
+  String get pulseTitle;
+
+  /// No description provided for @pulseChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse over time'**
+  String get pulseChartTitle;
+
+  /// No description provided for @pulseRangeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Range'**
+  String get pulseRangeLabel;
+
+  /// No description provided for @pulseAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get pulseAverageLabel;
+
+  /// No description provided for @pulseRestingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting'**
+  String get pulseRestingLabel;
+
+  /// No description provided for @pulseInsufficientData.
+  ///
+  /// In en, this message translates to:
+  /// **'Too few pulse samples for a reliable chart.'**
+  String get pulseInsufficientData;
+
+  /// No description provided for @pulseMethodNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Average pulse is time-weighted. Resting pulse is a conservative estimate from the lowest 20% of samples in the selected period.'**
+  String get pulseMethodNote;
+
+  /// No description provided for @pulseSampleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No samples} one{1 sample} other{{count} samples}}'**
+  String pulseSampleCount(int count);
+
+  /// No description provided for @pulseQualityReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Good coverage'**
+  String get pulseQualityReady;
+
+  /// No description provided for @pulseQualityLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited data'**
+  String get pulseQualityLimited;
+
+  /// No description provided for @pulseQualityInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Very sparse'**
+  String get pulseQualityInsufficient;
+
+  /// No description provided for @pulseQualityNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get pulseQualityNoData;
+
+  /// No description provided for @pulseNoDataDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse analysis is disabled in Settings.'**
+  String get pulseNoDataDisabled;
+
+  /// No description provided for @pulseNoDataPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate permission is required to show pulse analysis.'**
+  String get pulseNoDataPermissionDenied;
+
+  /// No description provided for @pulseNoDataUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse data is currently unavailable on this device.'**
+  String get pulseNoDataUnavailable;
+
+  /// No description provided for @pulseNoDataQueryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read pulse data.'**
+  String get pulseNoDataQueryFailed;
+
+  /// No description provided for @pulseNoDataDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'No pulse samples were found for this period.'**
+  String get pulseNoDataDefault;
+
+  /// No description provided for @pulseSettingsEnableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable pulse analysis'**
+  String get pulseSettingsEnableTitle;
+
+  /// No description provided for @pulseSettingsEnableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads heart-rate data for the pulse view only when you turn this on.'**
+  String get pulseSettingsEnableSubtitle;
+
+  /// No description provided for @pulseSettingsPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow heart-rate access'**
+  String get pulseSettingsPermissionTitle;
+
+  /// No description provided for @pulseSettingsPermissionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens Apple Health or Health Connect so Train Libre can read pulse samples.'**
+  String get pulseSettingsPermissionSubtitle;
+
+  /// No description provided for @pulseSettingsAnalysisSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows range, time-weighted average, and a conservative resting-pulse estimate. Not a medical diagnosis.'**
+  String get pulseSettingsAnalysisSubtitle;
+
+  /// No description provided for @pulseSettingsPermissionGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate access is ready.'**
+  String get pulseSettingsPermissionGranted;
+
+  /// No description provided for @pulseSettingsPermissionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate access was not granted.'**
+  String get pulseSettingsPermissionFailed;
+
+  /// No description provided for @pulseOptInChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Opt-in'**
+  String get pulseOptInChip;
+
+  /// No description provided for @statisticsPulseDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Range, time-weighted average, and resting pulse for selected periods.'**
+  String get statisticsPulseDescription;
+
+  /// No description provided for @statisticsPulseOpenCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens pulse analysis'**
+  String get statisticsPulseOpenCaption;
+
+  /// No description provided for @healthExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health export'**
+  String get healthExportTitle;
+
+  /// No description provided for @healthExportAppleHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health export'**
+  String get healthExportAppleHealthTitle;
+
+  /// No description provided for @healthExportHealthConnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect export'**
+  String get healthExportHealthConnectTitle;
+
+  /// No description provided for @healthExportDomainNutritionHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition & hydration'**
+  String get healthExportDomainNutritionHydration;
+
+  /// No description provided for @healthExportDomainWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get healthExportDomainWorkouts;
+
+  /// No description provided for @healthExportStateIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get healthExportStateIdle;
+
+  /// No description provided for @healthExportStateExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting'**
+  String get healthExportStateExporting;
+
+  /// No description provided for @healthExportStateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get healthExportStateSuccess;
+
+  /// No description provided for @healthExportStateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get healthExportStateFailed;
+
+  /// No description provided for @healthExportStateDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get healthExportStateDisabled;
+
+  /// No description provided for @healthExportResultComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Export complete'**
+  String get healthExportResultComplete;
+
+  /// No description provided for @healthExportResultFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed'**
+  String get healthExportResultFailed;
+
+  /// No description provided for @healthExportAppleHealthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-way export from Train Libre to Apple Health'**
+  String get healthExportAppleHealthSubtitle;
+
+  /// No description provided for @healthExportHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-way export from Train Libre to Health Connect'**
+  String get healthExportHealthConnectSubtitle;
+
+  /// No description provided for @healthExportAppleHealthStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health export status'**
+  String get healthExportAppleHealthStatusTitle;
+
+  /// No description provided for @healthExportHealthConnectStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect export status'**
+  String get healthExportHealthConnectStatusTitle;
 }
 
 class _AppLocalizationsDelegate

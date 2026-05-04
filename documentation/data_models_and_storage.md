@@ -1,6 +1,6 @@
-# Data Models & Storage (Current Implementation)
+# Data Models & Storage
 
-This document summarizes the active persistence model in the current working copy.
+This document summarizes the active persistence model.
 
 ## Storage architecture
 
@@ -40,9 +40,15 @@ under the `exercise_catalog_*` namespace.
 
 ## Open Food Facts country data source foundation
 
-Bundled OFF seed data fallback currently defaults to the DE asset:
+Bundled OFF seed data fallback keeps the legacy DE asset path for compatibility,
+but the asset is no longer required to be shipped:
 
 - `assets/db/hypertrack_prep_de.db`
+
+If the remote OFF catalog cannot be downloaded and the optional bundled OFF DB
+is absent, startup skips the OFF import safely. The smaller
+`assets/db/hypertrack_base_foods.db` catalog is still imported first and remains
+available as the offline baseline.
 
 Country-aware OFF source/channel configuration is centralized in:
 

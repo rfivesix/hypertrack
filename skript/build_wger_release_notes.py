@@ -31,7 +31,20 @@ def main() -> int:
     if diff.get("skipped"):
         lines.append("- Diff: skipped (published reference DB missing)")
     elif dsum:
+        dex = diff.get("examples", {}) if isinstance(diff, dict) else {}
         lines.append(f"- Diff removed IDs: `{dsum.get('removed_count', 'n/a')}`")
+        lines.append(
+            "- Diff fail-on-removed threshold: "
+            f"`{dsum.get('fail_on_removed_threshold', 'n/a')}`"
+        )
+        lines.append(
+            "- Diff removed threshold exceeded: "
+            f"`{dsum.get('removed_threshold_exceeded', 'n/a')}`"
+        )
+        lines.append(
+            "- Diff removed ID examples: "
+            f"`{', '.join(dex.get('removed_ids', [])) if dex.get('removed_ids') else 'none'}`"
+        )
         lines.append(f"- Diff added IDs: `{dsum.get('added_count', 'n/a')}`")
     else:
         lines.append("- Diff summary unavailable")

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/statistics/domain/recovery_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/recovery_payload_models.dart';
 
 void main() {
   group('RecoveryAnalyticsPayload', () {
@@ -67,6 +67,56 @@ void main() {
       expect(payload.muscles.first.highSessionFatigue, isFalse);
       expect(payload.muscles.first.recoveringUpperHours, 48);
       expect(payload.muscles.first.readyUpperHours, 72);
+    });
+
+    test('parses DateTime timestamp input', () {
+      final timestamp = DateTime(2026, 1, 1, 12);
+      final payload = RecoveryMusclePayload.fromMap({
+        'lastSignificantLoadAt': timestamp,
+      });
+
+      expect(payload.lastSignificantLoadAt, timestamp);
+    });
+
+    test('parses ISO timestamp input', () {
+      final timestamp = DateTime(2026, 1, 1, 12);
+      final payload = RecoveryMusclePayload.fromMap({
+        'lastSignificantLoadAt': timestamp.toIso8601String(),
+      });
+
+      expect(payload.lastSignificantLoadAt, timestamp);
+    });
+
+    test('parses millisecond epoch timestamp input', () {
+      final timestamp = DateTime(2026, 1, 1, 12);
+      final payload = RecoveryMusclePayload.fromMap({
+        'lastSignificantLoadAt': timestamp.millisecondsSinceEpoch,
+      });
+
+      expect(
+        payload.lastSignificantLoadAt?.millisecondsSinceEpoch,
+        timestamp.millisecondsSinceEpoch,
+      );
+    });
+
+    test('parses second epoch timestamp input', () {
+      final timestamp = DateTime(2026, 1, 1, 12);
+      final payload = RecoveryMusclePayload.fromMap({
+        'lastSignificantLoadAt': timestamp.millisecondsSinceEpoch ~/ 1000,
+      });
+
+      expect(
+        payload.lastSignificantLoadAt?.millisecondsSinceEpoch,
+        (timestamp.millisecondsSinceEpoch ~/ 1000) * 1000,
+      );
+    });
+
+    test('returns null for invalid timestamp strings', () {
+      final payload = RecoveryMusclePayload.fromMap(const {
+        'lastSignificantLoadAt': 'not-a-date',
+      });
+
+      expect(payload.lastSignificantLoadAt, isNull);
     });
   });
 }

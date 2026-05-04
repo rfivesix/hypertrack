@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
-import 'package:hypertrack/features/steps/domain/steps_models.dart';
+import 'package:train_libre/features/steps/data/steps_aggregation_repository.dart';
+import 'package:train_libre/features/steps/domain/steps_models.dart';
 
 class _FakeStepsRepository implements StepsAggregationRepository {
   int refreshCalls = 0;

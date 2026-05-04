@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/domain/heart_rate_sample.dart';
-import 'package:hypertrack/features/sleep/domain/metrics/heart_rate_metrics.dart';
+import 'package:train_libre/features/sleep/domain/heart_rate_sample.dart';
+import 'package:train_libre/features/sleep/domain/metrics/heart_rate_metrics.dart';
 
 void main() {
   test('nightly HR metrics use 5th percentile min and average', () {

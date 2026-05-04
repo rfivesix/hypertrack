@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/feedback_report/application/feedback_report_actions.dart';
-import 'package:hypertrack/features/feedback_report/domain/feedback_report_builder.dart';
-import 'package:hypertrack/features/feedback_report/presentation/feedback_report_screen.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
+import 'package:train_libre/features/feedback_report/application/feedback_report_actions.dart';
+import 'package:train_libre/features/feedback_report/domain/feedback_report_builder.dart';
+import 'package:train_libre/features/feedback_report/presentation/feedback_report_screen.dart';
+import 'package:train_libre/generated/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -20,8 +20,8 @@ class _FakeDiagnosticsProvider implements FeedbackReportDiagnosticsProvider {
 
 Future<PackageInfo> _mockPackageInfo() async {
   return PackageInfo(
-    appName: 'Hypertrack',
-    packageName: 'com.example.hypertrack',
+    appName: 'Train Libre',
+    packageName: 'com.example.trainlibre',
     version: '0.8.6',
     buildNumber: '80014',
     buildSignature: '',
@@ -140,7 +140,7 @@ void main() {
     await _tapGeneratePreview(tester);
 
     var text = await _previewText(tester);
-    expect(text, contains('Hypertrack Feedback Report'));
+    expect(text, contains('Train Libre Feedback Report'));
     expect(text, contains('Observed a calorie target jump.'));
     expect(text, contains('adaptive_marker: yes'));
     expect(text, contains('backup_marker: yes'));

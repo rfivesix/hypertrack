@@ -2,6 +2,7 @@ import '../../../data/workout_database_helper.dart';
 import '../../../util/body_nutrition_analytics_utils.dart';
 import '../domain/consistency_payload_models.dart';
 import '../domain/hub_payload_models.dart';
+import '../domain/recovery_domain_service.dart';
 import '../domain/recovery_payload_models.dart';
 import '../domain/statistics_range_policy.dart';
 
@@ -34,6 +35,10 @@ class StatisticsHubDataAdapter {
       metricId: StatisticsMetricId.hubConsistencyMetrics,
       selectedRangeIndex: selectedTimeRangeIndex,
     );
+    final recoveryRange = _rangePolicy.resolve(
+      metricId: StatisticsMetricId.hubRecoveryReadiness,
+      selectedRangeIndex: selectedTimeRangeIndex,
+    );
     final muscleRange = _rangePolicy.resolve(
       metricId: StatisticsMetricId.hubMuscleAnalytics,
       selectedRangeIndex: selectedTimeRangeIndex,
@@ -60,7 +65,10 @@ class StatisticsHubDataAdapter {
       weeksBack: muscleRange.effectiveWeeks ?? 8,
     );
     final trainingStats = _workoutDatabaseHelper.getTrainingStats();
-    final recoveryAnalytics = _workoutDatabaseHelper.getRecoveryAnalytics();
+    final recoveryAnalytics = _workoutDatabaseHelper.getRecoveryAnalytics(
+      lookbackDays: recoveryRange.effectiveDays ??
+          RecoveryDomainService.recoveryLookbackDays,
+    );
     final improvements = _workoutDatabaseHelper.getNotablePrImprovements(
       daysWindow: improvementRange.effectiveDays ?? selectedDays,
       limit: 3,

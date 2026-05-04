@@ -1,13 +1,13 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/database_helper.dart';
-import 'package:hypertrack/data/drift_database.dart' show AppDatabase;
-import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
-import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_service.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/screens/goals_screen.dart';
-import 'package:hypertrack/screens/onboarding_screen.dart';
+import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/data/drift_database.dart' show AppDatabase;
+import 'package:train_libre/features/nutrition_recommendation/data/recommendation_repository.dart';
+import 'package:train_libre/features/nutrition_recommendation/data/recommendation_service.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/screens/goals_screen.dart';
+import 'package:train_libre/screens/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/statistics/domain/recovery_domain_service.dart';
-import 'package:hypertrack/features/statistics/presentation/statistics_formatter.dart';
-import 'package:hypertrack/generated/app_localizations_de.dart';
-import 'package:hypertrack/generated/app_localizations_en.dart';
-import 'package:hypertrack/util/body_nutrition_analytics_utils.dart';
+import 'package:train_libre/features/statistics/domain/recovery_domain_service.dart';
+import 'package:train_libre/features/statistics/presentation/statistics_formatter.dart';
+import 'package:train_libre/generated/app_localizations_de.dart';
+import 'package:train_libre/generated/app_localizations_en.dart';
+import 'package:train_libre/util/body_nutrition_analytics_utils.dart';
 
 void main() {
   group('StatisticsPresentationFormatter', () {
@@ -54,6 +54,26 @@ void main() {
       expect(
         StatisticsPresentationFormatter.recoveryStateLabel(l10n, 'unexpected'),
         l10n.recoveryStateUnknown,
+      );
+    });
+
+    test('maps recovery pressure level labels', () {
+      final en = AppLocalizationsEn();
+      final de = AppLocalizationsDe();
+
+      expect(
+        StatisticsPresentationFormatter.recoveryPressureLevelLabel(
+          en,
+          RecoveryPressureLevel.low,
+        ),
+        en.recoveryPressureLow,
+      );
+      expect(
+        StatisticsPresentationFormatter.recoveryPressureLevelLabel(
+          de,
+          RecoveryPressureLevel.veryHigh,
+        ),
+        de.recoveryPressureVeryHigh,
       );
     });
 

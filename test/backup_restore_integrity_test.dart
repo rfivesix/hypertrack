@@ -2,17 +2,17 @@ import 'dart:convert';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/backup_manager.dart';
-import 'package:hypertrack/data/database_helper.dart';
-import 'package:hypertrack/data/drift_database.dart'
+import 'package:train_libre/data/backup_manager.dart';
+import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion, ExercisesCompanion;
-import 'package:hypertrack/data/product_database_helper.dart';
-import 'package:hypertrack/data/workout_database_helper.dart';
-import 'package:hypertrack/models/food_entry.dart';
-import 'package:hypertrack/models/measurement.dart';
-import 'package:hypertrack/models/measurement_session.dart';
-import 'package:hypertrack/models/set_log.dart';
-import 'package:hypertrack/models/workout_log.dart';
+import 'package:train_libre/data/product_database_helper.dart';
+import 'package:train_libre/data/workout_database_helper.dart';
+import 'package:train_libre/models/food_entry.dart';
+import 'package:train_libre/models/measurement.dart';
+import 'package:train_libre/models/measurement_session.dart';
+import 'package:train_libre/models/set_log.dart';
+import 'package:train_libre/models/workout_log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -471,6 +471,42 @@ void main() {
       expect(userPreferences['ai_enabled'], isTrue);
       expect(userPreferences['ai_selected_provider'], 'openai');
       expect(userPreferences['ai_selected_model_openai'], 'gpt-5.4');
+    });
+
+    test('new backup payload uses Train Libre metadata and file prefix',
+        () async {
+      final payload = await backupManager.generateBackupPayloadForTesting();
+
+      expect(payload['appName'], BackupManager.currentBackupAppName);
+      expect(payload['applicationId'], BackupManager.currentApplicationId);
+      expect(
+        payload['backupFilePrefix'],
+        BackupManager.currentBackupFilePrefix,
+      );
+      expect(payload['generatedAtUtc'], isA<String>());
+    });
+
+    test('restore accepts legacy Hypertrack backup metadata', () async {
+      final payload = await backupManager.generateBackupPayloadForTesting();
+      payload['appName'] = BackupManager.legacyBackupAppNames.first;
+      payload['applicationId'] = BackupManager.legacyApplicationIds.first;
+      payload['backupFilePrefix'] =
+          BackupManager.legacyBackupFilePrefixes.first;
+
+      final imported =
+          await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
+    });
+
+    test('restore accepts Train Libre backup metadata', () async {
+      final payload = await backupManager.generateBackupPayloadForTesting();
+      payload['appName'] = BackupManager.currentBackupAppName;
+      payload['applicationId'] = BackupManager.currentApplicationId;
+      payload['backupFilePrefix'] = BackupManager.currentBackupFilePrefix;
+
+      final imported =
+          await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
     });
 
     test('restore preserves daily goals history timestamps and target values',

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/statistics/domain/consistency_domain_service.dart';
-import 'package:hypertrack/features/statistics/domain/consistency_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/consistency_domain_service.dart';
+import 'package:train_libre/features/statistics/domain/consistency_payload_models.dart';
 
 void main() {
   group('ConsistencyDomainService', () {

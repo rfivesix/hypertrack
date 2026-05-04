@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
+import '../features/sharing/share_service.dart';
 import '../generated/app_localizations.dart';
 import '../models/set_log.dart';
 import '../models/workout_log.dart';
@@ -32,6 +33,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   final WorkoutHeartRateService _heartRateService =
       const WorkoutHeartRateService();
   WorkoutHeartRateSummary? _heartRateSummary;
+  static const ShareService _shareService = ShareService();
 
   // Wir speichern jetzt einen formatierten String pro Übung,
   // da Cardio und Kraft unterschiedliche Einheiten haben.
@@ -122,7 +124,20 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: GlobalAppBar(title: l10n.workoutSummaryTitle),
+      appBar: GlobalAppBar(
+        title: l10n.workoutSummaryTitle,
+        actions: [
+          if (!_isLoading && _log != null)
+            IconButton(
+              tooltip: l10n.share,
+              icon: const Icon(Icons.ios_share),
+              onPressed: () => _shareService.showWorkoutShareSheet(
+                context: context,
+                workout: _log!,
+              ),
+            ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _log == null

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/statistics/domain/statistics_range_policy.dart';
+import 'package:train_libre/features/statistics/domain/recovery_domain_service.dart';
+import 'package:train_libre/features/statistics/domain/statistics_range_policy.dart';
 
 void main() {
   group('StatisticsRangePolicyService', () {
@@ -105,6 +106,22 @@ void main() {
         metricId: StatisticsMetricId.consistencyWeeklyMetrics,
       );
       expect(weeks, 12);
+    });
+
+    test('recovery readiness uses fixed current-state lookback', () {
+      final resolved = service.resolve(
+        metricId: StatisticsMetricId.hubRecoveryReadiness,
+        selectedRangeIndex: 4,
+        selectedDays: 3650,
+        now: DateTime(2026, 3, 21),
+      );
+
+      expect(resolved.semantics, StatisticsRangeSemantics.fixed);
+      expect(
+          resolved.effectiveDays, RecoveryDomainService.recoveryLookbackDays);
+      expect(resolved.dateRange!.start, DateTime(2026, 3, 8));
+      expect(resolved.dateRange!.end, DateTime(2026, 3, 21, 23, 59, 59));
+      expect(resolved.disclosureHook, 'range:fixed-current-recovery-14d');
     });
   });
 }

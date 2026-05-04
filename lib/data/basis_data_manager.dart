@@ -18,8 +18,15 @@ import '../services/off_catalog_country_service.dart';
 import '../services/off_catalog_refresh_service.dart';
 
 // Typ-Definition für den Callback
-typedef ProgressCallback =
-    void Function(String task, String detail, double progress);
+typedef ProgressCallback = void Function(
+    String task, String detail, double progress);
+typedef RemoteCatalogProgressCallback = void Function(
+  String task,
+  String detail,
+  double progress, {
+  required bool canSkip,
+});
+typedef RemoteCatalogSkipRequested = bool Function();
 
 /// Manager responsible for initializing and updating the application's base data.
 ///
@@ -46,6 +53,8 @@ class BasisDataManager {
   Future<void> checkForBasisDataUpdate({
     bool force = false,
     ProgressCallback? onProgress, // NEU: Callback
+    RemoteCatalogProgressCallback? onRemoteProgress,
+    RemoteCatalogSkipRequested? isRemoteSkipRequested,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -68,8 +77,8 @@ class BasisDataManager {
     );
     final activeOffVersionKey =
         OffCatalogCountryService.installedVersionKeyForCountry(
-          activeOffCountry,
-        );
+      activeOffCountry,
+    );
 
     // Hilfsfunktion, um den Code lesbarer zu halten
     Future<void> process(
@@ -106,11 +115,13 @@ class BasisDataManager {
         "Suche nach Remote-Katalog-Updates...",
         0.0,
       );
-      final remoteCandidate = await ExerciseCatalogRefreshService.instance
-          .prepareUpdateCandidate(
-            installedVersion: installedTrainingVersion,
-            force: force,
-          );
+      final remoteCandidate =
+          await ExerciseCatalogRefreshService.instance.prepareUpdateCandidate(
+        installedVersion: installedTrainingVersion,
+        force: force,
+        onProgress: onRemoteProgress,
+        isSkipRequested: isRemoteSkipRequested,
+      );
       if (remoteCandidate != null) {
         remoteTrainingDbPath = remoteCandidate.localDbPath;
         onProgress?.call(
@@ -160,11 +171,13 @@ class BasisDataManager {
         'Suche nach Remote-OFF-Katalog-Updates...',
         0.0,
       );
-      final remoteOffCandidate = await OffCatalogRefreshService.instance
-          .prepareUpdateCandidate(
-            installedVersion: installedOffVersion,
-            force: force,
-          );
+      final remoteOffCandidate =
+          await OffCatalogRefreshService.instance.prepareUpdateCandidate(
+        installedVersion: installedOffVersion,
+        force: force,
+        onProgress: onRemoteProgress,
+        isSkipRequested: isRemoteSkipRequested,
+      );
       if (remoteOffCandidate != null) {
         remoteOffDbPath = remoteOffCandidate.localDbPath;
         onProgress?.call(
@@ -179,8 +192,8 @@ class BasisDataManager {
 
     final hasBundledOffAsset =
         await OffCatalogCountryService.bundledAssetAvailableForCountry(
-          activeOffCountry,
-        );
+      activeOffCountry,
+    );
 
     if (remoteOffDbPath == null && !hasBundledOffAsset) {
       onProgress?.call(
@@ -416,20 +429,16 @@ class BasisDataManager {
             .getSingleOrNull();
         return row != null;
       case _keyVersionFood:
-        final row = await mainDb
-            .customSelect(
-              'SELECT 1 FROM products WHERE source = ? LIMIT 1',
-              variables: [drift.Variable.withString('base')],
-            )
-            .getSingleOrNull();
+        final row = await mainDb.customSelect(
+          'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+          variables: [drift.Variable.withString('base')],
+        ).getSingleOrNull();
         return row != null;
       case OffCatalogCountryService.legacyInstalledVersionKey:
-        final row = await mainDb
-            .customSelect(
-              'SELECT 1 FROM products WHERE source = ? LIMIT 1',
-              variables: [drift.Variable.withString('off')],
-            )
-            .getSingleOrNull();
+        final row = await mainDb.customSelect(
+          'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+          variables: [drift.Variable.withString('off')],
+        ).getSingleOrNull();
         return row != null;
       case _keyVersionCats:
         final row = await mainDb
@@ -440,12 +449,10 @@ class BasisDataManager {
         if (prefKey.startsWith(
           OffCatalogCountryService.installedVersionKeyPrefix,
         )) {
-          final row = await mainDb
-              .customSelect(
-                'SELECT 1 FROM products WHERE source = ? LIMIT 1',
-                variables: [drift.Variable.withString('off')],
-              )
-              .getSingleOrNull();
+          final row = await mainDb.customSelect(
+            'SELECT 1 FROM products WHERE source = ? LIMIT 1',
+            variables: [drift.Variable.withString('off')],
+          ).getSingleOrNull();
           return row != null;
         }
         return false;
@@ -568,7 +575,8 @@ class BasisDataManager {
 
     final offRows = await (mainDb.select(
       mainDb.products,
-    )..where((t) => t.source.equals('off'))).get();
+    )..where((t) => t.source.equals('off')))
+        .get();
 
     final barcodesToRetain = <String>[];
     final barcodesToDelete = <String>[];
@@ -684,7 +692,8 @@ class BasisDataManager {
       );
       await (mainDb.delete(
         mainDb.products,
-      )..where((t) => t.source.equals('off') & t.barcode.isIn(chunk))).go();
+      )..where((t) => t.source.equals('off') & t.barcode.isIn(chunk)))
+          .go();
     }
   }
 

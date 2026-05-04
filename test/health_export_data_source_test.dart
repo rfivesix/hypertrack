@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/database_helper.dart';
-import 'package:hypertrack/data/drift_database.dart';
-import 'package:hypertrack/health_export/data/health_export_data_source.dart';
+import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/data/drift_database.dart';
+import 'package:train_libre/health_export/data/health_export_data_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

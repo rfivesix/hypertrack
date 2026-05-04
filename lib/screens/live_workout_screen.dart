@@ -52,6 +52,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   bool _isLoading = true;
 
   late final VoidCallback _onManagerUpdateCallback;
+  WorkoutSessionManager? _manager;
 
   @override
   void initState() {
@@ -68,18 +69,20 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _initializeScreen();
-      Provider.of<WorkoutSessionManager>(
+      final manager = Provider.of<WorkoutSessionManager>(
         context,
         listen: false,
-      ).addListener(_onManagerUpdateCallback);
+      );
+      _manager = manager;
+      manager.addListener(_onManagerUpdateCallback);
     });
   }
 
   @override
   void dispose() {
-    // Falls der Manager ein Singleton ist, Listener entfernen, sonst nicht zwingend nötig wenn er disposed wird
-    // WorkoutSessionManager().removeListener(_onManagerUpdateCallback); // Vorsicht bei Singleton Zugriff
+    _manager?.removeListener(_onManagerUpdateCallback);
     _clearControllers();
     super.dispose();
   }

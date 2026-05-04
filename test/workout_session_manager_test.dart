@@ -1,15 +1,15 @@
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/database_helper.dart';
-import 'package:hypertrack/data/drift_database.dart' as db;
-import 'package:hypertrack/data/drift_database.dart' show AppDatabase;
-import 'package:hypertrack/data/workout_database_helper.dart';
-import 'package:hypertrack/models/routine_exercise.dart';
-import 'package:hypertrack/models/set_log.dart';
-import 'package:hypertrack/models/set_template.dart';
-import 'package:hypertrack/models/exercise.dart' as model;
-import 'package:hypertrack/services/workout_session_manager.dart';
+import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/data/drift_database.dart' as db;
+import 'package:train_libre/data/drift_database.dart' show AppDatabase;
+import 'package:train_libre/data/workout_database_helper.dart';
+import 'package:train_libre/models/routine_exercise.dart';
+import 'package:train_libre/models/set_log.dart';
+import 'package:train_libre/models/set_template.dart';
+import 'package:train_libre/models/exercise.dart' as model;
+import 'package:train_libre/services/workout_session_manager.dart';
 
 Future<void> _waitFor(
   bool Function() condition, {

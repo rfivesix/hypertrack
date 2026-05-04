@@ -1,6 +1,6 @@
 {
   "@@locale": "de",
-  "appTitle": "Hypertrack",
+  "appTitle": "Train Libre",
   "bannerText": "Empfehlung / Aktuelles Workout",
   "calories": "Kalorien",
   "water": "Wasser",
@@ -91,7 +91,7 @@
   "measurementRightThigh": "Rechter Oberschenkel",
   "measurementLeftCalf": "Linke Wade",
   "measurementRightCalf": "Rechte Wade",
-  "drawerMenuTitle": "Hypertrack Menü",
+  "drawerMenuTitle": "Train Libre Menü",
   "drawerDashboard": "Dashboard",
   "drawerFoodExplorer": "Lebensmittel-Explorer",
   "drawerDataManagement": "Datensicherung",
@@ -161,6 +161,12 @@
   "cardioIntensityShortLabel": "Int.",
   "restTimerLabel": "Pause",
   "skipButton": "Überspringen",
+  "appInitStarting": "App wird gestartet...",
+  "appInitInitializing": "Initialisierung läuft...",
+  "appInitFinalizing": "Abschluss",
+  "appInitCheckingBackups": "Backups werden geprüft...",
+  "appInitSkipDownload": "Download überspringen",
+  "appInitSkippingRemoteDownload": "Remote-Download wird übersprungen...",
   "emptyHistory": "Noch keine Workouts abgeschlossen.",
   "workoutDetailsTitle": "Workout-Details",
   "workoutHeartRateSectionTitle": "Herzfrequenz",
@@ -212,11 +218,69 @@
   "cancel": "Abbrechen",
   "delete": "Löschen",
   "save": "Speichern",
+  "share": "Teilen",
+  "shareWorkout": "Workout teilen",
+  "shareRoutine": "Routine teilen",
+  "shareAsImage": "Als Bild teilen",
+  "shareAsText": "Als Text teilen",
+  "sharedFromTrainLibre": "Geteilt mit Train Libre",
+  "sharedWithTrainLibre": "Geteilt mit Train Libre",
+  "shareImageSummary": "Zusammenfassung",
+  "shareImageExercises": "Übungen",
+  "shareImageMuscleFocus": "Muskel-Fokus",
+  "shareImageMinimal": "Minimal",
+  "volume": "Volumen",
+  "moreExercises": "+ {count} weitere Übungen",
+  "@moreExercises": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareSetNumber": "Set {number}",
+  "@shareSetNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "repsShort": "Wdh",
+  "shareFailed": "Teilen fehlgeschlagen",
+  "workoutShareTitle": "Workout",
+  "routineShareTitle": "Routine",
+  "setTypeWarmup": "Aufwärmsatz",
+  "setTypeWork": "Arbeitssätze",
+  "setTypeFailure": "Satz bis zum Muskelversagen",
+  "setTypeDropset": "Dropsatz",
+  "setTypeSuperset": "Supersatz",
+  "setTypeOther": "Sonstige Sätze",
+  "setTypeWarmupSuffix": "Aufwärmen",
+  "setTypeFailureSuffix": "Muskelversagen",
+  "setTypeDropsetSuffix": "Dropsatz",
+  "setTypeSupersetSuffix": "Supersatz",
+  "setTypeOtherSuffix": "Spezial",
+  "warmupSetCount": "{count, plural, =1{1 Aufwärmsatz} other{{count} Aufwärmsätze}}",
+  "workSetCount": "{count, plural, =1{1 Arbeitssatz} other{{count} Arbeitssätze}}",
+  "failureSetCount": "{count, plural, =1{1 Satz bis zum Muskelversagen} other{{count} Sätze bis zum Muskelversagen}}",
+  "dropsetCount": "{count, plural, =1{1 Dropsatz} other{{count} Dropsätze}}",
+  "supersetSetCount": "{count, plural, =1{1 Supersatz} other{{count} Supersätze}}",
+  "otherSetCount": "{count, plural, =1{1 Spezial-Satz} other{{count} Spezial-Sätze}}",
+  "warmupCompactCount": "{count, plural, =1{1 Aufwärmen} other{{count} Aufwärmen}}",
+  "workCompactCount": "{count, plural, =1{1 Arbeit} other{{count} Arbeit}}",
+  "failureCompactCount": "{count, plural, =1{1 Muskelversagen} other{{count} Muskelversagen}}",
+  "dropsetCompactCount": "{count, plural, =1{1 Dropsatz} other{{count} Dropsätze}}",
+  "supersetCompactCount": "{count, plural, =1{1 Supersatz} other{{count} Supersätze}}",
+  "otherCompactCount": "{count, plural, =1{1 Spezial} other{{count} Spezial}}",
+  "shareExercisesLabel": "Übungen",
+  "shareSetsLabel": "Sätze",
+  "shareSetLabel": "Satz",
   "tabBaseFoods": "Grundnahrungsmittel",
   "baseFoodsEmptyState": "Dieser Bereich wird bald mit einer kuratierten Liste von Grundnahrungsmitteln wie Obst, Gemüse und mehr gefüllt sein.",
   "noBrand": "Keine Marke",
   "unknown": "Unbekannt",
-  "backupFileSubject": "Hypertrack App Backup - {timestamp}",
+  "backupFileSubject": "Train Libre App Backup - {timestamp}",
   "@backupFileSubject": {
     "placeholders": {
       "timestamp": {
@@ -444,8 +508,8 @@
   "feedbackReportShareCompleted": "Teilen-Dialog geöffnet.",
   "feedbackReportShareCanceled": "Teilen abgebrochen.",
   "feedbackReportEmailOpenFailed": "E-Mail-App konnte nicht geöffnet werden.",
-  "feedbackReportEmailSubject": "Hypertrack Feedback-Bericht",
-  "feedbackReportReportTitle": "Hypertrack Feedback-Bericht",
+  "feedbackReportEmailSubject": "Train Libre Feedback-Bericht",
+  "feedbackReportReportTitle": "Train Libre Feedback-Bericht",
   "feedbackReportReportGeneratedAt": "Erstellt",
   "feedbackReportReportAppVersion": "App-Version",
   "feedbackReportReportBuildNumber": "Build-Nummer",
@@ -461,7 +525,7 @@
   "all_measurements":"ALLE MESSWERTE",
   "all_measurements_no_cap":"Alle Messwerte",
   "date_and_time_of_measurement":"Datum & Uhrzeit der Messung",
-  "onbWelcomeTitle": "Willkommen bei Hypertrack",
+  "onbWelcomeTitle": "Willkommen bei Train Libre",
   "@onbWelcomeTitle": { "description": "Onboarding Folie 1 Titel" },
   "onbWelcomeBody": "Starte mit deinen persönlichen Zielen für Training und Ernährung.",
   "@onbWelcomeBody": { "description": "Onboarding Folie 1 Beschreibung" },
@@ -567,7 +631,7 @@
   "categoryHint": "z.B. Brust, Rücken, Beine...",
   "validatorPleaseEnterCategory": "Bitte eine Kategorie angeben.",
   "dialogEnterPasswordImport": "Passwort für den Import eingeben",
-  "dataManagementBackupTitle": "Hypertrack Datensicherung",
+  "dataManagementBackupTitle": "Train Libre Datensicherung",
   "dataManagementBackupDescription": "Sichere oder wiederherstelle alle deine App-Daten. Ideal für einen Gerätewechsel.",
   "exportEncrypted": "Verschlüsselt exportieren",
   "dialogPasswordForExport": "Passwort für verschlüsselten Export",
@@ -719,7 +783,7 @@
   "settingsVisualStyleLiquid": "Flüssig (Liquid Glass)",
   "settingsVisualStyleLiquidDesc": "Runde, schwebende UI-Elemente",
   "settingsMaterialColorsTitle": "Material-Farben",
-  "settingsMaterialColorsSubtitle": "Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents",
+  "settingsMaterialColorsSubtitle": "Verwende dynamische Android-Farben (Material You) statt des Train Libre-Markenakzents",
   "settingsFoodDbSectionTitle": "Lebensmittel-Datenbank",
   "settingsFoodDbRegionTitle": "Region der Lebensmittel-Datenbank",
   "settingsFoodDbRegionSubtitle": "Wähle, welche Open-Food-Facts-Region für die Produktsuche verwendet wird.",
@@ -749,7 +813,7 @@
   "onbBodyAppLayout": "Die Bottom Bar ermöglicht den schnellen Wechsel zwischen den Bereichen. Mit dem großen [+] Button kannst du sofort alles protokollieren.",
   "dataHubTitle": "Data Hub",
   "resumeButton": "Fortsetzen",
-  "onboardingWelcomeTitle": "Willkommen bei Hypertrack",
+  "onboardingWelcomeTitle": "Willkommen bei Train Libre",
   "onboardingWelcomeSubtitle": "Lass uns dein Profil einrichten, um loszulegen.",
   
   "onboardingNameTitle": "Wie heißt du?",
@@ -794,7 +858,7 @@
   "aiTestSuccess": "Verbindung erfolgreich!",
   "aiKeySaved": "API-Schlüssel sicher gespeichert.",
   "aiPrivacySection": "Datenschutz",
-  "aiPrivacyDisclosure": "Deine Bilder und Texte werden nur an den gewählten KI-Anbieter gesendet, wenn du auf Analysieren tippst. Daten werden über die Verarbeitung hinaus nicht auf externen Servern gespeichert. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.",
+  "aiPrivacyDisclosure": "Bilder, Texte und erzeugte Empfehlungs-Prompts werden nur an den gewählten KI-Anbieter gesendet, wenn du eine KI-Aktion nutzt. Speicherung und Verarbeitung beim Anbieter richten sich nach dessen Bedingungen. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.",
   "aiMealCapture": "KI-Mahlzeit",
   "aiCaptureTitle": "KI-Mahlzeitenerkennung",
   "aiCaptureTabPhoto": "Foto",
@@ -827,6 +891,8 @@
 
   "aiEnableTitle": "KI-Funktionen aktivieren",
   "aiEnableSubtitle": "Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.",
+  "aiRecommendationContextTitle": "Letzte Mahlzeiten für Empfehlungen senden",
+  "aiRecommendationContextSubtitle": "Optional. Kann Vorschläge verbessern, indem eine kurze Zusammenfassung letzter Mahlzeiten an den gewählten KI-Anbieter gesendet wird. Standardmäßig aus.",
 
   "aiRecommendationTitle": "KI-Mahlzeitcoach",
   "aiRecommendDietary": "Ernährungsweise",
@@ -841,6 +907,146 @@
   "aiRecommendGenerating": "Denke nach…",
   "aiRecommendSaveToDiary": "Im Tagebuch speichern",
   "aiRecommendNoMatch": "Kein Datenbank-Treffer",
+  "aiValidationNoMatchedItemsSaveYet": "Noch keine zugeordneten Einträge können gespeichert werden.",
+  "aiValidationNoMatchedIngredientsSaveYet": "Noch keine zugeordneten Zutaten können gespeichert werden.",
+  "aiValidationSomeItemsNeedReviewTitle": "Einige Einträge müssen geprüft werden",
+  "aiValidationSomeIngredientsNeedReviewTitle": "Einige Zutaten müssen geprüft werden",
+  "aiValidationSaveMatchedItemsButton": "Zuordnete Einträge speichern",
+  "aiValidationSaveMatchedIngredientsButton": "Zuordnete Zutaten speichern",
+  "aiValidationValidationPassedTitle": "Validierung bestanden",
+  "aiValidationReviewSuggestedTitle": "Überprüfung empfohlen",
+  "aiValidationMacroFitValidatedTitle": "Makro-Fit bestätigt",
+  "aiValidationNeedsReviewTitle": "Prüfung nötig",
+  "aiValidationRepairLimitReachedReview": "Automatische Reparaturgrenze erreicht. Bitte vor dem Speichern prüfen.",
+  "aiValidationRepairLimitReachedRecommendation": "Automatische Reparaturgrenze erreicht. Bitte Zuordnungen und Portionsgrößen vor dem Speichern prüfen.",
+  "aiValidationRecentMealContextIncluded": "Der Kontext letzter Mahlzeiten wurde einbezogen.",
+  "aiValidationGeneratedWithoutRecentMealHistory": "Ohne Verlauf letzter Mahlzeiten erzeugt.",
+  "aiValidationApiKeyRequiredTitle": "API-Schlüssel erforderlich",
+  "aiValidationScoreLabel": "Punktzahl {score}/100",
+  "@aiValidationScoreLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationDeltaSummary": "Differenz: {kcalDelta} kcal · {proteinDelta}g Protein · {carbsDelta}g Kohlenhydrate · {fatDelta}g Fett",
+  "@aiValidationDeltaSummary": {
+    "placeholders": {
+      "kcalDelta": {
+        "type": "int"
+      },
+      "proteinDelta": {
+        "type": "int"
+      },
+      "carbsDelta": {
+        "type": "int"
+      },
+      "fatDelta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveItemsMessage": "{unmatchedCount, plural, =1{1 Eintrag hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.} other{{unmatchedCount} Einträge haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.}} Die {matchedCount} zugeordneten Einträge speichern?",
+  "@aiValidationPartialSaveItemsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationPartialSaveIngredientsMessage": "{unmatchedCount, plural, =1{1 Zutat hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.} other{{unmatchedCount} Zutaten haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.}} Die {matchedCount} zugeordneten Zutaten speichern?",
+  "@aiValidationPartialSaveIngredientsMessage": {
+    "placeholders": {
+      "unmatchedCount": {
+        "type": "int"
+      },
+      "matchedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationEmptyItemName": "Ein Eintrag hat keinen Lebensmittelnamen.",
+  "aiValidationDuplicateItemMerged": "Doppelte Einträge für \"{name}\" wurden vor der Validierung zusammengeführt.",
+  "@aiValidationDuplicateItemMerged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiValidationInvalidQuantity": "Die Menge muss größer als 0 g sein.",
+  "aiValidationTinyQuantity": "Die Menge ist sehr klein; bitte die Grammangabe prüfen.",
+  "aiValidationExtremeQuantity": "Die Menge ist für ein einzelnes Mahlzeiten-Element unrealistisch hoch.",
+  "aiValidationLargeQuantity": "Die Menge ist ungewöhnlich groß; bitte die Grammangabe prüfen.",
+  "aiValidationLowAiConfidence": "Die KI-Konfidenz für diesen Eintrag ist niedrig.",
+  "aiValidationUnmatchedItem": "Kein Treffer in der lokalen Datenbank gefunden.",
+  "aiValidationWeakDbMatch": "Der Datenbank-Treffer ist schwach.",
+  "aiValidationPartialDbMatch": "Der Datenbank-Treffer ist teilweise passend.",
+  "aiValidationAmbiguousDbMatch": "Mehrere lokale Datenbank-Treffer wirken ähnlich plausibel.",
+  "aiValidationStateMismatch": "Der Zustand des KI-Eintrags passt möglicherweise nicht zum Datenbankeintrag.",
+  "aiValidationZeroNutritionMatch": "Der zugeordnete Datenbankeintrag enthält keine nutzbaren Nährwertdaten.",
+  "aiValidationImplausibleFoodDensity": "Das zugeordnete Lebensmittel hat ungewöhnlich viele kcal pro 100 g.",
+  "aiValidationMacroEnergyMismatch": "Die Makros des zugeordneten Lebensmittels passen nicht gut zu den kcal.",
+  "aiValidationImplausibleItemNutrition": "Die Nährwerte für diese Menge sind ungewöhnlich hoch.",
+  "aiValidationEmptyMeal": "Die KI hat keine Mahlzeiten-Elemente zurückgegeben.",
+  "aiValidationAllItemsUnmatched": "Kein Element konnte der lokalen Lebensmitteldatenbank zugeordnet werden.",
+  "aiValidationPartialUnmatchedItems": "{count, plural, =1{1 Element kann erst gespeichert werden, wenn es zugeordnet ist.} other{{count} Elemente können erst gespeichert werden, wenn sie zugeordnet sind.}}",
+  "@aiValidationPartialUnmatchedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationZeroTotalKcal": "Die zugeordneten Elemente ergeben 0 kcal.",
+  "aiValidationCaptureTotalKcalExtreme": "Die Gesamt-kcal sind für eine erfasste Mahlzeit unrealistisch hoch.",
+  "aiValidationCaptureTotalKcalHigh": "Die Gesamt-kcal sind ungewöhnlich hoch; bitte die Portionen prüfen.",
+  "aiValidationMacroTotalExtreme": "Die Gesamt-Makros sind unrealistisch hoch.",
+  "aiValidationMacroTotalHigh": "Die Gesamt-Makros sind ungewöhnlich hoch; bitte die Portionen prüfen.",
+  "aiValidationTargetKcalMismatch": "Die Kalorien weichen um {delta} kcal vom Ziel ab.",
+  "@aiValidationTargetKcalMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetProteinMismatch": "Das Protein weicht um {delta} g vom Ziel ab.",
+  "@aiValidationTargetProteinMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetCarbsMismatch": "Die Kohlenhydrate weichen um {delta} g vom Ziel ab.",
+  "@aiValidationTargetCarbsMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationTargetFatMismatch": "Das Fett weicht um {delta} g vom Ziel ab.",
+  "@aiValidationTargetFatMismatch": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "aiValidationUnknownIssue": "Validierungsproblem: {code}",
+  "@aiValidationUnknownIssue": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecommendRemainingMacros": "Heute noch übrig",
   "aiRecommendCustomRequest": "Eigener Wunsch",
   "aiRecommendCustomRequestHint": "z. B. auf restlichen Reis achten, viel Protein, usw.",
@@ -892,22 +1098,22 @@
   "recoveryStateReady": "Bereit",
   "recoveryStateFresh": "Frisch",
   "recoveryStateUnknown": "Unbekannt",
-  "recoveryLastLoadedHours": "Letzte signifikante Belastung: vor {hours}h",
+  "recoveryLastLoadedHours": "Zuletzt signifikant belastet: vor {hours} h",
   "@recoveryLastLoadedHours": {
     "placeholders": {
       "hours": { "type": "int" }
     }
   },
-  "recoveryFatigueContextHigh": "Letzter Ermüdungs-Kontext: hohe Session-Ermüdung",
-  "recoveryFatigueContextBaseline": "Letzter Ermüdungs-Kontext: normale Session-Ermüdung",
-  "recoveryExplanationWithHighFatigue": "{muscle}: zuletzt vor {hours}h signifikant belastet, mit hoher Session-Ermüdung.",
+  "recoveryFatigueContextHigh": "Ermüdungskontext: hohe Session-Ermüdung",
+  "recoveryFatigueContextBaseline": "Ermüdungskontext: normale Session-Ermüdung",
+  "recoveryExplanationWithHighFatigue": "{muscle}: zuletzt vor {hours} h signifikant belastet, mit hoher Session-Ermüdung.",
   "@recoveryExplanationWithHighFatigue": {
     "placeholders": {
       "muscle": { "type": "String" },
       "hours": { "type": "int" }
     }
   },
-  "recoveryExplanationBasic": "{muscle}: zuletzt vor {hours}h signifikant belastet.",
+  "recoveryExplanationBasic": "{muscle}: zuletzt vor {hours} h signifikant belastet.",
   "@recoveryExplanationBasic": {
     "placeholders": {
       "muscle": { "type": "String" },
@@ -915,20 +1121,38 @@
     }
   },
   "recoveryHeuristicDisclaimer": "Dies ist eine konservative Heuristik auf Basis kürzlich signifikanter Belastung und Session-Anstrengung. Keine medizinische Erholungs-Messung.",
-  "recoveryRecentLoad": "Letzte Belastungsmenge: {sets} äquivalente Sätze",
+  "recoveryReadinessLabel": "Bereitschaft",
+  "recoveryRecentLoad": "Letzte Belastung: {sets} äquivalente Sätze",
   "@recoveryRecentLoad": {
     "placeholders": {
       "sets": { "type": "String" }
     }
   },
-  "recoveryWindowHeuristic": "Heuristisches Zeitfenster: häufig etwa {from} bis {to} Stunden, abhängig vom Kontext.",
+  "recoveryLastLoadPressure": "Letzter Belastungsdruck: {level}",
+  "@recoveryLastLoadPressure": {
+    "placeholders": {
+      "level": { "type": "String" }
+    }
+  },
+  "recoveryPressureLow": "niedrig",
+  "recoveryPressureModerate": "moderat",
+  "recoveryPressureHigh": "hoch",
+  "recoveryPressureVeryHigh": "sehr hoch",
+  "recoveryCurrentWindow": "Aktuelles Zeitfenster: erholt sich bis ca. {recoveringUpper} h, bereit bis ca. {readyUpper} h.",
+  "@recoveryCurrentWindow": {
+    "placeholders": {
+      "recoveringUpper": { "type": "int" },
+      "readyUpper": { "type": "int" }
+    }
+  },
+  "recoveryWindowHeuristic": "Aktuelles Zeitfenster: erholt sich bis ca. {from} h, bereit bis ca. {to} h.",
   "@recoveryWindowHeuristic": {
     "placeholders": {
       "from": { "type": "int" },
       "to": { "type": "int" }
     }
   },
-  "recoveryRadarHeuristicCaption": "Radar-Überblick zum jüngsten Erholungsdruck je Muskel. Richtungsweisend und heuristisch.",
+  "recoveryRadarHeuristicCaption": "Radar-Überblick zur aktuellen Bereitschaft je Muskel. Die Status-Badges bleiben das wichtigste Signal.",
   "recoveryNoDataBody": "Es wurden noch nicht genug signifikante Trainingsbelastungen erfasst, um die Muskel-Erholung einzuordnen.",
   "sectionBodyNutrition": "Körper & Ernährung",
   "statisticsSectionTraining": "Training",
@@ -1361,7 +1585,7 @@
   ,"adaptiveExtraCardioOption3": "3 h/Woche"
   ,"adaptiveExtraCardioOption5": "5 h/Woche"
   ,"adaptiveExtraCardioOption7Plus": "7+ h/Woche"
-  ,"adaptiveExtraCardioHelp": "Berücksichtige Joggen, Laufen, Radfahren, Schwimmen oder andere Ausdauer-Einheiten, die nicht als Hypertrack-Workout erfasst sind."
+  ,"adaptiveExtraCardioHelp": "Berücksichtige Joggen, Laufen, Radfahren, Schwimmen oder andere Ausdauer-Einheiten, die nicht als Train Libre-Workout erfasst sind."
   ,"onboardingAdaptiveGoalTitle": "Adaptive Ernährungsempfehlung"
   ,"onboardingAdaptiveGoalSubtitle": "Wähle Richtung und Wochenrate. Wir erstellen eine konservative Starteinschätzung und passen sie mit deinen Logs an."
   ,"adaptiveRecommendationGenerating": "Wird erstellt..."
@@ -1532,4 +1756,75 @@
   ,"adaptiveRecommendationRecalculatedSnack": "Empfehlung neu berechnet."
   ,"adaptiveRecommendationAppliedToGoalsSnack": "Empfehlung auf aktive Ziele angewendet."
   ,"adaptiveRecommendationNotAvailableSnack": "Keine Empfehlung zum Anwenden verfügbar."
+  ,"settingsSectionApp": "App"
+  ,"settingsAppearanceSubtitle": "Design, Stil und Haptik anpassen"
+  ,"settingsShowSugarInDiaryOverviewTitle": "Zucker in Tagebuch-Übersicht anzeigen"
+  ,"settingsShowSugarInDiaryOverviewSubtitle": "Blendet Zucker in der oberen Tagesübersicht ein"
+  ,"settingsSectionHealthTracking": "Gesundheit & Tracking"
+  ,"settingsStepsSubtitle": "Tracking, Quellenrichtlinie und Provider"
+  ,"settingsSleepSubtitle": "Import, Berechtigungen und Schlafstatus"
+  ,"settingsPulseSubtitle": "Opt-in Pulsauswertung und Herzfrequenz-Zugriff"
+  ,"settingsHealthExportSubtitle": "Apple Health und Health Connect Export verwalten"
+  ,"settingsSectionNutritionAndData": "Ernährung & Daten"
+  ,"settingsSectionSupportAbout": "Support & Info"
+  ,"settingsHapticFeedbackTitle": "Haptisches Feedback"
+  ,"settingsHapticFeedbackSubtitle": "Leichte Vibrationen bei Bestätigungen und KI-Warten"
+  ,"stepsSettingsEnableTrackingTitle": "Schritte-Tracking aktivieren"
+  ,"stepsSettingsEnableTrackingSubtitle": "Schrittdaten aus Apple Health / Health Connect lesen"
+  ,"stepsSettingsSourcePolicyTitle": "Quellenrichtlinie"
+  ,"stepsSettingsSourcePolicyAutoDominant": "Auto (dominante Quelle)"
+  ,"stepsSettingsSourcePolicyAutoDominantSubtitle": "Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden."
+  ,"stepsSettingsSourcePolicyMaxPerHour": "Zusammenführen (max pro Stunde)"
+  ,"stepsSettingsSourcePolicyMaxPerHourSubtitle": "Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird."
+  ,"stepsSettingsProviderFilterTitle": "Provider-Filter"
+  ,"pulseTitle": "Puls"
+  ,"pulseChartTitle": "Pulsverlauf"
+  ,"pulseRangeLabel": "Bereich"
+  ,"pulseAverageLabel": "Durchschnitt"
+  ,"pulseRestingLabel": "Ruhepuls"
+  ,"pulseInsufficientData": "Zu wenige Pulswerte für eine verlässliche Kurve."
+  ,"pulseMethodNote": "Der Durchschnitt ist zeitgewichtet. Der Ruhepuls ist ein vorsichtiger Schätzwert aus den niedrigsten 20% der Werte im gewählten Zeitraum."
+  ,"pulseSampleCount": "{count, plural, =0{Keine Werte} one{1 Wert} other{{count} Werte}}"
+  ,"@pulseSampleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+  ,"pulseQualityReady": "Gute Abdeckung"
+  ,"pulseQualityLimited": "Begrenzte Daten"
+  ,"pulseQualityInsufficient": "Sehr wenige Daten"
+  ,"pulseQualityNoData": "Keine Daten"
+  ,"pulseNoDataDisabled": "Pulsauswertung ist in den Einstellungen deaktiviert."
+  ,"pulseNoDataPermissionDenied": "Pulserlaubnis ist erforderlich, um diese Auswertung zu zeigen."
+  ,"pulseNoDataUnavailable": "Pulswerte sind auf diesem Gerät derzeit nicht verfügbar."
+  ,"pulseNoDataQueryFailed": "Pulswerte konnten nicht gelesen werden."
+  ,"pulseNoDataDefault": "Keine Pulswerte für diesen Zeitraum gefunden."
+  ,"pulseSettingsEnableTitle": "Pulsauswertung aktivieren"
+  ,"pulseSettingsEnableSubtitle": "Liest Herzfrequenzdaten nur für die Pulsansicht, wenn du es einschaltest."
+  ,"pulseSettingsPermissionTitle": "Herzfrequenz-Zugriff erlauben"
+  ,"pulseSettingsPermissionSubtitle": "Öffnet Apple Health oder Health Connect, um Pulswerte zu lesen."
+  ,"pulseSettingsAnalysisSubtitle": "Zeigt Bereich, zeitgewichteten Durchschnitt und einen konservativen Ruhepuls-Schätzwert. Keine medizinische Diagnose."
+  ,"pulseSettingsPermissionGranted": "Herzfrequenz-Zugriff ist bereit."
+  ,"pulseSettingsPermissionFailed": "Herzfrequenz-Zugriff wurde nicht erteilt."
+  ,"pulseOptInChip": "Opt-in"
+  ,"statisticsPulseDescription": "Bereich, zeitgewichteter Durchschnitt und Ruhepuls für ausgewählte Zeiträume."
+  ,"statisticsPulseOpenCaption": "Öffnet die Pulsauswertung"
+  ,"healthExportTitle": "Health Export"
+  ,"healthExportAppleHealthTitle": "Apple Health Export"
+  ,"healthExportHealthConnectTitle": "Health Connect Export"
+  ,"healthExportDomainNutritionHydration": "Ernährung & Hydration"
+  ,"healthExportDomainWorkouts": "Workouts"
+  ,"healthExportStateIdle": "Leerlauf"
+  ,"healthExportStateExporting": "Export läuft"
+  ,"healthExportStateSuccess": "Erfolgreich"
+  ,"healthExportStateFailed": "Fehlgeschlagen"
+  ,"healthExportStateDisabled": "Deaktiviert"
+  ,"healthExportResultComplete": "Export abgeschlossen"
+  ,"healthExportResultFailed": "Export fehlgeschlagen"
+  ,"healthExportAppleHealthSubtitle": "Einweg-Export von Train Libre nach Apple Health"
+  ,"healthExportHealthConnectSubtitle": "Einweg-Export von Train Libre nach Health Connect"
+  ,"healthExportAppleHealthStatusTitle": "Export-Status Apple Health"
+  ,"healthExportHealthConnectStatusTitle": "Export-Status Health Connect"
 }

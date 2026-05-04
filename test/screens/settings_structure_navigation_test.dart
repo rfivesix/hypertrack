@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_controller.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permissions_service.dart';
-import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/screens/appearance_settings_screen.dart';
-import 'package:hypertrack/screens/settings_screen.dart';
-import 'package:hypertrack/screens/sleep_settings_screen.dart';
-import 'package:hypertrack/screens/steps_settings_screen.dart';
-import 'package:hypertrack/services/theme_service.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_controller.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_models.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permissions_service.dart';
+import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/screens/appearance_settings_screen.dart';
+import 'package:train_libre/screens/settings_screen.dart';
+import 'package:train_libre/screens/sleep_settings_screen.dart';
+import 'package:train_libre/screens/pulse_settings_screen.dart';
+import 'package:train_libre/screens/steps_settings_screen.dart';
+import 'package:train_libre/services/theme_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -79,8 +80,8 @@ void main() {
 
   setUp(() {
     PackageInfo.setMockInitialValues(
-      appName: 'HyperTrack',
-      packageName: 'com.rfivesix.hypertrack',
+      appName: 'Train Libre',
+      packageName: 'com.rfivesix.trainlibre',
       version: '0.8.11',
       buildNumber: '80021',
       buildSignature: '',
@@ -124,6 +125,7 @@ void main() {
     expect(find.byKey(const Key('settings_appearance_entry')), findsOneWidget);
     expect(find.byKey(const Key('settings_steps_entry')), findsOneWidget);
     expect(find.byKey(const Key('settings_sleep_entry')), findsOneWidget);
+    expect(find.byKey(const Key('settings_pulse_entry')), findsOneWidget);
     expect(
       find.byKey(const Key('settings_health_export_entry')),
       findsOneWidget,
@@ -196,6 +198,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SleepSettingsScreen), findsOneWidget);
+  });
+
+  testWidgets('pulse entry opens pulse settings sub-screen', (tester) async {
+    final controller =
+        SleepPermissionController(const _StubPermissionService());
+
+    await tester.pumpWidget(
+      _wrap(
+        SettingsScreen(
+          sleepSyncService: _FakeSleepSettingsService(controller: controller),
+          sleepPermissionController: controller,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pulseEntry = find.byKey(const Key('settings_pulse_entry'));
+    await tester.scrollUntilVisible(
+      pulseEntry,
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.tap(pulseEntry);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PulseSettingsScreen), findsOneWidget);
   });
 
   testWidgets(

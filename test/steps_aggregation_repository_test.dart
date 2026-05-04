@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
+import 'package:train_libre/features/steps/data/steps_aggregation_repository.dart';
 
 void main() {
   group('InMemoryStepsAggregationRepository', () {

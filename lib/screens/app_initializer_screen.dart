@@ -3,9 +3,13 @@
 import 'package:flutter/material.dart';
 import '../data/backup_manager.dart';
 import '../data/basis_data_manager.dart';
-// import '../generated/app_localizations.dart'; // Not required here because status text is dynamic.
+import '../data/database_helper.dart';
+import '../generated/app_localizations.dart';
+import '../services/local_notification_service.dart';
+import '../services/workout_session_manager.dart';
 import 'main_screen.dart';
 import 'onboarding_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A splash screen responsible for app-wide initialization.
@@ -21,10 +25,12 @@ class AppInitializerScreen extends StatefulWidget {
 
 class _AppInitializerScreenState extends State<AppInitializerScreen> {
   // UI state displayed while initialization is running.
-  String _currentTask = "Starting app...";
-  String _currentDetail = "Initializing...";
+  String _currentTask = '';
+  String _currentDetail = '';
   double _progress = 0.0;
   bool _isDone = false;
+  bool _canSkipRemoteCatalog = false;
+  bool _skipRemoteCatalogRequested = false;
 
   @override
   void initState() {
@@ -36,6 +42,8 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
   }
 
   Future<void> _initialize() async {
+    await _prepareCoreServices();
+
     // 1) Run basis-data update checks and stream progress to the UI.
     await BasisDataManager.instance.checkForBasisDataUpdate(
       force: false,
@@ -45,16 +53,32 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
           _currentTask = task;
           _currentDetail = detail;
           _progress = progress;
+          _canSkipRemoteCatalog = false;
         });
       },
+      onRemoteProgress: (task, detail, progress, {required canSkip}) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
+        setState(() {
+          _currentTask = task;
+          _currentDetail = _skipRemoteCatalogRequested
+              ? l10n.appInitSkippingRemoteDownload
+              : detail;
+          _progress = progress;
+          _canSkipRemoteCatalog = canSkip && !_skipRemoteCatalogRequested;
+        });
+      },
+      isRemoteSkipRequested: () => _skipRemoteCatalogRequested,
     );
 
     // Show completion feedback before navigation.
     if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _currentTask = "Finalizing";
-        _currentDetail = "Checking backups...";
+        _currentTask = l10n.appInitFinalizing;
+        _currentDetail = l10n.appInitCheckingBackups;
         _progress = 1.0;
+        _canSkipRemoteCatalog = false;
       });
     }
 
@@ -84,6 +108,35 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
     );
   }
 
+  Future<void> _prepareCoreServices() async {
+    WorkoutSessionManager? workoutSessionManager;
+    try {
+      workoutSessionManager = context.read<WorkoutSessionManager>();
+    } catch (_) {
+      workoutSessionManager = null;
+    }
+
+    try {
+      await DatabaseHelper.instance.ensureStandardSupplements();
+    } catch (e) {
+      debugPrint("Standard supplement setup failed: $e");
+    }
+
+    try {
+      await LocalNotificationService.instance.initialize();
+    } catch (e) {
+      debugPrint("Local notification initialization failed: $e");
+    }
+
+    if (workoutSessionManager != null) {
+      try {
+        await workoutSessionManager.tryRestoreSession();
+      } catch (e) {
+        debugPrint("Workout session restore failed: $e");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // If initialization is done, render an empty container until navigation completes.
@@ -93,6 +146,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -112,7 +166,7 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
 
             // Main status text.
             Text(
-              _currentTask,
+              _currentTask.isEmpty ? l10n.appInitStarting : _currentTask,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
@@ -136,12 +190,30 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
 
             // Secondary detail text.
             Text(
-              _currentDetail,
+              _currentDetail.isEmpty
+                  ? l10n.appInitInitializing
+                  : _currentDetail,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            if (_canSkipRemoteCatalog) ...[
+              const SizedBox(height: 20),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _skipRemoteCatalogRequested = true;
+                      _canSkipRemoteCatalog = false;
+                      _currentDetail = l10n.appInitSkippingRemoteDownload;
+                    });
+                  },
+                  icon: const Icon(Icons.skip_next_rounded),
+                  label: Text(l10n.appInitSkipDownload),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -33,7 +33,20 @@ def main() -> int:
             lines.append("- Diff: skipped (published reference DB missing)")
         else:
             dsum = diff.get("summary", {})
+            dex = diff.get("examples", {})
             lines.append(f"- Removed IDs: `{dsum.get('removed_count', 'n/a')}`")
+            lines.append(
+                "- Fail-on-removed threshold: "
+                f"`{dsum.get('fail_on_removed_threshold', 'n/a')}`"
+            )
+            lines.append(
+                "- Removed threshold exceeded: "
+                f"`{dsum.get('removed_threshold_exceeded', 'n/a')}`"
+            )
+            lines.append(
+                "- Removed ID examples: "
+                f"`{', '.join(dex.get('removed_ids', [])) if dex.get('removed_ids') else 'none'}`"
+            )
             lines.append(f"- Added IDs: `{dsum.get('added_count', 'n/a')}`")
 
     lines.append(f"- Release publication: `{publish_outcome}`")

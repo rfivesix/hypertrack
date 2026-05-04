@@ -44,16 +44,17 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   void initState() {
     super.initState();
     // Fix #65: Starte mit dem übergebenen Datum oder Heute
-    _selectedDate = widget.initialDate ?? DateTime.now();
+    _selectedDate = (widget.initialDate ?? DateTime.now()).dateOnly;
     _loadData(_selectedDate);
   }
 
   Future<void> _loadData(DateTime day) async {
+    final selectedDay = day.dateOnly;
     setState(() => _isLoading = true);
     final db = DatabaseHelper.instance;
 
-    final supplementsForDate = await db.getSupplementsForDate(day);
-    final logs = await db.getSupplementLogsForDate(day);
+    final supplementsForDate = await db.getSupplementsForDate(selectedDay);
+    final logs = await db.getSupplementLogsForDate(selectedDay);
 
     final byId = <int, Supplement>{
       for (final s in supplementsForDate)
@@ -101,6 +102,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
 
     if (!mounted) return;
     setState(() {
+      _selectedDate = selectedDay;
       _supplementsById
         ..clear()
         ..addAll(byId);
@@ -111,7 +113,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   }
 
   void _navigateDay(bool forward) {
-    final newDay = _selectedDate.add(Duration(days: forward ? 1 : -1));
+    final newDay = _selectedDate.dateOnly.add(Duration(days: forward ? 1 : -1));
     if (forward && newDay.isAfter(DateTime.now())) return;
     setState(() => _selectedDate = newDay);
     _loadData(_selectedDate);
@@ -124,7 +126,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && !picked.isSameDate(_selectedDate)) {
       setState(() => _selectedDate = picked);
       _loadData(_selectedDate);
     }

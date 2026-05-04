@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Hypertrack';
+  String get appTitle => 'Train Libre';
 
   @override
   String get bannerText => 'Recommendation / Current Workout';
@@ -269,7 +269,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get measurementRightCalf => 'Right Calf';
 
   @override
-  String get drawerMenuTitle => 'Hypertrack Menu';
+  String get drawerMenuTitle => 'Train Libre Menu';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -440,6 +440,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get skipButton => 'Skip';
 
   @override
+  String get appInitStarting => 'Starting app...';
+
+  @override
+  String get appInitInitializing => 'Initializing...';
+
+  @override
+  String get appInitFinalizing => 'Finalizing';
+
+  @override
+  String get appInitCheckingBackups => 'Checking backups...';
+
+  @override
+  String get appInitSkipDownload => 'Skip download';
+
+  @override
+  String get appInitSkippingRemoteDownload => 'Skipping remote download...';
+
+  @override
   String get emptyHistory => 'No completed workouts yet.';
 
   @override
@@ -576,6 +594,238 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
+  String get share => 'Share';
+
+  @override
+  String get shareWorkout => 'Share workout';
+
+  @override
+  String get shareRoutine => 'Share routine';
+
+  @override
+  String get shareAsImage => 'Share as image';
+
+  @override
+  String get shareAsText => 'Share as text';
+
+  @override
+  String get sharedFromTrainLibre => 'Shared from Train Libre';
+
+  @override
+  String get sharedWithTrainLibre => 'Shared with Train Libre';
+
+  @override
+  String get shareImageSummary => 'Summary';
+
+  @override
+  String get shareImageExercises => 'Exercises';
+
+  @override
+  String get shareImageMuscleFocus => 'Muscle focus';
+
+  @override
+  String get shareImageMinimal => 'Minimal';
+
+  @override
+  String get volume => 'Volume';
+
+  @override
+  String moreExercises(int count) {
+    return '+ $count more exercises';
+  }
+
+  @override
+  String shareSetNumber(int number) {
+    return 'Set $number';
+  }
+
+  @override
+  String get repsShort => 'reps';
+
+  @override
+  String get shareFailed => 'Sharing failed';
+
+  @override
+  String get workoutShareTitle => 'Workout';
+
+  @override
+  String get routineShareTitle => 'Routine';
+
+  @override
+  String get setTypeWarmup => 'Warm-up';
+
+  @override
+  String get setTypeWork => 'Work sets';
+
+  @override
+  String get setTypeFailure => 'Failure';
+
+  @override
+  String get setTypeDropset => 'Dropset';
+
+  @override
+  String get setTypeSuperset => 'Superset';
+
+  @override
+  String get setTypeOther => 'Other';
+
+  @override
+  String get setTypeWarmupSuffix => 'Warm-up';
+
+  @override
+  String get setTypeFailureSuffix => 'Failure';
+
+  @override
+  String get setTypeDropsetSuffix => 'Dropset';
+
+  @override
+  String get setTypeSupersetSuffix => 'Superset';
+
+  @override
+  String get setTypeOtherSuffix => 'Other';
+
+  @override
+  String warmupSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count warm-up sets',
+      one: '1 warm-up set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count work sets',
+      one: '1 work set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count failure sets',
+      one: '1 failure set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dropsets',
+      one: '1 dropset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count supersets',
+      one: '1 superset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other sets',
+      one: '1 other set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String warmupCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count warm-up',
+      one: '1 warm-up',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count work',
+      one: '1 work',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count failure',
+      one: '1 failure',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dropsets',
+      one: '1 dropset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count supersets',
+      one: '1 superset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other',
+      one: '1 other',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareExercisesLabel => 'exercises';
+
+  @override
+  String get shareSetsLabel => 'sets';
+
+  @override
+  String get shareSetLabel => 'set';
+
+  @override
   String get tabBaseFoods => 'Base Foods';
 
   @override
@@ -590,7 +840,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Hypertrack App Backup - $timestamp';
+    return 'Train Libre App Backup - $timestamp';
   }
 
   @override
@@ -1059,10 +1309,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackReportEmailOpenFailed => 'Could not open email app.';
 
   @override
-  String get feedbackReportEmailSubject => 'Hypertrack feedback report';
+  String get feedbackReportEmailSubject => 'Train Libre feedback report';
 
   @override
-  String get feedbackReportReportTitle => 'Hypertrack Feedback Report';
+  String get feedbackReportReportTitle => 'Train Libre Feedback Report';
 
   @override
   String get feedbackReportReportGeneratedAt => 'Generated';
@@ -1112,7 +1362,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get date_and_time_of_measurement => 'Date & time of measurement';
 
   @override
-  String get onbWelcomeTitle => 'Welcome to Hypertrack';
+  String get onbWelcomeTitle => 'Welcome to Train Libre';
 
   @override
   String get onbWelcomeBody =>
@@ -1308,7 +1558,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dialogEnterPasswordImport => 'Enter password to import backup';
 
   @override
-  String get dataManagementBackupTitle => 'Hypertrack Data Backup';
+  String get dataManagementBackupTitle => 'Train Libre Data Backup';
 
   @override
   String get dataManagementBackupDescription =>
@@ -1747,7 +1997,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMaterialColorsSubtitle =>
-      'Use Android dynamic colors (Material You) instead of the Hypertrack brand accent';
+      'Use Android dynamic colors (Material You) instead of the Train Libre brand accent';
 
   @override
   String get settingsFoodDbSectionTitle => 'Food database';
@@ -1827,7 +2077,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resumeButton => 'Resume';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Hypertrack';
+  String get onboardingWelcomeTitle => 'Welcome to Train Libre';
 
   @override
   String get onboardingWelcomeSubtitle =>
@@ -1944,7 +2194,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiPrivacyDisclosure =>
-      'Your images and text are sent to the selected AI provider only when you tap Analyze. Data is never stored on external servers beyond processing your request. Your API key is stored encrypted on this device only.';
+      'Images, text, and generated recommendation prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider\'s terms. Your API key is stored encrypted on this device only.';
 
   @override
   String get aiMealCapture => 'AI Meal';
@@ -2033,6 +2283,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.';
 
   @override
+  String get aiRecommendationContextTitle =>
+      'Send recent meals for recommendations';
+
+  @override
+  String get aiRecommendationContextSubtitle =>
+      'Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.';
+
+  @override
   String get aiRecommendationTitle => 'AI Meal Coach';
 
   @override
@@ -2070,6 +2328,220 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiRecommendNoMatch => 'No database match';
+
+  @override
+  String get aiValidationNoMatchedItemsSaveYet =>
+      'No matched items can be saved yet.';
+
+  @override
+  String get aiValidationNoMatchedIngredientsSaveYet =>
+      'No matched ingredients can be saved yet.';
+
+  @override
+  String get aiValidationSomeItemsNeedReviewTitle => 'Some items need review';
+
+  @override
+  String get aiValidationSomeIngredientsNeedReviewTitle =>
+      'Some ingredients need review';
+
+  @override
+  String get aiValidationSaveMatchedItemsButton => 'Save matched items';
+
+  @override
+  String get aiValidationSaveMatchedIngredientsButton =>
+      'Save matched ingredients';
+
+  @override
+  String get aiValidationValidationPassedTitle => 'Validation passed';
+
+  @override
+  String get aiValidationReviewSuggestedTitle => 'Review suggested';
+
+  @override
+  String get aiValidationMacroFitValidatedTitle => 'Macro fit validated';
+
+  @override
+  String get aiValidationNeedsReviewTitle => 'Needs review';
+
+  @override
+  String get aiValidationRepairLimitReachedReview =>
+      'Automatic repair limit reached. Please review before saving.';
+
+  @override
+  String get aiValidationRepairLimitReachedRecommendation =>
+      'Automatic repair limit reached. Review matches and portions before saving.';
+
+  @override
+  String get aiValidationRecentMealContextIncluded =>
+      'Recent meal context was included.';
+
+  @override
+  String get aiValidationGeneratedWithoutRecentMealHistory =>
+      'Generated without recent meal history.';
+
+  @override
+  String get aiValidationApiKeyRequiredTitle => 'API Key Required';
+
+  @override
+  String aiValidationScoreLabel(int score) {
+    return 'Score $score/100';
+  }
+
+  @override
+  String aiValidationDeltaSummary(
+      int kcalDelta, int proteinDelta, int carbsDelta, int fatDelta) {
+    return 'Delta: $kcalDelta kcal · ${proteinDelta}g Protein · ${carbsDelta}g Carbs · ${fatDelta}g Fat';
+  }
+
+  @override
+  String aiValidationPartialSaveItemsMessage(
+      int unmatchedCount, int matchedCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      unmatchedCount,
+      locale: localeName,
+      other:
+          '$unmatchedCount items do not have a local database match and will not be saved.',
+      one: '1 item does not have a local database match and will not be saved.',
+    );
+    return '$_temp0 Save the $matchedCount matched item(s) only?';
+  }
+
+  @override
+  String aiValidationPartialSaveIngredientsMessage(
+      int unmatchedCount, int matchedCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      unmatchedCount,
+      locale: localeName,
+      other:
+          '$unmatchedCount ingredients do not have a local database match and will not be saved.',
+      one:
+          '1 ingredient does not have a local database match and will not be saved.',
+    );
+    return '$_temp0 Save the $matchedCount matched ingredient(s) only?';
+  }
+
+  @override
+  String get aiValidationEmptyItemName => 'An item has no food name.';
+
+  @override
+  String aiValidationDuplicateItemMerged(String name) {
+    return 'Duplicate \"$name\" entries were merged before validation.';
+  }
+
+  @override
+  String get aiValidationInvalidQuantity => 'Quantity must be greater than 0g.';
+
+  @override
+  String get aiValidationTinyQuantity =>
+      'Quantity is very small; review the gram amount.';
+
+  @override
+  String get aiValidationExtremeQuantity =>
+      'Quantity is implausibly high for one meal item.';
+
+  @override
+  String get aiValidationLargeQuantity =>
+      'Quantity is unusually large; review the gram amount.';
+
+  @override
+  String get aiValidationLowAiConfidence =>
+      'AI confidence is low for this item.';
+
+  @override
+  String get aiValidationUnmatchedItem => 'No local database match was found.';
+
+  @override
+  String get aiValidationWeakDbMatch => 'The local database match is weak.';
+
+  @override
+  String get aiValidationPartialDbMatch =>
+      'The local database match is partial.';
+
+  @override
+  String get aiValidationAmbiguousDbMatch =>
+      'Several local database matches look similarly plausible.';
+
+  @override
+  String get aiValidationStateMismatch =>
+      'The AI item state may not match the database entry.';
+
+  @override
+  String get aiValidationZeroNutritionMatch =>
+      'The matched database entry has no usable nutrition data.';
+
+  @override
+  String get aiValidationImplausibleFoodDensity =>
+      'Matched food has unusually high kcal per 100g.';
+
+  @override
+  String get aiValidationMacroEnergyMismatch =>
+      'Matched food macros do not align well with kcal.';
+
+  @override
+  String get aiValidationImplausibleItemNutrition =>
+      'Nutrition for this quantity is unusually high.';
+
+  @override
+  String get aiValidationEmptyMeal => 'The AI returned no meal items.';
+
+  @override
+  String get aiValidationAllItemsUnmatched =>
+      'No item could be matched to the local food database.';
+
+  @override
+  String aiValidationPartialUnmatchedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items cannot be saved until matched.',
+      one: '1 item cannot be saved until matched.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiValidationZeroTotalKcal => 'Matched items produce 0 kcal.';
+
+  @override
+  String get aiValidationCaptureTotalKcalExtreme =>
+      'Total kcal is implausibly high for one captured meal.';
+
+  @override
+  String get aiValidationCaptureTotalKcalHigh =>
+      'Total kcal is unusually high; review portions.';
+
+  @override
+  String get aiValidationMacroTotalExtreme =>
+      'Total macros are implausibly high.';
+
+  @override
+  String get aiValidationMacroTotalHigh =>
+      'Total macros are unusually high; review portions.';
+
+  @override
+  String aiValidationTargetKcalMismatch(int delta) {
+    return 'Calories miss the target by $delta kcal.';
+  }
+
+  @override
+  String aiValidationTargetProteinMismatch(int delta) {
+    return 'Protein misses the target by ${delta}g.';
+  }
+
+  @override
+  String aiValidationTargetCarbsMismatch(int delta) {
+    return 'Carbs miss the target by ${delta}g.';
+  }
+
+  @override
+  String aiValidationTargetFatMismatch(int delta) {
+    return 'Fat misses the target by ${delta}g.';
+  }
+
+  @override
+  String aiValidationUnknownIssue(String code) {
+    return 'Validation issue: $code';
+  }
 
   @override
   String get aiRecommendRemainingMacros => 'Remaining today';
@@ -2216,25 +2688,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recoveryLastLoadedHours(int hours) {
-    return 'Last significant loading: ${hours}h ago';
+    return 'Last significantly loaded: $hours h ago';
   }
 
   @override
   String get recoveryFatigueContextHigh =>
-      'Recent fatigue context: high session fatigue';
+      'Fatigue context: high session fatigue';
 
   @override
   String get recoveryFatigueContextBaseline =>
-      'Recent fatigue context: baseline session fatigue';
+      'Fatigue context: baseline session fatigue';
 
   @override
   String recoveryExplanationWithHighFatigue(String muscle, int hours) {
-    return '$muscle: last significantly loaded ${hours}h ago, with high session fatigue.';
+    return '$muscle: last significantly loaded $hours h ago, with high session fatigue.';
   }
 
   @override
   String recoveryExplanationBasic(String muscle, int hours) {
-    return '$muscle: last significantly loaded ${hours}h ago.';
+    return '$muscle: last significantly loaded $hours h ago.';
   }
 
   @override
@@ -2242,18 +2714,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is a conservative heuristic based on recent significant loading and session effort. It is not a medical recovery measurement.';
 
   @override
+  String get recoveryReadinessLabel => 'Readiness';
+
+  @override
   String recoveryRecentLoad(String sets) {
-    return 'Recent load amount: $sets equivalent sets';
+    return 'Last load: $sets equivalent sets';
+  }
+
+  @override
+  String recoveryLastLoadPressure(String level) {
+    return 'Last load pressure: $level';
+  }
+
+  @override
+  String get recoveryPressureLow => 'low';
+
+  @override
+  String get recoveryPressureModerate => 'moderate';
+
+  @override
+  String get recoveryPressureHigh => 'high';
+
+  @override
+  String get recoveryPressureVeryHigh => 'very high';
+
+  @override
+  String recoveryCurrentWindow(int recoveringUpper, int readyUpper) {
+    return 'Current window: recovering until about $recoveringUpper h, ready until about $readyUpper h.';
   }
 
   @override
   String recoveryWindowHeuristic(int from, int to) {
-    return 'Heuristic window: often around $from to $to hours, depending on context.';
+    return 'Current window: recovering until about $from h, ready until about $to h.';
   }
 
   @override
   String get recoveryRadarHeuristicCaption =>
-      'Radar overview of recent recovery pressure by muscle. It is directional and heuristic.';
+      'Radar overview of current readiness by muscle. Status badges remain the primary signal.';
 
   @override
   String get recoveryNoDataBody =>
@@ -3329,7 +3826,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptiveExtraCardioHelp =>
-      'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Hypertrack workouts.';
+      'Include jogging, running, cycling, swimming, or other endurance sessions not logged as Train Libre workouts.';
 
   @override
   String get onboardingAdaptiveGoalTitle => 'Adaptive nutrition recommendation';
@@ -3626,4 +4123,227 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adaptiveRecommendationNotAvailableSnack =>
       'No recommendation available to apply.';
+
+  @override
+  String get settingsSectionApp => 'App';
+
+  @override
+  String get settingsAppearanceSubtitle =>
+      'Adjust theme, visual style, and haptics';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewTitle =>
+      'Show sugar in Diary overview';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewSubtitle =>
+      'Shows sugar in the top daily overview section';
+
+  @override
+  String get settingsSectionHealthTracking => 'Health & Tracking';
+
+  @override
+  String get settingsStepsSubtitle => 'Tracking, source policy, and providers';
+
+  @override
+  String get settingsSleepSubtitle => 'Import, permissions, and sleep status';
+
+  @override
+  String get settingsPulseSubtitle =>
+      'Opt-in pulse analysis and heart-rate access';
+
+  @override
+  String get settingsHealthExportSubtitle =>
+      'Manage Apple Health and Health Connect export';
+
+  @override
+  String get settingsSectionNutritionAndData => 'Nutrition & Data';
+
+  @override
+  String get settingsSectionSupportAbout => 'Support / About';
+
+  @override
+  String get settingsHapticFeedbackTitle => 'Haptic feedback';
+
+  @override
+  String get settingsHapticFeedbackSubtitle =>
+      'Light vibrations for confirmations and AI waiting';
+
+  @override
+  String get stepsSettingsEnableTrackingTitle => 'Enable steps tracking';
+
+  @override
+  String get stepsSettingsEnableTrackingSubtitle =>
+      'Read step data from Apple Health / Health Connect';
+
+  @override
+  String get stepsSettingsSourcePolicyTitle => 'Source policy';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominant => 'Auto (dominant source)';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominantSubtitle =>
+      'Recommended: use one source per day to avoid overlap inflation.';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHour => 'Merge (max per hour)';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHourSubtitle =>
+      'Combine sources by taking the highest hourly bucket.';
+
+  @override
+  String get stepsSettingsProviderFilterTitle => 'Provider filter';
+
+  @override
+  String get pulseTitle => 'Pulse';
+
+  @override
+  String get pulseChartTitle => 'Pulse over time';
+
+  @override
+  String get pulseRangeLabel => 'Range';
+
+  @override
+  String get pulseAverageLabel => 'Average';
+
+  @override
+  String get pulseRestingLabel => 'Resting';
+
+  @override
+  String get pulseInsufficientData =>
+      'Too few pulse samples for a reliable chart.';
+
+  @override
+  String get pulseMethodNote =>
+      'Average pulse is time-weighted. Resting pulse is a conservative estimate from the lowest 20% of samples in the selected period.';
+
+  @override
+  String pulseSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samples',
+      one: '1 sample',
+      zero: 'No samples',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pulseQualityReady => 'Good coverage';
+
+  @override
+  String get pulseQualityLimited => 'Limited data';
+
+  @override
+  String get pulseQualityInsufficient => 'Very sparse';
+
+  @override
+  String get pulseQualityNoData => 'No data';
+
+  @override
+  String get pulseNoDataDisabled => 'Pulse analysis is disabled in Settings.';
+
+  @override
+  String get pulseNoDataPermissionDenied =>
+      'Heart-rate permission is required to show pulse analysis.';
+
+  @override
+  String get pulseNoDataUnavailable =>
+      'Pulse data is currently unavailable on this device.';
+
+  @override
+  String get pulseNoDataQueryFailed => 'Could not read pulse data.';
+
+  @override
+  String get pulseNoDataDefault =>
+      'No pulse samples were found for this period.';
+
+  @override
+  String get pulseSettingsEnableTitle => 'Enable pulse analysis';
+
+  @override
+  String get pulseSettingsEnableSubtitle =>
+      'Reads heart-rate data for the pulse view only when you turn this on.';
+
+  @override
+  String get pulseSettingsPermissionTitle => 'Allow heart-rate access';
+
+  @override
+  String get pulseSettingsPermissionSubtitle =>
+      'Opens Apple Health or Health Connect so Train Libre can read pulse samples.';
+
+  @override
+  String get pulseSettingsAnalysisSubtitle =>
+      'Shows range, time-weighted average, and a conservative resting-pulse estimate. Not a medical diagnosis.';
+
+  @override
+  String get pulseSettingsPermissionGranted => 'Heart-rate access is ready.';
+
+  @override
+  String get pulseSettingsPermissionFailed =>
+      'Heart-rate access was not granted.';
+
+  @override
+  String get pulseOptInChip => 'Opt-in';
+
+  @override
+  String get statisticsPulseDescription =>
+      'Range, time-weighted average, and resting pulse for selected periods.';
+
+  @override
+  String get statisticsPulseOpenCaption => 'Opens pulse analysis';
+
+  @override
+  String get healthExportTitle => 'Health export';
+
+  @override
+  String get healthExportAppleHealthTitle => 'Apple Health export';
+
+  @override
+  String get healthExportHealthConnectTitle => 'Health Connect export';
+
+  @override
+  String get healthExportDomainNutritionHydration => 'Nutrition & hydration';
+
+  @override
+  String get healthExportDomainWorkouts => 'Workouts';
+
+  @override
+  String get healthExportStateIdle => 'Idle';
+
+  @override
+  String get healthExportStateExporting => 'Exporting';
+
+  @override
+  String get healthExportStateSuccess => 'Success';
+
+  @override
+  String get healthExportStateFailed => 'Failed';
+
+  @override
+  String get healthExportStateDisabled => 'Disabled';
+
+  @override
+  String get healthExportResultComplete => 'Export complete';
+
+  @override
+  String get healthExportResultFailed => 'Export failed';
+
+  @override
+  String get healthExportAppleHealthSubtitle =>
+      'One-way export from Train Libre to Apple Health';
+
+  @override
+  String get healthExportHealthConnectSubtitle =>
+      'One-way export from Train Libre to Health Connect';
+
+  @override
+  String get healthExportAppleHealthStatusTitle => 'Apple Health export status';
+
+  @override
+  String get healthExportHealthConnectStatusTitle =>
+      'Health Connect export status';
 }

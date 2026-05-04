@@ -7,6 +7,7 @@ class SleepScoringInput {
     this.wasoMinutes,
     this.regularitySri,
     this.regularityValidDays = 0,
+    this.regularityValidComparisonPairs,
     this.lightSleepPct,
     this.deepSleepPct,
     this.remSleepPct,
@@ -26,6 +27,7 @@ class SleepScoringInput {
   /// minimum threshold.
   final double? regularitySri;
   final int regularityValidDays;
+  final int? regularityValidComparisonPairs;
 
   /// Sleep stage composition percentages relative to total sleep time.
   ///
@@ -128,9 +130,14 @@ SleepScoringResult calculateSleepScore(
   // Do not impute/fake regularity: SRI contributes only when minimum valid
   // day requirements are satisfied.
   final regularityUsed = input.regularitySri != null &&
-      input.regularityValidDays >= config.regularityMinDays;
+      input.regularityValidDays >= config.regularityMinDays &&
+      (input.regularityValidComparisonPairs ?? config.regularityMinDays - 1) >=
+          config.regularityMinDays - 1;
   final regularityStable = regularityUsed &&
-      input.regularityValidDays >= config.regularityStableDays;
+      input.regularityValidDays >= config.regularityStableDays &&
+      (input.regularityValidComparisonPairs ??
+              config.regularityStableDays - 1) >=
+          config.regularityStableDays - 1;
   final regularityScore =
       regularityUsed ? input.regularitySri!.clamp(0, 100).toDouble() : null;
   final stageDepthScore = scoreStageDepthQualityV1(
@@ -183,10 +190,19 @@ SleepScoringResult calculateSleepScore(
       ? baseScore
       : (baseScore <= stageScoreCap ? baseScore : stageScoreCap);
   final clamped = cappedScore.clamp(0, 100).toDouble();
+  final stageSupportFactor = _stageSupportFactor(
+    lightSleepPct: input.lightSleepPct,
+    deepSleepPct: input.deepSleepPct,
+    remSleepPct: input.remSleepPct,
+    asleepUnspecifiedPct: input.asleepUnspecifiedPct,
+    stageDataConfidence: input.stageDataConfidence,
+    sourcePlatform: input.sourcePlatform,
+    sourceAppId: input.sourceAppId,
+  );
   return SleepScoringResult(
     score: clamped,
     state: _scoreState(clamped),
-    completeness: activeWeight,
+    completeness: (activeWeight * stageSupportFactor).clamp(0, 1).toDouble(),
     durationScore: durationScore,
     continuityScore: continuityScore,
     seScore: seScore,
@@ -282,10 +298,14 @@ double? scoreStageDepthQualityV1({
       restorativeBonus;
 
   if (remMissing) {
-    final remMissingCap = fidelity < 0.7 ? 82.0 : 78.0;
+    final remMissingCap = fidelity < 0.7 ? 76.0 : 72.0;
     if (score > remMissingCap) {
       score = remMissingCap;
     }
+  }
+
+  if (normalizedUnspecified >= 99.0 && score > 70.0) {
+    score = 70.0;
   }
 
   return score.clamp(0, 100).toDouble();
@@ -416,4 +436,46 @@ double _stageFidelity({
 
 bool _isLikelyLimitedStagingSource(String source) {
   return source.contains('withings');
+}
+
+double _stageSupportFactor({
+  required double? lightSleepPct,
+  required double? deepSleepPct,
+  required double? remSleepPct,
+  required double? asleepUnspecifiedPct,
+  required SleepStageConfidence stageDataConfidence,
+  required String? sourcePlatform,
+  required String? sourceAppId,
+}) {
+  final hasAnyStage = lightSleepPct != null ||
+      deepSleepPct != null ||
+      remSleepPct != null ||
+      asleepUnspecifiedPct != null;
+  if (!hasAnyStage) return 0.85;
+
+  final light = (lightSleepPct ?? 0).clamp(0, 100).toDouble();
+  final deep = (deepSleepPct ?? 0).clamp(0, 100).toDouble();
+  final rem = (remSleepPct ?? 0).clamp(0, 100).toDouble();
+  final unspecified = (asleepUnspecifiedPct ?? 0).clamp(0, 100).toDouble();
+  final total = light + deep + rem + unspecified;
+  if (total <= 0) return 0.85;
+
+  final normalizedUnspecified = unspecified / total;
+  final normalizedRem = rem / total;
+  final fidelity = _stageFidelity(
+    stageDataConfidence: stageDataConfidence,
+    sourcePlatform: sourcePlatform,
+    sourceAppId: sourceAppId,
+  );
+  var factor = switch (stageDataConfidence) {
+    SleepStageConfidence.high => 1.0,
+    SleepStageConfidence.medium => 0.96,
+    SleepStageConfidence.unknown => 0.90,
+    SleepStageConfidence.low => 0.82,
+  };
+  factor -= normalizedUnspecified * 0.20;
+  if (normalizedRem < 0.01) {
+    factor -= fidelity < 0.7 ? 0.08 : 0.14;
+  }
+  return factor.clamp(0.65, 1.0).toDouble();
 }

@@ -1,24 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/features/statistics/domain/body_nutrition_analytics_models.dart';
-import 'package:hypertrack/features/statistics/domain/consistency_payload_models.dart';
-import 'package:hypertrack/features/statistics/domain/hub_payload_models.dart';
-import 'package:hypertrack/features/statistics/domain/recovery_payload_models.dart';
-import 'package:hypertrack/features/statistics/domain/statistics_data_quality_policy.dart';
-import 'package:hypertrack/features/steps/data/steps_aggregation_repository.dart';
-import 'package:hypertrack/features/steps/domain/steps_models.dart';
-import 'package:hypertrack/features/sleep/presentation/day/sleep_day_overview_page.dart';
-import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
-import 'package:hypertrack/features/sleep/presentation/sleep_navigation.dart';
-import 'package:hypertrack/features/sleep/data/sleep_hub_summary_repository.dart';
-import 'package:hypertrack/screens/measurements_screen.dart';
-import 'package:hypertrack/screens/statistics_hub_screen.dart';
-import 'package:hypertrack/services/health/steps_sync_service.dart';
-import 'package:hypertrack/services/theme_service.dart';
-import 'package:hypertrack/services/workout_session_manager.dart';
-import 'package:hypertrack/widgets/analytics_section_header.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/features/statistics/domain/body_nutrition_analytics_models.dart';
+import 'package:train_libre/features/statistics/domain/consistency_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/hub_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/recovery_payload_models.dart';
+import 'package:train_libre/features/statistics/domain/statistics_data_quality_policy.dart';
+import 'package:train_libre/features/pulse/data/pulse_repository.dart';
+import 'package:train_libre/features/pulse/domain/pulse_models.dart';
+import 'package:train_libre/features/steps/data/steps_aggregation_repository.dart';
+import 'package:train_libre/features/steps/domain/steps_models.dart';
+import 'package:train_libre/features/sleep/presentation/day/sleep_day_overview_page.dart';
+import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
+import 'package:train_libre/features/sleep/presentation/sleep_navigation.dart';
+import 'package:train_libre/features/sleep/data/sleep_hub_summary_repository.dart';
+import 'package:train_libre/screens/measurements_screen.dart';
+import 'package:train_libre/screens/statistics_hub_screen.dart';
+import 'package:train_libre/services/health/steps_sync_service.dart';
+import 'package:train_libre/services/theme_service.dart';
+import 'package:train_libre/services/workout_session_manager.dart';
+import 'package:train_libre/widgets/analytics_section_header.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -109,8 +113,34 @@ class _FakeSleepSummaryRepository extends SleepHubSummaryRepository {
   Future<void> dispose() async {}
 }
 
+class _FakePulseRepository implements PulseAnalysisRepository {
+  const _FakePulseRepository({
+    this.summary,
+  });
+
+  final PulseAnalysisSummary? summary;
+
+  @override
+  Future<PulseAnalysisSummary> getAnalysis({
+    required PulseAnalysisWindow window,
+  }) async {
+    return summary ??
+        PulseAnalysisSummary(
+          window: window,
+          samples: const [],
+          chartSamples: const [],
+          sampleCount: 0,
+          quality: PulseDataQuality.noData,
+          noDataReason: PulseNoDataReason.noSamples,
+        );
+  }
+
+  @override
+  Future<bool> isTrackingEnabled() async => true;
+}
+
 const _sleepConnectChannel =
-    MethodChannel('hypertrack.health/sleep_health_connect');
+    MethodChannel('trainlibre.health/sleep_health_connect');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -158,23 +188,43 @@ void main() {
     }
   }
 
-  Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fakeFetch(
-    int _,
+  Future<void> pumpUntil(
+    WidgetTester tester,
+    bool Function() condition,
   ) async {
+    for (var i = 0; i < 80; i++) {
+      if (condition()) return;
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    fail('Timed out waiting for condition.');
+  }
+
+  (StatisticsHubPayload, BodyNutritionAnalyticsResult) hubResult({
+    String? topExerciseName,
+  }) {
+    final notableImprovements = topExerciseName == null
+        ? <Map<String, dynamic>>[]
+        : <Map<String, dynamic>>[
+            {
+              'exerciseName': topExerciseName,
+              'improvementPct': 12.3,
+            },
+          ];
+
     return (
-      const StatisticsHubPayload(
-        recentPrs: [],
-        weeklyVolume: [],
-        workoutsPerWeek: [],
-        weeklyConsistencyMetrics: [],
-        muscleAnalytics: {},
-        trainingStats: TrainingStatsPayload(
+      StatisticsHubPayload(
+        recentPrs: const [],
+        weeklyVolume: const [],
+        workoutsPerWeek: const [],
+        weeklyConsistencyMetrics: const [],
+        muscleAnalytics: const {},
+        trainingStats: const TrainingStatsPayload(
           totalWorkouts: 0,
           thisWeekCount: 0,
           avgPerWeek: 0,
           streakWeeks: 0,
         ),
-        recoveryAnalytics: RecoveryAnalyticsPayload(
+        recoveryAnalytics: const RecoveryAnalyticsPayload(
           hasData: false,
           overallState: '',
           totals: RecoveryTotalsPayload(
@@ -185,7 +235,7 @@ void main() {
           ),
           muscles: [],
         ),
-        notableImprovements: [],
+        notableImprovements: notableImprovements,
       ),
       BodyNutritionAnalyticsResult(
         range: DateTimeRange(
@@ -236,6 +286,12 @@ void main() {
     );
   }
 
+  Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fakeFetch(
+    int _,
+  ) async {
+    return hubResult();
+  }
+
   Widget wrapWithSessionManager(Widget child) {
     return MultiProvider(
       providers: [
@@ -257,9 +313,13 @@ void main() {
 
   StatisticsHubScreen buildHub({
     required StepsAggregationRepository stepsRepository,
+    PulseAnalysisRepository? pulseRepository,
+    Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(int)?
+        fetchHubAnalytics,
   }) {
     return StatisticsHubScreen(
       stepsRepository: stepsRepository,
+      pulseRepository: pulseRepository,
       sleepSummaryRepository: _FakeSleepSummaryRepository(
         const SleepHubSummary(
           averageScore: 79,
@@ -270,7 +330,7 @@ void main() {
           nightsCount: 5,
         ),
       ),
-      fetchHubAnalytics: fakeFetch,
+      fetchHubAnalytics: fetchHubAnalytics ?? fakeFetch,
       importSleepIfDue: ({
         int lookbackDays = 30,
         Duration minInterval = const Duration(hours: 6),
@@ -309,6 +369,60 @@ void main() {
     final changedChips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
     expect(changedChips.first.selected, isTrue);
     expect(stepsSectionHeader(), findsOneWidget);
+  });
+
+  testWidgets('statistics hub ignores stale overlapping range loads', (
+    WidgetTester tester,
+  ) async {
+    await StepsSyncService().setTrackingEnabled(true);
+    final pendingFetches = <int,
+        Completer<(StatisticsHubPayload, BodyNutritionAnalyticsResult)>>{};
+
+    Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> delayedFetch(
+      int rangeIndex,
+    ) {
+      return pendingFetches
+          .putIfAbsent(
+            rangeIndex,
+            () => Completer<
+                (StatisticsHubPayload, BodyNutritionAnalyticsResult)>(),
+          )
+          .future;
+    }
+
+    await tester.pumpWidget(
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(
+            stepsRepository: _FakeStepsRepository(),
+            fetchHubAnalytics: delayedFetch,
+          ),
+        ),
+      ),
+    );
+
+    await pumpUntil(tester, () => pendingFetches.containsKey(1));
+    pendingFetches[1]!.complete(hubResult(topExerciseName: 'Initial range'));
+    await pumpLoaded(tester);
+    expect(find.text('73,500'), findsOneWidget);
+
+    await tester.tap(find.byType(ChoiceChip).first);
+    await pumpUntil(tester, () => pendingFetches.containsKey(0));
+
+    await tester.tap(find.byType(ChoiceChip).at(2));
+    await pumpUntil(tester, () => pendingFetches.containsKey(2));
+
+    pendingFetches[2]!.complete(hubResult(topExerciseName: 'Fresh range'));
+    await pumpLoaded(tester);
+    expect(find.text('490,500'), findsOneWidget);
+
+    pendingFetches[0]!.complete(hubResult(topExerciseName: 'Stale range'));
+    await pumpLoaded(tester);
+    expect(find.text('490,500'), findsOneWidget);
+    expect(find.text('9,100'), findsNothing);
   });
 
   testWidgets('statistics hub hides steps card when tracking is disabled', (
@@ -387,6 +501,85 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byType(SleepDayOverviewPage), findsOneWidget);
+  });
+
+  testWidgets('statistics hub pulse card shows selected range and KPI values', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 5000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await StepsSyncService().setTrackingEnabled(true);
+    final window = PulseAnalysisWindow(
+      startUtc: DateTime.utc(2026, 1),
+      endUtc: DateTime.utc(2026, 1, 31),
+    );
+    await tester.pumpWidget(
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(
+            stepsRepository: _FakeStepsRepository(),
+            pulseRepository: _FakePulseRepository(
+              summary: PulseAnalysisSummary(
+                window: window,
+                samples: const [],
+                chartSamples: const [],
+                sampleCount: 12,
+                quality: PulseDataQuality.ready,
+                noDataReason: PulseNoDataReason.none,
+                minBpm: 50,
+                maxBpm: 90,
+                averageBpm: 70,
+                restingBpm: 55,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpLoaded(tester);
+
+    final pulseCard = find.byKey(const Key('statistics_pulse_card'));
+    expect(pulseCard, findsOneWidget);
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Jan 1 - Jan 30')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Range')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('50-90 bpm')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Average')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('70 bpm')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('Resting')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pulseCard, matching: find.text('55 bpm')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: pulseCard,
+        matching: find.text('12 samples - Good coverage'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Opt-in'), findsNothing);
   });
 
   testWidgets('statistics hub body section shows measurements link', (

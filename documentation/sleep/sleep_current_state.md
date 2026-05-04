@@ -1,10 +1,10 @@
-# Sleep Module — Current Source of Truth (Working-Copy Audit)
+# Sleep Module
 
-This is the canonical technical reference for Sleep as implemented in the **current working copy**.
+This is the canonical technical reference for Sleep as currently implemented.
 
 ## Scope and guardrails
 
-- Source of truth: code under `lib/features/sleep/**` plus integration callers in `lib/screens/*`.
+- Current implementation: code under `lib/features/sleep/**` plus integration callers in `lib/screens/*`.
 - This document describes implemented behavior only.
 - Ambiguities are labeled explicitly when code signals multiple possible interpretations.
 
@@ -52,9 +52,7 @@ Route registration:
 - `/sleep/day`, `/sleep/week`, `/sleep/month` currently all build `SleepDayOverviewPage` with different `initialScope` values.
 - `SleepWeekOverviewPage` and `SleepMonthOverviewPage` classes exist (`lib/features/sleep/presentation/week/*`, `.../month/*`) and are used in tests, but are not currently wired by `onGenerateRoute`.
 
-Status label:
-
-- **Implemented in current working copy**.
+Status: implemented.
 
 ## UI screens and behavior
 
@@ -183,6 +181,12 @@ Flow:
 - HealthKit adapter: `lib/features/sleep/platform/healthkit/healthkit_sleep_adapter.dart`
 - Channel bridges/data sources: `lib/features/sleep/platform/sleep_platform_channel.dart`
 
+Health Connect heart-rate robustness:
+
+- Android native sleep import reads sleep sessions first, then reads heart-rate records from a padded session-derived window.
+- The Dart Health Connect adapter has a best-effort fallback: if the strict sleep import contains sessions but no HR samples, it retries with a 24-hour padded import window and keeps only HR samples that still fall inside the strict imported sleep sessions.
+- This is intended to support providers that store HR in long interval records whose record bounds sit outside a sleep/import window. It does not synthesize or interpolate missing data.
+
 ### Mapping
 
 - Health Connect mapping: `lib/features/sleep/data/mapping/health_connect_mapper.dart`
@@ -226,6 +230,7 @@ Current scoring inputs provided by pipeline:
 - `wasoMinutes` from nightly metrics (`wakeAfterSleepOnset`)
 - `regularitySri` from 1-minute sleep/wake state matching across true 24h pairs (consecutive calendar days only)
 - `regularityValidDays` for availability/stability thresholds
+- Regularity availability/stability also depends on valid consecutive comparison pairs; sparse non-consecutive days do not become stable just from raw day count.
 
 Explicitly excluded from V2 main score:
 
@@ -269,6 +274,8 @@ Implemented threshold mapping in repositories:
 - Qualifying wake segment threshold: `>= 3 minutes`
 - Distinct interruption requires sleep gap `> 2 minutes` between wake segments
 - Interruption counting starts after sleep onset
+- `unknown` and ambiguous `inBedOnly` are not definite wake for WASO/interruption scoring; explicit `awake` and `outOfBed` remain wake.
+- Consumer sleep stages are treated as imperfect source data. Missing/no-stage nights can still score from duration and continuity, but completeness is lowered when stage support is limited.
 
 ### Persistence
 
@@ -299,6 +306,7 @@ Important implementation detail:
 
 - HR samples are imported with sessions and stages through platform batch
 - Persisted to `sleep_canonical_heart_rate_samples`
+- Health Connect HR retrieval uses wider read windows with strict final session-window filtering to avoid losing valid in-session samples from long provider records.
 
 ### Derived nightly HR in pipeline
 
@@ -315,9 +323,10 @@ Important implementation detail:
   - median of up to last 30 valid nightly averages
 - Delta: `nightlyAvg - baseline`
 
-### Working-copy note
+### Heart-rate detail chart
 
-- **Implemented in current working copy:** `SleepDayOverviewData` includes `heartRateSamples`, and `HeartRateDetailPage` renders a per-night HR chart from those samples when available.
+`SleepDayOverviewData` includes `heartRateSamples`, and `HeartRateDetailPage`
+renders a per-night HR chart from those samples when available.
 
 ## Persisted vs derived-on-read
 
@@ -357,7 +366,7 @@ Week/month scope uses `SleepPeriodAggregationEngine` (`lib/features/sleep/domain
 
 Important implementation detail:
 
-- Week window bars use a synthetic wake anchor at `06:00` and back-calculate bedtime from duration (`_toWindow(...)`), not real bedtime/wake timestamps.
+- Week window bars use real session bounds when available. If bounds are missing, `_toWindow(...)` uses a synthetic wake anchor at `06:00` and back-calculates bedtime from duration; those windows are marked as estimated in the domain model.
 
 ## Statistics integration boundaries
 
@@ -397,9 +406,9 @@ Sleep section currently implements:
 
 - Standalone pages `SleepWeekOverviewPage` and `SleepMonthOverviewPage` exist but app routing currently resolves week/month through `SleepDayOverviewPage` scope mode.
 
-## Debugging pointers for score/HR/interruptions issues
+## Troubleshooting score, HR, and interruptions
 
-When validating nightly score discrepancies, inspect in this order:
+For recurring nightly score discrepancies, inspect in this order:
 
 1. Raw import presence (`sleep_raw_imports`)
 2. Canonical session/stage/hr rows (`sleep_canonical_*`)

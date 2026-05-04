@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'Hypertrack';
+  String get appTitle => 'Train Libre';
 
   @override
   String get bannerText => 'Empfehlung / Aktuelles Workout';
@@ -269,7 +269,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get measurementRightCalf => 'Rechte Wade';
 
   @override
-  String get drawerMenuTitle => 'Hypertrack Menü';
+  String get drawerMenuTitle => 'Train Libre Menü';
 
   @override
   String get drawerDashboard => 'Dashboard';
@@ -442,6 +442,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get skipButton => 'Überspringen';
 
   @override
+  String get appInitStarting => 'App wird gestartet...';
+
+  @override
+  String get appInitInitializing => 'Initialisierung läuft...';
+
+  @override
+  String get appInitFinalizing => 'Abschluss';
+
+  @override
+  String get appInitCheckingBackups => 'Backups werden geprüft...';
+
+  @override
+  String get appInitSkipDownload => 'Download überspringen';
+
+  @override
+  String get appInitSkippingRemoteDownload =>
+      'Remote-Download wird übersprungen...';
+
+  @override
   String get emptyHistory => 'Noch keine Workouts abgeschlossen.';
 
   @override
@@ -580,6 +599,238 @@ class AppLocalizationsDe extends AppLocalizations {
   String get save => 'Speichern';
 
   @override
+  String get share => 'Teilen';
+
+  @override
+  String get shareWorkout => 'Workout teilen';
+
+  @override
+  String get shareRoutine => 'Routine teilen';
+
+  @override
+  String get shareAsImage => 'Als Bild teilen';
+
+  @override
+  String get shareAsText => 'Als Text teilen';
+
+  @override
+  String get sharedFromTrainLibre => 'Geteilt mit Train Libre';
+
+  @override
+  String get sharedWithTrainLibre => 'Geteilt mit Train Libre';
+
+  @override
+  String get shareImageSummary => 'Zusammenfassung';
+
+  @override
+  String get shareImageExercises => 'Übungen';
+
+  @override
+  String get shareImageMuscleFocus => 'Muskel-Fokus';
+
+  @override
+  String get shareImageMinimal => 'Minimal';
+
+  @override
+  String get volume => 'Volumen';
+
+  @override
+  String moreExercises(int count) {
+    return '+ $count weitere Übungen';
+  }
+
+  @override
+  String shareSetNumber(int number) {
+    return 'Set $number';
+  }
+
+  @override
+  String get repsShort => 'Wdh';
+
+  @override
+  String get shareFailed => 'Teilen fehlgeschlagen';
+
+  @override
+  String get workoutShareTitle => 'Workout';
+
+  @override
+  String get routineShareTitle => 'Routine';
+
+  @override
+  String get setTypeWarmup => 'Aufwärmsatz';
+
+  @override
+  String get setTypeWork => 'Arbeitssätze';
+
+  @override
+  String get setTypeFailure => 'Satz bis zum Muskelversagen';
+
+  @override
+  String get setTypeDropset => 'Dropsatz';
+
+  @override
+  String get setTypeSuperset => 'Supersatz';
+
+  @override
+  String get setTypeOther => 'Sonstige Sätze';
+
+  @override
+  String get setTypeWarmupSuffix => 'Aufwärmen';
+
+  @override
+  String get setTypeFailureSuffix => 'Muskelversagen';
+
+  @override
+  String get setTypeDropsetSuffix => 'Dropsatz';
+
+  @override
+  String get setTypeSupersetSuffix => 'Supersatz';
+
+  @override
+  String get setTypeOtherSuffix => 'Spezial';
+
+  @override
+  String warmupSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufwärmsätze',
+      one: '1 Aufwärmsatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Arbeitssätze',
+      one: '1 Arbeitssatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sätze bis zum Muskelversagen',
+      one: '1 Satz bis zum Muskelversagen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Dropsätze',
+      one: '1 Dropsatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Supersätze',
+      one: '1 Supersatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Spezial-Sätze',
+      one: '1 Spezial-Satz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String warmupCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufwärmen',
+      one: '1 Aufwärmen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Arbeit',
+      one: '1 Arbeit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Muskelversagen',
+      one: '1 Muskelversagen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Dropsätze',
+      one: '1 Dropsatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Supersätze',
+      one: '1 Supersatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Spezial',
+      one: '1 Spezial',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareExercisesLabel => 'Übungen';
+
+  @override
+  String get shareSetsLabel => 'Sätze';
+
+  @override
+  String get shareSetLabel => 'Satz';
+
+  @override
   String get tabBaseFoods => 'Grundnahrungsmittel';
 
   @override
@@ -594,7 +845,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String backupFileSubject(String timestamp) {
-    return 'Hypertrack App Backup - $timestamp';
+    return 'Train Libre App Backup - $timestamp';
   }
 
   @override
@@ -1064,10 +1315,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'E-Mail-App konnte nicht geöffnet werden.';
 
   @override
-  String get feedbackReportEmailSubject => 'Hypertrack Feedback-Bericht';
+  String get feedbackReportEmailSubject => 'Train Libre Feedback-Bericht';
 
   @override
-  String get feedbackReportReportTitle => 'Hypertrack Feedback-Bericht';
+  String get feedbackReportReportTitle => 'Train Libre Feedback-Bericht';
 
   @override
   String get feedbackReportReportGeneratedAt => 'Erstellt';
@@ -1116,7 +1367,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get date_and_time_of_measurement => 'Datum & Uhrzeit der Messung';
 
   @override
-  String get onbWelcomeTitle => 'Willkommen bei Hypertrack';
+  String get onbWelcomeTitle => 'Willkommen bei Train Libre';
 
   @override
   String get onbWelcomeBody =>
@@ -1312,7 +1563,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dialogEnterPasswordImport => 'Passwort für den Import eingeben';
 
   @override
-  String get dataManagementBackupTitle => 'Hypertrack Datensicherung';
+  String get dataManagementBackupTitle => 'Train Libre Datensicherung';
 
   @override
   String get dataManagementBackupDescription =>
@@ -1754,7 +2005,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsMaterialColorsSubtitle =>
-      'Verwende dynamische Android-Farben (Material You) statt des Hypertrack-Markenakzents';
+      'Verwende dynamische Android-Farben (Material You) statt des Train Libre-Markenakzents';
 
   @override
   String get settingsFoodDbSectionTitle => 'Lebensmittel-Datenbank';
@@ -1835,7 +2086,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get resumeButton => 'Fortsetzen';
 
   @override
-  String get onboardingWelcomeTitle => 'Willkommen bei Hypertrack';
+  String get onboardingWelcomeTitle => 'Willkommen bei Train Libre';
 
   @override
   String get onboardingWelcomeSubtitle =>
@@ -1953,7 +2204,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiPrivacyDisclosure =>
-      'Deine Bilder und Texte werden nur an den gewählten KI-Anbieter gesendet, wenn du auf Analysieren tippst. Daten werden über die Verarbeitung hinaus nicht auf externen Servern gespeichert. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.';
+      'Bilder, Texte und erzeugte Empfehlungs-Prompts werden nur an den gewählten KI-Anbieter gesendet, wenn du eine KI-Aktion nutzt. Speicherung und Verarbeitung beim Anbieter richten sich nach dessen Bedingungen. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.';
 
   @override
   String get aiMealCapture => 'KI-Mahlzeit';
@@ -2045,6 +2296,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.';
 
   @override
+  String get aiRecommendationContextTitle =>
+      'Letzte Mahlzeiten für Empfehlungen senden';
+
+  @override
+  String get aiRecommendationContextSubtitle =>
+      'Optional. Kann Vorschläge verbessern, indem eine kurze Zusammenfassung letzter Mahlzeiten an den gewählten KI-Anbieter gesendet wird. Standardmäßig aus.';
+
+  @override
   String get aiRecommendationTitle => 'KI-Mahlzeitcoach';
 
   @override
@@ -2082,6 +2341,229 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiRecommendNoMatch => 'Kein Datenbank-Treffer';
+
+  @override
+  String get aiValidationNoMatchedItemsSaveYet =>
+      'Noch keine zugeordneten Einträge können gespeichert werden.';
+
+  @override
+  String get aiValidationNoMatchedIngredientsSaveYet =>
+      'Noch keine zugeordneten Zutaten können gespeichert werden.';
+
+  @override
+  String get aiValidationSomeItemsNeedReviewTitle =>
+      'Einige Einträge müssen geprüft werden';
+
+  @override
+  String get aiValidationSomeIngredientsNeedReviewTitle =>
+      'Einige Zutaten müssen geprüft werden';
+
+  @override
+  String get aiValidationSaveMatchedItemsButton =>
+      'Zuordnete Einträge speichern';
+
+  @override
+  String get aiValidationSaveMatchedIngredientsButton =>
+      'Zuordnete Zutaten speichern';
+
+  @override
+  String get aiValidationValidationPassedTitle => 'Validierung bestanden';
+
+  @override
+  String get aiValidationReviewSuggestedTitle => 'Überprüfung empfohlen';
+
+  @override
+  String get aiValidationMacroFitValidatedTitle => 'Makro-Fit bestätigt';
+
+  @override
+  String get aiValidationNeedsReviewTitle => 'Prüfung nötig';
+
+  @override
+  String get aiValidationRepairLimitReachedReview =>
+      'Automatische Reparaturgrenze erreicht. Bitte vor dem Speichern prüfen.';
+
+  @override
+  String get aiValidationRepairLimitReachedRecommendation =>
+      'Automatische Reparaturgrenze erreicht. Bitte Zuordnungen und Portionsgrößen vor dem Speichern prüfen.';
+
+  @override
+  String get aiValidationRecentMealContextIncluded =>
+      'Der Kontext letzter Mahlzeiten wurde einbezogen.';
+
+  @override
+  String get aiValidationGeneratedWithoutRecentMealHistory =>
+      'Ohne Verlauf letzter Mahlzeiten erzeugt.';
+
+  @override
+  String get aiValidationApiKeyRequiredTitle => 'API-Schlüssel erforderlich';
+
+  @override
+  String aiValidationScoreLabel(int score) {
+    return 'Punktzahl $score/100';
+  }
+
+  @override
+  String aiValidationDeltaSummary(
+      int kcalDelta, int proteinDelta, int carbsDelta, int fatDelta) {
+    return 'Differenz: $kcalDelta kcal · ${proteinDelta}g Protein · ${carbsDelta}g Kohlenhydrate · ${fatDelta}g Fett';
+  }
+
+  @override
+  String aiValidationPartialSaveItemsMessage(
+      int unmatchedCount, int matchedCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      unmatchedCount,
+      locale: localeName,
+      other:
+          '$unmatchedCount Einträge haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.',
+      one:
+          '1 Eintrag hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.',
+    );
+    return '$_temp0 Die $matchedCount zugeordneten Einträge speichern?';
+  }
+
+  @override
+  String aiValidationPartialSaveIngredientsMessage(
+      int unmatchedCount, int matchedCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      unmatchedCount,
+      locale: localeName,
+      other:
+          '$unmatchedCount Zutaten haben keinen Treffer in der lokalen Datenbank und werden nicht gespeichert.',
+      one:
+          '1 Zutat hat keinen Treffer in der lokalen Datenbank und wird nicht gespeichert.',
+    );
+    return '$_temp0 Die $matchedCount zugeordneten Zutaten speichern?';
+  }
+
+  @override
+  String get aiValidationEmptyItemName =>
+      'Ein Eintrag hat keinen Lebensmittelnamen.';
+
+  @override
+  String aiValidationDuplicateItemMerged(String name) {
+    return 'Doppelte Einträge für \"$name\" wurden vor der Validierung zusammengeführt.';
+  }
+
+  @override
+  String get aiValidationInvalidQuantity =>
+      'Die Menge muss größer als 0 g sein.';
+
+  @override
+  String get aiValidationTinyQuantity =>
+      'Die Menge ist sehr klein; bitte die Grammangabe prüfen.';
+
+  @override
+  String get aiValidationExtremeQuantity =>
+      'Die Menge ist für ein einzelnes Mahlzeiten-Element unrealistisch hoch.';
+
+  @override
+  String get aiValidationLargeQuantity =>
+      'Die Menge ist ungewöhnlich groß; bitte die Grammangabe prüfen.';
+
+  @override
+  String get aiValidationLowAiConfidence =>
+      'Die KI-Konfidenz für diesen Eintrag ist niedrig.';
+
+  @override
+  String get aiValidationUnmatchedItem =>
+      'Kein Treffer in der lokalen Datenbank gefunden.';
+
+  @override
+  String get aiValidationWeakDbMatch => 'Der Datenbank-Treffer ist schwach.';
+
+  @override
+  String get aiValidationPartialDbMatch =>
+      'Der Datenbank-Treffer ist teilweise passend.';
+
+  @override
+  String get aiValidationAmbiguousDbMatch =>
+      'Mehrere lokale Datenbank-Treffer wirken ähnlich plausibel.';
+
+  @override
+  String get aiValidationStateMismatch =>
+      'Der Zustand des KI-Eintrags passt möglicherweise nicht zum Datenbankeintrag.';
+
+  @override
+  String get aiValidationZeroNutritionMatch =>
+      'Der zugeordnete Datenbankeintrag enthält keine nutzbaren Nährwertdaten.';
+
+  @override
+  String get aiValidationImplausibleFoodDensity =>
+      'Das zugeordnete Lebensmittel hat ungewöhnlich viele kcal pro 100 g.';
+
+  @override
+  String get aiValidationMacroEnergyMismatch =>
+      'Die Makros des zugeordneten Lebensmittels passen nicht gut zu den kcal.';
+
+  @override
+  String get aiValidationImplausibleItemNutrition =>
+      'Die Nährwerte für diese Menge sind ungewöhnlich hoch.';
+
+  @override
+  String get aiValidationEmptyMeal =>
+      'Die KI hat keine Mahlzeiten-Elemente zurückgegeben.';
+
+  @override
+  String get aiValidationAllItemsUnmatched =>
+      'Kein Element konnte der lokalen Lebensmitteldatenbank zugeordnet werden.';
+
+  @override
+  String aiValidationPartialUnmatchedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Elemente können erst gespeichert werden, wenn sie zugeordnet sind.',
+      one: '1 Element kann erst gespeichert werden, wenn es zugeordnet ist.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiValidationZeroTotalKcal =>
+      'Die zugeordneten Elemente ergeben 0 kcal.';
+
+  @override
+  String get aiValidationCaptureTotalKcalExtreme =>
+      'Die Gesamt-kcal sind für eine erfasste Mahlzeit unrealistisch hoch.';
+
+  @override
+  String get aiValidationCaptureTotalKcalHigh =>
+      'Die Gesamt-kcal sind ungewöhnlich hoch; bitte die Portionen prüfen.';
+
+  @override
+  String get aiValidationMacroTotalExtreme =>
+      'Die Gesamt-Makros sind unrealistisch hoch.';
+
+  @override
+  String get aiValidationMacroTotalHigh =>
+      'Die Gesamt-Makros sind ungewöhnlich hoch; bitte die Portionen prüfen.';
+
+  @override
+  String aiValidationTargetKcalMismatch(int delta) {
+    return 'Die Kalorien weichen um $delta kcal vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationTargetProteinMismatch(int delta) {
+    return 'Das Protein weicht um $delta g vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationTargetCarbsMismatch(int delta) {
+    return 'Die Kohlenhydrate weichen um $delta g vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationTargetFatMismatch(int delta) {
+    return 'Das Fett weicht um $delta g vom Ziel ab.';
+  }
+
+  @override
+  String aiValidationUnknownIssue(String code) {
+    return 'Validierungsproblem: $code';
+  }
 
   @override
   String get aiRecommendRemainingMacros => 'Heute noch übrig';
@@ -2226,25 +2708,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String recoveryLastLoadedHours(int hours) {
-    return 'Letzte signifikante Belastung: vor ${hours}h';
+    return 'Zuletzt signifikant belastet: vor $hours h';
   }
 
   @override
   String get recoveryFatigueContextHigh =>
-      'Letzter Ermüdungs-Kontext: hohe Session-Ermüdung';
+      'Ermüdungskontext: hohe Session-Ermüdung';
 
   @override
   String get recoveryFatigueContextBaseline =>
-      'Letzter Ermüdungs-Kontext: normale Session-Ermüdung';
+      'Ermüdungskontext: normale Session-Ermüdung';
 
   @override
   String recoveryExplanationWithHighFatigue(String muscle, int hours) {
-    return '$muscle: zuletzt vor ${hours}h signifikant belastet, mit hoher Session-Ermüdung.';
+    return '$muscle: zuletzt vor $hours h signifikant belastet, mit hoher Session-Ermüdung.';
   }
 
   @override
   String recoveryExplanationBasic(String muscle, int hours) {
-    return '$muscle: zuletzt vor ${hours}h signifikant belastet.';
+    return '$muscle: zuletzt vor $hours h signifikant belastet.';
   }
 
   @override
@@ -2252,18 +2734,43 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dies ist eine konservative Heuristik auf Basis kürzlich signifikanter Belastung und Session-Anstrengung. Keine medizinische Erholungs-Messung.';
 
   @override
+  String get recoveryReadinessLabel => 'Bereitschaft';
+
+  @override
   String recoveryRecentLoad(String sets) {
-    return 'Letzte Belastungsmenge: $sets äquivalente Sätze';
+    return 'Letzte Belastung: $sets äquivalente Sätze';
+  }
+
+  @override
+  String recoveryLastLoadPressure(String level) {
+    return 'Letzter Belastungsdruck: $level';
+  }
+
+  @override
+  String get recoveryPressureLow => 'niedrig';
+
+  @override
+  String get recoveryPressureModerate => 'moderat';
+
+  @override
+  String get recoveryPressureHigh => 'hoch';
+
+  @override
+  String get recoveryPressureVeryHigh => 'sehr hoch';
+
+  @override
+  String recoveryCurrentWindow(int recoveringUpper, int readyUpper) {
+    return 'Aktuelles Zeitfenster: erholt sich bis ca. $recoveringUpper h, bereit bis ca. $readyUpper h.';
   }
 
   @override
   String recoveryWindowHeuristic(int from, int to) {
-    return 'Heuristisches Zeitfenster: häufig etwa $from bis $to Stunden, abhängig vom Kontext.';
+    return 'Aktuelles Zeitfenster: erholt sich bis ca. $from h, bereit bis ca. $to h.';
   }
 
   @override
   String get recoveryRadarHeuristicCaption =>
-      'Radar-Überblick zum jüngsten Erholungsdruck je Muskel. Richtungsweisend und heuristisch.';
+      'Radar-Überblick zur aktuellen Bereitschaft je Muskel. Die Status-Badges bleiben das wichtigste Signal.';
 
   @override
   String get recoveryNoDataBody =>
@@ -3352,7 +3859,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adaptiveExtraCardioHelp =>
-      'Berücksichtige Joggen, Laufen, Radfahren, Schwimmen oder andere Ausdauer-Einheiten, die nicht als Hypertrack-Workout erfasst sind.';
+      'Berücksichtige Joggen, Laufen, Radfahren, Schwimmen oder andere Ausdauer-Einheiten, die nicht als Train Libre-Workout erfasst sind.';
 
   @override
   String get onboardingAdaptiveGoalTitle => 'Adaptive Ernährungsempfehlung';
@@ -3650,4 +4157,231 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get adaptiveRecommendationNotAvailableSnack =>
       'Keine Empfehlung zum Anwenden verfügbar.';
+
+  @override
+  String get settingsSectionApp => 'App';
+
+  @override
+  String get settingsAppearanceSubtitle => 'Design, Stil und Haptik anpassen';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewTitle =>
+      'Zucker in Tagebuch-Übersicht anzeigen';
+
+  @override
+  String get settingsShowSugarInDiaryOverviewSubtitle =>
+      'Blendet Zucker in der oberen Tagesübersicht ein';
+
+  @override
+  String get settingsSectionHealthTracking => 'Gesundheit & Tracking';
+
+  @override
+  String get settingsStepsSubtitle =>
+      'Tracking, Quellenrichtlinie und Provider';
+
+  @override
+  String get settingsSleepSubtitle => 'Import, Berechtigungen und Schlafstatus';
+
+  @override
+  String get settingsPulseSubtitle =>
+      'Opt-in Pulsauswertung und Herzfrequenz-Zugriff';
+
+  @override
+  String get settingsHealthExportSubtitle =>
+      'Apple Health und Health Connect Export verwalten';
+
+  @override
+  String get settingsSectionNutritionAndData => 'Ernährung & Daten';
+
+  @override
+  String get settingsSectionSupportAbout => 'Support & Info';
+
+  @override
+  String get settingsHapticFeedbackTitle => 'Haptisches Feedback';
+
+  @override
+  String get settingsHapticFeedbackSubtitle =>
+      'Leichte Vibrationen bei Bestätigungen und KI-Warten';
+
+  @override
+  String get stepsSettingsEnableTrackingTitle => 'Schritte-Tracking aktivieren';
+
+  @override
+  String get stepsSettingsEnableTrackingSubtitle =>
+      'Schrittdaten aus Apple Health / Health Connect lesen';
+
+  @override
+  String get stepsSettingsSourcePolicyTitle => 'Quellenrichtlinie';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominant => 'Auto (dominante Quelle)';
+
+  @override
+  String get stepsSettingsSourcePolicyAutoDominantSubtitle =>
+      'Empfohlen: eine Quelle pro Tag, um Doppelzählungen zu vermeiden.';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHour =>
+      'Zusammenführen (max pro Stunde)';
+
+  @override
+  String get stepsSettingsSourcePolicyMaxPerHourSubtitle =>
+      'Quellen kombinieren, indem pro Stunde der höchste Wert verwendet wird.';
+
+  @override
+  String get stepsSettingsProviderFilterTitle => 'Provider-Filter';
+
+  @override
+  String get pulseTitle => 'Puls';
+
+  @override
+  String get pulseChartTitle => 'Pulsverlauf';
+
+  @override
+  String get pulseRangeLabel => 'Bereich';
+
+  @override
+  String get pulseAverageLabel => 'Durchschnitt';
+
+  @override
+  String get pulseRestingLabel => 'Ruhepuls';
+
+  @override
+  String get pulseInsufficientData =>
+      'Zu wenige Pulswerte für eine verlässliche Kurve.';
+
+  @override
+  String get pulseMethodNote =>
+      'Der Durchschnitt ist zeitgewichtet. Der Ruhepuls ist ein vorsichtiger Schätzwert aus den niedrigsten 20% der Werte im gewählten Zeitraum.';
+
+  @override
+  String pulseSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Werte',
+      one: '1 Wert',
+      zero: 'Keine Werte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pulseQualityReady => 'Gute Abdeckung';
+
+  @override
+  String get pulseQualityLimited => 'Begrenzte Daten';
+
+  @override
+  String get pulseQualityInsufficient => 'Sehr wenige Daten';
+
+  @override
+  String get pulseQualityNoData => 'Keine Daten';
+
+  @override
+  String get pulseNoDataDisabled =>
+      'Pulsauswertung ist in den Einstellungen deaktiviert.';
+
+  @override
+  String get pulseNoDataPermissionDenied =>
+      'Pulserlaubnis ist erforderlich, um diese Auswertung zu zeigen.';
+
+  @override
+  String get pulseNoDataUnavailable =>
+      'Pulswerte sind auf diesem Gerät derzeit nicht verfügbar.';
+
+  @override
+  String get pulseNoDataQueryFailed =>
+      'Pulswerte konnten nicht gelesen werden.';
+
+  @override
+  String get pulseNoDataDefault =>
+      'Keine Pulswerte für diesen Zeitraum gefunden.';
+
+  @override
+  String get pulseSettingsEnableTitle => 'Pulsauswertung aktivieren';
+
+  @override
+  String get pulseSettingsEnableSubtitle =>
+      'Liest Herzfrequenzdaten nur für die Pulsansicht, wenn du es einschaltest.';
+
+  @override
+  String get pulseSettingsPermissionTitle => 'Herzfrequenz-Zugriff erlauben';
+
+  @override
+  String get pulseSettingsPermissionSubtitle =>
+      'Öffnet Apple Health oder Health Connect, um Pulswerte zu lesen.';
+
+  @override
+  String get pulseSettingsAnalysisSubtitle =>
+      'Zeigt Bereich, zeitgewichteten Durchschnitt und einen konservativen Ruhepuls-Schätzwert. Keine medizinische Diagnose.';
+
+  @override
+  String get pulseSettingsPermissionGranted =>
+      'Herzfrequenz-Zugriff ist bereit.';
+
+  @override
+  String get pulseSettingsPermissionFailed =>
+      'Herzfrequenz-Zugriff wurde nicht erteilt.';
+
+  @override
+  String get pulseOptInChip => 'Opt-in';
+
+  @override
+  String get statisticsPulseDescription =>
+      'Bereich, zeitgewichteter Durchschnitt und Ruhepuls für ausgewählte Zeiträume.';
+
+  @override
+  String get statisticsPulseOpenCaption => 'Öffnet die Pulsauswertung';
+
+  @override
+  String get healthExportTitle => 'Health Export';
+
+  @override
+  String get healthExportAppleHealthTitle => 'Apple Health Export';
+
+  @override
+  String get healthExportHealthConnectTitle => 'Health Connect Export';
+
+  @override
+  String get healthExportDomainNutritionHydration => 'Ernährung & Hydration';
+
+  @override
+  String get healthExportDomainWorkouts => 'Workouts';
+
+  @override
+  String get healthExportStateIdle => 'Leerlauf';
+
+  @override
+  String get healthExportStateExporting => 'Export läuft';
+
+  @override
+  String get healthExportStateSuccess => 'Erfolgreich';
+
+  @override
+  String get healthExportStateFailed => 'Fehlgeschlagen';
+
+  @override
+  String get healthExportStateDisabled => 'Deaktiviert';
+
+  @override
+  String get healthExportResultComplete => 'Export abgeschlossen';
+
+  @override
+  String get healthExportResultFailed => 'Export fehlgeschlagen';
+
+  @override
+  String get healthExportAppleHealthSubtitle =>
+      'Einweg-Export von Train Libre nach Apple Health';
+
+  @override
+  String get healthExportHealthConnectSubtitle =>
+      'Einweg-Export von Train Libre nach Health Connect';
+
+  @override
+  String get healthExportAppleHealthStatusTitle => 'Export-Status Apple Health';
+
+  @override
+  String get healthExportHealthConnectStatusTitle =>
+      'Export-Status Health Connect';
 }

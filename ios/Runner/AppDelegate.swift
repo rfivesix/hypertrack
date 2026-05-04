@@ -5,9 +5,9 @@ import UIKit
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private let healthStore = HKHealthStore()
-  private let stepsChannelName = "hypertrack.health/steps"
-  private let sleepHealthKitChannelName = "hypertrack.health/sleep_healthkit"
-  private let exportAppleHealthChannelName = "hypertrack.health/export_apple_health"
+  private let stepsChannelName = "trainlibre.health/steps"
+  private let sleepHealthKitChannelName = "trainlibre.health/sleep_healthkit"
+  private let exportAppleHealthChannelName = "trainlibre.health/export_apple_health"
   private var channelsConfigured = false
 
   override func application(
@@ -105,6 +105,8 @@ import UIKit
       result(HKHealthStore.isHealthDataAvailable())
     case "requestPermissions":
       requestHealthKitPermissions(result: result)
+    case "requestHeartRatePermissions":
+      requestHeartRatePermissions(result: result)
     case "readStepSegments":
       readStepSegments(call: call, result: result)
     case "readHeartRateSamples":
@@ -126,6 +128,26 @@ import UIKit
     }
 
     healthStore.requestAuthorization(toShare: nil, read: [stepType]) { success, error in
+      if let error = error {
+        result(FlutterError(code: "permission_denied", message: error.localizedDescription, details: nil))
+        return
+      }
+      result(success)
+    }
+  }
+
+  private func requestHeartRatePermissions(result: @escaping FlutterResult) {
+    guard HKHealthStore.isHealthDataAvailable() else {
+      result(FlutterError(code: "not_available", message: "HealthKit unavailable", details: nil))
+      return
+    }
+
+    guard let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else {
+      result(FlutterError(code: "not_available", message: "Heart rate type unavailable", details: nil))
+      return
+    }
+
+    healthStore.requestAuthorization(toShare: nil, read: [heartRateType]) { success, error in
       if let error = error {
         result(FlutterError(code: "permission_denied", message: error.localizedDescription, details: nil))
         return
@@ -493,7 +515,7 @@ import UIKit
     let metadata: [String: Any]? = {
       guard let summaryNotes, !summaryNotes.isEmpty else { return nil }
       // HealthKit workout has no dedicated notes field; persist summary in metadata.
-      return ["hypertrack_workout_summary": summaryNotes]
+      return ["trainlibre_workout_summary": summaryNotes]
     }()
     let duration = end.timeIntervalSince(start)
     let workout = HKWorkout(

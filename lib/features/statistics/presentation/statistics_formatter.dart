@@ -63,6 +63,18 @@ class StatisticsPresentationFormatter implements StatisticsFormatter {
     };
   }
 
+  static String recoveryPressureLevelLabel(
+    AppLocalizations l10n,
+    RecoveryPressureLevel level,
+  ) {
+    return switch (level) {
+      RecoveryPressureLevel.low => l10n.recoveryPressureLow,
+      RecoveryPressureLevel.moderate => l10n.recoveryPressureModerate,
+      RecoveryPressureLevel.high => l10n.recoveryPressureHigh,
+      RecoveryPressureLevel.veryHigh => l10n.recoveryPressureVeryHigh,
+    };
+  }
+
   static String bodyNutritionInsightLabel(
     AppLocalizations l10n,
     BodyNutritionInsightType insightType,

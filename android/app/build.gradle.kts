@@ -14,12 +14,12 @@ plugins {
 }
 
 android {
-    namespace = "com.rfivesix.hypertrack"
+    namespace = "com.rfivesix.trainlibre"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-         applicationId = "com.rfivesix.hypertrack"
+         applicationId = "com.rfivesix.trainlibre"
         versionName = flutterVersionName
         versionCode = flutterVersionCode
 
@@ -37,11 +37,11 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
-    kotlinOptions { jvmTarget = "1.8" }
+    kotlinOptions { jvmTarget = JavaVersion.VERSION_17.toString() }
 }
 
 flutter { source = "../.." }

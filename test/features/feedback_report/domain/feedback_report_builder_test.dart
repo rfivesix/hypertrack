@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/feedback_report/domain/feedback_report_builder.dart';
-import 'package:hypertrack/features/feedback_report/domain/feedback_report_models.dart';
+import 'package:train_libre/features/feedback_report/domain/feedback_report_builder.dart';
+import 'package:train_libre/features/feedback_report/domain/feedback_report_models.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class _FakeDiagnosticsProvider implements FeedbackReportDiagnosticsProvider {
@@ -24,7 +24,7 @@ class _ThrowingDiagnosticsProvider
 
 FeedbackReportLocalizedCopy _copy() {
   return const FeedbackReportLocalizedCopy(
-    title: 'Hypertrack Feedback Report',
+    title: 'Train Libre Feedback Report',
     generatedLabel: 'Generated',
     appVersionLabel: 'App version',
     buildNumberLabel: 'Build number',
@@ -39,8 +39,8 @@ FeedbackReportLocalizedCopy _copy() {
 
 Future<PackageInfo> _mockPackageInfo() async {
   return PackageInfo(
-    appName: 'Hypertrack',
-    packageName: 'com.example.hypertrack',
+    appName: 'Train Libre',
+    packageName: 'com.example.trainlibre',
     version: '0.8.6',
     buildNumber: '80014',
     buildSignature: '',

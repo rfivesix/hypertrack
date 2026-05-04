@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_controller.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permission_models.dart';
-import 'package:hypertrack/features/sleep/platform/permissions/sleep_permissions_service.dart';
-import 'package:hypertrack/features/sleep/platform/sleep_sync_service.dart';
-import 'package:hypertrack/generated/app_localizations.dart';
-import 'package:hypertrack/screens/sleep_settings_screen.dart';
-import 'package:hypertrack/services/theme_service.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_controller.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permission_models.dart';
+import 'package:train_libre/features/sleep/platform/permissions/sleep_permissions_service.dart';
+import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
+import 'package:train_libre/generated/app_localizations.dart';
+import 'package:train_libre/screens/sleep_settings_screen.dart';
+import 'package:train_libre/services/theme_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -76,8 +76,8 @@ Widget _wrap(Widget child) {
 void main() {
   setUp(() {
     PackageInfo.setMockInitialValues(
-      appName: 'HyperTrack',
-      packageName: 'com.rfivesix.hypertrack',
+      appName: 'Train Libre',
+      packageName: 'com.rfivesix.trainlibre',
       version: '1.0.0',
       buildNumber: '1',
       buildSignature: '',

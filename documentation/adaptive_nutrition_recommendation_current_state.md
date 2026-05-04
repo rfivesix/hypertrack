@@ -311,23 +311,9 @@ Current known limitations:
 - credible interval is a simple posterior-normal approximation (product transparency aid, not a clinical guarantee)
 - residual-bias seam is diagnostic only (not an automated self-retuning loop yet)
 
-## Verification Checklist
+## Regression Coverage Priorities
 
-When validating future changes, verify at minimum:
-- due-week Monday anchoring and stable previous-Sunday input window
-- in-week force refresh determinism
-- confirmed vs pending phase transitions with 7-day confirmation
-- no phase reset on target-rate-only changes inside same goal direction
-- phase-age `3000 -> 7700` ramp behavior (week 1, ramp, week 9+)
-- recursive posterior chaining across weeks
-- prediction-only behavior for missing-observation weeks
-- variance-cap bounded uncertainty growth after long gaps
-- onboarding bootstrap without logs
-- Q/R fallback behavior when history is insufficient
-- Q/R calibration response under stable vs noisy histories
-- user-facing maintenance range/hint rendering in hub + onboarding preview
-- stabilization hint behavior during bootstrap/transient phases
-- residual-bias summary determinism and direction labeling
-- explicit apply semantics (`generate != apply`)
-- snapshot/state persistence coherence and restore behavior
-- due-notification eligibility rules
+Future changes should preserve the durable contracts above: due-week anchoring,
+same-week replay determinism, 7-day phase confirmation, explicit apply
+semantics, recursive state chaining, sparse-data fallback behavior, backup
+restore coverage, and due-notification eligibility.

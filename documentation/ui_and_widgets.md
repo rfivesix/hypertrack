@@ -1,11 +1,11 @@
 # UI & Widgets
 
-This document covers the design system, widget catalog, dialog system, and layout patterns used throughout Hypertrack.
+This document covers the design system, widget catalog, dialog system, and layout patterns used throughout Train Libre.
 It is a broad UI reference; for current Statistics/Sleep implementation specifics, use [statistics_module.md](statistics_module.md) and [sleep_current_state.md](sleep/sleep_current_state.md).
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
 - [Design Philosophy](#design-philosophy)
 - [Theme System](#theme-system)
@@ -19,7 +19,7 @@ It is a broad UI reference; for current Statistics/Sleep implementation specific
 
 ## Design Philosophy
 
-Hypertrack's visual design is built on four principles:
+Train Libre's visual design is built on four principles:
 
 1. **Glassmorphism:** Semi-transparent surfaces with blurred backgrounds (`BackdropFilter`) create a layered, premium aesthetic. Applied to FABs, bottom menus, and navigation bars.
 2. **Card-Based Consistency:** All content sections use `SummaryCard` as a visual container, ensuring uniform shadows, borders, and padding.

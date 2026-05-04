@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_models.dart';
 
 void main() {
   group('BayesianTdeeEstimator recursive filter', () {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../data/workout_database_helper.dart';
 import '../../features/statistics/domain/analytics_state.dart';
@@ -88,12 +89,38 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
         StatisticsPresentationFormatter.isOtherCategoryLabel(name);
   }
 
-  double _recoveryPressureScore(RecoveryMusclePayload muscle) {
-    return RecoveryDomainService.recoveryPressureScore({
-      'lastEquivalentSets': muscle.lastEquivalentSets,
-      'hoursSinceLastSignificantLoad': muscle.hoursSinceLastSignificantLoad,
-      'highSessionFatigue': muscle.highSessionFatigue,
-    });
+  double _readinessScore(RecoveryMusclePayload muscle) {
+    return RecoveryDomainService.readinessScore(
+      hoursSinceLastSignificantLoad: muscle.hoursSinceLastSignificantLoad,
+      recoveringUpperHours: muscle.recoveringUpperHours.toDouble(),
+      readyUpperHours: muscle.readyUpperHours.toDouble(),
+    );
+  }
+
+  double _lastLoadPressureScore(RecoveryMusclePayload muscle) {
+    return RecoveryDomainService.lastLoadPressureScore(
+      lastEquivalentSets: muscle.lastEquivalentSets,
+      highSessionFatigue: muscle.highSessionFatigue,
+    );
+  }
+
+  String _lastLoadPressureLabel(
+    AppLocalizations l10n,
+    RecoveryMusclePayload muscle,
+  ) {
+    final pressureScore = _lastLoadPressureScore(muscle);
+    final level = RecoveryDomainService.pressureLevelForScore(pressureScore);
+    final levelLabel =
+        StatisticsPresentationFormatter.recoveryPressureLevelLabel(l10n, level);
+    return l10n.recoveryLastLoadPressure(levelLabel);
+  }
+
+  String _formatEquivalentSets(BuildContext context, double value) {
+    final localeName = Localizations.localeOf(context).toLanguageTag();
+    final format = NumberFormat.decimalPattern(localeName)
+      ..minimumFractionDigits = 1
+      ..maximumFractionDigits = 1;
+    return format.format(value);
   }
 
   Color _overallStateColor(BuildContext context, String overallState) {
@@ -107,16 +134,6 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
       default:
         return Theme.of(context).colorScheme.outline;
     }
-  }
-
-  Color _pressureColor(BuildContext context, double score) {
-    if (score < 34) {
-      return _stateColor(context, RecoveryDomainService.stateFresh);
-    }
-    if (score < 67) {
-      return _stateColor(context, RecoveryDomainService.stateReady);
-    }
-    return _stateColor(context, RecoveryDomainService.stateRecovering);
   }
 
   Widget _buildReadinessPill(
@@ -197,8 +214,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
 
   List<MuscleRadarDatum> _buildRadarData(List<RecoveryMusclePayload> muscles) {
     final sorted = [...muscles]..sort(
-        (a, b) =>
-            _recoveryPressureScore(b).compareTo(_recoveryPressureScore(a)),
+        (a, b) => _readinessScore(a).compareTo(_readinessScore(b)),
       );
 
     return sorted
@@ -206,7 +222,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
         .map(
           (m) => MuscleRadarDatum(
             label: m.muscleGroup,
-            value: _recoveryPressureScore(m),
+            value: _readinessScore(m),
           ),
         )
         .toList();
@@ -432,11 +448,8 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       final eqSets = muscle.lastEquivalentSets;
                       final recoveringUpper = muscle.recoveringUpperHours;
                       final readyUpper = muscle.readyUpperHours;
-                      final pressureScore = _recoveryPressureScore(muscle);
-                      final pressureColor = _pressureColor(
-                        context,
-                        pressureScore,
-                      );
+                      final readinessScore = _readinessScore(muscle);
+                      final readinessColor = stateColor;
 
                       return Padding(
                         padding: const EdgeInsets.only(
@@ -495,7 +508,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                     _buildContextChip(
                                       context,
                                       l10n.recoveryRecentLoad(
-                                        eqSets.toStringAsFixed(1),
+                                        _formatEquivalentSets(context, eqSets),
                                       ),
                                     ),
                                     _buildContextChip(
@@ -506,38 +519,53 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                       context,
                                       _fatigueContextLabel(l10n, highFatigue),
                                     ),
+                                    _buildContextChip(
+                                      context,
+                                      _lastLoadPressureLabel(l10n, muscle),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [
                                     Text(
-                                      pressureScore.toStringAsFixed(0),
+                                      l10n.recoveryReadinessLabel,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      readinessScore.toStringAsFixed(0),
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleSmall
                                           ?.copyWith(
-                                            color: pressureColor,
+                                            color: readinessColor,
                                             fontWeight: FontWeight.w700,
                                           ),
                                     ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          999,
-                                        ),
-                                        child: LinearProgressIndicator(
-                                          value: pressureScore / 100,
-                                          minHeight: 8,
-                                          color: pressureColor,
-                                          backgroundColor: Theme.of(
-                                            context,
-                                          ).colorScheme.surfaceContainerHighest,
-                                        ),
-                                      ),
-                                    ),
                                   ],
+                                ),
+                                const SizedBox(height: 4),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    999,
+                                  ),
+                                  child: LinearProgressIndicator(
+                                    value: readinessScore / 100,
+                                    minHeight: 8,
+                                    color: readinessColor,
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
+                                  ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
@@ -553,7 +581,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  l10n.recoveryWindowHeuristic(
+                                  l10n.recoveryCurrentWindow(
                                     recoveringUpper,
                                     readyUpper,
                                   ),

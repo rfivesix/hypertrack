@@ -45,6 +45,12 @@ Compares old vs new catalog DB and emits:
 - warning flags
 - optional CI-safe nonzero exit via `--fail-on-breaking`
 
+Threshold behavior under `--fail-on-breaking`:
+
+- removals are tolerated up to `--fail-on-removed-threshold`
+- safety gate fails when `removed_count > fail_on_removed_threshold`
+- severe regressions and suspicious row-drop patterns still fail the safety gate
+
 ### 3) GitHub Actions refresh workflow
 
 Workflow: `.github/workflows/wger-catalog-refresh.yml`
@@ -87,6 +93,9 @@ Key assets:
 - `hypertrack_training.db` (catalog payload)
 - `wger_build_report.json` (diagnostics)
 - `wger_diff_report.json` (safety diagnostics)
+
+`hypertrack_training.db` is intentionally retained as a legacy artifact filename
+for runtime compatibility with existing app-side remote catalog import paths.
 
 ## Manifest schema (runtime contract)
 
@@ -153,9 +162,18 @@ Responsibilities:
 - fetch manifest
 - decide if remote version is newer
 - download DB
+- normalize legacy WAL-mode single-file SQLite artifacts after checksum verification
 - validate DB file/tables/columns/version/row-count threshold
 - cache validated DB + manifest snapshot
 - track last-check/last-error/version state in `SharedPreferences`
+
+Failed remote refreshes bypass the normal minimum-check interval on the next
+startup so a fixed artifact can be retried without clearing app data.
+
+Published `.db` artifacts should be portable single-file SQLite databases. Build
+scripts should checkpoint WAL writes and publish with `journal_mode=DELETE`. For
+compatibility with older published artifacts, the app can normalize a downloaded
+WAL-mode header after SHA-256 verification and before schema validation/import.
 
 Startup integration:
 
@@ -171,15 +189,12 @@ Startup integration:
 - Payload integrity currently uses SHA-256 checksums from the manifest.
 - Digital signature verification is intentionally not implemented yet.
 
-## Operational testing checklist (before broader rollout)
+## Release validation
 
-1. Run workflow manually with `publish_release_assets=true`.
-2. Verify release `wger-catalog-stable` assets were replaced.
-3. Verify manifest version/URLs match uploaded assets.
-4. Install app build using this code.
-5. Trigger app startup with network enabled and confirm remote catalog adoption.
-6. Confirm startup remains stable with network disabled or manifest fetch failure.
-7. Verify routines/history still resolve exercises and analytics remain functional.
+For catalog-channel changes, validate that the workflow publishes the expected
+release assets, the manifest points to those assets, startup can adopt a valid
+remote catalog, fallback behavior remains stable when the remote channel is
+unavailable, and existing routines/history still resolve exercises.
 
 ## Changing source/channel configuration
 

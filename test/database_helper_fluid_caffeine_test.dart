@@ -1,8 +1,8 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/database_helper.dart';
-import 'package:hypertrack/data/drift_database.dart';
-import 'package:hypertrack/models/fluid_entry.dart';
+import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/data/drift_database.dart';
+import 'package:train_libre/models/fluid_entry.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

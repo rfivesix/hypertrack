@@ -3,21 +3,21 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/data/database_helper.dart';
-import 'package:hypertrack/data/drift_database.dart'
+import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion;
-import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
-import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_due_notification.dart';
-import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_repository.dart';
-import 'package:hypertrack/features/nutrition_recommendation/data/recommendation_service.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/adaptive_recommendation_snapshot.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/confidence_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/goal_models.dart';
-import 'package:hypertrack/features/nutrition_recommendation/domain/recommendation_models.dart';
-import 'package:hypertrack/models/food_entry.dart';
-import 'package:hypertrack/models/measurement.dart';
-import 'package:hypertrack/models/measurement_session.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/adaptive_diet_phase.dart';
+import 'package:train_libre/features/nutrition_recommendation/data/recommendation_due_notification.dart';
+import 'package:train_libre/features/nutrition_recommendation/data/recommendation_repository.dart';
+import 'package:train_libre/features/nutrition_recommendation/data/recommendation_service.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/adaptive_recommendation_snapshot.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/confidence_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
+import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_models.dart';
+import 'package:train_libre/models/food_entry.dart';
+import 'package:train_libre/models/measurement.dart';
+import 'package:train_libre/models/measurement_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

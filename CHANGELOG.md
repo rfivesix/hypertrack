@@ -4,6 +4,137 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-beta.3] - 2025-05-05
+
+### Fixed
+- Fixed redundant Add Food meal-card refetching by caching meal total futures and using batched product lookup.
+- Fixed repeated Diary product lookups by batch-loading products for the selected day.
+- Fixed possible stale Statistics range results when switching range chips quickly.
+- Fixed additional startup blocking by deferring non-critical initialization until after the first initializer frame.
+- Moved Backup JSON encode/decode work off the main isolate to reduce UI stalls during import/export.
+
+### Improved
+- Improved Add Food meal performance during scrolling, rebuilds, and meal edits.
+- Improved Diary loading performance for days with many food entries.
+- Improved startup responsiveness while preserving ongoing workout restoration.
+- Improved backup import/export responsiveness for larger backup files.
+
+### Internal
+- Added regression coverage for Add Food meal totals.
+- Added batch product lookup coverage.
+- Added backup isolate helper coverage.
+- Added Statistics stale overlapping-load coverage.
+- Full Flutter test suite passed with 509 tests.
+- Android debug build completed successfully.
+
+## [0.9.0-beta.2] - 2026-05-05
+### Added
+- Added native share-sheet support for completed workouts and routines.
+- Added text exports with localized workout/routine summaries, set-type handling, workout volume, Train Libre branding, and the project GitHub link.
+- Added branded image share cards for workouts and routines, including multiple workout layouts for summary, exercises, muscle focus, and minimal stats.
+
+### Changed
+- Redesigned workout text sharing to use readable per-set lines with localized special set-type suffixes.
+- Redesigned routine image sharing to use compact set-type codes and two-column exercise cards with truncation and `+ X more` handling.
+- Improved share-card branding by using the current Train Libre SVG logo.
+
+### Fixed
+- Moved the production Drift SQLite connection onto a background isolate to prevent database work from blocking touch handling and causing Android ANRs.
+- Reduced workout-history database load by fetching completed workout sets in bulk instead of issuing one set query per workout log.
+- Removed redundant food-search controller rebuilds while typing in Add Food, Food Explorer, and the general food picker.
+- Prevented the Diary weight chart from reloading its database query on unrelated parent rebuilds.
+- Preserved the selected Diary date after adding or logging food, meals, fluids, supplements, caffeine, measurements, AI meals, or workouts from a non-today Diary view.
+- Removed a Live Workout session-manager listener on screen disposal to reduce memory-leak risk after leaving active workouts.
+- Prevented dense workout and routine share cards from clipping long labels or overflowing the image canvas.
+- Fixed muscle-focus share cards so high-exercise workouts keep the radar, top muscle-volume values, and footer inside the exported image.
+
+## [0.9.0-beta.1] - 2025-05-02
+### Changed
+- Renamed the app and repository branding from Hypertrack to Train Libre across Flutter, Android, iOS, widgets, documentation, and package metadata.
+
+### Fixed
+- Preserved restore compatibility for legacy Hypertrack backups while creating new backups under the Train Libre name.
+
+## [0.9.0-alpha.4] - 2026-05-02
+### Fixed
+- Hardened Sleep Health Score handling for ambiguous and missing stage data.
+- Prevented `unknown` and ambiguous `inBedOnly` stages from inflating wake duration, WASO, interruptions, and sleep-efficiency penalties.
+- Improved REM-missing and low-fidelity stage guardrails so scores do not imply unsupported certainty.
+- Made Sleep Regularity Index availability depend on valid consecutive comparison pairs, not just raw valid-day count.
+- Marked synthesized duration-only sleep windows as estimated instead of treating them like observed session bounds.
+- Added targeted regression tests for missing-stage handling, stage guardrails, SRI coverage, and sleep-window fallback behavior.
+- Improved Muscle Recovery readiness semantics with bodyweight strength support, explicit cardio exclusion, and centralized significant-load handling.
+- Recalibrated recovery pressure so equivalent-set load no longer saturates after very small stimuli.
+- Added muscle-specific recovery windows plus load- and intensity-based recovery extensions.
+- Made RIR/RPE fatigue detection more robust and fixed inclusive recovery-state boundary behavior.
+- Added robust recovery timestamp parsing and clarified fixed current-state recovery lookback behavior.
+- Fixed remote OFF catalog import for currently published single-file SQLite artifacts that still use WAL header mode.
+- Prevented remote catalog normalization from truncating downloaded DB files before import validation.
+- Added startup retry behavior so failed remote refresh attempts bypass the normal minimum check interval on the next app launch.
+
+### Changed
+- Refined muscle recovery analytics by separating current readiness from last-load pressure in the Recovery Tracker.
+- Updated recovery UI copy to show actual effective recovery windows and localized load-pressure levels.
+- Improved recovery heuristic documentation for muscle-specific windows, readiness scoring, and load-pressure semantics.
+- Startup loading status now reflects remote catalog preparation details during OFF/training refresh checks.
+
+### Internal
+- Expanded recovery regression coverage for equivalent-set pressure, bodyweight/cardio filtering, RIR/RPE fatigue thresholds, muscle-specific windows, boundary behavior, timestamp parsing, and recovery range policy.
+- Updated statistics/recovery documentation to frame readiness as a transparent training-log heuristic rather than a clinical recovery prediction.
+- Hardened remote catalog refresh services with WAL-header normalization, size-integrity guards, and focused regression coverage for OFF refresh edge cases.
+- Updated OFF/WGER catalog refresh docs and generator scripts to enforce portable published SQLite artifacts (`journal_mode=DELETE`).
+
+## [0.9.0-alpha.3] - 2026-04-26
+### Internal
+- updated the base nutrition database
+
+## [0.9.0-alpha.2] - 2026-04-25
+
+### Fixed
+- Fixed Pulse day-scope handling so the current day is now included as a partial-day window (`start of day -> now`) instead of behaving like a fully completed 24-hour period.
+- Added a small guard against zero-length Pulse day windows around local midnight rollover.
+- Improved sleep heart-rate fallback behavior on Android / Health Connect setups by deriving sleep HR from the general heart-rate stream when strict sleep-session-linked heart-rate samples are unavailable.
+- Improved robustness for vendor/device combinations such as Xiaomi Band setups where valid heart-rate samples may exist but are not reliably linked to sleep-session records.
+
+### Changed
+- Sleep heart-rate fallback now intersects general heart-rate samples with imported sleep-session time windows and remaps matched samples to the corresponding sleep session before use.
+- The fallback path is still conservative: strict session-linked sleep HR remains preferred, and derived-by-window HR is only used when that stricter result is empty.
+
+### Internal
+- Added focused regression tests for:
+  - Pulse current-day partial-window behavior
+  - Health Connect sleep-HR derivation from general HR samples filtered by sleep windows
+
+### Notes
+- This release is a targeted reliability follow-up to `0.9.0-alpha.1`.
+- Real-device validation remains especially important for Xiaomi Band / Health Connect combinations and for edge cases such as overlapping or adjacent sleep sessions.
+
+## [0.9.0-alpha.1] - 2026-04-25
+
+### Added
+- Added opt-in Pulse analysis with a Settings toggle, heart-rate permission request, and a Statistics hub entry that appears only when enabled.
+- Added a dedicated Pulse analysis screen with day/week/month period controls, pulse range, time-weighted average pulse, conservative resting-pulse estimate, and the existing line-chart pattern.
+- Added a shared deterministic AI meal validation engine for capture and recommendations, including local DB matching quality, local nutrition recomputation, target-fit checks, visible warnings, and bounded repair orchestration.
+- Added a separate opt-in setting for sending recent meal context to AI meal recommendations. It defaults off and recommendations still work without it.
+
+### Fixed
+- Improved Android sleep heart-rate retrieval for Health Connect providers that store valid in-session samples inside longer heart-rate records whose record window can sit outside the strict sleep/import window.
+- Made AI meal save behavior explicit when some recognized/recommended items are unmatched, so partial saves no longer look like all AI items were saved.
+
+### Changed
+- Updated Apple Health usage copy to mention enabled health views that read steps, sleep, and heart-rate data.
+- AI meal recommendations now locally verify kcal/protein/carbs/fat fit against the intended remaining meal target before acceptance, with up to three automatic repair passes.
+- AI meal capture now validates recognized quantities, DB matches, and recomputed nutrition before showing the review screen, with up to three automatic repair passes.
+
+### Internal
+- Modernized the Android app module Java/Kotlin compile target from 8 to 17 to match the current Gradle/AGP/JDK toolchain and reduce app-owned build warnings.
+- Replaced the foreground rest-timer sound cue with Flutter's built-in system alert sound and removed the `flutter_ringtone_player` dependency to eliminate its Android Java 8/deprecated API build warnings.
+- Documented the Pulse MVP boundaries and the Health Connect sleep HR fallback behavior.
+- Documented the AI meal capture/recommendation validation architecture and added focused validation/repair tests.
+
+### Notes
+- The former `flutter_ringtone_player` warning source was reviewed: version 4.0.0+4 still declares Java 8 compatibility and uses the deprecated Android `Ringtone.setStreamType(...)` API. The app only used it for the foreground rest-timer notification sound, so replacing that single call was lower-risk than keeping or suppressing the plugin warning.
+
 ## [0.8.11] - 2026-04-23
 
 ### Fixed
@@ -424,7 +555,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Documented Bayesian estimator tuning parameters
 
 ### Changed
-- Bayesian experimental state now uses atomic snapshot persistence as single source of truth
+- Bayesian experimental state now uses atomic snapshot persistence as unified state storage
 - Due-notification logic now requires:
   - recommendation is currently due
   - no recommendation has yet been generated for that due week
@@ -824,7 +955,7 @@ This release completes the main **sleep module rollout** and adds the first full
 ### Notes
 
 - **Sleep export/import scope remains unchanged**: the sleep module is about processing and analytics inside Hypertrack, not external sleep write-back.
-- **Health export is one-way only**. Hypertrack remains the source of truth.
+- **Health export is one-way only**. Hypertrack remains the authoritative record.
 - **Nutrition export is aggregate-based only**. No ingredient or individual food-item reconstruction is exported.
 - **Workout export is session-level only**. Internal workout structure is not exported as structured native workout data.
 - Some downstream behavior, especially in **Google Fit**, may differ from what is actually stored in **Health Connect**. If a field is written correctly but not surfaced there, that is a downstream display limitation rather than a Hypertrack write failure.
@@ -873,7 +1004,7 @@ This beta focuses on **one-way health platform export** and the final stabilizat
 - Fixed incremental export behavior so one failed domain does not force unnecessary full-history reloads for all other domains
 
 ### Notes
-- Export remains **one-way only**. Hypertrack is the source of truth.
+- Export remains **one-way only**. Hypertrack is the authoritative record.
 - Nutrition export remains **aggregate-based only**. No ingredient- or food-item reconstruction is exported.
 - Workout export remains **session-level only**. Internal workout structure is not exported as native structured workout content.
 - Some downstream display behavior, especially in **Google Fit**, may differ from what is stored in Health Connect. If a field is written correctly but not shown in Google Fit, this is a platform display limitation rather than a Hypertrack write failure.
@@ -941,7 +1072,7 @@ This stable release includes all `0.7.3-alpha.*` and `0.7.3-beta.1` changes sinc
 - Sleep benchmark bars (duration/heart-rate detail views) updated for better contrast in light/dark mode.
 - Statistics-to-Sleep integration refined while preserving clear feature ownership boundaries.
 - Settings section labels updated to release wording (`Sleep/Schlaf`, `Steps/Schritte`).
-- Project docs rewritten and consolidated around implementation-first “current source of truth” references.
+- Project docs rewritten and consolidated around implementation-first references.
 
 ### Fixed
 - Manual `Import sleep data now` now performs full-history backfill import.
@@ -997,11 +1128,11 @@ This release promotes the current Sleep feature set from alpha toward beta by fi
 
 ## [0.7.3-alpha.4] - 2026-04-02
 
-This alpha finalizes the current Sleep health-score pass in the working copy. It documents and ships the implemented V1 scoring model, persists additional nightly analysis fields for score completeness and regularity, expands Sleep day/detail messaging and localization, and refreshes core documentation so release notes and docs align with the current source of truth.
+This alpha finalizes the Sleep health-score pass. It documents and ships the implemented V1 scoring model, persists additional nightly analysis fields for score completeness and regularity, expands Sleep day/detail messaging and localization, and refreshes core documentation so release notes and docs align with implementation.
 
 ### Added
 - Sleep Health Score V1 documentation describing the implemented scoring model, component weights, regularity rules, completeness semantics, and known limitations.
-- A canonical Sleep current-state document that describes the routed screens, repositories, pipeline flow, persistence layers, and implementation boundaries in the current working copy.
+- A canonical Sleep current-state document that describes the routed screens, repositories, pipeline flow, persistence layers, and implementation boundaries.
 - Persisted nightly-analysis fields for score completeness and regularity outputs, including SRI, valid-day count, and stable/preliminary state.
 - Additional localized Sleep copy for empty states, timeline/status labels, sleep-score messaging, regularity messaging, heart-rate messaging, and raw-import metadata in English and German.
 - Targeted regression coverage for the updated sleep scoring engine, nightly analysis persistence, pipeline processing, navigation, settings, and regularity index calculation.
@@ -1014,7 +1145,7 @@ This alpha finalizes the current Sleep health-score pass in the working copy. It
 - Project documentation was rewritten to be implementation-focused and current-state-first across the README, architecture, data/storage, overview, statistics, and sleep technical references.
 
 ### Fixed
-- Fixed release/documentation accuracy by replacing stale or historical descriptions with working-copy-based documentation and clearer boundaries around what is actually implemented.
+- Fixed release/documentation accuracy by replacing stale or historical descriptions with implementation-grounded documentation and clearer boundaries around what is actually implemented.
 - Fixed nightly-analysis persistence gaps so newly computed score completeness and regularity fields round-trip through schema migration, DAO writes, and repository mapping.
 - Fixed score-model consistency by aligning the pipeline, persisted analysis version, and documentation around the same Sleep Health Score V1 behavior.
 ## [0.7.3-alpha.3] - 2026-04-01
@@ -1430,7 +1561,7 @@ This release represents a complete modernization of Hypertrack's core architectu
 ### 💾 Database & Architecture
 
 - **Schema v6 Migration**: Major database overhaul adding `height`, `gender`, `birthday` to Profiles, `carbsPer100ml` to FluidLogs, and `rir`/`pauseSeconds` columns for workout tracking.
-- **Single Source of Truth**: User goals (Calories, Macros, Water) migrated from `SharedPreferences` to the SQLite database (`app_settings` table). Changing goals now updates the Dashboard instantly without restart.
+- **Unified goal storage**: User goals (Calories, Macros, Water) migrated from `SharedPreferences` to the SQLite database (`app_settings` table). Changing goals now updates the Dashboard instantly without restart.
 
 ### 🎨 UI/UX Improvements
 
@@ -1521,7 +1652,7 @@ This release represents a complete modernization of Hypertrack's core architectu
     - Added `birthday` (datetime) to `Profiles`.
     - Added `carbsPer100ml` to `FluidLogs`.
     - Added `rir` (Reps in Reserve) and `pauseSeconds` columns (backend preparation).
-- **Single Source of Truth:**
+- **Unified storage:**
     - Migrated user goals (Calories, Macros, Water) from `SharedPreferences` to the local SQLite database (`app_settings` table).
     - Enabled "Live Updates": Changing goals in Settings or Onboarding now updates the Dashboard immediately without a restart.
 

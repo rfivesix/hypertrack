@@ -14,7 +14,6 @@ class AppearanceSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isGerman = Localizations.localeOf(context).languageCode == 'de';
     final isAndroid =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
     final themeService = Provider.of<ThemeService>(context);
@@ -114,14 +113,10 @@ class AppearanceSettingsScreen extends StatelessWidget {
                       SwitchListTile(
                         secondary: const Icon(Icons.vibration_outlined),
                         title: Text(
-                          isGerman ? 'Haptisches Feedback' : 'Haptic feedback',
+                          l10n.settingsHapticFeedbackTitle,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text(
-                          isGerman
-                              ? 'Leichte Vibrationen bei Bestätigungen und KI-Warten'
-                              : 'Light vibrations for confirmations and AI waiting',
-                        ),
+                        subtitle: Text(l10n.settingsHapticFeedbackSubtitle),
                         value: themeService.hapticsEnabled,
                         onChanged: (value) =>
                             themeService.setHapticsEnabled(value),

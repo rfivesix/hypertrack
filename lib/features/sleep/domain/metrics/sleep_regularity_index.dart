@@ -26,6 +26,7 @@ class SleepRegularityIndexResult {
   const SleepRegularityIndexResult({
     required this.sri,
     required this.validDays,
+    required this.validComparisonPairs,
     required this.available,
     required this.stable,
   });
@@ -33,6 +34,7 @@ class SleepRegularityIndexResult {
   /// Probability of matching sleep/wake state 24h apart, 0..100.
   final double? sri;
   final int validDays;
+  final int validComparisonPairs;
   final bool available;
   final bool stable;
 }
@@ -59,6 +61,7 @@ SleepRegularityIndexResult calculateSleepRegularityIndex({
     return SleepRegularityIndexResult(
       sri: null,
       validDays: validDays,
+      validComparisonPairs: 0,
       available: false,
       stable: false,
     );
@@ -66,6 +69,7 @@ SleepRegularityIndexResult calculateSleepRegularityIndex({
 
   var matches = 0;
   var comparisons = 0;
+  var validComparisonPairs = 0;
   for (var i = 1; i < valid.length; i++) {
     final previousDay = valid[i - 1].day;
     final currentDay = valid[i].day;
@@ -87,23 +91,29 @@ SleepRegularityIndexResult calculateSleepRegularityIndex({
       }
     }
     comparisons += comparedLength;
+    validComparisonPairs += 1;
   }
 
-  if (comparisons <= 0) {
+  final minimumComparisonPairs = minimumValidDays - 1;
+  if (comparisons <= 0 || validComparisonPairs < minimumComparisonPairs) {
     return SleepRegularityIndexResult(
       sri: null,
       validDays: validDays,
+      validComparisonPairs: validComparisonPairs,
       available: false,
       stable: false,
     );
   }
 
   final sri = (matches / comparisons) * 100.0;
+  final stableComparisonPairs = stableValidDays - 1;
   return SleepRegularityIndexResult(
     sri: sri.clamp(0, 100).toDouble(),
     validDays: validDays,
+    validComparisonPairs: validComparisonPairs,
     available: true,
-    stable: validDays >= stableValidDays,
+    stable: validDays >= stableValidDays &&
+        validComparisonPairs >= stableComparisonPairs,
   );
 }
 

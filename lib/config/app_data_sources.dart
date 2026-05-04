@@ -10,7 +10,7 @@ class AppDataSources {
   static const String baseFoodsAssetDbPath =
       'assets/db/hypertrack_base_foods.db';
   static const String offFoodsAssetDbPath =
-      'assets/db/hypertrack_prep_de.db'; // Legacy default (DE)
+      'assets/db/hypertrack_prep_de.db'; // Optional legacy DE OFF fallback.
   static const String foodCategoriesAssetDbPath =
       'assets/db/hypertrack_base_foods.db';
 
@@ -20,7 +20,7 @@ class AppDataSources {
     sourceId: 'wger_catalog',
     channel: 'stable',
     baseUrl:
-        'https://github.com/rfivesix/hypertrack/releases/download/wger-catalog-stable/',
+        'https://github.com/rfivesix/train-libre/releases/download/wger-catalog-stable/',
     manifestPath: 'wger_catalog_manifest.json',
     defaultDbPath: 'hypertrack_training.db',
     defaultBuildReportPath: 'wger_build_report.json',
@@ -52,10 +52,13 @@ class AppDataSources {
       channel: 'stable',
       releaseTag: 'off-foods-de-stable',
       baseUrl:
-          'https://github.com/rfivesix/hypertrack/releases/download/off-foods-de-stable/',
+          'https://github.com/rfivesix/train-libre/releases/download/off-foods-de-stable/',
       manifestPath: 'off_catalog_manifest_de.json',
       defaultDbPath: 'hypertrack_off_de.db',
       defaultBuildReportPath: 'off_build_report_de.json',
+      // This asset path is intentionally allowed to be absent in release
+      // builds. Startup will use a remote OFF DB when available; otherwise the
+      // smaller bundled base-foods catalog remains usable.
       bundledAssetDbPath: 'assets/db/hypertrack_prep_de.db',
       minimumProductRows: 5000,
       manifestTimeoutSeconds: 6,
@@ -72,7 +75,7 @@ class AppDataSources {
       channel: 'stable',
       releaseTag: 'off-foods-us-stable',
       baseUrl:
-          'https://github.com/rfivesix/hypertrack/releases/download/off-foods-us-stable/',
+          'https://github.com/rfivesix/train-libre/releases/download/off-foods-us-stable/',
       manifestPath: 'off_catalog_manifest_us.json',
       defaultDbPath: 'hypertrack_off_us.db',
       defaultBuildReportPath: 'off_build_report_us.json',
@@ -92,7 +95,7 @@ class AppDataSources {
       channel: 'stable',
       releaseTag: 'off-foods-uk-stable',
       baseUrl:
-          'https://github.com/rfivesix/hypertrack/releases/download/off-foods-uk-stable/',
+          'https://github.com/rfivesix/train-libre/releases/download/off-foods-uk-stable/',
       manifestPath: 'off_catalog_manifest_uk.json',
       defaultDbPath: 'hypertrack_off_uk.db',
       defaultBuildReportPath: 'off_build_report_uk.json',

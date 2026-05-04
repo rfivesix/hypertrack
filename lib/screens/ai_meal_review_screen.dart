@@ -4,13 +4,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
-import '../data/product_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/food_entry.dart';
 import '../models/food_item.dart';
+import '../services/ai_meal_validation.dart';
 import '../services/ai_service.dart';
 import '../services/haptic_feedback_service.dart';
 import '../util/design_constants.dart';
+import '../util/ai_validation_localization.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/glass_bottom_menu.dart';
@@ -24,6 +25,7 @@ import 'general_food_selection_screen.dart';
 /// [FoodEntry] records.
 class AiMealReviewScreen extends StatefulWidget {
   final List<AiSuggestedItem> suggestions;
+  final AiValidationResult? initialValidation;
   final List<File> originalImages;
   final DateTime? initialDate;
   final String? initialMealType;
@@ -31,6 +33,7 @@ class AiMealReviewScreen extends StatefulWidget {
   const AiMealReviewScreen({
     super.key,
     required this.suggestions,
+    this.initialValidation,
     required this.originalImages,
     this.initialDate,
     this.initialMealType,
@@ -48,6 +51,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   bool _isSaving = false;
   bool _isMatching = true;
   bool _aiWaitingHapticActive = false;
+  AiValidationResult? _validation;
 
   // Meal type selection
   late String _selectedMealType;
@@ -58,8 +62,15 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
     super.initState();
     _selectedMealType = widget.initialMealType ?? 'mealtypeSnack';
     _selectedTimestamp = widget.initialDate ?? DateTime.now();
-    _items = widget.suggestions.map((s) => _ReviewItem(suggestion: s)).toList();
-    _performFuzzyMatching();
+    final initialValidation = widget.initialValidation;
+    if (initialValidation != null) {
+      _applyValidationResult(initialValidation);
+      _isMatching = false;
+    } else {
+      _items =
+          widget.suggestions.map((s) => _ReviewItem(suggestion: s)).toList();
+      _validateCurrentItems();
+    }
   }
 
   @override
@@ -82,20 +93,58 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Fuzzy matching
+  // Validation
   // ---------------------------------------------------------------------------
 
-  Future<void> _performFuzzyMatching() async {
-    for (final item in _items) {
-      final matches = await ProductDatabaseHelper.instance.fuzzyMatchForAi(
-        item.suggestion.name,
-      );
-      if (matches.isNotEmpty) {
-        item.matchedFood = matches.first;
-        item.suggestion.matchedBarcode = matches.first.barcode;
-      }
-    }
-    if (mounted) setState(() => _isMatching = false);
+  Future<void> _validateCurrentItems() async {
+    if (!mounted) return;
+    setState(() => _isMatching = true);
+    final candidate = _candidateFromReviewItems();
+    final result = await AiMealValidationEngine().validateMealCandidate(
+      candidate: candidate,
+      mode: AiValidationMode.capture,
+    );
+    if (!mounted) return;
+    setState(() {
+      _applyValidationResult(result);
+      _isMatching = false;
+    });
+  }
+
+  AiMealCandidate _candidateFromReviewItems() {
+    return AiMealCandidate(
+      items: _items
+          .map(
+            (item) => AiMealCandidateItem(
+              name: item.suggestion.name,
+              grams: item.suggestion.estimatedGrams,
+              confidence: item.suggestion.confidence,
+              matchedBarcode:
+                  item.matchedFood?.barcode ?? item.suggestion.matchedBarcode,
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  void _applyValidationResult(AiValidationResult result) {
+    _validation = result;
+    _items = result.items
+        .map(
+          (item) => _ReviewItem(
+            suggestion: AiSuggestedItem(
+              name: item.candidate.name,
+              estimatedGrams: item.candidate.grams,
+              confidence: item.candidate.confidence ?? 1.0,
+              matchedBarcode: item.match.bestMatch?.barcode ??
+                  item.candidate.matchedBarcode,
+            ),
+            matchedFood: item.match.bestMatch,
+            issues: item.issues,
+            nutrition: item.nutrition,
+          ),
+        )
+        .toList(growable: false);
   }
 
   // ---------------------------------------------------------------------------
@@ -104,6 +153,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   void _removeItem(int index) {
     setState(() => _items.removeAt(index));
+    _validateCurrentItems();
   }
 
   void _editQuantity(int index) async {
@@ -162,6 +212,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
     if (result != null && mounted) {
       setState(() => item.suggestion.estimatedGrams = result);
+      _validateCurrentItems();
     }
   }
 
@@ -175,6 +226,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
         _items[index].suggestion.matchedBarcode = selectedItem.barcode;
         _items[index].suggestion.name = selectedItem.getLocalizedName(context);
       });
+      _validateCurrentItems();
     }
   }
 
@@ -196,6 +248,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
           ),
         );
       });
+      _validateCurrentItems();
       HapticFeedbackService.instance.confirmationFeedback();
     }
   }
@@ -211,19 +264,48 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
     setState(() => _isRetrying = true);
     _startAiWaitingHaptics();
     try {
+      final languageCode = Localizations.localeOf(context).languageCode;
       final newResults = await AiService.instance.retry(
         previousResults: _items.map((e) => e.suggestion).toList(),
         feedback: feedback,
         images: widget.originalImages.isNotEmpty ? widget.originalImages : null,
+        languageCode: languageCode,
+      );
+      final candidate = AiMealCandidate(
+        items: newResults
+            .map(
+              (item) => AiMealCandidateItem(
+                name: item.name,
+                grams: item.estimatedGrams,
+                confidence: item.confidence,
+                matchedBarcode: item.matchedBarcode,
+              ),
+            )
+            .toList(growable: false),
+      );
+      final orchestrator = AiRepairOrchestrator(
+        validationEngine: AiMealValidationEngine(),
+      );
+      final outcome = await orchestrator.run(
+        initialCandidate: candidate,
+        mode: AiValidationMode.capture,
+        repairer: (candidate, validation, attempt) {
+          return AiService.instance.repairMealCaptureCandidate(
+            candidate: candidate,
+            validation: validation,
+            images:
+                widget.originalImages.isNotEmpty ? widget.originalImages : null,
+            languageCode: languageCode,
+          );
+        },
       );
       if (mounted) {
         setState(() {
-          _items = newResults.map((s) => _ReviewItem(suggestion: s)).toList();
+          _applyValidationResult(outcome.validation);
           _feedbackController.clear();
           _showFeedback = false;
-          _isMatching = true;
+          _isMatching = false;
         });
-        _performFuzzyMatching();
       }
     } on AiServiceException catch (e) {
       if (mounted) {
@@ -246,19 +328,39 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   // ---------------------------------------------------------------------------
 
   Future<void> _saveToDiary() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_items.isEmpty) return;
+    final validation = _validation ??
+        await AiMealValidationEngine().validateMealCandidate(
+          candidate: _candidateFromReviewItems(),
+          mode: AiValidationMode.capture,
+        );
+    final savePlan = AiDiarySavePlan.fromValidation(validation);
+    if (!savePlan.canSaveAny) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.aiValidationNoMatchedItemsSaveYet),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (savePlan.isPartial) {
+      final confirmed = await _confirmPartialSave(savePlan);
+      if (confirmed != true) return;
+    }
+
     setState(() => _isSaving = true);
 
     final db = DatabaseHelper.instance;
 
-    for (final item in _items) {
-      // Use matched food item if available, otherwise create a minimal entry
-      final food = item.matchedFood;
-      if (food == null) continue; // Skip unmatched items
+    for (final item in savePlan.matchedItems) {
+      final food = item.match.bestMatch!;
 
       final entry = FoodEntry(
         barcode: food.barcode,
-        quantityInGrams: item.suggestion.estimatedGrams,
+        quantityInGrams: item.candidate.grams,
         timestamp: _selectedTimestamp,
         mealType: _selectedMealType,
       );
@@ -270,6 +372,50 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
       HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context).pop(true);
     }
+  }
+
+  Future<bool?> _confirmPartialSave(AiDiarySavePlan savePlan) {
+    final l10n = AppLocalizations.of(context)!;
+    return showGlassBottomMenu<bool>(
+      context: context,
+      title: l10n.aiValidationSomeItemsNeedReviewTitle,
+      contentBuilder: (ctx, close) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.aiValidationPartialSaveItemsMessage(
+              savePlan.unmatchedItems.length,
+              savePlan.matchedItems.length,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    close();
+                    Navigator.of(ctx).pop(false);
+                  },
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    close();
+                    Navigator.of(ctx).pop(true);
+                  },
+                  child: Text(l10n.aiValidationSaveMatchedItemsButton),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -299,6 +445,10 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                   style: theme.textTheme.titleMedium,
                 ),
                 const SizedBox(height: DesignConstants.spacingM),
+                if (_validation != null) ...[
+                  _buildValidationSummary(theme),
+                  const SizedBox(height: DesignConstants.spacingM),
+                ],
 
                 // Meal type + time selector
                 SummaryCard(
@@ -552,6 +702,31 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                             ),
                           ),
                         ),
+                        if (item.issues
+                            .where(
+                              (issue) =>
+                                  issue.severity != AiValidationSeverity.info,
+                            )
+                            .isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          ...item.issues
+                              .where(
+                                (issue) =>
+                                    issue.severity != AiValidationSeverity.info,
+                              )
+                              .take(2)
+                              .map(
+                                (issue) => Text(
+                                  aiValidationIssueText(l10n, issue),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: issue.severity ==
+                                            AiValidationSeverity.error
+                                        ? theme.colorScheme.error
+                                        : Colors.orange[800],
+                                  ),
+                                ),
+                              ),
+                        ],
                       ],
                     ),
                   ),
@@ -583,12 +758,102 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
       ),
     );
   }
+
+  Widget _buildValidationSummary(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
+    final validation = _validation!;
+    final issues = validation.allIssues
+        .where((issue) => issue.severity != AiValidationSeverity.info)
+        .take(4)
+        .toList(growable: false);
+    final color = validation.passed
+        ? Colors.green
+        : validation.errors.isNotEmpty
+            ? theme.colorScheme.error
+            : Colors.orange;
+    final title = validation.passed
+        ? l10n.aiValidationValidationPassedTitle
+        : l10n.aiValidationReviewSuggestedTitle;
+    final subtitle = [
+      '${validation.totals.kcalRounded} ${l10n.unit_kcal}',
+      '${validation.totals.proteinRounded}${l10n.unit_grams} ${l10n.protein}',
+      '${validation.totals.carbsRounded}${l10n.unit_grams} ${l10n.carbs}',
+      '${validation.totals.fatRounded}${l10n.unit_grams} ${l10n.fat}',
+    ].join(' · ');
+
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  validation.passed
+                      ? Icons.verified_rounded
+                      : Icons.warning_amber_rounded,
+                  color: color,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '$title · ${l10n.aiValidationScoreLabel(validation.score)}',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (validation.repairLimitReached) ...[
+              const SizedBox(height: 6),
+              Text(
+                l10n.aiValidationRepairLimitReachedReview,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            if (issues.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ...issues.map(
+                (issue) => Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '• ${aiValidationIssueText(l10n, issue)}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Internal wrapper around [AiSuggestedItem] that holds the matched food.
 class _ReviewItem {
   AiSuggestedItem suggestion;
   FoodItem? matchedFood;
+  List<AiValidationIssue> issues;
+  AiNutritionTotals nutrition;
 
-  _ReviewItem({required this.suggestion, this.matchedFood});
+  _ReviewItem({
+    required this.suggestion,
+    this.matchedFood,
+    this.issues = const [],
+    this.nutrition = AiNutritionTotals.zero,
+  });
 }

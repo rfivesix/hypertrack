@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/domain/aggregation/sleep_period_aggregations.dart';
-import 'package:hypertrack/features/sleep/domain/derived/nightly_sleep_analysis.dart';
-import 'package:hypertrack/features/sleep/domain/sleep_enums.dart';
+import 'package:train_libre/features/sleep/domain/aggregation/sleep_period_aggregations.dart';
+import 'package:train_libre/features/sleep/domain/derived/nightly_sleep_analysis.dart';
+import 'package:train_libre/features/sleep/domain/sleep_enums.dart';
 
 NightlySleepAnalysis _analysis({
   required DateTime date,
@@ -111,6 +111,7 @@ void main() {
           expectedEndLocal.minute +
           (expectedEndDate.isBefore(targetDateOnly) ? 0 : 1440);
       expect(window.hasData, isTrue);
+      expect(window.isEstimatedWindow, isFalse);
       expect(window.startMinutes, expectedStartMinutes);
       expect(window.endMinutes, expectedEndMinutes);
       expect(window.displayStartMinutes, expectedStartMinutes);
@@ -142,6 +143,46 @@ void main() {
       final day = result.days.firstWhere((item) => item.date == date);
       expect(day.score, 85);
       expect(day.totalSleepMinutes, 450);
+    });
+
+    test('duration-only fallback window is marked estimated', () {
+      final weekStart = DateTime(2026, 3, 30);
+      final targetDate = weekStart.add(const Duration(days: 1));
+      final engine = const SleepPeriodAggregationEngine();
+      final result = engine.aggregateWeek(
+        weekStart: weekStart,
+        analyses: [
+          _analysis(date: targetDate, totalSleepMinutes: 420),
+        ],
+      );
+
+      final window = result.sleepWindows.firstWhere(
+        (item) => item.date == targetDate,
+      );
+      expect(window.hasData, isTrue);
+      expect(window.isEstimatedWindow, isTrue);
+      expect(window.startMinutes, 23 * 60);
+      expect(window.endMinutes, 6 * 60);
+    });
+
+    test('missing duration and session bounds produce no-data window', () {
+      final weekStart = DateTime(2026, 3, 30);
+      final targetDate = weekStart.add(const Duration(days: 1));
+      final engine = const SleepPeriodAggregationEngine();
+      final result = engine.aggregateWeek(
+        weekStart: weekStart,
+        analyses: [
+          _analysis(date: targetDate),
+        ],
+      );
+
+      final window = result.sleepWindows.firstWhere(
+        (item) => item.date == targetDate,
+      );
+      expect(window.hasData, isFalse);
+      expect(window.isEstimatedWindow, isFalse);
+      expect(window.startMinutes, isNull);
+      expect(window.endMinutes, isNull);
     });
   });
 

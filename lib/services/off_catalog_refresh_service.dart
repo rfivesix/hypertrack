@@ -83,6 +83,13 @@ typedef PrefsProvider = Future<SharedPreferences> Function();
 typedef OffConfigResolver = OffCatalogRemoteSourceConfig Function(
   OffCatalogCountry country,
 );
+typedef CatalogRefreshProgress = void Function(
+  String task,
+  String detail,
+  double progress, {
+  required bool canSkip,
+});
+typedef RemoteRefreshSkipRequested = bool Function();
 
 /// Handles remote OFF catalog update discovery, download, and validation.
 ///
@@ -158,6 +165,8 @@ class OffCatalogRefreshService {
   Future<OffCatalogUpdateCandidate?> prepareUpdateCandidate({
     required String installedVersion,
     bool force = false,
+    CatalogRefreshProgress? onProgress,
+    RemoteRefreshSkipRequested? isSkipRequested,
   }) async {
     final prefs = await _prefsProvider();
     final activeCountry = OffCatalogCountryService.readActiveCountryFromPrefs(
@@ -203,7 +212,11 @@ class OffCatalogRefreshService {
     final lastCheckedMs = prefs.getInt(
       _countryScopedKey(_keyLastCheckedAtMsPrefix, countryCode),
     );
+    final hasLastError =
+        prefs.getString(_countryScopedKey(_keyLastErrorPrefix, countryCode)) !=
+            null;
     if (!force &&
+        !hasLastError &&
         !shouldCheckRemoteNow(
           now: now,
           lastCheckedEpochMs: lastCheckedMs,
@@ -220,6 +233,19 @@ class OffCatalogRefreshService {
     String? tempDbPath;
 
     try {
+      if (isSkipRequested?.call() ?? false) {
+        await prefs.setString(
+          _countryScopedKey(_keyLastErrorPrefix, countryCode),
+          'Remote OFF catalog update skipped by user.',
+        );
+        return null;
+      }
+      onProgress?.call(
+        'Prüfe Produktdatenbank (${activeCountry.upperCode})...',
+        'Remote-Manifest wird geladen...',
+        0.0,
+        canSkip: true,
+      );
       final manifest = await _fetchManifest(
         manifestUri,
         config,
@@ -244,6 +270,20 @@ class OffCatalogRefreshService {
           );
       if (!shouldDownload) {
         await prefs.remove(_countryScopedKey(_keyLastErrorPrefix, countryCode));
+        onProgress?.call(
+          'Produktdatenbank (${activeCountry.upperCode}) aktuell',
+          'Kein Remote-Download erforderlich.',
+          1.0,
+          canSkip: false,
+        );
+        return null;
+      }
+
+      if (isSkipRequested?.call() ?? false) {
+        await prefs.setString(
+          _countryScopedKey(_keyLastErrorPrefix, countryCode),
+          'Remote OFF catalog download skipped by user.',
+        );
         return null;
       }
 
@@ -257,15 +297,32 @@ class OffCatalogRefreshService {
         manifest.dbUri,
         tempDbPath,
         timeout: config.downloadTimeout,
+        onProgress: (progress) {
+          onProgress?.call(
+            'Lade Produktdatenbank (${activeCountry.upperCode})...',
+            'Remote-OFF-Katalog ${manifest.version} wird heruntergeladen.',
+            progress,
+            canSkip: true,
+          );
+        },
+        isSkipRequested: isSkipRequested,
       );
       if (!downloaded) {
         await prefs.setString(
           _countryScopedKey(_keyLastErrorPrefix, countryCode),
-          'Download failed for ${manifest.dbUri}',
+          (isSkipRequested?.call() ?? false)
+              ? 'Remote OFF catalog download skipped by user.'
+              : 'Download failed for ${manifest.dbUri}',
         );
         return null;
       }
 
+      onProgress?.call(
+        'Prüfe Produktdatenbank (${activeCountry.upperCode})...',
+        'Download wird verifiziert...',
+        0.92,
+        canSkip: false,
+      );
       final actualDbSha256 = await _computeFileSha256(tempDbPath);
       if (!_sha256Equals(actualDbSha256, manifest.dbSha256)) {
         await prefs.setString(
@@ -274,6 +331,26 @@ class OffCatalogRefreshService {
         );
         await _deleteIfExists(tempDbPath);
         return null;
+      }
+
+      if (await _usesWalJournalMode(tempDbPath)) {
+        onProgress?.call(
+          'Prüfe Produktdatenbank (${activeCountry.upperCode})...',
+          'Download wird für den Import vorbereitet...',
+          0.94,
+          canSkip: false,
+        );
+        final beforeSize = await File(tempDbPath).length();
+        await _normalizeSingleFileWalDatabase(tempDbPath);
+        final afterSize = await File(tempDbPath).length();
+        if (afterSize <= 0 || afterSize < beforeSize) {
+          await prefs.setString(
+            _countryScopedKey(_keyLastErrorPrefix, countryCode),
+            'Downloaded OFF DB was modified unexpectedly during WAL normalization. before=$beforeSize after=$afterSize',
+          );
+          await _deleteIfExists(tempDbPath);
+          return null;
+        }
       }
 
       final validated = await _validateCatalogDb(
@@ -306,6 +383,13 @@ class OffCatalogRefreshService {
         manifestUri: manifestUri,
         config: config,
         manifest: manifest,
+      );
+
+      onProgress?.call(
+        'Produktdatenbank (${activeCountry.upperCode}) bereit',
+        'Remote-OFF-Katalog ${manifest.version} wird importiert.',
+        1.0,
+        canSkip: false,
       );
 
       return OffCatalogUpdateCandidate(
@@ -603,15 +687,39 @@ class OffCatalogRefreshService {
     Uri uri,
     String destinationPath, {
     required Duration timeout,
+    ValueChanged<double>? onProgress,
+    RemoteRefreshSkipRequested? isSkipRequested,
   }) async {
-    final response = await _httpClient.get(uri).timeout(timeout);
+    if (isSkipRequested?.call() ?? false) return false;
+    final request = http.Request('GET', uri);
+    final response = await _httpClient.send(request).timeout(timeout);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       return false;
     }
 
     final file = File(destinationPath);
     await file.parent.create(recursive: true);
-    await file.writeAsBytes(response.bodyBytes, flush: true);
+    final sink = file.openWrite();
+    var received = 0;
+    final total = response.contentLength;
+    try {
+      await for (final chunk in response.stream.timeout(timeout)) {
+        if (isSkipRequested?.call() ?? false) {
+          return false;
+        }
+        received += chunk.length;
+        sink.add(chunk);
+        if (total != null && total > 0) {
+          onProgress?.call((received / total).clamp(0.0, 0.9));
+        } else {
+          onProgress?.call(0.0);
+        }
+      }
+    } finally {
+      await sink.close();
+    }
+    if (isSkipRequested?.call() ?? false) return false;
+    onProgress?.call(0.9);
     return true;
   }
 
@@ -731,6 +839,35 @@ class OffCatalogRefreshService {
   Future<String> _computeFileSha256(String filePath) async {
     final bytes = await File(filePath).readAsBytes();
     return sha256.convert(bytes).toString();
+  }
+
+  Future<bool> _usesWalJournalMode(String filePath) async {
+    final file = File(filePath);
+    final length = await file.length();
+    if (length < 20) return false;
+
+    final handle = await file.open();
+    try {
+      final header = await handle.read(20);
+      if (header.length < 20) return false;
+      final isSqlite =
+          String.fromCharCodes(header.take(16)) == 'SQLite format 3\u0000';
+      if (!isSqlite) return false;
+      return header[18] == 2 || header[19] == 2;
+    } finally {
+      await handle.close();
+    }
+  }
+
+  Future<void> _normalizeSingleFileWalDatabase(String filePath) async {
+    final handle = await File(filePath).open(mode: FileMode.writeOnlyAppend);
+    try {
+      await handle.setPosition(18);
+      await handle.writeFrom(const [1, 1]);
+      await handle.flush();
+    } finally {
+      await handle.close();
+    }
   }
 
   static bool _sha256Equals(String a, String b) {

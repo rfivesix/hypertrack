@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hypertrack/features/sleep/domain/metrics/regularity_calculator.dart';
+import 'package:train_libre/features/sleep/domain/metrics/regularity_calculator.dart';
 
 void main() {
   test('returns insufficient-data state with fewer than 3 nights', () {

@@ -29,6 +29,54 @@ import '../services/theme_service.dart';
 
 // lib/screens/add_food_screen.dart
 
+class MealCardNutritionTotals {
+  const MealCardNutritionTotals({
+    required this.ingredientCount,
+    required this.kcal,
+    required this.carbs,
+    required this.fat,
+    required this.protein,
+  });
+
+  final int ingredientCount;
+  final int kcal;
+  final double carbs;
+  final double fat;
+  final double protein;
+}
+
+MealCardNutritionTotals calculateMealCardNutritionTotals({
+  required List<Map<String, dynamic>> items,
+  required Map<String, FoodItem> productsByBarcode,
+}) {
+  var kcal = 0;
+  var carbs = 0.0;
+  var fat = 0.0;
+  var protein = 0.0;
+
+  for (final item in items) {
+    final barcode = item['barcode'] as String?;
+    if (barcode == null) continue;
+    final quantity = (item['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
+    final foodItem = productsByBarcode[barcode];
+    if (foodItem == null) continue;
+
+    final factor = quantity / 100.0;
+    kcal += (foodItem.calories * factor).round();
+    carbs += foodItem.carbs * factor;
+    fat += foodItem.fat * factor;
+    protein += foodItem.protein * factor;
+  }
+
+  return MealCardNutritionTotals(
+    ingredientCount: items.length,
+    kcal: kcal,
+    carbs: carbs,
+    fat: fat,
+    protein: protein,
+  );
+}
+
 /// A comprehensive screen for searching and adding food items to the nutrition diary.
 ///
 /// Features multiple tabs for catalog search, recently used items, favorites,
@@ -81,14 +129,21 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   // Meals
   List<Map<String, dynamic>> _meals = [];
   final Map<int, List<Map<String, dynamic>>> _mealItemsCache = {};
+  final Map<int, Future<MealCardNutritionTotals>> _mealTotalsFutureCache = {};
   bool _isLoadingMeals = true;
   int _currentTab = 0; // 0=Katalog, 1=Zuletzt, 2=Favoriten, 3=Mahlzeiten
   final bool _suspendFab = false;
   static const double _bottomPadding = 100.0;
 
   Future<void> _loadMeals() async {
-    setState(() => _isLoadingMeals = true);
+    if (!mounted) return;
+    setState(() {
+      _isLoadingMeals = true;
+      _mealItemsCache.clear();
+      _mealTotalsFutureCache.clear();
+    });
     final rows = await DatabaseHelper.instance.getMeals();
+    if (!mounted) return;
     setState(() {
       _meals = rows;
       _isLoadingMeals = false;
@@ -100,6 +155,30 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     final rows = await DatabaseHelper.instance.getMealItems(mealId);
     _mealItemsCache[mealId] = rows;
     return rows;
+  }
+
+  Future<Map<String, FoodItem>> _getProductsForMealItems(
+    List<Map<String, dynamic>> items,
+  ) async {
+    final barcodes = items
+        .map((item) => item['barcode'] as String?)
+        .whereType<String>()
+        .toSet()
+        .toList();
+    final products =
+        await ProductDatabaseHelper.instance.getProductsByBarcodes(barcodes);
+    return {for (final product in products) product.barcode: product};
+  }
+
+  Future<MealCardNutritionTotals> _getMealTotals(int mealId) {
+    return _mealTotalsFutureCache.putIfAbsent(mealId, () async {
+      final items = await _getMealItems(mealId);
+      final productsByBarcode = await _getProductsForMealItems(items);
+      return calculateMealCardNutritionTotals(
+        items: items,
+        productsByBarcode: productsByBarcode,
+      );
+    });
   }
 
   Future<void> _loadBaseCategories() async {
@@ -146,7 +225,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       }
     });
 
-    _searchController.addListener(() => setState(() {}));
     _loadFavorites();
     _loadRecentItems();
     _baseSearchCtrl.addListener(
@@ -853,63 +931,29 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
   Widget _buildMealCard(Map<String, dynamic> meal, AppLocalizations l10n) {
     final color = Theme.of(context).colorScheme;
-
-    Future<Map<String, num>> computeMealTotals(int mealId) async {
-      final items = await _getMealItems(mealId);
-      int kcal = 0;
-      double c = 0, f = 0, p = 0;
-
-      for (final it in items) {
-        final bc = it['barcode'] as String;
-        final qty = (it['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
-        final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
-        if (fi == null) continue;
-
-        final factor = qty / 100.0;
-        kcal += ((fi.calories) * factor).round();
-        c += (fi.carbs) * factor;
-        f += (fi.fat) * factor;
-        p += (fi.protein) * factor;
-      }
-      return {'kcal': kcal, 'c': c, 'f': f, 'p': p};
-    }
+    final mealId = meal['id'] as int;
 
     return SummaryCard(
       child: ListTile(
         leading: Icon(Icons.restaurant, color: color.primary),
         title: Text(meal['name'] as String),
-        subtitle: FutureBuilder<Map<String, num>>(
-          future: computeMealTotals(meal['id'] as int),
+        subtitle: FutureBuilder<MealCardNutritionTotals>(
+          future: _getMealTotals(mealId),
           builder: (_, snap) {
-            // Fallback: nur Anzahl Zutaten, falls noch lädt
-            if (!snap.hasData) {
-              return FutureBuilder<List<Map<String, dynamic>>>(
-                future: _getMealItems(meal['id'] as int),
-                builder: (_, s2) {
-                  final count = s2.data?.length ?? 0;
-                  return Text('${l10n.mealIngredientsTitle}: $count');
-                },
-              );
-            }
-            final t = snap.data!;
-            final c = (t['c'] ?? 0).toDouble();
-            final f = (t['f'] ?? 0).toDouble();
-            final p = (t['p'] ?? 0).toDouble();
-            final kcal = (t['kcal'] ?? 0).toInt();
+            final totals = snap.data;
+            final count =
+                totals?.ingredientCount ?? _mealItemsCache[mealId]?.length ?? 0;
 
+            if (totals == null) {
+              return Text('${l10n.mealIngredientsTitle}: $count');
+            }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _getMealItems(meal['id'] as int),
-                  builder: (_, s2) {
-                    final count = s2.data?.length ?? 0;
-                    return Text('${l10n.mealIngredientsTitle}: $count');
-                  },
-                ),
+                Text('${l10n.mealIngredientsTitle}: $count'),
                 const SizedBox(height: 2),
                 Text(
-                  '$kcal kcal   •   C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
+                  '${totals.kcal} kcal   •   C ${totals.carbs.toStringAsFixed(1)} g   •   F ${totals.fat.toStringAsFixed(1)} g   •   P ${totals.protein.toStringAsFixed(1)} g',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
@@ -969,8 +1013,10 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
 
     if (!ok) return;
-    await DatabaseHelper.instance.deleteMeal(meal['id'] as int);
-    _mealItemsCache.remove(meal['id'] as int);
+    final mealId = meal['id'] as int;
+    await DatabaseHelper.instance.deleteMeal(mealId);
+    _mealItemsCache.remove(mealId);
+    _mealTotalsFutureCache.remove(mealId);
     await _loadMeals();
     if (mounted) {
       ScaffoldMessenger.of(
@@ -989,13 +1035,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
     if (rawItems.isEmpty) return;
 
-    final Map<String, FoodItem?> products = {};
-    for (final it in rawItems) {
-      final bc = it['barcode'] as String;
-      products[bc] = await ProductDatabaseHelper.instance.getProductByBarcode(
-        bc,
-      );
-    }
+    final products = await _getProductsForMealItems(rawItems);
 
     final Map<String, TextEditingController> qtyCtrls = {
       for (final it in rawItems)
@@ -1027,234 +1067,239 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     };
     if (!mounted) return;
 
-    final ok = await showGlassBottomMenu<bool>(
-          context: context,
-          title: l10n.mealsAddToDiary,
-          contentBuilder: (ctx, close) {
-            return StatefulBuilder(
-              builder: (ctx, modalSetState) {
-                final locale = Localizations.localeOf(ctx).toString();
-                final formattedDate = DateFormat.yMd(
-                  locale,
-                ).format(selectedDate);
-                final formattedTime = DateFormat.Hm(
-                  locale,
-                ).format(selectedDate);
+    try {
+      final ok = await showGlassBottomMenu<bool>(
+            context: context,
+            title: l10n.mealsAddToDiary,
+            contentBuilder: (ctx, close) {
+              return StatefulBuilder(
+                builder: (ctx, modalSetState) {
+                  final locale = Localizations.localeOf(ctx).toString();
+                  final formattedDate = DateFormat.yMd(
+                    locale,
+                  ).format(selectedDate);
+                  final formattedTime = DateFormat.Hm(
+                    locale,
+                  ).format(selectedDate);
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      meal['name'] as String,
-                      style: Theme.of(ctx).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Datum & Zeit Auswahl
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.calendar_today, size: 18),
-                          label: Text(formattedDate),
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: ctx,
-                              initialDate: selectedDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now().add(
-                                const Duration(days: 365),
-                              ),
-                            );
-                            if (picked != null) {
-                              modalSetState(() {
-                                selectedDate = DateTime(
-                                  picked.year,
-                                  picked.month,
-                                  picked.day,
-                                  selectedDate.hour,
-                                  selectedDate.minute,
-                                );
-                              });
-                            }
-                          },
-                        ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.access_time, size: 18),
-                          label: Text(formattedTime),
-                          onPressed: () async {
-                            final picked = await showTimePicker(
-                              context: ctx,
-                              initialTime: TimeOfDay.fromDateTime(selectedDate),
-                            );
-                            if (picked != null) {
-                              modalSetState(() {
-                                selectedDate = DateTime(
-                                  selectedDate.year,
-                                  selectedDate.month,
-                                  selectedDate.day,
-                                  picked.hour,
-                                  picked.minute,
-                                );
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedMealType,
-                      decoration: InputDecoration(
-                        labelText: l10n.mealTypeLabel,
-                        border: const OutlineInputBorder(),
-                        isDense: true,
-                        filled: true,
-                        fillColor:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.black.withValues(alpha: 0.05),
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        meal['name'] as String,
+                        style: Theme.of(ctx).textTheme.titleMedium,
                       ),
-                      items: internalTypes
-                          .map(
-                            (key) => DropdownMenuItem(
-                              value: key,
-                              child: Text(mealTypeLabel[key] ?? key),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) {
-                        if (v != null) {
-                          modalSetState(() => selectedMealType = v);
-                        }
-                      },
-                    ),
+                      const SizedBox(height: 12),
 
-                    const SizedBox(height: 12),
+                      // Datum & Zeit Auswahl
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton.icon(
+                            icon: const Icon(Icons.calendar_today, size: 18),
+                            label: Text(formattedDate),
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: ctx,
+                                initialDate: selectedDate,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now().add(
+                                  const Duration(days: 365),
+                                ),
+                              );
+                              if (picked != null) {
+                                modalSetState(() {
+                                  selectedDate = DateTime(
+                                    picked.year,
+                                    picked.month,
+                                    picked.day,
+                                    selectedDate.hour,
+                                    selectedDate.minute,
+                                  );
+                                });
+                              }
+                            },
+                          ),
+                          TextButton.icon(
+                            icon: const Icon(Icons.access_time, size: 18),
+                            label: Text(formattedTime),
+                            onPressed: () async {
+                              final picked = await showTimePicker(
+                                context: ctx,
+                                initialTime:
+                                    TimeOfDay.fromDateTime(selectedDate),
+                              );
+                              if (picked != null) {
+                                modalSetState(() {
+                                  selectedDate = DateTime(
+                                    selectedDate.year,
+                                    selectedDate.month,
+                                    selectedDate.day,
+                                    picked.hour,
+                                    picked.minute,
+                                  );
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
 
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 300),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: rawItems.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (_, i) {
-                          final it = rawItems[i];
-                          final bc = it['barcode'] as String;
-                          final fi = products[bc];
-                          final displayName =
-                              (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
-                          final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
-
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 18),
-                                child: Icon(Icons.lunch_dining, size: 20),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedMealType,
+                        decoration: InputDecoration(
+                          labelText: l10n.mealTypeLabel,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          filled: true,
+                          fillColor:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.black.withValues(alpha: 0.05),
+                        ),
+                        items: internalTypes
+                            .map(
+                              (key) => DropdownMenuItem(
+                                value: key,
+                                child: Text(mealTypeLabel[key] ?? key),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: qtyCtrls[bc],
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: displayName,
-                                    suffixText: unit,
-                                    filled: true,
-                                    fillColor: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white.withValues(alpha: 0.05)
-                                        : Colors.black.withValues(alpha: 0.05),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
+                            )
+                            .toList(),
+                        onChanged: (v) {
+                          if (v != null) {
+                            modalSetState(() => selectedMealType = v);
+                          }
+                        },
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 300),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: rawItems.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, i) {
+                            final it = rawItems[i];
+                            final bc = it['barcode'] as String;
+                            final fi = products[bc];
+                            final displayName =
+                                (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
+                            final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 18),
+                                  child: Icon(Icons.lunch_dining, size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: qtyCtrls[bc],
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                      decimal: true,
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 14,
+                                    decoration: InputDecoration(
+                                      labelText: displayName,
+                                      suffixText: unit,
+                                      filled: true,
+                                      fillColor: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white.withValues(alpha: 0.05)
+                                          : Colors.black
+                                              .withValues(alpha: 0.05),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              close();
-                              Navigator.of(ctx).pop(false);
-                            },
-                            child: Text(l10n.cancel),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                close();
+                                Navigator.of(ctx).pop(false);
+                              },
+                              child: Text(l10n.cancel),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () {
-                              close();
-                              Navigator.of(ctx).pop(true);
-                            },
-                            child: Text(l10n.save),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () {
+                                close();
+                                Navigator.of(ctx).pop(true);
+                              },
+                              child: Text(l10n.save),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        ) ??
-        false;
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ) ??
+          false;
 
-    if (!ok) return;
+      if (!ok) return;
 
-    // Nutze das ausgewählte Datum (selectedDate) statt DateTime.now()
-    for (final it in rawItems) {
-      final bc = it['barcode'] as String;
-      final ctrl = qtyCtrls[bc]!;
-      final qty =
-          int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
+      // Nutze das ausgewählte Datum (selectedDate) statt DateTime.now()
+      for (final it in rawItems) {
+        final bc = it['barcode'] as String;
+        final ctrl = qtyCtrls[bc]!;
+        final qty =
+            int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
 
-      await DatabaseHelper.instance.insertFoodEntry(
-        FoodEntry(
-          barcode: bc,
-          timestamp: selectedDate, // <--- VERWENDUNG
-          quantityInGrams: qty,
-          mealType: selectedMealType,
-        ),
-      );
+        await DatabaseHelper.instance.insertFoodEntry(
+          FoodEntry(
+            barcode: bc,
+            timestamp: selectedDate, // <--- VERWENDUNG
+            quantityInGrams: qty,
+            mealType: selectedMealType,
+          ),
+        );
 
-      final fi = products[bc];
-      if (fi != null) {
-        final c100 = fi.caffeineMgPer100ml;
-        if (fi.isLiquid == true && c100 != null && c100 > 0) {
-          await _logCaffeineDose(
-            c100 * (qty / 100.0),
-            selectedDate,
-          ); // <--- VERWENDUNG
+        final fi = products[bc];
+        final c100 = fi?.caffeineMgPer100ml;
+        if (fi?.isLiquid == true && c100 != null && c100 > 0) {
+          await _logCaffeineDose(c100 * (qty / 100.0), selectedDate);
         }
       }
-    }
 
-    if (mounted) {
-      HapticFeedbackService.instance.confirmationFeedback();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
+      if (mounted) {
+        HapticFeedbackService.instance.confirmationFeedback();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
+      }
+    } finally {
+      for (final controller in qtyCtrls.values) {
+        controller.dispose();
+      }
     }
   }
 
