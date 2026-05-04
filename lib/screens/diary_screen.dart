@@ -44,13 +44,21 @@ import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
 
+DateTime resolveDiaryInitialDate({DateTime? initialDate, DateTime? now}) {
+  return (initialDate ?? now ?? DateTime.now()).dateOnly;
+}
+
+DateTime normalizeDiaryDate(DateTime date) => date.dateOnly;
+
 /// The central hub for tracking and viewing daily nutritional and activity data.
 ///
 /// Displays a comprehensive overview of calories, macros, supplements, and workouts
 /// for a selected date. Allows users to manage food entries, fluid intake, and
 /// view historical measurements like weight.
 class DiaryScreen extends StatefulWidget {
-  const DiaryScreen({super.key});
+  final DateTime? initialDate;
+
+  const DiaryScreen({super.key, this.initialDate});
 
   @override
   State<DiaryScreen> createState() => DiaryScreenState();
@@ -62,9 +70,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   static const String _showSugarInDiaryOverviewPrefKey =
       'showSugarInDiaryOverview';
   bool _isLoading = true;
-  final ValueNotifier<DateTime> selectedDateNotifier = ValueNotifier(
-    DateTime.now(),
-  );
+  late final ValueNotifier<DateTime> selectedDateNotifier;
   DateTime get _selectedDate => selectedDateNotifier.value;
   DailyNutrition? _dailyNutrition;
   Map<String, List<TrackedFoodItem>> _entriesByMeal = {};
@@ -99,6 +105,9 @@ class DiaryScreenState extends State<DiaryScreen> {
   @override
   void initState() {
     super.initState();
+    selectedDateNotifier = ValueNotifier(
+      resolveDiaryInitialDate(initialDate: widget.initialDate),
+    );
     loadDataForDate(_selectedDate);
   }
 
@@ -114,12 +123,13 @@ class DiaryScreenState extends State<DiaryScreen> {
     bool forceStepsRefresh = false,
   }) async {
     if (!mounted) return;
+    final diaryDate = normalizeDiaryDate(date);
     setState(() => _isLoading = true);
 
     final dbHelper = DatabaseHelper.instance;
 
     // 1. Load goals from DB (historically accurate for the selected date)
-    final goals = await dbHelper.getGoalsForDate(date);
+    final goals = await dbHelper.getGoalsForDate(diaryDate);
 
     // 2. Prefs only for "Extra" values not in the DB schema
     final prefs = await SharedPreferences.getInstance();
@@ -141,9 +151,11 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     // Caffeine and related targets still come from prefs (not in AppSettings yet).
     final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
-    final foodEntries = await DatabaseHelper.instance.getEntriesForDate(date);
+    final foodEntries = await DatabaseHelper.instance.getEntriesForDate(
+      diaryDate,
+    );
     final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(
-      date,
+      diaryDate,
     );
     final waterIntake = fluidEntries.fold<int>(
       0,
@@ -199,10 +211,10 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
 
     final supplementsForDate =
-        await DatabaseHelper.instance.getSupplementsForDate(date);
+        await DatabaseHelper.instance.getSupplementsForDate(diaryDate);
     final allSupplements = await DatabaseHelper.instance.getAllSupplements();
     final todaysSupplementLogs =
-        await DatabaseHelper.instance.getSupplementLogsForDate(date);
+        await DatabaseHelper.instance.getSupplementLogsForDate(diaryDate);
 
     final Map<int, double> todaysDoses = {};
     for (final log in todaysSupplementLogs) {
@@ -257,7 +269,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     }
 
     final workoutLogs = await WorkoutDatabaseHelper.instance
-        .getWorkoutLogsForDateRange(date, date);
+        .getWorkoutLogsForDateRange(diaryDate, diaryDate);
     final completedLogs =
         workoutLogs.where((log) => log.endTime != null).toList();
     Map<String, dynamic>? workoutSummary;
@@ -289,7 +301,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     if (mounted) {
       setState(() {
-        selectedDateNotifier.value = date;
+        selectedDateNotifier.value = diaryDate;
         _dailyNutrition = summary;
         _entriesByMeal = groupedEntries;
         _fluidEntries = fluidEntries;
@@ -301,10 +313,10 @@ class DiaryScreenState extends State<DiaryScreen> {
         _isLoading = false;
       });
     }
-    await _loadStepsForDate(date, providerFilterRaw: providerFilterRaw);
+    await _loadStepsForDate(diaryDate, providerFilterRaw: providerFilterRaw);
     await _syncSleepIfDue(force: forceStepsRefresh);
-    await _loadSleepForDate(date);
-    await _syncStepsIfDue(date, force: forceStepsRefresh);
+    await _loadSleepForDate(diaryDate);
+    await _syncStepsIfDue(diaryDate, force: forceStepsRefresh);
   }
 
   Future<void> _loadStepsForDate(
@@ -712,13 +724,13 @@ class DiaryScreenState extends State<DiaryScreen> {
       // Erlaube Auswahl in der Zukunft, z.B. für Vorausplanung
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && !picked.isSameDate(_selectedDate)) {
       loadDataForDate(picked);
     }
   }
 
   void navigateDay(bool forward) {
-    final newDay = _selectedDate.add(Duration(days: forward ? 1 : -1));
+    final newDay = _selectedDate.dateOnly.add(Duration(days: forward ? 1 : -1));
     // Im Gegensatz zum NutritionScreen erlauben wir hier die Navigation in die Zukunft
     // if (forward && newDay.isAfter(DateTime.now())) return;
 
@@ -807,10 +819,15 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   DateTimeRange _calculateDateRange() {
     final now = DateTime.now();
+    final end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
     DateTime start;
     switch (_selectedChartRangeKey) {
       case '90D':
-        start = now.subtract(const Duration(days: 89));
+        start = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 89));
         break;
       case 'All':
         // Für "Alle" setzen wir ein sehr frühes Datum,
@@ -819,9 +836,13 @@ class DiaryScreenState extends State<DiaryScreen> {
         break;
       case '30D':
       default:
-        start = now.subtract(const Duration(days: 29));
+        start = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 29));
     }
-    return DateTimeRange(start: start, end: now);
+    return DateTimeRange(start: start, end: end);
   }
 
   @override

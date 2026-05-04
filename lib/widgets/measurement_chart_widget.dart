@@ -109,10 +109,15 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       return;
     }
     if (oldWidget.chartType != widget.chartType ||
-        oldWidget.dateRange != widget.dateRange ||
+        _dateRangeChanged(oldWidget.dateRange, widget.dateRange) ||
         oldWidget.axisMode != widget.axisMode) {
       _loadChartData();
     }
+  }
+
+  bool _dateRangeChanged(DateTimeRange? previous, DateTimeRange? next) {
+    if (previous == null || next == null) return previous != next;
+    return previous.start != next.start || previous.end != next.end;
   }
 
   void _applyExternalData({bool notify = true}) {

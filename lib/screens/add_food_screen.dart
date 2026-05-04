@@ -146,7 +146,6 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       }
     });
 
-    _searchController.addListener(() => setState(() {}));
     _loadFavorites();
     _loadRecentItems();
     _baseSearchCtrl.addListener(

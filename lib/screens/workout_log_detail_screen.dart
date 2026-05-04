@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../data/workout_database_helper.dart';
+import '../features/sharing/share_service.dart';
 import '../generated/app_localizations.dart';
 import '../models/chart_data_point.dart';
 import '../models/exercise.dart';
@@ -55,6 +56,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
   DateTime? _editedStartTime;
   Map<String, double> _categoryVolume = {};
+  static const ShareService _shareService = ShareService();
 
   @override
   void initState() {
@@ -363,6 +365,15 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                     icon: const Icon(Icons.edit),
                     onPressed: _toggleEditMode,
                   ),
+          if (!_isLoading && _log != null && !_isEditMode)
+            IconButton(
+              tooltip: l10n.share,
+              icon: const Icon(Icons.ios_share),
+              onPressed: () => _shareService.showWorkoutShareSheet(
+                context: context,
+                workout: _log!,
+              ),
+            ),
         ],
       ),
       body: _isLoading

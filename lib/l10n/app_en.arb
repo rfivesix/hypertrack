@@ -218,6 +218,64 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "save": "Save",
+  "share": "Share",
+  "shareWorkout": "Share workout",
+  "shareRoutine": "Share routine",
+  "shareAsImage": "Share as image",
+  "shareAsText": "Share as text",
+  "sharedFromTrainLibre": "Shared from Train Libre",
+  "sharedWithTrainLibre": "Shared with Train Libre",
+  "shareImageSummary": "Summary",
+  "shareImageExercises": "Exercises",
+  "shareImageMuscleFocus": "Muscle focus",
+  "shareImageMinimal": "Minimal",
+  "volume": "Volume",
+  "moreExercises": "+ {count} more exercises",
+  "@moreExercises": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareSetNumber": "Set {number}",
+  "@shareSetNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "repsShort": "reps",
+  "shareFailed": "Sharing failed",
+  "workoutShareTitle": "Workout",
+  "routineShareTitle": "Routine",
+  "setTypeWarmup": "Warm-up",
+  "setTypeWork": "Work sets",
+  "setTypeFailure": "Failure",
+  "setTypeDropset": "Dropset",
+  "setTypeSuperset": "Superset",
+  "setTypeOther": "Other",
+  "setTypeWarmupSuffix": "Warm-up",
+  "setTypeFailureSuffix": "Failure",
+  "setTypeDropsetSuffix": "Dropset",
+  "setTypeSupersetSuffix": "Superset",
+  "setTypeOtherSuffix": "Other",
+  "warmupSetCount": "{count, plural, =1{1 warm-up set} other{{count} warm-up sets}}",
+  "workSetCount": "{count, plural, =1{1 work set} other{{count} work sets}}",
+  "failureSetCount": "{count, plural, =1{1 failure set} other{{count} failure sets}}",
+  "dropsetCount": "{count, plural, =1{1 dropset} other{{count} dropsets}}",
+  "supersetSetCount": "{count, plural, =1{1 superset} other{{count} supersets}}",
+  "otherSetCount": "{count, plural, =1{1 other set} other{{count} other sets}}",
+  "warmupCompactCount": "{count, plural, =1{1 warm-up} other{{count} warm-up}}",
+  "workCompactCount": "{count, plural, =1{1 work} other{{count} work}}",
+  "failureCompactCount": "{count, plural, =1{1 failure} other{{count} failure}}",
+  "dropsetCompactCount": "{count, plural, =1{1 dropset} other{{count} dropsets}}",
+  "supersetCompactCount": "{count, plural, =1{1 superset} other{{count} supersets}}",
+  "otherCompactCount": "{count, plural, =1{1 other} other{{count} other}}",
+  "shareExercisesLabel": "exercises",
+  "shareSetsLabel": "sets",
+  "shareSetLabel": "set",
   "tabBaseFoods": "Base Foods",
   "baseFoodsEmptyState": "This section will soon be filled with a curated list of base foods like fruits, vegetables, and more.",
   "noBrand": "No Brand",

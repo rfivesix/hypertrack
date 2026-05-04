@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/workout_database_helper.dart';
+import '../features/sharing/share_service.dart';
 import '../generated/app_localizations.dart';
 import '../models/exercise.dart';
 import '../models/routine.dart';
@@ -44,6 +45,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _weightControllers = {};
   final Map<int, TextEditingController> _rirControllers = {};
+  static const ShareService _shareService = ShareService();
 
   @override
   void initState() {
@@ -461,6 +463,16 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     }
   }
 
+  void _shareCurrentRoutine() {
+    final name = _nameController.text.trim();
+    final routine = Routine(
+      id: _routineId,
+      name: name.isEmpty ? _originalName : name,
+      exercises: _routineExercises,
+    );
+    _shareService.showRoutineShareSheet(context: context, routine: routine);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -475,6 +487,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       appBar: GlobalAppBar(
         title: _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
         actions: [
+          if (!_isNewRoutine)
+            IconButton(
+              tooltip: l10n.share,
+              icon: const Icon(Icons.ios_share),
+              onPressed: _shareCurrentRoutine,
+            ),
           TextButton(
             onPressed: () => _saveRoutine(),
             child: Text(

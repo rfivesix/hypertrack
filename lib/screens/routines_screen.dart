@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
+import '../features/sharing/share_service.dart';
 import '../generated/app_localizations.dart';
 import '../models/routine.dart';
 import '../services/haptic_feedback_service.dart';
@@ -29,6 +30,7 @@ class RoutinesScreen extends StatefulWidget {
 class _RoutinesScreenState extends State<RoutinesScreen> {
   bool _isLoading = true;
   List<Routine> _routines = [];
+  static const ShareService _shareService = ShareService();
   // final l10n wurde entfernt, da es in didChangeDependencies instanziiert wird
 
   @override
@@ -137,6 +139,16 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     _loadRoutines(l10n); // l10n hier übergeben
   }
 
+  Future<void> _shareRoutine(Routine routine) async {
+    final fullRoutine =
+        await WorkoutDatabaseHelper.instance.getRoutineById(routine.id!);
+    if (!mounted || fullRoutine == null) return;
+    await _shareService.showRoutineShareSheet(
+      context: context,
+      routine: fullRoutine,
+    );
+  }
+
   // 1. Die Methode für das Menü
   void _deleteRoutine(BuildContext context, Routine routine) async {
     final l10n = AppLocalizations.of(context)!;
@@ -222,6 +234,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                             onSelected: (value) {
                               if (value == 'duplicate') {
                                 _duplicateRoutine(routine.id!);
+                              } else if (value == 'share') {
+                                _shareRoutine(routine);
                               } else if (value == 'delete') {
                                 _deleteRoutine(context, routine);
                               }
@@ -231,6 +245,10 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                               PopupMenuItem<String>(
                                 value: 'duplicate',
                                 child: Text(l10n.duplicate),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'share',
+                                child: Text(l10n.share),
                               ),
                               PopupMenuItem<String>(
                                 value: 'delete',

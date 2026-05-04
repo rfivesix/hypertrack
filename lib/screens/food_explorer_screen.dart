@@ -38,7 +38,6 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _searchController.addListener(() => setState(() {}));
     _loadFavorites();
   }
 

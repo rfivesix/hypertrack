@@ -656,7 +656,7 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'app_hybrid.sqlite'));
-    return NativeDatabase(
+    return NativeDatabase.createInBackground(
       file,
       setup: (rawDb) {
         rawDb.execute('PRAGMA foreign_keys = ON;');

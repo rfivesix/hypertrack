@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-beta.2] - 2026-05-05
+### Added
+- Added native share-sheet support for completed workouts and routines.
+- Added text exports with localized workout/routine summaries, set-type handling, workout volume, Train Libre branding, and the project GitHub link.
+- Added branded image share cards for workouts and routines, including multiple workout layouts for summary, exercises, muscle focus, and minimal stats.
+
+### Changed
+- Redesigned workout text sharing to use readable per-set lines with localized special set-type suffixes.
+- Redesigned routine image sharing to use compact set-type codes and two-column exercise cards with truncation and `+ X more` handling.
+- Improved share-card branding by using the current Train Libre SVG logo.
+
+### Fixed
+- Moved the production Drift SQLite connection onto a background isolate to prevent database work from blocking touch handling and causing Android ANRs.
+- Reduced workout-history database load by fetching completed workout sets in bulk instead of issuing one set query per workout log.
+- Removed redundant food-search controller rebuilds while typing in Add Food, Food Explorer, and the general food picker.
+- Prevented the Diary weight chart from reloading its database query on unrelated parent rebuilds.
+- Preserved the selected Diary date after adding or logging food, meals, fluids, supplements, caffeine, measurements, AI meals, or workouts from a non-today Diary view.
+- Removed a Live Workout session-manager listener on screen disposal to reduce memory-leak risk after leaving active workouts.
+- Prevented dense workout and routine share cards from clipping long labels or overflowing the image canvas.
+- Fixed muscle-focus share cards so high-exercise workouts keep the radar, top muscle-volume values, and footer inside the exported image.
+
 ## [0.9.0-beta.1] - 2025-05-02
 ### Changed
 - Renamed the app and repository branding from Hypertrack to Train Libre across Flutter, Android, iOS, widgets, documentation, and package metadata.

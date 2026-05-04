@@ -594,6 +594,238 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
+  String get share => 'Share';
+
+  @override
+  String get shareWorkout => 'Share workout';
+
+  @override
+  String get shareRoutine => 'Share routine';
+
+  @override
+  String get shareAsImage => 'Share as image';
+
+  @override
+  String get shareAsText => 'Share as text';
+
+  @override
+  String get sharedFromTrainLibre => 'Shared from Train Libre';
+
+  @override
+  String get sharedWithTrainLibre => 'Shared with Train Libre';
+
+  @override
+  String get shareImageSummary => 'Summary';
+
+  @override
+  String get shareImageExercises => 'Exercises';
+
+  @override
+  String get shareImageMuscleFocus => 'Muscle focus';
+
+  @override
+  String get shareImageMinimal => 'Minimal';
+
+  @override
+  String get volume => 'Volume';
+
+  @override
+  String moreExercises(int count) {
+    return '+ $count more exercises';
+  }
+
+  @override
+  String shareSetNumber(int number) {
+    return 'Set $number';
+  }
+
+  @override
+  String get repsShort => 'reps';
+
+  @override
+  String get shareFailed => 'Sharing failed';
+
+  @override
+  String get workoutShareTitle => 'Workout';
+
+  @override
+  String get routineShareTitle => 'Routine';
+
+  @override
+  String get setTypeWarmup => 'Warm-up';
+
+  @override
+  String get setTypeWork => 'Work sets';
+
+  @override
+  String get setTypeFailure => 'Failure';
+
+  @override
+  String get setTypeDropset => 'Dropset';
+
+  @override
+  String get setTypeSuperset => 'Superset';
+
+  @override
+  String get setTypeOther => 'Other';
+
+  @override
+  String get setTypeWarmupSuffix => 'Warm-up';
+
+  @override
+  String get setTypeFailureSuffix => 'Failure';
+
+  @override
+  String get setTypeDropsetSuffix => 'Dropset';
+
+  @override
+  String get setTypeSupersetSuffix => 'Superset';
+
+  @override
+  String get setTypeOtherSuffix => 'Other';
+
+  @override
+  String warmupSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count warm-up sets',
+      one: '1 warm-up set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count work sets',
+      one: '1 work set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count failure sets',
+      one: '1 failure set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dropsets',
+      one: '1 dropset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count supersets',
+      one: '1 superset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other sets',
+      one: '1 other set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String warmupCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count warm-up',
+      one: '1 warm-up',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count work',
+      one: '1 work',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count failure',
+      one: '1 failure',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dropsets',
+      one: '1 dropset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count supersets',
+      one: '1 superset',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other',
+      one: '1 other',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareExercisesLabel => 'exercises';
+
+  @override
+  String get shareSetsLabel => 'sets';
+
+  @override
+  String get shareSetLabel => 'set';
+
+  @override
   String get tabBaseFoods => 'Base Foods';
 
   @override

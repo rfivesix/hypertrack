@@ -218,6 +218,64 @@
   "cancel": "Abbrechen",
   "delete": "Löschen",
   "save": "Speichern",
+  "share": "Teilen",
+  "shareWorkout": "Workout teilen",
+  "shareRoutine": "Routine teilen",
+  "shareAsImage": "Als Bild teilen",
+  "shareAsText": "Als Text teilen",
+  "sharedFromTrainLibre": "Geteilt mit Train Libre",
+  "sharedWithTrainLibre": "Geteilt mit Train Libre",
+  "shareImageSummary": "Zusammenfassung",
+  "shareImageExercises": "Übungen",
+  "shareImageMuscleFocus": "Muskel-Fokus",
+  "shareImageMinimal": "Minimal",
+  "volume": "Volumen",
+  "moreExercises": "+ {count} weitere Übungen",
+  "@moreExercises": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareSetNumber": "Set {number}",
+  "@shareSetNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "repsShort": "Wdh",
+  "shareFailed": "Teilen fehlgeschlagen",
+  "workoutShareTitle": "Workout",
+  "routineShareTitle": "Routine",
+  "setTypeWarmup": "Aufwärmsatz",
+  "setTypeWork": "Arbeitssätze",
+  "setTypeFailure": "Satz bis zum Muskelversagen",
+  "setTypeDropset": "Dropsatz",
+  "setTypeSuperset": "Supersatz",
+  "setTypeOther": "Sonstige Sätze",
+  "setTypeWarmupSuffix": "Aufwärmen",
+  "setTypeFailureSuffix": "Muskelversagen",
+  "setTypeDropsetSuffix": "Dropsatz",
+  "setTypeSupersetSuffix": "Supersatz",
+  "setTypeOtherSuffix": "Spezial",
+  "warmupSetCount": "{count, plural, =1{1 Aufwärmsatz} other{{count} Aufwärmsätze}}",
+  "workSetCount": "{count, plural, =1{1 Arbeitssatz} other{{count} Arbeitssätze}}",
+  "failureSetCount": "{count, plural, =1{1 Satz bis zum Muskelversagen} other{{count} Sätze bis zum Muskelversagen}}",
+  "dropsetCount": "{count, plural, =1{1 Dropsatz} other{{count} Dropsätze}}",
+  "supersetSetCount": "{count, plural, =1{1 Supersatz} other{{count} Supersätze}}",
+  "otherSetCount": "{count, plural, =1{1 Spezial-Satz} other{{count} Spezial-Sätze}}",
+  "warmupCompactCount": "{count, plural, =1{1 Aufwärmen} other{{count} Aufwärmen}}",
+  "workCompactCount": "{count, plural, =1{1 Arbeit} other{{count} Arbeit}}",
+  "failureCompactCount": "{count, plural, =1{1 Muskelversagen} other{{count} Muskelversagen}}",
+  "dropsetCompactCount": "{count, plural, =1{1 Dropsatz} other{{count} Dropsätze}}",
+  "supersetCompactCount": "{count, plural, =1{1 Supersatz} other{{count} Supersätze}}",
+  "otherCompactCount": "{count, plural, =1{1 Spezial} other{{count} Spezial}}",
+  "shareExercisesLabel": "Übungen",
+  "shareSetsLabel": "Sätze",
+  "shareSetLabel": "Satz",
   "tabBaseFoods": "Grundnahrungsmittel",
   "baseFoodsEmptyState": "Dieser Bereich wird bald mit einer kuratierten Liste von Grundnahrungsmitteln wie Obst, Gemüse und mehr gefüllt sein.",
   "noBrand": "Keine Marke",

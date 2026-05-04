@@ -599,6 +599,238 @@ class AppLocalizationsDe extends AppLocalizations {
   String get save => 'Speichern';
 
   @override
+  String get share => 'Teilen';
+
+  @override
+  String get shareWorkout => 'Workout teilen';
+
+  @override
+  String get shareRoutine => 'Routine teilen';
+
+  @override
+  String get shareAsImage => 'Als Bild teilen';
+
+  @override
+  String get shareAsText => 'Als Text teilen';
+
+  @override
+  String get sharedFromTrainLibre => 'Geteilt mit Train Libre';
+
+  @override
+  String get sharedWithTrainLibre => 'Geteilt mit Train Libre';
+
+  @override
+  String get shareImageSummary => 'Zusammenfassung';
+
+  @override
+  String get shareImageExercises => 'Übungen';
+
+  @override
+  String get shareImageMuscleFocus => 'Muskel-Fokus';
+
+  @override
+  String get shareImageMinimal => 'Minimal';
+
+  @override
+  String get volume => 'Volumen';
+
+  @override
+  String moreExercises(int count) {
+    return '+ $count weitere Übungen';
+  }
+
+  @override
+  String shareSetNumber(int number) {
+    return 'Set $number';
+  }
+
+  @override
+  String get repsShort => 'Wdh';
+
+  @override
+  String get shareFailed => 'Teilen fehlgeschlagen';
+
+  @override
+  String get workoutShareTitle => 'Workout';
+
+  @override
+  String get routineShareTitle => 'Routine';
+
+  @override
+  String get setTypeWarmup => 'Aufwärmsatz';
+
+  @override
+  String get setTypeWork => 'Arbeitssätze';
+
+  @override
+  String get setTypeFailure => 'Satz bis zum Muskelversagen';
+
+  @override
+  String get setTypeDropset => 'Dropsatz';
+
+  @override
+  String get setTypeSuperset => 'Supersatz';
+
+  @override
+  String get setTypeOther => 'Sonstige Sätze';
+
+  @override
+  String get setTypeWarmupSuffix => 'Aufwärmen';
+
+  @override
+  String get setTypeFailureSuffix => 'Muskelversagen';
+
+  @override
+  String get setTypeDropsetSuffix => 'Dropsatz';
+
+  @override
+  String get setTypeSupersetSuffix => 'Supersatz';
+
+  @override
+  String get setTypeOtherSuffix => 'Spezial';
+
+  @override
+  String warmupSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufwärmsätze',
+      one: '1 Aufwärmsatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Arbeitssätze',
+      one: '1 Arbeitssatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sätze bis zum Muskelversagen',
+      one: '1 Satz bis zum Muskelversagen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Dropsätze',
+      one: '1 Dropsatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Supersätze',
+      one: '1 Supersatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherSetCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Spezial-Sätze',
+      one: '1 Spezial-Satz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String warmupCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufwärmen',
+      one: '1 Aufwärmen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Arbeit',
+      one: '1 Arbeit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String failureCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Muskelversagen',
+      one: '1 Muskelversagen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dropsetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Dropsätze',
+      one: '1 Dropsatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supersetCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Supersätze',
+      one: '1 Supersatz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String otherCompactCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Spezial',
+      one: '1 Spezial',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareExercisesLabel => 'Übungen';
+
+  @override
+  String get shareSetsLabel => 'Sätze';
+
+  @override
+  String get shareSetLabel => 'Satz';
+
+  @override
   String get tabBaseFoods => 'Grundnahrungsmittel';
 
   @override

@@ -1190,6 +1190,270 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @shareWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Share workout'**
+  String get shareWorkout;
+
+  /// No description provided for @shareRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Share routine'**
+  String get shareRoutine;
+
+  /// No description provided for @shareAsImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as image'**
+  String get shareAsImage;
+
+  /// No description provided for @shareAsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as text'**
+  String get shareAsText;
+
+  /// No description provided for @sharedFromTrainLibre.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared from Train Libre'**
+  String get sharedFromTrainLibre;
+
+  /// No description provided for @sharedWithTrainLibre.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with Train Libre'**
+  String get sharedWithTrainLibre;
+
+  /// No description provided for @shareImageSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get shareImageSummary;
+
+  /// No description provided for @shareImageExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises'**
+  String get shareImageExercises;
+
+  /// No description provided for @shareImageMuscleFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle focus'**
+  String get shareImageMuscleFocus;
+
+  /// No description provided for @shareImageMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get shareImageMinimal;
+
+  /// No description provided for @volume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get volume;
+
+  /// No description provided for @moreExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'+ {count} more exercises'**
+  String moreExercises(int count);
+
+  /// No description provided for @shareSetNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}'**
+  String shareSetNumber(int number);
+
+  /// No description provided for @repsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'reps'**
+  String get repsShort;
+
+  /// No description provided for @shareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing failed'**
+  String get shareFailed;
+
+  /// No description provided for @workoutShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workoutShareTitle;
+
+  /// No description provided for @routineShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine'**
+  String get routineShareTitle;
+
+  /// No description provided for @setTypeWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get setTypeWarmup;
+
+  /// No description provided for @setTypeWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work sets'**
+  String get setTypeWork;
+
+  /// No description provided for @setTypeFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get setTypeFailure;
+
+  /// No description provided for @setTypeDropset.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropset'**
+  String get setTypeDropset;
+
+  /// No description provided for @setTypeSuperset.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset'**
+  String get setTypeSuperset;
+
+  /// No description provided for @setTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get setTypeOther;
+
+  /// No description provided for @setTypeWarmupSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get setTypeWarmupSuffix;
+
+  /// No description provided for @setTypeFailureSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get setTypeFailureSuffix;
+
+  /// No description provided for @setTypeDropsetSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropset'**
+  String get setTypeDropsetSuffix;
+
+  /// No description provided for @setTypeSupersetSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset'**
+  String get setTypeSupersetSuffix;
+
+  /// No description provided for @setTypeOtherSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get setTypeOtherSuffix;
+
+  /// No description provided for @warmupSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 warm-up set} other{{count} warm-up sets}}'**
+  String warmupSetCount(num count);
+
+  /// No description provided for @workSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 work set} other{{count} work sets}}'**
+  String workSetCount(num count);
+
+  /// No description provided for @failureSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 failure set} other{{count} failure sets}}'**
+  String failureSetCount(num count);
+
+  /// No description provided for @dropsetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 dropset} other{{count} dropsets}}'**
+  String dropsetCount(num count);
+
+  /// No description provided for @supersetSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 superset} other{{count} supersets}}'**
+  String supersetSetCount(num count);
+
+  /// No description provided for @otherSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other set} other{{count} other sets}}'**
+  String otherSetCount(num count);
+
+  /// No description provided for @warmupCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 warm-up} other{{count} warm-up}}'**
+  String warmupCompactCount(num count);
+
+  /// No description provided for @workCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 work} other{{count} work}}'**
+  String workCompactCount(num count);
+
+  /// No description provided for @failureCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 failure} other{{count} failure}}'**
+  String failureCompactCount(num count);
+
+  /// No description provided for @dropsetCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 dropset} other{{count} dropsets}}'**
+  String dropsetCompactCount(num count);
+
+  /// No description provided for @supersetCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 superset} other{{count} supersets}}'**
+  String supersetCompactCount(num count);
+
+  /// No description provided for @otherCompactCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other} other{{count} other}}'**
+  String otherCompactCount(num count);
+
+  /// No description provided for @shareExercisesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'exercises'**
+  String get shareExercisesLabel;
+
+  /// No description provided for @shareSetsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'sets'**
+  String get shareSetsLabel;
+
+  /// No description provided for @shareSetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'set'**
+  String get shareSetLabel;
+
   /// No description provided for @tabBaseFoods.
   ///
   /// In en, this message translates to:

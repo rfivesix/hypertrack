@@ -31,6 +31,7 @@ import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 import '../services/workout_session_manager.dart';
 import '../theme/color_constants.dart';
+import '../util/date_util.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_bottom_nav_bar.dart';
@@ -87,9 +88,9 @@ class _MainScreenState extends State<MainScreen>
   double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
   DateTime get _currentActiveDate {
     if (_currentIndex == 0 && _tagebuchKey.currentState != null) {
-      return _tagebuchKey.currentState!.selectedDateNotifier.value;
+      return _tagebuchKey.currentState!.selectedDateNotifier.value.dateOnly;
     }
-    return DateTime.now();
+    return DateTime.now().dateOnly;
   }
 
   @override
@@ -201,10 +202,11 @@ class _MainScreenState extends State<MainScreen>
   }
 
   Future<void> _refreshHomeScreen() async {
+    final targetDate = _currentActiveDate;
     await _stepsRepository.refresh(force: true);
     if (_currentIndex == 0) {
       await _tagebuchKey.currentState?.loadDataForDate(
-        DateTime.now(),
+        targetDate,
         forceStepsRefresh: true,
       );
     }
@@ -653,7 +655,7 @@ class _MainScreenState extends State<MainScreen>
               key: dialogStateKey,
               item: item,
               initialTimestamp:
-                  initialDate ?? DateTime.now(), // <--- FIX: Nutzen
+                  initialDate ?? DateTime.now().dateOnly, // <--- FIX: Nutzen
             ),
             const SizedBox(height: 12),
             Row(

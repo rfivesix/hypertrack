@@ -752,35 +752,71 @@ class WorkoutDatabaseHelper {
           ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]))
         .get();
 
-    final sets = setRows
-        .map(
-          (row) => SetLog(
-            id: row.localId,
-            workoutLogId: id,
-            exerciseName: row.exerciseNameSnapshot ?? 'Unknown',
-            setType: row.setType,
-            weightKg: row.weight,
-            reps: row.reps,
-            restTimeSeconds: row.restTimeSeconds,
-            isCompleted: row.isCompleted,
-            logOrder: row.logOrder,
-            notes: row.notes,
-            distanceKm: row.distance,
-            durationSeconds: row.durationSeconds,
-            rpe: row.rpe,
-            rir: row.rir, // Direkt übernehmen
-          ),
-        )
-        .toList();
+    return _mapWorkoutLogWithSets(logRow, setRows);
+  }
 
+  SetLog _mapSetLogToModel(db.SetLog row, int workoutLogLocalId) {
+    return SetLog(
+      id: row.localId,
+      workoutLogId: workoutLogLocalId,
+      exerciseName: row.exerciseNameSnapshot ?? 'Unknown',
+      setType: row.setType,
+      weightKg: row.weight,
+      reps: row.reps,
+      restTimeSeconds: row.restTimeSeconds,
+      isCompleted: row.isCompleted,
+      logOrder: row.logOrder,
+      notes: row.notes,
+      distanceKm: row.distance,
+      durationSeconds: row.durationSeconds,
+      rpe: row.rpe,
+      rir: row.rir,
+    );
+  }
+
+  WorkoutLog _mapWorkoutLogWithSets(
+    db.WorkoutLog logRow,
+    List<db.SetLog> setRows,
+  ) {
     return WorkoutLog(
       id: logRow.localId,
       routineName: logRow.routineNameSnapshot,
       startTime: logRow.startTime,
       endTime: logRow.endTime,
       notes: logRow.notes,
-      sets: sets,
+      sets:
+          setRows.map((row) => _mapSetLogToModel(row, logRow.localId)).toList(),
     );
+  }
+
+  Future<List<WorkoutLog>> _loadWorkoutLogsWithSets(
+    List<db.WorkoutLog> logRows,
+  ) async {
+    if (logRows.isEmpty) return [];
+
+    final dbInstance = await database;
+    final localIdsByUuid = {
+      for (final row in logRows) row.id: row.localId,
+    };
+    final setRows = await (dbInstance.select(dbInstance.setLogs)
+          ..where((tbl) => tbl.workoutLogId.isIn(localIdsByUuid.keys))
+          ..orderBy([
+            (t) => drift.OrderingTerm(expression: t.workoutLogId),
+            (t) => drift.OrderingTerm(expression: t.logOrder),
+          ]))
+        .get();
+
+    final setsByWorkoutUuid = <String, List<db.SetLog>>{};
+    for (final setRow in setRows) {
+      setsByWorkoutUuid.putIfAbsent(setRow.workoutLogId, () => []).add(setRow);
+    }
+
+    return logRows
+        .map((row) => _mapWorkoutLogWithSets(
+              row,
+              setsByWorkoutUuid[row.id] ?? const <db.SetLog>[],
+            ))
+        .toList();
   }
 
   Future<void> updateSetLogs(List<SetLog> updatedSets) async {
@@ -884,15 +920,18 @@ class WorkoutDatabaseHelper {
   }
 
   Future<List<WorkoutLog>> getFullWorkoutLogs() async {
-    final basicLogs = await getWorkoutLogs();
-    final fullLogs = <WorkoutLog>[];
-    for (var log in basicLogs) {
-      if (log.id != null) {
-        final full = await getWorkoutLogById(log.id!);
-        if (full != null) fullLogs.add(full);
-      }
-    }
-    return fullLogs;
+    final dbInstance = await database;
+    final rows = await (dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.status.equals('completed'))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                  expression: t.startTime,
+                  mode: drift.OrderingMode.desc,
+                ),
+          ]))
+        .get();
+
+    return _loadWorkoutLogsWithSets(rows);
   }
 
   Future<WorkoutLog?> getLatestWorkoutLog() async {
@@ -939,12 +978,7 @@ class WorkoutDatabaseHelper {
           ]))
         .get();
 
-    final list = <WorkoutLog>[];
-    for (var r in rows) {
-      final full = await getWorkoutLogById(r.localId);
-      if (full != null) list.add(full);
-    }
-    return list;
+    return _loadWorkoutLogsWithSets(rows);
   }
 
   Future<void> updateWorkoutLogDetails(
