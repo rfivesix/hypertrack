@@ -16,7 +16,8 @@ name: OFF Foods Refresh
       parquet_source_url:
         description: "Open Food Facts parquet source URL"
         required: false
-        default: "https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet?download=true"
+        default: "https://huggingface.co/datasets/openfoodfacts/product-database/resolv\
+          e/main/food.parquet?download=true"
         type: string
   schedule:
     - cron: "0 6 * * 1"
@@ -43,9 +44,13 @@ jobs:
       COUNTRY_CODE: ${{ matrix.country_code }}
       OFF_MIN_PRODUCT_COUNT: ${{ matrix.min_product_count }}
       OFF_BATCH_SIZE: 50000
-      OFF_PARQUET_SOURCE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.parquet_source_url || 'https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet?download=true' }}
+      OFF_PARQUET_SOURCE_URL: ${{ github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.parquet_source_url ||
+        'https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet?download=true'
+        }}
       OFF_PARQUET_LOCAL_PATH: artifacts/food.parquet
 
+      # Legacy artifact filename kept for app/runtime compatibility.
       GENERATED_DB_PATH: artifacts/hypertrack_off_${{ matrix.country_code }}.db
       BUILD_REPORT_PATH: artifacts/off_build_report_${{ matrix.country_code }}.json
       DIFF_REPORT_PATH: artifacts/off_diff_report_${{ matrix.country_code }}.json
@@ -54,16 +59,21 @@ jobs:
 
       MANIFEST_FILE_NAME: off_catalog_manifest_${{ matrix.country_code }}.json
       RELEASE_REFERENCE_MANIFEST_PATH: artifacts/reference_off_catalog_manifest_${{ matrix.country_code }}.json
+      # Legacy filename kept for backward compatibility with previously published assets.
       RELEASE_REFERENCE_DB_PATH: artifacts/reference_hypertrack_off_${{ matrix.country_code }}.db
 
       RELEASE_TAG: off-foods-${{ matrix.country_code }}-stable
       RELEASE_NAME: Open Food Facts Catalog (${{ matrix.country_code }}, stable channel)
       RELEASE_CHANNEL: stable
-      RELEASE_DOWNLOAD_BASE: https://github.com/${{ github.repository }}/releases/download/off-foods-${{ matrix.country_code }}-stable/
-      RELEASE_PAGE_URL: https://github.com/${{ github.repository }}/releases/tag/off-foods-${{ matrix.country_code }}-stable
+      RELEASE_DOWNLOAD_BASE: https://github.com/${{ github.repository
+        }}/releases/download/off-foods-${{ matrix.country_code }}-stable/
+      RELEASE_PAGE_URL: https://github.com/${{ github.repository
+        }}/releases/tag/off-foods-${{ matrix.country_code }}-stable
 
-      FAIL_ON_BREAKING: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_breaking || 'true' }}
-      PUBLISH_RELEASE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release_assets || 'true' }}
+      FAIL_ON_BREAKING: ${{ github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.fail_on_breaking || 'true' }}
+      PUBLISH_RELEASE_ASSETS: ${{ github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.publish_release_assets || 'true' }}
 
     steps:
       - name: Checkout repository
@@ -136,7 +146,8 @@ jobs:
 
       - name: Download previous published OFF DB
         id: download_reference
-        if: steps.generate.outcome == 'success' && steps.resolve_reference.outputs.reference_manifest_found == 'true'
+        if: steps.generate.outcome == 'success' &&
+          steps.resolve_reference.outputs.reference_manifest_found == 'true'
         continue-on-error: true
         run: |
           if curl -fsSL "${{ steps.resolve_reference.outputs.reference_db_url }}" -o "$RELEASE_REFERENCE_DB_PATH"; then
@@ -222,7 +233,9 @@ jobs:
 
       - name: Publish release assets (OFF country channel)
         id: publish_release
-        if: steps.generate.outcome == 'success' && env.PUBLISH_RELEASE_ASSETS == 'true' && (steps.diff.outputs.reference_db_found != 'true' || steps.diff.outcome == 'success' || env.FAIL_ON_BREAKING != 'true')
+        if: steps.generate.outcome == 'success' && env.PUBLISH_RELEASE_ASSETS == 'true'
+          && (steps.diff.outputs.reference_db_found != 'true' ||
+          steps.diff.outcome == 'success' || env.FAIL_ON_BREAKING != 'true')
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -249,7 +262,9 @@ jobs:
           GENERATE_OUTCOME: ${{ steps.generate.outcome }}
 
       - name: Enforce safety gate result
-        if: always() && steps.generate.outcome == 'success' && steps.diff.outputs.reference_db_found == 'true' && env.FAIL_ON_BREAKING == 'true' && steps.diff.outcome == 'failure'
+        if: always() && steps.generate.outcome == 'success' &&
+          steps.diff.outputs.reference_db_found == 'true' &&
+          env.FAIL_ON_BREAKING == 'true' && steps.diff.outcome == 'failure'
         run: |
           echo "Diff safety validation failed under --fail-on-breaking."
           exit 1

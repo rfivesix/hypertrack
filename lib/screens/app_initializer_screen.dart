@@ -3,9 +3,13 @@
 import 'package:flutter/material.dart';
 import '../data/backup_manager.dart';
 import '../data/basis_data_manager.dart';
+import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
+import '../services/local_notification_service.dart';
+import '../services/workout_session_manager.dart';
 import 'main_screen.dart';
 import 'onboarding_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A splash screen responsible for app-wide initialization.
@@ -38,6 +42,8 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
   }
 
   Future<void> _initialize() async {
+    await _prepareCoreServices();
+
     // 1) Run basis-data update checks and stream progress to the UI.
     await BasisDataManager.instance.checkForBasisDataUpdate(
       force: false,
@@ -100,6 +106,35 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
             FadeTransition(opacity: anim, child: child),
       ),
     );
+  }
+
+  Future<void> _prepareCoreServices() async {
+    WorkoutSessionManager? workoutSessionManager;
+    try {
+      workoutSessionManager = context.read<WorkoutSessionManager>();
+    } catch (_) {
+      workoutSessionManager = null;
+    }
+
+    try {
+      await DatabaseHelper.instance.ensureStandardSupplements();
+    } catch (e) {
+      debugPrint("Standard supplement setup failed: $e");
+    }
+
+    try {
+      await LocalNotificationService.instance.initialize();
+    } catch (e) {
+      debugPrint("Local notification initialization failed: $e");
+    }
+
+    if (workoutSessionManager != null) {
+      try {
+        await workoutSessionManager.tryRestoreSession();
+      } catch (e) {
+        debugPrint("Workout session restore failed: $e");
+      }
+    }
   }
 
   @override

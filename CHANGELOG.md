@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-beta.3] - 2025-05-05
+
+### Fixed
+- Fixed redundant Add Food meal-card refetching by caching meal total futures and using batched product lookup.
+- Fixed repeated Diary product lookups by batch-loading products for the selected day.
+- Fixed possible stale Statistics range results when switching range chips quickly.
+- Fixed additional startup blocking by deferring non-critical initialization until after the first initializer frame.
+- Moved Backup JSON encode/decode work off the main isolate to reduce UI stalls during import/export.
+
+### Improved
+- Improved Add Food meal performance during scrolling, rebuilds, and meal edits.
+- Improved Diary loading performance for days with many food entries.
+- Improved startup responsiveness while preserving ongoing workout restoration.
+- Improved backup import/export responsiveness for larger backup files.
+
+### Internal
+- Added regression coverage for Add Food meal totals.
+- Added batch product lookup coverage.
+- Added backup isolate helper coverage.
+- Added Statistics stale overlapping-load coverage.
+- Full Flutter test suite passed with 509 tests.
+- Android debug build completed successfully.
+
 ## [0.9.0-beta.2] - 2026-05-05
 ### Added
 - Added native share-sheet support for completed workouts and routines.

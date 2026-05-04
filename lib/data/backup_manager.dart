@@ -26,6 +26,42 @@ import '../util/encryption_util.dart';
 
 typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
 
+String _encodeBackupJsonPayload(Map<String, dynamic> payload) {
+  return jsonEncode(payload);
+}
+
+Map<String, dynamic> _decodeBackupJsonPayload(String source) {
+  final decoded = jsonDecode(source);
+  if (decoded is! Map) {
+    throw const FormatException('Backup JSON root must be an object.');
+  }
+  return decoded.cast<String, dynamic>();
+}
+
+Future<String> _encodeBackupJsonPayloadInBackground(
+  Map<String, dynamic> payload,
+) {
+  return compute(_encodeBackupJsonPayload, payload);
+}
+
+Future<Map<String, dynamic>> _decodeBackupJsonPayloadInBackground(
+  String source,
+) {
+  return compute(_decodeBackupJsonPayload, source);
+}
+
+@visibleForTesting
+Future<String> encodeBackupJsonPayloadForTesting(
+  Map<String, dynamic> payload,
+) {
+  return _encodeBackupJsonPayloadInBackground(payload);
+}
+
+@visibleForTesting
+Future<Map<String, dynamic>> decodeBackupJsonPayloadForTesting(String source) {
+  return _decodeBackupJsonPayloadInBackground(source);
+}
+
 /// Manager responsible for application backup, restoration, and data export.
 ///
 /// Supports full JSON backups with optional encryption and CSV exports for
@@ -139,7 +175,7 @@ class BackupManager {
         jsonString,
         passphrase,
       );
-      final wrappedJson = jsonEncode(wrapper);
+      final wrappedJson = await _encodeBackupJsonPayloadInBackground(wrapper);
 
       return await _writeAndShareFile(
         wrappedJson,
@@ -329,12 +365,12 @@ class BackupManager {
     payload['applicationId'] = currentApplicationId;
     payload['backupFilePrefix'] = currentBackupFilePrefix;
     payload['generatedAtUtc'] = DateTime.now().toUtc().toIso8601String();
-    return jsonEncode(payload);
+    return _encodeBackupJsonPayloadInBackground(payload);
   }
 
   @visibleForTesting
   Future<Map<String, dynamic>> generateBackupPayloadForTesting() async {
-    return jsonDecode(await _generateBackupJson()) as Map<String, dynamic>;
+    return decodeBackupJsonPayloadForTesting(await _generateBackupJson());
   }
 
   Future<bool> _writeAndShareFile(String content, String baseName) async {
@@ -378,26 +414,25 @@ class BackupManager {
     try {
       final file = File(filePath);
       final rawString = await file.readAsString();
-      final jsonMapRaw = jsonDecode(rawString);
+      final jsonMapRaw = await _decodeBackupJsonPayloadInBackground(rawString);
 
       Map<String, dynamic> payload;
 
-      if (jsonMapRaw is Map &&
-          (jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV1 ||
-              jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV2)) {
+      if (jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV1 ||
+          jsonMapRaw['enc'] == EncryptionUtil.wrapperVersionV2) {
         final effectivePw = passphrase ?? "";
         try {
           final clearText = await EncryptionUtil.decryptToString(
             Map<String, dynamic>.from(jsonMapRaw),
             effectivePw,
           );
-          payload = jsonDecode(clearText) as Map<String, dynamic>;
+          payload = await _decodeBackupJsonPayloadInBackground(clearText);
         } catch (e) {
           debugPrint('Backup decryption failed: $e');
           return false;
         }
       } else {
-        payload = (jsonMapRaw as Map).cast<String, dynamic>();
+        payload = jsonMapRaw;
       }
 
       if (!_isAcceptedBackupMetadata(payload)) {
@@ -816,7 +851,7 @@ class BackupManager {
       if (encrypted) {
         if (passphrase == null || passphrase.isEmpty) return false;
         final wrapper = await EncryptionUtil.encryptString(content, passphrase);
-        content = jsonEncode(wrapper);
+        content = await _encodeBackupJsonPayloadInBackground(wrapper);
         fileName = '$currentAutoBackupFilePrefix-enc-v$currentSchemaVersion';
       }
 

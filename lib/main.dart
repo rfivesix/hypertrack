@@ -4,14 +4,12 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'data/database_helper.dart';
 import 'features/sleep/presentation/sleep_navigation.dart';
 import 'generated/app_localizations.dart';
 import 'navigation/app_route_observer.dart';
 // App startup routing is delegated to the dedicated initializer screen.
 import 'screens/app_initializer_screen.dart';
 import 'services/profile_service.dart';
-import 'services/local_notification_service.dart';
 import 'services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
@@ -28,15 +26,9 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Ensure baseline data and local notifications are ready before app startup.
-  await DatabaseHelper.instance.ensureStandardSupplements();
-  await LocalNotificationService.instance.initialize();
-
-  // Create and warm up the workout session manager before injecting it.
+  // Create the workout session manager before injecting it. Restoration is
+  // handled by AppInitializerScreen after the first frame is visible.
   final workoutSessionManager = WorkoutSessionManager();
-
-  // Restore an unfinished workout session (if any) as part of cold start.
-  await workoutSessionManager.tryRestoreSession();
 
   final themeService = ThemeService(); // Create an instance
 

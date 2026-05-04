@@ -75,6 +75,10 @@ Assets are country-specific and collision-safe, for example:
 
 Equivalent naming is used for `us` and `uk`.
 
+`hypertrack_off_<country>.db` names are intentionally retained as legacy
+artifact filenames for runtime compatibility with existing app-side remote
+catalog import paths.
+
 ## Helper scripts
 
 The workflow uses dedicated helper scripts only (no inline python heredocs):

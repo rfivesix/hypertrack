@@ -124,6 +124,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   bool _pulseTrackingEnabled = false;
   int _targetSteps = 8000;
   String _stepsProviderName = '';
+  int _hubAnalyticsLoadGeneration = 0;
   @override
   void initState() {
     super.initState();
@@ -187,23 +188,27 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Future<void> _loadHubAnalytics() async {
+    final loadGeneration = ++_hubAnalyticsLoadGeneration;
+    final selectedRangeIndex = _selectedTimeRangeIndex;
     setState(() => _isLoadingStats = true);
     await (widget.importSleepIfDue?.call(minInterval: _sleepSyncInterval) ??
         _sleepSyncService.importRecentIfDue(minInterval: _sleepSyncInterval));
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
     final selectedDays = _rangePolicy.selectedDaysFromIndex(
-      _selectedTimeRangeIndex,
+      selectedRangeIndex,
     );
     final earliest = await _stepsRepository.getEarliestAvailableDate();
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
     final resolvedRange = _rangePolicy.resolve(
       metricId: StatisticsMetricId.bodyNutritionTrend,
-      selectedRangeIndex: _selectedTimeRangeIndex,
+      selectedRangeIndex: selectedRangeIndex,
       selectedDays: selectedDays,
       earliestAvailableDay: earliest,
     );
     // Keep Steps and Sleep cards on the same effective hub window.
     final daysBack = resolvedRange.effectiveDays ?? selectedDays;
     final hubFuture = _fetchHubAnalytics(
-      selectedTimeRangeIndex: _selectedTimeRangeIndex,
+      selectedTimeRangeIndex: selectedRangeIndex,
     );
     final stepsRangeFuture = _stepsRepository.getRangeAggregation(
       endDate: DateTime.now(),
@@ -223,18 +228,24 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         widget.stepsProviderNameLoader?.call() ?? _loadStepsProviderName();
 
     final tuple = await hubFuture;
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
     final stepsRange = await stepsRangeFuture;
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
     final sleepSummary = await sleepSummaryFuture;
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
     final stepsTrackingEnabled = await stepsTrackingFuture;
     final sleepTrackingEnabled = await sleepTrackingFuture;
     final pulseTrackingEnabled = await pulseTrackingFuture;
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
     final pulseSummary = pulseTrackingEnabled
         ? await _pulseRepository.getAnalysis(
             window: _pulseWindowForDaysBack(daysBack),
           )
         : null;
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
     final targetSteps = await targetStepsFuture;
     final providerName = await providerNameFuture;
+    if (!_isCurrentHubAnalyticsLoad(loadGeneration)) return;
 
     final hub = tuple.$1;
     final bodyNutrition = tuple.$2;
@@ -242,7 +253,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         StepsSyncService.trackingEnabledListenable.value ??
             stepsTrackingEnabled;
 
-    if (!mounted) return;
     setState(() {
       _workoutsPerWeek = hub.workoutsPerWeek;
       _muscleAnalytics = hub.muscleAnalytics;
@@ -260,6 +270,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       _stepsProviderName = providerName;
       _isLoadingStats = false;
     });
+  }
+
+  bool _isCurrentHubAnalyticsLoad(int loadGeneration) {
+    return mounted && loadGeneration == _hubAnalyticsLoadGeneration;
   }
 
   PulseAnalysisWindow _pulseWindowForDaysBack(int daysBack) {

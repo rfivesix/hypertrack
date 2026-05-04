@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -186,23 +188,43 @@ void main() {
     }
   }
 
-  Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fakeFetch(
-    int _,
+  Future<void> pumpUntil(
+    WidgetTester tester,
+    bool Function() condition,
   ) async {
+    for (var i = 0; i < 80; i++) {
+      if (condition()) return;
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    fail('Timed out waiting for condition.');
+  }
+
+  (StatisticsHubPayload, BodyNutritionAnalyticsResult) hubResult({
+    String? topExerciseName,
+  }) {
+    final notableImprovements = topExerciseName == null
+        ? <Map<String, dynamic>>[]
+        : <Map<String, dynamic>>[
+            {
+              'exerciseName': topExerciseName,
+              'improvementPct': 12.3,
+            },
+          ];
+
     return (
-      const StatisticsHubPayload(
-        recentPrs: [],
-        weeklyVolume: [],
-        workoutsPerWeek: [],
-        weeklyConsistencyMetrics: [],
-        muscleAnalytics: {},
-        trainingStats: TrainingStatsPayload(
+      StatisticsHubPayload(
+        recentPrs: const [],
+        weeklyVolume: const [],
+        workoutsPerWeek: const [],
+        weeklyConsistencyMetrics: const [],
+        muscleAnalytics: const {},
+        trainingStats: const TrainingStatsPayload(
           totalWorkouts: 0,
           thisWeekCount: 0,
           avgPerWeek: 0,
           streakWeeks: 0,
         ),
-        recoveryAnalytics: RecoveryAnalyticsPayload(
+        recoveryAnalytics: const RecoveryAnalyticsPayload(
           hasData: false,
           overallState: '',
           totals: RecoveryTotalsPayload(
@@ -213,7 +235,7 @@ void main() {
           ),
           muscles: [],
         ),
-        notableImprovements: [],
+        notableImprovements: notableImprovements,
       ),
       BodyNutritionAnalyticsResult(
         range: DateTimeRange(
@@ -264,6 +286,12 @@ void main() {
     );
   }
 
+  Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> fakeFetch(
+    int _,
+  ) async {
+    return hubResult();
+  }
+
   Widget wrapWithSessionManager(Widget child) {
     return MultiProvider(
       providers: [
@@ -286,6 +314,8 @@ void main() {
   StatisticsHubScreen buildHub({
     required StepsAggregationRepository stepsRepository,
     PulseAnalysisRepository? pulseRepository,
+    Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> Function(int)?
+        fetchHubAnalytics,
   }) {
     return StatisticsHubScreen(
       stepsRepository: stepsRepository,
@@ -300,7 +330,7 @@ void main() {
           nightsCount: 5,
         ),
       ),
-      fetchHubAnalytics: fakeFetch,
+      fetchHubAnalytics: fetchHubAnalytics ?? fakeFetch,
       importSleepIfDue: ({
         int lookbackDays = 30,
         Duration minInterval = const Duration(hours: 6),
@@ -339,6 +369,60 @@ void main() {
     final changedChips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
     expect(changedChips.first.selected, isTrue);
     expect(stepsSectionHeader(), findsOneWidget);
+  });
+
+  testWidgets('statistics hub ignores stale overlapping range loads', (
+    WidgetTester tester,
+  ) async {
+    await StepsSyncService().setTrackingEnabled(true);
+    final pendingFetches = <int,
+        Completer<(StatisticsHubPayload, BodyNutritionAnalyticsResult)>>{};
+
+    Future<(StatisticsHubPayload, BodyNutritionAnalyticsResult)> delayedFetch(
+      int rangeIndex,
+    ) {
+      return pendingFetches
+          .putIfAbsent(
+            rangeIndex,
+            () => Completer<
+                (StatisticsHubPayload, BodyNutritionAnalyticsResult)>(),
+          )
+          .future;
+    }
+
+    await tester.pumpWidget(
+      wrapWithSessionManager(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: buildHub(
+            stepsRepository: _FakeStepsRepository(),
+            fetchHubAnalytics: delayedFetch,
+          ),
+        ),
+      ),
+    );
+
+    await pumpUntil(tester, () => pendingFetches.containsKey(1));
+    pendingFetches[1]!.complete(hubResult(topExerciseName: 'Initial range'));
+    await pumpLoaded(tester);
+    expect(find.text('73,500'), findsOneWidget);
+
+    await tester.tap(find.byType(ChoiceChip).first);
+    await pumpUntil(tester, () => pendingFetches.containsKey(0));
+
+    await tester.tap(find.byType(ChoiceChip).at(2));
+    await pumpUntil(tester, () => pendingFetches.containsKey(2));
+
+    pendingFetches[2]!.complete(hubResult(topExerciseName: 'Fresh range'));
+    await pumpLoaded(tester);
+    expect(find.text('490,500'), findsOneWidget);
+
+    pendingFetches[0]!.complete(hubResult(topExerciseName: 'Stale range'));
+    await pumpLoaded(tester);
+    expect(find.text('490,500'), findsOneWidget);
+    expect(find.text('9,100'), findsNothing);
   });
 
   testWidgets('statistics hub hides steps card when tracking is disabled', (

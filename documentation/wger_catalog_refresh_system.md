@@ -45,6 +45,12 @@ Compares old vs new catalog DB and emits:
 - warning flags
 - optional CI-safe nonzero exit via `--fail-on-breaking`
 
+Threshold behavior under `--fail-on-breaking`:
+
+- removals are tolerated up to `--fail-on-removed-threshold`
+- safety gate fails when `removed_count > fail_on_removed_threshold`
+- severe regressions and suspicious row-drop patterns still fail the safety gate
+
 ### 3) GitHub Actions refresh workflow
 
 Workflow: `.github/workflows/wger-catalog-refresh.yml`
@@ -87,6 +93,9 @@ Key assets:
 - `hypertrack_training.db` (catalog payload)
 - `wger_build_report.json` (diagnostics)
 - `wger_diff_report.json` (safety diagnostics)
+
+`hypertrack_training.db` is intentionally retained as a legacy artifact filename
+for runtime compatibility with existing app-side remote catalog import paths.
 
 ## Manifest schema (runtime contract)
 

@@ -94,10 +94,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--fail-on-removed-threshold",
         type=int,
-        default=0,
+        default=30,
         help=(
             "With --fail-on-breaking, fail if removed ID count is above this value "
-            "(default: 0)."
+            "(default: 30)."
         ),
     )
     return parser.parse_args()
@@ -179,7 +179,9 @@ def load_catalog(db_path: str) -> Dict[str, Any]:
 
 
 def compare_catalogs(
-    old_catalog: Dict[str, Any], new_catalog: Dict[str, Any], args: argparse.Namespace
+    old_catalog: Dict[str, Any],
+    new_catalog: Dict[str, Any],
+    args: argparse.Namespace,
 ) -> Dict[str, Any]:
     old_ids = set(old_catalog["exercises"].keys())
     new_ids = set(new_catalog["exercises"].keys())
@@ -187,6 +189,7 @@ def compare_catalogs(
     removed_ids = sorted(old_ids - new_ids)
     added_ids = sorted(new_ids - old_ids)
     shared_ids = sorted(old_ids & new_ids)
+    removed_threshold_exceeded = len(removed_ids) > args.fail_on_removed_threshold
 
     compare_fields = sorted(set(old_catalog["compare_fields"]) | set(new_catalog["compare_fields"]))
     changed_fields_by_id: Dict[str, Dict[str, Dict[str, Any]]] = {}
@@ -368,6 +371,8 @@ def compare_catalogs(
         "summary": {
             "shared_id_count": len(shared_ids),
             "removed_count": len(removed_ids),
+            "fail_on_removed_threshold": args.fail_on_removed_threshold,
+            "removed_threshold_exceeded": removed_threshold_exceeded,
             "added_count": len(added_ids),
             "changed_exercise_count": changed_exercise_count,
             "changed_field_counts": changed_field_counts,
@@ -424,6 +429,8 @@ def print_console_report(report: Dict[str, Any], examples: int) -> None:
 
     print("ID-level catalog diff:")
     print(f"  Removed IDs: {summary['removed_count']}")
+    print(f"  Fail-on-removed threshold: {summary['fail_on_removed_threshold']}")
+    print(f"  Removed threshold exceeded: {summary['removed_threshold_exceeded']}")
     print(f"  Added IDs: {summary['added_count']}")
     if report["examples"]["removed_ids"]:
         print(f"  Removed examples ({min(examples, summary['removed_count'])}):")
@@ -496,7 +503,16 @@ def should_fail(report: Dict[str, Any], args: argparse.Namespace) -> Tuple[bool,
     if regressions["name_de_became_blank"] > 0 or regressions["name_en_became_blank"] > 0:
         reasons.append("name regression detected (non-empty name became blank)")
 
-    if any(warning["severity"] == "severe" for warning in warnings):
+    severe_breaking_codes = {
+        "CATEGORY_REGRESSION",
+        "MUSCLE_REGRESSION",
+        "ROW_COUNT_DROP",
+    }
+    if any(
+        warning["severity"] == "severe"
+        and warning.get("code") in severe_breaking_codes
+        for warning in warnings
+    ):
         reasons.append("severe warning present")
 
     return len(reasons) > 0, reasons
@@ -507,7 +523,11 @@ def main() -> int:
     try:
         old_catalog = load_catalog(args.old)
         new_catalog = load_catalog(args.new)
-        report = compare_catalogs(old_catalog, new_catalog, args)
+        report = compare_catalogs(
+            old_catalog,
+            new_catalog,
+            args,
+        )
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2

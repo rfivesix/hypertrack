@@ -11,6 +11,7 @@ def main() -> int:
     manifest_path = os.environ["RELEASE_REFERENCE_MANIFEST_PATH"]
     github_output = os.environ["GITHUB_OUTPUT"]
     expected_country = os.environ.get("COUNTRY_CODE", "").strip().lower()
+    release_download_base = os.environ.get("RELEASE_DOWNLOAD_BASE", "").strip()
 
     with open(manifest_path, "r", encoding="utf-8") as file:
         manifest = json.load(file)
@@ -34,10 +35,17 @@ def main() -> int:
         )
         return 1
 
-    db_url = str(manifest.get("db_url", "")).strip()
+    db_file = str(manifest.get("db_file", "")).strip()
+
+    # Prefer current workflow release base to avoid stale repo URLs from older manifests.
+    db_url = ""
+    if release_download_base and db_file:
+        db_url = release_download_base + db_file
+
+    if not db_url:
+        db_url = str(manifest.get("db_url", "")).strip()
     if not db_url:
         asset_base_url = str(manifest.get("asset_base_url", "")).strip()
-        db_file = str(manifest.get("db_file", "")).strip()
         if asset_base_url and db_file:
             db_url = asset_base_url + db_file
 

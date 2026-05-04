@@ -7,6 +7,23 @@ import 'package:path/path.dart' as p;
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('backup JSON helpers preserve nested payloads off the main isolate',
+      () async {
+    final payload = <String, dynamic>{
+      'appName': BackupManager.currentBackupAppName,
+      'schemaVersion': BackupManager.currentSchemaVersion,
+      'items': [
+        {'barcode': 'a', 'quantity': 125},
+        {'barcode': 'b', 'quantity': 250},
+      ],
+    };
+
+    final encoded = await encodeBackupJsonPayloadForTesting(payload);
+    final decoded = await decodeBackupJsonPayloadForTesting(encoded);
+
+    expect(decoded, payload);
+  });
+
   test(
     'resolveWritableBackupDirectory uses explicit writable directory',
     () async {

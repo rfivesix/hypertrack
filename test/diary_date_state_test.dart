@@ -30,5 +30,22 @@ void main() {
         DateTime(2026, 5, 4),
       );
     });
+
+    test('ignores stale diary loads after quick day switches', () {
+      final coordinator = DiaryLoadCoordinator();
+      final first = DateTime(2026, 5, 4, 23, 30);
+      final second = DateTime(2026, 5, 5, 1, 15);
+
+      final firstGeneration = coordinator.begin(first);
+      final secondGeneration = coordinator.begin(second);
+
+      expect(coordinator.isCurrent(firstGeneration, first), isFalse);
+      expect(coordinator.isCurrent(firstGeneration, second), isFalse);
+      expect(coordinator.isCurrent(secondGeneration, second), isTrue);
+      expect(
+        coordinator.isCurrent(secondGeneration, DateTime(2026, 5, 5, 20)),
+        isTrue,
+      );
+    });
   });
 }
