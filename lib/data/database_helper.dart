@@ -94,6 +94,8 @@ class DatabaseHelper {
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
       await dbInstance.customStatement('DELETE FROM health_step_segments');
       await dbInstance.customStatement('DELETE FROM health_export_records');
+      await dbInstance.customStatement('DELETE FROM pulse_hourly_aggregates');
+      await dbInstance.customStatement('DELETE FROM pulse_aggregate_metadata');
 
       // 2. Child tables (Logs) first
       await dbInstance.delete(dbInstance.supplementLogs).go();

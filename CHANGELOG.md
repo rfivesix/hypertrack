@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-beta.6] - 2026-05-05
+### Fixed
+- Fixed severe Pulse loading lag in Statistics by caching hourly heart-rate aggregates instead of repeatedly reprocessing large raw sample histories.
+- Hardened Pulse aggregate cache coverage so small recent caches cannot be mistaken for complete older or larger ranges.
+
+### Changed
+- Pulse Hub summaries now use cached aggregate rows for range, average pulse, and resting-pulse estimates.
+- Pulse detail charts now render from capped aggregate chart points while preserving the selected time range.
+
+### Internal
+- Added Drift persistence for hourly Pulse aggregates and aggregate metadata.
+- Added regression coverage for large Pulse histories, incremental refresh, leading backfill, weighted aggregate metrics, chart point caps, and disabled tracking behavior.
+
 ## [0.9.0-beta.5] - 2025-05-05
 ### Fixed
 - Renamed bundled and remote catalog database artifacts to Train Libre filenames while preserving legacy Hypertrack fallback compatibility.

@@ -393,7 +393,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -411,6 +411,7 @@ class AppDatabase extends _$AppDatabase {
             UNIQUE(platform, domain, idempotency_key)
           )
         ''');
+          await _createPulsePersistenceSchema(this);
         },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
@@ -505,8 +506,39 @@ class AppDatabase extends _$AppDatabase {
           )
         ''');
           }
+          if (from < 13) {
+            await _createPulsePersistenceSchema(this);
+          }
         },
       );
+}
+
+Future<void> _createPulsePersistenceSchema(GeneratedDatabase db) async {
+  await db.customStatement('''
+    CREATE TABLE IF NOT EXISTS pulse_hourly_aggregates (
+      bucket_start_ms INTEGER NOT NULL PRIMARY KEY,
+      bucket_end_ms INTEGER NOT NULL,
+      sample_count INTEGER NOT NULL,
+      min_bpm REAL NOT NULL,
+      max_bpm REAL NOT NULL,
+      sum_bpm REAL NOT NULL,
+      first_sample_ms INTEGER NOT NULL,
+      last_sample_ms INTEGER NOT NULL,
+      source TEXT NOT NULL DEFAULT 'platform',
+      aggregation_version INTEGER NOT NULL DEFAULT 1,
+      updated_at_ms INTEGER NOT NULL
+    )
+  ''');
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS idx_pulse_hourly_range ON pulse_hourly_aggregates(bucket_start_ms, bucket_end_ms)',
+  );
+  await db.customStatement('''
+    CREATE TABLE IF NOT EXISTS pulse_aggregate_metadata (
+      key TEXT NOT NULL PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at_ms INTEGER NOT NULL
+    )
+  ''');
 }
 
 /// Sleep persistence schema foundations.
