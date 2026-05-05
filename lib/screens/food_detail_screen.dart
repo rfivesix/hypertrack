@@ -1,9 +1,11 @@
 // lib/screens/food_detail_screen.dart
 
 import 'package:flutter/material.dart';
+import '../config/app_data_sources.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/food_item.dart';
+import '../services/catalog_file_migration.dart';
 import '../models/tracked_food_item.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_fab.dart';
@@ -12,6 +14,7 @@ import '../widgets/off_attribution_widget.dart';
 import '../widgets/summary_card.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 // Dev flag: keep disabled for production or remove dev-only sections entirely.
@@ -96,9 +99,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   // ---------- DEV: Base DB helpers ----------
 
   Future<String> _getBaseDbPath() async {
-    // First try the known base DB file name in the app DB directory.
-    final dbDir = await getDatabasesPath();
-    return p.join(dbDir, 'hypertrack_base_foods.db');
+    final supportDir = await getApplicationSupportDirectory();
+    return CatalogFileMigration.resolveCanonicalPath(
+      directoryPath: supportDir.path,
+      canonicalFileName: AppDataSources.baseFoodsDbFileName,
+      legacyFileName: AppDataSources.legacyBaseFoodsDbFileName,
+    );
   }
 
   Future<Database> _openBaseDb({bool readOnly = false}) async {
@@ -185,7 +191,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       await SharePlus.instance.share(
         ShareParams(
           files: [file],
-          subject: 'Export: hypertrack_base_foods.db',
+          subject: 'Export: ${AppDataSources.baseFoodsDbFileName}',
         ),
       );
     } catch (e) {

@@ -23,7 +23,7 @@ Script: `skript/create_wger_exercise_db.py`
 
 Produces:
 
-- `hypertrack_training.db`
+- `train_libre_training.db`
 - build/rejection report JSON (optional via `--report-json-out`)
 
 The build report includes:
@@ -62,7 +62,7 @@ Triggers:
 
 Build outputs:
 
-- `hypertrack_training.db`
+- `train_libre_training.db`
 - `wger_build_report.json`
 - `wger_diff_report.json`
 - `wger_catalog_manifest.json`
@@ -90,12 +90,13 @@ Stable release download base:
 Key assets:
 
 - `wger_catalog_manifest.json` (canonical discovery doc)
-- `hypertrack_training.db` (catalog payload)
+- `train_libre_training.db` (catalog payload)
 - `wger_build_report.json` (diagnostics)
 - `wger_diff_report.json` (safety diagnostics)
 
-`hypertrack_training.db` is intentionally retained as a legacy artifact filename
-for runtime compatibility with existing app-side remote catalog import paths.
+`hypertrack_training.db` is retained only as a legacy fallback filename. Runtime
+resolution prefers the Train Libre artifact and can fall back to the legacy
+asset if the new file has not been published yet.
 
 ## Manifest schema (runtime contract)
 

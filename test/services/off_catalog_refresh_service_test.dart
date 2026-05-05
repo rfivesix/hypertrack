@@ -21,15 +21,18 @@ void main() {
     releaseTag: 'off-foods-us-stable',
     baseUrl: 'https://example.com/root/',
     manifestPath: 'off_catalog_manifest_us.json',
-    defaultDbPath: 'hypertrack_off_us.db',
+    defaultDbPath: 'train_libre_off_us.db',
+    legacyDefaultDbPath: 'hypertrack_off_us.db',
     defaultBuildReportPath: 'off_build_report_us.json',
-    bundledAssetDbPath: 'assets/db/hypertrack_prep_us.db',
+    bundledAssetDbPath: 'assets/db/train_libre_prep_us.db',
+    legacyBundledAssetDbPath: 'assets/db/hypertrack_prep_us.db',
     minimumProductRows: 50,
     manifestTimeoutSeconds: 5,
     downloadTimeoutSeconds: 15,
     minCheckIntervalHours: 6,
     localCacheDirectoryName: 'off_catalog_refresh',
-    localCacheDbFileName: 'hypertrack_off_us_remote.db',
+    localCacheDbFileName: 'train_libre_off_us_remote.db',
+    legacyLocalCacheDbFileName: 'hypertrack_off_us_remote.db',
     localManifestFileName: 'off_catalog_manifest_us_cached.json',
   );
 
@@ -40,7 +43,7 @@ void main() {
         'country_code': 'us',
         'channel': 'stable',
         'version': '202604130001',
-        'db_url': 'https://cdn.example.net/off/hypertrack_off_us.db',
+        'db_url': 'https://cdn.example.net/off/train_libre_off_us.db',
         'db_sha256':
             'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         'product_count': 120000,
@@ -53,7 +56,41 @@ void main() {
       expect(manifest.minimumProductCount, 5000);
       expect(
         manifest.dbUri.toString(),
-        'https://cdn.example.net/off/hypertrack_off_us.db',
+        'https://cdn.example.net/off/train_libre_off_us.db',
+      );
+    });
+
+    test('accepts legacy Hypertrack DB filename from published manifests', () {
+      final manifest = OffCatalogRefreshService.parseManifest({
+        'source_id': 'off_food_catalog',
+        'country_code': 'us',
+        'channel': 'stable',
+        'version': '202604130001',
+        'db_file': 'hypertrack_off_us.db',
+        'asset_base_url': 'https://example.com/root/',
+        'db_sha256':
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        'product_count': 120000,
+        'min_product_count': 5000,
+      }, config);
+
+      expect(manifest, isNotNull);
+      expect(
+        manifest!.dbUri.toString(),
+        'https://example.com/root/hypertrack_off_us.db',
+      );
+    });
+
+    test('resolves legacy DB fallback URL after Train Libre download failure',
+        () {
+      final legacyUri = OffCatalogRefreshService.legacyFallbackDbUri(
+        failedUri: Uri.parse('https://example.com/root/train_libre_off_us.db'),
+        config: config,
+      );
+
+      expect(
+        legacyUri.toString(),
+        'https://example.com/root/hypertrack_off_us.db',
       );
     });
 
@@ -63,7 +100,7 @@ void main() {
         'country_code': 'us',
         'channel': 'stable',
         'version': '202604130001',
-        'db_url': 'https://cdn.example.net/off/hypertrack_off_us.db',
+        'db_url': 'https://cdn.example.net/off/train_libre_off_us.db',
         'db_sha256':
             'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         'product_count': 120000,
@@ -79,7 +116,7 @@ void main() {
         'country_code': 'de',
         'channel': 'stable',
         'version': '202604130001',
-        'db_url': 'https://cdn.example.net/off/hypertrack_off_us.db',
+        'db_url': 'https://cdn.example.net/off/train_libre_off_us.db',
         'db_sha256':
             'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
         'product_count': 120000,
@@ -95,7 +132,7 @@ void main() {
         'country_code': 'us',
         'channel': 'stable',
         'version': '202604130001',
-        'db_url': 'https://cdn.example.net/off/hypertrack_off_us.db',
+        'db_url': 'https://cdn.example.net/off/train_libre_off_us.db',
         'db_sha256':
             'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
         'product_count': 4999,
@@ -129,7 +166,7 @@ void main() {
         'country_code': 'us',
         'channel': 'stable',
         'version': '202604130001',
-        'db_url': 'https://example.com/root/hypertrack_off_us.db',
+        'db_url': 'https://example.com/root/train_libre_off_us.db',
         'db_sha256':
             'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         'product_count': 120000,
@@ -146,7 +183,7 @@ void main() {
           );
         }
         if (request.url.toString() ==
-            'https://example.com/root/hypertrack_off_us.db') {
+            'https://example.com/root/train_libre_off_us.db') {
           return http.Response.bytes(
             utf8.encode('this-is-not-the-expected-binary'),
             200,
@@ -182,7 +219,7 @@ void main() {
         'country_code': 'us',
         'channel': 'stable',
         'version': '202604130001',
-        'db_url': 'https://example.com/root/hypertrack_off_us.db',
+        'db_url': 'https://example.com/root/train_libre_off_us.db',
         'db_sha256':
             'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         'product_count': 120000,
@@ -199,7 +236,7 @@ void main() {
           );
         }
         if (request.url.toString() ==
-            'https://example.com/root/hypertrack_off_us.db') {
+            'https://example.com/root/train_libre_off_us.db') {
           return http.Response.bytes(
             utf8.encode('download-that-will-be-skipped'),
             200,
@@ -246,7 +283,7 @@ void main() {
         'country_code': 'us',
         'channel': 'stable',
         'version': '202604130001',
-        'db_url': 'https://example.com/root/hypertrack_off_us.db',
+        'db_url': 'https://example.com/root/train_libre_off_us.db',
         'db_sha256': sha256.convert(walDbBytes).toString(),
         'product_count': 120000,
         'min_product_count': 5000,
@@ -262,7 +299,7 @@ void main() {
           );
         }
         if (request.url.toString() ==
-            'https://example.com/root/hypertrack_off_us.db') {
+            'https://example.com/root/train_libre_off_us.db') {
           return http.Response.bytes(walDbBytes, 200);
         }
         return http.Response('not found', 404);

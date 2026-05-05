@@ -24,15 +24,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      # Legacy artifact filename kept for app/runtime compatibility.
-      GENERATED_DB_PATH: artifacts/hypertrack_training.db
+      GENERATED_DB_PATH: artifacts/train_libre_training.db
       BUILD_REPORT_PATH: artifacts/wger_build_report.json
       DIFF_REPORT_PATH: artifacts/wger_diff_report.json
       MANIFEST_PATH: artifacts/wger_catalog_manifest.json
       RELEASE_NOTES_PATH: artifacts/wger_release_notes.md
       RELEASE_REFERENCE_MANIFEST_PATH: artifacts/reference_wger_catalog_manifest.json
-      # Legacy filename kept for backward compatibility with previously published assets.
-      RELEASE_REFERENCE_DB_PATH: artifacts/reference_hypertrack_training.db
+      RELEASE_REFERENCE_DB_PATH: artifacts/reference_train_libre_training.db
       WGER_FAIL_ON_REMOVED_THRESHOLD: 30
       RELEASE_TAG: wger-catalog-stable
       RELEASE_NAME: Wger Catalog Data (stable channel)

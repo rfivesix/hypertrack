@@ -47,5 +47,78 @@ void main() {
         isTrue,
       );
     });
+
+    test('coalesces identical in-flight diary loads without queuing by default',
+        () {
+      final coordinator = DiaryLoadCoordinator();
+      final day = DateTime(2026, 5, 4, 9);
+
+      coordinator.markInFlight(day);
+
+      expect(
+        coordinator.coalesceIfInFlight(
+          DateTime(2026, 5, 4, 21),
+          forceStepsRefresh: false,
+          queueIfInFlight: false,
+        ),
+        isTrue,
+      );
+      expect(coordinator.hasPendingReload, isFalse);
+    });
+
+    test('queues one same-day reload after water mutation during refresh', () {
+      final coordinator = DiaryLoadCoordinator();
+      final day = DateTime(2026, 5, 4, 9);
+
+      coordinator.markInFlight(day);
+
+      expect(
+        coordinator.coalesceIfInFlight(
+          DateTime(2026, 5, 4, 21),
+          forceStepsRefresh: false,
+          queueIfInFlight: true,
+        ),
+        isTrue,
+      );
+      expect(coordinator.hasPendingReload, isTrue);
+      expect(coordinator.pendingForceStepsRefresh, isFalse);
+
+      coordinator.clearPendingReload();
+      expect(coordinator.hasPendingReload, isFalse);
+    });
+
+    test('keeps forced refresh intent when coalescing an in-flight load', () {
+      final coordinator = DiaryLoadCoordinator();
+      final day = DateTime(2026, 5, 4, 9);
+
+      coordinator.markInFlight(day);
+
+      coordinator.coalesceIfInFlight(
+        day,
+        forceStepsRefresh: true,
+        queueIfInFlight: false,
+      );
+
+      expect(coordinator.hasPendingReload, isTrue);
+      expect(coordinator.pendingForceStepsRefresh, isTrue);
+    });
+
+    test('does not coalesce a different selected diary date', () {
+      final coordinator = DiaryLoadCoordinator();
+      final first = DateTime(2026, 5, 4, 9);
+      final second = DateTime(2026, 5, 5, 9);
+
+      coordinator.markInFlight(first);
+
+      expect(
+        coordinator.coalesceIfInFlight(
+          second,
+          forceStepsRefresh: false,
+          queueIfInFlight: true,
+        ),
+        isFalse,
+      );
+      expect(coordinator.hasPendingReload, isFalse);
+    });
   });
 }

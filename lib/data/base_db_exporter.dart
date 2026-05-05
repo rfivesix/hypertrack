@@ -2,6 +2,7 @@
 import 'package:share_plus/share_plus.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
+import '../config/app_data_sources.dart';
 import 'product_database_helper.dart';
 
 /// Utility class for exporting and sharing the base database file.
@@ -19,7 +20,7 @@ class BaseDbExporter {
     await SharePlus.instance.share(
       ShareParams(
         files: [file],
-        subject: subject ?? 'hypertrack_base_foods.db',
+        subject: subject ?? AppDataSources.baseFoodsDbFileName,
       ),
     );
   }

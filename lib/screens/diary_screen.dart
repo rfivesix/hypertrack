@@ -53,6 +53,9 @@ DateTime normalizeDiaryDate(DateTime date) => date.dateOnly;
 class DiaryLoadCoordinator {
   int _generation = 0;
   DateTime? _activeDate;
+  DateTime? _inFlightDate;
+  bool _hasPendingReload = false;
+  bool _pendingForceStepsRefresh = false;
 
   int begin(DateTime date) {
     _activeDate = normalizeDiaryDate(date);
@@ -63,6 +66,41 @@ class DiaryLoadCoordinator {
     return generation == _generation &&
         (_activeDate?.isSameDate(normalizeDiaryDate(date)) ?? false);
   }
+
+  bool coalesceIfInFlight(
+    DateTime date, {
+    required bool forceStepsRefresh,
+    required bool queueIfInFlight,
+  }) {
+    final diaryDate = normalizeDiaryDate(date);
+    if (!(_inFlightDate?.isSameDate(diaryDate) ?? false)) {
+      return false;
+    }
+    if (forceStepsRefresh || queueIfInFlight) {
+      _hasPendingReload = true;
+      _pendingForceStepsRefresh |= forceStepsRefresh;
+    }
+    return true;
+  }
+
+  void markInFlight(DateTime date) {
+    _inFlightDate = normalizeDiaryDate(date);
+  }
+
+  void clearInFlight(DateTime date) {
+    if (_inFlightDate?.isSameDate(normalizeDiaryDate(date)) ?? false) {
+      _inFlightDate = null;
+    }
+  }
+
+  void clearPendingReload() {
+    _hasPendingReload = false;
+    _pendingForceStepsRefresh = false;
+  }
+
+  bool get hasPendingReload => _hasPendingReload;
+
+  bool get pendingForceStepsRefresh => _pendingForceStepsRefresh;
 }
 
 /// The central hub for tracking and viewing daily nutritional and activity data.
@@ -105,6 +143,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   bool _sleepTrackingEnabled = false;
   bool _showSugarInOverview = false;
   final DiaryLoadCoordinator _loadCoordinator = DiaryLoadCoordinator();
+  Future<void>? _activeDiaryLoadFuture;
 
   // Workout summary state used by the daily overview card.
   Map<String, dynamic>? _workoutSummary;
@@ -137,9 +176,56 @@ class DiaryScreenState extends State<DiaryScreen> {
   Future<void> loadDataForDate(
     DateTime date, {
     bool forceStepsRefresh = false,
+    bool queueIfInFlight = false,
+  }) async {
+    final diaryDate = normalizeDiaryDate(date);
+    final activeFuture = _activeDiaryLoadFuture;
+    if (activeFuture != null &&
+        _loadCoordinator.coalesceIfInFlight(
+          diaryDate,
+          forceStepsRefresh: forceStepsRefresh,
+          queueIfInFlight: queueIfInFlight,
+        )) {
+      return activeFuture;
+    }
+
+    _loadCoordinator.markInFlight(diaryDate);
+    late final Future<void> loadFuture;
+    loadFuture = _runDiaryLoadQueue(
+      diaryDate,
+      forceStepsRefresh: forceStepsRefresh,
+    ).whenComplete(() {
+      if (identical(_activeDiaryLoadFuture, loadFuture)) {
+        _activeDiaryLoadFuture = null;
+        _loadCoordinator.clearInFlight(diaryDate);
+      }
+    });
+    _activeDiaryLoadFuture = loadFuture;
+    return loadFuture;
+  }
+
+  Future<void> _runDiaryLoadQueue(
+    DateTime diaryDate, {
+    required bool forceStepsRefresh,
+  }) async {
+    var shouldForceStepsRefresh = forceStepsRefresh;
+    do {
+      _loadCoordinator.clearPendingReload();
+      await _loadDataForDateOnce(
+        diaryDate,
+        forceStepsRefresh: shouldForceStepsRefresh,
+      );
+      shouldForceStepsRefresh = _loadCoordinator.pendingForceStepsRefresh;
+    } while (mounted &&
+        _loadCoordinator.hasPendingReload &&
+        _selectedDate.isSameDate(diaryDate));
+  }
+
+  Future<void> _loadDataForDateOnce(
+    DateTime diaryDate, {
+    required bool forceStepsRefresh,
   }) async {
     if (!mounted) return;
-    final diaryDate = normalizeDiaryDate(date);
     final loadGeneration = _loadCoordinator.begin(diaryDate);
     setState(() {
       selectedDateNotifier.value = diaryDate;
@@ -1269,6 +1355,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                     onPressed: () async {
                       final state = key.currentState;
                       if (state == null) return;
+                      final diaryDate = _selectedDate;
                       final quantity = int.tryParse(state.quantityText);
                       if (quantity == null || quantity <= 0) return;
 
@@ -1294,21 +1381,30 @@ class DiaryScreenState extends State<DiaryScreen> {
                         caffeinePer100ml: caffeinePer100ml,
                       );
 
-                      final newId = await DatabaseHelper.instance
-                          .insertFluidEntry(newEntry);
+                      try {
+                        final newId = await DatabaseHelper.instance
+                            .insertFluidEntry(newEntry);
 
-                      if (caffeinePer100ml != null && caffeinePer100ml > 0) {
-                        final totalCaffeine =
-                            (caffeinePer100ml / 100.0) * quantity;
-                        await _logCaffeineDose(
-                          totalCaffeine,
-                          state.selectedDateTime,
-                          fluidEntryId: newId,
+                        if (caffeinePer100ml != null && caffeinePer100ml > 0) {
+                          final totalCaffeine =
+                              (caffeinePer100ml / 100.0) * quantity;
+                          await _logCaffeineDose(
+                            totalCaffeine,
+                            state.selectedDateTime,
+                            fluidEntryId: newId,
+                          );
+                        }
+                      } catch (_) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.error)),
                         );
+                        return;
                       }
 
                       close();
-                      loadDataForDate(_selectedDate);
+                      if (!mounted) return;
+                      loadDataForDate(diaryDate, queueIfInFlight: true);
                     },
                     child: Text(l10n.add_button),
                   ),

@@ -9,10 +9,12 @@ void main() {
     channel: 'stable',
     baseUrl: 'https://example.com/root/',
     manifestPath: 'manifest.json',
-    defaultDbPath: 'db/hypertrack_training.db',
+    defaultDbPath: 'db/train_libre_training.db',
+    legacyDefaultDbPath: 'db/hypertrack_training.db',
     defaultBuildReportPath: 'reports/wger_build_report.json',
     localCacheDirectoryName: 'catalog_refresh',
-    localCacheDbFileName: 'hypertrack_training_remote.db',
+    localCacheDbFileName: 'train_libre_training_remote.db',
+    legacyLocalCacheDbFileName: 'hypertrack_training_remote.db',
     localManifestFileName: 'wger_manifest_cached.json',
     manifestTimeoutSeconds: 5,
     downloadTimeoutSeconds: 15,
@@ -26,7 +28,7 @@ void main() {
         'source_id': 'wger_catalog',
         'channel': 'stable',
         'version': '202601010001',
-        'db_path': 'artifacts/hypertrack_training.db',
+        'db_path': 'artifacts/train_libre_training.db',
         'build_report_path': 'artifacts/wger_build_report.json',
         'db_sha256':
             'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -36,7 +38,7 @@ void main() {
       expect(manifest, isNotNull);
       expect(
         manifest!.dbUri.toString(),
-        'https://example.com/root/artifacts/hypertrack_training.db',
+        'https://example.com/root/artifacts/train_libre_training.db',
       );
       expect(
         manifest.buildReportUri!.toString(),
@@ -76,7 +78,7 @@ void main() {
         'channel': 'stable',
         'version': '202603030003',
         'asset_base_url': 'https://github.com/org/repo/releases/download/tag/',
-        'db_file': 'hypertrack_training.db',
+        'db_file': 'train_libre_training.db',
         'build_report_file': 'wger_build_report.json',
         'db_sha256':
             'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
@@ -86,7 +88,7 @@ void main() {
       expect(manifest, isNotNull);
       expect(
         manifest!.dbUri.toString(),
-        'https://github.com/org/repo/releases/download/tag/hypertrack_training.db',
+        'https://github.com/org/repo/releases/download/tag/train_libre_training.db',
       );
       expect(
         manifest.buildReportUri!.toString(),
@@ -106,7 +108,7 @@ void main() {
         'channel': 'stable',
         'version': '202603030004',
         'asset_base_url': 'https://github.com/org/repo/releases/download/tag/',
-        'db_file': 'hypertrack_training.db',
+        'db_file': 'train_libre_training.db',
         'db_sha256':
             'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
         'expected_exercise_count': 777,
@@ -115,6 +117,55 @@ void main() {
 
       expect(manifest, isNotNull);
       expect(manifest!.minimumExerciseRows, 640);
+    });
+
+    test('uses Train Libre default DB path when manifest omits db locator', () {
+      final manifest = ExerciseCatalogRefreshService.parseManifest({
+        'source_id': 'wger_catalog',
+        'channel': 'stable',
+        'version': '202603030004',
+        'asset_base_url': 'https://github.com/org/repo/releases/download/tag/',
+        'db_sha256':
+            'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+      }, config);
+
+      expect(manifest, isNotNull);
+      expect(
+        manifest!.dbUri.toString(),
+        'https://github.com/org/repo/releases/download/tag/db/train_libre_training.db',
+      );
+    });
+
+    test('accepts legacy Hypertrack DB filename from published manifests', () {
+      final manifest = ExerciseCatalogRefreshService.parseManifest({
+        'source_id': 'wger_catalog',
+        'channel': 'stable',
+        'version': '202603030004',
+        'asset_base_url': 'https://github.com/org/repo/releases/download/tag/',
+        'db_file': 'hypertrack_training.db',
+        'db_sha256':
+            'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+      }, config);
+
+      expect(manifest, isNotNull);
+      expect(
+        manifest!.dbUri.toString(),
+        'https://github.com/org/repo/releases/download/tag/hypertrack_training.db',
+      );
+    });
+
+    test('resolves legacy DB fallback URL after Train Libre download failure',
+        () {
+      final legacyUri = ExerciseCatalogRefreshService.legacyFallbackDbUri(
+        failedUri:
+            Uri.parse('https://example.com/root/db/train_libre_training.db'),
+        config: config,
+      );
+
+      expect(
+        legacyUri.toString(),
+        'https://example.com/root/db/hypertrack_training.db',
+      );
     });
 
     test('rejects manifest with unexpected source_id', () {
@@ -162,7 +213,7 @@ void main() {
         'channel': 'stable',
         'version': '202603030008',
         'asset_base_url': 'https://github.com/org/repo/releases/download/tag/',
-        'db_file': 'hypertrack_training.db',
+        'db_file': 'train_libre_training.db',
         'db_sha256':
             '2222222222222222222222222222222222222222222222222222222222222222',
         'expected_exercise_count': 500,

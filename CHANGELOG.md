@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-beta.5] - 2025-05-05
+### Fixed
+- Renamed bundled and remote catalog database artifacts to Train Libre filenames while preserving legacy Hypertrack fallback compatibility.
+- Added English iOS permission usage descriptions for camera, microphone, speech recognition, photo library, and Apple Health access, with German InfoPlist localization kept alongside them.
+- Fixed Sleep day overview week/month loading helper wiring so analyzer, tests, and debug builds compile cleanly.
+- Fixed a Diary water logging refresh issue where adding water after a refresh could trigger broad app reloads, causing lag or persistent loading states across tabs.
+- Kept the selected Diary date stable when adding water from the Diary action path.
+
+### Changed
+- New installs now use Train Libre catalog database filenames by default, including `train_libre_training.db`, `train_libre_base_foods.db`, `train_libre_off_<country>.db`, and `train_libre_prep_<country>.db`.
+- WGER and Open Food Facts refresh workflows/scripts now publish Train Libre database artifact filenames.
+- Base-food sharing/export subjects now use the Train Libre database filename.
+- activated inification so the size of the app shrinks
+
+### Compatibility
+- Existing local Hypertrack-named catalog files are migrated by copying to the Train Libre filename, verifying the copied size, and removing the old file only after verification.
+- Remote catalog refresh prefers Train Libre artifact URLs and falls back to legacy Hypertrack artifact URLs when needed.
+- Backup restore compatibility for legacy Hypertrack metadata and filenames remains intact.
+
+### Internal
+- Added regression coverage for Train Libre default filenames, explicit legacy fallback constants, local legacy file migration, remote fallback resolution, iOS InfoPlist permission strings, and legacy backup restore compatibility.
+- Documented canonical Train Libre catalog filenames and legacy fallback behavior.
+
 ## [0.9.0-beta.4] - 2025-05-05
 ### Fixed
 - Improved Statistics hub loading so slow or failing sections no longer block the entire tab.

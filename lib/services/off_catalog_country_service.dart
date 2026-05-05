@@ -69,12 +69,19 @@ class OffCatalogCountryService {
     AssetBundle? bundle,
   }) async {
     final assetBundle = bundle ?? rootBundle;
-    final assetPath = AppDataSources.offFoodsAssetDbPathForCountry(country);
+    final source = AppDataSources.offCatalogForCountry(country);
     try {
-      final ByteData data = await assetBundle.load(assetPath);
+      final ByteData data = await assetBundle.load(source.bundledAssetDbPath);
       return data.lengthInBytes > 0;
     } catch (_) {
-      return false;
+      final legacyPath = source.legacyBundledAssetDbPath;
+      if (legacyPath == null) return false;
+      try {
+        final ByteData data = await assetBundle.load(legacyPath);
+        return data.lengthInBytes > 0;
+      } catch (_) {
+        return false;
+      }
     }
   }
 }

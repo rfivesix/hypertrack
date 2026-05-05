@@ -3,7 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show ByteData, rootBundle;
 import 'database_helper.dart';
 import 'drift_database.dart';
 import 'package:path/path.dart' as p;
@@ -88,6 +88,7 @@ class BasisDataManager {
       String table,
       Function(Map<String, dynamic>) mapper, {
       String? sourceFilePath,
+      String? legacyAssetPath,
       String? driftTable,
       bool enableOffReplacementRetention = false,
     }) async {
@@ -98,6 +99,7 @@ class BasisDataManager {
         prefs: prefs,
         tableName: table,
         driftTableName: driftTable,
+        legacyAssetPath: legacyAssetPath,
         mapFunction: mapper,
         taskLabel: label,
         onProgress: onProgress,
@@ -142,6 +144,7 @@ class BasisDataManager {
       'exercises',
       _mapExerciseRow,
       sourceFilePath: remoteTrainingDbPath,
+      legacyAssetPath: AppDataSources.legacyTrainingAssetDbPath,
     );
 
     // 2a. Base Foods
@@ -151,6 +154,7 @@ class BasisDataManager {
       _keyVersionFood,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'base'),
+      legacyAssetPath: AppDataSources.legacyBaseFoodsAssetDbPath,
     );
 
     // 2b. Kategorien
@@ -161,6 +165,7 @@ class BasisDataManager {
       'categories',
       _mapCategoryRow,
       driftTable: 'food_categories',
+      legacyAssetPath: AppDataSources.legacyFoodCategoriesAssetDbPath,
     );
 
     String? remoteOffDbPath;
@@ -212,6 +217,7 @@ class BasisDataManager {
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'off'),
       sourceFilePath: remoteOffDbPath,
+      legacyAssetPath: activeOffSource.legacyBundledAssetDbPath,
       enableOffReplacementRetention: true,
     );
   }
@@ -252,6 +258,7 @@ class BasisDataManager {
   Future<void> _updateDatabaseFromSource({
     required String assetPath,
     String? sourceFilePath,
+    String? legacyAssetPath,
     required String prefKey,
     required SharedPreferences prefs,
     required String tableName,
@@ -286,7 +293,14 @@ class BasisDataManager {
         final tempPath = p.join(tempDir.path, p.basename(assetPath));
 
         try {
-          final byteData = await rootBundle.load(assetPath);
+          ByteData byteData;
+          try {
+            byteData = await rootBundle.load(assetPath);
+          } catch (_) {
+            if (legacyAssetPath == null) rethrow;
+            // Legacy asset fallback keeps older packaged catalogs importable.
+            byteData = await rootBundle.load(legacyAssetPath);
+          }
           tempFile = File(tempPath);
           await tempFile.writeAsBytes(
             byteData.buffer.asUint8List(

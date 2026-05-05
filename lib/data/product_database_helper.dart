@@ -1,10 +1,13 @@
 // lib/data/product_database_helper.dart
 
+import 'package:path_provider/path_provider.dart';
 import 'package:drift/drift.dart';
 import 'database_helper.dart';
 import 'drift_database.dart' as db;
 import 'drift_database.dart';
+import '../config/app_data_sources.dart';
 import '../models/food_item.dart';
+import '../services/catalog_file_migration.dart';
 import '../util/perf_debug_timer.dart';
 
 /// Helper class for managing food product data in the Drift database.
@@ -438,7 +441,11 @@ class ProductDatabaseHelper {
   }
 
   Future<String> getBaseDbPath() async {
-    // Dummy-Pfad, da wir keine separate Datei mehr nutzen
-    return '';
+    final supportDir = await getApplicationSupportDirectory();
+    return CatalogFileMigration.resolveCanonicalPath(
+      directoryPath: supportDir.path,
+      canonicalFileName: AppDataSources.baseFoodsDbFileName,
+      legacyFileName: AppDataSources.legacyBaseFoodsDbFileName,
+    );
   }
 }

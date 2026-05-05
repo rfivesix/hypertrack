@@ -46,14 +46,20 @@ class _PulseAnalysisScreenState extends State<PulseAnalysisScreen> {
 
   Future<void> _loadAnalysis() async {
     setState(() => _isLoading = true);
-    final summary = await _repository.getAnalysis(
-      window: _windowFor(scope: _scope, anchorDate: _anchorDate),
-    );
-    if (!mounted) return;
-    setState(() {
-      _summary = summary;
-      _isLoading = false;
-    });
+    try {
+      final summary = await _repository.getAnalysis(
+        window: _windowFor(scope: _scope, anchorDate: _anchorDate),
+      );
+      if (!mounted) return;
+      setState(() {
+        _summary = summary;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('PulseAnalysisScreen: failed to load analysis: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   void _onScopeChanged(SleepPeriodScope scope) {

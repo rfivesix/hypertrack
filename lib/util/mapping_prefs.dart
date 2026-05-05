@@ -2,7 +2,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Utility for managing exercise name mappings between external apps and Hypertrack.
+/// Utility for managing exercise name mappings between external apps and Train Libre.
 ///
 /// Persists user-defined mappings in [SharedPreferences] to handle CSV imports.
 class MappingPrefs {

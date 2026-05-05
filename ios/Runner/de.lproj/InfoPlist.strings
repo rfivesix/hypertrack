@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "Train Libre verwendet die Kamera, um Barcodes von Lebensmitteln zu scannen.";
+"NSMicrophoneUsageDescription" = "Train Libre verwendet das Mikrofon fuer Spracheingaben beim Erfassen von Mahlzeiten mit KI-Funktionen.";
+"NSHealthShareUsageDescription" = "Train Libre liest Schritte, Schlaf und Herzfrequenz aus Apple Health, um aktivierte Gesundheits- und Erholungsansichten anzuzeigen.";
+"NSHealthUpdateUsageDescription" = "Train Libre schreibt Messwerte, Ernaehrung, Fluessigkeit und Workouts in Apple Health, wenn du den einseitigen Gesundheitsexport aktivierst.";
+"NSPhotoLibraryUsageDescription" = "Train Libre verwendet den Zugriff auf die Fotomediathek, damit du ein Profilbild auswaehlen kannst.";
+"NSSpeechRecognitionUsageDescription" = "Train Libre verwendet Spracherkennung, um gesprochene Mahlzeitennotizen in Mahlzeiteneintraege umzuwandeln.";
