@@ -5,6 +5,7 @@ import '../../../data/product_database_helper.dart';
 import '../../../models/chart_data_point.dart';
 import '../../../models/food_entry.dart';
 import '../../../models/fluid_entry.dart';
+import '../../../util/perf_debug_timer.dart';
 import '../domain/statistics_range_policy.dart';
 
 class BodyNutritionAnalyticsRawData {
@@ -58,32 +59,50 @@ class BodyNutritionAnalyticsDataAdapter {
     required int rangeIndex,
     DateTime? now,
   }) async {
-    final normalizedNow = normalizeDay(now ?? DateTime.now());
-    final earliest = await _earliestRelevantDate();
-    final range = await _resolveRange(
-      rangeIndex: rangeIndex,
-      now: normalizedNow,
-      earliestRelevantDate: earliest,
-    );
+    return PerfDebugTimer.time(
+      area: 'statistics',
+      label: 'bodyNutritionFetchRaw',
+      action: () async {
+        final normalizedNow = normalizeDay(now ?? DateTime.now());
+        final earliest = await PerfDebugTimer.time(
+          area: 'statistics',
+          label: 'bodyNutritionEarliest',
+          action: _earliestRelevantDate,
+        );
+        final range = await _resolveRange(
+          rangeIndex: rangeIndex,
+          now: normalizedNow,
+          earliestRelevantDate: earliest,
+        );
 
-    final results = await Future.wait([
-      _databaseHelper.getChartDataForTypeAndRange('weight', range),
-      _databaseHelper.getEntriesForDateRange(range.start, range.end),
-      _databaseHelper.getFluidEntriesForDateRange(range.start, range.end),
-    ]);
+        final results = await Future.wait([
+          _databaseHelper.getChartDataForTypeAndRange('weight', range),
+          _databaseHelper.getEntriesForDateRange(range.start, range.end),
+          _databaseHelper.getFluidEntriesForDateRange(range.start, range.end),
+        ]);
 
-    final weightPoints = (results[0] as List<ChartDataPoint>);
-    final foodEntries = results[1] as List<FoodEntry>;
-    final fluidEntries = (results[2] as List<FluidEntry>);
-    final caloriesByDay = await _dailyCaloriesMap(
-      foodEntries: foodEntries,
-      fluidEntries: fluidEntries,
-    );
+        final weightPoints = (results[0] as List<ChartDataPoint>);
+        final foodEntries = results[1] as List<FoodEntry>;
+        final fluidEntries = (results[2] as List<FluidEntry>);
+        final caloriesByDay = await PerfDebugTimer.time(
+          area: 'statistics',
+          label: 'bodyNutritionDailyCalories',
+          action: () => _dailyCaloriesMap(
+            foodEntries: foodEntries,
+            fluidEntries: fluidEntries,
+          ),
+          fields: {
+            'foodRows': foodEntries.length,
+            'fluidRows': fluidEntries.length,
+          },
+        );
 
-    return BodyNutritionAnalyticsRawData(
-      range: range,
-      weightPoints: weightPoints,
-      caloriesByDay: caloriesByDay,
+        return BodyNutritionAnalyticsRawData(
+          range: range,
+          weightPoints: weightPoints,
+          caloriesByDay: caloriesByDay,
+        );
+      },
     );
   }
 

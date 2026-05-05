@@ -3,6 +3,7 @@ import '../data/product_database_helper.dart';
 import '../features/statistics/data/body_nutrition_analytics_data_adapter.dart';
 import '../features/statistics/domain/body_nutrition_analytics_engine.dart';
 import '../features/statistics/domain/body_nutrition_analytics_models.dart';
+import 'perf_debug_timer.dart';
 
 export '../features/statistics/domain/body_nutrition_analytics_models.dart';
 
@@ -19,15 +20,21 @@ class BodyNutritionAnalyticsUtils {
   static Future<BodyNutritionAnalyticsResult> build({
     required int rangeIndex,
   }) async {
-    final adapter = BodyNutritionAnalyticsDataAdapter(
-      databaseHelper: DatabaseHelper.instance,
-      productDatabaseHelper: ProductDatabaseHelper.instance,
-    );
-    final raw = await adapter.fetch(rangeIndex: rangeIndex);
-    return BodyNutritionAnalyticsEngine.build(
-      range: raw.range,
-      weightPoints: raw.weightPoints,
-      caloriesByDay: raw.caloriesByDay,
+    return PerfDebugTimer.time(
+      area: 'statistics',
+      label: 'bodyNutritionBuild',
+      action: () async {
+        final adapter = BodyNutritionAnalyticsDataAdapter(
+          databaseHelper: DatabaseHelper.instance,
+          productDatabaseHelper: ProductDatabaseHelper.instance,
+        );
+        final raw = await adapter.fetch(rangeIndex: rangeIndex);
+        return BodyNutritionAnalyticsEngine.build(
+          range: raw.range,
+          weightPoints: raw.weightPoints,
+          caloriesByDay: raw.caloriesByDay,
+        );
+      },
     );
   }
 

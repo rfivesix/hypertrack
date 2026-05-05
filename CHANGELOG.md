@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0-beta.4] - 2025-05-05
+### Fixed
+- Improved Statistics hub loading so slow or failing sections no longer block the entire tab.
+- Replaced shared Statistics loading behavior with section-level stale-while-refresh state.
+- Kept existing Statistics section data visible while range changes refresh in the background.
+- Prevented stale async Statistics results from overwriting newer section data after rapid range changes.
+- Fixed Statistics section error handling so failures remain local to the affected card instead of causing endless global loading.
+- Fixed Sleep card visibility after Sleep tracking is disabled.
+- Prevented in-flight Sleep and Pulse loads from re-rendering stale cards after their tracking features are disabled.
+- Added missing cleanup/error handling for selected AI meal save and feedback-report actions to avoid stuck loading states.
+- Improved Diary and Add Food performance by reducing repeated product and meal-total lookups.
+- Fixed a Live Workout listener cleanup issue.
+
+### Changed
+- Statistics hub now loads Steps, Recovery, Sleep, Pulse, Consistency, Performance Records, Volume/Muscles, and Body/Nutrition independently.
+- Added debug-only per-section performance timing logs for Statistics and related database/helper calls.
+- Preserved Recovery as a fixed current-state metric while improving Statistics reload behavior.
+
+### Internal
+- Added regression coverage for section-level Statistics loading, stale result protection, gated Sleep/Pulse visibility, and failed load cleanup.
+- Added performance diagnosis documentation for issue #313.
+- Expanded focused performance/stability tests around Statistics, Add Food meal totals, product batch lookup, backup JSON processing, and save-flow loading cleanup.
+
 ## [0.9.0-beta.3] - 2025-05-05
 
 ### Fixed

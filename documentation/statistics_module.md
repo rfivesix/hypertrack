@@ -181,6 +181,8 @@ Implemented behavior in `StatisticsHubScreen._loadHubAnalytics()`:
 - Resulting `daysBack` is used for both:
   - steps range aggregation
   - sleep hub summary fetch
+- Hub sections use independent stale-while-refresh state. Range chip changes keep existing card data visible while each section reloads, and stale section results are ignored if a newer range request has already started.
+- Section-level errors are local to the affected card. A failing body/nutrition, sleep, pulse, recovery, consistency, performance, volume/muscle, or steps load should not block the rest of the hub.
 
 Implication:
 

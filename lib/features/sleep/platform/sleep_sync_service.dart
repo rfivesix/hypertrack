@@ -52,6 +52,8 @@ class SleepSyncService implements SleepSettingsService {
   static const String trackingEnabledKey = 'sleep_tracking_enabled';
   static const String lastAutoImportAttemptAtIsoKey =
       'sleep_last_auto_import_attempt_at_iso';
+  static final ValueNotifier<bool?> trackingEnabledListenable =
+      ValueNotifier<bool?>(null);
   static final ValueNotifier<DateTime?> lastImportAtListenable =
       ValueNotifier<DateTime?>(null);
   static bool _autoImportInFlight = false;
@@ -116,13 +118,20 @@ class SleepSyncService implements SleepSettingsService {
   @override
   Future<bool> isTrackingEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(trackingEnabledKey) ?? false;
+    final enabled = prefs.getBool(trackingEnabledKey) ?? false;
+    if (trackingEnabledListenable.value != enabled) {
+      trackingEnabledListenable.value = enabled;
+    }
+    return enabled;
   }
 
   @override
   Future<void> setTrackingEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(trackingEnabledKey, enabled);
+    if (trackingEnabledListenable.value != enabled) {
+      trackingEnabledListenable.value = enabled;
+    }
   }
 
   @override

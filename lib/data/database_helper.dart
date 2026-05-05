@@ -15,6 +15,7 @@ import '../models/measurement_session.dart';
 import '../models/supplement.dart';
 import '../models/supplement_log.dart';
 import '../services/health/steps_sync_service.dart';
+import '../util/perf_debug_timer.dart';
 import 'product_database_helper.dart';
 
 /// Main helper for general application data persistence using the Drift database.
@@ -301,6 +302,7 @@ class DatabaseHelper {
     DateTime end, {
     DateTime? updatedSince,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
 
     final effectiveStart = DateTime(start.year, start.month, start.day);
@@ -316,7 +318,7 @@ class DatabaseHelper {
 
     final rows = await query.get();
 
-    return rows.map((row) {
+    final result = rows.map((row) {
       return FoodEntry(
         id: row.localId,
         barcode: row.legacyBarcode ?? 'UNKNOWN',
@@ -326,6 +328,13 @@ class DatabaseHelper {
         updatedAt: row.updatedAt,
       );
     }).toList();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getEntriesForDateRange',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': rows.length},
+    );
+    return result;
   }
 
   /// Aggregates logged food calories per local day for a date range.
@@ -512,6 +521,7 @@ class DatabaseHelper {
     DateTime end, {
     DateTime? updatedSince,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     final effectiveStart = DateTime(start.year, start.month, start.day);
     final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
@@ -526,7 +536,7 @@ class DatabaseHelper {
 
     final rows = await query.get();
 
-    return rows
+    final result = rows
         .map(
           (row) => FluidEntry(
             id: row.localId,
@@ -542,6 +552,13 @@ class DatabaseHelper {
           ),
         )
         .toList();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getFluidEntriesForDateRange',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': rows.length},
+    );
+    return result;
   }
 
   Future<void> updateFluidEntry(FluidEntry entry) async {
@@ -711,6 +728,7 @@ class DatabaseHelper {
   }
 
   Future<DateTime?> getEarliestMeasurementDate() async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.measurements)
       ..orderBy([
@@ -721,6 +739,12 @@ class DatabaseHelper {
       ])
       ..limit(1);
     final row = await query.getSingleOrNull();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getEarliestMeasurementDate',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': row == null ? 0 : 1},
+    );
     return row?.date;
   }
 
@@ -745,6 +769,7 @@ class DatabaseHelper {
     String type,
     DateTimeRange range,
   ) async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.measurements)
       ..where((tbl) => tbl.type.equals(type))
@@ -757,9 +782,15 @@ class DatabaseHelper {
       ]);
 
     final rows = await query.get();
-    return rows
-        .map((r) => ChartDataPoint(date: r.date, value: r.value))
-        .toList();
+    final result =
+        rows.map((r) => ChartDataPoint(date: r.date, value: r.value)).toList();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getChartDataForTypeAndRange',
+      elapsed: stopwatch.elapsed,
+      fields: {'type': type, 'rows': rows.length},
+    );
+    return result;
   }
 
   // ===========================================================================
@@ -1267,6 +1298,7 @@ class DatabaseHelper {
   // ===========================================================================
 
   Future<DateTime?> getEarliestFoodEntryDate() async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.nutritionLogs)
       ..orderBy([
@@ -1277,10 +1309,17 @@ class DatabaseHelper {
       ])
       ..limit(1);
     final row = await query.getSingleOrNull();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getEarliestFoodEntryDate',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': row == null ? 0 : 1},
+    );
     return row?.consumedAt;
   }
 
   Future<DateTime?> getEarliestFluidEntryDate() async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     final query = dbInstance.select(dbInstance.fluidLogs)
       ..orderBy([
@@ -1291,6 +1330,12 @@ class DatabaseHelper {
       ])
       ..limit(1);
     final row = await query.getSingleOrNull();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getEarliestFluidEntryDate',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': row == null ? 0 : 1},
+    );
     return row?.consumedAt;
   }
 
@@ -1739,6 +1784,7 @@ class DatabaseHelper {
     String providerFilter = 'all',
     String sourcePolicy = 'auto_dominant',
   }) async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     final startLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
     final endLocal = startLocal.add(const Duration(days: 1));
@@ -1807,7 +1853,7 @@ class DatabaseHelper {
         for (final variable in allVars) drift.Variable.withInt(variable),
       ],
     ).get();
-    return rows
+    final result = rows
         .map(
           (row) => <String, dynamic>{
             'hour': row.read<int>('hour_local'),
@@ -1815,6 +1861,17 @@ class DatabaseHelper {
           },
         )
         .toList(growable: false);
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getHourlyStepsTotalsForDay',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'rows': rows.length,
+        'provider': providerFilter,
+        'policy': sourcePolicy,
+      },
+    );
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getDailyStepsTotalsForRange({
@@ -1823,6 +1880,7 @@ class DatabaseHelper {
     String providerFilter = 'all',
     String sourcePolicy = 'auto_dominant',
   }) async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     final normalizedStart = DateTime(
       startLocal.year,
@@ -1830,7 +1888,15 @@ class DatabaseHelper {
       startLocal.day,
     );
     final normalizedEnd = DateTime(endLocal.year, endLocal.month, endLocal.day);
-    if (normalizedEnd.isBefore(normalizedStart)) return const [];
+    if (normalizedEnd.isBefore(normalizedStart)) {
+      PerfDebugTimer.logDuration(
+        area: 'db',
+        label: 'getDailyStepsTotalsForRange',
+        elapsed: stopwatch.elapsed,
+        fields: {'rows': 0},
+      );
+      return const [];
+    }
 
     var sql = sourcePolicy == 'max_per_hour'
         ? '''
@@ -1915,7 +1981,7 @@ class DatabaseHelper {
       ],
     ).get();
 
-    return rows
+    final result = rows
         .map(
           (row) => <String, dynamic>{
             'dayLocal': row.read<String>('day_local'),
@@ -1923,6 +1989,17 @@ class DatabaseHelper {
           },
         )
         .toList(growable: false);
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getDailyStepsTotalsForRange',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'rows': rows.length,
+        'provider': providerFilter,
+        'policy': sourcePolicy,
+      },
+    );
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getDailyStepsTotalsBySource({
@@ -2040,6 +2117,7 @@ class DatabaseHelper {
   Future<DateTime?> getEarliestHealthStepsDateLocal({
     String providerFilter = 'all',
   }) async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
     var sql = '''
       SELECT MIN(start_at) AS min_start_at
@@ -2051,13 +2129,36 @@ class DatabaseHelper {
       sql += " WHERE provider = 'google_health_connect'";
     }
     final rows = await dbInstance.customSelect(sql).get();
-    if (rows.isEmpty) return null;
+    if (rows.isEmpty) {
+      PerfDebugTimer.logDuration(
+        area: 'db',
+        label: 'getEarliestHealthStepsDateLocal',
+        elapsed: stopwatch.elapsed,
+        fields: {'rows': 0, 'provider': providerFilter},
+      );
+      return null;
+    }
     final minEpoch = rows.first.read<int?>('min_start_at');
-    if (minEpoch == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(
+    if (minEpoch == null) {
+      PerfDebugTimer.logDuration(
+        area: 'db',
+        label: 'getEarliestHealthStepsDateLocal',
+        elapsed: stopwatch.elapsed,
+        fields: {'rows': 1, 'provider': providerFilter},
+      );
+      return null;
+    }
+    final result = DateTime.fromMillisecondsSinceEpoch(
       minEpoch * _msPerSecond,
       isUtc: true,
     ).toLocal();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getEarliestHealthStepsDateLocal',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': 1, 'provider': providerFilter},
+    );
+    return result;
   }
 
   /// Speichert das Startgewicht als Messung

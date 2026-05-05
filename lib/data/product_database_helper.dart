@@ -5,6 +5,7 @@ import 'database_helper.dart';
 import 'drift_database.dart' as db;
 import 'drift_database.dart';
 import '../models/food_item.dart';
+import '../util/perf_debug_timer.dart';
 
 /// Helper class for managing food product data in the Drift database.
 ///
@@ -118,6 +119,7 @@ class ProductDatabaseHelper {
   /// Retrieves a list of [FoodItem]s matching the provided [barcodes].
   Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) async {
     if (barcodes.isEmpty) return [];
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
 
     final rows = await (dbInstance.select(
@@ -125,7 +127,14 @@ class ProductDatabaseHelper {
     )..where((tbl) => tbl.barcode.isIn(barcodes)))
         .get();
 
-    return rows.map(_mapRowToModel).toList();
+    final result = rows.map(_mapRowToModel).toList();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getProductsByBarcodes',
+      elapsed: stopwatch.elapsed,
+      fields: {'barcodes': barcodes.length, 'rows': rows.length},
+    );
+    return result;
   }
 
   /// Retrieves recently used products based on the user's consumption history.

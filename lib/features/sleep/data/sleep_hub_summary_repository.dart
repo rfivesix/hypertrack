@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart';
+import '../../../util/perf_debug_timer.dart';
 import 'persistence/dao/sleep_canonical_dao.dart';
 import 'persistence/dao/sleep_nightly_analyses_dao.dart';
 import 'persistence/sleep_persistence_models.dart';
@@ -50,6 +51,8 @@ class SleepHubSummaryRepository {
     required DateTime endDate,
     required int daysBack,
   }) async {
+    final stopwatch = Stopwatch()..start();
+    var segmentRowCount = 0;
     if (daysBack <= 0) return const SleepHubSummary();
     await _ensureDaos();
 
@@ -60,7 +63,15 @@ class SleepHubSummaryRepository {
       toNightDateInclusive: _nightKey(endLocal),
     );
 
-    if (analyses.isEmpty) return const SleepHubSummary();
+    if (analyses.isEmpty) {
+      PerfDebugTimer.logDuration(
+        area: 'db',
+        label: 'fetchSleepHubSummary',
+        elapsed: stopwatch.elapsed,
+        fields: {'analyses': 0, 'sessions': 0, 'segments': 0},
+      );
+      return const SleepHubSummary();
+    }
 
     final latestByDate = _latestAnalysesByDate(analyses);
     final sessions = await _sessionsDao!.findByDateRange(
@@ -92,6 +103,7 @@ class SleepHubSummaryRepository {
       bedtimeMinutes.add(localStart.hour * 60 + localStart.minute);
 
       final segmentRows = await _segmentsDao!.findBySessionId(session.id);
+      segmentRowCount += segmentRows.length;
       if (segmentRows.isEmpty) continue;
       final segments =
           segmentRows.map(_toDomainSegment).toList(growable: false);
@@ -108,7 +120,7 @@ class SleepHubSummaryRepository {
       wakeMinutes.add(metrics.totalWakeDuration.inMinutes);
     }
 
-    return SleepHubSummary(
+    final result = SleepHubSummary(
       averageScore: _meanDouble(scoreValues),
       averageDuration: _meanDuration(durationMinutes),
       averageBedtimeMinutes: _circularMeanMinutes(bedtimeMinutes),
@@ -118,6 +130,17 @@ class SleepHubSummaryRepository {
       averageWakeDuration: _meanDuration(wakeMinutes),
       nightsCount: latestByDate.length,
     );
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'fetchSleepHubSummary',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'analyses': analyses.length,
+        'sessions': sessions.length,
+        'segments': segmentRowCount,
+      },
+    );
+    return result;
   }
 
   Future<void> dispose() async {

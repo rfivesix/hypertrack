@@ -12,6 +12,7 @@ import '../models/set_template.dart';
 import '../models/workout_log.dart';
 import '../features/statistics/domain/recovery_domain_service.dart';
 import '../util/muscle_analytics_utils.dart';
+import '../util/perf_debug_timer.dart';
 
 /// Helper class for managing workout-specific data in the Drift database.
 ///
@@ -1506,6 +1507,7 @@ class WorkoutDatabaseHelper {
   ///
   /// Each entry contains: 'exerciseName' (String), 'weight' (double), 'reps' (int).
   Future<List<Map<String, dynamic>>> getRecentGlobalPRs({int limit = 3}) async {
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
 
     final rows = await dbInstance.customSelect(
@@ -1536,7 +1538,7 @@ class WorkoutDatabaseHelper {
       variables: [drift.Variable.withInt(limit)],
     ).get();
 
-    return rows
+    final result = rows
         .map(
           (row) => {
             'exerciseName': row.read<String>('exerciseName'),
@@ -1545,6 +1547,13 @@ class WorkoutDatabaseHelper {
           },
         )
         .toList();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getRecentGlobalPRs',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': rows.length, 'resultRows': result.length},
+    );
+    return result;
   }
 
   // ===========================================================================
@@ -1556,6 +1565,7 @@ class WorkoutDatabaseHelper {
   Future<List<Map<String, dynamic>>> getWeeklyVolumeData({
     int weeksBack = 8,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
     final since = now.subtract(Duration(days: weeksBack * 7));
     final dbInstance = await database;
@@ -1631,6 +1641,12 @@ class WorkoutDatabaseHelper {
         (a, b) =>
             (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime),
       );
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getWeeklyVolumeData',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': rows.length, 'weeks': weeksBack},
+    );
     return result;
   }
 
@@ -1715,6 +1731,7 @@ class WorkoutDatabaseHelper {
     int daysBack = 30,
     int weeksBack = 8,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
     final since = now.subtract(Duration(days: daysBack));
     final dbInstance = await database;
@@ -1788,12 +1805,23 @@ class WorkoutDatabaseHelper {
       }
     }
 
-    return MuscleAnalyticsUtils.buildSummary(
+    final result = MuscleAnalyticsUtils.buildSummary(
       contributions: contributions,
       daysBack: daysBack,
       weeksBack: weeksBack,
       now: now,
     );
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getMuscleGroupAnalytics',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'rows': rows.length,
+        'contributions': contributions.length,
+        'range': '${daysBack}d',
+      },
+    );
+    return result;
   }
 
   /// Recovery analytics based on shared v1 heuristics.
@@ -1816,6 +1844,7 @@ class WorkoutDatabaseHelper {
   Future<Map<String, dynamic>> getRecoveryAnalytics({
     int lookbackDays = RecoveryDomainService.recoveryLookbackDays,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
     final since = now.subtract(Duration(days: lookbackDays));
     final dbInstance = await database;
@@ -2033,7 +2062,7 @@ class WorkoutDatabaseHelper {
       recoveringCount: recoveringCount,
     );
 
-    return {
+    final result = {
       'hasData': total > 0,
       'overallState': overallState,
       'totals': {
@@ -2044,6 +2073,17 @@ class WorkoutDatabaseHelper {
       },
       'muscles': muscles,
     };
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getRecoveryAnalytics',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'rows': rows.length,
+        'muscles': muscles.length,
+        'range': '${lookbackDays}d',
+      },
+    );
+    return result;
   }
 
   /// Top [limit] exercises by tonnage for the last [daysBack] days.
@@ -2098,6 +2138,7 @@ class WorkoutDatabaseHelper {
   Future<List<Map<String, dynamic>>> getWorkoutsPerWeek({
     int weeksBack = 12,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
     final since = now.subtract(Duration(days: weeksBack * 7));
     final dbInstance = await database;
@@ -2141,11 +2182,18 @@ class WorkoutDatabaseHelper {
       }
     }
 
-    return weekMap.values.toList()
+    final result = weekMap.values.toList()
       ..sort(
         (a, b) =>
             (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime),
       );
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getWorkoutsPerWeek',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': rows.length, 'weeks': weeksBack},
+    );
+    return result;
   }
 
   /// Returns per-week consistency metrics for the last [weeksBack] weeks.
@@ -2159,6 +2207,7 @@ class WorkoutDatabaseHelper {
   Future<List<Map<String, dynamic>>> getWeeklyConsistencyMetrics({
     int weeksBack = 12,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
     final since = now.subtract(Duration(days: weeksBack * 7));
     final dbInstance = await database;
@@ -2257,15 +2306,27 @@ class WorkoutDatabaseHelper {
       weekMap[key]!['tonnage'] = (weekMap[key]!['tonnage'] as double) + tonnage;
     }
 
-    return weekMap.values.toList()
+    final result = weekMap.values.toList()
       ..sort(
         (a, b) =>
             (a['weekStart'] as DateTime).compareTo(b['weekStart'] as DateTime),
       );
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getWeeklyConsistencyMetrics',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'workoutRows': workoutRows.length,
+        'setRows': tonnageRows.length,
+        'weeks': weeksBack,
+      },
+    );
+    return result;
   }
 
   /// Returns key training stats: totalWorkouts, thisWeekCount, avgPerWeek (last 4 wks), streakWeeks.
   Future<Map<String, dynamic>> getTrainingStats() async {
+    final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
     final dbInstance = await database;
 
@@ -2315,12 +2376,19 @@ class WorkoutDatabaseHelper {
       }
     }
 
-    return {
+    final result = {
       'totalWorkouts': totalWorkouts,
       'thisWeekCount': thisWeekCount,
       'avgPerWeek': avgPerWeek,
       'streakWeeks': streakWeeks,
     };
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getTrainingStats',
+      elapsed: stopwatch.elapsed,
+      fields: {'rows': allLogs.length},
+    );
+    return result;
   }
 
   /// Returns the set of dates (normalized to midnight) that had completed workouts
@@ -2577,6 +2645,7 @@ class WorkoutDatabaseHelper {
     int daysWindow = 30,
     int limit = 5,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
     final recentStart = now.subtract(Duration(days: daysWindow));
     final previousStart = recentStart.subtract(Duration(days: daysWindow));
@@ -2647,6 +2716,17 @@ class WorkoutDatabaseHelper {
         a['improvementPct'] as double,
       ),
     );
-    return result.take(limit).toList();
+    final limited = result.take(limit).toList();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getNotablePrImprovements',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'rows': rows.length,
+        'resultRows': limited.length,
+        'range': '${daysWindow}d',
+      },
+    );
+    return limited;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 
 import '../../../services/health/health_platform_heart_rate.dart';
+import '../../../util/perf_debug_timer.dart';
 import '../application/pulse_tracking_service.dart';
 import '../domain/pulse_analysis_engine.dart';
 import '../domain/pulse_models.dart';
@@ -34,13 +35,21 @@ class HealthPulseAnalysisRepository implements PulseAnalysisRepository {
   Future<PulseAnalysisSummary> getAnalysis({
     required PulseAnalysisWindow window,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final enabled = await _trackingService.isTrackingEnabled();
     if (!enabled) {
-      return _engine.analyze(
+      final result = _engine.analyze(
         window: window,
         rawSamples: const <PulseSamplePoint>[],
         emptyReason: PulseNoDataReason.disabled,
       );
+      PerfDebugTimer.logDuration(
+        area: 'statistics',
+        label: 'pulseAnalysisQuery',
+        elapsed: stopwatch.elapsed,
+        fields: {'samples': 0, 'enabled': false},
+      );
+      return result;
     }
 
     try {
@@ -56,7 +65,14 @@ class HealthPulseAnalysisRepository implements PulseAnalysisRepository {
             ),
           )
           .toList(growable: false);
-      return _engine.analyze(window: window, rawSamples: samples);
+      final result = _engine.analyze(window: window, rawSamples: samples);
+      PerfDebugTimer.logDuration(
+        area: 'statistics',
+        label: 'pulseAnalysisQuery',
+        elapsed: stopwatch.elapsed,
+        fields: {'samples': samples.length, 'enabled': true},
+      );
+      return result;
     } on MissingPluginException {
       return _empty(window, PulseNoDataReason.platformUnavailable);
     } on PlatformException catch (error) {
