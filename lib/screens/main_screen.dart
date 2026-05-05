@@ -212,6 +212,17 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
+  Future<void> _refreshDiaryForActiveDate({
+    bool queueIfInFlight = false,
+  }) async {
+    if (_currentIndex != 0) return;
+    final targetDate = _currentActiveDate;
+    await _tagebuchKey.currentState?.loadDataForDate(
+      targetDate,
+      queueIfInFlight: queueIfInFlight,
+    );
+  }
+
   Future<void> _showLogSupplementMenu() async {
     // ... (Supplement Auswahl bleibt gleich) ...
     final l10n = AppLocalizations.of(context)!;
@@ -572,21 +583,29 @@ class _MainScreenState extends State<MainScreen>
                         caffeinePer100ml: caffeinePer100ml,
                       );
 
-                      final newId = await DatabaseHelper.instance
-                          .insertFluidEntry(newEntry);
+                      try {
+                        final newId = await DatabaseHelper.instance
+                            .insertFluidEntry(newEntry);
 
-                      if (caffeinePer100ml != null && caffeinePer100ml > 0) {
-                        final totalCaffeine =
-                            (caffeinePer100ml / 100.0) * quantity;
-                        await _logCaffeineDose(
-                          totalCaffeine,
-                          state.selectedDateTime,
-                          fluidEntryId: newId,
+                        if (caffeinePer100ml != null && caffeinePer100ml > 0) {
+                          final totalCaffeine =
+                              (caffeinePer100ml / 100.0) * quantity;
+                          await _logCaffeineDose(
+                            totalCaffeine,
+                            state.selectedDateTime,
+                            fluidEntryId: newId,
+                          );
+                        }
+                      } catch (_) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.error)),
                         );
+                        return;
                       }
 
                       close();
-                      _refreshHomeScreen();
+                      await _refreshDiaryForActiveDate(queueIfInFlight: true);
                     },
                     child: Text(l10n.add_button),
                   ),

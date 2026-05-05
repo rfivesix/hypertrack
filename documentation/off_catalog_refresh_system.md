@@ -67,7 +67,7 @@ Countries are not mixed into one shared mega-release asset set.
 
 Assets are country-specific and collision-safe, for example:
 
-- `hypertrack_off_de.db`
+- `train_libre_off_de.db`
 - `off_build_report_de.json`
 - `off_catalog_manifest_de.json`
 - `off_diff_report_de.json`
@@ -75,9 +75,10 @@ Assets are country-specific and collision-safe, for example:
 
 Equivalent naming is used for `us` and `uk`.
 
-`hypertrack_off_<country>.db` names are intentionally retained as legacy
-artifact filenames for runtime compatibility with existing app-side remote
-catalog import paths.
+`hypertrack_off_<country>.db` names are retained only as legacy fallback
+filenames. Runtime resolution prefers `train_libre_off_<country>.db` and can
+fall back to the legacy asset while older release-channel artifacts are still
+being replaced.
 
 ## Helper scripts
 
@@ -239,8 +240,9 @@ This prevents startup crashes when a configured bundled asset path is not shippe
 
 Current APK-size rollout note:
 
-- the legacy DE OFF fallback path (`assets/db/hypertrack_prep_de.db`) remains
-  configured, but the large asset does not need to be bundled.
+- the DE OFF fallback path prefers `assets/db/train_libre_prep_de.db` and still
+  accepts the legacy `assets/db/hypertrack_prep_de.db`, but the large asset
+  does not need to be bundled.
 - when no remote candidate is available and that optional asset is absent,
   startup skips OFF import and continues with the bundled base-foods catalog.
 - startup remote catalog downloads can be skipped from the initializer screen;

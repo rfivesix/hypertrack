@@ -125,9 +125,12 @@ void main() {
       expect(us.manifestPath, 'off_catalog_manifest_us.json');
       expect(uk.manifestPath, 'off_catalog_manifest_uk.json');
 
-      expect(de.bundledAssetDbPath, 'assets/db/hypertrack_prep_de.db');
-      expect(us.bundledAssetDbPath, 'assets/db/hypertrack_prep_us.db');
-      expect(uk.bundledAssetDbPath, 'assets/db/hypertrack_prep_uk.db');
+      expect(de.bundledAssetDbPath, 'assets/db/train_libre_prep_de.db');
+      expect(us.bundledAssetDbPath, 'assets/db/train_libre_prep_us.db');
+      expect(uk.bundledAssetDbPath, 'assets/db/train_libre_prep_uk.db');
+      expect(de.legacyBundledAssetDbPath, 'assets/db/hypertrack_prep_de.db');
+      expect(us.legacyBundledAssetDbPath, 'assets/db/hypertrack_prep_us.db');
+      expect(uk.legacyBundledAssetDbPath, 'assets/db/hypertrack_prep_uk.db');
     });
   });
 }

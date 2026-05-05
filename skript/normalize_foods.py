@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_path = "hypertrack_base_foods.db"
+db_path = "train_libre_base_foods.db"
 
 if not os.path.exists(db_path):
     print(f"❌ {db_path} nicht gefunden.")

@@ -17,7 +17,12 @@ Main access paths currently in use:
 
 Bundled exercise seed data ships as:
 
-- `assets/db/hypertrack_training.db`
+- `assets/db/train_libre_training.db`
+
+Legacy packaged/runtime filenames such as `hypertrack_training.db` are accepted
+as fallback inputs. When an existing local legacy DB is found and the Train
+Libre filename is absent, startup copies it to the Train Libre filename,
+verifies the copied size, and removes the old file only after that check.
 
 Startup import path:
 
@@ -40,15 +45,19 @@ under the `exercise_catalog_*` namespace.
 
 ## Open Food Facts country data source foundation
 
-Bundled OFF seed data fallback keeps the legacy DE asset path for compatibility,
-but the asset is no longer required to be shipped:
+Bundled OFF seed data fallback uses Train Libre artifact names, but the asset is
+no longer required to be shipped:
 
-- `assets/db/hypertrack_prep_de.db`
+- `assets/db/train_libre_prep_de.db`
 
 If the remote OFF catalog cannot be downloaded and the optional bundled OFF DB
 is absent, startup skips the OFF import safely. The smaller
-`assets/db/hypertrack_base_foods.db` catalog is still imported first and remains
+`assets/db/train_libre_base_foods.db` catalog is still imported first and remains
 available as the offline baseline.
+
+Legacy bundled paths such as `assets/db/hypertrack_prep_de.db` and
+`assets/db/hypertrack_base_foods.db` remain accepted as fallback sources for old
+beta packages and backups.
 
 Country-aware OFF source/channel configuration is centralized in:
 
