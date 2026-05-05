@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New installs now use Train Libre catalog database filenames by default, including `train_libre_training.db`, `train_libre_base_foods.db`, `train_libre_off_<country>.db`, and `train_libre_prep_<country>.db`.
 - WGER and Open Food Facts refresh workflows/scripts now publish Train Libre database artifact filenames.
 - Base-food sharing/export subjects now use the Train Libre database filename.
-- activated inification so the size of the app shrinks
+- activated minification so the size of the app shrinks
 
 ### Compatibility
 - Existing local Hypertrack-named catalog files are migrated by copying to the Train Libre filename, verifying the copied size, and removing the old file only after verification.
