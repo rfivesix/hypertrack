@@ -55,8 +55,9 @@ class _PulseAnalysisScreenState extends State<PulseAnalysisScreen> {
         _summary = summary;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('PulseAnalysisScreen: failed to load analysis: $e');
       setState(() => _isLoading = false);
     }
   }

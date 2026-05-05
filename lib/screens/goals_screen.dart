@@ -124,8 +124,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('GoalsScreen: failed to load settings: $e');
       setState(() => _isLoading = false);
     }
   }

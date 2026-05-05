@@ -95,8 +95,9 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
       _stepsProviderName = await providerNameFuture;
       if (!mounted) return;
       setState(() => _isLoading = false);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('StepsModuleScreen: failed to load scope data: $e');
       setState(() => _isLoading = false);
     }
   }

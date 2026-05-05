@@ -95,8 +95,9 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
         _aggregation = aggregation;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('SleepMonthOverviewPage: failed to load month: $e');
       setState(() => _isLoading = false);
     }
   }

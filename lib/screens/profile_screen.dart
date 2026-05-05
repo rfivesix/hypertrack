@@ -53,7 +53,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('ProfileScreen: failed to load profile data: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }

@@ -233,13 +233,11 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
         _weekAggregation = aggregation;
         _isLoadingWeek = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('SleepDayOverviewPage: failed to load week data: $e');
       setState(() => _isLoadingWeek = false);
     }
-  }
-
-  Future<void> _loadMonth() async {
     final repo = await _ensureQueryRepository();
     if (repo == null) return;
     setState(() => _isLoadingMonth = true);
@@ -259,13 +257,11 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
         _monthAggregation = aggregation;
         _isLoadingMonth = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('SleepDayOverviewPage: failed to load month data: $e');
       setState(() => _isLoadingMonth = false);
     }
-  }
-
-  Future<SleepQueryRepository?> _ensureQueryRepository() async {
     if (_queryRepository != null) return _queryRepository;
     final database = await DatabaseHelper.instance.database;
     if (!mounted) return null;

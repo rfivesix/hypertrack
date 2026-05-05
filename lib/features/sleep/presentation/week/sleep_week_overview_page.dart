@@ -99,8 +99,9 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
         _aggregation = aggregation;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('SleepWeekOverviewPage: failed to load week: $e');
       setState(() => _isLoading = false);
     }
   }
