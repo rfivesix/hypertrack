@@ -45,12 +45,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
-    final profile = await DatabaseHelper.instance.getUserProfile();
-    if (mounted) {
-      setState(() {
-        _userProfile = profile;
-        _isLoading = false;
-      });
+    try {
+      final profile = await DatabaseHelper.instance.getUserProfile();
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

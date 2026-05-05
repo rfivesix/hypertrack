@@ -82,22 +82,27 @@ class _SleepWeekOverviewPageState extends State<SleepWeekOverviewPage> {
 
   Future<void> _loadWeek() async {
     setState(() => _isLoading = true);
-    final weekStart = _anchorDay.subtract(
-      Duration(days: _anchorDay.weekday - DateTime.monday),
-    );
-    final analyses = await _repository.getAnalysesInRange(
-      fromInclusive: weekStart,
-      toInclusive: weekStart.add(const Duration(days: 6)),
-    );
-    final aggregation = const SleepPeriodAggregationEngine().aggregateWeek(
-      weekStart: weekStart,
-      analyses: analyses,
-    );
-    if (!mounted) return;
-    setState(() {
-      _aggregation = aggregation;
-      _isLoading = false;
-    });
+    try {
+      final weekStart = _anchorDay.subtract(
+        Duration(days: _anchorDay.weekday - DateTime.monday),
+      );
+      final analyses = await _repository.getAnalysesInRange(
+        fromInclusive: weekStart,
+        toInclusive: weekStart.add(const Duration(days: 6)),
+      );
+      final aggregation = const SleepPeriodAggregationEngine().aggregateWeek(
+        weekStart: weekStart,
+        analyses: analyses,
+      );
+      if (!mounted) return;
+      setState(() {
+        _aggregation = aggregation;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _onScopeChanged(SleepPeriodScope scope) async {

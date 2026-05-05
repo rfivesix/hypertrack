@@ -73,27 +73,32 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
 
   Future<void> _loadScopeData() async {
     setState(() => _isLoading = true);
-    final anchor = _anchorDate;
-    final targetStepsFuture = widget.targetStepsLoader?.call() ??
-        DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
-    final providerNameFuture =
-        widget.stepsProviderNameLoader?.call() ?? _loadProviderName();
-    switch (_scope) {
-      case StepsScope.day:
-        _dayData = await _repository.getDayAggregation(anchor);
-        break;
-      case StepsScope.week:
-        _weekData = await _repository.getWeekAggregation(anchor);
-        break;
-      case StepsScope.month:
-        _monthData = await _repository.getMonthAggregation(anchor);
-        break;
+    try {
+      final anchor = _anchorDate;
+      final targetStepsFuture = widget.targetStepsLoader?.call() ??
+          DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
+      final providerNameFuture =
+          widget.stepsProviderNameLoader?.call() ?? _loadProviderName();
+      switch (_scope) {
+        case StepsScope.day:
+          _dayData = await _repository.getDayAggregation(anchor);
+          break;
+        case StepsScope.week:
+          _weekData = await _repository.getWeekAggregation(anchor);
+          break;
+        case StepsScope.month:
+          _monthData = await _repository.getMonthAggregation(anchor);
+          break;
+      }
+      _lastUpdatedAtUtc = await _repository.getLastUpdatedAt();
+      _targetSteps = await targetStepsFuture;
+      _stepsProviderName = await providerNameFuture;
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
     }
-    _lastUpdatedAtUtc = await _repository.getLastUpdatedAt();
-    _targetSteps = await targetStepsFuture;
-    _stepsProviderName = await providerNameFuture;
-    if (!mounted) return;
-    setState(() => _isLoading = false);
   }
 
   Future<String> _loadProviderName() async {

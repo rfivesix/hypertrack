@@ -79,21 +79,26 @@ class _SleepMonthOverviewPageState extends State<SleepMonthOverviewPage> {
 
   Future<void> _loadMonth() async {
     setState(() => _isLoading = true);
-    final monthStart = DateTime(_anchorDay.year, _anchorDay.month, 1);
-    final monthEnd = DateTime(_anchorDay.year, _anchorDay.month + 1, 0);
-    final analyses = await _repository.getAnalysesInRange(
-      fromInclusive: monthStart,
-      toInclusive: monthEnd,
-    );
-    final aggregation = const SleepPeriodAggregationEngine().aggregateMonth(
-      monthStart: monthStart,
-      analyses: analyses,
-    );
-    if (!mounted) return;
-    setState(() {
-      _aggregation = aggregation;
-      _isLoading = false;
-    });
+    try {
+      final monthStart = DateTime(_anchorDay.year, _anchorDay.month, 1);
+      final monthEnd = DateTime(_anchorDay.year, _anchorDay.month + 1, 0);
+      final analyses = await _repository.getAnalysesInRange(
+        fromInclusive: monthStart,
+        toInclusive: monthEnd,
+      );
+      final aggregation = const SleepPeriodAggregationEngine().aggregateMonth(
+        monthStart: monthStart,
+        analyses: analyses,
+      );
+      if (!mounted) return;
+      setState(() {
+        _aggregation = aggregation;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _onScopeChanged(SleepPeriodScope scope) async {
