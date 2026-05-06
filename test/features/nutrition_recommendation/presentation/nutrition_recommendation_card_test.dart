@@ -75,13 +75,29 @@ void main() {
     final l10n = AppLocalizations.of(context)!;
 
     expect(find.text('2500 kcal'), findsOneWidget);
+    expect(
+      find.text(l10n.adaptiveRecommendationMaintenanceLabel),
+      findsOneWidget,
+    );
+    expect(
+      find.text(l10n.adaptiveRecommendationMacroTargetsLabel),
+      findsOneWidget,
+    );
     expect(find.text(l10n.adaptiveRecommendationApplyAction), findsOneWidget);
     expect(
       find.text(l10n.adaptiveRecommendationRecalculateNowAction),
       findsOneWidget,
     );
 
+    await tester.ensureVisible(
+      find.text(l10n.adaptiveRecommendationApplyAction),
+    );
+    await tester.pump();
     await tester.tap(find.text(l10n.adaptiveRecommendationApplyAction));
+    await tester.ensureVisible(
+      find.text(l10n.adaptiveRecommendationRecalculateNowAction),
+    );
+    await tester.pump();
     await tester
         .tap(find.text(l10n.adaptiveRecommendationRecalculateNowAction));
     await tester.pump();

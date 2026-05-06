@@ -1734,7 +1734,20 @@
       "value": { "type": "String" }
     }
   }
+  ,"adaptiveRecommendationNextDueShort": "Nächste {value}"
+  ,"@adaptiveRecommendationNextDueShort": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
   ,"adaptiveRecommendationDueNowLine": "Diese Woche ist eine neue adaptive Empfehlung fällig."
+  ,"adaptiveRecommendationDueNowShort": "Diese Woche fällig"
+  ,"adaptiveRecommendationMaintenanceLabel": "Erhaltungsschätzung"
+  ,"adaptiveRecommendationMaintenanceSourceLabel": "Profil-Prior + aktuelle Logs"
+  ,"adaptiveRecommendationMaintenanceUnit": "kcal/Tag"
+  ,"adaptiveRecommendationMacroTargetsLabel": "Empfohlene Ziele"
+  ,"adaptiveRecommendationTargetCaloriesLabel": "Ziel-kcal"
+  ,"adaptiveRecommendationDataQualityLabel": "Datenqualität"
   ,"adaptiveRecommendationRecalculateNowAction": "Jetzt neu berechnen"
   ,"adaptiveRecommendationRecalculating": "Wird neu berechnet..."
   ,"adaptiveRecommendationApplying": "Wird angewendet..."

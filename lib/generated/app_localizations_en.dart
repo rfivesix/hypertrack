@@ -4044,8 +4044,35 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String adaptiveRecommendationNextDueShort(String value) {
+    return 'Next $value';
+  }
+
+  @override
   String get adaptiveRecommendationDueNowLine =>
       'A new adaptive recommendation is due this week.';
+
+  @override
+  String get adaptiveRecommendationDueNowShort => 'Due this week';
+
+  @override
+  String get adaptiveRecommendationMaintenanceLabel => 'Estimated maintenance';
+
+  @override
+  String get adaptiveRecommendationMaintenanceSourceLabel =>
+      'Profile prior + recent logs';
+
+  @override
+  String get adaptiveRecommendationMaintenanceUnit => 'kcal/day';
+
+  @override
+  String get adaptiveRecommendationMacroTargetsLabel => 'Recommended targets';
+
+  @override
+  String get adaptiveRecommendationTargetCaloriesLabel => 'Target kcal';
+
+  @override
+  String get adaptiveRecommendationDataQualityLabel => 'Data quality';
 
   @override
   String get adaptiveRecommendationRecalculateNowAction => 'Recalculate now';
