@@ -4077,8 +4077,35 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String adaptiveRecommendationNextDueShort(String value) {
+    return 'Nächste $value';
+  }
+
+  @override
   String get adaptiveRecommendationDueNowLine =>
       'Diese Woche ist eine neue adaptive Empfehlung fällig.';
+
+  @override
+  String get adaptiveRecommendationDueNowShort => 'Diese Woche fällig';
+
+  @override
+  String get adaptiveRecommendationMaintenanceLabel => 'Erhaltungsschätzung';
+
+  @override
+  String get adaptiveRecommendationMaintenanceSourceLabel =>
+      'Profil-Prior + aktuelle Logs';
+
+  @override
+  String get adaptiveRecommendationMaintenanceUnit => 'kcal/Tag';
+
+  @override
+  String get adaptiveRecommendationMacroTargetsLabel => 'Empfohlene Ziele';
+
+  @override
+  String get adaptiveRecommendationTargetCaloriesLabel => 'Ziel-kcal';
+
+  @override
+  String get adaptiveRecommendationDataQualityLabel => 'Datenqualität';
 
   @override
   String get adaptiveRecommendationRecalculateNowAction =>

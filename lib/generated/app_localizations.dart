@@ -7110,11 +7110,59 @@ abstract class AppLocalizations {
   /// **'Next adaptive recommendation due: {value}'**
   String adaptiveRecommendationNextDueLine(String value);
 
+  /// No description provided for @adaptiveRecommendationNextDueShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Next {value}'**
+  String adaptiveRecommendationNextDueShort(String value);
+
   /// No description provided for @adaptiveRecommendationDueNowLine.
   ///
   /// In en, this message translates to:
   /// **'A new adaptive recommendation is due this week.'**
   String get adaptiveRecommendationDueNowLine;
+
+  /// No description provided for @adaptiveRecommendationDueNowShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Due this week'**
+  String get adaptiveRecommendationDueNowShort;
+
+  /// No description provided for @adaptiveRecommendationMaintenanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated maintenance'**
+  String get adaptiveRecommendationMaintenanceLabel;
+
+  /// No description provided for @adaptiveRecommendationMaintenanceSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile prior + recent logs'**
+  String get adaptiveRecommendationMaintenanceSourceLabel;
+
+  /// No description provided for @adaptiveRecommendationMaintenanceUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal/day'**
+  String get adaptiveRecommendationMaintenanceUnit;
+
+  /// No description provided for @adaptiveRecommendationMacroTargetsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended targets'**
+  String get adaptiveRecommendationMacroTargetsLabel;
+
+  /// No description provided for @adaptiveRecommendationTargetCaloriesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target kcal'**
+  String get adaptiveRecommendationTargetCaloriesLabel;
+
+  /// No description provided for @adaptiveRecommendationDataQualityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Data quality'**
+  String get adaptiveRecommendationDataQualityLabel;
 
   /// No description provided for @adaptiveRecommendationRecalculateNowAction.
   ///

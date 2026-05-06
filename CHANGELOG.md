@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.1] - 2026-05-06
+### Changed
+- Redesigned the Nutrition Recommendation UI: improved layout, clearer action affordances, and more consistent responsive behavior across device sizes.
+- Fixed visual overflow and alignment issues on small screens.
+- Improved accessibility and localization support for the nutrition recommendation controls.
+
+### Fixed
+- Minor bug fixes and performance improvements in the nutrition recommendation flow.
+
 ## [0.9.0] - 2026-05-05
 ### Added
 - Initial Train Libre release with offline-first workout logging, reusable routines, nutrition tracking, hydration, supplements, body measurements, statistics, and local backups.

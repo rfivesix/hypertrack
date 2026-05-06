@@ -1729,7 +1729,20 @@
       "value": { "type": "String" }
     }
   }
+  ,"adaptiveRecommendationNextDueShort": "Next {value}"
+  ,"@adaptiveRecommendationNextDueShort": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  }
   ,"adaptiveRecommendationDueNowLine": "A new adaptive recommendation is due this week."
+  ,"adaptiveRecommendationDueNowShort": "Due this week"
+  ,"adaptiveRecommendationMaintenanceLabel": "Estimated maintenance"
+  ,"adaptiveRecommendationMaintenanceSourceLabel": "Profile prior + recent logs"
+  ,"adaptiveRecommendationMaintenanceUnit": "kcal/day"
+  ,"adaptiveRecommendationMacroTargetsLabel": "Recommended targets"
+  ,"adaptiveRecommendationTargetCaloriesLabel": "Target kcal"
+  ,"adaptiveRecommendationDataQualityLabel": "Data quality"
   ,"adaptiveRecommendationRecalculateNowAction": "Recalculate now"
   ,"adaptiveRecommendationRecalculating": "Recalculating..."
   ,"adaptiveRecommendationApplying": "Applying..."

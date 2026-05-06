@@ -1,0 +1,8 @@
+
+Verbesserte UI für Ernährungsempfehlungen
+
+- Aktualisiertes Layout und Interaktionsverhalten für die Ernährungsempfehlungs-Karte.
+- Fehler bei Überlauf und Ausrichtung auf kleinen Bildschirmen behoben.
+- Kleinere Bugfixes und Verbesserungen der Barrierefreiheit.
+
+
