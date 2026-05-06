@@ -1,15 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- KORREKTUR: DIESE BEIDEN ZEILEN MÜSSEN HIER STEHEN, ALS DIREKTE KINDER VON <manifest> -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <!-- (Optional, aber empfohlen für neuere Android-Versionen für Bildzugriff) -->
+    <!-- FIX: These two lines must be direct children of <manifest>. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
+    <!-- Optional, but recommended for image access on newer Android versions. -->
     <!-- <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/> -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <!-- BENÖTIGT FÜR HEALTH CONNECT -->
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false"/>
+
+    <!-- Required for Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>
     <uses-permission android:name="android.permission.health.READ_SLEEP"/>
     <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
@@ -20,14 +28,14 @@
     <uses-permission android:name="android.permission.health.WRITE_EXERCISE"/>
     <uses-permission android:name="android.permission.health.WRITE_DISTANCE"/>
 
-    <!-- HIER DIE ÄNDERUNG: android:enableOnBackInvokedCallback="true" hinzugefügt -->
+    <!-- Change here: added android:enableOnBackInvokedCallback="true". -->
     <application
         android:label="Train Libre"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
         
-        <!-- HIER DÜRFEN KEINE <uses-permission> TAGS MEHR SEIN -->
+        <!-- No <uses-permission> tags may appear here anymore. -->
         
         <activity
             android:name=".MainActivity"
@@ -46,20 +54,20 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- BENÖTIGT FÜR HEALTH CONNECT PERMISSIONS RATIONALE -->
+            <!-- Required for the Health Connect permissions rationale. -->
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
             
-            <!-- BENÖTIGT FÜR ANDROID 14+ HEALTH CONNECT: Vorab-Deklaration der genutzten Berechtigungen -->
+            <!-- Required for Android 14+ Health Connect: predeclare the permissions in use. -->
             <meta-data
                 android:name="health_permissions"
                 android:resource="@array/health_permissions" />
         </activity>
 
-        <!-- KRITISCH FÜR ANDROID 14+ (API 34+): activity-alias für VIEW_PERMISSION_USAGE -->
-        <!-- Ohne diesen Alias zeigt Health Connect "App-Update erforderlich" an -->
+        <!-- Critical for Android 14+ (API 34+): activity-alias for VIEW_PERMISSION_USAGE. -->
+        <!-- Without this alias, Health Connect shows "App update required". -->
         <activity-alias
             android:name="ViewPermissionUsageActivity"
             android:exported="true"

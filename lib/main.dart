@@ -94,13 +94,13 @@ class _MyAppState extends State<MyApp> {
             ? (darkDynamic?.primary ?? lightSeed)
             : brandAccentColor;
 
-        // --- Light Scheme aus Seed, aber ohne Material You UI ---
+        // --- Light scheme from seed, but without Material You UI ---
         final lightScheme = ColorScheme.fromSeed(
           seedColor: lightSeed,
           brightness: Brightness.light,
         ).copyWith(surface: Colors.white);
 
-        // --- Dark Scheme aus Seed + OLED-Schwarz ---
+        // --- Dark scheme from seed + OLED black ---
         final seededDark = ColorScheme.fromSeed(
           seedColor: darkSeed,
           brightness: Brightness.dark,
@@ -116,11 +116,11 @@ class _MyAppState extends State<MyApp> {
           surfaceContainerHighest: Colors.black,
         );
 
-        // --- Light Theme (Material2, aber mit ColorScheme aus Seed) ---
+        // --- Light theme (Material 2, but with ColorScheme from seed) ---
         final baseLightTheme = ThemeData(
-          useMaterial3: false, // KEIN Material You
+          useMaterial3: false, // No Material You
           colorScheme: lightScheme,
-          primaryColor: lightScheme.primary, // Akzent in M2-Welten
+          primaryColor: lightScheme.primary, // Accent in Material 2 contexts
           scaffoldBackgroundColor: Colors.white,
           canvasColor: Colors.white,
           cardColor: cardLight,
@@ -232,11 +232,11 @@ class _MyAppState extends State<MyApp> {
           ),
         );
 
-        // --- Dark Theme (Material2, OLED, Akzent aus Seed) ---
+        // --- Dark theme (Material 2, OLED, accent from seed) ---
         final baseDarkTheme = ThemeData(
-          useMaterial3: false, // KEIN Material You
+          useMaterial3: false, // No Material You
           colorScheme: darkScheme,
-          primaryColor: darkScheme.primary, // Akzent in M2-Welten
+          primaryColor: darkScheme.primary, // Accent in Material 2 contexts
           scaffoldBackgroundColor: Colors.black,
           canvasColor: Colors.black,
           cardColor: cardDark,
@@ -360,7 +360,7 @@ class _MyAppState extends State<MyApp> {
           darkTheme: baseDarkTheme,
           themeMode: themeService.themeMode,
           onGenerateRoute: SleepNavigation.onGenerateRoute,
-          // FIX: Hier wird nun der ausgelagerte Screen verwendet
+          // FIX: The extracted screen is now used here.
           home: const AppInitializerScreen(),
         );
       },
@@ -375,7 +375,7 @@ class NoGlowScrollBehavior extends ScrollBehavior {
     Widget child,
     ScrollableDetails details,
   ) {
-    // Keine Glow-Effekte
+    // No glow effects
     return child;
   }
 

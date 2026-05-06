@@ -32,12 +32,12 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Lade die Daten nur beim ersten Mal.
+    // Load data only the first time.
     _hubDataFuture ??= _loadHubData();
   }
 
   Future<void> _refreshData() async {
-    // Wird vom RefreshIndicator aufgerufen, um die Daten neu zu laden.
+    // Called by RefreshIndicator to reload data.
     setState(() {
       _hubDataFuture = _loadHubData();
     });

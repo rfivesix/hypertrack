@@ -34,7 +34,7 @@ class SupplementTrackScreen extends StatefulWidget {
 
 class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   bool _isLoading = true;
-  late DateTime _selectedDate; // Spät initialisiert
+  late DateTime _selectedDate; // Initialized late
 
   final Map<int, Supplement> _supplementsById = {};
   List<TrackedSupplement> _tracked = const [];
@@ -43,7 +43,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
   @override
   void initState() {
     super.initState();
-    // Fix #65: Starte mit dem übergebenen Datum oder Heute
+    // Fix #65: Start with the passed date or today.
     _selectedDate = (widget.initialDate ?? DateTime.now()).dateOnly;
     _loadData(_selectedDate);
   }
@@ -142,7 +142,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
         return LogSupplementDoseBody(
           supplement: supplement,
           primaryLabel: l10n.add_button,
-          initialTimestamp: _selectedDate, // Fix #66: Datum übergeben
+          initialTimestamp: _selectedDate, // Fix #66: Pass the date.
           onCancel: close,
           onSubmit: (dose, ts) {
             close();
@@ -170,8 +170,8 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
     final l10n = AppLocalizations.of(context)!;
     final supplement = _supplementsById[log.supplementId]!;
 
-    // KORREKTUR: showGlassBottomMenu statt showDialog
-    // Wir nutzen den wiederverwendbaren LogSupplementDoseBody
+    // FIX: showGlassBottomMenu instead of showDialog.
+    // Use the reusable LogSupplementDoseBody.
     final result = await showGlassBottomMenu<(double, DateTime)?>(
       context: context,
       title: localizeSupplementName(supplement, l10n),
@@ -349,7 +349,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
           _editLogEntry(log);
           return false;
         }
-        // KORREKTUR: Neuer Glas-Dialog statt AlertDialog
+        // FIX: New glass dialog instead of AlertDialog.
         return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {

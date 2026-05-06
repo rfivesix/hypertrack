@@ -111,7 +111,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Bild / GIF
+            // Image / GIF
             if ((widget.exercise.imagePath ?? '').isNotEmpty)
               Container(
                 clipBehavior: Clip.antiAlias,
@@ -532,7 +532,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   }
 
   // -----------------------------
-  // Überschriften-Stil
+  // Heading style
   // -----------------------------
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
@@ -549,7 +549,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 }
 
 // -----------------------------
-// Kategorie-Pill oben rechts
+// Category pill at top right
 // -----------------------------
 class _CategoryBadge extends StatelessWidget {
   final String text;
@@ -580,7 +580,7 @@ class _CategoryBadge extends StatelessWidget {
 }
 
 // -----------------------------
-// Einzel-Kachel für Primär / Sekundär
+// Single tile for primary / secondary
 // -----------------------------
 class _MuscleGroupCard extends StatelessWidget {
   final String title;

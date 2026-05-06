@@ -32,7 +32,7 @@ class DbService {
       legacyFileName: AppDataSources.legacyTrainingDbFileName,
     );
 
-    // Falls Datei noch nicht existiert: aus Assets kopieren
+    // If file does not exist yet: copy it from assets.
     if (!await File(dbPath).exists()) {
       final bytes = await _loadTrainingAsset();
       await File(dbPath).writeAsBytes(
@@ -41,7 +41,7 @@ class DbService {
       );
     }
 
-    // readOnly ist optional – wenn du später migrieren willst, weglassen.
+    // readOnly is optional; omit it if migration is needed later.
     return openDatabase(dbPath, readOnly: true);
   }
 

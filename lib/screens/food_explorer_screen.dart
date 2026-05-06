@@ -9,7 +9,7 @@ import 'food_detail_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_fab.dart';
 import '../widgets/off_attribution_widget.dart';
-import '../widgets/summary_card.dart'; // HINZUGEFÜGT
+import '../widgets/summary_card.dart'; // Added
 
 /// A screen for exploring and managing the food database independently of tracking.
 ///
@@ -104,7 +104,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    // KORREKTUR: Direkte Abfrage des Theme-Modus
+    // FIX: Query theme mode directly.
     final isLightMode = Theme.of(context).brightness == Brightness.light;
 
     return Scaffold(
@@ -134,7 +134,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
                   splashFactory: NoSplash.splashFactory,
                   overlayColor: WidgetStateProperty.all(Colors.transparent),
                   dividerColor: Colors.transparent,
-                  // KORREKTUR: Dynamische Farbe basierend auf dem Theme-Modus
+                  // FIX: Dynamic color based on theme mode.
                   labelColor: isLightMode ? Colors.black : Colors.white,
                   unselectedLabelColor: Colors.grey.shade600,
                   labelStyle: const TextStyle(
@@ -183,7 +183,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
       padding: DesignConstants.cardPadding,
       child: Column(
         children: [
-          // KORREKTUR 4: TextField nutzt globale InputDecorationTheme
+          // FIX 4: TextField uses global InputDecorationTheme.
           TextField(
             controller: _searchController,
             onChanged: (value) => _runFilter(value),
@@ -266,7 +266,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     );
   }
 
-  // KORREKTUR 5: _buildFoodListItem verwendet jetzt SummaryCard
+  // FIX 5: _buildFoodListItem now uses SummaryCard.
   Widget _buildFoodListItem(FoodItem item) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
@@ -283,7 +283,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     }
 
     return SummaryCard(
-      // KORREKTUR: Jetzt mit SummaryCard
+      // FIX: Now uses SummaryCard.
       child: ListTile(
         leading: Icon(sourceIcon, color: colorScheme.primary),
         title: Text(

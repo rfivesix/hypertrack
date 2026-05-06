@@ -56,7 +56,7 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- NEUE METHODE ---
+  // --- New method ---
   Future<void> _loadVisualStyle() async {
     final prefs = await SharedPreferences.getInstance();
     _visualStyle = prefs.getInt(_styleKey) ?? 0;

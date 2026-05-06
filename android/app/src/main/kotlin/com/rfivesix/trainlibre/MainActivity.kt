@@ -839,6 +839,9 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun logExportDebug(message: String) {
+        val isDebuggable =
+            (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (!isDebuggable) return
         Log.d(exportDebugTag, message)
     }
 

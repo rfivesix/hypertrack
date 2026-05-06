@@ -9,7 +9,7 @@ class Exercise {
   /// Unique identifier for the exercise.
   ///
   /// Can be null if the exercise is newly created and not yet saved to the database.
-  final int? id; // optional für neu angelegte Datensätze
+  final int? id; // Optional for newly created records
 
   /// The name of the exercise in German.
   final String nameDe;
@@ -54,7 +54,7 @@ class Exercise {
     final s = raw.toString().trim();
     if (s.isEmpty) return const [];
 
-    // JSON-Array?
+    // JSON array?
     if (s.startsWith('[')) {
       try {
         final data = jsonDecode(s);
@@ -66,7 +66,7 @@ class Exercise {
               .toList(growable: false);
         }
       } catch (_) {
-        // fällt auf CSV zurück
+        // Falls back to CSV
       }
     }
 
@@ -102,10 +102,10 @@ class Exercise {
     );
   }
 
-  // ---------- Model -> DB (für Inserts/Updates) ----------
+  // ---------- Model -> DB (for inserts/updates) ----------
   //
-  // Achtung: Wir serialisieren Muskulatur als CSV, weil dein Insert
-  // in workout_database_helper aktuell CSV erwartet.
+  // Note: We serialize muscles as CSV because the insert path
+  // in workout_database_helper currently expects CSV.
   /// Converts the [Exercise] instance to a Map for database storage.
   Map<String, Object?> toMap() {
     return <String, Object?>{

@@ -1,4 +1,4 @@
-// lib/screens/workout_hub_screen.dart (Final, mit einheitlichem Design)
+// lib/screens/workout_hub_screen.dart (final, with unified design)
 
 import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
@@ -64,7 +64,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
   }
 
   void _startRoutine(Routine routine) async {
-    // Wir brauchen die vollen Details der Routine zum Starten
+    // Need the full routine details to start.
     final detailedRoutine = await WorkoutDatabaseHelper.instance.getRoutineById(
       routine.id!,
     );
@@ -89,7 +89,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
   }
 
   Future<void> _createNewRoutine() async {
-    // Navigiert zum Editor für eine neue Routine und lädt danach die Daten neu.
+    // Navigates to the editor for a new routine and reloads the data afterward.
     final created = await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => const EditRoutineScreen()));
@@ -256,7 +256,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
     return SizedBox(
       width: cardWidth,
-      // KORREKTUR: Wir fügen den Abstand hier als Padding hinzu, nicht als Margin.
+      // FIX: Add spacing here as padding, not as margin.
       child: Padding(
         padding: const EdgeInsets.only(right: 12.0),
         child: SummaryCard(

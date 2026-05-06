@@ -84,7 +84,7 @@ class TrainLibreBackup {
     required this.measurementSessions,
     required this.routines,
     required this.workoutLogs,
-    required this.userPreferences, // HINZUGEFÜGT
+    required this.userPreferences, // Added
     required this.supplements,
     required this.supplementLogs,
     required this.customExercises,
@@ -146,7 +146,7 @@ class TrainLibreBackup {
           }).toList() ??
           [],
 
-      // KORRIGIERT: Detaillierte Deserialisierung für Routinen
+      // FIXED: Detailed deserialization for routines
       routines: (json['routines'] as List<dynamic>?)?.map((r) {
             final routineMap = r as Map<String, dynamic>;
             return Routine(
@@ -156,7 +156,7 @@ class TrainLibreBackup {
                     final reMap = re as Map<String, dynamic>;
                     return RoutineExercise(
                       id: reMap['id'],
-                      // Rekursiver Aufruf der .fromMap Konstruktoren
+                      // Recursive call to the .fromMap constructors
                       exercise: Exercise.fromMap(
                         reMap['exercise'] as Map<String, dynamic>,
                       ),
@@ -238,14 +238,14 @@ class TrainLibreBackup {
             },
           )
           .toList(),
-      // Platzhalter für die komplexe Serialisierung von Routinen
+      // Placeholder for complex routine serialization
       'routines': routines.map((r) => r.toMap()).toList(),
       'workoutLogs': workoutLogs
           .map(
             (log) => {
-              ...log.toMap(), // Nutzt die existierende toMap-Methode
+              ...log.toMap(), // Uses the existing toMap method
               'sets':
-                  log.sets.map((s) => s.toMap()).toList(), // Hängt die Sets an
+                  log.sets.map((s) => s.toMap()).toList(), // Appends the sets
             },
           )
           .toList(),

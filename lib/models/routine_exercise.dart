@@ -17,21 +17,21 @@ class RoutineExercise {
   List<SetTemplate> setTemplates;
 
   /// The recommended pause duration between sets in seconds.
-  final int? pauseSeconds; // NEUES FELD
+  final int? pauseSeconds; // New field
 
   /// Creates a new [RoutineExercise] instance.
   RoutineExercise({
     this.id,
     required this.exercise,
     this.setTemplates = const [],
-    this.pauseSeconds, // NEUES FELD
+    this.pauseSeconds, // New field
   });
 
   /// Converts the [RoutineExercise] instance to a Map for database storage.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'exercise': exercise.toMap(), // Annahme: Exercise hat eine toMap-Methode
+      'exercise': exercise.toMap(), // Assumption: Exercise has a toMap method
       'setTemplates': setTemplates.map((st) => st.toMap()).toList(),
       'pause_seconds': pauseSeconds,
     };

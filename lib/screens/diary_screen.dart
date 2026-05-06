@@ -390,7 +390,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       Map<String, dynamic>? workoutSummary;
 
       if (completedLogs.isNotEmpty) {
-        // --- KORREKTUR START ---
+        // --- Fix starts ---
         Duration totalDuration = Duration.zero;
         double totalVolume = 0.0;
         int totalSets = 0;
@@ -398,7 +398,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         for (final log in completedLogs) {
           totalDuration += log.endTime!.difference(
             log.startTime,
-          ); // Addiert die volle Dauer
+          ); // Adds the full duration
           totalSets += log.sets.length;
           for (final set in log.sets) {
             totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
@@ -406,12 +406,12 @@ class DiaryScreenState extends State<DiaryScreen> {
         }
 
         workoutSummary = {
-          'duration': totalDuration, // Verwendet die korrekte Summe
+          'duration': totalDuration, // Uses the correct sum
           'volume': totalVolume,
           'sets': totalSets,
           'count': completedLogs.length,
         };
-        // --- KORREKTUR ENDE ---
+        // --- Fix ends ---
       }
 
       if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
@@ -556,7 +556,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     loadDataForDate(_selectedDate);
   }
 
-  // lib/screens/diary_screen.dart - ERSETZE DIE GESAMTE METHODE
+  // lib/screens/diary_screen.dart - replace the entire method
   Future<void> _editFoodEntry(TrackedFoodItem trackedItem) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
@@ -576,16 +576,16 @@ class DiaryScreenState extends State<DiaryScreen> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Der Inhalt des Dialogs (jetzt als Bottom-Sheet-Inhalt)
+            // Dialog content, now used as bottom-sheet content
             QuantityDialogContent(
               key: dialogStateKey,
               item: trackedItem.item,
               initialQuantity: trackedItem.entry.quantityInGrams,
               initialTimestamp: trackedItem.entry.timestamp,
               initialMealType: trackedItem.entry.mealType,
-              // Die aktuellen Nährwerte des Eintrags als Initial-Werte
-              // Annahme: Wenn der Eintrag existiert, sind die Nährwerte fix.
-              // Wir setzen nur die Liquid-Status, falls nötig.
+              // Current nutrients of the entry as initial values
+              // Assumption: if the entry exists, the nutrients are fixed.
+              // Set only the liquid status when needed.
             ),
             const SizedBox(height: 12),
             Row(
@@ -612,7 +612,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
                         if (quantity != null && quantity > 0) {
                           close();
-                          // Hier geben wir das korrekte, anonyme Tupel zurück
+                          // Return the correct anonymous tuple here.
                           Navigator.of(ctx).pop((
                             quantity: quantity,
                             timestamp: state.selectedDateTime,
@@ -634,7 +634,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       },
     );
 
-    // Weiterhin die Daten aus dem Ergebnis verarbeiten
+    // Continue processing the result data.
     if (result != null) {
       final updatedEntry = FoodEntry(
         id: trackedItem.entry.id,
@@ -645,13 +645,13 @@ class DiaryScreenState extends State<DiaryScreen> {
       );
       await DatabaseHelper.instance.updateFoodEntry(updatedEntry);
 
-      // 1. FluidEntry löschen (falls verknüpft)
+      // 1. Delete FluidEntry if linked.
       if (trackedItem.entry.id != null) {
         await DatabaseHelper.instance.deleteFluidEntryByLinkedFoodId(
           trackedItem.entry.id!,
         );
       }
-      // 2. FluidEntry neu erstellen (falls jetzt flüssig)
+      // 2. Recreate FluidEntry if it is now liquid.
       if (result.isLiquid) {
         final newFluidEntry = FluidEntry(
           timestamp: result.timestamp,
@@ -661,12 +661,12 @@ class DiaryScreenState extends State<DiaryScreen> {
           sugarPer100ml: result.sugarPer100ml,
           carbsPer100ml: result.sugarPer100ml, // Spiegeln
           caffeinePer100ml: result.caffeinePer100ml,
-          linkedFoodEntryId: trackedItem.entry.id, // Verknüpfung beibehalten
+          linkedFoodEntryId: trackedItem.entry.id, // Preserve the link
         );
         await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
       }
 
-      // 3. Koffein-Log aktualisieren/löschen (in jedem Fall)
+      // 3. Update/delete caffeine log in every case.
       await _logCaffeineDose(
         (result.caffeinePer100ml ?? 0) * (result.quantity / 100.0),
         result.timestamp,
@@ -681,8 +681,8 @@ class DiaryScreenState extends State<DiaryScreen> {
     final routeResult = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder: (context) => AddFoodScreen(
-          initialDate: _selectedDate, // <--- ÜBERGABE
-          initialMealType: mealType, // <--- ÜBERGABE
+          initialDate: _selectedDate, // <--- Pass-through
+          initialMealType: mealType, // <--- Pass-through
         ),
       ),
     );
@@ -698,16 +698,16 @@ class DiaryScreenState extends State<DiaryScreen> {
     final selectedFoodItem = addFoodResult.selectedFoodItem;
     if (selectedFoodItem == null) return;
 
-    // FIX: Datum an das Hilfs-Menü übergeben
+    // FIX: Pass the date to the helper menu.
     final result = await _showQuantityMenu(
       selectedFoodItem,
       mealType,
-      initialDate: _selectedDate, // <--- Parameter hinzufügen (siehe Punkt C)
+      initialDate: _selectedDate, // <--- Add parameter (see point C)
     );
 
     if (result == null || !mounted) return;
 
-    // ... (Rest der Logik bleibt gleich, nutzt result.timestamp) ...
+    // ... (rest of the logic stays the same, uses result.timestamp) ...
     final int quantity = result.quantity;
     final DateTime timestamp = result.timestamp;
     final String resultMealType = result.mealType;
@@ -750,7 +750,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     loadDataForDate(_selectedDate);
   }
 
-  // FÜGEN SIE DIESE ZWEI NEUEN METHODEN ZUR KLASSE HINZU
+  // Add these two new methods to the class.
   // In lib/screens/diary_screen.dart
 
   Future<
@@ -764,7 +764,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       })?> _showQuantityMenu(
     FoodItem item,
     String mealType, {
-    DateTime? initialDate, // <--- NEUER PARAMETER
+    DateTime? initialDate, // <--- New parameter
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
@@ -781,9 +781,9 @@ class DiaryScreenState extends State<DiaryScreen> {
               item: item,
               initialMealType: mealType,
               initialTimestamp: initialDate ??
-                  _selectedDate, // <--- FIX: Nutze Parameter oder Fallback
+                  _selectedDate, // <--- FIX: Use parameter or fallback
             ),
-            // ... (Rest der Methode: Buttons etc. bleibt gleich) ...
+            // ... (rest of the method: buttons, etc. stays the same) ...
             const SizedBox(height: 12),
             Row(
               children: [
@@ -870,7 +870,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
-      // Erlaube Auswahl in der Zukunft, z.B. für Vorausplanung
+      // Allow future selections, for example for planning ahead.
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null && !picked.isSameDate(_selectedDate)) {
@@ -880,7 +880,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   void navigateDay(bool forward) {
     final newDay = _selectedDate.dateOnly.add(Duration(days: forward ? 1 : -1));
-    // Im Gegensatz zum NutritionScreen erlauben wir hier die Navigation in die Zukunft
+    // Unlike NutritionScreen, allow navigation into the future here.
     // if (forward && newDay.isAfter(DateTime.now())) return;
 
     loadDataForDate(newDay);
@@ -941,7 +941,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         setState(() {
           _selectedChartRangeKey = key;
         });
-        // Chart wird durch setState im MeasurementChartWidget neu geladen
+        // Chart is reloaded through setState in MeasurementChartWidget.
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
@@ -979,8 +979,8 @@ class DiaryScreenState extends State<DiaryScreen> {
         ).subtract(const Duration(days: 89));
         break;
       case 'All':
-        // Für "Alle" setzen wir ein sehr frühes Datum,
-        // der Chart wird die Daten entsprechend laden
+        // For "All", set a very early date
+        // so the chart loads the data accordingly.
         start = DateTime(2020);
         break;
       case '30D':
@@ -1035,7 +1035,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                   onTap: () => Navigator.of(context)
                       .push(
                         MaterialPageRoute(
-                          // FIX #65: Datum weiterreichen
+                          // FIX #65: Pass date along
                           builder: (context) =>
                               SupplementTrackScreen(initialDate: _selectedDate),
                         ),
@@ -1044,7 +1044,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                 ),
                 if (_stepsTrackingEnabled) ...[_buildStepsSummaryCard()],
                 if (_sleepTrackingEnabled) ...[_buildSleepSummaryCard()],
-                // NEUER TEIL: Workout-Zusammenfassung hier einfügen
+                // New section: insert workout summary here.
                 if (_workoutSummary != null) ...[
                   //const SizedBox(height: DesignConstants.spacingXS),
                   TodaysWorkoutSummaryCard(
@@ -1248,7 +1248,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header (Tippen toggelt)
+          // Header (tap toggles)
           InkWell(
             onTap: () => setState(() {
               _mealExpanded[mealKey] = !isOpen;
@@ -1286,7 +1286,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             ),
           ),
 
-          // <<< NEU: Makro-Zeile unter dem Titel (eigene Zeile, linksbündig)
+          // <<< New: macro row below the title (own line, left aligned)
           if (items.isNotEmpty) ...[
             const SizedBox(height: 4),
             Align(
@@ -1304,7 +1304,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             ),
           ],
 
-          // Inhalt (animiert ein-/ausklappen)
+          // Content (animated expand/collapse)
           AnimatedCrossFade(
             crossFadeState:
                 isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
@@ -1337,10 +1337,10 @@ class DiaryScreenState extends State<DiaryScreen> {
           children: [
             FluidDialogContent(
               key: key,
-              initialTimestamp: _selectedDate, // <--- FIX: Datum übergeben
+              initialTimestamp: _selectedDate, // <--- FIX: Pass date
             ),
             const SizedBox(height: 12),
-            // ... (Rest der Methode bleibt gleich: Buttons Row etc.)
+            // ... (rest of the method stays the same: buttons row, etc.)
             Row(
               children: [
                 Expanded(
@@ -1372,7 +1372,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
                       final newEntry = FluidEntry(
                         timestamp: state
-                            .selectedDateTime, // Das ist jetzt korrekt initialisiert
+                            .selectedDateTime, // This is now initialized correctly.
                         quantityInMl: quantity,
                         name: name,
                         kcal: kcal,
@@ -1419,7 +1419,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   Widget _buildTodaysLog(AppLocalizations l10n) {
     const mealOrder = [
-      "fluids", // AN ERSTER STELLE
+      "fluids", // In first position
       "mealtypeBreakfast",
       "mealtypeLunch",
       "mealtypeDinner",
@@ -1526,7 +1526,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
-        // NEU: Helper
+        // New helper
         return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {
@@ -1565,7 +1565,7 @@ class DiaryScreenState extends State<DiaryScreen> {
           _editFoodEntry(trackedItem);
           return false;
         } else {
-          // NEU: Helper
+          // New helper
           return await showDeleteConfirmation(context);
         }
       },

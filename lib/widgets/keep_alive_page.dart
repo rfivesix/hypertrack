@@ -8,7 +8,7 @@ class KeepAlivePage extends StatefulWidget {
   final Widget child;
 
   /// Optional key for storage persistence.
-  final Key? storageKey; // optional, falls du’s später brauchen willst
+  final Key? storageKey; // Optional in case it is needed later.
 
   const KeepAlivePage({super.key, required this.child, this.storageKey});
 
@@ -23,9 +23,9 @@ class _KeepAlivePageState extends State<KeepAlivePage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // wichtig für KeepAlive!
-    // Kein PageStorage() mehr -> kein bucket nötig.
-    // Optional: mit KeyedSubtree den storageKey an den Subtree hängen
+    super.build(context); // Important for KeepAlive.
+    // No PageStorage() anymore -> no bucket needed.
+    // Optional: attach storageKey to the subtree with KeyedSubtree.
     return widget.storageKey == null
         ? widget.child
         : KeyedSubtree(key: widget.storageKey, child: widget.child);

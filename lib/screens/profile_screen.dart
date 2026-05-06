@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/database_helper.dart';
-import '../data/drift_database.dart' as db; // Zugriff auf Profile-Klasse
+import '../data/drift_database.dart' as db; // Access to Profile class
 import '../generated/app_localizations.dart';
 import 'goals_screen.dart';
 import 'onboarding_screen.dart';
@@ -59,7 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// Berechnet das Alter basierend auf dem Geburtstag
+  /// Calculates the age based on the birthday.
   String _calculateAge(DateTime? birthday) {
     if (birthday == null) return '';
     final now = DateTime.now();
@@ -71,15 +71,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '$age Jahre';
   }
 
-  /// Öffnet den Editor für Profildaten
+  /// Opens the editor for profile data.
   Future<void> _showEditProfileDialog() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // Controller mit aktuellen Werten initialisieren
+    // Initialize controllers with current values
     final nameCtrl = TextEditingController(text: _userProfile?.username ?? '');
     DateTime? selectedDate = _userProfile?.birthday;
     String? selectedGender = _userProfile?.gender ?? 'male';
-    // Fallback für Height, falls wir das auch hier editieren wollen (optional)
+    // Height fallback in case it should be edited here too (optional)
     final heightCtrl = TextEditingController(
       text: _userProfile?.height?.toString() ?? '',
     );
@@ -112,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Geburtstag & Geschlecht in einer Zeile
+                // Birthday & gender in one row
                 Row(
                   children: [
                     Expanded(
@@ -195,19 +195,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: FilledButton(
                         onPressed: () async {
-                          // Speichern
+                          // Save
                           await DatabaseHelper.instance.saveUserProfile(
                             name: nameCtrl.text.trim(),
                             birthday: selectedDate,
                             height: int.tryParse(
                               heightCtrl.text,
-                            ), // optional, sonst null lassen wenn nicht im UI
+                            ), // Optional; otherwise keep null when not in the UI.
                             gender: selectedGender,
                           );
                           if (!ctx.mounted) return;
                           close();
                           Navigator.of(ctx).pop();
-                          // UI neu laden
+                          // Reload UI
                           _loadProfileData();
                         },
                         child: Text(l10n.save),
@@ -231,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    // Daten für die Anzeige vorbereiten
+    // Prepare data for display
     final String displayName = _userProfile?.username?.isNotEmpty == true
         ? _userProfile!.username!
         : 'Dein Name'; // Fallback
@@ -247,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       genderString = l10n.genderDiverse;
     }
 
-    // Kombinierter String: "25 Jahre • Männlich"
+    // Combined string: "25 years - male"
     final String subline = [
       ageString,
       genderString,
@@ -263,21 +263,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 top: DesignConstants.cardPadding.top + topPadding,
               ),
               children: [
-                // --- NEUE PROFIL-KARTE (Row statt Column) ---
+                // --- New profile card (Row instead of Column) ---
                 SummaryCard(
-                  // padding: EdgeInsets.zero, // Padding manuell steuern für Klick-Bereich
+                  // padding: EdgeInsets.zero, // Control padding manually for the tap area
                   child: InkWell(
                     borderRadius: BorderRadius.circular(20),
                     onTap:
-                        _showEditProfileDialog, // Öffnet Editor bei Klick auf die Karte
+                        _showEditProfileDialog, // Opens editor when the card is tapped
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
                         children: [
-                          // Linke Seite: Bild
+                          // Left side: image
                           GestureDetector(
                             onTap: () async {
-                              // Nur Bild ändern bei Klick auf das Bild
+                              // Change only the image when the image is tapped
                               await profileService.pickAndSaveProfileImage();
                             },
                             child: Stack(
@@ -287,7 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     '${profileService.profileImagePath ?? ''}${profileService.cacheBuster}',
                                   ),
                                   radius:
-                                      40, // Etwas kleiner als vorher (war 50), passt besser in Row
+                                      40, // Slightly smaller than before (was 50), fits better in Row
                                   backgroundColor: theme.colorScheme.primary
                                       .withValues(alpha: 0.1),
                                   backgroundImage:
@@ -307,7 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         )
                                       : null,
                                 ),
-                                // Kleines Edit-Icon am Bild
+                                // Small edit icon on the image
                                 Positioned(
                                   bottom: 0,
                                   right: 0,
@@ -333,7 +333,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(width: 20),
 
-                          // Rechte Seite: Text-Daten
+                          // Right side: text data
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,7 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
 
-                          // Pfeil nach rechts als Indikator
+                          // Right arrow as indicator
                           Icon(
                             Icons.edit_outlined,
                             color: theme.colorScheme.onSurfaceVariant
@@ -390,7 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: DesignConstants.spacingM),
 
-                // Sektion für Navigation (Unverändert)
+                // Navigation section (unchanged)
                 _buildNavigationCard(
                   icon: Icons.settings_outlined,
                   title: l10n.settingsTitle,

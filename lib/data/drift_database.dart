@@ -8,24 +8,24 @@ import 'package:uuid/uuid.dart';
 
 part 'drift_database.g.dart';
 
-// --- MIXINS FÜR WIEDERKEHRENDE SPALTEN ---
+// --- Mixins for recurring columns ---
 
-/// Garantiert die Hybrid-Architektur:
-/// - [localId]: Interne, lokale ID für Performance und lokale Relationen.
-/// - [id]: UUID für Sync und Server-Kommunikation.
+/// Guarantees the hybrid architecture:
+/// - [localId]: Internal local ID for performance and local relations.
+/// - [id]: UUID for sync and server communication.
 mixin HybridId on Table {
   IntColumn get localId => integer().autoIncrement()();
   TextColumn get id => text().clientDefault(() => const Uuid().v4()).unique()();
 }
 
-/// Standard Meta-Daten für Sync-Logik
+/// Standard metadata for sync logic.
 mixin MetaColumns on Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 }
 
-// --- TABELLEN DEFINITIONEN ---
+// --- Table definitions ---
 
 // 1. Profiles
 /// Table definition for user profiles.
@@ -38,7 +38,7 @@ class Profiles extends Table with HybridId, MetaColumns {
   DateTimeColumn get birthday => dateTime().nullable()();
   IntColumn get height => integer().nullable()(); // in cm
   TextColumn get gender => text().nullable()(); // 'male', 'female', 'diverse'
-  // Aus altem Code: Profilbild-Pfad speichern
+  // From old code: store profile image path
   TextColumn get profileImagePath => text().nullable()();
 }
 
@@ -48,7 +48,7 @@ class AppSettings extends Table with HybridId, MetaColumns {
   TextColumn get themeMode => text().withDefault(const Constant('system'))();
   TextColumn get unitSystem => text().withDefault(const Constant('metric'))();
 
-  // Aus altem Code: Tagesziele (bisher in SharedPreferences, besser hier aufgehoben für Sync)
+  // From old code: daily goals (previously in SharedPreferences, better kept here for sync)
   IntColumn get targetCalories => integer().withDefault(const Constant(2500))();
   IntColumn get targetProtein => integer().withDefault(const Constant(180))();
   IntColumn get targetCarbs => integer().withDefault(const Constant(250))();
@@ -60,11 +60,11 @@ class AppSettings extends Table with HybridId, MetaColumns {
 // 3. Exercises
 /// Table definition for exercises.
 class Exercises extends Table with HybridId, MetaColumns {
-  TextColumn get createdBy => text().nullable()(); // Nullable wenn System-Übung
+  TextColumn get createdBy => text().nullable()(); // Nullable for system exercises
   TextColumn get nameDe => text()();
   TextColumn get nameEn => text()();
 
-  // Aus altem Code: Beschreibungen und Kategorie waren wichtig für die UI
+  // From old code: descriptions and category were important for the UI
   TextColumn get descriptionDe => text().nullable()();
   TextColumn get descriptionEn => text().nullable()();
   TextColumn get categoryName => text().nullable()();
@@ -72,7 +72,7 @@ class Exercises extends Table with HybridId, MetaColumns {
 
   TextColumn get musclesPrimary => text().nullable()(); // JSON String
   TextColumn get musclesSecondary =>
-      text().nullable()(); // JSON String (aus altem Code übernommen)
+      text().nullable()(); // JSON string (carried over from old code)
 
   BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
   TextColumn get source => text().withDefault(const Constant('user'))();
@@ -81,7 +81,7 @@ class Exercises extends Table with HybridId, MetaColumns {
 // 4. Routines
 class Routines extends Table with HybridId, MetaColumns {
   TextColumn get userId =>
-      text().nullable()(); // Nullable für lokale Nutzung ohne Login
+      text().nullable()(); // Nullable for local use without login
   TextColumn get name => text()();
   BoolColumn get isPublic => boolean().withDefault(const Constant(false))();
 }
@@ -103,7 +103,7 @@ class RoutineSetTemplates extends Table with HybridId, MetaColumns {
         const Constant('normal'),
       )(); // normal, warmup, dropset, failure
   TextColumn get targetReps =>
-      text().nullable()(); // String, da z.B. "8-12" möglich
+      text().nullable()(); // String because values like "8-12" are possible
   RealColumn get targetWeight => real().nullable()();
   IntColumn get targetRir => integer().nullable()();
 }
@@ -114,7 +114,7 @@ class WorkoutLogs extends Table with HybridId, MetaColumns {
   TextColumn get userId => text().nullable()();
   TextColumn get routineId => text().nullable().references(Routines, #id)();
 
-  // Aus altem Code: Routine Name als Fallback, falls Routine gelöscht wurde
+  // From old code: routine name as fallback if the routine was deleted
   TextColumn get routineNameSnapshot => text().nullable()();
 
   DateTimeColumn get startTime => dateTime()();
@@ -131,25 +131,25 @@ class SetLogs extends Table with HybridId, MetaColumns {
       text().references(WorkoutLogs, #id, onDelete: KeyAction.cascade)();
   TextColumn get exerciseId => text().nullable().references(Exercises, #id)();
 
-  // Aus altem Code: Fallback Name, falls Exercise gelöscht oder nicht gemappt
+  // From old code: fallback name if exercise was deleted or not mapped
   TextColumn get exerciseNameSnapshot => text().nullable()();
 
   RealColumn get weight => real().nullable()();
   IntColumn get reps => integer().nullable()();
   IntColumn get rpe => integer().nullable()();
   IntColumn get rir => integer().nullable()();
-  // Aus altem Code: Felder die essenziell waren
+  // From old code: fields that were essential.
   TextColumn get setType => text().withDefault(const Constant('normal'))();
   IntColumn get restTimeSeconds => integer().nullable()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   IntColumn get logOrder => integer().withDefault(const Constant(0))();
-  RealColumn get distance => real().nullable()(); // Für Cardio im Set
+  RealColumn get distance => real().nullable()(); // For cardio in the set
   IntColumn get durationSeconds =>
-      integer().nullable()(); // Für Cardio/Statisch
+      integer().nullable()(); // For cardio/static
   TextColumn get notes => text().nullable()();
 }
 
-// 9. CardioActivities (Neu laut Zielschema)
+// 9. CardioActivities (new in target schema)
 class CardioActivities extends Table with HybridId, MetaColumns {
   TextColumn get workoutLogId =>
       text().references(WorkoutLogs, #id, onDelete: KeyAction.cascade)();
@@ -160,51 +160,51 @@ class CardioActivities extends Table with HybridId, MetaColumns {
   TextColumn get source => text().nullable()(); // Manual, AppleHealth, etc.
 }
 
-// 10. CardioSamples (Neu laut Zielschema)
+// 10. CardioSamples (new in target schema)
 class CardioSamples extends Table with HybridId, MetaColumns {
   TextColumn get cardioActivityId =>
       text().references(CardioActivities, #id, onDelete: KeyAction.cascade)();
   TextColumn get dataType => text()(); // HeartRate, Speed, Elevation
-  TextColumn get dataJson => text()(); // JSON Array der Samples
+  TextColumn get dataJson => text()(); // JSON array of samples
 }
 
-// 11. Products (Ersetzt Teile von food_entries / FoodItem)
+// 11. Products (replaces parts of food_entries / FoodItem)
 /// Table definition for food products.
 class Products extends Table with HybridId, MetaColumns {
   TextColumn get barcode => text().unique()(); // Eindeutiger Identifier
   TextColumn get name => text()();
   TextColumn get brand => text().nullable()();
 
-  // Nährwerte pro 100g/ml
+  // Nutrients per 100g/ml
   IntColumn get calories => integer()();
   RealColumn get protein => real()();
   RealColumn get carbs => real()();
   RealColumn get fat => real()();
 
-  // Optionale Nährwerte (aus altem Code übernommen)
+  // Optional nutrients (carried over from old code)
   RealColumn get sugar => real().nullable()();
   RealColumn get fiber => real().nullable()();
   RealColumn get salt => real().nullable()();
-  RealColumn get caffeine => real().nullable()(); // Wichtig für Supp-Logik
+  RealColumn get caffeine => real().nullable()(); // Important for supplement logic
 
   BoolColumn get isLiquid => boolean().withDefault(const Constant(false))();
   TextColumn get source =>
       text().withDefault(const Constant('user'))(); // off, user, base
 
-  TextColumn get category => text().nullable()(); // <-- Diese Zeile einfügen
+  TextColumn get category => text().nullable()(); // <-- Insert this line
 }
 
-// 12. NutritionLogs (Ersetzt food_entries)
+// 12. NutritionLogs (replaces food_entries)
 /// Table definition for nutrition consumption logs.
 class NutritionLogs extends Table with HybridId, MetaColumns {
   TextColumn get userId => text().nullable()();
   TextColumn get productId => text().nullable().references(Products, #id)();
 
-  // Aus altem Code: Barcode als Fallback für Migration/Sync
+  // From old code: barcode as fallback for migration/sync
   TextColumn get legacyBarcode => text().nullable()();
 
   DateTimeColumn get consumedAt => dateTime()();
-  RealColumn get amount => real()(); // In Gramm oder ml
+  RealColumn get amount => real()(); // In grams or ml
   TextColumn get mealType =>
       text().withDefault(const Constant('Snack'))(); // Breakfast, Lunch, etc.
 }
@@ -212,12 +212,12 @@ class NutritionLogs extends Table with HybridId, MetaColumns {
 // 13. Supplements
 class Supplements extends Table with HybridId, MetaColumns {
   TextColumn get code =>
-      text().nullable().unique()(); // z.B. 'caffeine' für Logik
+      text().nullable().unique()(); // e.g., 'caffeine' for logic
   TextColumn get name => text()();
-  RealColumn get dose => real()(); // Standard Dosis
+  RealColumn get dose => real()(); // Standard dose
   TextColumn get unit => text()(); // mg, g, ml, pill
 
-  // Aus altem Code
+  // From old code
   RealColumn get dailyGoal => real().nullable()();
   RealColumn get dailyLimit => real().nullable()();
   TextColumn get notes => text().nullable()();
@@ -230,28 +230,28 @@ class SupplementLogs extends Table with HybridId, MetaColumns {
   TextColumn get supplementId =>
       text().references(Supplements, #id, onDelete: KeyAction.cascade)();
   DateTimeColumn get takenAt => dateTime()();
-  RealColumn get amount => real()(); // Tatsächlich genommene Menge
+  RealColumn get amount => real()(); // Amount actually consumed
 
-  // Verknüpfungen (Aus altem Code übernommen für Auto-Logik bei Kaffee etc.)
+  // Links (carried over from old code for auto logic for coffee, etc.)
   TextColumn get sourceNutritionLogId => text().nullable().references(
         NutritionLogs,
         #id,
         onDelete: KeyAction.setNull,
       )();
-  // Referenz auf FluidLogs unten definiert
+  // Reference to FluidLogs defined below
 }
 
-// --- ZUSATZ: FluidLogs (Fehlte im Zielschema, aber essenziell für "FluidEntry") ---
+// --- Addition: FluidLogs (missing from target schema, but essential for FluidEntry) ---
 class FluidLogs extends Table with HybridId, MetaColumns {
   DateTimeColumn get consumedAt => dateTime()();
   IntColumn get amountMl => integer()();
   TextColumn get name => text()(); // "Water", "Coke", etc.
 
-  // Makros für Flüssigkeiten (Aus altem Code übernommen)
+  // Macros for fluids (carried over from old code)
   IntColumn get kcal => integer().nullable()();
   RealColumn get sugarPer100ml => real().nullable()();
   RealColumn get caffeinePer100ml => real().nullable()();
-  // Verknüpfung zu NutritionLogs falls es ein geloggtes Getränk war
+  // Link to NutritionLogs if it was a logged drink
   TextColumn get linkedNutritionLogId => text().nullable().references(
         NutritionLogs,
         #id,
@@ -264,11 +264,11 @@ class Measurements extends Table with HybridId, MetaColumns {
   TextColumn get userId => text().nullable()();
   TextColumn get type => text()(); // weight, chest, etc.
   RealColumn get value => real()();
-  TextColumn get unit => text()(); // kg, cm, % (Aus altem Code übernommen)
+  TextColumn get unit => text()(); // kg, cm, % (carried over from old code)
   DateTimeColumn get date => dateTime()();
 
-  // Aus altem Code: Session-Konzept (Gruppierung von Messungen am gleichen Tag)
-  // Wir lösen das hier über das Datum, aber ein legacy_session_id hilft bei Migration
+  // From old code: session concept (grouping measurements on the same day)
+  // Resolve this by date here, but legacy_session_id helps with migration.
   IntColumn get legacySessionId => integer().nullable()();
 }
 
@@ -276,7 +276,7 @@ class Measurements extends Table with HybridId, MetaColumns {
 class Posts extends Table with HybridId, MetaColumns {
   TextColumn get userId => text()();
   TextColumn get type => text()(); // workout_share, achievement
-  TextColumn get referenceId => text().nullable()(); // ID des Workouts o.ä.
+  TextColumn get referenceId => text().nullable()(); // Workout ID, etc.
   TextColumn get metadata => text().nullable()(); // JSON
   TextColumn get content => text().nullable()();
 }
@@ -291,7 +291,7 @@ class SocialInteractions extends Table with HybridId, MetaColumns {
 }
 
 class Meals extends Table with HybridId, MetaColumns {
-  TextColumn get userId => text().nullable()(); // Für spätere Multi-User Logik
+  TextColumn get userId => text().nullable()(); // For future multi-user logic
   TextColumn get name => text()();
   TextColumn get notes => text().nullable()();
 }
@@ -300,7 +300,7 @@ class MealItems extends Table with HybridId, MetaColumns {
   TextColumn get mealId =>
       text().references(Meals, #id, onDelete: KeyAction.cascade)();
 
-  // Wir speichern entweder den Barcode (Legacy) oder die Product-UUID
+  // Store either the barcode (legacy) or the product UUID.
   TextColumn get productBarcode => text().nullable()();
   TextColumn get productId => text().nullable().references(Products, #id)();
 
@@ -319,15 +319,15 @@ class FoodCategories extends Table {
 
 class Favorites extends Table with MetaColumns {
   TextColumn get barcode => text()();
-  // createdAt ist jetzt via MetaColumns dabei
-  // updatedAt (modified_at) ist jetzt dabei
-  // deletedAt ist jetzt dabei
+  // createdAt is now included via MetaColumns
+  // updatedAt (modified_at) is now included
+  // deletedAt is now included
 
   @override
   Set<Column> get primaryKey => {barcode};
 }
 
-// 18. DailyGoalsHistory (Neu für historische Ziele)
+// 18. DailyGoalsHistory (new for historical goals)
 class DailyGoalsHistory extends Table with HybridId, MetaColumns {
   IntColumn get targetCalories => integer()();
   IntColumn get targetProtein => integer()();
@@ -335,7 +335,7 @@ class DailyGoalsHistory extends Table with HybridId, MetaColumns {
   IntColumn get targetFat => integer()();
   IntColumn get targetWater => integer()();
   IntColumn get targetSteps => integer().withDefault(const Constant(8000))();
-  // createdAt dient hier als "gültig ab" Zeitstempel
+  // createdAt serves here as the valid-from timestamp
 }
 
 // 19. SupplementSettingsHistory
@@ -346,7 +346,7 @@ class SupplementSettingsHistory extends Table with HybridId, MetaColumns {
   RealColumn get dose => real()();
   RealColumn get dailyGoal => real().nullable()();
   RealColumn get dailyLimit => real().nullable()();
-  // createdAt dient als "gültig ab" Zeitstempel
+  // createdAt serves as the valid-from timestamp
 }
 
 class HealthStepSegments extends Table with HybridId, MetaColumns {
@@ -374,7 +374,7 @@ class HealthStepSegments extends Table with HybridId, MetaColumns {
     NutritionLogs,
     Supplements,
     SupplementLogs,
-    FluidLogs, // Hinzugefügt
+    FluidLogs, // Added
     Measurements,
     Posts,
     SocialInteractions,
@@ -416,18 +416,18 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
             await m.createTable(favorites);
-            // WICHTIG: Füge die fehlende Spalte hinzu!
+            // Important: add the missing column.
             await m.addColumn(products, products.category);
           }
-          // Migration V2 -> V3 (Sync-Spalten & RIR)
+          // Migration V2 -> V3 (sync columns & RIR)
           if (from < 3) {
-            // RIR zu SetLogs hinzufügen
+            // Add RIR to SetLogs
             await m.addColumn(setLogs, setLogs.rir);
 
-            // Favorites Sync-fähig machen (fehlende Spalten adden)
+            // Make favorites syncable (add missing columns)
             // MetaColumns adds: createdAt, updatedAt, deletedAt
-            // Favorites hatte vorher schon barcode und createdAt manuell.
-            // Wir müssen nur updatedAt und deletedAt hinzufügen.
+            // Favorites already had barcode and createdAt manually before.
+            // Only updatedAt and deletedAt need to be added.
             await m.addColumn(favorites, favorites.updatedAt);
             await m.addColumn(favorites, favorites.deletedAt);
           }

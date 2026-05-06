@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0] - 2026-05-05
+### Added
+- Initial Train Libre release with offline-first workout logging, reusable routines, nutrition tracking, hydration, supplements, body measurements, statistics, and local backups.
+- Integrated Open Food Facts and wger-based catalog sources for food and exercise data.
+- Added optional AI meal features using the user's own API key.
+- Added one-way export of supported app-recorded data to Google Health Connect.
+- Added native sharing for completed workouts and routines, including localized text exports and branded image share cards.
+
+### Changed
+- Renamed the app and repository branding from Hypertrack to Train Libre across Flutter, Android, iOS, widgets, documentation, package metadata, and local catalog filenames.
+- Improved Statistics, Pulse, Diary, Add Food, workout history, and backup import/export performance for larger local datasets.
+- Refined recovery, sleep, pulse, and nutrition analytics to make training guidance more transparent and robust.
+
+### Fixed
+- Preserved compatibility for legacy Hypertrack backups and catalog files while migrating new installs to Train Libre naming.
+- Hardened loading and error handling across Statistics, Diary, Sleep, Pulse, AI meal save, feedback-report, and active workout flows.
+- Reduced Android UI stalls and ANR risk by moving production Drift database work to a background isolate and reducing repeated database lookups.
+
 ## [0.9.0-beta.6] - 2026-05-05
 ### Fixed
 - Fixed severe Pulse loading lag in Statistics by caching hourly heart-rate aggregates instead of repeatedly reprocessing large raw sample histories.

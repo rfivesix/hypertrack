@@ -13,7 +13,7 @@ import '../models/export_models.dart';
 // Nutrition labels often provide salt (NaCl) while platform schemas expect
 // sodium; sodium is approximately salt / 2.5 by mass.
 const double _saltToSodiumFactor = 2.5;
-const bool _debugAndroidHealthExport = true;
+const bool _debugAndroidHealthExport = false;
 const double _bodyFatMinPercent = 0;
 const double _bodyFatMaxPercent = 100;
 const List<String> _strengthWorkoutKeywords = <String>[

@@ -25,7 +25,7 @@ class OffAttributionWidget extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: GestureDetector(
-          // Macht den Text klickbar
+          // Makes the text clickable
           onTap: () async {
             final uri = Uri.parse("https://openfoodfacts.org/");
             try {

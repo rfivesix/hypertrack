@@ -25,12 +25,12 @@ class SwipeActionBackground extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(
         vertical: 6.0,
-      ), // Selber Margin wie SummaryCard
+      ), // Same margin as SummaryCard
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(
           20,
-        ), // Selber Radius wie SummaryCard
+        ), // Same radius as SummaryCard
       ),
       child: Align(
         alignment: alignment,

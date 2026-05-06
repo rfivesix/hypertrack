@@ -60,7 +60,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
       _allCategories = categories;
       _isLoading = false;
     });
-    _runFilter(_searchController.text); // Erste Ladung oder Filter
+    _runFilter(_searchController.text); // Initial load or filter
   }
 
   void _runFilter(String enteredKeyword) async {
@@ -82,7 +82,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
       context: context,
       title: l10n.filterByCategory,
       contentBuilder: (ctx, close) {
-        // Lokaler State für das Bottom Sheet
+        // Local state for the bottom sheet
         List<String> tempSelected = List.from(_selectedCategories);
 
         return StatefulBuilder(
@@ -90,7 +90,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Scrollbare Liste der Kategorien
+                // Scrollable list of categories
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 400),
                   child: ListView.builder(
@@ -123,7 +123,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          close(); // Schließen ohne Speichern
+                          close(); // Close without saving
                         },
                         child: Text(l10n.cancel),
                       ),
@@ -132,7 +132,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                     Expanded(
                       child: FilledButton(
                         onPressed: () {
-                          // State des Haupt-Screens aktualisieren
+                          // Update main screen state
                           setState(() {
                             _selectedCategories = tempSelected;
                           });
@@ -177,8 +177,8 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
       ),
 
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // KORREKTUR 1: AppBar entfernt, Titel und Aktionen im Body
-      // Body ohne doppelten Titel
+      // FIX 1: Removed AppBar; title and actions are in the body.
+      // Body without duplicate title
       body: Column(
         children: [
           Padding(
@@ -236,7 +236,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                         itemBuilder: (context, index) {
                           final exercise = _foundExercises[index];
                           return SummaryCard(
-                            // KORREKTUR 3: Übungs-Card
+                            // FIX 3: Exercise card
                             child: ListTile(
                               leading: const Icon(Icons.fitness_center),
                               title: Text(
@@ -247,7 +247,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                               subtitle: Text(exercise.categoryName),
                               trailing: widget.isSelectionMode
                                   ? IconButton(
-                                      // Auswahl-Modus: Hinzufügen-Icon
+                                      // Selection mode: add icon
                                       icon: Icon(
                                         Icons.add_circle_outline,
                                         color: colorScheme.primary,
@@ -257,15 +257,15 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                                     )
                                   : const Icon(
                                       Icons.chevron_right,
-                                    ), // Anzeige-Modus: Pfeil
+                                    ), // Display mode: arrow
                               onTap: () {
                                 if (widget.onExerciseSelected != null) {
                                   widget.onExerciseSelected!(exercise);
                                 } else if (widget.isSelectionMode) {
-                                  // Im Auswahl-Modus: Bei Klick auch auswählen
+                                  // In selection mode: tap also selects.
                                   Navigator.of(context).pop(exercise);
                                 } else {
-                                  // Im Anzeige-Modus: Detail-Screen öffnen
+                                  // In display mode: open detail screen.
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (context) =>
@@ -280,7 +280,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                         },
                       ),
           ),
-          // KORREKTUR 4: WgerAttributionWidget am Ende
+          // FIX 4: WgerAttributionWidget at the end.
           Padding(
             padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
             child: WgerAttributionWidget(
@@ -299,8 +299,8 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
             ),
           )
               .then((wasCreated) {
-            // Wenn der Screen mit 'true' zurückkehrt, wurde eine Übung erstellt.
-            // Lade die Liste neu, um die neue Übung anzuzeigen.
+            // If the screen returns 'true', an exercise was created.
+            // Reload the list to show the new exercise.
             if (wasCreated == true) {
               _runFilter(_searchController.text);
             }
@@ -311,7 +311,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     );
   }
 
-  // KORREKTUR 5: Helfer-Widget für den Filter-Button
+  // FIX 5: Helper widget for the filter button.
   Widget _buildFilterButton(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

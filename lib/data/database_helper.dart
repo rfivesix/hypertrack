@@ -3,7 +3,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-// Import mit Prefix
+// Import with prefix
 import 'drift_database.dart' as db;
 import 'drift_database.dart' show FavoritesCompanion;
 
@@ -51,23 +51,23 @@ class DatabaseHelper {
     return _driftDb!;
   }
 
-  // --- INIT: STANDARD SUPPLEMENTS ---
+  // --- Init: standard supplements ---
   Future<void> ensureStandardSupplements() async {
     final dbInstance = await database;
 
-    // Prüfen, ob Koffein (Code 'caffeine') schon existiert
+    // Check whether caffeine (code 'caffeine') already exists.
     final exists = await (dbInstance.select(
       dbInstance.supplements,
     )..where((t) => t.code.equals('caffeine')))
         .getSingleOrNull();
 
     if (exists == null) {
-      // Koffein anlegen
+      // Create caffeine
       await insertSupplement(
         Supplement(
-          code: 'caffeine', // WICHTIG: Code muss exakt stimmen für die Logik
+          code: 'caffeine', // Important: code must match exactly for the logic.
           name: 'Koffein',
-          defaultDose: 0, // Hängt vom Getränk ab
+          defaultDose: 0, // Depends on the drink
           unit: 'mg',
           dailyGoal: null,
           dailyLimit: 400,
@@ -85,7 +85,7 @@ class DatabaseHelper {
   Future<void> clearAllUserData() async {
     final dbInstance = await database;
 
-    // Wir deaktivieren kurzzeitig Foreign Keys, um sicher alles löschen zu können
+    // Temporarily disable foreign keys so everything can be deleted safely.
     await dbInstance.customStatement('PRAGMA foreign_keys = OFF');
 
     try {
@@ -119,7 +119,7 @@ class DatabaseHelper {
       )..where((t) => t.source.equals('user')))
           .go();
     } finally {
-      // Foreign Keys wieder aktivieren
+      // Re-enable foreign keys.
       await dbInstance.customStatement('PRAGMA foreign_keys = ON');
     }
   }
@@ -135,7 +135,7 @@ class DatabaseHelper {
     final dbInstance = await database;
 
     await dbInstance.batch((batch) {
-      // A. FAVORITEN
+      // A. Favorites
       for (final barcode in favoriteBarcodes) {
         batch.insert(
           dbInstance.favorites,
@@ -147,7 +147,7 @@ class DatabaseHelper {
         );
       }
 
-      // B. NUTRITION LOGS (Essen)
+      // B. Nutrition logs (food)
       for (final entry in foodEntries) {
         batch.insert(
           dbInstance.nutritionLogs,
@@ -161,7 +161,7 @@ class DatabaseHelper {
         );
       }
 
-      // C. FLUID LOGS (Trinken)
+      // C. Fluid logs (drinks)
       for (final entry in fluidEntries) {
         batch.insert(
           dbInstance.fluidLogs,
@@ -195,16 +195,16 @@ class DatabaseHelper {
         }
       }
 
-      // E. SUPPLEMENTS (Mit ID-Fix)
+      // E. Supplements (with ID fix)
       for (final s in supplements) {
-        // Konvertiere int-ID zu String, falls nötig, oder erstelle neue UUID
+        // Convert int ID to String if needed, or create a new UUID.
         final String fixedId =
             s.id != null ? s.id.toString() : const Uuid().v4();
 
         batch.insert(
           dbInstance.supplements,
           db.SupplementsCompanion(
-            id: drift.Value(fixedId), // Explizite ID setzen!
+            id: drift.Value(fixedId), // Set explicit ID.
             code: drift.Value(s.code),
             name: drift.Value(s.name),
             dose: drift.Value(s.defaultDose),
@@ -220,10 +220,10 @@ class DatabaseHelper {
       }
     });
 
-    // F. SUPPLEMENT LOGS (Separat, um Referenzfehler zu vermeiden)
+    // F. Supplement logs (separate to avoid reference errors)
     await dbInstance.batch((batch) {
       for (final log in supplementLogs) {
-        // Hier referenzieren wir die ID, die wir oben erzwungen haben (String)
+        // Reference the ID forced above (String).
         final String refId = log.supplementId.toString();
 
         batch.insert(
@@ -474,7 +474,7 @@ class DatabaseHelper {
   Future<int> insertFluidEntry(FluidEntry entry) async {
     final dbInstance = await database;
 
-    // 1. Getränk speichern
+    // 1. Save drink
     final companion = db.FluidLogsCompanion(
       consumedAt: drift.Value(entry.timestamp),
       amountMl: drift.Value(entry.quantityInMl),
@@ -1375,19 +1375,19 @@ class DatabaseHelper {
         .toSet();
   }
 
-  // Diese Methode wird vom BackupManager vielleicht aufgerufen, kann aber leer bleiben,
-  // da wir die Logik direkt im Fluid-Insert handeln können oder gar nicht brauchen.
+  // BackupManager may call this method, but it can stay empty
+  // because the logic can be handled directly in fluid insert or skipped entirely.
   Future<void> upsertCaffeineForFoodEntry({
     required int foodEntryId,
     required DateTime timestamp,
     required double? caffeinePer100ml,
     required double quantityInMl,
   }) async {
-    // Implementierung optional, wenn du automatische Caffeine-Logs willst
+    // Optional implementation if automatic caffeine logs are needed.
   }
 
   // ===========================================================================
-  // FAVORITEN (Fehlende Methoden für BackupManager)
+  // FAVORITES (missing methods for BackupManager)
   // ===========================================================================
 
   Future<void> addFavorite(String barcode) async {
@@ -1455,7 +1455,7 @@ class DatabaseHelper {
     return await dbInstance.select(dbInstance.appSettings).getSingleOrNull();
   }
 
-  /// Erstellt oder aktualisiert das Basis-Profil
+  /// Creates or updates the base profile.
   Future<void> saveUserProfile({
     required String name,
     required DateTime? birthday,
@@ -1468,7 +1468,7 @@ class DatabaseHelper {
         await dbInstance.select(dbInstance.profiles).getSingleOrNull();
 
     if (existing == null) {
-      // NEU anlegen
+      // Create new
       await dbInstance.into(dbInstance.profiles).insert(
             db.ProfilesCompanion(
               username: drift.Value(name),
@@ -2163,7 +2163,7 @@ class DatabaseHelper {
     return result;
   }
 
-  /// Speichert das Startgewicht als Messung
+  /// Saves the starting weight as a measurement.
   Future<void> saveInitialWeight(double weightKg) async {
     final dbInstance = await database;
     final now = DateTime.now();

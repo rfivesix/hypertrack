@@ -10,9 +10,9 @@ import 'package:provider/provider.dart';
 /// Represents an action item within a [showGlassBottomMenu].
 class GlassMenuAction {
   /// Optional standard material icon.
-  final IconData? icon; // Jetzt nullable
+  final IconData? icon; // Now nullable
   /// Optional custom widget for the icon area (e.g., initials or custom shape).
-  final Widget? customIcon; // NEU: Für deine Buchstaben
+  final Widget? customIcon; // New: for custom letters
   /// The main text label for the action.
   final String label;
 
@@ -24,7 +24,7 @@ class GlassMenuAction {
 
   GlassMenuAction({
     this.icon,
-    this.customIcon, // NEU
+    this.customIcon, // New
     required this.label,
     this.subtitle,
     required this.onTap,
@@ -34,8 +34,8 @@ class GlassMenuAction {
         );
 }
 
-// ... (showGlassBottomMenu und _GlassBottomMenuSheet bleiben unverändert) ...
-// ... BITTE DEN CODE DAZWISCHEN NICHT LÖSCHEN, NUR ÜBERSPRINGEN ...
+// ... (showGlassBottomMenu and _GlassBottomMenuSheet stay unchanged) ...
+// ... Do not delete the code in between; only skip it ...
 
 /// Shows a premium glass-styled modal bottom sheet.
 ///
@@ -101,7 +101,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ... (Dieser Teil bleibt 1:1 identisch wie in deiner aktuellen Datei) ...
+    // ... (this part stays exactly identical to the current file) ...
     // ...
     final media = MediaQuery.of(context);
     final theme = Theme.of(context);
@@ -172,7 +172,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: _GlassTile(
                             icon: a.icon,
-                            customIcon: a.customIcon, // <--- NEU übergeben
+                            customIcon: a.customIcon, // <--- Pass new value
                             title: a.label,
                             subtitle: a.subtitle,
                             onTap: () {
@@ -196,7 +196,7 @@ class _GlassBottomMenuSheet extends StatelessWidget {
       );
     }
 
-    // ... (liquidCard und plainCard bleiben identisch, hier gekürzt) ...
+    // ... (liquidCard and plainCard stay identical, shortened here) ...
     Widget liquidCard() {
       return Stack(
         children: [
@@ -333,7 +333,7 @@ class _GlassTile extends StatelessWidget {
     final textTheme = theme.textTheme;
     final themeService = context.watch<ThemeService>();
 
-    // Hintergrund-Tint etwas anpassen
+    // Adjust background tint slightly
     final Color neutralTint =
         (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05);
 
@@ -404,11 +404,11 @@ class _GlassTile extends StatelessWidget {
     if (themeService.visualStyle == 1) {
       return LiquidGlass.withOwnLayer(
         settings: LiquidGlassSettings(
-          // HIER GEÄNDERT: thickness 0 entfernt die Verzerrung/Verschiebung
+          // Changed here: thickness 0 removes distortion/shift.
           thickness: 0,
           blur: 5,
           glassColor: effectiveGlass,
-          // HIER GEÄNDERT: Weniger Lichtintensität reduziert harte Kanten
+          // Changed here: less light intensity reduces harsh edges.
           lightIntensity: 0.1,
           saturation: 1.10,
         ),
@@ -426,7 +426,7 @@ class _GlassTile extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: DecoratedBox(
-                    // BorderRadius hier hilft zusätzlich bei der visuellen Abgrenzung
+                    // BorderRadius also helps visual separation here.
                     decoration: BoxDecoration(
                       color: neutralTint,
                       borderRadius: BorderRadius.circular(18),
@@ -452,8 +452,8 @@ class _GlassTile extends StatelessWidget {
   }
 }
 
-/// Eine wiederverwendbare Lösch-Bestätigung im Glas-Design.
-/// Gibt true zurück, wenn gelöscht werden soll.
+/// A reusable delete confirmation in glass style.
+/// Returns true when deletion should proceed.
 Future<bool> showDeleteConfirmation(
   BuildContext context, {
   String? title,

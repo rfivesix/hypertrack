@@ -2,8 +2,8 @@
 
 /// Formats a [Duration] into a string like "HH:MM:SS" or "MM:SS".
 String formatDuration(Duration d) {
-  // .abs() stellt sicher, dass wir keine negativen Werte anzeigen,
-  // falls es zu kleinen Zeit-Inkonsistenzen kommt.
+  // .abs() ensures we do not show negative values
+  // if small time inconsistencies occur.
   d = d.abs();
 
   var seconds = d.inSeconds;

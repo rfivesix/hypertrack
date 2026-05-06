@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart'; // Für debugPrint
+import 'package:flutter/foundation.dart'; // For debugPrint
 import 'package:intl/intl.dart';
 import 'workout_database_helper.dart';
 import 'drift_database.dart' as db;
@@ -18,7 +18,7 @@ class ImportManager {
   /// into the local database. Returns the number of imported workouts, or -1 on error.
   Future<int> importHevyCsv() async {
     try {
-      // 1. Datei auswählen
+      // 1. Select file
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv'],
@@ -30,17 +30,17 @@ class ImportManager {
       final file = File(filePath);
       final content = await file.readAsString();
 
-      // 2. CSV parsen
+      // 2. Parse CSV
       final List<List<dynamic>> rows = Csv(
         dynamicTyping: false,
       ).decode(content);
 
-      if (rows.length < 2) return 0; // Nur Header oder leer
+      if (rows.length < 2) return 0; // Header only or empty
 
-      // 3. Header mappen
+      // 3. Map header
       final header = rows.first.map((e) => e.toString().trim()).toList();
 
-      // 4. Zeilen gruppieren (Ein Workout hat mehrere Sets in mehreren Zeilen)
+      // 4. Group rows (one workout has multiple sets across multiple rows).
       final workoutGroups = <String, List<Map<String, dynamic>>>{};
 
       for (var i = 1; i < rows.length; i++) {
@@ -49,27 +49,27 @@ class ImportManager {
 
         final rowMap = Map<String, dynamic>.fromIterables(header, row);
 
-        // Ohne Startzeit kein valides Workout
+        // No valid workout without a start time.
         if (rowMap['start_time'] == null ||
             rowMap['start_time'].toString().trim().isEmpty) {
           continue;
         }
 
-        // Gruppierungsschlüssel: Titel + Startzeit
+        // Grouping key: title + start time
         final key = "${rowMap['title']}_${rowMap['start_time']}";
         workoutGroups.putIfAbsent(key, () => []).add(rowMap);
       }
 
-      // 5. Workouts in DB schreiben
+      // 5. Write workouts to DB
       final workoutHelper = WorkoutDatabaseHelper.instance;
       final database =
-          await workoutHelper.database; // Zugriff auf Drift DB Instanz
+          await workoutHelper.database; // Access to Drift DB instance
 
       int importedWorkouts = 0;
 
-      // KORREKTUR: Die Methode getExerciseMappings existiert im neuen Helper nicht mehr.
-      // Wir initialisieren eine leere Map. Das Mapping erfolgt im neuen Flow NACH dem Import
-      // über 'findUnknownExerciseNames'.
+      // FIX: The getExerciseMappings method no longer exists in the new helper.
+      // Initialize an empty map. Mapping happens in the new flow after import
+      // via 'findUnknownExerciseNames'.
       final knownMap = <String, String>{};
 
       for (var group in workoutGroups.values) {
@@ -77,20 +77,20 @@ class ImportManager {
         final routineName = firstRow['title'] ?? 'Importiertes Workout';
         final notes = firstRow['description'];
 
-        // A. Workout anlegen (Initial als 'ongoing' mit current time)
+        // A. Create workout (initially 'ongoing' with current time)
         final newLog = await workoutHelper.startWorkout(
           routineName: routineName,
         );
 
         if (newLog.id == null) continue;
 
-        // B. Zeitstempel parsen
+        // B. Parse timestamp
         final startTime = _parseHevyDate(firstRow['start_time']);
         final endTime = _parseHevyDate(firstRow['end_time']);
 
-        // C. Workout-Details aktualisieren (Zeiten & Status korrigieren)
-        // Wir nutzen hier direkt Drift Updates, um historische Daten korrekt zu setzen
-        // (da finishWorkout DateTime.now() verwenden würde)
+        // C. Update workout details (correct times & status).
+        // Use Drift updates directly here to set historical data correctly
+        // because finishWorkout would use DateTime.now().
         final updateCompanion = db.WorkoutLogsCompanion(
           startTime: drift.Value(startTime),
           endTime: drift.Value(endTime),
@@ -102,17 +102,17 @@ class ImportManager {
               ..where((tbl) => tbl.localId.equals(newLog.id!)))
             .write(updateCompanion);
 
-        // D. Sets iterieren und einfügen
+        // D. Iterate and insert sets
         int setOrder = 0;
         for (var row in group) {
           final rawName = row['exercise_title']?.toString() ?? '';
 
-          // Mapping prüfen (falls User schon mal gemappt hat - aktuell leer)
+          // Check mapping (if the user has mapped before; currently empty).
           final mappedName = knownMap[rawName.trim().toLowerCase()] ?? rawName;
 
-          // Daten für SetLog extrahieren
+          // Extract data for SetLog
           final setLog = SetLog(
-            workoutLogId: newLog.id!, // Verknüpfung via lokaler ID
+            workoutLogId: newLog.id!, // Link via local ID
             exerciseName: mappedName,
             setType: _mapSetType(row['set_type']),
 
@@ -127,7 +127,7 @@ class ImportManager {
 
             logOrder: setOrder++,
             notes: row['exercise_notes'],
-            isCompleted: true, // Importierte Sets sind immer fertig
+            isCompleted: true, // Imported sets are always completed.
           );
 
           await workoutHelper.insertSetLog(setLog);
@@ -141,7 +141,7 @@ class ImportManager {
     }
   }
 
-  /// Hilfsmethode um Hevy Set-Types auf interne Types zu mappen
+  /// Helper method to map Hevy set types to internal types.
   String _mapSetType(dynamic rawType) {
     final t = rawType?.toString().toLowerCase() ?? '';
     if (t == 'warmup') return 'warmup';
@@ -150,14 +150,14 @@ class ImportManager {
     return 'normal';
   }
 
-  /// Robuste Datums-Parsing-Funktion
+  /// Robust date parsing function.
   DateTime _parseHevyDate(dynamic rawDateString) {
     final dateString = rawDateString?.toString().trim();
     if (dateString == null || dateString.isEmpty) {
       return DateTime.now();
     }
 
-    // Liste unterstützter Formate (Erweitert um DE und EN)
+    // List of supported formats (expanded with DE and EN).
     final List<DateFormat> formats = [
       DateFormat("dd MMM yyyy, HH:mm", "en_US"), // 18 Oct 2023, 14:30
       DateFormat("dd MMM yyyy, HH:mm", "de_DE"), // 18 Okt 2023, 14:30

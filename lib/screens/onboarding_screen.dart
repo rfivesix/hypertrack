@@ -61,8 +61,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final TextEditingController _nameController = TextEditingController();
   DateTime? _selectedDate;
   final TextEditingController _heightController =
-      TextEditingController(); // NEU
-  String? _selectedGender; // NEU (male, female, diverse)
+      TextEditingController(); // New
+  String? _selectedGender; // New (male, female, diverse)
   final TextEditingController _bodyFatPercentController =
       TextEditingController();
   PriorActivityLevel _selectedPriorActivityLevel =
@@ -227,7 +227,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           markAsApplied: false,
         );
 
-    // 1. Profil speichern (DB)
+    // 1. Save profile (DB)
     await db.saveUserProfile(
       name: _nameController.text.trim(),
       birthday: _selectedDate,
@@ -235,7 +235,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       gender: _selectedGender,
     );
 
-    // Height auch kurz in Prefs cachen für GoalsScreen Fallback (optional)
+    // Also cache height briefly in prefs for GoalsScreen fallback (optional).
     if (height != null) await prefs.setInt('userHeight', height);
 
     // 2. Startgewicht (DB)
@@ -264,7 +264,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
 
-    // 3. Ziele speichern (DB - DAS IST JETZT DIE QUELLE FÜR ALLES)
+    // 3. Save goals (DB - this is now the source for everything).
     await db.saveUserGoals(
       calories: calories,
       protein: protein,
@@ -274,7 +274,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       steps: 8000,
     );
 
-    // 4. Extra Werte (Sugar/Fiber/Salt) Defaults in Prefs setzen (da noch nicht in DB Schema)
+    // 4. Store default extra values (sugar/fiber/salt) in prefs because they are not in the DB schema yet.
     if (prefs.getInt('targetSugar') == null) {
       await prefs.setInt('targetSugar', 50);
     }
@@ -703,7 +703,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ... Restliche Pages bleiben identisch zum vorherigen Code ...
+  // ... Remaining pages stay identical to the previous code ...
 
   Widget _buildWeightPage(AppLocalizations l10n) {
     return Padding(

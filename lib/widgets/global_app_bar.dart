@@ -46,7 +46,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Der sichtbare Inhalt der AppBar (Titel, Icons etc.)
+    // Visible AppBar content (title, icons, etc.)
     final appBarContent = AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -66,17 +66,17 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: actions,
     );
 
-    // Farbe für das durchscheinende "Glas"
+    // Color for the translucent glass
     final Color glassColor = isDark
         ? Colors.black.withValues(alpha: 0.5)
         : Colors.white.withValues(alpha: 0.3);
 
-    // Die finale Struktur mit statischem Blur
+    // Final structure with static blur
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
-          // Die Decoration sorgt für die Farbe und die untere Kante
+          // Decoration provides the color and bottom edge
           decoration: BoxDecoration(
             color: glassColor,
             //border: Border(
