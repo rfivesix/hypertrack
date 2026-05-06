@@ -4,7 +4,7 @@
 ///
 /// Aggregates data from [FoodEntry] and [WaterEntry] to show progress against targets.
 class DailyNutrition {
-  // Verbrauchte Nährwerte
+  // Consumed nutrients
   /// Total calories consumed today.
   int calories;
 
@@ -32,7 +32,7 @@ class DailyNutrition {
   /// Total caffeine consumed today in milligrams.
   double caffeine;
 
-  // Ziele
+  // Goals
   /// Target daily calorie intake.
   int targetCalories;
 
@@ -48,7 +48,7 @@ class DailyNutrition {
   /// Target daily fat intake in grams.
   int targetFat;
 
-  // DOC: NEUE ZIELFELDER
+  // DOC: New target fields
   /// Target daily sugar intake in grams.
   int targetSugar;
 
@@ -78,7 +78,7 @@ class DailyNutrition {
     this.targetCarbs = 0,
     this.targetFat = 0,
 
-    // DOC: Initialisierung der neuen Ziele
+    // DOC: Initialize the new goals
     this.targetSugar = 0,
     this.targetFiber = 0,
     this.targetSalt = 0,

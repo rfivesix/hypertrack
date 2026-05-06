@@ -24,9 +24,9 @@ class WgerAttributionWidget extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 2.5),
         child: GestureDetector(
-          // Macht den Text klickbar
+          // Makes the text clickable
           onTap: () async {
-            final uri = Uri.parse("https://wger.de/"); // <-- Geänderte URL
+            final uri = Uri.parse("https://wger.de/"); // <-- Changed URL
             try {
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri);
@@ -44,7 +44,7 @@ class WgerAttributionWidget extends StatelessWidget {
             }
           },
           child: Text(
-            l10n.exerciseDataAttribution, // <-- Geänderter Text
+            l10n.exerciseDataAttribution, // <-- Changed text
             style: currentTextStyle,
             textAlign: TextAlign.center,
           ),

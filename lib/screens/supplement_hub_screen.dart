@@ -182,7 +182,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
   }
 
   Future<void> _deleteLogEntry(int logId) async {
-    // NEU: Verwendung des standardisierten Helpers
+    // New: use the standardized helper
     final confirmed = await showDeleteConfirmation(context);
 
     if (confirmed) {
@@ -194,7 +194,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
   Future<void> _deleteSupplement(Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
 
-    // NEU: Verwendung des Helpers mit spezifischem Text
+    // New: use the helper with specific text
     final confirmed = await showDeleteConfirmation(
       context,
       content: l10n.deleteSupplementConfirm,
@@ -335,15 +335,15 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           _editLogEntry(log);
-          return false; // Nicht dismissen, da Edit-Dialog aufging
+          return false; // Do not dismiss because the edit dialog opened.
         } else {
-          // Für Delete (EndToStart): Wir geben true zurück, damit die Animation läuft,
-          // ABER wir rufen die Lösch-Logik erst in onDismissed auf.
-          // ODER wir zeigen hier den Dialog. Da Dismissible sofort entfernt, ist Dialog hier besser:
+          // For delete (EndToStart): return true so the animation runs,
+          // but run the delete logic only in onDismissed.
+          // Or show the dialog here. Since Dismissible removes immediately, the dialog is better here:
 
-          // Wir rufen unsere _deleteLogEntry Methode auf, die den Dialog zeigt.
-          // Aber Dismissible erwartet ein Future<bool>.
-          // Einfacherer Weg für Dismissible mit Dialog:
+          // Call _deleteLogEntry, which shows the dialog.
+          // But Dismissible expects a Future<bool>.
+          // Simpler path for Dismissible with a dialog:
 
           final l10n = AppLocalizations.of(context)!;
           final confirmed = await showGlassBottomMenu<bool>(

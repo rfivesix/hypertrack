@@ -24,7 +24,7 @@ class WorkoutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      key: key, // Key an den Container weitergeben
+      key: key, // Pass key to the container
       margin: margin,
       padding: padding,
       decoration: BoxDecoration(
@@ -32,7 +32,7 @@ class WorkoutCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: ClipRRect(
-        // Stellt sicher, dass die Ecken der Kinder abgerundet sind
+        // Ensures child corners stay rounded.
         borderRadius: BorderRadius.circular(20),
         child: child,
       ),

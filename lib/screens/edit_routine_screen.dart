@@ -101,7 +101,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       for (var re in routineWithExercises.exercises) {
         final isCardio = _isCardio(re);
         for (var st in re.setTemplates) {
-          // FIX: Wenn es Cardio ist und der Wert "8-12" (Default DB) ist, leer anzeigen
+          // FIX: For cardio, show empty when the value is "8-12" (DB default).
           String repsText = st.targetReps ?? '';
           if (isCardio && repsText == '8-12') repsText = '';
 
@@ -137,7 +137,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
 
     if (selectedExercise != null && _routineId != null) {
-      // FIX: Cardio Check vor dem Hinzufügen
+      // FIX: Check cardio before adding.
       final isCardio = selectedExercise.categoryName.toLowerCase() == 'cardio';
       final initialSetCount = isCardio ? 1 : 3;
 
@@ -146,11 +146,11 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         _routineId!,
         selectedExercise.id!,
         initialSetCount: initialSetCount,
-      ); // Parameter
+      ); // Parameters
 
       if (newRoutineExercise != null) {
         for (var st in newRoutineExercise.setTemplates) {
-          // FIX: Leere Reps für Cardio
+          // FIX: Empty reps for cardio.
           final defaultReps = isCardio ? '' : st.targetReps;
 
           _repsControllers[st.id!] = TextEditingController(text: defaultReps);
@@ -709,13 +709,13 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (isCardio) {
       return Row(
         children: [
-          _buildHeader(l10n.setLabel, flex: 2), // FIX: Kleiner
+          _buildHeader(l10n.setLabel, flex: 2), // FIX: Smaller
           _buildHeader(
             l10n.cardioDistanceLabel,
             flex: 4,
-          ), // FIX: Sehr viel Platz
+          ), // FIX: Lots of space
           const SizedBox(width: 8),
-          _buildHeader(l10n.cardioTimeLabel, flex: 4), // FIX: Sehr viel Platz
+          _buildHeader(l10n.cardioTimeLabel, flex: 4), // FIX: Lots of space
           const SizedBox(width: 8),
           _buildHeader(l10n.cardioIntensityLabel, flex: 2),
           const SizedBox(width: 48),
@@ -765,7 +765,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         child: Row(
           children: [
             Expanded(
-              flex: isCardio ? 2 : 2, // FIX: Kleiner für Cardio
+              flex: isCardio ? 2 : 2, // FIX: Smaller for cardio.
               child: Center(
                 child: SetTypeChip(
                   setType: template.setType,
@@ -777,7 +777,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
             if (isCardio) ...[
               // CARDIO FIELDS
               Expanded(
-                flex: 4, // FIX: Mehr Platz
+                flex: 4, // FIX: More space
                 child: TextFormField(
                   controller: _weightControllers[template.id!],
                   textAlign: TextAlign.center,
@@ -794,7 +794,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                flex: 2, // FIX: Mehr Platz
+                flex: 2, // FIX: More space
                 child: TextFormField(
                   controller: _repsControllers[template.id!],
                   textAlign: TextAlign.center,

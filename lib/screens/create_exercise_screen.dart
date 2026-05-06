@@ -21,10 +21,10 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  // Statt Controller nutzen wir jetzt eine Variable für das Dropdown
+  // Use a variable for the dropdown instead of a controller.
   String? _selectedCategory;
 
-  // Fallback-Listen, falls die DB leer ist
+  // Fallback lists if the DB is empty
   final List<String> _defaultCategories = [
     'Abs',
     'Arms',
@@ -83,12 +83,12 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
       if (mounted) {
         setState(() {
-          // Nutze DB-Werte oder Fallback, falls leer
+          // Use DB values or fallback if empty.
           _allCategories =
               categories.isNotEmpty ? categories : _defaultCategories;
           _allMuscleGroups = muscles.isNotEmpty ? muscles : _defaultMuscles;
 
-          // Sortieren für bessere UX
+          // Sort for better UX
           _allCategories.sort();
           _allMuscleGroups.sort();
 
@@ -115,7 +115,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
     try {
       final newExercise = Exercise(
-        // ID ist null, DB vergibt neue ID
+        // ID is null; DB assigns a new ID.
         nameDe: _nameController.text.trim(),
         nameEn: _nameController.text.trim(),
         descriptionDe: _descriptionController.text.trim(),
@@ -123,7 +123,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         categoryName: _selectedCategory ?? 'Other', // Fallback
         primaryMuscles: _selectedPrimaryMuscles,
         secondaryMuscles: _selectedSecondaryMuscles,
-        imagePath: null, // Kein Bild für Custom Exercises
+        imagePath: null, // No image for custom exercises
       );
 
       await WorkoutDatabaseHelper.instance.insertExercise(newExercise);
@@ -204,7 +204,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
 
-                    // --- Kategorie (Dropdown) ---
+                    // --- Category (dropdown) ---
                     DropdownButtonFormField<String>(
                       initialValue: _selectedCategory,
                       items: _allCategories.map((cat) {
@@ -238,7 +238,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
 
-                    // --- Primäre Muskeln ---
+                    // --- Primary muscles ---
                     _buildSectionTitle(context, l10n.primary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(
@@ -247,7 +247,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
 
-                    // --- Sekundäre Muskeln ---
+                    // --- Secondary muscles ---
                     _buildSectionTitle(context, l10n.secondary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(

@@ -21,7 +21,7 @@ class MappingPrefs {
     }
   }
 
-  // Fügt/aktualisiert Einträge und speichert als JSON-String.
+  // Adds/updates entries and stores them as a JSON string.
   static Future<void> upsert(Map<String, String> entries) async {
     if (entries.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
@@ -34,7 +34,7 @@ class MappingPrefs {
     await prefs.setString(_kKey, jsonEncode(current));
   }
 
-  // Holt eine Zielzuordnung, falls vorhanden.
+  // Gets a target mapping if one exists.
   static Future<String?> lookup(String externalName) async {
     final m = await load();
     return m[_norm(externalName)];

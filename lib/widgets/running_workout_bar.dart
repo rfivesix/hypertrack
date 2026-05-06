@@ -26,7 +26,7 @@ class RunningWorkoutBar extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        // Zeit (links)
+        // Time (left)
         Expanded(
           child: Row(
             children: [
@@ -41,7 +41,7 @@ class RunningWorkoutBar extends StatelessWidget {
             ],
           ),
         ),
-        // Fortsetzen (Accent)
+        // Resume (accent)
         FilledButton(
           onPressed: onResume,
           style: FilledButton.styleFrom(
@@ -55,7 +55,7 @@ class RunningWorkoutBar extends StatelessWidget {
           child: const Text('Fortsetzen'),
         ),
         const SizedBox(width: 8),
-        // Verwerfen (Rot)
+        // Discard (red)
         FilledButton(
           onPressed: onDiscard,
           style: FilledButton.styleFrom(

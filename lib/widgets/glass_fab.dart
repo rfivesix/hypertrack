@@ -123,16 +123,16 @@ class _GlassFabState extends State<GlassFab>
               glowColor: Colors.white.withValues(alpha: isDark ? 0.24 : 0.18),
               glowRadius: 1.0,
               child: hasLabel
-                  // PILLE: Breite aus Inhalt + Padding
+                  // PILL: width from content + padding
                   ? Container(
                       height: 65.0,
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       decoration: BoxDecoration(
-                        color: neutralTint, // << Grundtönung
+                        color: neutralTint, // << Base tint
                         borderRadius: BorderRadius.circular(99),
                       ),
                       foregroundDecoration: BoxDecoration(
-                        // << Rim oben drauf
+                        // << Rim layered on top
                         borderRadius: BorderRadius.circular(99),
                         border: Border.all(
                           color: isDark
@@ -162,7 +162,7 @@ class _GlassFabState extends State<GlassFab>
                         ],
                       ),
                     )
-                  // KREIS: feste 76×76
+                  // Circle: fixed 76x76
                   : Container(
                       height: 65.0,
                       width: 65.0,

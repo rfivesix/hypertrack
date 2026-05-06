@@ -48,7 +48,7 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
       _unit = s.unit;
       _isTracked = s.isTracked;
     } else {
-      _unit = 'mg'; // Default bei Neuanlage
+      _unit = 'mg'; // Default for new entries
       _isTracked = true; // Default to tracked
     }
   }
@@ -65,7 +65,7 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
 
     final newSupplement = Supplement(
       id: editing?.id,
-      code: editing?.code, // bei Edit beibehalten; bei New null
+      code: editing?.code, // Keep for edit; null for new.
       name: _nameController.text.trim(),
       defaultDose:
           double.tryParse(_doseController.text.replaceAll(',', '.')) ?? 0.0,
@@ -97,7 +97,7 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    // NEU: Caffeine-Lock bestimmen
+    // New: determine caffeine lock
     final s = widget.supplementToEdit;
     final bool isBuiltinCaffeine =
         (s?.isBuiltin == true) && (s?.code == 'caffeine');
@@ -147,7 +147,7 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
                   ),
                   const SizedBox(width: DesignConstants.spacingM),
 
-                  // <- Wichtig: begrenzen!
+                  // <- Important: constrain this.
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       initialValue: _unit,

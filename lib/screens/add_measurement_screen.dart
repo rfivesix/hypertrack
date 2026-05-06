@@ -1,4 +1,4 @@
-// lib/screens/add_measurement_screen.dart (Final & De-Materialisiert - Korrigiert)
+// lib/screens/add_measurement_screen.dart (final, de-materialized, corrected)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +8,7 @@ import '../models/measurement.dart';
 import '../models/measurement_session.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
-import '../widgets/summary_card.dart'; // HINZUGEFÜGT
+import '../widgets/summary_card.dart'; // Added
 
 /// A screen for recording new body measurements.
 ///
@@ -206,14 +206,14 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Datum & Uhrzeit Sektion
+              // Date & time section
               Text(
                 l10n.date_and_time_of_measurement,
                 style: textTheme.titleMedium,
               ),
               const SizedBox(height: DesignConstants.spacingS),
               SummaryCard(
-                // KORREKTUR 2: Datum/Uhrzeit in SummaryCard
+                // FIX 2: Date/time in SummaryCard
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16.0,
@@ -254,7 +254,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               ),
               const SizedBox(
                 height: DesignConstants.spacingXL,
-              ), // KORREKTUR 3: Abstand angepasst
+              ), // FIX 3: Adjusted spacing
               // Messwerte-Sektion
               Text(l10n.drawerMeasurements, style: textTheme.titleMedium),
               const SizedBox(height: DesignConstants.spacingS),
@@ -262,7 +262,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(
                     bottom: 12.0,
-                  ), // KORREKTUR 4: Padding angepasst
+                  ), // FIX 4: Adjusted padding
                   child: TextFormField(
                     controller: _controllers[key],
                     decoration: InputDecoration(
@@ -273,7 +273,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                       decimal: true,
                     ),
                     validator: (value) {
-                      // Nur validieren, wenn etwas eingegeben wurde
+                      // Validate only if something was entered
                       if (value != null &&
                           value.isNotEmpty &&
                           double.tryParse(value.replaceAll(',', '.')) == null) {
@@ -286,7 +286,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               }),
               const SizedBox(
                 height: DesignConstants.spacingL,
-              ), // Abstand zum Ende
+              ), // Spacing to the end
             ],
           ),
         ),

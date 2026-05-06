@@ -14,7 +14,7 @@ class ShadowContainer extends StatelessWidget {
   final List<BoxShadow>? boxShadow;
 
   /// Optional external margin around the container.
-  final EdgeInsetsGeometry? margin; // Optionaler externer Margin
+  final EdgeInsetsGeometry? margin; // Optional external margin
 
   const ShadowContainer({
     super.key,
@@ -32,7 +32,7 @@ class ShadowContainer extends StatelessWidget {
         borderRadius: borderRadius,
         boxShadow: boxShadow ??
             [
-              // Standard-Schatten, wenn keiner angegeben ist
+              // Standard shadow when none is provided
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 15,
@@ -42,7 +42,7 @@ class ShadowContainer extends StatelessWidget {
             ],
       ),
       child: ClipRRect(
-        // ClipRRect, um den Inhalt innerhalb der Ecken zu halten
+        // ClipRRect keeps the content inside the rounded corners.
         borderRadius: borderRadius,
         child: child,
       ),

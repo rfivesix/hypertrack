@@ -86,9 +86,9 @@ class AddFoodScreen extends StatefulWidget {
   final int initialTab;
 
   /// Optional initial date for the tracked entry.
-  final DateTime? initialDate; // <--- NEU
+  final DateTime? initialDate; // <--- New
   /// Optional category or meal type identifier for the entry.
-  final String? initialMealType; // <--- NEU
+  final String? initialMealType; // <--- New
 
   /// When true, the screen acts as a food picker — tapping an item pops it
   /// back to the caller instead of logging it. Used by AI meal review.
@@ -96,8 +96,8 @@ class AddFoodScreen extends StatefulWidget {
   const AddFoodScreen({
     super.key,
     this.initialTab = 0,
-    this.initialDate, // <--- NEU
-    this.initialMealType, // <--- NEU
+    this.initialDate, // <--- New
+    this.initialMealType, // <--- New
     this.selectionMode = false,
   });
 
@@ -125,13 +125,13 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
   List<Map<String, dynamic>> _baseCategories = [];
   final Map<String, List<FoodItem>> _catItems = {}; // key -> Produkte
-  final Set<String> _loadingCats = {}; // ladeanzeige je Kategorie
+  final Set<String> _loadingCats = {}; // Loading indicator per category
   // Meals
   List<Map<String, dynamic>> _meals = [];
   final Map<int, List<Map<String, dynamic>>> _mealItemsCache = {};
   final Map<int, Future<MealCardNutritionTotals>> _mealTotalsFutureCache = {};
   bool _isLoadingMeals = true;
-  int _currentTab = 0; // 0=Katalog, 1=Zuletzt, 2=Favoriten, 3=Mahlzeiten
+  int _currentTab = 0; // 0=catalog, 1=recent, 2=favorites, 3=meals
   final bool _suspendFab = false;
   static const double _bottomPadding = 100.0;
 
@@ -192,7 +192,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     if (mounted) setState(() {});
     final items = await ProductDatabaseHelper.instance.getBaseFoods(
       categoryKey: key,
-      limit: 500, // großzügig – DB ist lokal
+      limit: 500, // generous because the DB is local
     );
     _catItems[key] = items;
     _loadingCats.remove(key);
@@ -446,7 +446,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       return const Center(child: CircularProgressIndicator());
     }
     if (_favoriteFoodItems.isEmpty) {
-      // NEUER, AUFGEWERTETER EMPTY STATE
+      // Newer, improved empty state
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -501,7 +501,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       return const Center(child: CircularProgressIndicator());
     }
     if (_recentFoodItems.isEmpty) {
-      // NEUER, AUFGEWERTETER EMPTY STATE
+      // Newer, improved empty state
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -565,14 +565,14 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     return SummaryCard(
       child: ListTile(
         leading: Icon(sourceIcon, color: colorScheme.primary),
-        // --- HIER IST DIE ÄNDERUNG ---
+        // --- Change starts here ---
         title: Text(
           item.getLocalizedName(context).isNotEmpty
               ? item.getLocalizedName(context)
               : l10n.unknown,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        // --- ENDE DER ÄNDERUNG ---
+        // --- Change ends here ---
         subtitle: Text(
           l10n.foodItemSubtitle(
             item.brand.isNotEmpty ? item.brand : l10n.noBrand,
@@ -606,28 +606,28 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
   }
 
-  // FÜGE DIESE NEUE METHODE HINZU
+  // Add this new method.
   void _scanBarcodeAndPop() async {
     final l10n = AppLocalizations.of(context)!;
-    // Öffne den Scanner und warte auf einen Barcode (String) als Ergebnis
+    // Open the scanner and wait for a barcode (String) result.
     final String? barcode = await Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (context) => const ScannerScreen()),
     );
 
-    // Wenn ein Barcode zurückgegeben wurde und der Screen noch existiert...
+    // If a barcode was returned and the screen still exists...
     if (barcode != null && mounted) {
-      // ...suche das Produkt in der Datenbank.
+      // ...search for the product in the database.
       final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
         barcode,
       );
       if (!mounted) return;
 
-      // Wenn das Produkt gefunden wurde...
+      // If the product was found...
       if (foodItem != null) {
-        // ...schließe den AddFoodScreen und gib das gefundene Item zurück.
+        // ...close AddFoodScreen and return the found item.
         Navigator.of(context).pop(foodItem);
       } else {
-        // Wenn nicht, zeige eine kurze Info-Nachricht.
+        // Otherwise, show a short info message.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.snackbarBarcodeNotFound(barcode))),
@@ -649,7 +649,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           Expanded(
             child: TextField(
               controller: _searchController,
-              onChanged: _runFilter, // nutzt deine bestehende Suche
+              onChanged: _runFilter, // Uses the existing search
               decoration: InputDecoration(
                 hintText: l10n.searchHintText,
                 prefixIcon: Icon(
@@ -727,7 +727,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       ),
     );
 
-    // FALL A: Kein Query → Kategorien/Accordion aus Base-DB (deine vorhandene Logik)
+    // CASE A: No query -> categories/accordion from Base DB (existing logic)
 
     final String q = _searchController.text.trim();
     if (q.isEmpty) {
@@ -819,7 +819,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       );
     }
 
-    // FALL B: Mit Query → zuerst Base-Items, dann OFF/User-Items (Priorisierung)
+    // CASE B: With query -> base items first, then OFF/user items (prioritized)
     final baseHits = _foundFoodItems
         .where((it) => it.source == FoodItemSource.base)
         .toList();
@@ -884,7 +884,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
 
     if (_meals.isEmpty) {
-      // Empty State: kein Top-Button mehr – Erstellen läuft über den FAB
+      // Empty state: no top button anymore; creation happens via the FAB.
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -920,7 +920,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       onRefresh: _loadMeals,
       child: ListView.builder(
         padding: DesignConstants.cardPadding.copyWith(bottom: _bottomPadding),
-        itemCount: _meals.length, // FIX: +1 entfernt, da Padding genutzt wird
+        itemCount: _meals.length, // FIX: Removed +1 because padding is used.
         itemBuilder: (_, i) {
           final meal = _meals[i];
           return _buildMealCard(meal, l10n);
@@ -974,7 +974,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               tooltip: l10n.mealsEdit,
               icon: const Icon(Icons.edit),
               onPressed: () async {
-                // Neuer Screen öffnen (View), direkt in Edit wechseln
+                // Open new screen (view), then switch directly to edit.
                 await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => MealScreen(meal: meal, startInEdit: true),
@@ -991,7 +991,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           ],
         ),
         onTap: () async {
-          // Neuer Detail-Screen (View)
+          // New detail screen (view)
           await Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => MealScreen(meal: meal)));
@@ -1005,7 +1005,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     Map<String, dynamic> meal,
     AppLocalizations l10n,
   ) async {
-    // NEU: Helper
+    // New helper
     final ok = await showDeleteConfirmation(
       context,
       title: l10n.mealDeleteConfirmTitle,
@@ -1051,7 +1051,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       'mealtypeSnack',
     ];
 
-    // Initialwerte aus Widget-Parametern oder Defaults
+    // Initial values from widget parameters or defaults
     String selectedMealType = widget.initialMealType ?? internalTypes.first;
     if (!internalTypes.contains(selectedMealType)) {
       selectedMealType = internalTypes.first;
@@ -1091,7 +1091,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                       ),
                       const SizedBox(height: 12),
 
-                      // Datum & Zeit Auswahl
+                      // Date & time selection
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -1267,7 +1267,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
       if (!ok) return;
 
-      // Nutze das ausgewählte Datum (selectedDate) statt DateTime.now()
+      // Use the selected date (selectedDate) instead of DateTime.now().
       for (final it in rawItems) {
         final bc = it['barcode'] as String;
         final ctrl = qtyCtrls[bc]!;
@@ -1277,7 +1277,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         await DatabaseHelper.instance.insertFoodEntry(
           FoodEntry(
             barcode: bc,
-            timestamp: selectedDate, // <--- VERWENDUNG
+            timestamp: selectedDate, // <--- Usage
             quantityInGrams: qty,
             mealType: selectedMealType,
           ),
@@ -1306,7 +1306,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   Future<void> _logCaffeineDose(double doseMg, DateTime timestamp) async {
     if (doseMg <= 0) return;
 
-    // Caffeine-Supplement suchen/anlegen
+    // Search/create caffeine supplement
     final supplements = await DatabaseHelper.instance.getAllSupplements();
     final caffeine = supplements.firstWhere(
       (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
@@ -1329,8 +1329,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        // sourceFoodEntryId: hier könnten wir verlinken, wenn wir die neue FoodEntry-ID hätten –
-        // in diesem Flow buchen wir mehrere; Verlinkung kannst du später erweitern.
+        // sourceFoodEntryId: link here if the new FoodEntry ID is available.
+        // This flow logs multiple entries; linking can be extended later.
       ),
     );
   }

@@ -32,8 +32,8 @@ class SupplementLog {
     required this.dose,
     required this.unit,
     required this.timestamp,
-    this.sourceFoodEntryId, // Jetzt als optionaler Parameter verfügbar
-    this.sourceFluidEntryId, // Jetzt als optionaler Parameter verfügbar
+    this.sourceFoodEntryId, // Now available as an optional parameter
+    this.sourceFluidEntryId, // Now available as an optional parameter
   });
 
   /// Converts the [SupplementLog] instance to a Map for database storage.

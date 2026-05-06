@@ -28,7 +28,7 @@ class SupplementSummaryWidget extends StatelessWidget {
       case 'creatine_monohydrate':
         return l10n.supplement_creatine_monohydrate;
       default:
-        // Fallback: benutzerdefinierte Supplements behalten ihren Namen
+        // Fallback: custom supplements keep their name.
         return s.name;
     }
   }
@@ -94,7 +94,7 @@ class _CheckmarkCard extends StatelessWidget {
       case 'creatine_monohydrate':
         return l10n.supplement_creatine_monohydrate;
       default:
-        // Fallback: benutzerdefinierte Supplements behalten ihren Namen
+        // Fallback: custom supplements keep their name.
         return s.name;
     }
   }

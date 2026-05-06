@@ -52,7 +52,7 @@ class _EditableSetRowState extends State<EditableSetRow> {
       text: widget.setLog.reps?.toString() ?? '',
     );
 
-    // Melde Änderungen an den Parent-Screen
+    // Report changes to the parent screen.
     _weightController.addListener(() {
       widget.onWeightChanged(_weightController.text);
     });

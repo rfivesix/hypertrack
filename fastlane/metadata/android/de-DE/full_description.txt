@@ -1,0 +1,22 @@
+Train Libre ist ein Open-Source Fitness-Tracker für Menschen, die Training und Ernährung ernsthaft protokollieren wollen, ohne die Kontrolle über ihre Daten abzugeben.
+
+Funktionen:
+- Workouts Satz für Satz protokollieren, inklusive Aufwärmsätzen, Arbeitssätzen, Sätzen bis zum Versagen, Dropsets, Wiederholungen, Gewicht und RIR
+- Routinen erstellen, wiederverwenden und abgeschlossene Einheiten auswerten
+- Ernährung, Mahlzeiten, Hydration, Koffein, Kreatin, Supplements, Körpergewicht und Körpermaße tracken
+- Statistiken für PRs, Konsistenz, Muskelvolumen, Recovery, Körpertrends, Kalorien, Schlaf, Schritte und Puls nutzen, sofern Daten verfügbar sind
+- App-Daten standardmäßig lokal behalten, inklusive Export und Import lokaler Backups
+- Integrierte Datenquellen auf Basis von Open Food Facts und wger verwenden
+- Unterstützte selbst erfasste Daten einseitig zu Google Health Connect exportieren
+- Optionale KI-Mahlzeitenfunktionen mit eigenem API-Key nutzen, standardmäßig deaktiviert
+
+Was Train Libre besonders macht:
+- Open Source und öffentlich entwickelt
+- Offline-first, ohne verpflichtenden Cloud-Account
+- Gebaut für strukturiertes Krafttraining statt Gamification
+- Transparente Analysen, die langfristig verständlich und nützlich bleiben sollen
+
+Train Libre ist keine medizinische App. Recovery-, Schlaf- und Pulsfunktionen dienen der Trainingsplanung und persönlichen Orientierung und stellen keine medizinische Diagnose oder Behandlung dar.
+
+Open Source:
+Der Quellcode ist öffentlich verfügbar und die App wird offen entwickelt.

@@ -6,9 +6,9 @@ double convert(double value, String from, String to) {
   if (from == 'mg' && to == 'g') return value / 1000.0;
   if (from == 'l' && to == 'ml') return value * 1000.0;
   if (from == 'ml' && to == 'l') return value / 1000.0;
-  // sonst keine Konvertierung
+  // no conversion otherwise
   return value;
 }
 
-// Empfehlungs-Liste zulässiger Einheiten:
+// Recommended list of allowed units:
 const allowedUnits = <String>['mg', 'g', 'IU', 'ml', 'l'];

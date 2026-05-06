@@ -1,4 +1,4 @@
-// lib/screens/nutrition_screen.dart (Final & De-Materialisiert - Endgültige Korrektur)
+// lib/screens/nutrition_screen.dart (final, de-materialized correction)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -52,11 +52,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
       ? DateTimeRange(
           start: DateTime.now(),
           end: DateTime.now(),
-        ) // Einzeltag für heute
+        ) // Single day for today
       : DateTimeRange(
           start: DateTime.now().subtract(const Duration(days: 6)),
           end: DateTime.now(),
-        ); // Standard: Letzte 7 Tage
+        ); // Default: last 7 days
   bool _isSummaryExpanded = UiStateService.instance.isNutritionSummaryExpanded;
   String _selectedRangeKey = '1D';
   bool _isHeaderVisible = true;
@@ -102,7 +102,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final fluidEntries = await DatabaseHelper.instance
         .getFluidEntriesForDateRange(range.start, range.end);
     final supplementLogs = await DatabaseHelper.instance
-        .getAllSupplementLogs(); // Annahme: Methode existiert
+        .getAllSupplementLogs(); // Assumption: method exists
     final supplements = await DatabaseHelper.instance.getAllSupplements();
 
     final caffeineSupplementId =
@@ -140,8 +140,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
       }
     }
 
-    // *** KORREKTURBLOCK START ***
-    // Nährwerte aus Flüssigkeiten zur Summe addieren
+    // *** Fix block start ***
+    // Add nutrients from fluids to the total
     newNutritionSummary.water = fluidEntries.fold(
       0,
       (sum, entry) => sum + entry.quantityInMl,
@@ -154,7 +154,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
       newNutritionSummary.sugar += (entry.sugarPer100ml ?? 0) * factor;
     }
 
-    // Koffein aus Supplement-Logs berechnen
+    // Calculate caffeine from supplement logs
     if (caffeineSupplementId != null) {
       final relevantLogs = supplementLogs.where(
         (log) =>
@@ -170,12 +170,12 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
     final fluidTimeline =
         fluidEntries.map((e) => FluidTimelineEntry(e)).toList();
-    // *** KORREKTURBLOCK ENDE ***
+    // *** Fix block end ***
 
     final List<dynamic> finalDisplayList = [];
 
     if (range.duration.inDays == 0) {
-      // ... (Rest der Methode bleibt unverändert)
+      // ... (rest of the method stays unchanged)
       final Map<String, List<FoodTimelineEntry>> groupedFood = {};
       for (final entry in foodTimeline) {
         final mealType = entry.trackedItem.entry.mealType;
@@ -237,12 +237,12 @@ class _NutritionScreenState extends State<NutritionScreen> {
   void _navigateDay(bool forward) {
     final currentDay = _selectedDateRange.start;
     final newDay = currentDay.add(Duration(days: forward ? 1 : -1));
-    // Navigation über den heutigen Tag hinaus verhindern
+    // Prevent navigation beyond today
     if (forward && newDay.isAfter(DateTime.now())) return;
 
     setState(() {
       _selectedDateRange = DateTimeRange(start: newDay, end: newDay);
-      _selectedRangeKey = 'custom'; // De-selektiert die Filter-Chips
+      _selectedRangeKey = 'custom'; // Deselects the filter chips
     });
     _loadEntriesForDateRange(_selectedDateRange);
   }
@@ -426,11 +426,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
         carbsPer100ml: sugarPer100ml, // Spiegeln
         caffeinePer100ml: result.$4,
         timestamp: fluidEntry.timestamp,
-        linkedFoodEntryId: fluidEntry.linkedFoodEntryId, // Wichtig: beibehalten
+        linkedFoodEntryId: fluidEntry.linkedFoodEntryId, // Important: keep this
       );
       await DatabaseHelper.instance.updateFluidEntry(updatedEntry);
 
-      // Koffein-Log aktualisieren/löschen
+      // Update/delete caffeine log
       await _logCaffeineDose(
         (result.$4 ?? 0) * (quantity / 100.0),
         fluidEntry.timestamp,
@@ -441,7 +441,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
-  // FÜGE DIE FEHLENDE LOGIK FÜR KOFFEIN HINZU (falls nicht vorhanden)
+  // Add the missing caffeine logic if it is not present.
   Future<void> _logCaffeineDose(
     double doseMg,
     DateTime timestamp, {
@@ -515,7 +515,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //SizedBox(height: DesignConstants.spacingL), // <- DIESE ZEILE
+                        //SizedBox(height: DesignConstants.spacingL), // <- This line
                         //SizedBox(height: DesignConstants.spacingXL),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -572,7 +572,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                         ),
                         const SizedBox(
                           height: DesignConstants.spacingL,
-                        ), // <- DIESE ZEILE
+                        ), // <- This line
                       ],
                     ),
                   ),
@@ -591,11 +591,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             if (_nutritionData != null)
                               Column(
                                 children: [
-                                  // KORREKTUR: NutritionSummaryWidget in einem Padding, das dem horizontalen ListView-Padding entspricht.
+                                  // FIX: Wrap NutritionSummaryWidget in padding matching the horizontal ListView padding.
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0,
-                                    ), // <- Dieser Padding ist wichtig!
+                                    ), // <- This padding is important.
                                     child: NutritionSummaryWidget(
                                       nutritionData: _nutritionData!,
                                       isExpandedView: _isSummaryExpanded,
@@ -664,7 +664,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           itemCount: _displayItems.length,
                           separatorBuilder: (context, index) => const SizedBox(
                             height: DesignConstants.spacingM,
-                          ), // KORREKTUR: Trenner
+                          ), // FIX: Divider
                           itemBuilder: (context, index) {
                             final item = _displayItems[index];
 
@@ -742,7 +742,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                     _editFoodEntry(trackedItem);
                                     return false;
                                   } else {
-                                    // NEU: Verwendung der Helper-Funktion
+                                    // New: use the helper function
                                     return await showDeleteConfirmation(
                                       context,
                                     );
@@ -812,7 +812,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                     _editFluidEntry(fluidEntry);
                                     return false;
                                   } else {
-                                    // NEU: Verwendung der Helper-Funktion
+                                    // New: use the helper function
                                     return await showDeleteConfirmation(
                                       context,
                                     );

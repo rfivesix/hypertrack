@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
-import '../util/time_util.dart'; // Wir erstellen diese Hilfsdatei gleich
+import '../util/time_util.dart'; // This helper file is created separately.
 
 /// A horizontal bar displaying key workout metrics.
 ///
@@ -14,7 +14,7 @@ class WorkoutSummaryBar extends StatelessWidget {
     this.duration,
     required this.volume,
     required this.sets,
-    this.progress, // NULL => Spacer-Modus
+    this.progress, // NULL => spacer mode
   });
 
   /// The elapsed or total time.
@@ -27,7 +27,7 @@ class WorkoutSummaryBar extends StatelessWidget {
   final int sets;
 
   /// Optional progress value (0..1) for the progress bar.
-  final double? progress; // 0..1 oder null
+  final double? progress; // 0..1 or null
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +36,7 @@ class WorkoutSummaryBar extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Header ohne grauen Kasten
+        // Header without gray box
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -63,7 +63,7 @@ class WorkoutSummaryBar extends StatelessWidget {
           ),
         ),
 
-        // Progress / Spacer: volle Breite, kein Padding
+        // Progress / spacer: full width, no padding
         SizedBox(
           width: double.infinity,
           child: _WorkoutProgressBar(value: progress),
@@ -72,7 +72,7 @@ class WorkoutSummaryBar extends StatelessWidget {
     );
   }
 
-  /// Ein kleines Helfer-Widget für eine einzelne Statistik-Spalte.
+  /// Small helper widget for a single statistics column.
   Widget _buildStatColumn({
     required BuildContext context,
     required String label,
@@ -137,7 +137,7 @@ class _WorkoutProgressBar extends StatelessWidget {
       ),
     );
 
-    // kein Außenabstand → wirklich von ganz links bis ganz rechts
+    // No external spacing -> truly from far left to far right
     return bar;
   }
 }

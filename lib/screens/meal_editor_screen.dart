@@ -35,7 +35,7 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initialName ?? '');
     _type = widget.initialType;
-    _nameCtrl.addListener(() => setState(() {})); // Button-State aktualisieren
+    _nameCtrl.addListener(() => setState(() {})); // Update button state
   }
 
   @override
@@ -49,8 +49,8 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
     setState(() => _saving = true);
 
     try {
-      // 🔗 HIER später: Repo/DB call (insert/update).
-      // Für jetzt: einfach Erfolg simulieren und zurück.
+      // Later: repo/DB call (insert/update).
+      // For now: simulate success and return.
       await Future.delayed(const Duration(milliseconds: 150));
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -105,7 +105,7 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
                 .toList(),
           ),
           const SizedBox(height: 24),
-          // Platzhalter: später Zutaten/Per-Ingredient Anzeige
+          // Placeholder: later ingredients/per-ingredient display
           Card(
             child: ListTile(
               title: const Text('Zutaten'),
@@ -113,7 +113,7 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
               trailing: IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
-                  // später: Produktpicker öffnen
+                  // Later: open product picker
                 },
               ),
             ),

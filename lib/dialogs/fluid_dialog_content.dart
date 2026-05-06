@@ -1,4 +1,4 @@
-// lib/dialogs/fluid_dialog_content.dart - ERSETZE DIE GESAMTE DATEI
+// lib/dialogs/fluid_dialog_content.dart - replace the entire file
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,17 +11,17 @@ import '../util/design_constants.dart';
 class FluidDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;
-  final String? initialName; // <--- NEU
-  final double? initialSugar; // <--- NEU
-  final double? initialCaffeine; // <--- NEU
+  final String? initialName; // <--- New
+  final double? initialSugar; // <--- New
+  final double? initialCaffeine; // <--- New
 
   const FluidDialogContent({
     super.key,
     this.initialQuantity,
     this.initialTimestamp,
-    this.initialName, // <--- NEU
-    this.initialSugar, // <--- NEU
-    this.initialCaffeine, // <--- NEU
+    this.initialName, // <--- New
+    this.initialSugar, // <--- New
+    this.initialCaffeine, // <--- New
   });
 
   @override
@@ -46,11 +46,11 @@ class FluidDialogContentState extends State<FluidDialogContent> {
     super.initState();
     _nameController = TextEditingController(
       text: widget.initialName ?? 'Water',
-    ); // <--- Initialisierung anpassen
+    ); // <--- Adjust initialization
     _quantityController = TextEditingController(
       text: widget.initialQuantity?.toString() ?? '',
     );
-    // <--- Hinzufügen der Initialisierung für Nährstoffe
+    // <--- Add nutrient initialization
     _caffeineController = TextEditingController(
       text:
           widget.initialCaffeine?.toStringAsFixed(1).replaceAll('.0', '') ?? '',

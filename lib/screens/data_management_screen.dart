@@ -1,4 +1,4 @@
-// lib/screens/data_management_screen.dart (Final & Vollständig)
+// lib/screens/data_management_screen.dart (final and complete)
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -11,8 +11,8 @@ import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../data/workout_database_helper.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // NEU
-import 'package:flutter/services.dart'; // NEU (Clipboard)
+import 'package:shared_preferences/shared_preferences.dart'; // New
+import 'package:flutter/services.dart'; // New (Clipboard)
 import '../widgets/glass_bottom_menu.dart';
 import '../services/storage/saf_storage_service.dart';
 
@@ -28,11 +28,11 @@ class DataManagementScreen extends StatefulWidget {
 }
 
 class _DataManagementScreenState extends State<DataManagementScreen> {
-  // Lade-Zustände für die verschiedenen Aktionen
+  // Loading states for the different actions
   bool _isFullBackupRunning = false;
   bool _isCsvExportRunning = false;
   bool _isMigrationRunning = false;
-  String? _autoBackupDir; // NEU
+  String? _autoBackupDir; // New
   String? _lastAutoBackupFilePath;
   String? _lastAutoBackupDirUsed;
   String? _lastAutoBackupError;
@@ -40,7 +40,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAutoBackupDir(); // NEU
+    _loadAutoBackupDir(); // New
   }
 
   Future<void> _loadAutoBackupDir() async {
@@ -55,7 +55,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     });
   }
 
-  // --- UNVERÄNDERT: Logik für Komplett-Backup ---
+  // --- Unchanged: full-backup logic ---
   void _performFullExport() async {
     setState(() => _isFullBackupRunning = true);
     final success = await BackupManager.instance.exportFullBackup();
@@ -92,7 +92,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       title: l10n.dialogConfirmTitle,
       content: l10n.dialogConfirmImportContent,
       confirmLabel:
-          l10n.dialogButtonOverwrite, // Roter Button passt hier gut (Warnung)
+          l10n.dialogButtonOverwrite, // Red button fits well here (warning)
     );
 
     if (confirmed == true) {
@@ -101,10 +101,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         filePath,
       );
       if (!success) {
-        // Datei könnte verschlüsselt sein – Passwort abfragen (leer = “kein Passwort” versuchen)
+        // File may be encrypted; ask for password (empty = try no password).
         final pw = await _askPassword(title: l10n.dialogEnterPasswordImport);
         if (pw != null) {
-          // <-- wichtig: leer zulassen
+          // <-- Important: allow empty values.
           success = await BackupManager.instance.importFullBackupAuto(
             filePath,
             passphrase: pw,
@@ -113,10 +113,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       }
 
       if (!mounted) return;
-      setState(() => _isFullBackupRunning = false); // nur einmal
+      setState(() => _isFullBackupRunning = false); // only once
 
       if (success) {
-        // Neu: Unbekannte Übungsnamen ermitteln und ggf. Mapping anbieten
+        // New: detect unknown exercise names and offer mapping if needed.
         final unknown =
             await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
         if (!mounted) return;
@@ -127,7 +127,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             ),
           );
           */
-          // Optional: Nach Anwendung erneut prüfen/refreshen, aber keine Pflicht.
+          // Optional: check/refresh again after applying, but not required.
         }
 
         await showGlassBottomMenu<void>(
@@ -164,7 +164,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
   }
 
-  // --- UNVERÄNDERT: Logik für Hevy-Import ---
+  // --- Unchanged: Hevy import logic ---
   void _performHevyImport() async {
     setState(() => _isMigrationRunning = true);
     final count = await ImportManager().importHevyCsv();
@@ -198,7 +198,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
   }
 
-  // --- NEU: Helfer-Methode für alle CSV-Exporte ---
+  // --- New: helper method for all CSV exports ---
   void _exportCsv(
     Future<bool> Function() exportFunction,
     String successMessage,
@@ -226,26 +226,26 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    // Diese Berechnung ist korrekt.
+    // This calculation is correct.
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(
-        // l10n.dataHubTitle wäre hier ideal, aber "Data Hub" ist auch ok
+        // l10n.dataHubTitle would be ideal here, but "Data Hub" is also ok.
         title: l10n.dataHubTitle,
       ),
-      // Das SafeArea-Widget wurde hier entfernt. Der Body ist jetzt direkt der SingleChildScrollView.
+      // SafeArea was removed here. The body is now the SingleChildScrollView directly.
       body: SingleChildScrollView(
-        // Ihre Padding-Logik ist korrekt und wird beibehalten.
+        // Its padding logic is correct and preserved.
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top + topPadding,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- Ihr gesamter Inhalt bleibt hier unverändert ---
+            // --- All existing content remains unchanged here ---
             _buildFullBackupCard(context, l10n, theme),
             const SizedBox(height: DesignConstants.spacingL),
             _buildAutoBackupCard(context, l10n, theme),
@@ -306,7 +306,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               ],
             ),
             const SizedBox(height: DesignConstants.spacingS),
-            // NEU: Verschlüsselt exportieren
+            // New: export encrypted
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -487,7 +487,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     );
   }
 
-  // lib/screens/data_management_screen.dart – Auszug: neue Card
+  // lib/screens/data_management_screen.dart - excerpt: new card
   Widget _buildAutoBackupCard(
     BuildContext context,
     AppLocalizations l10n,
@@ -543,7 +543,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     passphrase: null,
                     retention: 7,
                     dirPath: _autoBackupDir,
-                    force: true, // NEU: sofort ausführen
+                    force: true, // New: run immediately
                   );
                   await _loadAutoBackupDir();
                   if (!mounted) return;

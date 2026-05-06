@@ -35,8 +35,8 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   WorkoutHeartRateSummary? _heartRateSummary;
   static const ShareService _shareService = ShareService();
 
-  // Wir speichern jetzt einen formatierten String pro Übung,
-  // da Cardio und Kraft unterschiedliche Einheiten haben.
+  // Store one formatted string per exercise,
+  // because cardio and strength use different units.
   Map<String, String> _summaryPerExercise = {};
 
   @override
@@ -112,12 +112,12 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme;
 
-    // Gesamtvolumen nur für Kraft berechnen? Oder einfach weglassen wenn Mischmasch?
-    // Wir lassen die globale "Volume" Anzeige im Header einfach als Summe aller Kraft-Volumen.
+    // Calculate total volume only for strength, or omit it for mixed workouts?
+    // Keep the global "Volume" header as the sum of all strength volume.
     double globalVolume = 0;
     if (_log != null) {
       for (var set in _log!.sets) {
-        // Nur Gewicht * Reps addieren (Cardio hat hier meist 0 oder null)
+        // Add only weight * reps (cardio usually has 0 or null here).
         globalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
       }
     }
@@ -146,7 +146,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                   padding: DesignConstants.cardPadding,
                   child: Column(
                     children: [
-                      // Gesamt-Statistiken
+                      // Overall statistics
                       WorkoutSummaryBar(
                         duration: _log!.endTime?.difference(_log!.startTime),
                         volume: globalVolume,
@@ -159,7 +159,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                         const SizedBox(height: DesignConstants.spacingL),
                       ],
 
-                      // Liste der Übungen
+                      // Exercise list
                       Expanded(
                         child: ListView(
                           children: [
@@ -199,7 +199,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  // Hier wird nun entweder "X kg" oder "X km | Y min" angezeigt
+                                  // This now shows either "X kg" or "X km | Y min".
                                   trailing: Text(
                                     entry.value,
                                     style: textTheme.bodyLarge,

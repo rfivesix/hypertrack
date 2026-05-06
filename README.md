@@ -174,4 +174,4 @@ Train Libre remains the authoritative record for its own tracking and analytics.
 
 ## License
 
-[MIT](LICENSE)
+[GPL-3.0](LICENSE)

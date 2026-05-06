@@ -12,10 +12,10 @@ const Color summaryCardDarkMode = Color.fromARGB(
   40,
   40,
   40,
-); // tiefes Grau für Dark Mode
+); // Deep gray for dark mode
 const Color summaryCardWhiteMode = Color.fromARGB(
   255,
   235,
   235,
   235,
-); // sehr helles Grau für Light Mode
+); // Very light gray for light mode
