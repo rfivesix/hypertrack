@@ -8,7 +8,7 @@ class Supplement {
   final int? id;
 
   /// An optional unique code for the supplement (e.g., for barcode scanning).
-  final String? code; // <— NEU, optional
+  final String? code; // New, optional
 
   /// The name of the supplement (e.g., "Creatine Monohydrate").
   final String name;
@@ -52,7 +52,7 @@ class Supplement {
   factory Supplement.fromMap(Map<String, dynamic> map) {
     return Supplement(
       id: map['id'] as int?,
-      code: map['code'] as String?, // NEU
+      code: map['code'] as String?, // New
       name: map['name'] as String,
       defaultDose: (map['default_dose'] as num).toDouble(),
       unit: map['unit'] as String,
@@ -68,7 +68,7 @@ class Supplement {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'code': code, // NEU
+      'code': code, // New
       'name': name,
       'default_dose': defaultDose,
       'unit': unit,

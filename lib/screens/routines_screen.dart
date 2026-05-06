@@ -1,4 +1,4 @@
-// lib/screens/routines_screen.dart (Final & De-Materialisiert - Korrigiert)
+// lib/screens/routines_screen.dart (final, de-materialized, corrected)
 
 import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
@@ -31,24 +31,24 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   bool _isLoading = true;
   List<Routine> _routines = [];
   static const ShareService _shareService = ShareService();
-  // final l10n wurde entfernt, da es in didChangeDependencies instanziiert wird
+  // final l10n was removed because it is instantiated in didChangeDependencies.
 
   @override
   void initState() {
     super.initState();
-    // _loadRoutines wird jetzt von didChangeDependencies aufgerufen
+    // _loadRoutines is now called from didChangeDependencies.
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Sicherstellen, dass l10n verfügbar ist, bevor _loadRoutines aufgerufen wird.
-    // l10n wird hier instanziiert, wo context sicher verfügbar ist.
+    // Ensure l10n is available before _loadRoutines is called.
+    // l10n is instantiated here, where context is safely available.
     _loadRoutines(AppLocalizations.of(context)!);
   }
 
   Future<void> _loadRoutines(AppLocalizations l10n) async {
-    // l10n als Parameter hinzugefügt
+    // l10n added as a parameter
     setState(() => _isLoading = true);
     final data = await WorkoutDatabaseHelper.instance.getAllRoutines();
     if (mounted) {
@@ -56,12 +56,12 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
         _routines = data;
         _isLoading = false;
       });
-      // Wenn eine initialRoutineId übergeben wurde, direkt dorthin navigieren
+      // If an initialRoutineId was passed, navigate there directly.
       if (widget.initialRoutineId != null) {
         final routineToEdit = _routines.firstWhere(
           (r) => r.id == widget.initialRoutineId,
           orElse: () => throw Exception(l10n.errorRoutineNotFound),
-        ); // l10n hier verwenden
+        ); // Use l10n here
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context)
               .push(
@@ -70,7 +70,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                       EditRoutineScreen(routine: routineToEdit),
                 ),
               )
-              .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
+              .then((_) => _loadRoutines(l10n)); // Pass l10n here
         });
       }
     }
@@ -92,7 +92,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     Navigator.of(context).pop();
     if (fullRoutine != null) {
       HapticFeedbackService.instance.confirmationFeedback();
-      final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
+      final l10n = AppLocalizations.of(context)!; // Get l10n from the build context
       Navigator.of(context)
           .push(
             MaterialPageRoute(
@@ -102,7 +102,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
               ),
             ),
           )
-          .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
+          .then((_) => _loadRoutines(l10n)); // Pass l10n here
     }
   }
 
@@ -119,24 +119,24 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
             builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
           ),
         )
-        .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
+        .then((_) => _loadRoutines(l10n)); // Pass l10n here
   }
 
   void _createNewRoutine() {
-    final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
+    final l10n = AppLocalizations.of(context)!; // Get l10n from the build context
     Navigator.of(context)
         .push(
           MaterialPageRoute(builder: (context) => const EditRoutineScreen()),
         )
-        .then((_) => _loadRoutines(l10n)); // l10n hier übergeben
+        .then((_) => _loadRoutines(l10n)); // Pass l10n here
   }
 
-  // NEUE METHODEN FÜR DAS MENÜ
+  // New methods for the menu
   void _duplicateRoutine(int routineId) async {
-    final l10n = AppLocalizations.of(context)!; // l10n im Build-Kontext holen
+    final l10n = AppLocalizations.of(context)!; // Get l10n from the build context
     await WorkoutDatabaseHelper.instance.duplicateRoutine(routineId);
     HapticFeedbackService.instance.confirmationFeedback();
-    _loadRoutines(l10n); // l10n hier übergeben
+    _loadRoutines(l10n); // Pass l10n here
   }
 
   Future<void> _shareRoutine(Routine routine) async {
@@ -149,10 +149,10 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     );
   }
 
-  // 1. Die Methode für das Menü
+  // 1. The menu method
   void _deleteRoutine(BuildContext context, Routine routine) async {
     final l10n = AppLocalizations.of(context)!;
-    // NEU: Helper
+    // New helper
     final confirmed = await showDeleteConfirmation(
       context,
       content: l10n.deleteRoutineConfirmContent(routine.name),
@@ -167,7 +167,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final textTheme = Theme.of(context).textTheme; // Hier definiert
+    final textTheme = Theme.of(context).textTheme; // Defined here
 
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
@@ -184,7 +184,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                   padding: DesignConstants.cardPadding.copyWith(
                     top: DesignConstants.cardPadding.top + topPadding,
                   ),
-                  itemCount: _routines.length + 1, // statt +2
+                  itemCount: _routines.length + 1, // instead of +2
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return _buildStartEmptyWorkoutCard(context, l10n);
@@ -194,24 +194,24 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                       key: Key('routine_${routine.id}'),
                       direction: DismissDirection.endToStart,
 
-                      // gleiche Hintergründe wie im Nutrition Screen
+                      // Same backgrounds as in Nutrition Screen
                       background: const SwipeActionBackground(
                         color: Colors.redAccent,
                         icon: Icons.delete,
                         alignment: Alignment.centerRight,
                       ),
 
-                      // Swipe-Logik wie bei Nutrition:
-                      // links→rechts = Edit (nicht wirklich dismissen),
-                      // rechts→links = Delete (mit Bestätigung)
+                      // Swipe logic as in Nutrition:
+                      // left->right = edit (do not really dismiss),
+                      // right->left = delete (with confirmation)
                       confirmDismiss: (direction) async {
-                        // NEU: Helper
+                        // New helper
                         return await showDeleteConfirmation(context);
                       },
 
                       onDismissed: (direction) {
                         if (direction == DismissDirection.endToStart) {
-                          _deleteRoutine(context, routine); // wirklich löschen
+                          _deleteRoutine(context, routine); // actually delete
                         }
                       },
 
@@ -266,7 +266,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
                                 )
                                 .then(
                                   (_) => _loadRoutines(l10n),
-                                ); // l10n hier übergeben
+                                ); // Pass l10n here
                           },
                         ),
                       ),
@@ -281,7 +281,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     );
   }
 
-  // KORREKTUR 5: _buildStartEmptyWorkoutCard als SummaryCard-Button
+  // FIX 5: _buildStartEmptyWorkoutCard as SummaryCard button
   Widget _buildStartEmptyWorkoutCard(
     BuildContext context,
     AppLocalizations l10n,
@@ -333,7 +333,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
             ),
             const SizedBox(height: DesignConstants.spacingXL),
 
-            // Bestehender Button: Routine erstellen
+            // Existing button: create routine
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
@@ -353,7 +353,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
             const SizedBox(height: DesignConstants.spacingM),
 
-            // NEU: Freies Training starten (sichtbar auch im Empty-State)
+            // New: start free workout (visible in empty state too)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(

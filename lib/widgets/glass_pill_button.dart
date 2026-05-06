@@ -7,9 +7,9 @@ import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
 /// Reusable liquid-glass Pill / Bubble.
-/// - Nutze [child], um beliebige Inhalte (Icon, Text, mehrere Elemente) zu platzieren.
-/// - Wenn [onTap] gesetzt ist: leichter Scale-Effekt + HapticFeedback.
-/// - Wenn [onTap] null ist: nur Surface, innere Widgets können eigene Gesten haben.
+/// - Use [child] to place arbitrary content (icon, text, multiple elements).
+/// - When [onTap] is set: light scale effect + HapticFeedback.
+/// - When [onTap] is null: surface only; inner widgets can have their own gestures.
 /// A reusable pill-shaped button with a glass aesthetic.
 ///
 /// Supports both simple icons and complex [child] layouts with optional [onTap] feedback.
@@ -102,7 +102,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
     Widget surface;
 
     if (themeService.visualStyle == 1) {
-      // Liquid-Style (mit LiquidStretch)
+      // Liquid style (with LiquidStretch)
       surface = LiquidStretch(
         stretch: 0.55,
         interactionScale: 1.04,

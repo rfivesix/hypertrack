@@ -39,17 +39,17 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Diese App benötigt Zugriff auf die Kamera, um Barcodes von Lebensmitteln zu scannen.</string>
+	<string>Train Libre uses the camera to scan food barcodes.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Train Libre benötigt Zugriff auf das Mikrofon für die Spracheingabe bei der KI-Mahlzeitenerkennung.</string>
+	<string>Train Libre uses the microphone for voice input when logging meals with AI features.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Train Libre benötigt Lesezugriff auf Schritte, Schlaf und Herzfrequenz aus Apple Health, um aktivierte Gesundheitsansichten anzuzeigen.</string>
+	<string>Train Libre reads steps, sleep, and heart-rate data from Apple Health to show health and recovery views you enable.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Train Libre benötigt Schreibzugriff auf Apple Health, um Messwerte, Ernährung, Flüssigkeit und Workouts einseitig zu exportieren.</string>
+	<string>Train Libre writes measurements, nutrition, hydration, and workouts to Apple Health when you enable one-way health export.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Diese App benötigt Zugriff auf deine Galerie, damit du ein Profilbild auswählen kannst.</string>
+	<string>Train Libre uses photo library access so you can choose a profile picture.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Train Libre nutzt Spracherkennung, um deine Mahlzeiten per Sprache zu erfassen.</string>
+	<string>Train Libre uses speech recognition to turn your spoken meal notes into meal log entries.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

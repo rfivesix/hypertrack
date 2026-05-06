@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:path/path.dart' as p;
+import 'package:flutter/services.dart' show ByteData, rootBundle;
 import 'package:sqflite/sqflite.dart';
 
 import '../config/app_data_sources.dart';
+import 'catalog_file_migration.dart';
 
 /// Service responsible for managing the local SQLite database.
 ///
@@ -26,18 +26,31 @@ class DbService {
   /// Initializes the database by copying it from assets if it doesn't already exist.
   Future<Database> _init() async {
     final dbDir = await getDatabasesPath();
-    final dbPath = p.join(dbDir, 'hypertrack_training.db');
+    final dbPath = await CatalogFileMigration.resolveCanonicalPath(
+      directoryPath: dbDir,
+      canonicalFileName: AppDataSources.trainingDbFileName,
+      legacyFileName: AppDataSources.legacyTrainingDbFileName,
+    );
 
-    // Falls Datei noch nicht existiert: aus Assets kopieren
+    // If file does not exist yet: copy it from assets.
     if (!await File(dbPath).exists()) {
-      final bytes = await rootBundle.load(AppDataSources.trainingAssetDbPath);
+      final bytes = await _loadTrainingAsset();
       await File(dbPath).writeAsBytes(
         bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
         flush: true,
       );
     }
 
-    // readOnly ist optional – wenn du später migrieren willst, weglassen.
+    // readOnly is optional; omit it if migration is needed later.
     return openDatabase(dbPath, readOnly: true);
+  }
+
+  Future<ByteData> _loadTrainingAsset() async {
+    try {
+      return await rootBundle.load(AppDataSources.trainingAssetDbPath);
+    } catch (_) {
+      // Legacy fallback keeps older packaged beta builds restorable/runnable.
+      return rootBundle.load(AppDataSources.legacyTrainingAssetDbPath);
+    }
   }
 }

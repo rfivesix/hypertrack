@@ -1,4 +1,4 @@
-// lib/screens/home.dart (Final & SWR-Lade-Logik)
+// lib/screens/home.dart (final SWR loading logic)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +35,7 @@ class Home extends StatefulWidget {
 class HomeState extends State<Home> {
   DailyNutrition? _nutritionData;
   String _recommendationText = "";
-  // KORREKTUR: _isLoading wird jetzt nur für den ERSTEN Ladevorgang auf true gesetzt
+  // FIX: _isLoading is now set to true only for the first load.
   bool _isLoading = true;
 
   List<ChartDataPoint> _weightChartData = [];
@@ -62,7 +62,7 @@ class HomeState extends State<Home> {
     if (_isFirstLoad) {
       loadAllHomeScreenData(
         showLoadingIndicator: true,
-      ); // KORREKTUR: Zeige Indikator nur beim ersten Mal
+      ); // FIX: Show the indicator only the first time.
       _isFirstLoad = false;
     }
   }
@@ -104,8 +104,8 @@ class HomeState extends State<Home> {
     newTodaysNutrition.water = waterIntake;
 
     final newWorkoutStats =
-        await _getWorkoutStats(); // KORREKTUR: Methode umbenannt
-    await _loadChartData(); // Lädt Chart-Daten und setzt _weightChartData
+        await _getWorkoutStats(); // FIX: Method renamed
+    await _loadChartData(); // Loads chart data and sets _weightChartData
 
     for (final entry in entries) {
       final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
@@ -170,7 +170,7 @@ class HomeState extends State<Home> {
       }
     }
 
-    // NEU: Lade Supplement-Daten
+    // New: load supplement data
     final supplementsForDate = await dbHelper.getSupplementsForDate(
       DateTime.now(),
     );
@@ -217,21 +217,21 @@ class HomeState extends State<Home> {
       }
     }
 
-    // --- DATEN LADEN ENDE ---
+    // --- Data loading end ---
 
     if (mounted) {
       setState(() {
-        _nutritionData = newTodaysNutrition; // Neue Daten
-        _recommendationText = newRecommendation; // Neue Daten
-        _workoutStats = newWorkoutStats; // Neue Daten
-        _trackedSupplements = trackedSupps; // NEU
+        _nutritionData = newTodaysNutrition; // New data
+        _recommendationText = newRecommendation; // New data
+        _workoutStats = newWorkoutStats; // New data
+        _trackedSupplements = trackedSupps; // New
         _isLoading = false; // Ladezustand beenden
       });
     }
   }
 
   Future<void> _loadChartData() async {
-    // KORRIGIERT: Die Logik zur Berechnung des Zeitraums wird hierher verschoben.
+    // FIXED: Time range calculation logic moves here.
     final now = DateTime.now();
     DateTime start;
     DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59);
@@ -241,7 +241,7 @@ class HomeState extends State<Home> {
         start = now.subtract(const Duration(days: 89));
         break;
       case 'All':
-        // Für "Alle" holen wir das früheste Datum aus der Datenbank
+        // For "All", fetch the earliest date from the database.
         final earliest =
             await DatabaseHelper.instance.getEarliestMeasurementDate();
         start = earliest ?? now;
@@ -253,13 +253,13 @@ class HomeState extends State<Home> {
 
     final normalizedStart = DateTime(start.year, start.month, start.day);
 
-    // Wichtig: Den State für den Datumsbereich hier aktualisieren!
+    // Important: update the date-range state here.
     if (!mounted) return;
     setState(() {
       _currentDateRange = DateTimeRange(start: normalizedStart, end: end);
     });
 
-    // Der Rest der Methode bleibt gleich, lädt aber jetzt mit dem korrekten Zeitbereich.
+    // The rest of the method stays the same, but now loads the correct time range.
     final sessions = await DatabaseHelper.instance.getMeasurementSessions();
     final points = <ChartDataPoint>[];
 
@@ -285,7 +285,7 @@ class HomeState extends State<Home> {
     });
   }
 
-  // KORREKTUR: Methode umbenannt, damit sie Daten ZURÜCKGIBT
+  // FIX: Method renamed so it returns data.
   Future<Map<String, int>> _getWorkoutStats() async {
     final today = DateTime.now();
     final sevenDaysAgo = today.subtract(const Duration(days: 6));
@@ -309,7 +309,7 @@ class HomeState extends State<Home> {
   }
 
   void _navigateTimeRange(bool forward) {
-    // "All" deckt sowieso alles ab – kein Paging
+    // "All" already covers everything; no paging.
     if (_selectedChartRangeKey == 'All') return;
 
     final int days = _selectedChartRangeKey == '90D' ? 90 : 30;
@@ -326,7 +326,7 @@ class HomeState extends State<Home> {
       _currentDateRange = DateTimeRange(start: newStart, end: newEnd);
     });
 
-    // Daten für die neue Range nachladen
+    // Reload data for the new range
     _loadChartData();
   }
 
@@ -341,18 +341,18 @@ class HomeState extends State<Home> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
-    // KORREKTUR: Zeige den Ladeindikator nur, wenn _isLoading true UND keine Daten vorhanden sind
+    // FIX: Show the loading indicator only when _isLoading is true and no data exists.
     final showLoadingOverlay = _isLoading && _nutritionData == null;
 
     return Scaffold(
       body: Stack(
         children: [
-          // KORREKTUR: Der RefreshIndicator ist immer da, damit man ziehen kann.
-          // Der Inhalt wird immer angezeigt, auch wenn _isLoading true ist (alte Daten).
+          // FIX: RefreshIndicator is always present so pull-to-refresh works.
+          // Content is always shown, even when _isLoading is true (old data).
           RefreshIndicator(
             onRefresh: () => loadAllHomeScreenData(
               showLoadingIndicator: false,
-            ), // KORREKTUR: Kein Ladeindikator bei manueller Aktualisierung
+            ), // FIX: No loading indicator during manual refresh.
             child: ListView(
               padding: DesignConstants.screenPadding,
               children: [
@@ -399,7 +399,7 @@ class HomeState extends State<Home> {
               ],
             ),
           ),
-          // KORREKTUR: Lade-Overlay nur anzeigen, wenn showLoadingOverlay true ist
+          // FIX: Show the loading overlay only when showLoadingOverlay is true.
           if (showLoadingOverlay)
             Positioned.fill(
               child: Container(
@@ -413,10 +413,10 @@ class HomeState extends State<Home> {
   }
 
   Widget _buildBannerCard(AppLocalizations l10n) {
-    // KORREKTUR: externalMargin wird jetzt gesetzt
+    // FIX: externalMargin is now set.
     return SummaryCard(
       //internalPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-      //externalMargin: EdgeInsets.zero, // Wichtig, da ListView.separated den Abstand steuert
+      //externalMargin: EdgeInsets.zero, // Important because ListView.separated controls spacing
       child: Container(
         height: 100,
         alignment: Alignment.center,
@@ -491,7 +491,7 @@ class HomeState extends State<Home> {
             MeasurementChartWidget(
               chartType: _chartType,
               dateRange: _currentDateRange,
-              // KORREKTUR: Die folgende Zeile wurde entfernt
+              // FIX: The following line was removed.
               // lineColor: colorScheme.secondary,
               unit: "kg",
             ),
@@ -534,9 +534,9 @@ class HomeState extends State<Home> {
   }
 
   Widget _buildWorkoutStatsCard(AppLocalizations l10n) {
-    // KORREKTUR: externalMargin wird jetzt gesetzt
+    // FIX: externalMargin is now set.
     return SummaryCard(
-      //externalMargin: EdgeInsets.zero, // Wichtig
+      //externalMargin: EdgeInsets.zero, // Important
       child: Padding(
         padding: DesignConstants.cardPadding,
         child: Column(

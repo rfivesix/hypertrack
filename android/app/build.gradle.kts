@@ -1,4 +1,5 @@
 // android/app/build.gradle.kts
+import java.io.FileInputStream
 import java.util.Properties
 
 val localProps = Properties().apply {
@@ -6,6 +7,12 @@ val localProps = Properties().apply {
 }
 val flutterVersionName = localProps.getProperty("flutter.versionName") ?: "0.0.0"
 val flutterVersionCode = (localProps.getProperty("flutter.versionCode") ?: "1").toInt()
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
 
 plugins {
     id("com.android.application")
@@ -19,19 +26,35 @@ android {
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-         applicationId = "com.rfivesix.trainlibre"
+        applicationId = "com.rfivesix.trainlibre"
         versionName = flutterVersionName
         versionCode = flutterVersionCode
 
         minSdk = 26
-        targetSdk = 36      // optional; you can set it or let Flutter handle it
+        targetSdk = 36
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
     }
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
-            isShrinkResources = false
-            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
         }
         getByName("debug") { }
     }

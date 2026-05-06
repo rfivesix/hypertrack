@@ -1,0 +1,1 @@
+Initial Train Libre release with workout logging, reusable routines, nutrition and supplement tracking, body measurements, statistics, local backups, and open-source, offline-first data handling.

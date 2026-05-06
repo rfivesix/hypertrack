@@ -3,9 +3,9 @@
 import 'tracked_food_item.dart';
 import 'water_entry.dart';
 
-// DOC: Dies ist eine "abstrakte" Klasse. Sie dient als gemeinsame
-// Schablone für alle Arten von Einträgen in unserem Tagebuch.
-// Jedes Timeline-Item MUSS einen Zeitstempel haben, damit wir es sortieren können.
+// DOC: This is an "abstract" class. It serves as the shared
+// template for all entry types in the diary.
+// Every timeline item must have a timestamp so we can sort it.
 /// Base class for all entries displayed in the daily timeline.
 ///
 /// Ensures every timeline item has a [timestamp] for chronological sorting.

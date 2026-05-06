@@ -71,20 +71,20 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
 
-    // KORREKTUR: Hintergrund im Light Mode weniger transparent für besseren Kontrast
+    // FIX: Make the light-mode background less transparent for better contrast.
     final backgroundColor = brightness == Brightness.dark
         ? Colors.white.withValues(alpha:0.10)
-        : Colors.white.withValues(alpha:0.65); // War 0.40, jetzt weniger durchsichtig
+        : Colors.white.withValues(alpha:0.65); // Was 0.40, now less transparent
 
-    // KORREKTUR: Randfarbe im Light Mode ist jetzt ein dunkles Grau statt Weiß
+    // FIX: Light-mode border color is now dark gray instead of white.
     final borderColor = brightness == Brightness.dark
         ? Colors.white.withValues(alpha:0.20)
-        : Colors.black.withValues(alpha:0.12); // War Weiß, jetzt dunkles Grau mit Transparenz
+        : Colors.black.withValues(alpha:0.12); // Was white, now transparent dark gray.
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
-      // WICHTIG: Kein Padding mehr direkt hier, wird jetzt vom Child gesteuert
-      // padding: padding, // Diese Zeile entfernen oder auskommentieren
+      // Important: no padding here anymore; the child controls it now.
+      // padding: padding, // Remove or comment out this line
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
@@ -94,14 +94,14 @@ class SummaryCard extends StatelessWidget {
         ),
         boxShadow: const [],
       ),
-      // WICHTIG: ClipRRect, damit der Blur-Effekt die Ecken respektiert
+      // Important: ClipRRect lets the blur effect respect corners.
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
-          // Der eigentliche "Frostglas"-Effekt
+          // The actual frosted-glass effect
           filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
           child: Padding(
-            // Das Padding wird jetzt innerhalb des Blur-Effekts angewendet
+            // Padding is now applied inside the blur effect.
             padding: padding,
             child: child,
           ),

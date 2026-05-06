@@ -12,7 +12,7 @@ class MeasurementSession {
   final DateTime timestamp;
 
   /// The list of individual [Measurement] entries associated with this session.
-  final List<Measurement> measurements; // Hält die Detailwerte
+  final List<Measurement> measurements; // Holds the detailed values
 
   /// Last modification timestamp of the newest member measurement when available.
   final DateTime? updatedAt;

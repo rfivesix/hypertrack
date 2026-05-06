@@ -247,7 +247,7 @@ class _MealScreenState extends State<MealScreen> {
 
                 const SizedBox(height: 18),
 
-                // === NÄHRWERTE (Gesamtsumme) ===
+                // === Nutrients (total sum) ===
                 _buildSectionTitle(context, l10n.nutritionSectionLabel),
                 SummaryCard(
                   child: Padding(
@@ -301,7 +301,7 @@ class _MealScreenState extends State<MealScreen> {
 
                 const SizedBox(height: 18),
 
-                // === ZUTATEN ===
+                // === Ingredients ===
                 _buildSectionTitle(context, l10n.ingredientsCapsLock),
 
                 if (_items.isEmpty)
@@ -393,16 +393,16 @@ class _MealScreenState extends State<MealScreen> {
   Future<void> _addIngredientFlow() async {
     final l10n = AppLocalizations.of(context)!;
     final searchCtrl = TextEditingController();
-    // Menge standardmäßig auf 100
+    // Default amount to 100
     final qtyCtrl = TextEditingController(text: '100');
 
-    // 1. Schritt: Produkt auswählen
-    // Wir öffnen das Such-Menu. Es gibt ein Tuple (Barcode, Menge) zurück.
+    // 1. Step: select product
+    // Open the search menu. It returns a tuple (barcode, amount).
     final picked = await showGlassBottomMenu<(String, int)?>(
       context: context,
       title: l10n.mealAddIngredient,
       contentBuilder: (searchCtx, closeSearch) {
-        // Lokaler State für Suchergebnisse
+        // Local state for search results
         List<FoodItem> results = [];
         bool loading = false;
         Timer? debounce;
@@ -473,21 +473,21 @@ class _MealScreenState extends State<MealScreen> {
                               trailing: IconButton(
                                 icon: const Icon(Icons.add_circle_outline),
                                 onPressed: () async {
-                                  // HIER IST DER FIX:
-                                  // Wir schließen das Such-Menü NICHT sofort.
-                                  // Wir öffnen den Mengen-Dialog DARÜBER (nested) oder ersetzen den Content.
-                                  // Am sichersten: Wir fragen die Menge in einem separaten Schritt ab.
+                                  // Here is the fix:
+                                  // Do not close the search menu immediately.
+                                  // Open the amount dialog above it (nested) or replace the content.
+                                  // Safest option: ask for the amount in a separate step.
 
-                                  // Menge abfragen
-                                  // HINWEIS: Wir nutzen hier den searchCtx für den Navigator, um im selben Overlay-Kontext zu bleiben
-                                  // oder wir schließen und öffnen neu.
+                                  // Ask for amount
+                                  // NOTE: Use searchCtx for the Navigator here to stay in the same overlay context
+                                  // or close and reopen.
 
-                                  // Strategie: Schließen und Ergebnis (Barcode) zurückgeben,
-                                  // dann im Parent die Menge abfragen. Das ist am stabilsten.
+                                  // Strategy: close and return the result (barcode),
+                                  // then ask for the amount in the parent. This is most stable.
                                   closeSearch();
                                   Navigator.of(searchCtx).pop(
                                     (fi.barcode, -1),
-                                  ); // -1 signalisiert: "Barcode gewählt, Menge fragen"
+                                  ); // -1 means: "barcode selected, ask for amount"
                                 },
                               ),
                             );
@@ -501,15 +501,15 @@ class _MealScreenState extends State<MealScreen> {
       },
     );
 
-    // Wenn nichts gewählt wurde, abbrechen
+    // Cancel if nothing was selected.
     if (picked == null) return;
 
     final String barcode = picked.$1;
     int quantity = picked.$2;
 
-    // Wenn Menge noch nicht festgelegt (-1), dann jetzt abfragen
+    // If amount is not set yet (-1), ask now.
     if (quantity == -1) {
-      // Produktnamen laden für den Titel
+      // Load product name for the title
       final fi = await ProductDatabaseHelper.instance.getProductByBarcode(
         barcode,
       );
@@ -570,11 +570,11 @@ class _MealScreenState extends State<MealScreen> {
       if (qtyResult != null && qtyResult > 0) {
         quantity = qtyResult;
       } else {
-        return; // Abgebrochen bei Menge
+        return; // Canceled at amount step
       }
     }
 
-    // Hinzufügen zur Liste
+    // Add to list
     if (quantity > 0) {
       setState(() {
         _items.add({'barcode': barcode, 'quantity_in_grams': quantity});
@@ -584,7 +584,7 @@ class _MealScreenState extends State<MealScreen> {
     }
   }
 
-  /// Aktuelle Mahlzeit als einzelne FoodEntries ins Tagebuch
+  /// Logs the current meal as individual FoodEntries in the diary.
   Future<void> _addMealToDiaryFlow() async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -801,7 +801,7 @@ class _MealScreenState extends State<MealScreen> {
   }
 }
 
-/// Kleines “Chip”-Label für C/F/P
+/// Small chip label for C/F/P.
 class _MacroChip extends StatelessWidget {
   final String label;
   final String value;
@@ -829,9 +829,9 @@ class _MacroChip extends StatelessWidget {
   }
 }
 
-/// Einzelne Zutat als SummaryCard
-/// - View-Modus: Name (tappable) + kleine kcal rechts + (darunter) C/F/P
-/// - Edit-Modus: rechts Mengenfeld; Swipe nach links = Löschen
+/// Single ingredient as SummaryCard.
+/// - View mode: name (tappable) + small kcal on the right + C/F/P below.
+/// - Edit mode: amount field on the right; swipe left = delete.
 class _IngredientCard extends StatelessWidget {
   final Map<String, dynamic> item; // { barcode, quantity_in_grams }
   final bool editMode;
@@ -949,7 +949,7 @@ class _IngredientCard extends StatelessWidget {
 
     if (!editMode) return card;
 
-    // Edit-Modus: Swipe links = löschen
+    // Edit mode: swipe left = delete
     return Dismissible(
       key: ValueKey('ing_${item['barcode']}_${item['quantity_in_grams']}'),
       direction: DismissDirection.endToStart,

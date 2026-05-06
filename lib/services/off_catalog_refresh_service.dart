@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 import '../config/app_data_sources.dart';
+import 'catalog_file_migration.dart';
 import 'off_catalog_country_service.dart';
 
 class OffCatalogManifest {
@@ -290,12 +291,13 @@ class OffCatalogRefreshService {
       final tempDir = await _tempDirectoryProvider();
       tempDbPath = p.join(
         tempDir.path,
-        'hypertrack_off_${countryCode}_remote_${now.millisecondsSinceEpoch}.db',
+        'train_libre_off_${countryCode}_remote_${now.millisecondsSinceEpoch}.db',
       );
 
-      final downloaded = await _downloadFile(
-        manifest.dbUri,
-        tempDbPath,
+      final effectiveDbUri = await _downloadWithLegacyFallback(
+        manifest: manifest,
+        config: config,
+        destinationPath: tempDbPath,
         timeout: config.downloadTimeout,
         onProgress: (progress) {
           onProgress?.call(
@@ -307,7 +309,7 @@ class OffCatalogRefreshService {
         },
         isSkipRequested: isSkipRequested,
       );
-      if (!downloaded) {
+      if (effectiveDbUri == null) {
         await prefs.setString(
           _countryScopedKey(_keyLastErrorPrefix, countryCode),
           (isSkipRequested?.call() ?? false)
@@ -397,7 +399,7 @@ class OffCatalogRefreshService {
         version: manifest.version,
         localDbPath: cachePath,
         manifestUri: manifestUri,
-        dbUri: manifest.dbUri,
+        dbUri: effectiveDbUri,
         fromCache: false,
       );
     } catch (e) {
@@ -452,7 +454,65 @@ class OffCatalogRefreshService {
     if (!await cacheDir.exists()) {
       await cacheDir.create(recursive: true);
     }
-    return p.join(cacheDir.path, config.localCacheDbFileName);
+    return CatalogFileMigration.resolveCanonicalPath(
+      directoryPath: cacheDir.path,
+      canonicalFileName: config.localCacheDbFileName,
+      legacyFileName: config.legacyLocalCacheDbFileName,
+    );
+  }
+
+  Future<Uri?> _downloadWithLegacyFallback({
+    required OffCatalogManifest manifest,
+    required OffCatalogRemoteSourceConfig config,
+    required String destinationPath,
+    required Duration timeout,
+    ValueChanged<double>? onProgress,
+    RemoteRefreshSkipRequested? isSkipRequested,
+  }) async {
+    if (await _downloadFile(
+      manifest.dbUri,
+      destinationPath,
+      timeout: timeout,
+      onProgress: onProgress,
+      isSkipRequested: isSkipRequested,
+    )) {
+      return manifest.dbUri;
+    }
+
+    final legacyUri = legacyFallbackDbUri(
+      failedUri: manifest.dbUri,
+      config: config,
+    );
+    if (legacyUri == null) {
+      return null;
+    }
+    await _deleteIfExists(destinationPath);
+    if (await _downloadFile(
+      legacyUri,
+      destinationPath,
+      timeout: timeout,
+      onProgress: onProgress,
+      isSkipRequested: isSkipRequested,
+    )) {
+      return legacyUri;
+    }
+    return null;
+  }
+
+  @visibleForTesting
+  static Uri? legacyFallbackDbUri({
+    required Uri failedUri,
+    required OffCatalogRemoteSourceConfig config,
+  }) {
+    final legacyDbPath = config.legacyDefaultDbPath;
+    if (legacyDbPath == null || legacyDbPath == config.defaultDbPath) {
+      return null;
+    }
+    final legacyUri = _resolveUrlOrPath(config.baseUrl, legacyDbPath);
+    if (legacyUri == failedUri || !_isSecureRemoteUri(legacyUri)) {
+      return null;
+    }
+    return legacyUri;
   }
 
   Future<void> _cacheManifestJson({

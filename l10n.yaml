@@ -1,9 +1,9 @@
-# Sagt dem Generator, wo die Quelldateien (.arb) liegen.
+# Tells the generator where the source files (.arb) are located.
 arb-dir: lib/l10n
 
-# Sagt dem Generator, wie die Haupt-Ausgabedatei heißen soll.
+# Tells the generator how to name the main output file.
 output-localization-file: app_localizations.dart
 
-# Sagt dem Generator, dass er die Ausgabedateien im Standard-Verzeichnis
-# ablegen soll, wo Flutter sie erwartet.
+# Tells the generator to place output files in the standard directory
+# where Flutter expects them.
 output-dir: lib/generated/

@@ -5,7 +5,7 @@ import '../generated/app_localizations.dart';
 import '../models/daily_nutrition.dart';
 import '../util/design_constants.dart';
 import 'summary_card.dart';
-import 'dart:ui'; // Für den ImageFilter.blur
+import 'dart:ui'; // For ImageFilter.blur
 
 class _NutrientSpec {
   final String label;
@@ -89,14 +89,14 @@ class NutritionSummaryWidget extends StatelessWidget {
     };
 
     return SummaryCard(
-      // KORREKTUR: internalPadding für diese spezifische Karte ist 12.0
+      // FIX: internalPadding for this specific card is 12.0.
       //internalPadding: const EdgeInsets.all(12.0),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              flex: 3, // KORREKTUR 2: Flex-Wert erhöht, um mehr Platz zu geben
+              flex: 3, // FIX 2: Increased flex value to provide more space.
               child: Column(
                 children: [
                   Expanded(child: _InfoBox(spec: specs['calories']!)),
@@ -107,7 +107,7 @@ class NutritionSummaryWidget extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              flex: 4, // KORREKTUR 2: Flex-Wert erhöht
+              flex: 4, // FIX 2: Increased flex value.
               child: Column(
                 children: [
                   Expanded(child: _InfoBox(spec: specs['protein']!)),
@@ -121,7 +121,7 @@ class NutritionSummaryWidget extends StatelessWidget {
             if (isExpandedView) ...[
               const SizedBox(width: 8),
               Expanded(
-                flex: 4, // KORREKTUR 2: Flex-Wert erhöht
+                flex: 4, // FIX 2: Increased flex value.
                 child: Column(
                   children: [
                     Expanded(child: _InfoBox(spec: specs['sugar']!)),
@@ -139,7 +139,7 @@ class NutritionSummaryWidget extends StatelessWidget {
     );
   }
 }
-// Ersetze die komplette _InfoBox Klasse in lib/widgets/nutrition_summary_widget.dart
+// Replace the entire _InfoBox class in lib/widgets/nutrition_summary_widget.dart.
 
 class _InfoBox extends StatelessWidget {
   final _NutrientSpec spec;
@@ -155,7 +155,7 @@ class _InfoBox extends StatelessWidget {
     final rawProgress = hasTarget ? (spec.value / spec.target) : 0.0;
     final progress = rawProgress.clamp(0.0, 1.0);
 
-    // Farben für den Glas-Effekt, identisch zur SummaryCard
+    // Colors for the glass effect, matching SummaryCard.
     final backgroundColor = brightness == Brightness.dark
         ? Colors.white.withValues(alpha:0.10)
         : Colors.white.withValues(alpha:0.65);
@@ -165,25 +165,25 @@ class _InfoBox extends StatelessWidget {
         : Colors.black.withValues(alpha:0.12);
 
     return Container(
-      // Die Dekoration ist jetzt die Glas-Dekoration
+      // Decoration is now the glass decoration.
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(
-            9), // Etwas weniger Rundung für die kleinen Boxen
+            9), // Slightly less rounding for the small boxes.
         border: Border.all(
           color: borderColor,
-          width: 1.0, // Etwas dünnerer Rand
+          width: 1.0, // Slightly thinner border
         ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9),
         child: BackdropFilter(
           filter:
-              ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0), // Etwas weniger Blur
+              ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0), // Slightly less blur
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Der animierte Füllbalken bleibt erhalten
+              // Animated fill bar is preserved.
               Align(
                 alignment: Alignment.centerLeft,
                 child: TweenAnimationBuilder<double>(
@@ -195,7 +195,7 @@ class _InfoBox extends StatelessWidget {
                   child: Container(color: spec.color),
                 ),
               ),
-              // Der Text-Inhalt liegt über dem Füllbalken
+              // Text content sits above the fill bar.
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
@@ -242,7 +242,7 @@ import '../generated/app_localizations.dart';
 import '../models/daily_nutrition.dart';
 import '../util/design_constants.dart';
 
-import 'glass_progress_bar.dart'; // Für den ImageFilter.blur
+import 'glass_progress_bar.dart'; // For ImageFilter.blur
 
 /// A comprehensive summary widget for daily nutrition and macro tracking.
 ///

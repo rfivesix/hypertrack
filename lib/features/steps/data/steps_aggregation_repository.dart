@@ -3,6 +3,7 @@ import 'dart:math';
 import '../../../data/database_helper.dart';
 import '../../../services/health/health_models.dart';
 import '../../../services/health/steps_sync_service.dart';
+import '../../../util/perf_debug_timer.dart';
 import '../domain/steps_models.dart';
 
 abstract class StepsAggregationRepository {
@@ -102,6 +103,7 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
     required DateTime endDate,
     required int daysBack,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final safeDays = daysBack < 1 ? 1 : daysBack;
     final normalizedEnd = _atStartOfDay(endDate);
     final normalizedStart = normalizedEnd.subtract(
@@ -115,13 +117,20 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
       return StepsBucket(start: day, steps: 3000 + rng.nextInt(7000));
     });
     final total = buckets.fold<int>(0, (sum, bucket) => sum + bucket.steps);
-    return RangeStepsAggregation(
+    final result = RangeStepsAggregation(
       start: normalizedStart,
       end: normalizedEnd,
       dailyTotals: buckets,
       totalSteps: total,
       averageDailySteps: buckets.isEmpty ? 0 : total / buckets.length,
     );
+    PerfDebugTimer.logDuration(
+      area: 'statistics',
+      label: 'inMemoryStepsRangeAggregation',
+      elapsed: stopwatch.elapsed,
+      fields: {'range': '${safeDays}d', 'buckets': buckets.length},
+    );
+    return result;
   }
 
   @override
@@ -234,6 +243,7 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
     required DateTime endDate,
     required int daysBack,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final safeDays = daysBack < 1 ? 1 : daysBack;
     final normalizedEnd = _atStartOfDay(endDate);
     final normalizedStart = normalizedEnd.subtract(
@@ -257,13 +267,24 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
       return StepsBucket(start: day, steps: byDay[dayKey] ?? 0);
     });
     final total = buckets.fold<int>(0, (sum, bucket) => sum + bucket.steps);
-    return RangeStepsAggregation(
+    final result = RangeStepsAggregation(
       start: normalizedStart,
       end: normalizedEnd,
       dailyTotals: buckets,
       totalSteps: total,
       averageDailySteps: buckets.isEmpty ? 0 : total / buckets.length,
     );
+    PerfDebugTimer.logDuration(
+      area: 'statistics',
+      label: 'healthStepsRangeAggregation',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'range': '${safeDays}d',
+        'rows': rows.length,
+        'buckets': buckets.length,
+      },
+    );
+    return result;
   }
 
   @override

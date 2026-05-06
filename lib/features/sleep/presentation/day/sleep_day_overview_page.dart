@@ -216,43 +216,55 @@ class _SleepDayOverviewPageState extends State<SleepDayOverviewPage> {
     final repo = await _ensureQueryRepository();
     if (repo == null) return;
     setState(() => _isLoadingWeek = true);
-    final weekStart = _anchorDay.subtract(
-      Duration(days: _anchorDay.weekday - DateTime.monday),
-    );
-    final analyses = await repo.getAnalysesInRange(
-      fromInclusive: weekStart,
-      toInclusive: weekStart.add(const Duration(days: 6)),
-    );
-    final aggregation = const SleepPeriodAggregationEngine().aggregateWeek(
-      weekStart: weekStart,
-      analyses: analyses,
-    );
-    if (!mounted) return;
-    setState(() {
-      _weekAggregation = aggregation;
-      _isLoadingWeek = false;
-    });
+    try {
+      final weekStart = _anchorDay.subtract(
+        Duration(days: _anchorDay.weekday - DateTime.monday),
+      );
+      final analyses = await repo.getAnalysesInRange(
+        fromInclusive: weekStart,
+        toInclusive: weekStart.add(const Duration(days: 6)),
+      );
+      final aggregation = const SleepPeriodAggregationEngine().aggregateWeek(
+        weekStart: weekStart,
+        analyses: analyses,
+      );
+      if (!mounted) return;
+      setState(() {
+        _weekAggregation = aggregation;
+        _isLoadingWeek = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('SleepDayOverviewPage: failed to load week data: $e');
+      setState(() => _isLoadingWeek = false);
+    }
   }
 
   Future<void> _loadMonth() async {
     final repo = await _ensureQueryRepository();
     if (repo == null) return;
     setState(() => _isLoadingMonth = true);
-    final monthStart = DateTime(_anchorDay.year, _anchorDay.month, 1);
-    final monthEnd = DateTime(_anchorDay.year, _anchorDay.month + 1, 0);
-    final analyses = await repo.getAnalysesInRange(
-      fromInclusive: monthStart,
-      toInclusive: monthEnd,
-    );
-    final aggregation = const SleepPeriodAggregationEngine().aggregateMonth(
-      monthStart: monthStart,
-      analyses: analyses,
-    );
-    if (!mounted) return;
-    setState(() {
-      _monthAggregation = aggregation;
-      _isLoadingMonth = false;
-    });
+    try {
+      final monthStart = DateTime(_anchorDay.year, _anchorDay.month, 1);
+      final monthEnd = DateTime(_anchorDay.year, _anchorDay.month + 1, 0);
+      final analyses = await repo.getAnalysesInRange(
+        fromInclusive: monthStart,
+        toInclusive: monthEnd,
+      );
+      final aggregation = const SleepPeriodAggregationEngine().aggregateMonth(
+        monthStart: monthStart,
+        analyses: analyses,
+      );
+      if (!mounted) return;
+      setState(() {
+        _monthAggregation = aggregation;
+        _isLoadingMonth = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('SleepDayOverviewPage: failed to load month data: $e');
+      setState(() => _isLoadingMonth = false);
+    }
   }
 
   Future<SleepQueryRepository?> _ensureQueryRepository() async {

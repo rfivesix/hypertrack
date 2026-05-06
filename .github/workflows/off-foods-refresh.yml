@@ -50,8 +50,7 @@ jobs:
         }}
       OFF_PARQUET_LOCAL_PATH: artifacts/food.parquet
 
-      # Legacy artifact filename kept for app/runtime compatibility.
-      GENERATED_DB_PATH: artifacts/hypertrack_off_${{ matrix.country_code }}.db
+      GENERATED_DB_PATH: artifacts/train_libre_off_${{ matrix.country_code }}.db
       BUILD_REPORT_PATH: artifacts/off_build_report_${{ matrix.country_code }}.json
       DIFF_REPORT_PATH: artifacts/off_diff_report_${{ matrix.country_code }}.json
       MANIFEST_PATH: artifacts/off_catalog_manifest_${{ matrix.country_code }}.json
@@ -59,8 +58,7 @@ jobs:
 
       MANIFEST_FILE_NAME: off_catalog_manifest_${{ matrix.country_code }}.json
       RELEASE_REFERENCE_MANIFEST_PATH: artifacts/reference_off_catalog_manifest_${{ matrix.country_code }}.json
-      # Legacy filename kept for backward compatibility with previously published assets.
-      RELEASE_REFERENCE_DB_PATH: artifacts/reference_hypertrack_off_${{ matrix.country_code }}.db
+      RELEASE_REFERENCE_DB_PATH: artifacts/reference_train_libre_off_${{ matrix.country_code }}.db
 
       RELEASE_TAG: off-foods-${{ matrix.country_code }}-stable
       RELEASE_NAME: Open Food Facts Catalog (${{ matrix.country_code }}, stable channel)

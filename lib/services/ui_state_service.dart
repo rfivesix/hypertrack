@@ -11,5 +11,5 @@ class UiStateService {
   UiStateService._internal();
 
   /// Whether the nutrition summary on the home screen is expanded.
-  bool isNutritionSummaryExpanded = true; // Standardmäßig AN, wie gewünscht
+  bool isNutritionSummaryExpanded = true; // Enabled by default, as requested
 }

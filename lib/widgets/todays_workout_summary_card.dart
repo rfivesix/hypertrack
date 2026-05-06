@@ -38,12 +38,12 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    // Erstellt den Subtitle-Text mit allen Statistiken
+    // Builds the subtitle text with all statistics.
     final subtitleText =
         '${formatDuration(duration)}  •  ${volume.toStringAsFixed(0)} kg  •  ${l10n.setCount(sets)}';
 
     return SummaryCard(
-      // Padding wird von der ListTile übernommen
+      // Padding is handled by ListTile.
       padding: EdgeInsets.zero,
       margin: const EdgeInsets.symmetric(vertical: 4.0),
       child: ListTile(

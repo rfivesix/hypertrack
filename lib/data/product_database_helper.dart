@@ -1,10 +1,14 @@
 // lib/data/product_database_helper.dart
 
+import 'package:path_provider/path_provider.dart';
 import 'package:drift/drift.dart';
 import 'database_helper.dart';
 import 'drift_database.dart' as db;
 import 'drift_database.dart';
+import '../config/app_data_sources.dart';
 import '../models/food_item.dart';
+import '../services/catalog_file_migration.dart';
+import '../util/perf_debug_timer.dart';
 
 /// Helper class for managing food product data in the Drift database.
 ///
@@ -20,7 +24,7 @@ class ProductDatabaseHelper {
   ProductDatabaseHelper.forTesting({required DatabaseHelper databaseHelper})
       : _databaseHelper = databaseHelper;
 
-  // Zugriff auf die zentrale Drift-Instanz
+  // Access to the central Drift instance
   Future<db.AppDatabase> get database async => _databaseHelper.database;
 
   // --- MAPPING HELPER ---
@@ -42,8 +46,8 @@ class ProductDatabaseHelper {
     return FoodItem(
       barcode: row.barcode,
       name: row.name,
-      // nameDe/En werden im aktuellen Schema nicht gespeichert,
-      // daher Fallback auf name oder leere Strings, falls Model das verlangt
+      // nameDe/nameEn are not stored in the current schema,
+      // so fall back to name or empty strings if the model requires it.
       nameDe: row.name,
       nameEn: row.name,
       brand: row.brand ?? '',
@@ -55,11 +59,11 @@ class ProductDatabaseHelper {
       sugar: row.sugar,
       fiber: row.fiber,
       salt: row.salt,
-      // Sodium ist nicht im Drift Schema, wir berechnen es grob aus Salz oder lassen es null
+      // Sodium is not in the Drift schema; estimate it from salt or leave it null.
       sodium: row.salt != null ? row.salt! / 2.5 : null,
-      // Kj ist nicht im Schema, berechnen:
+      // kJ is not in the schema, calculate it:
       kj: (row.calories * 4.184),
-      // Calcium ist nicht im Schema:
+      // Calcium is not in the schema:
       calcium: null,
       isLiquid: row.isLiquid,
       caffeineMgPer100ml: row.caffeine,
@@ -107,8 +111,8 @@ class ProductDatabaseHelper {
 
   /// Updates an existing product's information in the database.
   Future<void> updateProduct(FoodItem item) async {
-    // In Drift ist insertOrReplace (siehe oben) oft ausreichend,
-    // aber hier explizit Update:
+    // In Drift, insertOrReplace (see above) is often enough,
+    // but use an explicit update here:
     final dbInstance = await database;
     await (dbInstance.update(dbInstance.products)
           ..where((tbl) => tbl.barcode.equals(item.barcode)))
@@ -118,6 +122,7 @@ class ProductDatabaseHelper {
   /// Retrieves a list of [FoodItem]s matching the provided [barcodes].
   Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) async {
     if (barcodes.isEmpty) return [];
+    final stopwatch = Stopwatch()..start();
     final dbInstance = await database;
 
     final rows = await (dbInstance.select(
@@ -125,7 +130,14 @@ class ProductDatabaseHelper {
     )..where((tbl) => tbl.barcode.isIn(barcodes)))
         .get();
 
-    return rows.map(_mapRowToModel).toList();
+    final result = rows.map(_mapRowToModel).toList();
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getProductsByBarcodes',
+      elapsed: stopwatch.elapsed,
+      fields: {'barcodes': barcodes.length, 'rows': rows.length},
+    );
+    return result;
   }
 
   /// Retrieves recently used products based on the user's consumption history.
@@ -135,13 +147,13 @@ class ProductDatabaseHelper {
     return await getProductsByBarcodes(recentBarcodes);
   }
 
-  // === Grundnahrungsmittel (Base Foods) ===
+  // === Base foods ===
   /// Retrieves all food categories from the database.
   Future<List<Map<String, dynamic>>> getBaseCategories() async {
     final db = await database;
 
-    // Wir fragen jetzt die echte 'food_categories' Tabelle ab
-    // Sortiert nach 'key' (oder wie du magst)
+    // Query the real 'food_categories' table now.
+    // Sort by 'key' or adjust as needed.
     final rows = await (db.select(
       db.foodCategories,
     )..orderBy([(t) => OrderingTerm(expression: t.key)]))
@@ -150,18 +162,18 @@ class ProductDatabaseHelper {
     return rows.map((row) {
       return {
         'key': row.key,
-        'name_de': row.nameDe, // Echter Name aus DB
-        'name_en': row.nameEn, // Echter Name aus DB
-        'emoji': row.emoji, // Echter Emoji aus DB! 🍎
+        'name_de': row.nameDe, // Real name from DB
+        'name_en': row.nameEn, // Real name from DB
+        'emoji': row.emoji, // Real emoji from DB
       };
     }).toList();
   }
 
-  // --- 2. BASE-FOODS LADEN (Katalog & Base-Suche) ---
-  // FIX: categoryKey ist jetzt optional (String?)
+  // --- 2. Load base foods (catalog & base search) ---
+  // FIX: categoryKey is now optional (String?).
   /// Retrieves base foods from the katalog, optionally filtered by [categoryKey] or [search] term.
   Future<List<FoodItem>> getBaseFoods({
-    String? categoryKey, // <--- NICHT MEHR REQUIRED
+    String? categoryKey, // <--- No longer required
     int limit = 100,
     String? search,
   }) async {
@@ -171,7 +183,7 @@ class ProductDatabaseHelper {
       ..where((t) => t.source.equals('base'))
       ..limit(limit);
 
-    // Nur filtern, wenn eine Kategorie angegeben ist
+    // Filter only when a category is specified.
     if (categoryKey != null) {
       query = query..where((t) => t.category.equals(categoryKey));
     }
@@ -184,7 +196,7 @@ class ProductDatabaseHelper {
     return rows.map((row) => _mapRowToFoodItem(row)).toList();
   }
 
-  // --- 3. GLOBALE SUCHE (Base + OFF + User) ---
+  // --- 3. Global search (base + OFF + user) ---
   /// Performs a global search across user-created, base, and Open Food Facts products.
   Future<List<FoodItem>> searchProducts(String keyword) async {
     final term = keyword.trim();
@@ -192,8 +204,8 @@ class ProductDatabaseHelper {
     final db = await database;
     const int limit = 50;
 
-    // 1. Priorisierte Suche: Eigene Lebensmittel (user) & Grundnahrungsmittel (base)
-    // Diese sind am wichtigsten und sollen immer oben stehen.
+    // 1. Prioritized search: user foods and base foods
+    // These are most important and should always be at the top.
     final priorityRows = await (db.select(db.products)
           ..where(
             (t) =>
@@ -201,7 +213,7 @@ class ProductDatabaseHelper {
                 t.source.isIn(['user', 'base']),
           )
           ..orderBy([
-            // Kürzere Namen zuerst (Exakte Treffer nach oben)
+            // Shorter names first (exact matches to the top).
             (t) => OrderingTerm(
                   expression: t.name.length,
                   mode: OrderingMode.asc,
@@ -212,7 +224,7 @@ class ProductDatabaseHelper {
 
     final List<FoodItem> results = priorityRows.map(_mapRowToFoodItem).toList();
 
-    // 2. Auffüllen mit Open Food Facts (off), falls noch Platz in der Liste ist
+    // 2. Fill with Open Food Facts (OFF) if there is still space in the list.
     if (results.length < limit) {
       final int remaining = limit - results.length;
       final offRows = await (db.select(db.products)
@@ -249,12 +261,12 @@ class ProductDatabaseHelper {
     return _mapRowToFoodItem(row);
   }
 
-  // --- 5. FAVORITEN ---
+  // --- 5. Favorites ---
   /// Retrieves all products marked as favorites by the user.
   Future<List<FoodItem>> getFavoriteProducts() async {
     final db = await database;
 
-    // Join Products mit Favorites
+    // Join Products with Favorites
     final query = db.select(db.products).join([
       innerJoin(
         db.favorites,
@@ -421,15 +433,19 @@ class ProductDatabaseHelper {
 
   // === Legacy / Compatibility Getter ===
 
-  // Für den BackupManager, falls er direkten Zugriff benötigt (deprecated).
-  // Da wir jetzt alles in EINER DB haben, ist das Konzept einer separaten "offDatabase" hinfällig.
-  // Wir geben null zurück, da der BackupManager im neuen Code Drift nutzen sollte.
+  // For BackupManager if direct access is needed (deprecated).
+  // Since everything is now in one DB, a separate offDatabase concept is obsolete.
+  // Return null because BackupManager should use Drift in the new code.
   Future<dynamic> get offDatabase async {
     return null;
   }
 
   Future<String> getBaseDbPath() async {
-    // Dummy-Pfad, da wir keine separate Datei mehr nutzen
-    return '';
+    final supportDir = await getApplicationSupportDirectory();
+    return CatalogFileMigration.resolveCanonicalPath(
+      directoryPath: supportDir.path,
+      canonicalFileName: AppDataSources.baseFoodsDbFileName,
+      legacyFileName: AppDataSources.legacyBaseFoodsDbFileName,
+    );
   }
 }

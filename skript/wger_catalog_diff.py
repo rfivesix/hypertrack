@@ -36,7 +36,7 @@ MAIN_COMPARE_FIELDS = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Compare two generated hypertrack_training.db catalogs."
+        description="Compare two generated train_libre_training.db catalogs."
     )
     parser.add_argument("--old", required=True, help="Path to old database file")
     parser.add_argument("--new", required=True, help="Path to new database file")

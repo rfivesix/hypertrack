@@ -81,7 +81,7 @@ class GlassBottomNavBar extends StatelessWidget {
     );
   }
 
-  /// Mappt eine lokale X-Position (0..width) auf den Tab-Index.
+  /// Maps a local X position (0..width) to the tab index.
   int _indexFromDx(double dx, double width, int itemCount) {
     if (width <= 0 || itemCount <= 0) return 0;
     final frac = (dx / width).clamp(0.0, 0.9999);
@@ -111,17 +111,17 @@ class GlassBottomNavBar extends StatelessWidget {
 
     switch (themeService.visualStyle) {
       case 1:
-        // neutrale Tönung ableiten (funktioniert auf Weiß & Schwarz)
+        // Derive neutral tint (works on white and black).
         final Color neutralTint = (isDark ? Colors.white : Colors.black)
             .withValues(alpha: isDark ? 0.1 : 0.1);
 
-        // smarteres Glas: bg-Color + neutraler Tint "verheiraten"
+        // Smarter glass: blend bg color with neutral tint.
         final Color effectiveGlass = Color.alphaBlend(
           neutralTint,
           bg.withValues(alpha: isDark ? 0.8 : 0.5),
         );
 
-        // Drag-to-select + Release-to-activate: über GestureDetector
+        // Drag-to-select + release-to-activate via GestureDetector.
         return LayoutBuilder(
           builder: (context, constraints) {
             double? lastDx;
@@ -137,14 +137,14 @@ class GlassBottomNavBar extends StatelessWidget {
                 );
                 onTap(idx);
                 HapticFeedbackService.instance
-                    .lightImpact(); // Feedback bei einfachem Tap
+                    .lightImpact(); // Feedback on simple tap
               },
               onPanStart: (details) {
                 lastDx = details.localPosition.dx;
                 final idx = _indexFromDx(lastDx!, barWidth, items.length);
                 lastHoverIndex = idx;
                 HapticFeedbackService.instance
-                    .selectionFeedback(); // leichtes Feedback beim ersten Kontakt
+                    .selectionFeedback(); // Light feedback on first contact
               },
               onPanUpdate: (details) {
                 lastDx = details.localPosition.dx;
@@ -152,7 +152,7 @@ class GlassBottomNavBar extends StatelessWidget {
                 if (idx != lastHoverIndex) {
                   lastHoverIndex = idx;
                   HapticFeedbackService.instance
-                      .lightImpact(); // leichtes Feedback beim Wechseln der Zone
+                      .lightImpact(); // Light feedback when changing zones
                 }
               },
               onPanEnd: (_) {
@@ -221,7 +221,7 @@ class GlassBottomNavBar extends StatelessWidget {
         );
 
       default:
-        // Standard: bisheriger Backdrop-Filter
+        // Standard: previous backdrop filter
         return ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(

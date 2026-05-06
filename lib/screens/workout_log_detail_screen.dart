@@ -48,9 +48,9 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _notesController;
 
-  // Wir nutzen weightController für KG oder DISTANCE
+  // Use weightController for KG or DISTANCE
   final Map<int, TextEditingController> _weightControllers = {};
-  // Wir nutzen repsController für REPS oder TIME(min)
+  // Use repsController for REPS or TIME (min)
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _rirControllers = {};
 
@@ -145,12 +145,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       }
     }
 
-    // Volumen (nur Kraft) für den Header
+    // Volume for the header (strength only)
     final catVol = <String, double>{};
     for (var set in data.sets) {
-      // Nur wenn nicht Cardio zum Volumen zählen?
-      // Vereinfacht: wir zählen alles was weight*reps hat.
-      // Cardio hat weight=0/null im Log (da in distanceKm gespeichert), also automatisch 0.
+      // Count toward volume only when not cardio?
+      // Simplified: count anything that has weight * reps.
+      // Cardio has weight=0/null in the log because it is stored in distanceKm, so it is automatically 0.
       final v = (set.weightKg ?? 0) * (set.reps ?? 0);
       if (v > 0) {
         final cat = details[set.exerciseName]?.categoryName ?? 'Other';
@@ -161,10 +161,10 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     _notesController.text = data.notes ?? '';
     _editedStartTime = data.startTime;
 
-    // Controller befüllen
+    // Populate controllers
     _clearControllers();
     for (final setLog in data.sets) {
-      // Unterscheidung Cardio vs Kraft für Initial-Werte
+      // Distinguish cardio vs strength for initial values
       final isCardio =
           details[setLog.exerciseName]?.categoryName.toLowerCase() == 'cardio';
 
@@ -176,7 +176,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         final sec = setLog.durationSeconds ?? 0;
         val2 = sec > 0 ? (sec / 60).toStringAsFixed(0) : '';
       } else {
-        // Kraft: Val1 = Weight, Val2 = Reps
+        // Strength: Val1 = weight, Val2 = reps
         val1 = setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         val2 = setLog.reps?.toString() ?? '';
       }
@@ -260,7 +260,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final List<SetLog> setsToInsert = [];
 
     for (final setLog in currentSets) {
-      // Hier wieder die Unterscheidung: Was bedeuten die Controller-Werte?
+      // Distinguish again what the controller values mean.
       final isCardio = _isCardio(setLog.exerciseName);
 
       final val1 = double.tryParse(
@@ -281,7 +281,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
           distanceKm: val1,
           durationSeconds: (val2 * 60).round(),
           rir: rir,
-          // Weight/Reps auf 0/null setzen bei Cardio, um Datenmüll zu vermeiden?
+          // Set weight/reps to 0/null for cardio to avoid bad data?
           weightKg: 0,
           reps: 0,
         );
@@ -504,7 +504,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                   );
                                   if (selectedExercise != null) {
                                     setState(() {
-                                      // Exercise Details lokal speichern, damit _isCardio und Name funktionieren
+                                      // Store exercise details locally so _isCardio and name work.
                                       _exerciseDetails[selectedExercise
                                               .getLocalizedName(context)] =
                                           selectedExercise;
@@ -517,7 +517,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                             .getLocalizedName(context),
                                         setType: 'normal',
                                         isCompleted: true,
-                                        // Default Werte setzen
+                                        // Set default values
                                         weightKg: 0,
                                         reps: 0,
                                         distanceKm: 0,
@@ -860,7 +860,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       _buildHeader(l10n.cardioTimeLabel, flex: 4),
                       const SizedBox(width: 8),
                       _buildHeader(l10n.cardioIntensityShortLabel, flex: 2),
-                      const SizedBox(width: 48), // Platz für Check/Del
+                      const SizedBox(width: 48), // Space for check/delete
                     ],
                   )
                 else
@@ -870,7 +870,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                       _buildHeader(
                         l10n.lastTimeLabel,
                         flex: 3,
-                      ), // Nur in View sinnvoll, hier aber Platzhalter
+                      ), // Only useful in view mode, but reserved here as a placeholder
                       _buildHeader(l10n.kgLabel, flex: 2),
                       _buildHeader(l10n.repsLabel, flex: 2),
                       _buildHeader("RIR", flex: 2),
@@ -1052,7 +1052,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                     ),
             ),
             const SizedBox(width: 8),
-            // RIR / Intens
+            // RIR / intensity
             Expanded(
               flex: 2,
               child: _isEditMode

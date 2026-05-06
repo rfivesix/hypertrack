@@ -1,4 +1,4 @@
-// lib/screens/workout_history_screen.dart (Final & De-Materialisiert mit AppBar)
+// lib/screens/workout_history_screen.dart (final, de-materialized with AppBar)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +35,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
 
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
-    // KORREKTUR: Wir verwenden getFullWorkoutLogs(), um die Sätze direkt mitzuladen.
+    // FIX: Use getFullWorkoutLogs() to load sets directly.
     final data = await WorkoutDatabaseHelper.instance.getFullWorkoutLogs();
     if (mounted) {
       setState(() {
@@ -66,7 +66,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
-              // KORREKTUR: Aufgewerteter "Empty State"
+              // FIX: Improved empty state.
               ? Center(
                   child: Padding(
                     padding: DesignConstants.cardPadding.copyWith(
@@ -108,7 +108,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                     final log = _logs[index];
                     final duration = log.endTime?.difference(log.startTime);
 
-                    // NEU: Berechne Volumen und Sätze für diesen Log
+                    // New: calculate volume and sets for this log.
                     final totalSets = log.sets.length;
                     final totalVolume = log.sets.fold<double>(
                       0,
@@ -119,14 +119,14 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                       key: Key('log_${log.id}'),
                       direction: DismissDirection.endToStart,
 
-                      // KORRIGIERT: Nur `secondaryBackground` wird hier benötigt
+                      // FIXED: Only `secondaryBackground` is needed here.
                       background: const SwipeActionBackground(
                         color: Colors.redAccent,
                         icon: Icons.delete,
                         alignment: Alignment.centerRight,
                       ),
                       confirmDismiss: (direction) async {
-                        // NEU: Helper (Textspezifizierung hier nötig)
+                        // New: helper (specific text needed here)
                         return await showDeleteConfirmation(
                           context,
                           content: l10n.deleteWorkoutConfirmContent,
@@ -142,7 +142,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                             log.routineName ?? l10n.freeWorkoutTitle,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          // KORREKTUR: Das Subtitle wird jetzt ein Column mit mehr Infos
+                          // FIX: Subtitle is now a Column with more information.
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -178,7 +178,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                                   Text(
                                     l10n.setCount(
                                       totalSets,
-                                    ), // Nutzt die Plural-Funktion
+                                    ), // Uses the plural function
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,

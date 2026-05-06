@@ -119,12 +119,22 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
     }
 
     setState(() => _isCopying = true);
-    await _actions.copyReport(previewText);
-    if (!mounted) {
+    try {
+      await _actions.copyReport(previewText);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('${AppLocalizations.of(context)!.error}: $error')),
+      );
       return;
+    } finally {
+      if (mounted) {
+        setState(() => _isCopying = false);
+      }
     }
-    setState(() => _isCopying = false);
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(AppLocalizations.of(context)!.feedbackReportCopied)),
@@ -138,15 +148,26 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
     }
 
     setState(() => _isSaving = true);
-    final file =
-        await _actions.saveReportToTemporaryFile(reportText: previewText);
-    if (!mounted) {
+    String? savedPath;
+    try {
+      final file =
+          await _actions.saveReportToTemporaryFile(reportText: previewText);
+      savedPath = file.path;
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('${AppLocalizations.of(context)!.error}: $error')),
+      );
       return;
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
-    setState(() {
-      _isSaving = false;
-      _savedFilePath = file.path;
-    });
+
+    if (!mounted) return;
+    setState(() => _savedFilePath = savedPath);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -164,18 +185,27 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
     }
 
     setState(() => _isSharing = true);
-    final status = await _actions.shareReport(
-      reportText: previewText,
-      existingFilePath: _savedFilePath,
-      subject: AppLocalizations.of(context)!.feedbackReportEmailSubject,
-    );
-
-    if (!mounted) {
-      return;
-    }
-    setState(() => _isSharing = false);
-
     final l10n = AppLocalizations.of(context)!;
+    ShareResultStatus? status;
+    try {
+      status = await _actions.shareReport(
+        reportText: previewText,
+        existingFilePath: _savedFilePath,
+        subject: l10n.feedbackReportEmailSubject,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${l10n.error}: $error')),
+      );
+      return;
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
+
+    if (!mounted) return;
     final wasShared = status == ShareResultStatus.success;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -196,22 +226,31 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
 
     setState(() => _isEmailing = true);
     final includeNote = _includeUserNote ? _noteController.text.trim() : null;
-    final opened = await _actions.openFeedbackEmailDraft(
-      reportText: previewText,
-      userNote: includeNote,
-      subject: AppLocalizations.of(context)!.feedbackReportEmailSubject,
-    );
-
-    if (!mounted) {
+    final l10n = AppLocalizations.of(context)!;
+    var opened = false;
+    try {
+      opened = await _actions.openFeedbackEmailDraft(
+        reportText: previewText,
+        userNote: includeNote,
+        subject: l10n.feedbackReportEmailSubject,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${l10n.error}: $error')),
+      );
       return;
+    } finally {
+      if (mounted) {
+        setState(() => _isEmailing = false);
+      }
     }
-    setState(() => _isEmailing = false);
 
+    if (!mounted) return;
     if (!opened) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.feedbackReportEmailOpenFailed),
+          content: Text(l10n.feedbackReportEmailOpenFailed),
         ),
       );
     }

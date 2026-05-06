@@ -168,13 +168,13 @@ class _MainScreenState extends State<MainScreen>
         _showStartWorkoutMenu();
         break;
       case 'add_measurement':
-        // NEU: Datum holen
+        // New: get date
         final targetDate = _currentActiveDate;
 
         final success = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
             builder: (context) => AddMeasurementScreen(
-              initialDate: targetDate, // <--- ÜBERGABE
+              initialDate: targetDate, // <--- Pass-through
             ),
           ),
         );
@@ -212,8 +212,19 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
+  Future<void> _refreshDiaryForActiveDate({
+    bool queueIfInFlight = false,
+  }) async {
+    if (_currentIndex != 0) return;
+    final targetDate = _currentActiveDate;
+    await _tagebuchKey.currentState?.loadDataForDate(
+      targetDate,
+      queueIfInFlight: queueIfInFlight,
+    );
+  }
+
   Future<void> _showLogSupplementMenu() async {
-    // ... (Supplement Auswahl bleibt gleich) ...
+    // ... (supplement selection stays the same) ...
     final l10n = AppLocalizations.of(context)!;
     final Supplement? selectedSupplement =
         await showGlassBottomMenu<Supplement>(
@@ -224,7 +235,7 @@ class _MainScreenState extends State<MainScreen>
 
     if (selectedSupplement == null || !mounted) return;
 
-    // FIX: Datum holen
+    // FIX: Get date
     final targetDate = _currentActiveDate;
 
     final result = await showGlassBottomMenu<(double, DateTime)?>(
@@ -233,7 +244,7 @@ class _MainScreenState extends State<MainScreen>
       contentBuilder: (ctx, close) {
         return LogSupplementDoseBody(
           supplement: selectedSupplement,
-          initialTimestamp: targetDate, // <--- FIX: Datum übergeben
+          initialTimestamp: targetDate, // <--- FIX: Pass date
           primaryLabel: l10n.add_button,
           onCancel: close,
           onSubmit: (dose, ts) {
@@ -261,8 +272,8 @@ class _MainScreenState extends State<MainScreen>
     final routines = await WorkoutDatabaseHelper.instance.getAllRoutines();
     if (!mounted) return;
 
-    // Wir warten auf das Ergebnis des Menüs.
-    // Das Menü schließt sich selbst und gibt die Daten zurück.
+    // Wait for the menu result.
+    // The menu closes itself and returns the data.
     final result =
         await showGlassBottomMenu<({WorkoutLog log, Routine? routine})>(
       context: context,
@@ -285,14 +296,14 @@ class _MainScreenState extends State<MainScreen>
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () async {
-              // 1. Workout erstellen
+              // 1. Create workout
               final newWorkoutLog = await WorkoutDatabaseHelper.instance
                   .startWorkout(routineName: l10n.freeWorkoutTitle);
 
               if (!ctx.mounted) return;
 
-              // 2. Menü schließen und Daten zurückgeben
-              // Wir nutzen Navigator.of(ctx).pop(...), nicht 'close()', um Daten zu senden.
+              // 2. Close menu and return data
+              // Use Navigator.of(ctx).pop(...), not 'close()', to send data.
               Navigator.of(ctx).pop((log: newWorkoutLog, routine: null));
             },
             child: Row(
@@ -325,7 +336,7 @@ class _MainScreenState extends State<MainScreen>
                   children: [
                     FilledButton(
                       onPressed: () async {
-                        // Ladeindikator AUF dem Menü anzeigen
+                        // Show loading indicator on top of the menu.
                         showDialog(
                           context: context,
                           barrierDismissible: false,
@@ -340,10 +351,10 @@ class _MainScreenState extends State<MainScreen>
                             .startWorkout(routineName: r.name);
 
                         if (!mounted) return;
-                        Navigator.of(context).pop(); // Ladeindikator schließen
+                        Navigator.of(context).pop(); // Close loading indicator
 
                         if (fullRoutine != null && ctx.mounted) {
-                          // Menü schließen und Daten zurückgeben
+                          // Close menu and return data
                           Navigator.of(
                             ctx,
                           ).pop((log: newWorkoutLog, routine: fullRoutine));
@@ -356,10 +367,10 @@ class _MainScreenState extends State<MainScreen>
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: () {
-                          // Editieren navigiert direkt (das ist ok, da neuer Screen)
-                          // Aber besser wäre auch hier pop+push, wir lassen es für Edit so,
-                          // da der User zurück zum Menü will beim Editieren.
-                          // Hier schließen wir nur das Menü ohne Result.
+                          // Editing navigates directly (that is ok because it is a new screen).
+                          // pop+push would also be better here, but keep this for edit,
+                          // because the user wants to return to the menu while editing.
+                          // Close only the menu here without a result.
                           close();
                           Navigator.of(context)
                               .push(
@@ -417,8 +428,8 @@ class _MainScreenState extends State<MainScreen>
       },
     );
 
-    // HIER passiert die eigentliche Navigation zum Workout,
-    // NACHDEM das Menü geschlossen ist.
+    // The actual navigation to the workout happens here,
+    // after the menu is closed.
     if (result != null && mounted) {
       HapticFeedbackService.instance.confirmationFeedback();
       Navigator.of(context)
@@ -435,14 +446,14 @@ class _MainScreenState extends State<MainScreen>
   }
 
   Future<void> _handleAddFood() async {
-    // FIX: Datum holen
+    // FIX: Get date
     final targetDate = _currentActiveDate;
 
     final routeResult = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder: (context) => AddFoodScreen(
-          initialDate: targetDate, // <--- ÜBERGABE
-          // initialMealType: null, // Default ist ok
+          initialDate: targetDate, // <--- Pass-through
+          // initialMealType: null, // Default is ok
         ),
       ),
     );
@@ -458,7 +469,7 @@ class _MainScreenState extends State<MainScreen>
     final selectedFoodItem = addFoodResult.selectedFoodItem;
     if (selectedFoodItem == null) return;
 
-    // FIX: Datum übergeben (Signatur unten anpassen!)
+    // FIX: Pass date (adjust signature below).
     final result = await _showQuantityMenu(
       selectedFoodItem,
       initialDate: targetDate,
@@ -468,14 +479,14 @@ class _MainScreenState extends State<MainScreen>
 
     final int quantity = result.quantity;
     final DateTime timestamp =
-        result.timestamp; // Das kommt jetzt korrekt aus dem Dialog
+        result.timestamp; // This now comes correctly from the dialog.
     final String mealType = result.mealType;
     final bool isLiquid = result.isLiquid;
     final double? caffeinePer100 = result.caffeinePer100ml;
 
-    // ... (Restliche Logik: insertFoodEntry, insertFluidEntry etc. bleibt gleich) ...
-    // Der timestamp hier ist bereits korrekt, weil er aus dem Dialog kommt,
-    // der mit targetDate initialisiert wurde.
+    // ... (remaining logic: insertFoodEntry, insertFluidEntry, etc. stays the same) ...
+    // The timestamp here is already correct because it comes from the dialog,
+    // initialized with targetDate.
 
     final newFoodEntry = FoodEntry(
       barcode: selectedFoodItem.barcode,
@@ -490,7 +501,7 @@ class _MainScreenState extends State<MainScreen>
     HapticFeedbackService.instance.confirmationFeedback();
 
     if (isLiquid) {
-      // ... insertFluidEntry mit timestamp ...
+      // ... insertFluidEntry with timestamp ...
       final newFluidEntry = FluidEntry(
         timestamp: timestamp,
         quantityInMl: quantity,
@@ -531,7 +542,7 @@ class _MainScreenState extends State<MainScreen>
           children: [
             FluidDialogContent(
               key: key,
-              initialTimestamp: targetDate, // <--- FIX: Datum übergeben
+              initialTimestamp: targetDate, // <--- FIX: Pass date
             ),
             const SizedBox(height: 12),
             Row(
@@ -572,21 +583,29 @@ class _MainScreenState extends State<MainScreen>
                         caffeinePer100ml: caffeinePer100ml,
                       );
 
-                      final newId = await DatabaseHelper.instance
-                          .insertFluidEntry(newEntry);
+                      try {
+                        final newId = await DatabaseHelper.instance
+                            .insertFluidEntry(newEntry);
 
-                      if (caffeinePer100ml != null && caffeinePer100ml > 0) {
-                        final totalCaffeine =
-                            (caffeinePer100ml / 100.0) * quantity;
-                        await _logCaffeineDose(
-                          totalCaffeine,
-                          state.selectedDateTime,
-                          fluidEntryId: newId,
+                        if (caffeinePer100ml != null && caffeinePer100ml > 0) {
+                          final totalCaffeine =
+                              (caffeinePer100ml / 100.0) * quantity;
+                          await _logCaffeineDose(
+                            totalCaffeine,
+                            state.selectedDateTime,
+                            fluidEntryId: newId,
+                          );
+                        }
+                      } catch (_) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.error)),
                         );
+                        return;
                       }
 
                       close();
-                      _refreshHomeScreen();
+                      await _refreshDiaryForActiveDate(queueIfInFlight: true);
                     },
                     child: Text(l10n.add_button),
                   ),
@@ -639,7 +658,7 @@ class _MainScreenState extends State<MainScreen>
         double? caffeinePer100ml,
       })?> _showQuantityMenu(
     FoodItem item, {
-    DateTime? initialDate, // <--- NEUER PARAMETER
+    DateTime? initialDate, // <--- New parameter
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
@@ -655,7 +674,7 @@ class _MainScreenState extends State<MainScreen>
               key: dialogStateKey,
               item: item,
               initialTimestamp:
-                  initialDate ?? DateTime.now().dateOnly, // <--- FIX: Nutzen
+                  initialDate ?? DateTime.now().dateOnly, // <--- FIX: Use
             ),
             const SizedBox(height: 12),
             Row(
@@ -718,7 +737,7 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
-  // ERSETZE DIESE METHODE
+  // Replace this method
   GlobalAppBar _buildAppBar(
     BuildContext context,
     int index,
@@ -1018,12 +1037,12 @@ class _MainScreenState extends State<MainScreen>
     final bool isWorkoutRunning = manager.isActive;
     final String elapsed = _formatDuration(manager.elapsedDuration);
 
-    // Parameter für Animation
+    // Animation parameters
     // const basePad = 120.0; // Unused locally
     // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
     // final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode; // Unused locally in build, used in GlassNavBar logic internal
 
-    // Radius für Liquid Animation (falls aktiv)
+    // Radius for liquid animation, if active
     // const double rLiquid = 99; // Unused here directly
 
     return Stack(
@@ -1080,14 +1099,14 @@ class _MainScreenState extends State<MainScreen>
                   final wsm = context.read<WorkoutSessionManager>();
                   final logId = wsm.workoutLog?.id;
 
-                  // KORREKTUR: showDeleteConfirmation statt showDialog
+                  // FIX: showDeleteConfirmation instead of showDialog.
                   final confirmed = await showDeleteConfirmation(
                     context,
-                    title: l10n.discard_button, // "Verwerfen"
+                    title: l10n.discard_button, // "Discard"
                     content:
-                        l10n.deleteWorkoutConfirmContent, // "Wirklich löschen?"
+                        l10n.deleteWorkoutConfirmContent, // "Really delete?"
                     confirmLabel:
-                        l10n.discard_button, // Roter Button: "Verwerfen"
+                        l10n.discard_button, // Red button: "Discard"
                   );
 
                   if (confirmed) {
@@ -1179,7 +1198,7 @@ class _MainScreenState extends State<MainScreen>
               bgLocal.withValues(alpha: isDarkLocal ? 0.22 : 0.16),
             );
 
-            // Radius für Liquid Animation hier lokal definieren oder aus Konstante
+            // Define liquid animation radius locally here or from a constant.
             const double rLiquid = 99;
 
             return Offstage(

@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0] - 2026-05-05
+### Added
+- Initial Train Libre release with offline-first workout logging, reusable routines, nutrition tracking, hydration, supplements, body measurements, statistics, and local backups.
+- Integrated Open Food Facts and wger-based catalog sources for food and exercise data.
+- Added optional AI meal features using the user's own API key.
+- Added one-way export of supported app-recorded data to Google Health Connect.
+- Added native sharing for completed workouts and routines, including localized text exports and branded image share cards.
+
+### Changed
+- Renamed the app and repository branding from Hypertrack to Train Libre across Flutter, Android, iOS, widgets, documentation, package metadata, and local catalog filenames.
+- Improved Statistics, Pulse, Diary, Add Food, workout history, and backup import/export performance for larger local datasets.
+- Refined recovery, sleep, pulse, and nutrition analytics to make training guidance more transparent and robust.
+
+### Fixed
+- Preserved compatibility for legacy Hypertrack backups and catalog files while migrating new installs to Train Libre naming.
+- Hardened loading and error handling across Statistics, Diary, Sleep, Pulse, AI meal save, feedback-report, and active workout flows.
+- Reduced Android UI stalls and ANR risk by moving production Drift database work to a background isolate and reducing repeated database lookups.
+
+## [0.9.0-beta.6] - 2026-05-05
+### Fixed
+- Fixed severe Pulse loading lag in Statistics by caching hourly heart-rate aggregates instead of repeatedly reprocessing large raw sample histories.
+- Hardened Pulse aggregate cache coverage so small recent caches cannot be mistaken for complete older or larger ranges.
+
+### Changed
+- Pulse Hub summaries now use cached aggregate rows for range, average pulse, and resting-pulse estimates.
+- Pulse detail charts now render from capped aggregate chart points while preserving the selected time range.
+
+### Internal
+- Added Drift persistence for hourly Pulse aggregates and aggregate metadata.
+- Added regression coverage for large Pulse histories, incremental refresh, leading backfill, weighted aggregate metrics, chart point caps, and disabled tracking behavior.
+
+## [0.9.0-beta.5] - 2025-05-05
+### Fixed
+- Renamed bundled and remote catalog database artifacts to Train Libre filenames while preserving legacy Hypertrack fallback compatibility.
+- Added English iOS permission usage descriptions for camera, microphone, speech recognition, photo library, and Apple Health access, with German InfoPlist localization kept alongside them.
+- Fixed Sleep day overview week/month loading helper wiring so analyzer, tests, and debug builds compile cleanly.
+- Fixed a Diary water logging refresh issue where adding water after a refresh could trigger broad app reloads, causing lag or persistent loading states across tabs.
+- Kept the selected Diary date stable when adding water from the Diary action path.
+
+### Changed
+- New installs now use Train Libre catalog database filenames by default, including `train_libre_training.db`, `train_libre_base_foods.db`, `train_libre_off_<country>.db`, and `train_libre_prep_<country>.db`.
+- WGER and Open Food Facts refresh workflows/scripts now publish Train Libre database artifact filenames.
+- Base-food sharing/export subjects now use the Train Libre database filename.
+- activated minification so the size of the app shrinks
+
+### Compatibility
+- Existing local Hypertrack-named catalog files are migrated by copying to the Train Libre filename, verifying the copied size, and removing the old file only after verification.
+- Remote catalog refresh prefers Train Libre artifact URLs and falls back to legacy Hypertrack artifact URLs when needed.
+- Backup restore compatibility for legacy Hypertrack metadata and filenames remains intact.
+
+### Internal
+- Added regression coverage for Train Libre default filenames, explicit legacy fallback constants, local legacy file migration, remote fallback resolution, iOS InfoPlist permission strings, and legacy backup restore compatibility.
+- Documented canonical Train Libre catalog filenames and legacy fallback behavior.
+
+## [0.9.0-beta.4] - 2025-05-05
+### Fixed
+- Improved Statistics hub loading so slow or failing sections no longer block the entire tab.
+- Replaced shared Statistics loading behavior with section-level stale-while-refresh state.
+- Kept existing Statistics section data visible while range changes refresh in the background.
+- Prevented stale async Statistics results from overwriting newer section data after rapid range changes.
+- Fixed Statistics section error handling so failures remain local to the affected card instead of causing endless global loading.
+- Fixed Sleep card visibility after Sleep tracking is disabled.
+- Prevented in-flight Sleep and Pulse loads from re-rendering stale cards after their tracking features are disabled.
+- Added missing cleanup/error handling for selected AI meal save and feedback-report actions to avoid stuck loading states.
+- Improved Diary and Add Food performance by reducing repeated product and meal-total lookups.
+- Fixed a Live Workout listener cleanup issue.
+
+### Changed
+- Statistics hub now loads Steps, Recovery, Sleep, Pulse, Consistency, Performance Records, Volume/Muscles, and Body/Nutrition independently.
+- Added debug-only per-section performance timing logs for Statistics and related database/helper calls.
+- Preserved Recovery as a fixed current-state metric while improving Statistics reload behavior.
+
+### Internal
+- Added regression coverage for section-level Statistics loading, stale result protection, gated Sleep/Pulse visibility, and failed load cleanup.
+- Added performance diagnosis documentation for issue #313.
+- Expanded focused performance/stability tests around Statistics, Add Food meal totals, product batch lookup, backup JSON processing, and save-flow loading cleanup.
+
 ## [0.9.0-beta.3] - 2025-05-05
 
 ### Fixed

@@ -1,5 +1,5 @@
 // lib/models/set_log.dart
-// VOLLSTÄNDIGER CODE
+// Complete code
 
 /// Represents a single set performed during an exercise.
 ///
@@ -79,7 +79,7 @@ class SetLog {
       weightKg: map['weight_kg'],
       reps: map['reps'],
       restTimeSeconds: map['rest_time_seconds'],
-      // MODIFIKATION: isCompleted kann null sein, wir mappen 1 zu true, alles andere (0, null) zu false.
+      // MODIFICATION: isCompleted can be null; map 1 to true and everything else (0, null) to false.
       isCompleted: map['is_completed'] == 1,
       logOrder: map['log_order'],
       notes: map['notes'],
@@ -101,7 +101,7 @@ class SetLog {
       'weight_kg': weightKg,
       'reps': reps,
       'rest_time_seconds': restTimeSeconds,
-      // MODIFIKATION: Speichere true als 1, false/null als 0.
+      // MODIFICATION: Store true as 1, false/null as 0.
       'is_completed': isCompleted == true ? 1 : 0,
       'log_order': logOrder,
       'notes': notes,

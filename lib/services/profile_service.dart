@@ -1,7 +1,7 @@
 // lib/services/profile_service.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-// Wichtig für ImageCache
+// Important for ImageCache
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,7 +34,7 @@ class ProfileService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _profileImagePath = prefs.getString(_profileImageKey);
 
-    // Validierung: Existiert die Datei wirklich noch?
+    // Validation: does the file really still exist?
     if (_profileImagePath != null) {
       final file = File(_profileImagePath!);
       if (!await file.exists()) {
@@ -62,23 +62,23 @@ class ProfileService extends ChangeNotifier {
         final localPath = '${appDir.path}/$fileName';
         final targetFile = File(localPath);
 
-        // 1. WICHTIG: Das alte Bild aus dem Flutter-Cache werfen,
-        // bevor wir das neue schreiben.
+        // 1. Important: evict the old image from the Flutter cache
+        // before writing the new one.
         try {
           await FileImage(targetFile).evict();
         } catch (e) {
-          // Ignorieren, falls es nicht im Cache war
+          // Ignore if it was not in the cache.
         }
 
-        // 2. Datei kopieren/überschreiben
+        // 2. Copy/overwrite file
         await File(pickedFile.path).copy(localPath);
 
-        // 3. Pfad speichern
+        // 3. Save path
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_profileImageKey, localPath);
 
         _profileImagePath = localPath;
-        cacheBuster++; // Zwingt das Widget zum Neu-Zeichnen
+        cacheBuster++; // Forces the widget to redraw.
         notifyListeners();
       }
     } catch (e) {
@@ -94,20 +94,20 @@ class ProfileService extends ChangeNotifier {
     final currentPath = prefs.getString(_profileImageKey);
 
     if (currentPath != null) {
-      // 1. Aus Cache entfernen (WICHTIG!)
+      // 1. Remove from cache (important).
       try {
         await FileImage(File(currentPath)).evict();
       } catch (e) {
-        // Egal, wenn es nicht im Cache war
+        // Fine if it was not in the cache.
       }
 
-      // 2. UI sofort aktualisieren (Optimistic UI update)
+      // 2. Update UI immediately (optimistic UI update)
       _profileImagePath = null;
       await prefs.remove(_profileImageKey);
       cacheBuster++;
       notifyListeners();
 
-      // 3. Datei physisch löschen
+      // 3. Physically delete file
       try {
         final imageFile = File(currentPath);
         if (await imageFile.exists()) {

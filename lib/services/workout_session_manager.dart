@@ -49,7 +49,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   List<RoutineExercise> _exercises = [];
   final Map<int, SetLog> _setLogs = {};
 
-  // Speichert die Pausenzeit pro RoutineExercise-ID
+  // Stores rest time per RoutineExercise ID.
   final Map<int, int?> pauseTimes = {};
 
   Timer? _restTimer;
@@ -126,7 +126,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     _setLogs.clear();
     pauseTimes.clear();
 
-    // Pause-Zeiten initialisieren
+    // Initialize rest times
     for (var re in _exercises) {
       if (re.id != null) {
         pauseTimes[re.id!] = re.pauseSeconds;
@@ -138,8 +138,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Versucht, ein laufendes Workout aus der Datenbank wiederherzustellen.
-  /// Wird in main.dart aufgerufen.
+  /// Attempts to restore an ongoing workout from the database.
+  /// Called from main.dart.
   /// Attempts to restore an ongoing workout session from the database.
   ///
   /// This should be called during application initialization to resume an interrupted workout.
@@ -308,7 +308,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     String? setType,
     int? rir,
     bool clearRir = false,
-    // FIX: Cardio Parameter
+    // FIX: Cardio parameters
     double? distance,
     bool clearDistance = false,
     int? duration,
@@ -360,7 +360,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
 
-    // Volumens-Berechnung update (Nur für Krafttraining relevant)
+    // Update volume calculation (relevant only for strength training).
     if (finalWeight != null || finalReps != null || clearWeight || clearReps) {
       final oldVol = (oldLog.weightKg ?? 0) * (oldLog.reps ?? 0);
       final newWeight =
@@ -378,16 +378,16 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       setType: setType,
       rir: finalRir,
       clearRir: clearRir,
-      distanceKm: distance, // <--- NEU
+      distanceKm: distance, // <--- New
       clearDistance: clearDistance,
-      durationSeconds: duration, // <--- NEU
+      durationSeconds: duration, // <--- New
       clearDuration: clearDuration,
     );
 
     _setLogs[templateId] = newLog;
     await _workoutDb.insertSetLog(newLog); // Update in DB
 
-    // Timer Logik (unverändert)
+    // Timer logic (unchanged)
     if (isCompleted == true && oldLog.isCompleted != true) {
       int? pauseTime;
       for (var re in _exercises) {
@@ -423,7 +423,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
       targetRir: null,
     );
 
-    // KORREKTUR: Manuelle Erstellung statt copyWith
+    // FIX: Manual creation instead of copyWith.
     final updatedRe = RoutineExercise(
       id: re.id,
       exercise: re.exercise,
@@ -475,7 +475,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         final newTemplates = List<SetTemplate>.from(re.setTemplates)
           ..removeAt(tIndex);
 
-        // KORREKTUR: Manuelle Erstellung statt copyWith
+        // FIX: Manual creation instead of copyWith.
         _exercises[i] = RoutineExercise(
           id: re.id,
           exercise: re.exercise,
@@ -498,11 +498,11 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> addExercise(Exercise exercise) async {
     final tempReId = _nextSyntheticId(_allRoutineExerciseIds());
 
-    // FIX: Cardio Check für Anzahl der Sets
+    // FIX: Cardio check for set count.
     final isCardio = exercise.categoryName.toLowerCase() == 'cardio';
     final initialSetCount = isCardio ? 1 : 3;
     final initialReps =
-        isCardio ? '' : '10'; // Auch hier: Cardio leer, Kraft 10
+        isCardio ? '' : '10'; // Here too: cardio empty, strength 10.
 
     final existingTemplateIds = _allTemplateIds()..addAll(_setLogs.keys);
     final templates = <SetTemplate>[];
@@ -541,7 +541,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         reps: null,
         restTimeSeconds: 90,
         isCompleted: false,
-        // Optional: logOrder hier schon setzen, aber Manager macht das nicht explizit bisher
+        // Optional: set logOrder here already, but the manager has not done that explicitly so far.
         logOrder: _setLogs.length,
       );
       final dbId = await _workoutDb.insertSetLog(newSetLog);
@@ -746,8 +746,8 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     if (_workoutLog != null) {
       final logId = _workoutLog!.id!;
 
-      // 1. Unvollständige Sets identifizieren und löschen
-      // Wir filtern lokal, welche IDs gelöscht werden müssen
+      // 1. Identify and delete incomplete sets.
+      // Filter locally which IDs must be deleted.
       final incompleteSetIds = _setLogs.values
           .where((s) => s.isCompleted == false && s.id != null)
           .map((s) => s.id!)
@@ -757,16 +757,16 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         await _workoutDb.deleteSetLogs(incompleteSetIds);
       }
 
-      // 2. Reihenfolge aktualisieren (Reordering Fix)
-      // Wir iterieren durch die aktuelle Übungsliste (die vom User ggf. umsortiert wurde)
-      // und vergeben neue logOrder-Indizes für die verbleibenden (completed) Sets.
+      // 2. Update order (reordering fix).
+      // Iterate through the current exercise list, which the user may have reordered,
+      // and assign new logOrder indexes to the remaining completed sets.
       int globalOrderCounter = 0;
       final List<SetLog> setsToUpdate = [];
 
       for (final routineExercise in _exercises) {
         for (final template in routineExercise.setTemplates) {
           final setLog = _setLogs[template.id];
-          // Nur completed Sets werden behalten und neu sortiert
+          // Keep only completed sets and sort them again.
           if (setLog != null && setLog.isCompleted == true) {
             setsToUpdate.add(setLog.copyWith(logOrder: globalOrderCounter));
             globalOrderCounter++;
@@ -774,12 +774,12 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
 
-      // Batch-Update der Reihenfolge in der DB
+      // Batch-update the order in the DB.
       if (setsToUpdate.isNotEmpty) {
         await _workoutDb.updateSetLogs(setsToUpdate);
       }
 
-      // 3. Workout abschließen
+      // 3. Finish workout
       await _workoutDb.finishWorkout(logId, title: title, notes: notes);
 
       // Cleanup

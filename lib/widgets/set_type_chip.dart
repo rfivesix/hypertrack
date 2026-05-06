@@ -21,7 +21,7 @@ class SetTypeChip extends StatelessWidget {
   const SetTypeChip({
     super.key,
     required this.setType,
-    this.setIndex, // setIndex ist jetzt optional
+    this.setIndex, // setIndex is now optional
     this.isCompleted = false,
     this.onTap,
   });
@@ -40,14 +40,14 @@ class SetTypeChip extends StatelessWidget {
     return GestureDetector(
       onTap: isCompleted ? null : onTap,
       child: SizedBox(
-        width: 40, // Feste Breite für die Spalte
-        height: 40, // Feste Höhe
+        width: 40, // Fixed width for the column
+        height: 40, // Fixed height
         child: Center(
           child: Text(
             type['char'],
             style: TextStyle(
               color: textColor,
-              fontSize: 20, // Größere Schriftart
+              fontSize: 20, // Larger font size
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -1,4 +1,4 @@
-// lib/screens/measurements_screen.dart (Final & De-Materialisiert - mit AppBar)
+// lib/screens/measurements_screen.dart (final, de-materialized, with AppBar)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -106,9 +106,9 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            // Optional: Hier könnte man DateTime.now() übergeben,
-            // oder es leer lassen (Fallback im Screen ist ja now()).
-            // Wir lassen es leer, da dieser Screen keine Datums-Auswahl hat.
+            // Optional: DateTime.now() could be passed here,
+            // or leave it empty (the screen fallback is now()).
+            // Leave it empty because this screen has no date selection.
             builder: (context) =>
                 AddMeasurementScreen(initialDate: DateTime.now()),
           ),
@@ -277,7 +277,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             MeasurementChartWidget(
               chartType: _selectedChartType!,
               dateRange: _currentChartDateRange,
-              // KORREKTUR: Die folgende Zeile wurde entfernt
+              // FIX: The following line was removed.
               // lineColor: colorScheme.primary,
               unit: _getMeasurementUnit(_selectedChartType!),
             ),
@@ -331,14 +331,14 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     return Dismissible(
       key: Key('session_${session.id}'),
       direction: DismissDirection.endToStart,
-      // gleiche Hintergründe wie im Nutrition Screen
+      // Same backgrounds as in Nutrition Screen
       background: const SwipeActionBackground(
         color: Colors.redAccent,
         icon: Icons.delete,
         alignment: Alignment.centerRight,
       ),
       confirmDismiss: (direction) async {
-        // NEU: Helper
+        // New helper
         return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {
@@ -396,7 +396,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   }
 
   String _getMeasurementUnit(String type) {
-    // Hier die Einheiten basierend auf dem Typ zurückgeben
+    // Return units based on the type here.
     switch (type) {
       case 'weight':
         return 'kg';
@@ -423,7 +423,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   }
 
   Icon _getMeasurementIcon(String type) {
-    // Hier Icons basierend auf dem Typ zurückgeben
+    // Return icons based on the type here.
     switch (type) {
       case 'weight':
         return const Icon(Icons.monitor_weight);

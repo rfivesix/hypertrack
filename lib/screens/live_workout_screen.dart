@@ -1,5 +1,5 @@
 // lib/screens/live_workout_screen.dart
-// FINAL: Cardio Fix + Null Safety + Header Logic
+// FINAL: Cardio fix + null safety + header logic
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -24,7 +24,7 @@ import 'exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'workout_summary_screen.dart';
 import '../widgets/workout_card.dart';
-// Falls Vibration genutzt wird
+// Used when vibration is enabled.
 
 /// The active workout tracking screen, managing the real-time session state.
 ///
@@ -112,17 +112,17 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     }
   }
 
-  // --- HILFSMETHODE CARDIO CHECK ---
+  // --- Cardio check helper ---
   bool _isCardio(RoutineExercise re) {
     return re.exercise.categoryName.toLowerCase() == 'cardio';
   }
 
   void _syncControllersWithManager(WorkoutSessionManager manager) {
     manager.setLogs.forEach((templateId, setLog) {
-      // Finde die zugehörige Übung
+      // Find the associated exercise
       final exercise = manager.exercises.firstWhere(
         (re) => re.setTemplates.any((t) => t.id == templateId),
-        // Fallback falls Template nicht gefunden (sollte nicht passieren)
+        // Fallback if template is not found (should not happen)
         orElse: () => manager.exercises.first,
       );
       final isCardio = _isCardio(exercise);
@@ -135,7 +135,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           initText =
               setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         } else {
-          // Kraft: Weight
+          // Strength: weight
           initText =
               setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         }
@@ -173,11 +173,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       if (!_repsControllers.containsKey(templateId)) {
         String initText;
         if (isCardio) {
-          // Cardio: Duration (Minuten) aus Sekunden
+          // Cardio: duration in minutes from seconds
           final seconds = setLog.durationSeconds ?? 0;
           initText = seconds > 0 ? (seconds / 60).toStringAsFixed(0) : '';
         } else {
-          // Kraft: Reps
+          // Strength: reps
           initText = setLog.reps?.toString() ?? '';
         }
 
@@ -186,7 +186,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         _repsControllers[templateId]!.addListener(() {
           final text = _repsControllers[templateId]!.text;
           if (isCardio) {
-            // Input Minuten -> Speichern Sekunden
+            // Input minutes -> save seconds
             final minutes = double.tryParse(text.replaceAll(',', '.'));
             final seconds = (minutes != null) ? (minutes * 60).round() : null;
             final clearDuration = seconds == null && text.isEmpty;
@@ -484,7 +484,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
   // --- HEADER HELPER ---
   Widget _buildHeaderRow(RoutineExercise re, AppLocalizations l10n) {
-    // WICHTIG: Cardio Check hier!
+    // Important: cardio check here.
     final bool isCardio = _isCardio(re);
 
     if (isCardio) {
@@ -492,12 +492,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         children: [
           _buildHeader(l10n.setLabel, flex: 2), // Set Nr.
           _buildHeader(l10n.lastTimeLabel, flex: 3), // History/Last
-          _buildHeader(l10n.cardioDistanceLabel, flex: 4), // Mehr Platz
+          _buildHeader(l10n.cardioDistanceLabel, flex: 4), // More space
           const SizedBox(width: 8),
-          _buildHeader(l10n.cardioTimeLabel, flex: 4), // Mehr Platz
+          _buildHeader(l10n.cardioTimeLabel, flex: 4), // More space
           const SizedBox(width: 8),
           _buildHeader(l10n.cardioIntensityLabel, flex: 2),
-          const SizedBox(width: 48), // Platz für Checkbox
+          const SizedBox(width: 48), // Space for checkbox
         ],
       );
     }
@@ -603,7 +603,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           flex: 3,
           child: isCardio
               ? const SizedBox
-                  .shrink() // Bei Cardio zeigen wir (noch) keine History an
+                  .shrink() // For cardio, do not show history yet.
               : Text(
                   (rowIndex < lastPerfSets.length)
                       ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
@@ -615,7 +615,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
         // 3. INPUT 1: WEIGHT / DISTANCE
         Expanded(
-          flex: isCardio ? 2 : 2, // Mehr Platz für Cardio Distance
+          flex: isCardio ? 2 : 2, // More space for cardio distance
           child: TextFormField(
             controller: _weightControllers[templateId],
             textAlign: TextAlign.center,
@@ -634,7 +634,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
 
         // 4. INPUT 2: REPS / TIME
         Expanded(
-          flex: isCardio ? 2 : 2, // Mehr Platz für Cardio Time
+          flex: isCardio ? 2 : 2, // More space for cardio time
           child: TextFormField(
             controller: _repsControllers[templateId],
             textAlign: TextAlign.center,
@@ -844,7 +844,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       );
     }
 
-    // Edit Pause Helper
+    // Edit rest helper
     void editPauseTime(RoutineExercise routineExercise) async {
       final currentPause = manager.pauseTimes[routineExercise.id!];
       final controller = TextEditingController(
@@ -1062,7 +1062,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        // FIX: Header Row einfügen (dynamisch)
+                                        // FIX: Insert header row dynamically.
                                         _buildHeaderRow(routineExercise, l10n),
 
                                         // Set Rows
@@ -1102,7 +1102,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                                             _lastPerformances[routineExercise
                                                     .exercise.nameEn] ??
                                                 [],
-                                            template, // <--- Template übergeben
+                                            template, // <--- Pass template
                                           );
                                         }),
                                         Padding(

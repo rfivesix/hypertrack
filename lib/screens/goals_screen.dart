@@ -77,49 +77,58 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences
-        .getInstance(); // Nur noch für Height gebraucht falls nicht im Profil
-    final selectedGoal = await _recommendationService.getGoal();
-    final selectedTargetRate =
-        await _recommendationService.getTargetRateKgPerWeek();
-    final selectedPriorActivityLevel =
-        await _recommendationService.getPriorActivityLevel();
-    final selectedExtraCardioHoursOption =
-        await _recommendationService.getExtraCardioHoursOption();
+    try {
+      final prefs = await SharedPreferences
+          .getInstance(); // Only needed for height if it is not in the profile.
+      final selectedGoal = await _recommendationService.getGoal();
+      final selectedTargetRate =
+          await _recommendationService.getTargetRateKgPerWeek();
+      final selectedPriorActivityLevel =
+          await _recommendationService.getPriorActivityLevel();
+      final selectedExtraCardioHoursOption =
+          await _recommendationService.getExtraCardioHoursOption();
 
-    // Lade Ziele aus der DB
-    final settings = await _databaseHelper.getAppSettings();
-    final targetSteps = await _databaseHelper.getCurrentTargetStepsOrDefault();
-    // Lade Profil für Größe
-    // (Optional: Du könntest auch 'getProfile' im Helper bauen, aber prefs für Height ist ok als Übergang)
+      // Load goals from the DB
+      final settings = await _databaseHelper.getAppSettings();
+      final targetSteps =
+          await _databaseHelper.getCurrentTargetStepsOrDefault();
+      // Load profile for height
+      // Optional: `getProfile` could also be added to the helper, but prefs are ok as a height transition.
 
-    setState(() {
-      _heightController.text = (prefs.getInt('userHeight') ?? 180).toString();
+      if (!mounted) return;
+      setState(() {
+        _heightController.text = (prefs.getInt('userHeight') ?? 180).toString();
 
-      // Werte aus DB oder Default
-      _caloriesController.text = (settings?.targetCalories ?? 2500).toString();
-      _proteinController.text = (settings?.targetProtein ?? 180).toString();
-      _carbsController.text = (settings?.targetCarbs ?? 250).toString();
-      _fatController.text = (settings?.targetFat ?? 80).toString();
-      _waterController.text = (settings?.targetWater ?? 3000).toString();
-      _stepsController.text = targetSteps.toString();
+        // Values from DB or defaults
+        _caloriesController.text =
+            (settings?.targetCalories ?? 2500).toString();
+        _proteinController.text = (settings?.targetProtein ?? 180).toString();
+        _carbsController.text = (settings?.targetCarbs ?? 250).toString();
+        _fatController.text = (settings?.targetFat ?? 80).toString();
+        _waterController.text = (settings?.targetWater ?? 3000).toString();
+        _stepsController.text = targetSteps.toString();
 
-      // Hinweis: Sugar, Fiber, Salt sind noch nicht im AppSettings Schema von Drift definiert?
-      // Falls du diese auch syncen willst, musst du die Tabelle AppSettings in drift_database.dart erweitern.
-      // Vorerst laden wir diese noch aus Prefs, da sie im Schema fehlten:
-      _sugarController.text = (prefs.getInt('targetSugar') ?? 50).toString();
-      _fiberController.text = (prefs.getInt('targetFiber') ?? 30).toString();
-      _saltController.text = (prefs.getInt('targetSalt') ?? 6).toString();
-      _selectedGoal = selectedGoal;
-      _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.coerceTargetRate(
-        goal: selectedGoal,
-        kgPerWeek: selectedTargetRate,
-      );
-      _selectedPriorActivityLevel = selectedPriorActivityLevel;
-      _selectedExtraCardioHoursOption = selectedExtraCardioHoursOption;
+        // Note: sugar, fiber, and salt are not defined in Drift's AppSettings schema yet.
+        // Extend the AppSettings table in drift_database.dart if these should sync too.
+        // For now, still load these from prefs because they were missing from the schema:
+        _sugarController.text = (prefs.getInt('targetSugar') ?? 50).toString();
+        _fiberController.text = (prefs.getInt('targetFiber') ?? 30).toString();
+        _saltController.text = (prefs.getInt('targetSalt') ?? 6).toString();
+        _selectedGoal = selectedGoal;
+        _selectedTargetRateKgPerWeek = WeeklyTargetRateCatalog.coerceTargetRate(
+          goal: selectedGoal,
+          kgPerWeek: selectedTargetRate,
+        );
+        _selectedPriorActivityLevel = selectedPriorActivityLevel;
+        _selectedExtraCardioHoursOption = selectedExtraCardioHoursOption;
 
-      _isLoading = false;
-    });
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('GoalsScreen: failed to load settings: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveSettings() async {
@@ -128,7 +137,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
     final prefs = await SharedPreferences.getInstance();
 
-    // 1. Größe in Prefs (oder später DB Profile update)
+    // 1. Height in prefs (or later DB profile update)
     await prefs.setInt('userHeight', int.parse(_heightController.text));
 
     await _recommendationService.saveGoalAndTargetRate(
@@ -142,7 +151,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       _selectedExtraCardioHoursOption,
     );
 
-    // 2. WICHTIG: Ziele in die Datenbank speichern
+    // 2. Important: save goals to the database.
     await _databaseHelper.saveUserGoals(
       calories: int.parse(_caloriesController.text),
       protein: int.parse(_proteinController.text),
@@ -152,8 +161,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
       steps: int.parse(_stepsController.text),
     );
 
-    // 3. Die "Extra"-Werte (Sugar/Fiber/Salt) bleiben vorerst in Prefs,
-    // bis du das DB-Schema erweiterst (Empfehlung für später).
+    // 3. The extra values (sugar/fiber/salt) stay in prefs for now,
+    // until the DB schema is extended (recommended later).
     await prefs.setInt('targetSugar', int.parse(_sugarController.text));
     await prefs.setInt('targetFiber', int.parse(_fiberController.text));
     await prefs.setInt('targetSalt', int.parse(_saltController.text));
@@ -174,11 +183,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
 
-      // NEU: Unsere GlobalAppBar
+      // New: our GlobalAppBar
       appBar: GlobalAppBar(
         title: l10n.my_goals,
         actions: [
-          // Der Save-Button bleibt, nur etwas anders verpackt
+          // The save button stays, just wrapped a little differently.
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: TextButton(
@@ -198,7 +207,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              // Die neue Padding-Logik
+              // New padding logic
               padding: DesignConstants.cardPadding.copyWith(
                 top: DesignConstants.cardPadding.top +
                     MediaQuery.of(context).padding.top +

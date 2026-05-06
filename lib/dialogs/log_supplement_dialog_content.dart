@@ -31,7 +31,7 @@ class LogSupplementDialogContentState
   late final TextEditingController _doseController;
   late DateTime _selectedDateTime;
 
-  // Getter für den Zugriff von außen
+  // Getter for external access
   String get doseText => _doseController.text;
   DateTime get selectedDateTime => _selectedDateTime;
 
@@ -91,7 +91,7 @@ class LogSupplementDialogContentState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // Holen der l10n Instanz
+    final l10n = AppLocalizations.of(context)!; // Get the l10n instance
     final formattedDate = DateFormat('dd.MM.yyyy').format(_selectedDateTime);
     final formattedTime = DateFormat.Hm().format(_selectedDateTime);
     return Column(
@@ -101,7 +101,7 @@ class LogSupplementDialogContentState
           controller: _doseController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-            labelText: l10n.doseLabel, // LOKALISIERT
+            labelText: l10n.doseLabel, // Localized
             suffixText: widget.supplement.unit,
           ),
           autofocus: true,

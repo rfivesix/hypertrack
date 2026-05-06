@@ -1,18 +1,18 @@
 import 'food_entry.dart';
 import 'food_item.dart';
 
-// DOC: Diese Klasse ist ein reines "Anzeige-Modell". Sie kombiniert die Daten
-// aus zwei verschiedenen Quellen (unserem Tagebucheintrag und dem Produktkatalog),
-// damit die UI sie einfach an einem Ort abgreifen kann.
+// DOC: This class is a pure display model. It combines data
+// from two different sources (the diary entry and the product catalog),
+// so the UI can read everything from one place.
 class TrackedFoodItem {
   final FoodEntry
-      entry; // Der eigentliche Tagebucheintrag (mit ID, Menge, Zeit)
+      entry; // The actual diary entry (with ID, amount, and time)
   final FoodItem
-      item; // Die Details des Lebensmittels (mit Name, Kalorien etc.)
+      item; // Food details (with name, calories, etc.)
 
   TrackedFoodItem({required this.entry, required this.item});
 
-  // Eine kleine Helfer-Eigenschaft, um die berechneten Kalorien für diesen Eintrag zu bekommen.
+  // Small helper property for the calculated calories of this entry.
   int get calculatedCalories {
     return (item.calories / 100 * entry.quantityInGrams).round();
   }

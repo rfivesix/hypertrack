@@ -68,7 +68,7 @@ class BuildContext:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate a country-specific Hypertrack OFF catalog SQLite DB from the "
+            "Generate a country-specific Train Libre OFF catalog SQLite DB from the "
             "Open Food Facts bulk parquet export."
         )
     )

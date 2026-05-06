@@ -216,7 +216,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
   Future<void> _saveToDiary() async {
     final l10n = AppLocalizations.of(context)!;
-    if (_matchedIngredients.isEmpty) return;
+    if (_isSaving || _matchedIngredients.isEmpty) return;
     final validation = _validation;
     if (validation != null) {
       final savePlan = AiDiarySavePlan.fromValidation(validation);
@@ -236,26 +236,41 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       }
     }
 
+    if (!mounted) return;
     setState(() => _isSaving = true);
 
     final db = DatabaseHelper.instance;
+    var saved = false;
 
-    for (final item in _matchedIngredients) {
-      if (item.matchedFood == null) continue;
-      final entry = FoodEntry(
-        barcode: item.matchedFood!.barcode,
-        quantityInGrams: item.ingredient.amountInGrams,
-        timestamp: widget.date,
-        mealType: widget.mealType,
+    try {
+      for (final item in _matchedIngredients) {
+        if (item.matchedFood == null) continue;
+        final entry = FoodEntry(
+          barcode: item.matchedFood!.barcode,
+          quantityInGrams: item.ingredient.amountInGrams,
+          timestamp: widget.date,
+          mealType: widget.mealType,
+        );
+        await db.insertFoodEntry(entry);
+      }
+      saved = true;
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.error}: $error'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-      await db.insertFoodEntry(entry);
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
 
-    if (mounted) {
-      setState(() => _isSaving = false);
-      HapticFeedbackService.instance.confirmationFeedback();
-      Navigator.of(context).pop(true); // Signal diary to refresh
-    }
+    if (!mounted || !saved) return;
+    HapticFeedbackService.instance.confirmationFeedback();
+    Navigator.of(context).pop(true); // Signal diary to refresh
   }
 
   Future<bool?> _confirmPartialSave(AiDiarySavePlan savePlan) {

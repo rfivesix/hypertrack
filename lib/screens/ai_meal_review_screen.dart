@@ -329,7 +329,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   Future<void> _saveToDiary() async {
     final l10n = AppLocalizations.of(context)!;
-    if (_items.isEmpty) return;
+    if (_isSaving || _items.isEmpty) return;
     final validation = _validation ??
         await AiMealValidationEngine().validateMealCandidate(
           candidate: _candidateFromReviewItems(),
@@ -351,27 +351,42 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
       if (confirmed != true) return;
     }
 
+    if (!mounted) return;
     setState(() => _isSaving = true);
 
     final db = DatabaseHelper.instance;
+    var saved = false;
 
-    for (final item in savePlan.matchedItems) {
-      final food = item.match.bestMatch!;
+    try {
+      for (final item in savePlan.matchedItems) {
+        final food = item.match.bestMatch!;
 
-      final entry = FoodEntry(
-        barcode: food.barcode,
-        quantityInGrams: item.candidate.grams,
-        timestamp: _selectedTimestamp,
-        mealType: _selectedMealType,
+        final entry = FoodEntry(
+          barcode: food.barcode,
+          quantityInGrams: item.candidate.grams,
+          timestamp: _selectedTimestamp,
+          mealType: _selectedMealType,
+        );
+        await db.insertFoodEntry(entry);
+      }
+      saved = true;
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.error}: $error'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-      await db.insertFoodEntry(entry);
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
 
-    if (mounted) {
-      setState(() => _isSaving = false);
-      HapticFeedbackService.instance.confirmationFeedback();
-      Navigator.of(context).pop(true);
-    }
+    if (!mounted || !saved) return;
+    HapticFeedbackService.instance.confirmationFeedback();
+    Navigator.of(context).pop(true);
   }
 
   Future<bool?> _confirmPartialSave(AiDiarySavePlan savePlan) {

@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_path = "hypertrack_base_foods.db"
+db_path = "train_libre_base_foods.db"
 
 if not os.path.exists(db_path):
     print(f"❌ {db_path} nicht gefunden.")
@@ -11,8 +11,8 @@ print(f"🔧 Normalisiere {db_path}...")
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
-# 1. Spalten umbenennen (Mapping: Alt -> Neu)
-# Drift erwartet: calories, protein, carbs, fat, sugar, fiber, salt, category
+# 1. Rename columns (mapping: old -> new)
+# Drift expects: calories, protein, carbs, fat, sugar, fiber, salt, category
 column_map = {
     "calories_100g": "calories",
     "protein_100g": "protein",
@@ -21,11 +21,11 @@ column_map = {
     "sugar_100g": "sugar",
     "fiber_100g": "fiber",
     "salt_100g": "salt",
-    "category_key": "category"  # Wichtig!
+    "category_key": "category"  # Important.
 }
 
 try:
-    # Prüfen, welche Spalten da sind
+    # Check which columns exist
     cursor.execute("PRAGMA table_info(products)")
     existing_cols = [row[1] for row in cursor.fetchall()]
 
@@ -38,9 +38,9 @@ try:
         else:
             print(f"  ⚠️ Spalte {old_col} nicht gefunden (übersprungen).")
 
-    # 2. Version aktualisieren (damit die App das Update merkt!)
+    # 2. Update the version so the app detects the change.
     cursor.execute('CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT)')
-    # Wir nehmen ein Datum in der Zukunft
+    # Use a future date.
     cursor.execute("INSERT OR REPLACE INTO metadata (key, value) VALUES ('version', '202512312359')")
 
     conn.commit()

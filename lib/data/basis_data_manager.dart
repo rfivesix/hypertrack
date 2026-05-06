@@ -3,7 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show ByteData, rootBundle;
 import 'database_helper.dart';
 import 'drift_database.dart';
 import 'package:path/path.dart' as p;
@@ -17,7 +17,7 @@ import '../services/exercise_catalog_refresh_service.dart';
 import '../services/off_catalog_country_service.dart';
 import '../services/off_catalog_refresh_service.dart';
 
-// Typ-Definition für den Callback
+// Type definition for the callback
 typedef ProgressCallback = void Function(
     String task, String detail, double progress);
 typedef RemoteCatalogProgressCallback = void Function(
@@ -52,7 +52,7 @@ class BasisDataManager {
   /// The [onProgress] callback reports the ongoing task, details, and percentage.
   Future<void> checkForBasisDataUpdate({
     bool force = false,
-    ProgressCallback? onProgress, // NEU: Callback
+    ProgressCallback? onProgress, // New: callback
     RemoteCatalogProgressCallback? onRemoteProgress,
     RemoteCatalogSkipRequested? isRemoteSkipRequested,
   }) async {
@@ -80,7 +80,7 @@ class BasisDataManager {
       activeOffCountry,
     );
 
-    // Hilfsfunktion, um den Code lesbarer zu halten
+    // Helper function to keep the code readable.
     Future<void> process(
       String label,
       String asset,
@@ -88,6 +88,7 @@ class BasisDataManager {
       String table,
       Function(Map<String, dynamic>) mapper, {
       String? sourceFilePath,
+      String? legacyAssetPath,
       String? driftTable,
       bool enableOffReplacementRetention = false,
     }) async {
@@ -98,6 +99,7 @@ class BasisDataManager {
         prefs: prefs,
         tableName: table,
         driftTableName: driftTable,
+        legacyAssetPath: legacyAssetPath,
         mapFunction: mapper,
         taskLabel: label,
         onProgress: onProgress,
@@ -134,7 +136,7 @@ class BasisDataManager {
       debugPrint('Remote exercise catalog check skipped safely: $e');
     }
 
-    // 1. Übungen (Remote-Candidate wenn verfügbar, sonst Asset)
+    // 1. Exercises (remote candidate when available, otherwise asset)
     await process(
       'Übungen',
       AppDataSources.trainingAssetDbPath,
@@ -142,6 +144,7 @@ class BasisDataManager {
       'exercises',
       _mapExerciseRow,
       sourceFilePath: remoteTrainingDbPath,
+      legacyAssetPath: AppDataSources.legacyTrainingAssetDbPath,
     );
 
     // 2a. Base Foods
@@ -151,9 +154,10 @@ class BasisDataManager {
       _keyVersionFood,
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'base'),
+      legacyAssetPath: AppDataSources.legacyBaseFoodsAssetDbPath,
     );
 
-    // 2b. Kategorien
+    // 2b. Categories
     await process(
       'Kategorien',
       AppDataSources.foodCategoriesAssetDbPath,
@@ -161,6 +165,7 @@ class BasisDataManager {
       'categories',
       _mapCategoryRow,
       driftTable: 'food_categories',
+      legacyAssetPath: AppDataSources.legacyFoodCategoriesAssetDbPath,
     );
 
     String? remoteOffDbPath;
@@ -204,7 +209,7 @@ class BasisDataManager {
       return;
     }
 
-    // 3. OFF Datenbank (Das große File)
+    // 3. OFF database (the large file)
     await process(
       'Produktdatenbank (${activeOffCountry.upperCode})',
       activeOffSource.bundledAssetDbPath,
@@ -212,6 +217,7 @@ class BasisDataManager {
       'products',
       (row) => _mapProductRow(row, sourceLabel: 'off'),
       sourceFilePath: remoteOffDbPath,
+      legacyAssetPath: activeOffSource.legacyBundledAssetDbPath,
       enableOffReplacementRetention: true,
     );
   }
@@ -252,6 +258,7 @@ class BasisDataManager {
   Future<void> _updateDatabaseFromSource({
     required String assetPath,
     String? sourceFilePath,
+    String? legacyAssetPath,
     required String prefKey,
     required SharedPreferences prefs,
     required String tableName,
@@ -286,7 +293,14 @@ class BasisDataManager {
         final tempPath = p.join(tempDir.path, p.basename(assetPath));
 
         try {
-          final byteData = await rootBundle.load(assetPath);
+          ByteData byteData;
+          try {
+            byteData = await rootBundle.load(assetPath);
+          } catch (_) {
+            if (legacyAssetPath == null) rethrow;
+            // Legacy asset fallback keeps older packaged catalogs importable.
+            byteData = await rootBundle.load(legacyAssetPath);
+          }
           tempFile = File(tempPath);
           await tempFile.writeAsBytes(
             byteData.buffer.asUint8List(
@@ -351,7 +365,7 @@ class BasisDataManager {
         hasExistingDataForVersionlessAsset: hasExistingData,
       );
 
-      // Wenn Update nötig ist:
+      // When an update is needed:
       if (shouldImport) {
         onProgress?.call("Update $taskLabel", "Vorbereitung...", 0.05);
 
@@ -376,7 +390,7 @@ class BasisDataManager {
           storedVersionAfterImport(assetVersion: assetVersion),
         );
       } else {
-        // Falls aktuell, kurz 100% anzeigen, damit es nicht hängt
+        // If current, briefly show 100% so it does not hang.
         if (installedVersion == '0' &&
             assetVersion == '0' &&
             hasExistingData &&
@@ -401,8 +415,8 @@ class BasisDataManager {
     if (assetVersion.compareTo(installedVersion) > 0) return true;
     if (installedVersion != '0') return false;
 
-    // Guard: Wenn Asset keine Version liefert, aber Daten bereits vorhanden sind,
-    // nicht bei jedem Start erneut importieren.
+    // Guard: if the asset provides no version but data already exists,
+    // do not import again on every startup.
     if (assetVersion == '0' && hasExistingDataForVersionlessAsset) {
       return false;
     }
@@ -472,7 +486,7 @@ class BasisDataManager {
     int offset = 0;
     final importedProductBarcodes = <String>{};
 
-    // 1. Gesamtanzahl ermitteln für Progress Bar
+    // 1. Determine total count for progress bar
     int totalCount = 0;
     try {
       final countResult = await assetDb.query(
@@ -546,7 +560,7 @@ class BasisDataManager {
         );
       }
 
-      // UI-Thread atmen lassen
+      // Let the UI thread breathe
       await Future.delayed(const Duration(milliseconds: 1));
     }
 
@@ -697,7 +711,7 @@ class BasisDataManager {
     }
   }
 
-  // --- MAPPING FUNKTIONEN (Unverändert) ---
+  // --- Mapping functions (unchanged) ---
 
   dynamic _mapProductRow(
     Map<String, dynamic> row, {

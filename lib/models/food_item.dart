@@ -1,10 +1,10 @@
 // lib/models/food_item.dart
-import 'package:flutter/widgets.dart'; // HINZUGEFÜGT für BuildContext
+import 'package:flutter/widgets.dart'; // Added for BuildContext
 
 enum FoodItemSource {
   off, // Open Food Facts
-  base, // Grundnahrungsmittel-DB
-  user, // Vom Benutzer erstellt (Standard)
+  base, // Base foods DB
+  user, // Created by the user (default)
 }
 
 /// Represents a food item in the system.
@@ -15,13 +15,13 @@ class FoodItem {
   final String barcode;
 
   /// The generic name of the food item.
-  final String name; // Behalten wir als Fallback
+  final String name; // Keep as fallback
 
   /// The name of the food item in German.
-  final String nameDe; // NEU
+  final String nameDe; // New
 
   /// The name of the food item in English.
-  final String nameEn; // NEU
+  final String nameEn; // New
 
   /// The brand or manufacturer of the food item.
   final String brand;
@@ -72,8 +72,8 @@ class FoodItem {
   FoodItem({
     required this.barcode,
     required this.name,
-    this.nameDe = '', // NEU
-    this.nameEn = '', // NEU
+    this.nameDe = '', // New
+    this.nameEn = '', // New
     this.brand = '',
     required this.calories,
     required this.protein,
@@ -99,11 +99,11 @@ class FoodItem {
     if (locale == 'de' && nameDe.isNotEmpty) {
       return nameDe;
     }
-    // Fallback auf Englisch, wenn 'en' vorhanden ist oder die Sprache nicht Deutsch ist
+    // Fall back to English if 'en' exists or the language is not German
     if (nameEn.isNotEmpty) {
       return nameEn;
     }
-    // Letzter Fallback auf den generischen Namen
+    // Final fallback to the generic name
     return name;
   }
 
@@ -116,7 +116,7 @@ class FoodItem {
   }) {
     return FoodItem(
       barcode: map['barcode'] ?? '',
-      // KORRIGIERTE LOGIK: Alle Namensvarianten auslesen
+      // FIXED LOGIC: Read all name variants
       name: map['name'] ?? '',
       nameDe: map['name_de'] ?? '',
       nameEn: map['name_en'] ?? '',
@@ -142,8 +142,8 @@ class FoodItem {
     return {
       'barcode': barcode,
       'name': name,
-      'name_de': nameDe, // NEU
-      'name_en': nameEn, // NEU
+      'name_de': nameDe, // New
+      'name_en': nameEn, // New
       'brand': brand,
       'calories_100g': calories,
       'protein_100g': protein,

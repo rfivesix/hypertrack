@@ -2,20 +2,20 @@ name: train_libre
 description: "Train Libre is a modern, privacy-first fitness and nutrition
   tracking app. Offline-first, no cloud dependency, built with Flutter."
 publish_to: "none"
-version: 0.9.0-beta.3+90006
+version: 0.9.0+90010
 environment:
-  sdk: ">=3.0.0 <4.0.0" # Angepasst für moderne SDKs
+  sdk: ">=3.0.0 <4.0.0" # Adjusted for modern SDKs
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # DOC: Hinzugefügt für die Lokalisierung (Mehrsprachigkeit)
+  # DOC: Added for localization (multilingual support)
   flutter_localizations:
     sdk: flutter
-  intl: 0.20.2 # Stets die neueste Version prüfen mit `flutter pub outdated`
+  intl: 0.20.2 # Always check the latest version with `flutter pub outdated`
 
-  # DOC: Hinzugefügt für die SQLite-Datenbank
+  # DOC: Added for the SQLite database
   sqflite: ^2.3.0
   path: ^1.8.3
 
@@ -33,9 +33,9 @@ dependencies:
   csv: ^8.0.0
   provider: ^6.1.5+1
   google_fonts: ^8.1.0
-  package_info_plus: ^9.0.0 # oder die neueste Version
+  package_info_plus: ^9.0.0 # or the latest version
   image_picker: ^1.2.2
-  mobile_scanner: ^7.2.0 #^5.1.0 # Füge diese Zeile hinzu
+  mobile_scanner: ^7.2.0 #^5.1.0 # Add this line
   cryptography: ^2.7.0
   table_calendar: ^3.2.0
 
@@ -65,13 +65,13 @@ dev_dependencies:
   build_runner: ^2.15.0
   drift_dev: ^2.20.0
 flutter_launcher_icons:
-  android: true # Icon für Android generieren
-  ios: true # Icon für iOS generieren
-  image_path: "assets/icon/train-libre_icon_dark_bg.png" # Pfad zu deinem Haupt-Icon
+  android: true # Generate the icon for Android
+  ios: true # Generate the icon for iOS
+  image_path: "assets/icon/train-libre_icon_dark_bg.png" # Path to the main icon
 
 flutter:
-  # DOC: Dieser Schalter ist entscheidend. Er weist Flutter an, den Code
-  # für die Lokalisierung automatisch zu generieren.
+  # DOC: This flag is required. It tells Flutter to generate the
+  # localization code automatically.
   generate: true
   uses-material-design: true
 

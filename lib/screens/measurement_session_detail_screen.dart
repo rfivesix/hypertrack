@@ -16,7 +16,7 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
 
   const MeasurementSessionDetailScreen({super.key, required this.session});
 
-  // Wir kopieren die Helfer-Methode hierher, um die Namen zu übersetzen.
+  // Copy the helper method here to translate the names.
   String _getLocalizedMeasurementName(String key, AppLocalizations l10n) {
     switch (key) {
       case 'weight':
@@ -25,7 +25,7 @@ class MeasurementSessionDetailScreen extends StatelessWidget {
         return l10n.measurementFatPercent;
       case 'neck':
         return l10n.measurementNeck;
-      // ... (füge hier alle anderen 'case' Anweisungen aus dem measurements_screen.dart ein)
+      // ... (insert all other 'case' statements from measurements_screen.dart here)
       case 'right_calf':
         return l10n.measurementRightCalf;
       default:

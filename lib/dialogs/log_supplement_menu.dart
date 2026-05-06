@@ -6,7 +6,7 @@ import '../generated/app_localizations.dart';
 import '../models/supplement.dart';
 import '../util/supplement_l10n.dart';
 
-/// Ein Menü, das eine Liste von Supplements zur Auswahl anzeigt.
+/// A menu that shows a list of supplements to choose from.
 /// A selection menu for choosing a supplement to log.
 ///
 /// Displays a list of all available supplements from the database.
@@ -101,7 +101,7 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
   }
 }
 
-/// Ein wiederverwendbares Widget für die Eingabe von Dosis und Zeit eines Supplements.
+/// A reusable widget for entering the dose and time of a supplement.
 class LogSupplementDoseBody extends StatefulWidget {
   final Supplement supplement;
   final double? initialDose;
