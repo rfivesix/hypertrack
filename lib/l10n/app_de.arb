@@ -1885,5 +1885,32 @@
     "placeholders": {
       "error": {}
     }
-  }
+  },
+  "stepsModulePrevious": "Zurück",
+  "stepsModuleNext": "Weiter",
+  "stepsModuleTotalSteps": "Schritte insgesamt",
+  "stepsModuleThisWeek": "Diese Woche",
+  "stepsModuleThisMonth": "Diesen Monat",
+  "stepsModuleUpdated": "Aktualisiert {time}",
+  "@stepsModuleUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stepsModuleScopeSwitcherSemantics": "Schrittansicht wechseln",
+  "stepsModuleDay": "Tag",
+  "stepsModuleWeek": "Woche",
+  "stepsModuleMonth": "Monat",
+  "stepsModuleHourlyTimeline": "Stündlicher Verlauf",
+  "stepsModuleTotal": "Gesamt",
+  "stepsModuleActiveHours": "Aktive Stunden",
+  "stepsModulePeakHour": "Aktivste Stunde",
+  "stepsModuleAvgPerDay": "Durchschnitt / Tag",
+  "stepsModuleGoalHit": "Ziel erreicht",
+  "stepsModuleGoalDays": "Tage am Ziel",
+  "diarySyncingSteps": "Schritte werden synchronisiert...",
+  "diaryLoadingSleep": "Schlaf wird geladen...",
+  "unit_milligrams": "mg"
 }

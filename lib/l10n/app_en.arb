@@ -1880,5 +1880,32 @@
     "placeholders": {
       "error": {}
     }
-  }
+  },
+  "stepsModulePrevious": "Previous",
+  "stepsModuleNext": "Next",
+  "stepsModuleTotalSteps": "Total Steps",
+  "stepsModuleThisWeek": "This Week",
+  "stepsModuleThisMonth": "This Month",
+  "stepsModuleUpdated": "Updated {time}",
+  "@stepsModuleUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stepsModuleScopeSwitcherSemantics": "Switch step scope",
+  "stepsModuleDay": "Day",
+  "stepsModuleWeek": "Week",
+  "stepsModuleMonth": "Month",
+  "stepsModuleHourlyTimeline": "Hourly Timeline",
+  "stepsModuleTotal": "Total",
+  "stepsModuleActiveHours": "Active Hours",
+  "stepsModulePeakHour": "Peak Hour",
+  "stepsModuleAvgPerDay": "Avg / Day",
+  "stepsModuleGoalHit": "Goal Hit",
+  "stepsModuleGoalDays": "Goal Days",
+  "diarySyncingSteps": "Syncing steps...",
+  "diaryLoadingSleep": "Loading sleep...",
+  "unit_milligrams": "mg"
 }

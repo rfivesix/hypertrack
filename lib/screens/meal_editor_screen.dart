@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:train_libre/generated/app_localizations.dart';
+import '../generated/app_localizations.dart';
 
 enum MealType { breakfast, lunch, dinner, snack }
 

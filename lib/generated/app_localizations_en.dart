@@ -4491,4 +4491,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String foodDetailExportError(Object error) {
     return 'Export error: $error';
   }
+
+  @override
+  String get stepsModulePrevious => 'Previous';
+
+  @override
+  String get stepsModuleNext => 'Next';
+
+  @override
+  String get stepsModuleTotalSteps => 'Total Steps';
+
+  @override
+  String get stepsModuleThisWeek => 'This Week';
+
+  @override
+  String get stepsModuleThisMonth => 'This Month';
+
+  @override
+  String stepsModuleUpdated(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get stepsModuleScopeSwitcherSemantics => 'Switch step scope';
+
+  @override
+  String get stepsModuleDay => 'Day';
+
+  @override
+  String get stepsModuleWeek => 'Week';
+
+  @override
+  String get stepsModuleMonth => 'Month';
+
+  @override
+  String get stepsModuleHourlyTimeline => 'Hourly Timeline';
+
+  @override
+  String get stepsModuleTotal => 'Total';
+
+  @override
+  String get stepsModuleActiveHours => 'Active Hours';
+
+  @override
+  String get stepsModulePeakHour => 'Peak Hour';
+
+  @override
+  String get stepsModuleAvgPerDay => 'Avg / Day';
+
+  @override
+  String get stepsModuleGoalHit => 'Goal Hit';
+
+  @override
+  String get stepsModuleGoalDays => 'Goal Days';
+
+  @override
+  String get diarySyncingSteps => 'Syncing steps...';
+
+  @override
+  String get diaryLoadingSleep => 'Loading sleep...';
+
+  @override
+  String get unit_milligrams => 'mg';
 }

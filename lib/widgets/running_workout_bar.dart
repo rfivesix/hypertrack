@@ -1,7 +1,7 @@
 // lib/widgets/running_workout_bar.dart
 
 import 'package:flutter/material.dart';
-import 'package:train_libre/generated/app_localizations.dart';
+import '../generated/app_localizations.dart';
 
 /// A compact status bar displayed during an active workout session.
 ///

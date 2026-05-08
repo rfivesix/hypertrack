@@ -7889,6 +7889,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export error: {error}'**
   String foodDetailExportError(Object error);
+
+  /// No description provided for @stepsModulePrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get stepsModulePrevious;
+
+  /// No description provided for @stepsModuleNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get stepsModuleNext;
+
+  /// No description provided for @stepsModuleTotalSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Steps'**
+  String get stepsModuleTotalSteps;
+
+  /// No description provided for @stepsModuleThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get stepsModuleThisWeek;
+
+  /// No description provided for @stepsModuleThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get stepsModuleThisMonth;
+
+  /// No description provided for @stepsModuleUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String stepsModuleUpdated(String time);
+
+  /// No description provided for @stepsModuleScopeSwitcherSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch step scope'**
+  String get stepsModuleScopeSwitcherSemantics;
+
+  /// No description provided for @stepsModuleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get stepsModuleDay;
+
+  /// No description provided for @stepsModuleWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get stepsModuleWeek;
+
+  /// No description provided for @stepsModuleMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get stepsModuleMonth;
+
+  /// No description provided for @stepsModuleHourlyTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly Timeline'**
+  String get stepsModuleHourlyTimeline;
+
+  /// No description provided for @stepsModuleTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get stepsModuleTotal;
+
+  /// No description provided for @stepsModuleActiveHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Hours'**
+  String get stepsModuleActiveHours;
+
+  /// No description provided for @stepsModulePeakHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak Hour'**
+  String get stepsModulePeakHour;
+
+  /// No description provided for @stepsModuleAvgPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg / Day'**
+  String get stepsModuleAvgPerDay;
+
+  /// No description provided for @stepsModuleGoalHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Hit'**
+  String get stepsModuleGoalHit;
+
+  /// No description provided for @stepsModuleGoalDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Days'**
+  String get stepsModuleGoalDays;
+
+  /// No description provided for @diarySyncingSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing steps...'**
+  String get diarySyncingSteps;
+
+  /// No description provided for @diaryLoadingSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading sleep...'**
+  String get diaryLoadingSleep;
+
+  /// No description provided for @unit_milligrams.
+  ///
+  /// In en, this message translates to:
+  /// **'mg'**
+  String get unit_milligrams;
 }
 
 class _AppLocalizationsDelegate

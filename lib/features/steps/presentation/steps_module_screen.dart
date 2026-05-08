@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:train_libre/generated/app_localizations.dart';
 
 import '../../../data/database_helper.dart';
+import '../../../generated/app_localizations.dart';
 import '../../../services/health/steps_sync_service.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/bottom_content_spacer.dart';

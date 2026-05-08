@@ -4531,4 +4531,66 @@ class AppLocalizationsDe extends AppLocalizations {
   String foodDetailExportError(Object error) {
     return 'Export-Fehler: $error';
   }
+
+  @override
+  String get stepsModulePrevious => 'Zurück';
+
+  @override
+  String get stepsModuleNext => 'Weiter';
+
+  @override
+  String get stepsModuleTotalSteps => 'Schritte insgesamt';
+
+  @override
+  String get stepsModuleThisWeek => 'Diese Woche';
+
+  @override
+  String get stepsModuleThisMonth => 'Diesen Monat';
+
+  @override
+  String stepsModuleUpdated(String time) {
+    return 'Aktualisiert $time';
+  }
+
+  @override
+  String get stepsModuleScopeSwitcherSemantics => 'Schrittansicht wechseln';
+
+  @override
+  String get stepsModuleDay => 'Tag';
+
+  @override
+  String get stepsModuleWeek => 'Woche';
+
+  @override
+  String get stepsModuleMonth => 'Monat';
+
+  @override
+  String get stepsModuleHourlyTimeline => 'Stündlicher Verlauf';
+
+  @override
+  String get stepsModuleTotal => 'Gesamt';
+
+  @override
+  String get stepsModuleActiveHours => 'Aktive Stunden';
+
+  @override
+  String get stepsModulePeakHour => 'Aktivste Stunde';
+
+  @override
+  String get stepsModuleAvgPerDay => 'Durchschnitt / Tag';
+
+  @override
+  String get stepsModuleGoalHit => 'Ziel erreicht';
+
+  @override
+  String get stepsModuleGoalDays => 'Tage am Ziel';
+
+  @override
+  String get diarySyncingSteps => 'Schritte werden synchronisiert...';
+
+  @override
+  String get diaryLoadingSleep => 'Schlaf wird geladen...';
+
+  @override
+  String get unit_milligrams => 'mg';
 }
