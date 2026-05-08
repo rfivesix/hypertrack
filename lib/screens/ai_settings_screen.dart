@@ -305,8 +305,8 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                               ? const Center(child: CircularProgressIndicator())
                               : DropdownButtonFormField<String>(
                                   initialValue: _selectedModel,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Model',
+                                  decoration: InputDecoration(
+                                    labelText: l10n.aiModelLabel,
                                     border: OutlineInputBorder(),
                                     contentPadding: EdgeInsets.symmetric(
                                       horizontal: 12,

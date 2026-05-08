@@ -34,6 +34,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
   late final TextEditingController _caffeineController;
   late final TextEditingController _sugarController;
   late DateTime _selectedDateTime;
+  bool _hasSetLocalizedDefaultName = false;
 
   String get nameText => _nameController.text;
   String get quantityText => _quantityController.text;
@@ -45,7 +46,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(
-      text: widget.initialName ?? 'Water',
+      text: widget.initialName ?? '',
     ); // <--- Adjust initialization
     _quantityController = TextEditingController(
       text: widget.initialQuantity?.toString() ?? '',
@@ -59,6 +60,15 @@ class FluidDialogContentState extends State<FluidDialogContent> {
       text: widget.initialSugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
     );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasSetLocalizedDefaultName && _nameController.text.trim().isEmpty) {
+      _nameController.text = AppLocalizations.of(context)!.water;
+      _hasSetLocalizedDefaultName = true;
+    }
   }
 
   @override
@@ -131,7 +141,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: l10n.amount_in_milliliters,
-            suffixText: 'ml',
+            suffixText: l10n.unit_milliliters,
           ),
           autofocus: true,
         ),
@@ -141,7 +151,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             labelText: l10n.sugarPer100mlLabel,
-            suffixText: 'g',
+            suffixText: l10n.unit_grams,
           ),
         ),
         const SizedBox(height: DesignConstants.spacingL),
@@ -150,7 +160,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             labelText: l10n.caffeinePrompt,
-            suffixText: 'mg / 100ml',
+            suffixText: l10n.caffeineUnit,
           ),
         ),
         const SizedBox(height: DesignConstants.spacingL),

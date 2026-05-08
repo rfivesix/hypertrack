@@ -170,8 +170,9 @@ class WaterDialogContentState extends State<WaterDialogContent> {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = DateFormat('dd.MM.yyyy').format(_selectedDateTime);
-    final formattedTime = DateFormat.Hm().format(_selectedDateTime);
+    final locale = Localizations.localeOf(context).toString();
+    final formattedDate = DateFormat.yMd(locale).format(_selectedDateTime);
+    final formattedTime = DateFormat.Hm(locale).format(_selectedDateTime);
     return AppSheetScaffold(
       // Toggle between plain and glass depending on your feature flag or setting.
       style: AppSheetStyle.plain, // or AppSheetStyle.glass
@@ -183,7 +184,7 @@ class WaterDialogContentState extends State<WaterDialogContent> {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: l10n.amount_in_milliliters,
-              suffixText: 'ml',
+              suffixText: l10n.unit_milliliters,
             ),
             autofocus: true,
           ),

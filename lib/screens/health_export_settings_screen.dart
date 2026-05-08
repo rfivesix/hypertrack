@@ -64,8 +64,16 @@ class _HealthExportSettingsScreenState
           await _healthExportService.requestPermissions(platform);
       if (!permission.success) {
         if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(permission.message ?? 'Permission denied')),
+          SnackBar(
+            content: Text(
+              _localizeHealthExportMessage(
+                permission.message ?? l10n.healthExportPermissionDenied,
+                l10n,
+              ),
+            ),
+          ),
         );
       }
     } else {
@@ -162,7 +170,23 @@ class _HealthExportSettingsScreenState
     if (result.success) {
       return l10n.healthExportResultComplete;
     }
-    return result.message ?? l10n.healthExportResultFailed;
+    return _localizeHealthExportMessage(
+      result.message ?? l10n.healthExportResultFailed,
+      l10n,
+    );
+  }
+
+  String _localizeHealthExportMessage(String message, AppLocalizations l10n) {
+    // Keep in sync with HealthExportService fallback messages.
+    // Unknown values are returned unchanged to preserve diagnostics.
+    return switch (message) {
+      'Adapter unavailable' => l10n.healthExportAdapterUnavailable,
+      'Platform unavailable' => l10n.healthExportPlatformUnavailable,
+      'Platform not installed' => l10n.healthExportPlatformNotInstalled,
+      'Export disabled' => l10n.healthExportExportDisabled,
+      'Permission denied' => l10n.healthExportPermissionDenied,
+      _ => message,
+    };
   }
 
   @override

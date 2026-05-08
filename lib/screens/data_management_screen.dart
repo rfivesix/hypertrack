@@ -817,10 +817,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       } on MissingPluginException {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Storage picker unavailable. Please fully restart/reinstall the app after updating.',
-            ),
+          SnackBar(
+            content: Text(l10n.autoBackupStoragePickerUnavailable),
             backgroundColor: Colors.red,
           ),
         );
@@ -829,7 +827,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Folder picker failed: ${e.message ?? e.code}'),
+            content: Text(
+              l10n.autoBackupFolderPickerFailed(e.message ?? e.code),
+            ),
             backgroundColor: Colors.red,
           ),
         );

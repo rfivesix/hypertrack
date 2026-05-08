@@ -1849,4 +1849,63 @@
   ,"settingsBaseFoodLanguageFollowApp": "Follow app language"
   ,"settingsBaseFoodLanguageEnglish": "English"
   ,"settingsBaseFoodLanguageGerman": "German"
+  ,"aiModelLabel": "Model"
+  ,"autoBackupStoragePickerUnavailable": "Storage picker unavailable. Please fully restart/reinstall the app after updating."
+  ,"autoBackupFolderPickerFailed": "Folder picker failed: {error}"
+  ,"@autoBackupFolderPickerFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  }
+  ,"healthExportPermissionDenied": "Permission denied"
+  ,"healthExportAdapterUnavailable": "Adapter unavailable"
+  ,"healthExportPlatformUnavailable": "Platform unavailable"
+  ,"healthExportPlatformNotInstalled": "Platform not installed"
+  ,"healthExportExportDisabled": "Export disabled"
+  ,"onboardingMacrosStepTitle": "Macronutrients"
+  ,"onboardingMacrosStepSubtitle": "How is your nutrition composed?"
+  ,"statisticsProviderAppleHealth": "Apple Health"
+  ,"statisticsProviderHealthConnect": "Health Connect"
+  ,"statisticsProviderWithings": "Withings"
+  ,"statisticsProviderGarmin": "Garmin"
+  ,"statisticsProviderFitbit": "Fitbit"
+  ,"statisticsProviderLocal": "Local"
+  ,"unit_milliliters": "ml"
+  ,"unit_kilograms": "kg"
+  ,"mealEditorHintExample": "e.g. Chicken bowl"
+  ,"mealEditorNoIngredientsYet": "None yet – coming later"
+  ,"foodDetailSavedBaseDb": "Saved (base DB)"
+  ,"foodDetailExportError": "Export error: {error}"
+  ,"@foodDetailExportError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "stepsModulePrevious": "Previous",
+  "stepsModuleNext": "Next",
+  "stepsModuleTotalSteps": "Total Steps",
+  "stepsModuleThisWeek": "This Week",
+  "stepsModuleThisMonth": "This Month",
+  "stepsModuleUpdated": "Updated {time}",
+  "@stepsModuleUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stepsModuleScopeSwitcherSemantics": "Switch step scope",
+  "stepsModuleDay": "Day",
+  "stepsModuleWeek": "Week",
+  "stepsModuleMonth": "Month",
+  "stepsModuleHourlyTimeline": "Hourly Timeline",
+  "stepsModuleTotal": "Total",
+  "stepsModuleActiveHours": "Active Hours",
+  "stepsModulePeakHour": "Peak Hour",
+  "stepsModuleAvgPerDay": "Avg / Day",
+  "stepsModuleGoalHit": "Goal Hit",
+  "stepsModuleGoalDays": "Goal Days",
+  "diarySyncingSteps": "Syncing steps...",
+  "diaryLoadingSleep": "Loading sleep...",
+  "unit_milligrams": "mg"
 }

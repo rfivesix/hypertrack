@@ -175,7 +175,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: l10n.amount_in_grams,
-                suffixText: 'g',
+                suffixText: l10n.unit_grams,
               ),
             ),
             const SizedBox(height: 16),

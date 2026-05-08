@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/widgets.dart';
+import '../generated/app_localizations.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -87,41 +88,20 @@ class LocalNotificationService {
   }
 
   ({String title, String body}) _localizedRestTexts() {
-    final languageCode = WidgetsBinding
-        .instance.platformDispatcher.locale.languageCode
-        .toLowerCase();
-
-    if (languageCode == 'de') {
-      return (
-        title: 'Pause beendet',
-        body:
-            'Dein Pausentimer ist abgelaufen. Bereit fuer den naechsten Satz.',
-      );
-    }
-
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final l10n = lookupAppLocalizations(locale);
     return (
-      title: 'Rest finished',
-      body: 'Your pause timer is over. Ready for the next set.',
+      title: l10n.restTimerNotificationTitle,
+      body: l10n.restTimerNotificationBody,
     );
   }
 
   ({String title, String body}) _localizedAdaptiveRecommendationDueTexts() {
-    final languageCode = WidgetsBinding
-        .instance.platformDispatcher.locale.languageCode
-        .toLowerCase();
-
-    if (languageCode == 'de') {
-      return (
-        title: 'Neue adaptive Empfehlung verfügbar',
-        body:
-            'Deine neue wöchentliche adaptive Ernährungsempfehlung ist jetzt fällig.',
-      );
-    }
-
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final l10n = lookupAppLocalizations(locale);
     return (
-      title: 'New adaptive recommendation due',
-      body:
-          'Your new weekly adaptive nutrition recommendation is now available.',
+      title: l10n.adaptiveRecommendationDueNowShort,
+      body: l10n.adaptiveRecommendationDueNowLine,
     );
   }
 

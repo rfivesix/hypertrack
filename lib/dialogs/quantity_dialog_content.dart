@@ -129,7 +129,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
     final locale = Localizations.localeOf(context).toString();
     final formattedDate = DateFormat.yMd(locale).format(_selectedDateTime);
     final formattedTime = DateFormat.Hm(locale).format(_selectedDateTime);
-    final unit = _isLiquid ? 'ml' : 'g';
+    final unit = _isLiquid ? l10n.unit_milliliters : l10n.unit_grams;
 
     String getLocalizedMealName(String key) {
       switch (key) {
@@ -142,7 +142,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
         case "mealtypeSnack":
           return l10n.mealtypeSnack;
         default:
-          return "Snack";
+          return l10n.mealtypeSnack;
       }
     }
 
@@ -204,7 +204,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: l10n.sugarPer100mlLabel,
-              suffixText: 'g',
+              suffixText: l10n.unit_grams,
             ),
           ),
           const SizedBox(height: DesignConstants.spacingL),
@@ -213,7 +213,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: l10n.caffeinePrompt,
-              suffixText: 'mg / 100ml',
+              suffixText: l10n.caffeineUnit,
             ),
           ),
         ],

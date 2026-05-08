@@ -1,6 +1,7 @@
 // lib/widgets/running_workout_bar.dart
 
 import 'package:flutter/material.dart';
+import '../generated/app_localizations.dart';
 
 /// A compact status bar displayed during an active workout session.
 ///
@@ -24,6 +25,7 @@ class RunningWorkoutBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         // Time (left)
@@ -52,7 +54,7 @@ class RunningWorkoutBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          child: const Text('Fortsetzen'),
+          child: Text(l10n.continue_workout_button),
         ),
         const SizedBox(width: 8),
         // Discard (red)
@@ -66,7 +68,7 @@ class RunningWorkoutBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          child: const Text('Verwerfen'),
+          child: Text(l10n.discard_button),
         ),
       ],
     );

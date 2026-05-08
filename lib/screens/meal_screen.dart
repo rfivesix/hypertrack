@@ -262,7 +262,9 @@ class _MealScreenState extends State<MealScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _items.isEmpty ? '– kcal' : '$_totalKcal kcal',
+                              _items.isEmpty
+                                  ? '– ${l10n.unit_kcal}'
+                                  : '$_totalKcal ${l10n.unit_kcal}',
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                               ),
@@ -276,19 +278,19 @@ class _MealScreenState extends State<MealScreen> {
                                   label: 'C',
                                   value:
                                       _items.isEmpty ? '–' : _format1(_totalC),
-                                  unit: 'g',
+                                  unit: l10n.unit_grams,
                                 ),
                                 _MacroChip(
                                   label: 'F',
                                   value:
                                       _items.isEmpty ? '–' : _format1(_totalF),
-                                  unit: 'g',
+                                  unit: l10n.unit_grams,
                                 ),
                                 _MacroChip(
                                   label: 'P',
                                   value:
                                       _items.isEmpty ? '–' : _format1(_totalP),
-                                  unit: 'g',
+                                  unit: l10n.unit_grams,
                                 ),
                               ],
                             ),
@@ -530,7 +532,9 @@ class _MealScreenState extends State<MealScreen> {
                 controller: qtyCtrl,
                 keyboardType: TextInputType.number,
                 autofocus: true,
-                decoration: const InputDecoration(suffixText: 'g/ml'),
+                decoration: InputDecoration(
+                  suffixText: '${l10n.unit_grams}/${l10n.unit_milliliters}',
+                ),
                 onSubmitted: (val) {
                   final q = int.tryParse(val);
                   closeQty();
@@ -669,7 +673,9 @@ class _MealScreenState extends State<MealScreen> {
                           final fi = products[bc];
                           final displayName =
                               (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
-                          final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+                          final unit = (fi?.isLiquid == true)
+                              ? l10n.unit_milliliters
+                              : l10n.unit_grams;
 
                           return Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -851,13 +857,16 @@ class _IngredientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final color = theme.colorScheme.primary;
     final bc = item['barcode'] as String;
     final qty = (item['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
 
     Widget buildCard(FoodItem? fi) {
       final name = (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
-      final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+      final unit = (fi?.isLiquid == true)
+          ? l10n.unit_milliliters
+          : l10n.unit_grams;
 
       // per-ingredient macros & kcal
       int kcal = 0;
@@ -887,7 +896,7 @@ class _IngredientCard extends StatelessWidget {
       );
 
       final trailingView = Text(
-        fi == null ? '–' : '$kcal kcal',
+        fi == null ? '–' : '$kcal ${l10n.unit_kcal}',
         style: theme.textTheme.labelLarge?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w700,

@@ -162,11 +162,11 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
                         value: StepsProviderFilter.all,
                       ),
                       RadioListTile<StepsProviderFilter>(
-                        title: const Text('Apple Health'),
+                        title: Text(l10n.statisticsProviderAppleHealth),
                         value: StepsProviderFilter.apple,
                       ),
                       RadioListTile<StepsProviderFilter>(
-                        title: const Text('Health Connect'),
+                        title: Text(l10n.statisticsProviderHealthConnect),
                         value: StepsProviderFilter.google,
                       ),
                     ],

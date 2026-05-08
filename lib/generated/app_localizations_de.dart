@@ -4459,4 +4459,138 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsBaseFoodLanguageGerman => 'Deutsch';
+
+  @override
+  String get aiModelLabel => 'Modell';
+
+  @override
+  String get autoBackupStoragePickerUnavailable =>
+      'Speicherordner-Auswahl nicht verfügbar. Bitte die App nach dem Update vollständig neu starten/neu installieren.';
+
+  @override
+  String autoBackupFolderPickerFailed(Object error) {
+    return 'Ordnerauswahl fehlgeschlagen: $error';
+  }
+
+  @override
+  String get healthExportPermissionDenied => 'Berechtigung verweigert';
+
+  @override
+  String get healthExportAdapterUnavailable => 'Adapter nicht verfügbar';
+
+  @override
+  String get healthExportPlatformUnavailable => 'Plattform nicht verfügbar';
+
+  @override
+  String get healthExportPlatformNotInstalled => 'Plattform nicht installiert';
+
+  @override
+  String get healthExportExportDisabled => 'Export deaktiviert';
+
+  @override
+  String get onboardingMacrosStepTitle => 'Makronährstoffe';
+
+  @override
+  String get onboardingMacrosStepSubtitle =>
+      'Wie setzt sich deine Ernährung zusammen?';
+
+  @override
+  String get statisticsProviderAppleHealth => 'Apple Health';
+
+  @override
+  String get statisticsProviderHealthConnect => 'Health Connect';
+
+  @override
+  String get statisticsProviderWithings => 'Withings';
+
+  @override
+  String get statisticsProviderGarmin => 'Garmin';
+
+  @override
+  String get statisticsProviderFitbit => 'Fitbit';
+
+  @override
+  String get statisticsProviderLocal => 'Lokal';
+
+  @override
+  String get unit_milliliters => 'ml';
+
+  @override
+  String get unit_kilograms => 'kg';
+
+  @override
+  String get mealEditorHintExample => 'z. B. Hähnchen Bowl';
+
+  @override
+  String get mealEditorNoIngredientsYet => 'Noch keine – kommt später';
+
+  @override
+  String get foodDetailSavedBaseDb => 'Gespeichert (Basis-DB)';
+
+  @override
+  String foodDetailExportError(Object error) {
+    return 'Export-Fehler: $error';
+  }
+
+  @override
+  String get stepsModulePrevious => 'Zurück';
+
+  @override
+  String get stepsModuleNext => 'Weiter';
+
+  @override
+  String get stepsModuleTotalSteps => 'Schritte insgesamt';
+
+  @override
+  String get stepsModuleThisWeek => 'Diese Woche';
+
+  @override
+  String get stepsModuleThisMonth => 'Diesen Monat';
+
+  @override
+  String stepsModuleUpdated(String time) {
+    return 'Aktualisiert $time';
+  }
+
+  @override
+  String get stepsModuleScopeSwitcherSemantics => 'Schrittansicht wechseln';
+
+  @override
+  String get stepsModuleDay => 'Tag';
+
+  @override
+  String get stepsModuleWeek => 'Woche';
+
+  @override
+  String get stepsModuleMonth => 'Monat';
+
+  @override
+  String get stepsModuleHourlyTimeline => 'Stündlicher Verlauf';
+
+  @override
+  String get stepsModuleTotal => 'Gesamt';
+
+  @override
+  String get stepsModuleActiveHours => 'Aktive Stunden';
+
+  @override
+  String get stepsModulePeakHour => 'Aktivste Stunde';
+
+  @override
+  String get stepsModuleAvgPerDay => 'Durchschnitt / Tag';
+
+  @override
+  String get stepsModuleGoalHit => 'Ziel erreicht';
+
+  @override
+  String get stepsModuleGoalDays => 'Tage am Ziel';
+
+  @override
+  String get diarySyncingSteps => 'Schritte werden synchronisiert...';
+
+  @override
+  String get diaryLoadingSleep => 'Schlaf wird geladen...';
+
+  @override
+  String get unit_milligrams => 'mg';
 }
