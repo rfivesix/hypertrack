@@ -13,6 +13,7 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:drift/drift.dart' as drift;
 
 import '../config/app_data_sources.dart';
+import '../services/base_food_language_service.dart';
 import '../services/exercise_catalog_refresh_service.dart';
 import '../services/off_catalog_country_service.dart';
 import '../services/off_catalog_refresh_service.dart';
@@ -148,12 +149,22 @@ class BasisDataManager {
     );
 
     // 2a. Base Foods
+    // Read the preferred display language once before import.
+    final baseFoodLang = await BaseFoodLanguageService.readChoice(prefs: prefs);
+    final baseFoodLangCode = _resolveBaseFoodLangCode(
+      choice: baseFoodLang,
+      offCountry: activeOffCountry,
+    );
     await process(
       'Basis-Produkte',
       AppDataSources.baseFoodsAssetDbPath,
       _keyVersionFood,
       'products',
-      (row) => _mapProductRow(row, sourceLabel: 'base'),
+      (row) => _mapProductRow(
+        row,
+        sourceLabel: 'base',
+        preferredLanguage: baseFoodLangCode,
+      ),
       legacyAssetPath: AppDataSources.legacyBaseFoodsAssetDbPath,
     );
 
@@ -716,6 +727,7 @@ class BasisDataManager {
   dynamic _mapProductRow(
     Map<String, dynamic> row, {
     required String sourceLabel,
+    String? preferredLanguage,
   }) {
     var barcode = _parseString(row['barcode']);
     String id;
@@ -731,10 +743,25 @@ class BasisDataManager {
       barcode = id;
     }
 
+    // Always persist both language variants when available.
+    final rawNameDe = row['name_de']?.toString();
+    final rawNameEn = row['name_en']?.toString();
+    final rawName = row['name']?.toString() ?? '';
+
+    // Select the display name (for the legacy `name` column) based on preference.
+    String displayName;
+    if (preferredLanguage == 'en') {
+      displayName = _parseString(rawNameEn ?? rawNameDe ?? rawName);
+    } else {
+      displayName = _parseString(rawNameDe ?? rawNameEn ?? rawName);
+    }
+
     return ProductsCompanion(
       id: drift.Value(id),
       barcode: drift.Value(barcode),
-      name: drift.Value(_parseString(row['name_de'] ?? row['name'])),
+      name: drift.Value(displayName),
+      nameDe: drift.Value(rawNameDe),
+      nameEn: drift.Value(rawNameEn),
       brand: drift.Value(_parseString(row['brand'])),
       calories: drift.Value(_parseInt(row['calories'])),
       protein: drift.Value(_parseDouble(row['protein'])),
@@ -747,6 +774,20 @@ class BasisDataManager {
       isLiquid: drift.Value(_parseInt(row['is_liquid']) == 1),
       category: drift.Value(row['category']?.toString()),
     );
+  }
+
+  /// Resolve the language code for base food import without a BuildContext.
+  static String _resolveBaseFoodLangCode({
+    required BaseFoodLanguage choice,
+    required OffCatalogCountry offCountry,
+  }) {
+    if (choice == BaseFoodLanguage.en) return 'en';
+    if (choice == BaseFoodLanguage.de) return 'de';
+    // Auto: derive from the food DB region.
+    return switch (offCountry) {
+      OffCatalogCountry.us || OffCatalogCountry.uk => 'en',
+      OffCatalogCountry.de => 'de',
+    };
   }
 
   dynamic _mapCategoryRow(Map<String, dynamic> row) {

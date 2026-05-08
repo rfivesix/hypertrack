@@ -1074,6 +1074,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get secondary_muscles_hint => 'z.B. Schultern';
 
   @override
+  String get fluidNameLabel => 'Name';
+
+  @override
+  String get sugarPer100mlLabel => 'Zucker (g / 100ml)';
+
+  @override
   String get set_type_normal => 'Normal';
 
   @override
@@ -4436,4 +4442,21 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthExportHealthConnectStatusTitle =>
       'Export-Status Health Connect';
+
+  @override
+  String get settingsBaseFoodLanguageTitle =>
+      'Anzeigesprache Grundnahrungsmittel';
+
+  @override
+  String get settingsBaseFoodLanguageSubtitle =>
+      'Wähle, in welcher Sprache Grundnahrungsmittel angezeigt werden.';
+
+  @override
+  String get settingsBaseFoodLanguageFollowApp => 'App-Sprache verwenden';
+
+  @override
+  String get settingsBaseFoodLanguageEnglish => 'Englisch';
+
+  @override
+  String get settingsBaseFoodLanguageGerman => 'Deutsch';
 }

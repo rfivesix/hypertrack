@@ -122,7 +122,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
       children: [
         TextField(
           controller: _nameController,
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: l10n.fluidNameLabel),
           autofocus: true,
         ),
         const SizedBox(height: DesignConstants.spacingL),
@@ -140,7 +140,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
           controller: _sugarController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-            labelText: '${l10n.sugar} (g / 100ml)',
+            labelText: l10n.sugarPer100mlLabel,
             suffixText: 'g',
           ),
         ),

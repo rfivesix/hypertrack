@@ -1027,46 +1027,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muscleSplitLabel => 'Muscle Split';
 
   @override
-  String get snackbar_could_not_open_open_link => 'Konnte Link nicht öffnen';
+  String get snackbar_could_not_open_open_link => 'Could not open link';
 
   @override
   String get chart_no_data_for_period => 'No chart data for this period';
 
   @override
-  String get amount_in_milliliters => 'Menge in Millilitern';
+  String get amount_in_milliliters => 'Amount in milliliters';
 
   @override
-  String get amount_in_grams => 'Menge in Gramm';
+  String get amount_in_grams => 'Amount in grams';
 
   @override
-  String get meal_label => 'Mahlzeit';
+  String get meal_label => 'Meal';
 
   @override
-  String get add_to_water_intake => 'Zur Trinkmenge hinzufügen';
+  String get add_to_water_intake => 'Add to water intake';
 
   @override
-  String get create_exercise_screen_title => 'Eigene Übung erstellen';
+  String get create_exercise_screen_title => 'Create Custom Exercise';
 
   @override
-  String get exercise_name_label => 'Name der Übung';
+  String get exercise_name_label => 'Exercise name';
 
   @override
-  String get category_label => 'Kategorie';
+  String get category_label => 'Category';
 
   @override
-  String get description_optional_label => 'Beschreibung (optional)';
+  String get description_optional_label => 'Description (optional)';
 
   @override
-  String get primary_muscles_label => 'Primäre Muskeln';
+  String get primary_muscles_label => 'Primary muscles';
 
   @override
-  String get primary_muscles_hint => 'z.B. Brust, Trizeps';
+  String get primary_muscles_hint => 'e.g. Chest, Triceps';
 
   @override
-  String get secondary_muscles_label => 'Sekundäre Muskeln (optional)';
+  String get secondary_muscles_label => 'Secondary muscles (optional)';
 
   @override
-  String get secondary_muscles_hint => 'z.B. Schultern';
+  String get secondary_muscles_hint => 'e.g. Shoulders';
+
+  @override
+  String get fluidNameLabel => 'Name';
+
+  @override
+  String get sugarPer100mlLabel => 'Sugar (g / 100ml)';
 
   @override
   String get set_type_normal => 'Normal';
@@ -1869,7 +1875,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptySupplements => 'No supplements available';
 
   @override
-  String get undo => 'Rückgängig';
+  String get undo => 'Undo';
 
   @override
   String get deleteSupplementConfirm =>
@@ -4398,4 +4404,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthExportHealthConnectStatusTitle =>
       'Health Connect export status';
+
+  @override
+  String get settingsBaseFoodLanguageTitle => 'Base food display language';
+
+  @override
+  String get settingsBaseFoodLanguageSubtitle =>
+      'Choose which language to use for base food names.';
+
+  @override
+  String get settingsBaseFoodLanguageFollowApp => 'Follow app language';
+
+  @override
+  String get settingsBaseFoodLanguageEnglish => 'English';
+
+  @override
+  String get settingsBaseFoodLanguageGerman => 'German';
 }

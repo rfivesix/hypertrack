@@ -501,14 +501,17 @@ class _MaintenanceHero extends StatelessWidget {
               ],
             ),
             const SizedBox(height: DesignConstants.spacingS),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: _confidenceProgress(confidence),
-                minHeight: 8,
-                backgroundColor: colorScheme.onSurface
-                    .withValues(alpha: isDark ? 0.14 : 0.10),
-                valueColor: AlwaysStoppedAnimation<Color>(accent),
+            Semantics(
+              label: confidenceLabel,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: _confidenceProgress(confidence),
+                  minHeight: 8,
+                  backgroundColor: colorScheme.onSurface
+                      .withValues(alpha: isDark ? 0.14 : 0.10),
+                  valueColor: AlwaysStoppedAnimation<Color>(accent),
+                ),
               ),
             ),
           ],
@@ -518,6 +521,11 @@ class _MaintenanceHero extends StatelessWidget {
   }
 
   double _confidenceProgress(RecommendationConfidence confidence) {
+    // These are ordinal visual fractions (not probabilities or posterior
+    // percentages).  They map each discrete data-quality tier to a
+    // representative fill level so the bar conveys relative data-basis
+    // strength at a glance.  notEnoughData is non-zero so users always
+    // see a visible bar rather than an invisible one.
     switch (confidence) {
       case RecommendationConfidence.notEnoughData:
         return 0.22;

@@ -432,6 +432,8 @@
   "primary_muscles_hint": "z.B. Brust, Trizeps",
   "secondary_muscles_label": "Sekundäre Muskeln (optional)",
   "secondary_muscles_hint": "z.B. Schultern",
+  "fluidNameLabel": "Name",
+  "sugarPer100mlLabel": "Zucker (g / 100ml)",
   "set_type_normal": "Normal",
   "set_type_warmup": "Warmup",
   "set_type_failure": "Failure",
@@ -1847,4 +1849,9 @@
   ,"healthExportHealthConnectSubtitle": "Einweg-Export von Train Libre nach Health Connect"
   ,"healthExportAppleHealthStatusTitle": "Export-Status Apple Health"
   ,"healthExportHealthConnectStatusTitle": "Export-Status Health Connect"
+  ,"settingsBaseFoodLanguageTitle": "Anzeigesprache Grundnahrungsmittel"
+  ,"settingsBaseFoodLanguageSubtitle": "Wähle, in welcher Sprache Grundnahrungsmittel angezeigt werden."
+  ,"settingsBaseFoodLanguageFollowApp": "App-Sprache verwenden"
+  ,"settingsBaseFoodLanguageEnglish": "Englisch"
+  ,"settingsBaseFoodLanguageGerman": "Deutsch"
 }

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Minor UI polish and accessibility improvements across Nutrition and Statistics screens.
 - Improved offline catalog import resilience for certain published SQLite artifacts.
+- Added a macro and caffeine summary to the Water & Drinks section in the Diary.
 
 ### Changed
 - Performance improvements for Statistics and Pulse aggregate queries.
@@ -17,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed several layout overflows on small screens and compact devices.
 - Fixed backup restore edge cases for some legacy backup variants.
 - Miscellaneous bug fixes and stability improvements.
+- Fixed hydration totals not updating correctly after editing tracked foods/drinks.
+- Fixed caffeine totals not updating correctly after editing tracked foods/drinks.
+- Fixed the edit dialog not correctly restoring the liquid toggle, caffeine, and sugar states for previously logged liquid entries.
+- Fixed kcal missing in the Water & Drinks section when liquid entries are generated from tracked food items.
+- Fixed default entry time being incorrectly set to 00:00 instead of the current time when tracking entries for the current day.
 
 ### Internal
 - Dependency updates, documentation tweaks, and additional test coverage for catalog refresh and Pulse aggregation.

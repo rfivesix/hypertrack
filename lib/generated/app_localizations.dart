@@ -1799,7 +1799,7 @@ abstract class AppLocalizations {
   /// No description provided for @snackbar_could_not_open_open_link.
   ///
   /// In en, this message translates to:
-  /// **'Konnte Link nicht öffnen'**
+  /// **'Could not open link'**
   String get snackbar_could_not_open_open_link;
 
   /// No description provided for @chart_no_data_for_period.
@@ -1811,74 +1811,86 @@ abstract class AppLocalizations {
   /// No description provided for @amount_in_milliliters.
   ///
   /// In en, this message translates to:
-  /// **'Menge in Millilitern'**
+  /// **'Amount in milliliters'**
   String get amount_in_milliliters;
 
   /// No description provided for @amount_in_grams.
   ///
   /// In en, this message translates to:
-  /// **'Menge in Gramm'**
+  /// **'Amount in grams'**
   String get amount_in_grams;
 
   /// No description provided for @meal_label.
   ///
   /// In en, this message translates to:
-  /// **'Mahlzeit'**
+  /// **'Meal'**
   String get meal_label;
 
   /// No description provided for @add_to_water_intake.
   ///
   /// In en, this message translates to:
-  /// **'Zur Trinkmenge hinzufügen'**
+  /// **'Add to water intake'**
   String get add_to_water_intake;
 
   /// No description provided for @create_exercise_screen_title.
   ///
   /// In en, this message translates to:
-  /// **'Eigene Übung erstellen'**
+  /// **'Create Custom Exercise'**
   String get create_exercise_screen_title;
 
   /// No description provided for @exercise_name_label.
   ///
   /// In en, this message translates to:
-  /// **'Name der Übung'**
+  /// **'Exercise name'**
   String get exercise_name_label;
 
   /// No description provided for @category_label.
   ///
   /// In en, this message translates to:
-  /// **'Kategorie'**
+  /// **'Category'**
   String get category_label;
 
   /// No description provided for @description_optional_label.
   ///
   /// In en, this message translates to:
-  /// **'Beschreibung (optional)'**
+  /// **'Description (optional)'**
   String get description_optional_label;
 
   /// No description provided for @primary_muscles_label.
   ///
   /// In en, this message translates to:
-  /// **'Primäre Muskeln'**
+  /// **'Primary muscles'**
   String get primary_muscles_label;
 
   /// No description provided for @primary_muscles_hint.
   ///
   /// In en, this message translates to:
-  /// **'z.B. Brust, Trizeps'**
+  /// **'e.g. Chest, Triceps'**
   String get primary_muscles_hint;
 
   /// No description provided for @secondary_muscles_label.
   ///
   /// In en, this message translates to:
-  /// **'Sekundäre Muskeln (optional)'**
+  /// **'Secondary muscles (optional)'**
   String get secondary_muscles_label;
 
   /// No description provided for @secondary_muscles_hint.
   ///
   /// In en, this message translates to:
-  /// **'z.B. Schultern'**
+  /// **'e.g. Shoulders'**
   String get secondary_muscles_hint;
+
+  /// No description provided for @fluidNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get fluidNameLabel;
+
+  /// No description provided for @sugarPer100mlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sugar (g / 100ml)'**
+  String get sugarPer100mlLabel;
 
   /// No description provided for @set_type_normal.
   ///
@@ -3389,7 +3401,7 @@ abstract class AppLocalizations {
   /// No description provided for @undo.
   ///
   /// In en, this message translates to:
-  /// **'Rückgängig'**
+  /// **'Undo'**
   String get undo;
 
   /// No description provided for @deleteSupplementConfirm.
@@ -7715,6 +7727,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health Connect export status'**
   String get healthExportHealthConnectStatusTitle;
+
+  /// No description provided for @settingsBaseFoodLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Base food display language'**
+  String get settingsBaseFoodLanguageTitle;
+
+  /// No description provided for @settingsBaseFoodLanguageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which language to use for base food names.'**
+  String get settingsBaseFoodLanguageSubtitle;
+
+  /// No description provided for @settingsBaseFoodLanguageFollowApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow app language'**
+  String get settingsBaseFoodLanguageFollowApp;
+
+  /// No description provided for @settingsBaseFoodLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsBaseFoodLanguageEnglish;
+
+  /// No description provided for @settingsBaseFoodLanguageGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get settingsBaseFoodLanguageGerman;
 }
 
 class _AppLocalizationsDelegate

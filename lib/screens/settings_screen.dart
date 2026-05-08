@@ -10,6 +10,7 @@ import '../features/sleep/platform/permissions/sleep_permission_controller.dart'
 import '../features/sleep/platform/sleep_sync_service.dart';
 import '../generated/app_localizations.dart';
 import '../services/app_tour_service.dart';
+import '../services/base_food_language_service.dart';
 import '../services/off_catalog_country_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
@@ -46,6 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _showSugarInDiaryOverview = false;
   OffCatalogCountry _activeOffCatalogCountry =
       AppDataSources.defaultOffCatalogCountry;
+  BaseFoodLanguage _baseFoodLanguage = BaseFoodLanguage.auto;
 
   late final SleepSettingsService _sleepSyncService;
   late final SleepPermissionController _sleepPermissionController;
@@ -66,6 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadAppVersion();
     _loadDiaryOverviewSettings();
     _loadOffCatalogSettings();
+    _loadBaseFoodLanguage();
   }
 
   @override
@@ -100,6 +103,102 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final country = await OffCatalogCountryService.readActiveCountry();
     if (!mounted) return;
     setState(() => _activeOffCatalogCountry = country);
+  }
+
+  Future<void> _loadBaseFoodLanguage() async {
+    final choice = await BaseFoodLanguageService.readChoice();
+    if (!mounted) return;
+    setState(() => _baseFoodLanguage = choice);
+  }
+
+  String _baseFoodLanguageLabel(
+    BaseFoodLanguage language,
+    AppLocalizations l10n,
+  ) {
+    return switch (language) {
+      BaseFoodLanguage.auto => l10n.settingsBaseFoodLanguageFollowApp,
+      BaseFoodLanguage.en => l10n.settingsBaseFoodLanguageEnglish,
+      BaseFoodLanguage.de => l10n.settingsBaseFoodLanguageGerman,
+    };
+  }
+
+  Future<void> _showBaseFoodLanguagePicker() async {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = await showGlassBottomMenu<BaseFoodLanguage>(
+      context: context,
+      title: l10n.settingsBaseFoodLanguageTitle,
+      contentBuilder: (dialogContext, close) {
+        var draft = _baseFoodLanguage;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.settingsBaseFoodLanguageSubtitle),
+              const SizedBox(height: 12),
+              RadioGroup<BaseFoodLanguage>(
+                groupValue: draft,
+                onChanged: (value) {
+                  if (value == null) return;
+                  setDialogState(() => draft = value);
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final lang in BaseFoodLanguage.values)
+                      RadioListTile<BaseFoodLanguage>(
+                        contentPadding: EdgeInsets.zero,
+                        value: lang,
+                        title: Text(_baseFoodLanguageLabel(lang, l10n)),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () =>
+                          Navigator.of(dialogContext).pop(draft),
+                      child: Text(l10n.save),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted || selected == null) return;
+    if (selected == _baseFoodLanguage) return;
+
+    await BaseFoodLanguageService.writeChoice(selected);
+    // Force a base-food re-import on next startup so both name columns
+    // are populated according to the new preference.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('installed_food_version');
+    if (!mounted) return;
+    setState(() => _baseFoodLanguage = selected);
+    hasStepsSettingsChanged = true;
+
+    final l10nNow = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10nNow.settingsFoodDbRegionChanged(
+          _baseFoodLanguageLabel(selected, l10nNow),
+        )),
+      ),
+    );
   }
 
   String _offCountryLabel(OffCatalogCountry country, AppLocalizations l10n) {
@@ -412,6 +511,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
               isThreeLine: true,
               trailing: const Icon(Icons.chevron_right),
               onTap: _showOffCatalogRegionPicker,
+            ),
+          ),
+          SummaryCard(
+            child: ListTile(
+              leading: Icon(
+                Icons.translate_rounded,
+                size: 36,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(
+                l10n.settingsBaseFoodLanguageTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                _baseFoodLanguageLabel(_baseFoodLanguage, l10n),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _showBaseFoodLanguagePicker,
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),

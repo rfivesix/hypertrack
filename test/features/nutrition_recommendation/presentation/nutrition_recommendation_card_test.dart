@@ -378,6 +378,176 @@ void main() {
     expect(
         find.text(l10n.adaptiveRecommendationStabilizingHint), findsOneWidget);
   });
+
+  // -------------------------------------------------------------------------
+  // Confidence bar audit: label wording, ordinal fill mapping, accessibility
+  // -------------------------------------------------------------------------
+
+  group('confidence bar label wording (data-basis language)', () {
+    // The labels next to/above the bar must convey data-quality, not
+    // statistical probability.  None of them should contain the words
+    // "probability", "certainty", or "accurate".
+    const forbiddenWords = ['probability', 'certainty', 'accurate'];
+
+    for (final confidence in RecommendationConfidence.values) {
+      testWidgets(
+          'confidence label for $confidence does not imply statistical certainty',
+          (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: NutritionRecommendationCard(
+                goal: BodyweightGoal.maintainWeight,
+                targetRateKgPerWeek: 0,
+                recommendation: _recommendation().copyWith(confidence: confidence),
+                maintenanceEstimate: _estimate(),
+                generatedAt: DateTime(2026, 4, 5, 9, 0),
+                nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+                isAdaptiveRecommendationDueNow: false,
+                activeTargetCalories: 2400,
+                isRecalculating: false,
+                isApplying: false,
+                onRecalculate: () {},
+                onApply: () {},
+              ),
+            ),
+          ),
+        );
+
+        final context =
+            tester.element(find.byType(NutritionRecommendationCard));
+        final l10n = AppLocalizations.of(context)!;
+        final label = switch (confidence) {
+          RecommendationConfidence.notEnoughData =>
+            l10n.adaptiveConfidenceNotEnoughData,
+          RecommendationConfidence.low => l10n.adaptiveConfidenceLow,
+          RecommendationConfidence.medium => l10n.adaptiveConfidenceMedium,
+          RecommendationConfidence.high => l10n.adaptiveConfidenceHigh,
+        };
+
+        for (final word in forbiddenWords) {
+          expect(
+            label.toLowerCase().contains(word),
+            isFalse,
+            reason:
+                'Confidence label for $confidence ("$label") must not contain '
+                '"$word" — the bar shows data-basis strength, not statistical $word.',
+          );
+        }
+      });
+    }
+  });
+
+  group('confidence bar ordinal fill values (not probabilities)', () {
+    // These are the documented ordinal fractions from _confidenceProgress.
+    // They are NOT derived from the posterior variance; they are intentional
+    // visual buckets.  This test locks the mapping so future edits must be
+    // deliberate.
+    const expectedFills = {
+      RecommendationConfidence.notEnoughData: 0.22,
+      RecommendationConfidence.low: 0.42,
+      RecommendationConfidence.medium: 0.68,
+      RecommendationConfidence.high: 0.90,
+    };
+
+    for (final entry in expectedFills.entries) {
+      testWidgets(
+          'confidence bar fill for ${entry.key} is ${entry.value}',
+          (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: NutritionRecommendationCard(
+                goal: BodyweightGoal.maintainWeight,
+                targetRateKgPerWeek: 0,
+                recommendation:
+                    _recommendation().copyWith(confidence: entry.key),
+                maintenanceEstimate: _estimate(),
+                generatedAt: DateTime(2026, 4, 5, 9, 0),
+                nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+                isAdaptiveRecommendationDueNow: false,
+                activeTargetCalories: 2400,
+                isRecalculating: false,
+                isApplying: false,
+                onRecalculate: () {},
+                onApply: () {},
+              ),
+            ),
+          ),
+        );
+
+        final progressIndicators = tester.widgetList<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+        // There is exactly one progress indicator (the confidence bar).
+        expect(progressIndicators.length, 1);
+        expect(
+          progressIndicators.first.value,
+          closeTo(entry.value, 0.0001),
+          reason:
+              'Expected confidence bar fill for ${entry.key} to be ${entry.value}.',
+        );
+      });
+    }
+  });
+
+  testWidgets(
+      'confidence bar Semantics wraps LinearProgressIndicator with label',
+      (tester) async {
+    // The Semantics widget immediately wrapping the LinearProgressIndicator
+    // must declare the data-quality label so TalkBack / VoiceOver can read it.
+    const confidence = RecommendationConfidence.high;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: NutritionRecommendationCard(
+            goal: BodyweightGoal.maintainWeight,
+            targetRateKgPerWeek: 0,
+            recommendation: _recommendation().copyWith(confidence: confidence),
+            maintenanceEstimate: _estimate(),
+            generatedAt: DateTime(2026, 4, 5, 9, 0),
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+            isAdaptiveRecommendationDueNow: false,
+            activeTargetCalories: 2400,
+            isRecalculating: false,
+            isApplying: false,
+            onRecalculate: () {},
+            onApply: () {},
+          ),
+        ),
+      ),
+    );
+
+    final context = tester.element(find.byType(NutritionRecommendationCard));
+    final l10n = AppLocalizations.of(context)!;
+    final expectedLabel = l10n.adaptiveConfidenceHigh;
+
+    // Find Semantics widgets that are ancestors of the LinearProgressIndicator.
+    // The immediate ancestor is the one we added for the bar; verify that its
+    // widget-level 'label' property is the confidence string.
+    final semanticsParents = tester.widgetList<Semantics>(
+      find.ancestor(
+        of: find.byType(LinearProgressIndicator),
+        matching: find.byType(Semantics),
+      ),
+    );
+    // At least one Semantics ancestor must carry expectedLabel as its label.
+    final hasMatchingLabel =
+        semanticsParents.any((s) => s.properties.label == expectedLabel);
+    expect(
+      hasMatchingLabel,
+      isTrue,
+      reason: 'A Semantics ancestor of the confidence bar must carry '
+          '"$expectedLabel" so screen readers can announce the data-quality tier.',
+    );
+  });
 }
 
 NutritionRecommendation _recommendation() {

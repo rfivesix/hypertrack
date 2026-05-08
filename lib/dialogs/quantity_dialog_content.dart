@@ -15,6 +15,9 @@ class QuantityDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;
   final String? initialMealType;
+  final bool? initialIsLiquid;
+  final double? initialSugar;
+  final double? initialCaffeine;
 
   const QuantityDialogContent({
     super.key,
@@ -22,6 +25,9 @@ class QuantityDialogContent extends StatefulWidget {
     this.initialQuantity,
     this.initialTimestamp,
     this.initialMealType,
+    this.initialIsLiquid,
+    this.initialSugar,
+    this.initialCaffeine,
   });
 
   @override
@@ -57,17 +63,16 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
       text: widget.initialQuantity?.toString() ?? '100',
     );
     _sugarController = TextEditingController(
-      text: widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+      text: widget.initialSugar?.toStringAsFixed(1).replaceAll('.0', '') ??
+            widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
     );
     _caffeineController = TextEditingController(
-      text: widget.item.caffeineMgPer100ml
-              ?.toStringAsFixed(1)
-              .replaceAll('.0', '') ??
-          '',
+      text: widget.initialCaffeine?.toStringAsFixed(1).replaceAll('.0', '') ??
+            widget.item.caffeineMgPer100ml?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
     );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
     _selectedMealType = widget.initialMealType ?? "mealtypeSnack";
-    _isLiquid = widget.item.isLiquid ?? false;
+    _isLiquid = widget.initialIsLiquid ?? widget.item.isLiquid ?? false;
   }
 
   @override
@@ -198,7 +203,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             controller: _sugarController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: '${l10n.sugar} (g / 100ml)',
+              labelText: l10n.sugarPer100mlLabel,
               suffixText: 'g',
             ),
           ),

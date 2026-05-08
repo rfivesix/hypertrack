@@ -173,6 +173,8 @@ class CardioSamples extends Table with HybridId, MetaColumns {
 class Products extends Table with HybridId, MetaColumns {
   TextColumn get barcode => text().unique()(); // Eindeutiger Identifier
   TextColumn get name => text()();
+  TextColumn get nameDe => text().nullable()();
+  TextColumn get nameEn => text().nullable()();
   TextColumn get brand => text().nullable()();
 
   // Nutrients per 100g/ml
@@ -393,7 +395,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -508,6 +510,19 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 13) {
             await _createPulsePersistenceSchema(this);
+          }
+          if (from < 14) {
+            await customStatement(
+              'ALTER TABLE products ADD COLUMN name_de TEXT NULL',
+            );
+            await customStatement(
+              'ALTER TABLE products ADD COLUMN name_en TEXT NULL',
+            );
+            // Back-fill: copy existing name into name_de for base products
+            // so they have a value until the next re-import.
+            await customStatement(
+              "UPDATE products SET name_de = name WHERE source = 'base'",
+            );
           }
         },
       );
