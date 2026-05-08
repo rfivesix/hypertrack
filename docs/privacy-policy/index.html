@@ -11,953 +11,252 @@
   <meta property="og:description"
     content="How Train Libre handles local data, health integrations, backups, catalogs, and optional AI features.">
   <meta property="og:type" content="website">
-  <title>Train Libre Privacy Policy</title>
+  <title>Privacy Policy | Train Libre</title>
   <link rel="icon" href="../../web/favicon.png">
-  <style>
-    @font-face {
-      font-family: "Inter";
-      src: url("../../assets/fonts/Inter-Regular.ttf") format("truetype");
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Inter";
-      src: url("../../assets/fonts/Inter-SemiBold.ttf") format("truetype");
-      font-weight: 600;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Inter";
-      src: url("../../assets/fonts/Inter-Bold.ttf") format("truetype");
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Inter";
-      src: url("../../assets/fonts/Inter-Black.ttf") format("truetype");
-      font-weight: 900;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    :root {
-      color-scheme: dark;
-      --bg: #000000;
-      --panel: #171717;
-      --panel-soft: rgba(23, 23, 23, 0.72);
-      --panel-strong: #202020;
-      --fg: #f8faf7;
-      --muted: rgba(248, 250, 247, 0.68);
-      --quiet: rgba(248, 250, 247, 0.48);
-      --line: rgba(255, 255, 255, 0.12);
-      --line-strong: rgba(255, 255, 255, 0.2);
-      --accent: #ddff00;
-      --accent-ink: #121800;
-      --blue: #a9bfff;
-      --red: #f55353;
-      --max: 1180px;
-      --radius: 24px;
-      --ease: cubic-bezier(0.22, 1, 0.36, 1);
-      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      background: var(--bg);
-    }
-
-    body {
-      margin: 0;
-      min-width: 320px;
-      background:
-        linear-gradient(180deg, rgba(221, 255, 0, 0.075), transparent 20rem),
-        linear-gradient(115deg, rgba(169, 191, 255, 0.08), transparent 34rem),
-        var(--bg);
-      color: var(--fg);
-      font: 400 16px/1.62 "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      overflow-x: hidden;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-      background-size: 64px 64px;
-      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.88), transparent 72%);
-      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.88), transparent 72%);
-      opacity: 0.28;
-      z-index: -2;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    ::selection {
-      background: rgba(221, 255, 0, 0.32);
-      color: var(--fg);
-    }
-
-    .site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(0, 0, 0, 0.62);
-      -webkit-backdrop-filter: blur(18px);
-      backdrop-filter: blur(18px);
-    }
-
-    .nav {
-      width: min(var(--max), calc(100% - 32px));
-      height: 72px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .brand-mark {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 10px;
-      background: #050505;
-      border: 1px solid rgba(221, 255, 0, 0.34);
-      box-shadow: 0 0 28px rgba(221, 255, 0, 0.16);
-    }
-
-    .brand-mark svg {
-      width: 22px;
-      height: 22px;
-      display: block;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: rgba(248, 250, 247, 0.72);
-      font-size: 0.92rem;
-      font-weight: 700;
-    }
-
-    .nav-links a {
-      padding: 10px 12px;
-      border-radius: 999px;
-      transition: color 180ms ease, background 180ms ease;
-    }
-
-    .nav-links a:hover {
-      color: var(--fg);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    main {
-      isolation: isolate;
-      overflow: hidden;
-    }
-
-    .hero {
-      width: min(var(--max), calc(100% - 32px));
-      margin: 0 auto;
-      padding: 132px 0 74px;
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.72fr);
-      gap: clamp(36px, 7vw, 84px);
-      align-items: end;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 96px -16% auto auto;
-      width: 54%;
-      height: 44%;
-      background:
-        linear-gradient(105deg, rgba(221, 255, 0, 0.16), rgba(169, 191, 255, 0.12), transparent 74%);
-      filter: blur(52px);
-      transform: skewY(-9deg);
-      opacity: 0.86;
-      z-index: -1;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--accent);
-      font-size: 0.78rem;
-      font-weight: 850;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 24px;
-      height: 2px;
-      border-radius: 999px;
-      background: currentColor;
-    }
-
-    h1,
-    h2,
-    h3,
-    p {
-      margin: 0;
-    }
-
-    h1 {
-      max-width: 880px;
-      margin-top: 18px;
-      font-size: clamp(3.8rem, 10vw, 8rem);
-      line-height: 0.9;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .hero-copy {
-      max-width: 760px;
-      margin-top: 22px;
-      color: var(--muted);
-      font-size: clamp(1.05rem, 1.8vw, 1.24rem);
-    }
-
-    .hero-actions {
-      margin-top: 30px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .button {
-      min-height: 48px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 13px 18px;
-      border-radius: 14px;
-      border: 1px solid transparent;
-      font-weight: 800;
-      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-    }
-
-    .button-primary {
-      color: var(--accent-ink);
-      background: var(--accent);
-      box-shadow: 0 18px 46px rgba(221, 255, 0, 0.18);
-    }
-
-    .button-secondary {
-      color: var(--fg);
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.16);
-      -webkit-backdrop-filter: blur(18px);
-      backdrop-filter: blur(18px);
-    }
-
-    .policy-summary {
-      padding: 24px;
-      border-radius: var(--radius);
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.035)),
-        rgba(23, 23, 23, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
-      -webkit-backdrop-filter: blur(18px);
-      backdrop-filter: blur(18px);
-    }
-
-    .summary-label {
-      color: var(--quiet);
-      font-size: 0.75rem;
-      font-weight: 850;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .summary-date {
-      margin-top: 6px;
-      font-size: clamp(1.5rem, 3vw, 2.2rem);
-      line-height: 1;
-      font-weight: 900;
-    }
-
-    .summary-grid {
-      margin-top: 22px;
-      display: grid;
-      gap: 10px;
-    }
-
-    .summary-pill {
-      min-height: 58px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(0, 0, 0, 0.34);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: rgba(248, 250, 247, 0.72);
-      font-weight: 700;
-    }
-
-    .summary-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 20px rgba(221, 255, 0, 0.34);
-      flex: 0 0 auto;
-    }
-
-    .policy-shell {
-      width: min(var(--max), calc(100% - 32px));
-      margin: 0 auto;
-      padding: 0 0 88px;
-      display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
-      gap: clamp(22px, 4vw, 44px);
-      align-items: start;
-    }
-
-    .toc {
-      position: sticky;
-      top: 96px;
-      padding: 18px;
-      border-radius: 20px;
-      background: rgba(23, 23, 23, 0.62);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      -webkit-backdrop-filter: blur(16px);
-      backdrop-filter: blur(16px);
-    }
-
-    .toc-title {
-      color: var(--accent);
-      font-size: 0.74rem;
-      font-weight: 850;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .toc nav {
-      display: grid;
-      gap: 2px;
-      margin-top: 12px;
-    }
-
-    .toc a {
-      display: block;
-      padding: 8px 10px;
-      border-radius: 12px;
-      color: rgba(248, 250, 247, 0.62);
-      font-size: 0.92rem;
-      font-weight: 700;
-      line-height: 1.25;
-      transition: color 160ms ease, background 160ms ease;
-    }
-
-    .toc a:hover {
-      color: var(--fg);
-      background: rgba(255, 255, 255, 0.07);
-    }
-
-    .policy-card {
-      overflow: hidden;
-      border-radius: 28px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.028)),
-        var(--panel);
-      border: 1px solid rgba(255, 255, 255, 0.13);
-      box-shadow: 0 34px 90px rgba(0, 0, 0, 0.48);
-    }
-
-    .policy-section {
-      padding: clamp(26px, 4vw, 48px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      scroll-margin-top: 92px;
-    }
-
-    .policy-section:last-child {
-      border-bottom: 0;
-    }
-
-    .policy-section h2 {
-      color: var(--fg);
-      font-size: clamp(1.45rem, 3vw, 2.28rem);
-      line-height: 1.02;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .policy-section h2::after {
-      content: "";
-      display: block;
-      width: 52px;
-      height: 3px;
-      margin-top: 14px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 22px rgba(221, 255, 0, 0.24);
-    }
-
-    .policy-section p {
-      margin-top: 14px;
-      color: var(--muted);
-      max-width: 860px;
-    }
-
-    .policy-section ul {
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 10px;
-    }
-
-    .policy-section li {
-      position: relative;
-      padding: 14px 16px 14px 42px;
-      color: rgba(248, 250, 247, 0.68);
-      border-radius: 16px;
-      background: rgba(0, 0, 0, 0.22);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .policy-section li::before {
-      content: "";
-      position: absolute;
-      left: 18px;
-      top: 24px;
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 16px rgba(221, 255, 0, 0.28);
-    }
-
-    code {
-      color: var(--fg);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.92em;
-      padding: 0.08em 0.36em;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .contact-link {
-      color: var(--accent);
-      font-weight: 800;
-    }
-
-    .site-footer {
-      width: min(var(--max), calc(100% - 32px));
-      margin: 0 auto;
-      padding: 40px 0 46px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      color: rgba(248, 250, 247, 0.58);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      justify-content: end;
-    }
-
-    .footer-links a {
-      color: rgba(248, 250, 247, 0.76);
-      font-weight: 700;
-      transition: color 160ms ease;
-    }
-
-    .footer-links a:hover {
-      color: var(--accent);
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(22px);
-      transition:
-        opacity 700ms var(--ease),
-        transform 700ms var(--ease);
-    }
-
-    .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 940px) {
-      .hero {
-        grid-template-columns: 1fr;
-        padding-top: 116px;
-      }
-
-      .policy-summary {
-        max-width: 560px;
-      }
-
-      .policy-shell {
-        grid-template-columns: 1fr;
-      }
-
-      .toc {
-        position: static;
-      }
-
-      .toc nav {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 680px) {
-      .nav {
-        width: calc(100vw - 32px);
-        height: 64px;
-        gap: 12px;
-      }
-
-      .site-header {
-        width: 100vw;
-        overflow: hidden;
-      }
-
-      .brand>span:not(.brand-mark) {
-        display: none;
-      }
-
-      .nav-links {
-        font-size: 0.84rem;
-      }
-
-      .nav-links a:not(.nav-priority) {
-        display: none;
-      }
-
-      .hero {
-        width: min(100% - 32px, var(--max));
-        padding: 104px 0 44px;
-      }
-
-      h1 {
-        font-size: clamp(3.35rem, 16vw, 4.85rem);
-      }
-
-      .hero-actions {
-        display: grid;
-        grid-template-columns: 1fr;
-      }
-
-      .button {
-        width: 100%;
-      }
-
-      .policy-summary,
-      .toc,
-      .policy-card {
-        border-radius: 22px;
-      }
-
-      .toc nav {
-        grid-template-columns: 1fr;
-      }
-
-      .policy-section li {
-        padding-right: 14px;
-      }
-
-      .site-footer {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .footer-links {
-        justify-content: start;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html {
-        scroll-behavior: auto;
-      }
-
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.001ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-        transition-duration: 0.001ms !important;
-      }
-
-      .reveal {
-        opacity: 1;
-        transform: none;
-      }
-    }
-
-    :focus-visible {
-      outline: 3px solid rgba(221, 255, 0, 0.86);
-      outline-offset: 4px;
-    }
-  </style>
+  <link rel="stylesheet" href="../style.css">
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
 </head>
 
 <body>
-  <header class="site-header">
-    <nav class="nav" aria-label="Primary navigation">
-      <a class="brand" href="../" aria-label="Train Libre home">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 270.933 270.933" role="img">
-            <path fill="#ddff00"
-              d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
-          </svg>
-        </span>
-        <span>Train Libre</span>
-      </a>
-      <div class="nav-links">
-        <a href="../">Landing</a>
-        <a href="#data-we-process">Data</a>
-        <a href="#ai-camera-photos-features">AI</a>
-        <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
-          rel="noreferrer">GitHub</a>
-      </div>
-    </nav>
-  </header>
-
-  <main>
-    <section class="hero" aria-labelledby="policy-title">
-      <div class="reveal is-visible">
-        <span class="eyebrow">Privacy Policy</span>
-        <h1 id="policy-title">Control stays close to you.</h1>
-        <p class="hero-copy">Train Libre is offline-first fitness and nutrition tracking. This policy explains what the
-          app stores locally, when optional integrations leave the app, and how backups, catalogs, health data, and AI
-          features are handled.</p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="../">Back to Train Libre</a>
-          <a class="button button-secondary" href="https://github.com/rfivesix/train-libre" target="_blank"
-            rel="noreferrer">View on GitHub</a>
+  <div class="page">
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="../index.html" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <div class="nav-links">
+          <a href="../index.html#features" data-i18n="nav_features">Features</a>
+          <a href="../index.html#intelligence" data-i18n="nav_guidance">AI Guidance</a>
+          <a href="./index.html" data-i18n="nav_privacy">Privacy</a>
+          <a href="../index.html#showcase" data-i18n="nav_showcase">Showcase</a>
+          <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
+            rel="noreferrer">GitHub</a>
         </div>
-      </div>
-
-      <aside class="policy-summary reveal is-visible" aria-label="Policy summary">
-        <p class="summary-label">Last updated</p>
-        <p class="summary-date">May 6, 2026</p>
-        <div class="summary-grid">
-          <div class="summary-pill"><span class="summary-dot" aria-hidden="true"></span>Offline-first local storage</div>
-          <div class="summary-pill"><span class="summary-dot" aria-hidden="true"></span>No mandatory cloud account</div>
-          <div class="summary-pill"><span class="summary-dot" aria-hidden="true"></span>Optional BYOK AI features</div>
+        <div class="nav-controls">
+          <button id="lang-toggle" class="control-btn" aria-label="Switch Language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+              </path>
+            </svg>
+          </button>
+          <button id="theme-toggle" class="control-btn" aria-label="Toggle Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
         </div>
-      </aside>
-    </section>
+      </nav>
+    </header>
 
-    <div class="policy-shell">
-      <aside class="toc reveal" aria-label="Privacy policy sections">
-        <p class="toc-title">Sections</p>
-        <nav>
-          <a href="#overview">Overview</a>
-          <a href="#data-we-process">Data We Process</a>
-          <a href="#permissions-and-device-access">Permissions</a>
-          <a href="#health-and-fitness-data">Health Data</a>
-          <a href="#ai-camera-photos-features">AI Features</a>
-          <a href="#backups-export-import-and-sharing">Backups</a>
-          <a href="#remote-catalogs-and-third-party-data-sources">Catalogs</a>
-          <a href="#ads-analytics-and-tracking">Tracking</a>
-          <a href="#data-storage-and-security">Security</a>
-          <a href="#your-choices-and-controls">Controls</a>
-          <a href="#children">Children</a>
-          <a href="#contact">Contact</a>
-        </nav>
-      </aside>
+    <main>
+      <section class="hero hero-compact" aria-labelledby="policy-title">
+        <div class="hero-content reveal">
+          <span class="eyebrow" data-i18n="nav_privacy">Privacy Policy</span>
+          <h1 id="policy-title" data-i18n="priv_hero_title">Your data stays with you.</h1>
+          <p class="hero-copy" data-i18n="priv_hero_copy">Train Libre is offline-first. This policy explains how we
+            handle your data locally and when optional features interact with third-party services.</p>
+          <div class="hero-actions">
+            <a href="../index.html" class="button button-primary">← Back to home</a>
+            <a class="button button-secondary" href="https://github.com/rfivesix/train-libre" target="_blank"
+              rel="noreferrer">View on GitHub</a>
+          </div>
+        </div>
+      </section>
 
-      <article class="policy-card" aria-label="Train Libre Privacy Policy">
-        <section class="policy-section reveal" id="overview">
-          <h2>Overview</h2>
-          <p>Train Libre is an offline-first fitness and nutrition tracking app. The repository shows that the app is
-            designed to store user tracking data locally on the device by default and does not require a Train Libre
-            cloud account.</p>
-          <p>Sensitive data stays on your device unless you explicitly use a feature that accesses another app, a system
-            health service, a third-party AI provider, a share/export target, or a remote public catalog source. This
-            policy should be hosted at a public URL for store distribution, including Google Play.</p>
-          <p>Train Libre is not a medical service. Health, recovery, sleep, pulse, nutrition, and training features are
-            for personal tracking and training context only. They are not intended to diagnose, treat, cure, or prevent
-            any disease or medical condition.</p>
-        </section>
+      <div class="policy-shell">
+        <aside class="toc reveal" aria-label="Privacy policy sections">
+          <p class="toc-title">Sections</p>
+          <nav>
+            <a href="#overview">Overview</a>
+            <a href="#data">Data We Process</a>
+            <a href="#permissions">Permissions</a>
+            <a href="#health">Health Data</a>
+            <a href="#ai">AI Features</a>
+            <a href="#backups">Backups</a>
+            <a href="#catalogs">Catalogs</a>
+            <a href="#tracking">Tracking</a>
+            <a href="#security">Security</a>
+            <a href="#controls">Controls</a>
+            <a href="#contact">Contact</a>
+          </nav>
+        </aside>
 
-        <section class="policy-section reveal" id="data-we-process">
-          <h2>Data We Process</h2>
-          <p>Depending on the features you use, Train Libre can store or process the following data on your device:</p>
-          <ul>
-            <li>Profile and settings data, such as username, birthday, height, gender, unit preferences, goals, theme
-              settings, feature toggles, selected catalog region, and optional profile image path.</li>
-            <li>Workout data, such as routines, exercises, sets, reps, weights, RIR/RPE, rest times, workout notes,
-              workout dates, workout duration, distance, and cardio-related entries where used.</li>
-            <li>Nutrition data, such as foods, meals, meal templates, product barcodes, quantities, calories, macros,
-              sugar, fiber, salt/sodium, hydration, caffeine, creatine, supplements, supplement doses, and supplement
-              history.</li>
-            <li>Body data, such as bodyweight, body fat percentage, BMI where present, body measurements, and
-              measurement sessions.</li>
-            <li>Health integration data, such as step segments, sleep sessions, sleep stages, sleep-derived metrics, and
-              heart-rate samples when health integrations are enabled and permissions are granted.</li>
-            <li>Local analytics and derived data, such as training statistics, recovery estimates, body/nutrition trend
-              calculations, sleep scores, pulse aggregates, and recommendation state.</li>
-            <li>Imported data, such as workout CSV files selected by you for import.</li>
-            <li>Backup/export data, when you choose to create, share, import, or automatically write backups.</li>
-          </ul>
-          <p>The audited repository uses local SQLite/Drift storage, SharedPreferences, app document storage, temporary
-            files for sharing/export, and secure native storage for AI API keys.</p>
-        </section>
+        <article class="policy-card">
+          <div class="policy-section reveal">
+            <div class="last-updated-box">
+              <span data-i18n="p_last_updated">Last updated:</span> May 9, 2026
+            </div>
+          </div>
 
-        <section class="policy-section reveal" id="permissions-and-device-access">
-          <h2>Permissions and Device Access</h2>
-          <p>The Android manifest and iOS permission strings show the following privacy-relevant permissions or device
-            access:</p>
-          <ul>
-            <li>Camera: used for barcode scanning and AI meal photo capture.</li>
-            <li>Photos or gallery: used for selecting a profile image and selecting meal photos for AI meal capture.
-            </li>
-            <li>Notifications: used for app notifications, including reminder or recommendation-related flows where
-              enabled.</li>
-            <li>File and folder access: used when you choose files for import, export files, share files, or select an
-              Android folder for automatic backups.</li>
-            <li>Health access: used for Apple Health or Google Health Connect features, as described below.</li>
-          </ul>
-          <p>You can deny or revoke permissions in your device settings. Some features may not work without the related
-            permission.</p>
-        </section>
+          <section class="policy-section reveal" id="overview">
+            <h2 data-i18n="p_ov_t">Overview</h2>
+            <p data-i18n="p_ov_c_1">Train Libre is an offline-first fitness and nutrition tracking app. Your data is
+              stored locally on your device by default and does not require a cloud account.</p>
+            <p data-i18n="p_ov_c_2">Sensitive data stays on your device unless you explicitly use a feature that
+              accesses another app, a system health service, a third-party AI provider, a share/export target, or a
+              remote public catalog source.</p>
+            <p data-i18n="p_ov_c_3">Train Libre is not a medical service. Health, recovery, sleep, pulse, nutrition, and
+              training features are for personal tracking and training context only. They are not intended to diagnose,
+              treat, cure, or prevent any disease or medical condition.</p>
+          </section>
 
-        <section class="policy-section reveal" id="health-and-fitness-data">
-          <h2>Health and Fitness Data</h2>
-          <p>Train Libre includes optional health integrations with Apple Health and Google Health Connect.</p>
-          <p>When enabled and permitted, the app can read:</p>
-          <ul>
-            <li>Steps, for step summaries and statistics.</li>
-            <li>Sleep sessions and sleep stages, for sleep views and sleep-derived metrics.</li>
-            <li>Heart-rate data, for sleep heart-rate context, pulse analysis, and workout heart-rate summaries where
-              available.</li>
-          </ul>
-          <p>When enabled and permitted, the app can write supported app-recorded data one way to Apple Health or Google
-            Health Connect, including:</p>
-          <ul>
-            <li>Measurements such as weight and body fat percentage. BMI is supported in the shared export model and
-              Apple Health path, while the audited Android Health Connect export path skips BMI.</li>
-            <li>Aggregate nutrition and hydration entries.</li>
-            <li>Workout sessions with session-level timing and summary notes where the platform supports them.</li>
-          </ul>
-          <p>The repository documents this as a one-way export. It is not a bidirectional sync and does not make Apple
-            Health or Google Health Connect the source of truth for Train Libre tracking data.</p>
-          <p>Train Libre also stores step segments locally after import. Sleep persistence tables store raw import
-            records, normalized sleep sessions, sleep stage segments, sleep heart-rate samples, and derived nightly
-            analyses. Pulse analysis reads platform heart-rate samples and stores hourly aggregate pulse data in the
-            current repository.</p>
-        </section>
+          <section class="policy-section reveal" id="data">
+            <h2 data-i18n="p_data_t">Data We Process</h2>
+            <p data-i18n="p_data_c_1">Depending on the features you use, Train Libre stores or processes the following
+              data on your device:</p>
+            <ul>
+              <li data-i18n="p_data_l1">Profile and settings: Username, height, gender, goals, and unit preferences.
+              </li>
+              <li data-i18n="p_data_l2">Workouts: Routines, exercises, sets, reps, weights, RIR/RPE, rest times, and
+                duration.</li>
+              <li data-i18n="p_data_l3">Nutrition: Foods, meals, barcodes, calories, macros, hydration, and supplements.
+              </li>
+              <li data-i18n="p_data_l4">Body data: Bodyweight and body measurements.</li>
+              <li data-i18n="p_data_l5">Health integration: Steps, sleep sessions, and heart-rate samples (when
+                permissions are granted).</li>
+              <li data-i18n="p_data_l6">Local analytics: Training statistics, recovery estimates, and body/nutrition
+                trend calculations.</li>
+            </ul>
+            <p data-i18n="p_data_c_2">The app uses local storage (SQLite/Drift), SharedPreferences, and secure native
+              storage for AI API keys.</p>
+          </section>
 
-        <section class="policy-section reveal" id="ai-camera-photos-features">
-          <h2>AI / Camera / Photos Features</h2>
-          <p>AI meal features are optional and disabled by default in the repository documentation and settings flow.
-            They use a bring-your-own-key design.</p>
-          <p>If you enable AI features and add an API key, Train Libre stores the API key in native secure storage
-            through <code>flutter_secure_storage</code>. The audited code supports OpenAI, Google Gemini, Anthropic
-            Claude, Mistral, and xAI Grok providers.</p>
-          <p>When you use AI meal capture or AI meal recommendations, Train Libre may send the following to the selected
-            AI provider:</p>
-          <ul>
-            <li>Typed meal descriptions or prompts.</li>
-            <li>Meal photos you choose or take for analysis.</li>
-            <li>Selected preferences, constraints, meal type, target macros, and custom request text.</li>
-            <li>A recent meal-history summary only if the separate recommendation context-sharing setting is enabled.
-            </li>
-            <li>Your provider API key as needed to authorize the request with that provider.</li>
-          </ul>
-          <p>The AI provider returns suggested food names, gram estimates, recommendations, or repair suggestions. Train
-            Libre then validates and matches those suggestions against the local food database before saving. The app
-            does not silently save unmatched AI items as logged food.</p>
-          <p>Barcode scanning uses the camera to detect a barcode and look it up in the local product catalog. Profile
-            image selection copies the selected image into app document storage.</p>
-        </section>
+          <section class="policy-section reveal" id="permissions">
+            <h2 data-i18n="p_perm_t">Permissions and Device Access</h2>
+            <p data-i18n="p_perm_c_1">Train Libre requests the following permissions for specific features:</p>
+            <ul>
+              <li data-i18n="p_perm_l1">Camera: Used for barcode scanning and AI meal photo capture.</li>
+              <li data-i18n="p_perm_l2">Photos/Gallery: Used for selecting a profile image or meal photos for AI
+                analysis.</li>
+              <li data-i18n="p_perm_l3">Notifications: Used for reminders or recommendations where enabled.</li>
+              <li data-i18n="p_perm_l4">File Access: Used for data import/export and backups.</li>
+              <li data-i18n="p_perm_l5">Health Access: Used for Apple Health or Google Health Connect features.</li>
+            </ul>
+            <p data-i18n="p_perm_c_2">You can manage these permissions in your device settings.</p>
+          </section>
 
-        <section class="policy-section reveal" id="backups-export-import-and-sharing">
-          <h2>Backups, Export, Import, and Sharing</h2>
-          <p>Train Libre includes full JSON backups, optional encrypted backups, automatic backups, CSV exports, import
-            flows, and workout/routine sharing.</p>
-          <p>Full backups can include sensitive fitness, nutrition, body, profile, settings, preferences, custom foods,
-            custom exercises, routines, workout logs, food logs, hydration, supplement data, goals, and imported step
-            segments. The audited backup code exports all SharedPreferences keys as a <code>userPreferences</code> map.
-            Based on the current backup serialization path reviewed, dedicated sleep and pulse persistence tables were
-            not separately included in full backup payload generation.</p>
-          <p>Encrypted backups use a passphrase supplied by you. If you create an unencrypted backup or CSV export, the
-            file contents are readable by anyone who can access the file.</p>
-          <p>Backups and exports are written to temporary files for sharing or to an app/user-selected storage location
-            for automatic backups. On Android, automatic backups can use a folder selected through the Storage Access
-            Framework. You are responsible for where you save, share, upload, or delete exported files and backups.</p>
-          <p>Imports can read selected files, such as full Train Libre backups or Hevy CSV workout exports, and write
-            parsed data into the local database.</p>
-          <p>Sharing features can create text or image summaries of workouts and routines and pass them to the operating
-            system share sheet. The selected receiving app or service handles that shared content under its own terms
-            and privacy policy.</p>
-        </section>
+          <section class="policy-section reveal" id="health">
+            <h2 data-i18n="p_health_t">Health and Fitness Data</h2>
+            <p data-i18n="p_health_c_1">Train Libre includes optional integrations with Apple Health and Google Health
+              Connect.</p>
+            <p data-i18n="p_health_c_2">When permitted, the app can read steps for activity summaries, sleep sessions
+              and stages for recovery metrics, and heart-rate data for pulse analysis.</p>
+            <p data-i18n="p_health_c_3">When permitted, the app can export measurements (weight, body fat), aggregate
+              nutrition and hydration, and workout sessions.</p>
+            <p data-i18n="p_health_c_4">This is a one-way export; Train Libre remains the authoritative record for your
+              tracking data.</p>
+          </section>
 
-        <section class="policy-section reveal" id="remote-catalogs-and-third-party-data-sources">
-          <h2>Remote Catalogs and Third-Party Data Sources</h2>
-          <p>Train Libre includes public exercise and food catalog data based on wger and Open Food Facts.</p>
-          <p>The repository shows remote catalog refresh services that can fetch public catalog manifests and SQLite
-            catalog files from Train Libre GitHub release URLs. Supported Open Food Facts regions in the current
-            configuration are Germany, United States, and United Kingdom. These catalog downloads are for public
-            exercise and food data, not for uploading your personal tracking data.</p>
-          <p>Remote catalog requests may still expose standard network metadata, such as your IP address, user agent,
-            request time, and requested URL, to the hosting provider and network operators. Train Libre validates
-            downloaded catalog files before adopting them and falls back safely when a catalog refresh fails.</p>
-          <p>The app also contains links or attribution for Open Food Facts, wger, and the Train Libre GitHub
-            repository. Opening external links leaves the app and is handled by your browser or the target service.</p>
-        </section>
+          <section class="policy-section reveal" id="ai">
+            <h2 data-i18n="p_ai_t">AI / Camera / Photos Features</h2>
+            <p data-i18n="p_ai_c_1">AI meal features are optional and disabled by default. They use a "Bring Your Own
+              Key" (BYOK) model.</p>
+            <p data-i18n="p_ai_c_2">If you enable AI features and provide an API key, it is stored in native secure
+              storage. When you use AI meal capture, the app may send meal descriptions or photos to your selected
+              provider.</p>
+            <p data-i18n="p_ai_c_3">The AI provider returns suggested food names and gram estimates, which the app then
+              validates against the local food database before you save them.</p>
+          </section>
 
-        <section class="policy-section reveal" id="ads-analytics-and-tracking">
-          <h2>Ads, Analytics, and Tracking</h2>
-          <p>The audited repository does not include advertising SDKs, third-party analytics SDKs, crash-reporting SDKs,
-            Firebase, AdMob, or tracker integrations.</p>
-          <p>Train Libre contains in-app statistics and analytics features, but those are local fitness and nutrition
-            analysis features built from your local data. They are not evidence of third-party tracking.</p>
-          <p>Train Libre does not sell your personal data and does not use your data for advertising based on the
-            audited repository behavior.</p>
-        </section>
+          <section class="policy-section reveal" id="backups">
+            <h2 data-i18n="p_back_t">Backups and Data Portability</h2>
+            <p data-i18n="p_back_c_1">You can create JSON backups, encrypted backups, or CSV exports. If you choose a
+              non-encrypted format, the file contents are readable by anyone with access to the file.</p>
+            <p data-i18n="p_back_c_2">You are responsible for where you save or share these exported files. Imports
+              allow you to restore data from previous backups or other supported formats.</p>
+          </section>
 
-        <section class="policy-section reveal" id="data-storage-and-security">
-          <h2>Data Storage and Security</h2>
-          <p>Train Libre stores primary app data locally in app-controlled SQLite/Drift databases and related app
-            storage. Settings and feature state are stored in SharedPreferences. AI API keys are stored in native secure
-            storage.</p>
-          <p>Local storage security depends on your device, operating system, lock screen, backups, and any apps or
-            services you choose for sharing/export. Train Libre provides optional encrypted backups for full backup
-            export, but unencrypted backups, CSV exports, shared images, shared text, and files you place in external
-            folders may be accessible outside Train Libre.</p>
-          <p>No system can guarantee perfect security. Use device-level protections and be careful when sharing or
-            storing exported files that contain health, fitness, nutrition, or profile data.</p>
-        </section>
+          <section class="policy-section reveal" id="catalogs">
+            <h2 data-i18n="p_cat_t">Remote Catalogs</h2>
+            <p data-i18n="p_cat_c_1">The app can fetch public exercise and food catalog updates from official Train
+              Libre sources. These requests only download data and do not upload your personal tracking logs.</p>
+          </section>
 
-        <section class="policy-section reveal" id="your-choices-and-controls">
-          <h2>Your Choices and Controls</h2>
-          <p>You control Train Libre data and permissions in several ways:</p>
-          <ul>
-            <li>Do not enable optional AI features, health integrations, catalog refreshes, sharing, backups, imports,
-              notifications, camera, or photos if you do not want to use them.</li>
-            <li>Revoke camera, photo, notification, health, or file permissions in your device settings.
-            </li>
-            <li>Delete entries inside the app where deletion is available.</li>
-            <li>Delete profile images and other local files where the app provides that control.</li>
-            <li>Remove a saved AI API key from the AI settings screen.</li>
-            <li>Disable AI recommendation context sharing while still using other AI features.</li>
-            <li>Disable steps, sleep, pulse, or health export features in app settings where available.</li>
-            <li>Delete backups, CSV exports, shared files, and automatic backup folders from wherever you stored them.
-            </li>
-            <li>Uninstall the app to remove app-local data from the device, subject to your operating system and backup
-              settings.</li>
-          </ul>
-          <p>If you have shared data with another app, an AI provider, Apple Health, Google Health Connect, cloud storage
-            provider, messaging app, or other third party, you may need to manage or delete that copy through that third
-            party.</p>
-        </section>
+          <section class="policy-section reveal" id="tracking">
+            <h2 data-i18n="p_ads_t">Ads, Analytics, and Tracking</h2>
+            <p data-i18n="p_ads_c_1">Train Libre does not include advertising, third-party analytics SDKs, or trackers.
+              All statistics and insights are computed locally on your device. Your data is never sold or shared for
+              advertising purposes.</p>
+          </section>
 
-        <section class="policy-section reveal" id="children">
-          <h2>Children</h2>
-          <p>Train Libre is a fitness and nutrition tracking app for users who can responsibly record training,
-            nutrition, and health-related data. The repository does not indicate that the app is directed to children.
-            Children should not use Train Libre without appropriate parent or guardian involvement.</p>
-        </section>
+          <section class="policy-section reveal" id="security">
+            <h2 data-i18n="p_sec_t">Data Storage and Security</h2>
+            <p data-i18n="p_sec_c_1">Primary data is stored locally. Security depends on your device's operating system
+              and lock screen protections. Be cautious when sharing exported files or using unencrypted backups.</p>
+          </section>
 
-        <section class="policy-section reveal" id="changes-to-this-policy">
-          <h2>Changes to This Policy</h2>
-          <p>This policy may be updated as Train Libre changes. Updates should revise the "Last updated" date and should
-            continue to reflect the actual app behavior in the repository and release build.</p>
-        </section>
+          <section class="policy-section reveal" id="controls">
+            <h2 data-i18n="p_ctrl_t">Your Controls</h2>
+            <ul>
+              <li data-i18n="p_ctrl_l1">You decide which optional features and permissions to enable.</li>
+              <li data-i18n="p_ctrl_l2">You can delete entries or your entire profile within the app.</li>
+              <li data-i18n="p_ctrl_l3">You can remove saved AI API keys at any time.</li>
+              <li data-i18n="p_ctrl_l4">Uninstalling the app removes its local data from your device.</li>
+            </ul>
+          </section>
 
-        <section class="policy-section reveal" id="contact">
-          <h2>Contact</h2>
-          <p><a class="contact-link" href="mailto:support@schotte.me">support@schotte.me</a></p>
-        </section>
-      </article>
-    </div>
-  </main>
+          <section class="policy-section reveal" id="contact">
+            <h2 data-i18n="p_cont_t">Contact</h2>
+            <p>
+              Richard Georg Schotte<br>
+              Email: <a href="mailto:richard@schotte.me" class="contact-link">richard@schotte.me</a>
+            </p>
+          </section>
+        </article>
+      </div>
+    </main>
 
-  <footer class="site-footer">
-    <a class="brand" href="../" aria-label="Train Libre home">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 270.933 270.933" role="img">
-          <path fill="#ddff00"
-            d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
-        </svg>
-      </span>
-      <span>Train Libre</span>
-    </a>
-    <div class="footer-links">
-      <a href="../">Landing</a>
-      <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
-    </div>
-  </footer>
+    <footer class="site-footer">
+      <div>
+        <a class="brand" href="../index.html" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <p class="fine-print" data-i18n="footer_medical">Fitness, nutrition, recovery, and pulse features are for
+          personal tracking and training
+          context, not medical diagnosis or treatment.</p>
+      </div>
+      <div class="footer-links">
+        <a href="./index.html" data-i18n="footer_privacy">Privacy Policy</a>
+        <a href="../impressum.html" data-i18n="footer_imprint">Imprint</a>
+        <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </footer>
+  </div>
 
-  <script>
-    (() => {
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const revealTargets = document.querySelectorAll(".reveal");
-
-      if ("IntersectionObserver" in window && !reduceMotion) {
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
-              observer.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
-
-        revealTargets.forEach((target) => observer.observe(target));
-      } else {
-        revealTargets.forEach((target) => target.classList.add("is-visible"));
-      }
-    })();
-  </script>
+  <script src="../script.js"></script>
 </body>
 
 </html>

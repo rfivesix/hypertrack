@@ -120,8 +120,8 @@ No system can guarantee perfect security. Use device-level protections and be ca
 
 You control Train Libre data and permissions in several ways:
 
-- Do not enable optional AI features, health integrations, catalog refreshes, sharing, backups, imports, notifications, camera, photos, microphone, or speech features if you do not want to use them.
-- Revoke camera, microphone, photo, notification, health, or file permissions in your device settings.
+- Do not enable optional AI features, health integrations, catalog refreshes, sharing, backups, imports, notifications, camera, or photos if you do not want to use them.
+- Revoke camera, photo, notification, health, or file permissions in your device settings.
 - Delete entries inside the app where deletion is available.
 - Delete profile images and other local files where the app provides that control.
 - Remove a saved AI API key from the AI settings screen.
@@ -142,4 +142,5 @@ This policy may be updated as Train Libre changes. Updates should revise the "La
 
 ## Contact
 
+support@schotte.me
 support@schotte.me

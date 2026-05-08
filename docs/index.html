@@ -13,1506 +13,13 @@
   <meta property="og:type" content="website">
   <title>Train Libre | Offline-first fitness tracking</title>
   <link rel="icon" href="../web/favicon.png">
-  <style>
-    @font-face {
-      font-family: "Inter";
-      src: url("../assets/fonts/Inter-Regular.ttf") format("truetype");
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Inter";
-      src: url("../assets/fonts/Inter-SemiBold.ttf") format("truetype");
-      font-weight: 600;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Inter";
-      src: url("../assets/fonts/Inter-Bold.ttf") format("truetype");
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: "Inter";
-      src: url("../assets/fonts/Inter-Black.ttf") format("truetype");
-      font-weight: 900;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    :root {
-      color-scheme: dark;
-      --bg: #000000;
-      --bg-soft: #070807;
-      --panel: #171717;
-      --panel-2: #1c1c1c;
-      --panel-3: #252525;
-      --fg: #f8faf7;
-      --muted: #b7beb8;
-      --quiet: #838983;
-      --line: rgba(255, 255, 255, 0.12);
-      --line-strong: rgba(255, 255, 255, 0.2);
-      --accent: #ddff00;
-      --accent-ink: #121800;
-      --blue: #85d7f4;
-      --green: #66c86d;
-      --red: #f55353;
-      --purple: #b765c9;
-      --orange: #ff9b05;
-      --max: 1180px;
-      --radius: 24px;
-      --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
-      --ease: cubic-bezier(0.22, 1, 0.36, 1);
-      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      background: var(--bg);
-    }
-
-    body {
-      margin: 0;
-      min-width: 320px;
-      background:
-        linear-gradient(180deg, rgba(221, 255, 0, 0.06), transparent 18rem),
-        linear-gradient(115deg, rgba(133, 215, 244, 0.08), transparent 30rem),
-        var(--bg);
-      color: var(--fg);
-      font-size: 16px;
-      line-height: 1.5;
-      overflow-x: hidden;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-      background-size: 64px 64px;
-      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 70%);
-      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 70%);
-      opacity: 0.32;
-      z-index: -2;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    img {
-      display: block;
-      max-width: 100%;
-    }
-
-    svg {
-      display: block;
-    }
-
-    ::selection {
-      background: rgba(221, 255, 0, 0.32);
-      color: var(--fg);
-    }
-
-    .page {
-      isolation: isolate;
-      min-height: 100vh;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(0, 0, 0, 0.55);
-      -webkit-backdrop-filter: blur(18px);
-      backdrop-filter: blur(18px);
-    }
-
-    .nav {
-      width: min(var(--max), calc(100% - 32px));
-      height: 72px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 800;
-      letter-spacing: 0;
-      white-space: nowrap;
-    }
-
-    .brand-mark {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 10px;
-      background: #050505;
-      border: 1px solid rgba(221, 255, 0, 0.34);
-      box-shadow: 0 0 28px rgba(221, 255, 0, 0.16);
-    }
-
-    .brand-mark svg {
-      width: 22px;
-      height: 22px;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: rgba(248, 250, 247, 0.72);
-      font-size: 0.92rem;
-      font-weight: 650;
-    }
-
-    .nav-links a {
-      padding: 10px 12px;
-      border-radius: 999px;
-      transition: color 180ms ease, background 180ms ease;
-    }
-
-    .nav-links a:hover {
-      color: var(--fg);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .hero {
-      position: relative;
-      min-height: min(760px, calc(100vh - 140px));
-      min-height: min(760px, calc(100svh - 140px));
-      padding: 124px 24px 86px;
-      display: grid;
-      place-items: center;
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.32) 45%, rgba(0, 0, 0, 0.86) 100%),
-        linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.5) 55%, #000 100%);
-      z-index: 1;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 18% -10% auto -10%;
-      height: 48%;
-      background:
-        linear-gradient(100deg, transparent 8%, rgba(221, 255, 0, 0.12), rgba(133, 215, 244, 0.12), transparent 82%);
-      filter: blur(52px);
-      transform: skewY(-9deg);
-      opacity: 0.9;
-    }
-
-    .hero-stage {
-      --mx: 0;
-      --my: 0;
-      --scroll: 0;
-      position: absolute;
-      inset: 72px 0 0;
-      width: min(1280px, 100%);
-      margin: 0 auto;
-      pointer-events: none;
-      transform:
-        translate3d(calc(var(--mx) * -14px),
-          calc((var(--my) * -10px) + (var(--scroll) * 0.08px)), 0);
-      transition: transform 250ms ease-out;
-      z-index: 0;
-    }
-
-    .device {
-      position: absolute;
-      aspect-ratio: 1080 / 2340;
-      overflow: hidden;
-      border-radius: 34px;
-      background: #050505;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow:
-        0 48px 120px rgba(0, 0, 0, 0.8),
-        inset 0 0 0 9px rgba(0, 0, 0, 0.86),
-        0 0 0 1px rgba(221, 255, 0, 0.08);
-    }
-
-    .device::before {
-      content: "";
-      position: absolute;
-      top: 9px;
-      left: 50%;
-      width: 33%;
-      height: 16px;
-      transform: translateX(-50%);
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 2;
-    }
-
-    .device img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.94;
-      transform: scale(1.012);
-    }
-
-    .device-home {
-      width: clamp(190px, 24vw, 330px);
-      right: clamp(10px, 6vw, 80px);
-      top: 24px;
-      transform: rotate(7deg);
-      opacity: 0.72;
-    }
-
-    .device-workout {
-      width: clamp(160px, 19vw, 270px);
-      left: clamp(4px, 5vw, 80px);
-      top: 98px;
-      transform: rotate(-8deg);
-      opacity: 0.54;
-    }
-
-    .device-goals {
-      width: clamp(140px, 16vw, 230px);
-      right: 35%;
-      bottom: -58px;
-      transform: rotate(-2deg);
-      opacity: 0.34;
-      filter: saturate(0.9);
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      width: min(880px, 100%);
-      margin: 0 auto;
-      text-align: center;
-      transform: translateY(calc(var(--hero-copy-scroll, 0) * 0.03px));
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      min-height: 36px;
-      padding: 6px 12px 6px 7px;
-      border-radius: 999px;
-      color: rgba(248, 250, 247, 0.78);
-      background: rgba(23, 23, 23, 0.58);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      -webkit-backdrop-filter: blur(18px);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
-      font-size: 0.83rem;
-      font-weight: 700;
-    }
-
-    .eyebrow-dot {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background:
-        linear-gradient(135deg, rgba(221, 255, 0, 0.95), rgba(133, 215, 244, 0.82));
-      box-shadow: 0 0 22px rgba(221, 255, 0, 0.36);
-    }
-
-    h1,
-    h2,
-    h3,
-    p {
-      margin: 0;
-    }
-
-    h1 {
-      margin-top: 26px;
-      color: var(--fg);
-      font-size: clamp(4.2rem, 14vw, 9.8rem);
-      line-height: 0.86;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .hero-statement {
-      width: min(840px, 100%);
-      margin: 22px auto 0;
-      color: rgba(248, 250, 247, 0.94);
-      font-size: clamp(2rem, 5vw, 4.2rem);
-      line-height: 0.98;
-      font-weight: 850;
-      letter-spacing: 0;
-    }
-
-    .hero-copy {
-      width: min(690px, 100%);
-      margin: 22px auto 0;
-      color: rgba(248, 250, 247, 0.74);
-      font-size: clamp(1.05rem, 2vw, 1.32rem);
-      line-height: 1.55;
-    }
-
-    .hero-actions {
-      margin-top: 34px;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .button {
-      min-height: 48px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 13px 18px;
-      border-radius: 14px;
-      border: 1px solid transparent;
-      font-weight: 800;
-      letter-spacing: 0;
-      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
-    }
-
-    .button svg {
-      width: 19px;
-      height: 19px;
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-    }
-
-    .button-primary {
-      color: var(--accent-ink);
-      background: var(--accent);
-      box-shadow: 0 18px 46px rgba(221, 255, 0, 0.18);
-    }
-
-    .button-secondary {
-      color: var(--fg);
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.16);
-      -webkit-backdrop-filter: blur(18px);
-      backdrop-filter: blur(18px);
-    }
-
-    .button-secondary:hover {
-      border-color: rgba(221, 255, 0, 0.34);
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .hero-points {
-      width: min(780px, 100%);
-      margin: 28px auto 0;
-      display: flex;
-      justify-content: center;
-      gap: 9px;
-      flex-wrap: wrap;
-      color: rgba(248, 250, 247, 0.68);
-      font-size: 0.88rem;
-      font-weight: 700;
-    }
-
-    .hero-points span {
-      padding: 8px 11px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(23, 23, 23, 0.5);
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
-    }
-
-    .scroll-cue {
-      position: absolute;
-      left: 50%;
-      bottom: 24px;
-      z-index: 3;
-      transform: translateX(-50%);
-    }
-
-    .scroll-cue a {
-      width: 34px;
-      height: 54px;
-      display: grid;
-      place-items: start center;
-      padding-top: 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.05);
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
-    }
-
-    .scroll-cue span {
-      width: 5px;
-      height: 11px;
-      border-radius: 999px;
-      background: var(--accent);
-      animation: cue 1.55s var(--ease) infinite;
-    }
-
-    main {
-      position: relative;
-      z-index: 1;
-    }
-
-    .section {
-      width: min(var(--max), calc(100% - 32px));
-      margin: 0 auto;
-      padding: clamp(64px, 10vw, 126px) 0;
-    }
-
-    .section-tight {
-      padding-top: clamp(42px, 8vw, 90px);
-    }
-
-    .section-kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--accent);
-      font-size: 0.78rem;
-      font-weight: 850;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .section-kicker::before {
-      content: "";
-      width: 24px;
-      height: 2px;
-      border-radius: 999px;
-      background: currentColor;
-    }
-
-    .section-heading {
-      margin-top: 14px;
-      width: min(770px, 100%);
-      font-size: clamp(2.25rem, 6vw, 5.45rem);
-      line-height: 0.96;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .section-copy {
-      width: min(680px, 100%);
-      margin-top: 18px;
-      color: rgba(248, 250, 247, 0.68);
-      font-size: clamp(1rem, 1.8vw, 1.18rem);
-    }
-
-    .feature-grid {
-      margin-top: 42px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .feature-card {
-      min-height: 330px;
-      display: flex;
-      flex-direction: column;
-      padding: 26px;
-      border-radius: var(--radius);
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.035)),
-        var(--panel);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-      transition: transform 240ms var(--ease), border-color 240ms var(--ease), background 240ms var(--ease);
-    }
-
-    .feature-card::after {
-      content: "";
-      position: absolute;
-      inset: auto 18px 18px 18px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--feature), transparent);
-      opacity: 0.58;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(var(--feature-rgb), 0.46);
-      background:
-        linear-gradient(180deg, rgba(var(--feature-rgb), 0.12), rgba(255, 255, 255, 0.035)),
-        var(--panel);
-    }
-
-    .feature-icon {
-      width: 46px;
-      height: 46px;
-      display: grid;
-      place-items: center;
-      border-radius: 15px;
-      color: var(--feature);
-      background: rgba(var(--feature-rgb), 0.17);
-      border: 1px solid rgba(var(--feature-rgb), 0.34);
-      margin-bottom: 34px;
-      flex: 0 0 auto;
-    }
-
-    .feature-icon svg {
-      width: 22px;
-      height: 22px;
-      stroke-width: 2.1;
-    }
-
-    .feature-card h3 {
-      font-size: clamp(1.35rem, 2.4vw, 2rem);
-      line-height: 1.05;
-      font-weight: 850;
-      letter-spacing: 0;
-    }
-
-    .feature-card p {
-      margin-top: 14px;
-      color: rgba(248, 250, 247, 0.66);
-    }
-
-    .feature-card small {
-      display: block;
-      margin-top: auto;
-      padding-top: 24px;
-      color: rgba(248, 250, 247, 0.48);
-      font-weight: 750;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      font-size: 0.72rem;
-    }
-
-    .intelligence-section {
-      position: relative;
-      width: min(var(--max), calc(100% - 32px));
-      margin: clamp(14px, 4vw, 46px) auto clamp(42px, 8vw, 96px);
-      padding: clamp(54px, 8vw, 92px) 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .intelligence-section::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(115deg, rgba(221, 255, 0, 0.11), transparent 28%),
-        linear-gradient(245deg, rgba(133, 215, 244, 0.09), transparent 34%),
-        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 22px);
-      -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
-      mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
-      opacity: 0.62;
-    }
-
-    .intelligence-header {
-      position: relative;
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.58fr);
-      gap: clamp(28px, 6vw, 72px);
-      align-items: end;
-    }
-
-    .intelligence-intro {
-      color: rgba(248, 250, 247, 0.68);
-      font-size: clamp(1rem, 1.8vw, 1.15rem);
-      margin-bottom: 6px;
-    }
-
-    .intelligence-grid {
-      position: relative;
-      margin-top: clamp(38px, 6vw, 58px);
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .intelligence-card {
-      min-height: 660px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      padding: clamp(26px, 4vw, 38px);
-      border-radius: 28px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
-        var(--panel);
-      border: 1px solid rgba(255, 255, 255, 0.13);
-      box-shadow: var(--shadow);
-      transition: transform 260ms var(--ease), border-color 260ms var(--ease);
-    }
-
-    .intelligence-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(135deg, rgba(var(--intel-rgb), 0.18), transparent 38%),
-        linear-gradient(0deg, rgba(0, 0, 0, 0.36), transparent 46%);
-      pointer-events: none;
-    }
-
-    .intelligence-card:hover {
-      transform: translateY(-7px);
-      border-color: rgba(var(--intel-rgb), 0.42);
-    }
-
-    .intelligence-card>* {
-      position: relative;
-      z-index: 1;
-    }
-
-    .intelligence-label {
-      display: inline-flex;
-      width: fit-content;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      color: var(--intel);
-      background: rgba(var(--intel-rgb), 0.12);
-      border: 1px solid rgba(var(--intel-rgb), 0.28);
-      font-size: 0.76rem;
-      font-weight: 850;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .intelligence-label::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: currentColor;
-      box-shadow: 0 0 16px rgba(var(--intel-rgb), 0.34);
-    }
-
-    .intelligence-card h3 {
-      margin-top: 18px;
-      font-size: clamp(2rem, 4vw, 3.55rem);
-      line-height: 0.98;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .intelligence-card p {
-      margin-top: 16px;
-      color: rgba(248, 250, 247, 0.68);
-      font-size: clamp(1rem, 1.8vw, 1.12rem);
-    }
-
-    .intelligence-points {
-      margin-top: 24px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .intelligence-points span {
-      padding: 8px 10px;
-      border-radius: 999px;
-      color: rgba(248, 250, 247, 0.72);
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.11);
-      font-size: 0.8rem;
-      font-weight: 750;
-    }
-
-    .ai-phone-preview {
-      width: min(330px, 86%);
-      margin: clamp(30px, 5vw, 48px) auto 0;
-      padding: 9px;
-      border-radius: 34px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)),
-        #050505;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow:
-        0 34px 86px rgba(0, 0, 0, 0.62),
-        0 0 0 1px rgba(255, 155, 5, 0.06);
-      transform: rotate(-2.2deg);
-      transition: transform 260ms var(--ease);
-    }
-
-    .intelligence-card:hover .ai-phone-preview {
-      transform: translateY(-6px) rotate(-1deg);
-    }
-
-    .ai-phone-preview .screen {
-      border-radius: 25px;
-    }
-
-    .guidance-dashboard {
-      margin-top: clamp(30px, 5vw, 48px);
-      padding: 22px;
-      border-radius: 24px;
-      background:
-        linear-gradient(180deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1)),
-        rgba(0, 0, 0, 0.34);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    }
-
-    .guidance-topline {
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      align-items: start;
-      color: rgba(248, 250, 247, 0.58);
-      font-size: 0.85rem;
-      font-weight: 750;
-    }
-
-    .guidance-topline strong {
-      color: rgba(248, 250, 247, 0.88);
-      font-size: 0.95rem;
-    }
-
-    .guidance-value {
-      margin-top: 14px;
-      display: flex;
-      align-items: end;
-      gap: 10px;
-      color: var(--accent);
-      font-size: clamp(3rem, 7vw, 5.3rem);
-      line-height: 0.9;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .guidance-value span {
-      margin-bottom: 8px;
-      color: rgba(248, 250, 247, 0.56);
-      font-size: clamp(0.9rem, 1.7vw, 1.05rem);
-      font-weight: 800;
-    }
-
-    .guidance-range {
-      margin-top: 16px;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      color: rgba(248, 250, 247, 0.62);
-      font-size: 0.86rem;
-      font-weight: 700;
-    }
-
-    .guidance-meter {
-      height: 9px;
-      margin-top: 10px;
-      overflow: hidden;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .guidance-meter span {
-      display: block;
-      width: 68%;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, var(--accent), var(--blue));
-      box-shadow: 0 0 24px rgba(221, 255, 0, 0.18);
-    }
-
-    .guidance-macros {
-      margin-top: 16px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 9px;
-    }
-
-    .guidance-macro {
-      padding: 12px;
-      border-radius: 15px;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .guidance-macro strong {
-      display: block;
-      color: rgba(248, 250, 247, 0.92);
-      font-size: 1.04rem;
-      line-height: 1.1;
-    }
-
-    .guidance-macro span {
-      display: block;
-      margin-top: 3px;
-      color: rgba(248, 250, 247, 0.52);
-      font-size: 0.76rem;
-      font-weight: 750;
-      text-transform: uppercase;
-    }
-
-    .guidance-logic {
-      margin-top: 20px;
-      display: grid;
-      gap: 10px;
-    }
-
-    .guidance-step {
-      display: grid;
-      grid-template-columns: 34px 1fr;
-      gap: 12px;
-      align-items: start;
-      color: rgba(248, 250, 247, 0.68);
-      font-size: 0.95rem;
-    }
-
-    .guidance-step b {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      color: var(--accent-ink);
-      background: var(--accent);
-      font-size: 0.86rem;
-      font-weight: 900;
-    }
-
-    .privacy-band {
-      position: relative;
-      margin: clamp(28px, 7vw, 80px) 0;
-      padding: clamp(66px, 10vw, 128px) 0;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
-        linear-gradient(105deg, rgba(221, 255, 0, 0.09), rgba(133, 215, 244, 0.07) 48%, rgba(255, 255, 255, 0.02));
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-      overflow: hidden;
-    }
-
-    .privacy-band::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 16px);
-      opacity: 0.42;
-      -webkit-mask-image: linear-gradient(90deg, transparent, #000 24%, #000 76%, transparent);
-      mask-image: linear-gradient(90deg, transparent, #000 24%, #000 76%, transparent);
-    }
-
-    .privacy-inner {
-      position: relative;
-      width: min(var(--max), calc(100% - 32px));
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
-      gap: clamp(36px, 7vw, 88px);
-      align-items: center;
-    }
-
-    .privacy-heading {
-      margin-top: 14px;
-      font-size: clamp(2.55rem, 7vw, 6.8rem);
-      line-height: 0.92;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .privacy-copy {
-      margin-top: 22px;
-      max-width: 680px;
-      color: rgba(248, 250, 247, 0.7);
-      font-size: clamp(1.05rem, 2vw, 1.24rem);
-    }
-
-    .ownership-stack {
-      display: grid;
-      gap: 12px;
-    }
-
-    .ownership-row {
-      display: grid;
-      grid-template-columns: 48px 1fr;
-      gap: 14px;
-      align-items: start;
-      padding: 20px;
-      border-radius: 20px;
-      background: rgba(0, 0, 0, 0.38);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
-    }
-
-    .ownership-number {
-      width: 48px;
-      height: 48px;
-      display: grid;
-      place-items: center;
-      border-radius: 15px;
-      color: var(--accent-ink);
-      background: var(--accent);
-      font-weight: 900;
-      box-shadow: 0 18px 44px rgba(221, 255, 0, 0.16);
-    }
-
-    .ownership-row h3 {
-      font-size: 1.08rem;
-      font-weight: 850;
-      letter-spacing: 0;
-    }
-
-    .ownership-row p {
-      margin-top: 4px;
-      color: rgba(248, 250, 247, 0.62);
-      font-size: 0.98rem;
-    }
-
-    .showcase {
-      position: relative;
-      padding-bottom: clamp(70px, 12vw, 140px);
-    }
-
-    .showcase-header {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
-      gap: 32px;
-      align-items: end;
-    }
-
-    .showcase-note {
-      color: rgba(248, 250, 247, 0.66);
-      font-size: clamp(1rem, 1.8vw, 1.13rem);
-      margin-bottom: 6px;
-    }
-
-    .phone-row {
-      --row-scroll: 0;
-      margin-top: clamp(44px, 7vw, 76px);
-      display: grid;
-      grid-template-columns: 1fr 0.88fr 0.74fr;
-      gap: clamp(16px, 3vw, 38px);
-      align-items: center;
-      transform: translateY(calc(var(--row-scroll) * -0.035px));
-    }
-
-    .showcase-phone {
-      position: relative;
-      border-radius: 34px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)),
-        #050505;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow:
-        0 40px 90px rgba(0, 0, 0, 0.66),
-        0 0 0 1px rgba(221, 255, 0, 0.04);
-      padding: 10px;
-      transition: transform 260ms var(--ease), border-color 260ms var(--ease);
-    }
-
-    .showcase-phone:hover {
-      transform: translateY(-8px);
-      border-color: rgba(221, 255, 0, 0.3);
-    }
-
-    .showcase-phone:nth-child(2) {
-      transform: translateY(44px);
-    }
-
-    .showcase-phone:nth-child(2):hover {
-      transform: translateY(36px);
-    }
-
-    .showcase-phone:nth-child(3) {
-      transform: translateY(92px);
-    }
-
-    .showcase-phone:nth-child(3):hover {
-      transform: translateY(84px);
-    }
-
-    .screen {
-      aspect-ratio: 1080 / 2340;
-      overflow: hidden;
-      border-radius: 26px;
-      background: #000;
-    }
-
-    .screen img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .phone-caption {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 18px;
-      padding: 14px 14px 13px;
-      border-radius: 18px;
-      background: rgba(0, 0, 0, 0.66);
-      border: 1px solid rgba(255, 255, 255, 0.13);
-      -webkit-backdrop-filter: blur(16px);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.36);
-    }
-
-    .phone-caption strong {
-      display: block;
-      font-size: clamp(0.98rem, 1.7vw, 1.2rem);
-      line-height: 1.1;
-      letter-spacing: 0;
-    }
-
-    .phone-caption span {
-      display: block;
-      margin-top: 4px;
-      color: rgba(248, 250, 247, 0.64);
-      font-size: 0.9rem;
-    }
-
-    .open-section {
-      position: relative;
-      width: min(var(--max), calc(100% - 32px));
-      margin: clamp(42px, 8vw, 100px) auto 0;
-      padding: clamp(48px, 8vw, 76px) 0;
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      gap: clamp(30px, 6vw, 70px);
-      align-items: start;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .open-section h2 {
-      margin-top: 12px;
-      font-size: clamp(2.2rem, 5vw, 4.7rem);
-      line-height: 0.98;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .open-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .open-item {
-      padding: 22px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.11);
-    }
-
-    .open-item:first-child {
-      padding-top: 0;
-    }
-
-    .open-item:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .open-item h3 {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: clamp(1.16rem, 2vw, 1.42rem);
-      font-weight: 850;
-      letter-spacing: 0;
-    }
-
-    .open-item h3::before {
-      content: "";
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 18px rgba(221, 255, 0, 0.34);
-      flex: 0 0 auto;
-    }
-
-    .open-item p {
-      margin-top: 8px;
-      color: rgba(248, 250, 247, 0.62);
-    }
-
-    .site-footer {
-      width: min(var(--max), calc(100% - 32px));
-      margin: 0 auto;
-      padding: 44px 0 46px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 24px;
-      align-items: center;
-      color: rgba(248, 250, 247, 0.58);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      justify-content: end;
-    }
-
-    .footer-links a {
-      color: rgba(248, 250, 247, 0.76);
-      font-weight: 700;
-      transition: color 160ms ease;
-    }
-
-    .footer-links a:hover {
-      color: var(--accent);
-    }
-
-    .fine-print {
-      margin-top: 8px;
-      font-size: 0.9rem;
-      color: rgba(248, 250, 247, 0.46);
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(26px);
-      transition:
-        opacity 720ms var(--ease),
-        transform 720ms var(--ease);
-    }
-
-    .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .delay-1 {
-      transition-delay: 90ms;
-    }
-
-    .delay-2 {
-      transition-delay: 180ms;
-    }
-
-    .delay-3 {
-      transition-delay: 270ms;
-    }
-
-    @keyframes cue {
-      0% {
-        transform: translateY(0);
-        opacity: 1;
-      }
-
-      70% {
-        transform: translateY(18px);
-        opacity: 0.18;
-      }
-
-      100% {
-        transform: translateY(0);
-        opacity: 0;
-      }
-    }
-
-    @media (max-width: 980px) {
-      .nav-links a:not(.nav-priority) {
-        display: none;
-      }
-
-      .hero {
-        min-height: min(720px, calc(100vh - 116px));
-        min-height: min(720px, calc(100svh - 116px));
-      }
-
-      .device-home {
-        right: -16px;
-        top: 62px;
-        opacity: 0.48;
-      }
-
-      .device-workout {
-        left: -28px;
-        top: 150px;
-        opacity: 0.38;
-      }
-
-      .device-goals {
-        display: none;
-      }
-
-      .feature-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .intelligence-header,
-      .intelligence-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .intelligence-card {
-        min-height: auto;
-      }
-
-      .privacy-inner,
-      .showcase-header,
-      .open-section {
-        grid-template-columns: 1fr;
-      }
-
-      .phone-row {
-        grid-template-columns: repeat(3, minmax(235px, 1fr));
-        overflow-x: auto;
-        padding: 8px 16px 62px;
-        margin-left: -16px;
-        margin-right: -16px;
-        scroll-snap-type: x mandatory;
-        scrollbar-width: none;
-      }
-
-      .phone-row::-webkit-scrollbar {
-        display: none;
-      }
-
-      .showcase-phone {
-        scroll-snap-align: center;
-      }
-
-      .showcase-phone:nth-child(2),
-      .showcase-phone:nth-child(3),
-      .showcase-phone:nth-child(2):hover,
-      .showcase-phone:nth-child(3):hover {
-        transform: none;
-      }
-
-      .phone-caption {
-        position: static;
-        margin-top: 12px;
-      }
-    }
-
-    @media (max-width: 680px) {
-      .nav {
-        width: min(100% - 24px, var(--max));
-        height: 64px;
-      }
-
-      .brand>span:not(.brand-mark) {
-        display: none;
-      }
-
-      .nav-links {
-        font-size: 0.84rem;
-      }
-
-      .nav-links a {
-        padding: 9px 10px;
-      }
-
-      .hero {
-        min-height: min(660px, calc(100vh - 96px));
-        min-height: min(660px, calc(100svh - 96px));
-        padding: 92px 16px 62px;
-      }
-
-      .hero::before {
-        background:
-          linear-gradient(90deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.84)),
-          linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.64) 57%, #000 100%);
-      }
-
-      h1 {
-        font-size: clamp(3.25rem, 17vw, 4.9rem);
-      }
-
-      .hero-content {
-        width: min(100%, 340px);
-      }
-
-      .hero-statement {
-        width: min(100%, 330px);
-        font-size: clamp(1.75rem, 8.5vw, 2.5rem);
-        line-height: 1.02;
-      }
-
-      .hero-copy {
-        width: min(100%, 330px);
-        font-size: 0.98rem;
-        line-height: 1.48;
-      }
-
-      .hero-actions {
-        display: grid;
-        grid-template-columns: 1fr;
-        width: min(320px, 100%);
-        margin-left: auto;
-        margin-right: auto;
-      }
-
-      .button {
-        width: 100%;
-      }
-
-      .hero-points {
-        display: none;
-      }
-
-      .feature-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .feature-card {
-        min-height: 286px;
-      }
-
-      .intelligence-section {
-        width: min(100% - 24px, var(--max));
-        padding: 46px 0;
-      }
-
-      .intelligence-card {
-        border-radius: 24px;
-        padding: 22px;
-      }
-
-      .intelligence-card h3 {
-        font-size: clamp(1.8rem, 10vw, 2.8rem);
-      }
-
-      .ai-phone-preview {
-        width: min(268px, 100%);
-      }
-
-      .guidance-dashboard {
-        padding: 18px;
-      }
-
-      .guidance-topline,
-      .guidance-range {
-        flex-direction: column;
-        gap: 5px;
-      }
-
-      .guidance-macros {
-        grid-template-columns: 1fr;
-      }
-
-      .privacy-band {
-        padding: 56px 0;
-      }
-
-      .ownership-row {
-        grid-template-columns: 1fr;
-      }
-
-      .phone-row {
-        width: min(320px, 100%);
-        margin: clamp(34px, 9vw, 52px) auto 0;
-        padding: 0 0 10px;
-        grid-template-columns: 1fr;
-        gap: 22px;
-        overflow: visible;
-        scroll-snap-type: none;
-        transform: none !important;
-      }
-
-      .showcase-phone {
-        width: 100%;
-        margin: 0;
-        border-radius: 30px;
-        padding: 9px;
-        scroll-snap-align: none;
-      }
-
-      .showcase-phone:hover,
-      .showcase-phone:nth-child(2),
-      .showcase-phone:nth-child(3),
-      .showcase-phone:nth-child(2):hover,
-      .showcase-phone:nth-child(3):hover {
-        transform: none;
-      }
-
-      .showcase-phone .screen {
-        border-radius: 22px;
-      }
-
-      .phone-caption {
-        position: static;
-        margin-top: 10px;
-        padding: 14px;
-        border-radius: 18px;
-      }
-
-      .phone-caption strong {
-        font-size: 1rem;
-      }
-
-      .phone-caption span {
-        font-size: 0.9rem;
-        line-height: 1.42;
-      }
-
-      .site-footer {
-        grid-template-columns: 1fr;
-      }
-
-      .footer-links {
-        justify-content: start;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html {
-        scroll-behavior: auto;
-      }
-
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.001ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-        transition-duration: 0.001ms !important;
-      }
-
-      .reveal {
-        opacity: 1;
-        transform: none;
-      }
-
-      .hero-stage,
-      .hero-content,
-      .phone-row {
-        transform: none !important;
-      }
-    }
-
-    :focus-visible {
-      outline: 3px solid rgba(221, 255, 0, 0.86);
-      outline-offset: 4px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
 </head>
 
 <body>
@@ -1529,12 +36,41 @@
           <span>Train Libre</span>
         </a>
         <div class="nav-links">
-          <a href="#features">Features</a>
-          <a href="#intelligence">AI Guidance</a>
-          <a href="#privacy">Privacy</a>
-          <a href="#showcase">Showcase</a>
+          <a href="#features" data-i18n="nav_features">Features</a>
+          <a href="#intelligence" data-i18n="nav_guidance">AI Guidance</a>
+          <a href="#privacy" data-i18n="nav_privacy">Privacy</a>
+          <a href="#showcase" data-i18n="nav_showcase">Showcase</a>
           <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
             rel="noreferrer">GitHub</a>
+        </div>
+        <div class="nav-controls">
+          <button id="lang-toggle" class="control-btn" aria-label="Switch Language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+              </path>
+            </svg>
+          </button>
+          <button id="theme-toggle" class="control-btn" aria-label="Toggle Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
         </div>
       </nav>
     </header>
@@ -1558,37 +94,40 @@
         </div>
       </div>
 
-      <div class="hero-content reveal is-visible">
+      <div class="hero-content reveal">
         <div class="eyebrow">
           <span class="eyebrow-dot" aria-hidden="true"></span>
-          Offline-first fitness tracking
+          <span data-i18n="hero_eyebrow">Offline-first fitness tracking</span>
         </div>
         <h1 id="hero-title">Train Libre</h1>
-        <p class="hero-statement">Own every rep, meal, calorie, and recovery signal.</p>
-        <p class="hero-copy">A private, local-first app for structured workout logging, reviewable AI meal recognition,
+        <p class="hero-statement" data-i18n="hero_statement">Own every rep, meal, calorie, and recovery signal.</p>
+        <p class="hero-copy" data-i18n="hero_copy">A private, local-first app for structured workout logging, reviewable
+          AI meal recognition,
           adaptive calorie guidance, nutrition, hydration, measurements, sleep, pulse, and long-term progress without a
           mandatory cloud account.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="https://github.com/rfivesix/train-libre" target="_blank"
+          <a class="button button-primary" href="https://testflight.apple.com/join/VpG7r9z4" target="_blank"
             rel="noreferrer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path d="M9 19c-4 1.5-4-2.5-6-3m12 5v-3.8c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1-.3-3.4 1.2a11.7 11.7 0 0 0-6.2 0C6.6 2.5 5.6 2.8 5.6 2.8a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.2 9.2c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" />
+            <svg viewBox="0 0 384 512" fill="currentColor" width="20" height="20" style="margin-bottom: 2px;">
+              <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
             </svg>
-            GitHub
+            <span data-i18n="hero_cta_ios">iOS TestFlight Beta</span>
           </a>
-          <a class="button button-secondary" href="./privacy-policy/">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path d="M12 3 5 6v5c0 4.5 2.9 8.6 7 10 4.1-1.4 7-5.5 7-10V6l-7-3Z" />
-              <path d="m9.5 12 1.8 1.8 3.7-4" />
+          <a class="button button-secondary"
+            href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/train-libre/releases"
+            target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path
+                d="M17.523 15.3414c-.5511 0-.9996-.4486-.9996-.9997s.4485-.9997.9996-.9997c.5511 0 .9997.4486.9997.9997s-.4486.9997-.9997.9997zm-11.046 0c-.5511 0-.9997-.4486-.9997-.9997s.4486-.9997.9997-.9997c.5511 0 .9996.4486.9996.9997s-.4485.9997-.9996.9997zm11.445-5.8335l1.8844-3.264a.4545.4545 0 00-.1664-.6208.4545.4545 0 00-.6208.1664l-1.9239 3.3323a11.3328 11.3328 0 00-10.1924 0l-1.9239-3.3323a.4545.4545 0 00-.6208-.1664.4545.4545 0 00-.1664.6208l1.8844 3.264C3.125 11.037 1.306 13.524 1.05 16.3414h21.9c-.256-2.8174-2.075-5.3044-4.628-6.8335z" />
             </svg>
-            Privacy Policy
+            <span data-i18n="hero_cta_android">Android (Obtainium)</span>
           </a>
         </div>
         <div class="hero-points" aria-label="Product principles">
-          <span>AI meal recognition</span>
-          <span>Adaptive calorie guidance</span>
-          <span>Optional BYOK AI</span>
-          <span>Local data by default</span>
+          <span data-i18n="hero_point_1">AI meal recognition</span>
+          <span data-i18n="hero_point_2">Adaptive calorie guidance</span>
+          <span data-i18n="hero_point_3">Optional BYOK AI</span>
+          <span data-i18n="hero_point_4">Local data by default</span>
         </div>
       </div>
 
@@ -1599,86 +138,101 @@
 
     <main>
       <section class="section section-tight" id="features" aria-labelledby="features-title">
-        <div class="reveal is-visible">
-          <span class="section-kicker">Feature Highlights</span>
-          <h2 class="section-heading" id="features-title">Built for serious tracking without the noise.</h2>
-          <p class="section-copy">Train Libre keeps the daily surface calm and the underlying data rich, so you can log
+        <div class="reveal">
+          <span class="section-kicker" data-i18n="feat_kicker">Feature Highlights</span>
+          <h2 class="section-heading" id="features-title" data-i18n="feat_heading">Built for serious tracking without
+            the noise.</h2>
+          <p class="section-copy" data-i18n="feat_copy">Train Libre keeps the daily surface calm and the underlying data
+            rich, so you can log
             precisely, review honestly, and understand progress over time.</p>
         </div>
 
         <div class="feature-grid">
           <article class="feature-card reveal delay-1" style="--feature: var(--blue); --feature-rgb: 133, 215, 244;">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M4 8h3v8H4zM17 8h3v8h-3zM7 11h10v2H7zM2 10v4M22 10v4" />
               </svg>
             </div>
-            <h3>Workout logging that respects training.</h3>
-            <p>Log set by set with routines, warm-ups, working sets, failure sets, dropsets, reps, weight, and RIR.</p>
-            <small>Routines, history, session review</small>
+            <h3 data-i18n="f1_title">Workout logging that respects training.</h3>
+            <p data-i18n="f1_copy">Log set by set with routines, warm-ups, working sets, failure sets, dropsets, reps,
+              weight, and RIR.</p>
+            <small data-i18n="f1_small">Routines, history, session review</small>
           </article>
 
           <article class="feature-card reveal delay-2" style="--feature: var(--red); --feature-rgb: 245, 83, 83;">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M4 11h16M6 11v8h12v-8M8 11V7a4 4 0 0 1 8 0v4M9 15h.01M15 15h.01" />
               </svg>
             </div>
-            <h3>Nutrition, hydration, and supplements together.</h3>
-            <p>Track meals, calories, macros, fluids, caffeine, creatine, and custom supplements in one local journal.
+            <h3 data-i18n="f2_title">Nutrition, hydration, and supplements together.</h3>
+            <p data-i18n="f2_copy">Track meals, calories, macros, fluids, caffeine, creatine, and custom supplements in
+              one local journal.
             </p>
-            <small>Food, water, macros, doses</small>
+            <small data-i18n="f2_small">Food, water, macros, doses</small>
           </article>
 
           <article class="feature-card reveal delay-3" style="--feature: var(--purple); --feature-rgb: 183, 101, 201;">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M4 19V5M4 19h16M8 16l3-4 3 2 4-7" />
                 <path d="M8 16h.01M11 12h.01M14 14h.01M18 7h.01" />
               </svg>
             </div>
-            <h3>Body data with context.</h3>
-            <p>Log bodyweight and measurements, then read them beside nutrition trends and training consistency.</p>
-            <small>Measurements, trends, goals</small>
+            <h3 data-i18n="f3_title">Body data with context.</h3>
+            <p data-i18n="f3_copy">Log bodyweight and measurements, then read them beside nutrition trends and training
+              consistency.</p>
+            <small data-i18n="f3_small">Measurements, trends, goals</small>
           </article>
 
           <article class="feature-card reveal delay-1" style="--feature: var(--green); --feature-rgb: 102, 200, 109;">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M12 21a8 8 0 0 0 8-8c0-4-3-7-8-10-5 3-8 6-8 10a8 8 0 0 0 8 8Z" />
                 <path d="M8 13h2l1.2-3 2.1 6 1.4-3H16" />
               </svg>
             </div>
-            <h3>Recovery, sleep, steps, and pulse insights.</h3>
-            <p>Use sleep, steps, heart-rate context, and recovery views where your device data is available.</p>
-            <small>Training guidance, not diagnosis</small>
+            <h3 data-i18n="f4_title">Recovery, sleep, steps, and pulse insights.</h3>
+            <p data-i18n="f4_copy">Use sleep, steps, heart-rate context, and recovery views where your device data is
+              available.</p>
+            <small data-i18n="f4_small">Training guidance, not diagnosis</small>
           </article>
 
           <article class="feature-card reveal delay-2" style="--feature: var(--accent); --feature-rgb: 221, 255, 0;">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M12 3v12" />
                 <path d="m7 10 5 5 5-5" />
                 <path d="M5 19h14" />
               </svg>
             </div>
-            <h3>Backups, export, and ownership.</h3>
-            <p>Create local backups, import and export your data, and use one-way health export without making the
+            <h3 data-i18n="f5_title">Backups, export, and ownership.</h3>
+            <p data-i18n="f5_copy">Create local backups, import and export your data, and use one-way health export
+              without making the
               cloud your source of truth.</p>
-            <small>Local-first control</small>
+            <small data-i18n="f5_small">Local-first control</small>
           </article>
 
           <article class="feature-card reveal delay-3" style="--feature: var(--orange); --feature-rgb: 255, 155, 5;">
             <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path
+                  d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
                 <circle cx="12" cy="12" r="3.5" />
               </svg>
             </div>
-            <h3>AI meal recognition that stays reviewable.</h3>
-            <p>Capture meals from photos or text, then review portions, food matches, warnings, and locally computed
+            <h3 data-i18n="f6_title">AI meal recognition that stays reviewable.</h3>
+            <p data-i18n="f6_copy">Capture meals from photos or text, then review portions, food matches, warnings, and
+              locally computed
               nutrition before saving.</p>
-            <small>Photo, text, grams, review</small>
+            <small data-i18n="f6_small">Photo, text, grams, review</small>
           </article>
         </div>
       </section>
@@ -1686,25 +240,28 @@
       <section class="intelligence-section" id="intelligence" aria-labelledby="intelligence-title">
         <div class="intelligence-header reveal">
           <div>
-            <span class="section-kicker">AI &amp; Diet Guidance</span>
-            <h2 class="section-heading" id="intelligence-title">Helpful intelligence, kept accountable.</h2>
+            <span class="section-kicker" data-i18n="intel_kicker">AI &amp; Diet Guidance</span>
+            <h2 class="section-heading" id="intelligence-title" data-i18n="intel_heading">Helpful intelligence, kept
+              accountable.</h2>
           </div>
-          <p class="intelligence-intro">Train Libre uses AI where it removes friction, then brings the result back into
+          <p class="intelligence-intro" data-i18n="intel_intro">Train Libre uses AI where it removes friction, then
+            brings the result back into
             the app's local data model with review, validation, confidence, and explicit user control.</p>
         </div>
 
         <div class="intelligence-grid">
           <article class="intelligence-card reveal delay-1" style="--intel: var(--orange); --intel-rgb: 255, 155, 5;">
-            <span class="intelligence-label">AI meal recognition</span>
-            <h3>From plate to log, with a checkpoint.</h3>
-            <p>Snap photos or describe a meal. Train Libre asks your chosen AI provider for food names and gram
+            <span class="intelligence-label" data-i18n="intel_c1_label">AI meal recognition</span>
+            <h3 data-i18n="intel_c1_title">From plate to log, with a checkpoint.</h3>
+            <p data-i18n="intel_c1_copy">Snap photos or describe a meal. Train Libre asks your chosen AI provider for
+              food names and gram
               estimates, then matches them against the local food database and rebuilds calories and macros inside the
               app.</p>
             <div class="intelligence-points" aria-label="AI meal recognition details">
-              <span>Photo and text capture</span>
-              <span>Gram estimates</span>
-              <span>Local nutrition totals</span>
-              <span>Editable review</span>
+              <span data-i18n="intel_c1_p1">Photo and text capture</span>
+              <span data-i18n="intel_c1_p2">Gram estimates</span>
+              <span data-i18n="intel_c1_p3">Local nutrition totals</span>
+              <span data-i18n="intel_c1_p4">Editable review</span>
             </div>
             <div class="ai-phone-preview">
               <div class="screen">
@@ -1716,43 +273,44 @@
           </article>
 
           <article class="intelligence-card reveal delay-2" style="--intel: var(--accent); --intel-rgb: 221, 255, 0;">
-            <span class="intelligence-label">Calorie estimation</span>
-            <h3>Diet targets that adapt to your real trend.</h3>
-            <p>Train Libre estimates maintenance calories from your profile, logged intake, and smoothed bodyweight
+            <span class="intelligence-label" data-i18n="intel_c2_label">Calorie estimation</span>
+            <h3 data-i18n="intel_c2_title">Diet targets that adapt to your real trend.</h3>
+            <p data-i18n="intel_c2_copy">Train Libre estimates maintenance calories from your profile, logged intake,
+              and smoothed bodyweight
               trend, then turns that estimate into weekly calorie and macro targets you can apply when ready.</p>
             <div class="intelligence-points" aria-label="Adaptive calorie guidance details">
-              <span>Weekly recommendation</span>
-              <span>Confidence range</span>
-              <span>Quality warnings</span>
-              <span>Manual apply</span>
+              <span data-i18n="intel_c2_p1">Weekly recommendation</span>
+              <span data-i18n="intel_c2_p2">Confidence range</span>
+              <span data-i18n="intel_c2_p3">Quality warnings</span>
+              <span data-i18n="intel_c2_p4">Manual apply</span>
             </div>
 
             <div class="guidance-dashboard" aria-label="Illustrative adaptive calorie guidance preview">
               <div class="guidance-topline">
                 <div>
-                  <strong>Estimated maintenance</strong><br>
-                  Profile prior + recent logs
+                  <strong data-i18n="dash_maintenance">Estimated maintenance</strong><br>
+                  <span data-i18n="dash_maintenance_copy">Profile prior + recent logs</span>
                 </div>
-                <div>Fresh this week</div>
+                <div data-i18n="dash_fresh">Fresh this week</div>
               </div>
-              <div class="guidance-value">2640 <span>kcal/day</span></div>
+              <div class="guidance-value">2640 <span data-i18n="dash_kcal">kcal/day</span></div>
               <div class="guidance-range">
-                <span>Likely range 2480-2800</span>
-                <span>Medium confidence</span>
+                <span data-i18n="dash_range">Likely range 2480-2800</span>
+                <span data-i18n="dash_confidence">Medium confidence</span>
               </div>
               <div class="guidance-meter" aria-hidden="true"><span></span></div>
               <div class="guidance-macros">
                 <div class="guidance-macro">
                   <strong>2320</strong>
-                  <span>target kcal</span>
+                  <span data-i18n="macro_kcal">target kcal</span>
                 </div>
                 <div class="guidance-macro">
                   <strong>164g</strong>
-                  <span>protein</span>
+                  <span data-i18n="macro_protein">protein</span>
                 </div>
                 <div class="guidance-macro">
                   <strong>275g</strong>
-                  <span>carbs</span>
+                  <span data-i18n="macro_carbs">carbs</span>
                 </div>
               </div>
             </div>
@@ -1760,16 +318,19 @@
             <div class="guidance-logic">
               <div class="guidance-step">
                 <b>1</b>
-                <span>Smoothed weight trends reduce day-to-day scale noise before calories are adjusted.</span>
+                <span data-i18n="step1">Smoothed weight trends reduce day-to-day scale noise before calories are
+                  adjusted.</span>
               </div>
               <div class="guidance-step">
                 <b>2</b>
-                <span>Sparse logs, unresolved foods, and early diet-phase swings widen uncertainty instead of
+                <span data-i18n="step2">Sparse logs, unresolved foods, and early diet-phase swings widen uncertainty
+                  instead of
                   oversteering.</span>
               </div>
               <div class="guidance-step">
                 <b>3</b>
-                <span>Recommendations show warnings and never replace your active goals until you apply them.</span>
+                <span data-i18n="step3">Recommendations show warnings and never replace your active goals until you
+                  apply them.</span>
               </div>
             </div>
           </article>
@@ -1779,9 +340,10 @@
       <section class="privacy-band" id="privacy" aria-labelledby="privacy-title">
         <div class="privacy-inner">
           <div class="reveal">
-            <span class="section-kicker">Privacy &amp; Ownership</span>
-            <h2 class="privacy-heading" id="privacy-title">Your data starts local.</h2>
-            <p class="privacy-copy">Train Libre is offline-first. Your tracking data is handled locally by default, and
+            <span class="section-kicker" data-i18n="priv_kicker">Privacy &amp; Ownership</span>
+            <h2 class="privacy-heading" id="privacy-title" data-i18n="priv_heading">Your data starts local.</h2>
+            <p class="privacy-copy" data-i18n="priv_copy">Train Libre is offline-first. Your tracking data is handled
+              locally by default, and
               there is no mandatory Train Libre cloud account. Sharing, export, health integrations, catalog refreshes,
               AI meal recognition, and provider calls happen only through features you choose to use.</p>
           </div>
@@ -1789,23 +351,26 @@
             <article class="ownership-row reveal delay-1">
               <div class="ownership-number" aria-hidden="true">1</div>
               <div>
-                <h3>Local by default</h3>
-                <p>Workouts, meals, measurements, and app state are designed around device-local storage.</p>
+                <h3 data-i18n="priv_c1_title">Local by default</h3>
+                <p data-i18n="priv_c1_copy">Workouts, meals, measurements, and app state are designed around device-local
+                  storage.</p>
               </div>
             </article>
             <article class="ownership-row reveal delay-2">
               <div class="ownership-number" aria-hidden="true">2</div>
               <div>
-                <h3>Portable when needed</h3>
-                <p>Backups, imports, exports, and share sheets make data movable without turning it into a hosted
+                <h3 data-i18n="priv_c2_title">Portable when needed</h3>
+                <p data-i18n="priv_c2_copy">Backups, imports, exports, and share sheets make data movable without
+                  turning it into a hosted
                   account.</p>
               </div>
             </article>
             <article class="ownership-row reveal delay-3">
               <div class="ownership-number" aria-hidden="true">3</div>
               <div>
-                <h3>Clear boundaries</h3>
-                <p>Optional AI and health features are separate choices, with your API key and platform permissions in
+                <h3 data-i18n="priv_c3_title">Clear boundaries</h3>
+                <p data-i18n="priv_c3_copy">Optional AI and health features are separate choices, with your API key and
+                  platform permissions in
                   your control.</p>
               </div>
             </article>
@@ -1816,10 +381,12 @@
       <section class="section showcase" id="showcase" aria-labelledby="showcase-title">
         <div class="showcase-header reveal">
           <div>
-            <span class="section-kicker">Product Showcase</span>
-            <h2 class="section-heading" id="showcase-title">The actual app, framed with care.</h2>
+            <span class="section-kicker" data-i18n="show_kicker">Product Showcase</span>
+            <h2 class="section-heading" id="showcase-title" data-i18n="show_heading">The actual app, framed with care.
+            </h2>
           </div>
-          <p class="showcase-note">Dark surfaces, bold typography, glass controls, and restrained color accents carry
+          <p class="showcase-note" data-i18n="show_note">Dark surfaces, bold typography, glass controls, and restrained
+            color accents carry
             the same visual language from logging to AI capture to training review.</p>
         </div>
 
@@ -1831,8 +398,8 @@
                 alt="Train Libre dark-mode diary dashboard with nutrition, hydration, supplements, steps, and meals.">
             </div>
             <figcaption class="phone-caption">
-              <strong>Daily diary</strong>
-              <span>Nutrition, hydration, supplements, steps, and meals in one calm view.</span>
+              <strong data-i18n="show_c1_title">Daily diary</strong>
+              <span data-i18n="show_c1_copy">Nutrition, hydration, supplements, steps, and meals in one calm view.</span>
             </figcaption>
           </figure>
 
@@ -1843,8 +410,8 @@
                 alt="Train Libre live workout screen showing lower body training, duration, volume, sets, RIR, and rest timing.">
             </div>
             <figcaption class="phone-caption">
-              <strong>Live workout</strong>
-              <span>Set-level logging with RIR, rest timing, and session progress.</span>
+              <strong data-i18n="show_c2_title">Live workout</strong>
+              <span data-i18n="show_c2_copy">Set-level logging with RIR, rest timing, and session progress.</span>
             </figcaption>
           </figure>
 
@@ -1855,8 +422,9 @@
                 alt="Train Libre AI Meal Capture screen showing meal photos, text input, and an Analyze action.">
             </div>
             <figcaption class="phone-caption">
-              <strong>AI meal capture</strong>
-              <span>Photo or text input becomes reviewable food entries, not a black-box save.</span>
+              <strong data-i18n="show_c3_title">AI meal capture</strong>
+              <span data-i18n="show_c3_copy">Photo or text input becomes reviewable food entries, not a black-box
+                save.</span>
             </figcaption>
           </figure>
         </div>
@@ -1864,25 +432,29 @@
 
       <section class="open-section" aria-labelledby="open-title">
         <div class="reveal">
-          <span class="section-kicker">Open &amp; Transparent</span>
-          <h2 id="open-title">Public code. Public catalogs. Private logs.</h2>
-          <p class="section-copy">Train Libre is available on GitHub and built around understandable data flows rather
+          <span class="section-kicker" data-i18n="open_kicker">Open &amp; Transparent</span>
+          <h2 id="open-title" data-i18n="open_heading">Public code. Public catalogs. Private logs.</h2>
+          <p class="section-copy" data-i18n="open_copy">Train Libre is available on GitHub and built around
+            understandable data flows rather
             than opaque tracking loops.</p>
         </div>
         <div class="open-list">
           <article class="open-item reveal delay-1">
-            <h3>Developed in public</h3>
-            <p>The project source is available on GitHub, with app behavior, catalog tooling, backup logic, and privacy
+            <h3 data-i18n="open_l1_title">Developed in public</h3>
+            <p data-i18n="open_l1_copy">The project source is available on GitHub, with app behavior, catalog tooling,
+              backup logic, and privacy
               boundaries visible in the repository.</p>
           </article>
           <article class="open-item reveal delay-2">
-            <h3>Open catalog integrations</h3>
-            <p>Food and exercise coverage is grounded in public sources, including Open Food Facts and wger-based
+            <h3 data-i18n="open_l2_title">Open catalog integrations</h3>
+            <p data-i18n="open_l2_copy">Food and exercise coverage is grounded in public sources, including Open Food
+              Facts and wger-based
               catalog data.</p>
           </article>
           <article class="open-item reveal delay-3">
-            <h3>Transparent analytics</h3>
-            <p>Progress, recovery, consistency, and nutrition insights are meant to be readable, practical, and grounded
+            <h3 data-i18n="open_l3_title">Transparent analytics</h3>
+            <p data-i18n="open_l3_copy">Progress, recovery, consistency, and nutrition insights are meant to be
+              readable, practical, and grounded
               in the data you logged.</p>
           </article>
         </div>
@@ -1900,68 +472,19 @@
           </span>
           <span>Train Libre</span>
         </a>
-        <p class="fine-print">Fitness, nutrition, recovery, and pulse features are for personal tracking and training
+        <p class="fine-print" data-i18n="footer_medical">Fitness, nutrition, recovery, and pulse features are for
+          personal tracking and training
           context, not medical diagnosis or treatment.</p>
       </div>
       <div class="footer-links">
-        <a href="./privacy-policy/">Privacy Policy</a>
+        <a href="./privacy-policy/" data-i18n="footer_privacy">Privacy Policy</a>
+        <a href="./impressum.html" data-i18n="footer_imprint">Imprint</a>
         <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </footer>
   </div>
 
-  <script>
-    (() => {
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      document.querySelectorAll("img[data-fallback-src]").forEach((image) => {
-        image.addEventListener("error", () => {
-          if (image.dataset.fallbackLoaded === "true") return;
-          image.dataset.fallbackLoaded = "true";
-          image.src = image.dataset.fallbackSrc;
-        });
-      });
-
-      const revealTargets = document.querySelectorAll(".reveal");
-      if ("IntersectionObserver" in window && !reduceMotion) {
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
-              observer.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.16, rootMargin: "0px 0px -8% 0px" });
-
-        revealTargets.forEach((target) => observer.observe(target));
-      } else {
-        revealTargets.forEach((target) => target.classList.add("is-visible"));
-      }
-
-      if (!reduceMotion) {
-        const heroStage = document.querySelector(".hero-stage");
-        const heroContent = document.querySelector(".hero-content");
-        const phoneRow = document.querySelector(".phone-row");
-
-        window.addEventListener("pointermove", (event) => {
-          const mx = (event.clientX / window.innerWidth - 0.5).toFixed(3);
-          const my = (event.clientY / window.innerHeight - 0.5).toFixed(3);
-          heroStage?.style.setProperty("--mx", mx);
-          heroStage?.style.setProperty("--my", my);
-        }, { passive: true });
-
-        const syncScroll = () => {
-          const y = Math.min(window.scrollY, 520);
-          heroStage?.style.setProperty("--scroll", y.toFixed(0));
-          heroContent?.style.setProperty("--hero-copy-scroll", y.toFixed(0));
-          phoneRow?.style.setProperty("--row-scroll", Math.max(0, window.scrollY - phoneRow.offsetTop + 650).toFixed(0));
-        };
-
-        syncScroll();
-        window.addEventListener("scroll", syncScroll, { passive: true });
-      }
-    })();
-  </script>
+  <script src="script.js"></script>
 </body>
 
 </html>

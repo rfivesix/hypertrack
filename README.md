@@ -1,53 +1,25 @@
-
 # Train Libre
+
 Train Libre is an offline-first fitness app for **workouts, nutrition, analytics, sleep, steps, measurements, and supplements**.
 
-It is designed primarily for **experienced lifters and gym-focused athletes** who want structured tracking, clear long-term progress analysis, and practical recommendations **without gamification**. Train Libre focuses on **privacy-friendly local data handling**, **transparent analytics**, and features that are intended to be understandable, evidence-informed, and mathematically grounded where appropriate. It can be used as a simple logging app but its main goal is to go beyond logging without becoming noisy, gimmicky, or opaque.
+Designed for experienced lifters and athletes, it provides structured tracking and long-term progress analysis without gamification. Train Libre prioritizes **privacy**, **local data ownership**, and **transparent analytics**.
 
-## Install
+## Download & Install
 
 <table align="center">
   <tr>
-    <td align="center" valign="middle" width="420">
-      <a href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo7lpaRmW36htMaT8R6q4qOQlJ3A5-wvvdJg&s">
+    <td align="center" valign="middle" width="300">
+      <a href="https://testflight.apple.com/join/VpG7r9z4">
         <img
           src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
           alt="Download on the App Store"
           width="100%"
         />
       </a>
+      <br><sub><b>iOS Public TestFlight Beta</b></sub>
     </td>
-    <td width="28"></td>
-    <td align="center" valign="middle" width="420">
-      <a href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo7lpaRmW36htMaT8R6q4qOQlJ3A5-wvvdJg&s">
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-          alt="Get it on Google Play"
-          width="100%"
-        />
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="3" align="center">
-      <sub><b>Official app stores</b></sub>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="3" height="18"></td>
-  </tr>
-  <tr>
-    <td align="center" valign="middle" width="420">
-      <a href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo7lpaRmW36htMaT8R6q4qOQlJ3A5-wvvdJg&s">
-        <img
-          src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-          alt="Get it on F-Droid"
-          width="100%"
-        />
-      </a>
-    </td>
-    <td width="28"></td>
-    <td align="center" valign="middle" width="420">
+    <td width="50"></td>
+    <td align="center" valign="middle" width="300">
       <a href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/rfivesix/train-libre/releases">
         <img
           src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png"
@@ -55,122 +27,49 @@ It is designed primarily for **experienced lifters and gym-focused athletes** wh
           width="100%"
         />
       </a>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="3" align="center">
-      <sub><b>Alternative Android distribution</b></sub>
+      <br><sub><b>Android (via Obtainium)</b></sub>
     </td>
   </tr>
 </table>
 
-## Platform support
+*Google Play release is currently not available.*
 
-Train Libre is a Flutter app with active mobile targets:
+## Platform Support
 
-- iOS
-- Android
+Train Libre is built with Flutter and supports:
+- **iOS** (Active)
+- **Android** (Active)
 
-Desktop platform folders are present for Flutter compatibility but are not the
-primary production targets.
+## Key Features
 
-## Highlights
+- **Workout Tracking:** Structured sets (warm-up, failure, dropsets), history, and session reviews.
+- **Nutrition:** Calorie and macro tracking with adaptive weekly guidance.
+- **AI Meal Features (Optional):** AI-assisted meal capture via BYOK (Bring Your Own Key) setup. Disabled by default.
+- **Analytics:** Deep insights into performance, volume, recovery, and trends.
+- **Sleep & Steps:** Integration of recovery and activity context from system health services.
+- **Supplements:** Track caffeine, creatine, and custom supplements.
+- **Local Data:** One-way export to Apple Health and Google Health Connect.
 
-- **Workout tracking** with structured sets, history, and session review
-- **Nutrition tracking** with calories, macros, and adaptive weekly intake guidance
-- **Statistics and analytics** for performance, consistency, muscle volume, recovery, and body/nutrition trends
-- **Sleep and steps integration** for broader recovery and activity context
-- **Supplement tracking**, including caffeine, creatine, and custom supplements
-- **Offline-first local data handling**
-- **One-way export** to Apple Health and Google Health Connect
-- **Optional AI meal features** with BYOK setup  
-  - AI is **disabled by default**
-  - no mandatory cloud account
-  - no provider-managed in-app billing flow
+## Privacy & Philosophy
 
-## Core features
-
-### Workouts
-- Log full workout sessions
-- Track exercises set by set
-- Support warm-up, standard, failure, and dropset-style set logging
-- Track reps, weight, and RIR
-- Review workout history and post-workout summaries
-- View workout heart-rate summaries and workout-detail heart-rate charts where data is available
-
-### Nutrition
-- Log foods, meals, and nutrition entries
-- Track calories and core macros
-- Track additional nutrition values such as fiber, sugar, and salt/sodium where available
-- Use adaptive weekly nutrition recommendations based on the current Bayesian estimator
-- Use optional AI-assisted meal capture with your own API key
-- Export aggregate nutrition data to Apple Health and Google Health Connect
-
-### Statistics
-- Performance and PR-oriented views
-- Consistency tracking
-- Muscle-volume-related analysis
-- Recovery-focused insights
-- Bodyweight and calorie trend analysis
-- Sleep and steps context inside the statistics area
-
-### Sleep and steps
-- Import and aggregate step data
-- Import, process, and visualize sleep data
-- Sleep day, week, and month views
-- Sleep detail screens and scoring
-- Sleep and steps integration into the broader analytics experience
-
-### Measurements
-- Log bodyweight and body measurements
-- Track changes over time in charts
-- Export supported measurements to Apple Health and Google Health Connect
-
-### Supplements
-- Track caffeine and creatine
-- Track custom supplements
-- Review supplement intake over time
-
-## Health integrations
-
-Train Libre supports **one-way export** to:
-
-- **Apple Health**
-- **Google Health Connect**
-
-This includes supported app-recorded data such as:
-- measurements
-- aggregate nutrition
-- hydration
-- workout sessions
-
-Train Libre remains the authoritative record for its own tracking and analytics.
-
-## Privacy and local-first philosophy
-
-- Train Libre is **offline-first**
-- app data is handled locally by default
-- AI meal features are **optional** and **disabled by default**
-- AI usage is **BYOK only** (bring your own API key)
-- optional AI recommendation history/context sharing is a separate opt-in
-- no mandatory cloud account is required to use the app
+- **Offline-First:** Your data stays on your device by default.
+- **No Accounts:** No mandatory cloud account or registration required.
+- **Transparency:** Open-source and avoids opaque tracking or gamification.
+- **BYOK AI:** Optional AI features require your own API key; no data is sent to AI providers unless you opt-in.
 
 ## Documentation
 
 - [Project Overview](documentation/overview.md)
-- [AI Meal Features Architecture](documentation/ai_meal_features_architecture.md)
-- [Adaptive Nutrition Recommendation](documentation/adaptive_nutrition_recommendation_current_state.md)
-- [Statistics Module](documentation/statistics_module.md)
 - [System Architecture](documentation/architecture.md)
 - [Data Models & Storage](documentation/data_models_and_storage.md)
-- [Sleep Module](documentation/sleep/sleep_current_state.md)
-- [Health Steps Integration](documentation/health_steps.md)
-- [Health Export](documentation/health_export_one_way.md)
+- [Statistics & Analytics](documentation/statistics_module.md)
+- [Adaptive Nutrition Recommendation](documentation/adaptive_nutrition_recommendation_current_state.md)
+- [AI Meal Features Architecture](documentation/ai_meal_features_architecture.md)
 
 ## Credits
 
-- **[Open Food Facts](https://openfoodfacts.org/)** for food database coverage
-- **[wger](https://github.com/wger-project/wger)** for the workout database foundation
+- **[Open Food Facts](https://openfoodfacts.org/)** for food database coverage.
+- **[wger](https://github.com/wger-project/wger)** for the workout database foundation.
 
 ## License
 
