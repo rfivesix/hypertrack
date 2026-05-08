@@ -1126,19 +1126,19 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         return Wrap(
           children: <Widget>[
             ListTile(
-              title: const Text('Normal'),
+              title: Text(AppLocalizations.of(context)!.set_type_normal),
               onTap: () => _changeSetType(setLogId, 'normal'),
             ),
             ListTile(
-              title: const Text('Warmup'),
+              title: Text(AppLocalizations.of(context)!.set_type_warmup),
               onTap: () => _changeSetType(setLogId, 'warmup'),
             ),
             ListTile(
-              title: const Text('Failure'),
+              title: Text(AppLocalizations.of(context)!.set_type_failure),
               onTap: () => _changeSetType(setLogId, 'failure'),
             ),
             ListTile(
-              title: const Text('Dropset'),
+              title: Text(AppLocalizations.of(context)!.set_type_dropset),
               onTap: () => _changeSetType(setLogId, 'dropset'),
             ),
           ],

@@ -1092,7 +1092,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
                 SizedBox(width: 12),
-                Text('Syncing steps...'),
+                Text(AppLocalizations.of(context)!.diarySyncingSteps),
               ],
             ),
           ),
@@ -1148,7 +1148,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
                 SizedBox(width: 12),
-                Text('Loading sleep...'),
+                Text(AppLocalizations.of(context)!.diaryLoadingSleep),
               ],
             ),
           ),
@@ -1583,10 +1583,12 @@ class DiaryScreenState extends State<DiaryScreen> {
           subtitle: Builder(
             builder: (ctx) {
               final l10n = AppLocalizations.of(ctx)!;
-              return Text('${entry.quantityInMl}ml · ${l10n.sugar}: ${totalSugar}g · ${l10n.supplement_caffeine}: ${totalCaffeine}mg');
+              return Text(
+                '${entry.quantityInMl}${l10n.unit_milliliters} · ${l10n.sugar}: ${totalSugar}${l10n.unit_grams} · ${l10n.supplement_caffeine}: ${totalCaffeine}${l10n.unit_milligrams}',
+              );
             },
           ),
-          trailing: Text('${entry.kcal ?? 0} kcal'),
+          trailing: Text('${entry.kcal ?? 0} ${l10n.unit_kcal}'),
         ),
       ),
     );
@@ -1625,8 +1627,10 @@ class DiaryScreenState extends State<DiaryScreen> {
       child: SummaryCard(
         child: ListTile(
           title: Text(trackedItem.item.name),
-          subtitle: Text("${trackedItem.entry.quantityInGrams}g"),
-          trailing: Text("${trackedItem.calculatedCalories} kcal"),
+          subtitle: Text(
+            '${trackedItem.entry.quantityInGrams}${l10n.unit_grams}',
+          ),
+          trailing: Text('${trackedItem.calculatedCalories} ${l10n.unit_kcal}'),
           onTap: () {
             Navigator.of(context)
                 .push(

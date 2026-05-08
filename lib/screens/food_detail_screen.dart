@@ -412,14 +412,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                           ElevatedButton.icon(
                             onPressed: _saveDevEdits,
                             icon: const Icon(Icons.save),
-                            label: const Text('Speichern'),
+                            label: Text(l10n.save),
                           ),
                           const SizedBox(width: 12),
                           TextButton.icon(
                             onPressed: () =>
                                 setState(() => _devEditing = false),
                             icon: const Icon(Icons.close),
-                            label: const Text('Fertig'),
+                            label: Text(l10n.doneButtonLabel),
                           ),
                           const Spacer(),
                           IconButton(

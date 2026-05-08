@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:train_libre/generated/app_localizations.dart';
 
 import '../../../data/database_helper.dart';
 import '../../../services/health/steps_sync_service.dart';
@@ -59,7 +60,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   MonthStepsAggregation? _monthData;
   DateTime? _lastUpdatedAtUtc;
   int _targetSteps = StepsSyncService.defaultStepsGoal;
-  String _stepsProviderName = 'Local';
+  String _stepsProviderRaw = 'local';
 
   @override
   void initState() {
@@ -92,7 +93,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
       }
       _lastUpdatedAtUtc = await _repository.getLastUpdatedAt();
       _targetSteps = await targetStepsFuture;
-      _stepsProviderName = await providerNameFuture;
+      _stepsProviderRaw = await providerNameFuture;
       if (!mounted) return;
       setState(() => _isLoading = false);
     } catch (e) {
@@ -104,9 +105,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
 
   Future<String> _loadProviderName() async {
     final providerFilter = await StepsSyncService().getProviderFilter();
-    return _providerDisplayName(
-      StepsSyncService.providerFilterToRaw(providerFilter),
-    );
+    return StepsSyncService.providerFilterToRaw(providerFilter);
   }
 
   void _onScopeChanged(StepsScope nextScope) {
@@ -194,7 +193,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
           IconButton(
             onPressed: () => _shiftPeriod(-1),
             icon: const Icon(Icons.chevron_left),
-            tooltip: 'Previous',
+            tooltip: AppLocalizations.of(context)!.stepsModulePrevious,
           ),
           Expanded(
             child: Text(
@@ -208,7 +207,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
           IconButton(
             onPressed: canForward ? () => _shiftPeriod(1) : null,
             icon: const Icon(Icons.chevron_right),
-            tooltip: 'Next',
+            tooltip: AppLocalizations.of(context)!.stepsModuleNext,
           ),
         ],
       ),
@@ -221,7 +220,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
     final showSummaryCard = _scope == StepsScope.month;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const GlobalAppBar(title: 'Steps'),
+      appBar: GlobalAppBar(title: AppLocalizations.of(context)!.steps),
       body: Padding(
         padding: DesignConstants.screenPadding.copyWith(
           top: DesignConstants.screenPadding.top + topPadding,
@@ -283,13 +282,14 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   }
 
   Widget _buildScopeSummaryCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final localeCode = Localizations.localeOf(
       context,
     ).languageCode.toLowerCase();
-    final isDe = localeCode == 'de';
-    final title = isDe ? 'Schritte' : 'Steps';
-    final todayLabel = isDe ? 'Heute' : 'Today';
-    final totalLabel = isDe ? 'Gesamtschrittzahl' : 'Total steps';
+    final title = l10n.steps;
+    final todayLabel = l10n.today;
+    final totalLabel = l10n.stepsModuleTotalSteps;
+    final providerName = _providerDisplayName(_stepsProviderRaw, l10n);
     final safeGoal =
         _targetSteps > 0 ? _targetSteps : StepsSyncService.defaultStepsGoal;
 
@@ -297,8 +297,8 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
       case StepsScope.day:
         final data = _dayData;
         final subtitle = data == null
-            ? '${isDe ? 'Heute' : 'Today'} • $_stepsProviderName'
-            : '${DateFormat.MMMd(localeCode).format(data.date)} • $_stepsProviderName';
+            ? '${l10n.today} • $providerName'
+            : '${DateFormat.MMMd(localeCode).format(data.date)} • $providerName';
         final dayBucket = StepsBucket(
           start: data?.date ?? _anchorDate,
           steps: data?.totalSteps ?? 0,
@@ -314,8 +314,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         );
       case StepsScope.week:
         final data = _weekData;
-        final subtitle =
-            '${isDe ? 'Diese Woche' : 'This week'} • $_stepsProviderName';
+        final subtitle = '${l10n.stepsModuleThisWeek} • $providerName';
         return StatisticsStepsCard(
           title: title,
           subtitle: subtitle,
@@ -327,8 +326,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         );
       case StepsScope.month:
         final data = _monthData;
-        final subtitle =
-            '${isDe ? 'Diesen Monat' : 'This month'} • $_stepsProviderName';
+        final subtitle = '${l10n.stepsModuleThisMonth} • $providerName';
         return StatisticsStepsCard(
           title: title,
           subtitle: subtitle,
@@ -342,30 +340,26 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   }
 
   String _lastUpdatedLabel(BuildContext context, DateTime timestampUtc) {
-    final localeCode = Localizations.localeOf(
-      context,
-    ).languageCode.toLowerCase();
-    final timeText = DateFormat.Hm().format(timestampUtc.toLocal());
-    if (localeCode == 'de') {
-      return 'Aktualisiert $timeText';
-    }
-    return 'Updated $timeText';
+    final l10n = AppLocalizations.of(context)!;
+    final localeCode = Localizations.localeOf(context).toString();
+    final timeText = DateFormat.Hm(localeCode).format(timestampUtc.toLocal());
+    return l10n.stepsModuleUpdated(timeText);
   }
 
-  String _providerDisplayName(String providerRaw) {
+  String _providerDisplayName(String providerRaw, AppLocalizations l10n) {
     switch (providerRaw) {
       case 'appleHealth':
-        return 'Apple Health';
+        return l10n.statisticsProviderAppleHealth;
       case 'healthConnect':
-        return 'Health Connect';
+        return l10n.statisticsProviderHealthConnect;
       case 'withings':
-        return 'Withings';
+        return l10n.statisticsProviderWithings;
       case 'garmin':
-        return 'Garmin';
+        return l10n.statisticsProviderGarmin;
       case 'fitbit':
-        return 'Fitbit';
+        return l10n.statisticsProviderFitbit;
       default:
-        return 'Local';
+        return l10n.statisticsProviderLocal;
     }
   }
 }
@@ -378,24 +372,23 @@ class _ScopeSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDe =
-        Localizations.localeOf(context).languageCode.toLowerCase() == 'de';
+    final l10n = AppLocalizations.of(context)!;
     return Semantics(
-      label: 'Steps scope switcher',
+      label: l10n.stepsModuleScopeSwitcherSemantics,
       child: SegmentedButton<StepsScope>(
         showSelectedIcon: false,
         segments: [
           ButtonSegment(
             value: StepsScope.day,
-            label: Text(isDe ? 'Tag' : 'Day'),
+            label: Text(l10n.stepsModuleDay),
           ),
           ButtonSegment(
             value: StepsScope.week,
-            label: Text(isDe ? 'Woche' : 'Week'),
+            label: Text(l10n.stepsModuleWeek),
           ),
           ButtonSegment(
             value: StepsScope.month,
-            label: Text(isDe ? 'Monat' : 'Month'),
+            label: Text(l10n.stepsModuleMonth),
           ),
         ],
         selected: {scope},
@@ -468,10 +461,10 @@ class _DayHistogram extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final localeCode = Localizations.localeOf(
       context,
     ).languageCode.toLowerCase();
-    final isDe = localeCode == 'de';
     final numberFormat = NumberFormat.decimalPattern(localeCode);
     final total = buckets.fold<int>(0, (sum, b) => sum + b.steps);
     final activeHours = buckets.where((b) => b.steps > 0).length;
@@ -514,7 +507,7 @@ class _DayHistogram extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isDe ? 'Stundenverlauf' : 'Hourly timeline',
+          l10n.stepsModuleHourlyTimeline,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         if (date != null)
@@ -530,15 +523,15 @@ class _DayHistogram extends StatelessWidget {
           runSpacing: 8,
           children: [
             _InsightPill(
-              label: isDe ? 'Gesamt' : 'Total',
+              label: l10n.stepsModuleTotal,
               value: numberFormat.format(total),
             ),
             _InsightPill(
-              label: isDe ? 'Aktive Stunden' : 'Active hours',
+              label: l10n.stepsModuleActiveHours,
               value: activeHours.toString(),
             ),
             _InsightPill(
-              label: isDe ? 'Höchste Stunde' : 'Peak hour',
+              label: l10n.stepsModulePeakHour,
               value: peakText,
             ),
           ],
@@ -700,10 +693,10 @@ class _WeekBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final localeCode = Localizations.localeOf(
       context,
     ).languageCode.toLowerCase();
-    final isDe = localeCode == 'de';
     final numberFormat = NumberFormat.decimalPattern(localeCode);
     final safeGoal =
         dailyGoal > 0 ? dailyGoal : StepsSyncService.defaultStepsGoal;
@@ -738,7 +731,7 @@ class _WeekBars extends StatelessWidget {
       children: [
         Text(
           weekStart == null
-              ? (isDe ? 'Diese Woche' : 'This week')
+              ? l10n.stepsModuleThisWeek
               : '${DateFormat.MMMd(localeCode).format(weekStart!)} – ${DateFormat.MMMd(localeCode).format(weekStart!.add(const Duration(days: 6)))}',
           style: Theme.of(context).textTheme.titleMedium,
         ),
@@ -748,15 +741,15 @@ class _WeekBars extends StatelessWidget {
           runSpacing: 8,
           children: [
             _InsightPill(
-              label: isDe ? 'Gesamt' : 'Total',
+              label: l10n.stepsModuleTotal,
               value: numberFormat.format(total),
             ),
             _InsightPill(
-              label: isDe ? 'Ø / Tag' : 'Avg / day',
+              label: l10n.stepsModuleAvgPerDay,
               value: numberFormat.format(avg),
             ),
             _InsightPill(
-              label: isDe ? 'Ziel erreicht' : 'Goal hit',
+              label: l10n.stepsModuleGoalHit,
               value: '$goalDays/${buckets.length}',
             ),
           ],
@@ -937,10 +930,10 @@ class _MonthGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final localeCode = Localizations.localeOf(
       context,
     ).languageCode.toLowerCase();
-    final isDe = localeCode == 'de';
     final numberFormat = NumberFormat.decimalPattern(localeCode);
     final safeGoal =
         dailyGoal > 0 ? dailyGoal : StepsSyncService.defaultStepsGoal;
@@ -992,11 +985,11 @@ class _MonthGrid extends StatelessWidget {
           runSpacing: 8,
           children: [
             _InsightPill(
-              label: isDe ? 'Ø / Tag' : 'Avg / day',
+              label: l10n.stepsModuleAvgPerDay,
               value: numberFormat.format(avg),
             ),
             _InsightPill(
-              label: isDe ? 'Zieltage' : 'Goal days',
+              label: l10n.stepsModuleGoalDays,
               value: '$goalDays/${buckets.length}',
             ),
           ],
