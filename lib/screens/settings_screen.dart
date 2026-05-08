@@ -204,6 +204,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  bool _settingsChildMayHaveChanged(bool? result) {
+    // iOS interactive back-swipe completes a route with a null result. These
+    // settings sub-screens are safe to swipe away from, so refresh
+    // conservatively instead of blocking the native gesture with PopScope.
+    return result == true ||
+        (result == null && Theme.of(context).platform == TargetPlatform.iOS);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -291,7 +299,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   builder: (context) => const StepsSettingsScreen(),
                 ),
               );
-              if (changed == true) {
+              if (_settingsChildMayHaveChanged(changed)) {
                 hasStepsSettingsChanged = true;
               }
             },
@@ -311,7 +319,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               );
-              if (changed == true) {
+              if (_settingsChildMayHaveChanged(changed)) {
                 hasStepsSettingsChanged = true;
               }
             },
@@ -328,7 +336,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   builder: (context) => const PulseSettingsScreen(),
                 ),
               );
-              if (changed == true) {
+              if (_settingsChildMayHaveChanged(changed)) {
                 hasStepsSettingsChanged = true;
               }
             },
@@ -345,7 +353,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   builder: (context) => const HealthExportSettingsScreen(),
                 ),
               );
-              if (changed == true) {
+              if (_settingsChildMayHaveChanged(changed)) {
                 hasStepsSettingsChanged = true;
               }
             },

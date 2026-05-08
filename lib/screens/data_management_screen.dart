@@ -3,10 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:provider/provider.dart';
 import '../data/backup_manager.dart';
 import '../data/import_manager.dart';
 import '../generated/app_localizations.dart';
+import '../screens/app_initializer_screen.dart';
 import 'exercise_mapping_screen.dart';
+import '../services/local_app_data_reset_service.dart';
+import '../services/workout_session_manager.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -21,7 +25,15 @@ import '../services/storage/saf_storage_service.dart';
 /// Provides tools for manual and automated backups (JSON), CSV exports for
 /// nutrition and workouts, and importing data from third-party services like Hevy.
 class DataManagementScreen extends StatefulWidget {
-  const DataManagementScreen({super.key});
+  const DataManagementScreen({
+    super.key,
+    LocalAppDataResetter? localDataResetter,
+    VoidCallback? onResetComplete,
+  })  : _localDataResetter = localDataResetter,
+        _onResetComplete = onResetComplete;
+
+  final LocalAppDataResetter? _localDataResetter;
+  final VoidCallback? _onResetComplete;
 
   @override
   State<DataManagementScreen> createState() => _DataManagementScreenState();
@@ -32,6 +44,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   bool _isFullBackupRunning = false;
   bool _isCsvExportRunning = false;
   bool _isMigrationRunning = false;
+  bool _isLocalResetRunning = false;
   String? _autoBackupDir; // New
   String? _lastAutoBackupFilePath;
   String? _lastAutoBackupDirUsed;
@@ -250,6 +263,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             const SizedBox(height: DesignConstants.spacingL),
             _buildAutoBackupCard(context, l10n, theme),
             const SizedBox(height: DesignConstants.spacingL),
+            _buildLocalDataDeletionCard(context, l10n, theme),
+            const SizedBox(height: DesignConstants.spacingL),
             _buildCsvExportCard(context, l10n, theme),
             const SizedBox(height: DesignConstants.spacingL),
             _buildMigrationCard(context, l10n, theme),
@@ -439,6 +454,188 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildLocalDataDeletionCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    return SummaryCard(
+      child: Padding(
+        padding: DesignConstants.cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.localDataDeletionCardTitle,
+              style: theme.textTheme.headlineSmall,
+            ),
+            const SizedBox(height: DesignConstants.spacingS),
+            Text(
+              l10n.localDataDeletionCardDescription,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: DesignConstants.spacingL),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                key: const Key('delete_all_local_app_data_button'),
+                icon: const Icon(Icons.delete_forever_outlined),
+                label: Text(l10n.deleteAllLocalAppData),
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.error,
+                  foregroundColor: theme.colorScheme.onError,
+                ),
+                onPressed:
+                    _isLocalResetRunning ? null : _confirmAndDeleteLocalData,
+              ),
+            ),
+            if (_isLocalResetRunning)
+              const Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmAndDeleteLocalData() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await _showLocalDataDeletionConfirmation(l10n);
+    if (!confirmed || !mounted) return;
+
+    WorkoutSessionManager? sessionManager;
+    try {
+      sessionManager = context.read<WorkoutSessionManager>();
+    } catch (_) {
+      sessionManager = null;
+    }
+
+    setState(() => _isLocalResetRunning = true);
+    try {
+      final resetter = widget._localDataResetter ?? LocalAppDataResetService();
+      await resetter.deleteAllLocalAppData();
+      await sessionManager?.clearLocalSessionState();
+
+      if (!mounted) return;
+      setState(() => _isLocalResetRunning = false);
+
+      if (widget._onResetComplete != null) {
+        widget._onResetComplete!();
+        return;
+      }
+
+      await showGlassBottomMenu<void>(
+        context: context,
+        title: l10n.localDataDeletionSuccessTitle,
+        isDismissible: false,
+        enableDrag: false,
+        contentBuilder: (ctx, close) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.localDataDeletionSuccessBody,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(l10n.snackbarButtonOK),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AppInitializerScreen()),
+        (route) => false,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLocalResetRunning = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.localDataDeletionFailed),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<bool> _showLocalDataDeletionConfirmation(
+    AppLocalizations l10n,
+  ) async {
+    final controller = TextEditingController();
+    final result = await showGlassBottomMenu<bool>(
+      context: context,
+      title: l10n.localDataDeletionConfirmTitle,
+      contentBuilder: (ctx, close) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final canConfirm = controller.text.trim() == 'DELETE';
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.localDataDeletionConfirmBody,
+                  key: const Key('delete_local_data_warning_copy'),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  key: const Key('delete_local_data_confirmation_field'),
+                  controller: controller,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    labelText: l10n.localDataDeletionTypeDeleteLabel,
+                  ),
+                  onChanged: (_) => setDialogState(() {}),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        key: const Key('cancel_delete_local_data_button'),
+                        onPressed: () {
+                          close();
+                          Navigator.of(ctx).pop(false);
+                        },
+                        child: Text(l10n.cancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        key: const Key('confirm_delete_local_data_button'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: canConfirm
+                            ? () {
+                                close();
+                                Navigator.of(ctx).pop(true);
+                              }
+                            : null,
+                        child: Text(l10n.delete),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    return result ?? false;
   }
 
   Widget _buildExportTile({

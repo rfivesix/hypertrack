@@ -31,7 +31,6 @@ The Android manifest and iOS permission strings show the following privacy-relev
 
 - Camera: used for barcode scanning and AI meal photo capture.
 - Photos or gallery: used for selecting a profile image and selecting meal photos for AI meal capture.
-- Microphone and speech recognition: declared for voice input for AI meal logging. If you use voice input, spoken meal notes may be converted into text for meal logging.
 - Notifications: used for app notifications, including reminder or recommendation-related flows where enabled.
 - File and folder access: used when you choose files for import, export files, share files, or select an Android folder for automatic backups.
 - Health access: used for Apple Health or Google Health Connect features, as described below.
@@ -58,7 +57,7 @@ The repository documents this as a one-way export. It is not a bidirectional syn
 
 Train Libre also stores step segments locally after import. Sleep persistence tables store raw import records, normalized sleep sessions, sleep stage segments, sleep heart-rate samples, and derived nightly analyses. Pulse analysis reads platform heart-rate samples and stores hourly aggregate pulse data in the current repository.
 
-## AI / Camera / Photos / Microphone / Speech Features
+## AI / Camera / Photos Features
 
 AI meal features are optional and disabled by default in the repository documentation and settings flow. They use a bring-your-own-key design.
 
@@ -120,8 +119,8 @@ No system can guarantee perfect security. Use device-level protections and be ca
 
 You control Train Libre data and permissions in several ways:
 
-- Do not enable optional AI features, health integrations, catalog refreshes, sharing, backups, imports, notifications, camera, photos, microphone, or speech features if you do not want to use them.
-- Revoke camera, microphone, photo, notification, health, or file permissions in your device settings.
+- Do not enable optional AI features, health integrations, catalog refreshes, sharing, backups, imports, notifications, camera, or photos if you do not want to use them.
+- Revoke camera, photo, notification, health, or file permissions in your device settings.
 - Delete entries inside the app where deletion is available.
 - Delete profile images and other local files where the app provides that control.
 - Remove a saved AI API key from the AI settings screen.

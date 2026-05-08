@@ -2930,6 +2930,60 @@ abstract class AppLocalizations {
   /// **'Auto-Backup failed or was canceled.'**
   String get snackbarAutoBackupFailed;
 
+  /// No description provided for @localDataDeletionCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local app data'**
+  String get localDataDeletionCardTitle;
+
+  /// No description provided for @localDataDeletionCardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete user-owned data stored on this device and reset Train Libre to a fresh local state.'**
+  String get localDataDeletionCardDescription;
+
+  /// No description provided for @deleteAllLocalAppData.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all local app data'**
+  String get deleteAllLocalAppData;
+
+  /// No description provided for @localDataDeletionConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all local app data?'**
+  String get localDataDeletionConfirmTitle;
+
+  /// No description provided for @localDataDeletionConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes locally stored workouts, nutrition logs, measurements, supplements, settings/state, cached analytics, and local app data.\n\nThis does not delete data already exported to Apple Health or Health Connect.\n\nThis does not delete external provider data or remote public catalog sources. Bundled app assets and required default catalogs are kept or recreated so the app can launch after reset.'**
+  String get localDataDeletionConfirmBody;
+
+  /// No description provided for @localDataDeletionTypeDeleteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm'**
+  String get localDataDeletionTypeDeleteLabel;
+
+  /// No description provided for @localDataDeletionSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data deleted'**
+  String get localDataDeletionSuccessTitle;
+
+  /// No description provided for @localDataDeletionSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Train Libre will return to its initial setup state.'**
+  String get localDataDeletionSuccessBody;
+
+  /// No description provided for @localDataDeletionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data could not be deleted. Please try again.'**
+  String get localDataDeletionFailed;
+
   /// No description provided for @noUnknownExercisesFound.
   ///
   /// In en, this message translates to:
@@ -4022,12 +4076,6 @@ abstract class AppLocalizations {
   /// **'Photo'**
   String get aiCaptureTabPhoto;
 
-  /// No description provided for @aiCaptureTabVoice.
-  ///
-  /// In en, this message translates to:
-  /// **'Voice'**
-  String get aiCaptureTabVoice;
-
   /// No description provided for @aiCaptureTabText.
   ///
   /// In en, this message translates to:
@@ -4039,12 +4087,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Take or select up to 4 photos of your meal.'**
   String get aiCapturePhotoHint;
-
-  /// No description provided for @aiCaptureVoiceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap the microphone and describe your meal.'**
-  String get aiCaptureVoiceHint;
 
   /// No description provided for @aiCaptureTextHint.
   ///

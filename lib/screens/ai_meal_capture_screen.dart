@@ -13,7 +13,7 @@ import '../widgets/global_app_bar.dart';
 import 'ai_meal_review_screen.dart';
 import 'ai_settings_screen.dart';
 
-/// Screen for capturing meal input via photo(s), voice, or text before AI analysis.
+/// Screen for capturing meal input via photo(s) or text before AI analysis.
 ///
 /// Minimalist design — AI gradient is concentrated only on the primary
 /// "Analyze" CTA button. All other UI elements use standard theme colours.

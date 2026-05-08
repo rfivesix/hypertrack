@@ -1638,6 +1638,38 @@ class AppLocalizationsDe extends AppLocalizations {
       'Auto-Backup fehlgeschlagen oder abgebrochen.';
 
   @override
+  String get localDataDeletionCardTitle => 'Lokale App-Daten';
+
+  @override
+  String get localDataDeletionCardDescription =>
+      'Löscht dauerhaft deine auf diesem Gerät gespeicherten Daten und setzt Train Libre in einen frischen lokalen Zustand zurück.';
+
+  @override
+  String get deleteAllLocalAppData => 'Alle lokalen App-Daten löschen';
+
+  @override
+  String get localDataDeletionConfirmTitle => 'Alle lokalen App-Daten löschen?';
+
+  @override
+  String get localDataDeletionConfirmBody =>
+      'Dies löscht dauerhaft lokal gespeicherte Workouts, Ernährungslogs, Messwerte, Supplements, Einstellungen/Zustand, zwischengespeicherte Analysen und lokale App-Daten.\n\nDies löscht keine Daten, die bereits zu Apple Health oder Health Connect exportiert wurden.\n\nDies löscht keine Daten externer Anbieter und keine entfernten öffentlichen Katalogquellen. Gebündelte App-Assets und erforderliche Standardkataloge bleiben erhalten oder werden neu angelegt, damit die App nach dem Zurücksetzen starten kann.';
+
+  @override
+  String get localDataDeletionTypeDeleteLabel =>
+      'Zum Bestätigen DELETE eingeben';
+
+  @override
+  String get localDataDeletionSuccessTitle => 'Lokale Daten gelöscht';
+
+  @override
+  String get localDataDeletionSuccessBody =>
+      'Train Libre kehrt nun zum initialen Einrichtungszustand zurück.';
+
+  @override
+  String get localDataDeletionFailed =>
+      'Lokale Daten konnten nicht gelöscht werden. Bitte versuche es erneut.';
+
+  @override
   String get noUnknownExercisesFound => 'Keine unbekannten Übungen gefunden';
 
   @override
@@ -2216,18 +2248,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aiCaptureTabPhoto => 'Foto';
 
   @override
-  String get aiCaptureTabVoice => 'Sprache';
-
-  @override
   String get aiCaptureTabText => 'Text';
 
   @override
   String get aiCapturePhotoHint =>
       'Mache oder wähle bis zu 4 Fotos deiner Mahlzeit.';
-
-  @override
-  String get aiCaptureVoiceHint =>
-      'Tippe auf das Mikrofon und beschreibe deine Mahlzeit.';
 
   @override
   String get aiCaptureTextHint =>

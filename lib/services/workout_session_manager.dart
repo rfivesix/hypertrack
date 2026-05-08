@@ -95,6 +95,24 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   bool get _isAppInForeground =>
       _appLifecycleState == AppLifecycleState.resumed;
 
+  Future<void> clearLocalSessionState() async {
+    _workoutDurationTimer?.cancel();
+    _restTimer?.cancel();
+    _restDoneBannerTimer?.cancel();
+    await LocalNotificationService.instance.cancelRestTimerNotification();
+
+    _workoutLog = null;
+    _exercises.clear();
+    _setLogs.clear();
+    pauseTimes.clear();
+    _remainingRestSeconds = 0;
+    _showRestDone = false;
+    _elapsedDuration = Duration.zero;
+    _totalVolume = 0.0;
+    _totalSets = 0;
+    notifyListeners();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _appLifecycleState = state;

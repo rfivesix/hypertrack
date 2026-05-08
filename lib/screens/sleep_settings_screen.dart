@@ -192,170 +192,160 @@ class _SleepSettingsScreenState extends State<SleepSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        Navigator.of(context).pop(_hasChanges);
-      },
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: GlobalAppBar(
-          title: l10n.sleepSettingsSectionTitle,
-          leading: BackButton(
-            onPressed: () => Navigator.of(context).pop(_hasChanges),
-          ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.sleepSettingsSectionTitle,
+        leading: BackButton(
+          onPressed: () => Navigator.of(context).pop(_hasChanges),
         ),
-        body: ListView(
-          padding: DesignConstants.cardPadding.copyWith(
-            top: DesignConstants.cardPadding.top + topPadding,
-          ),
-          children: [
-            _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
-            ValueListenableBuilder<SleepPermissionStatus>(
-              valueListenable: _sleepPermissionController.state,
-              builder: (context, permission, _) {
-                return SummaryCard(
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        secondary: const Icon(Icons.bedtime_outlined),
-                        title: Text(
-                          l10n.sleepEnableTrackingTitle,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(l10n.sleepEnableTrackingSubtitle),
-                        value: _sleepTrackingEnabled,
-                        onChanged: (value) async {
-                          final wasEnabled = _sleepTrackingEnabled;
-                          await _sleepSyncService.setTrackingEnabled(value);
-                          if (value && !wasEnabled) {
-                            await _sleepPermissionController.requestAccess();
-                          }
-                          await _sleepPermissionController.refresh();
-                          if (!mounted) return;
-                          setState(() {
-                            _sleepTrackingEnabled = value;
-                            _hasChanges = true;
-                          });
-                        },
+      ),
+      body: ListView(
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
+        children: [
+          _buildSectionTitle(context, l10n.sleepSettingsSectionTitle),
+          ValueListenableBuilder<SleepPermissionStatus>(
+            valueListenable: _sleepPermissionController.state,
+            builder: (context, permission, _) {
+              return SummaryCard(
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      secondary: const Icon(Icons.bedtime_outlined),
+                      title: Text(
+                        l10n.sleepEnableTrackingTitle,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.health_and_safety_outlined),
-                        title: Text(
-                          l10n.sleepHealthConnectionStatusTitle,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(_sleepStatusSubtitle(permission, l10n)),
-                        trailing: Icon(
-                          _sleepStatusIcon(permission.state),
-                          color: _sleepStatusColor(context, permission.state),
-                        ),
-                      ),
-                      if (permission.state == SleepPermissionState.ready)
-                        ListTile(
-                          leading: const Icon(Icons.info_outline),
-                          title: Text(
-                            l10n.sleepDataStatusTitle,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.sleepDataStatusSubtitle),
-                        ),
-                      if (permission.state == SleepPermissionState.denied ||
-                          permission.state == SleepPermissionState.partial)
-                        ListTile(
-                          leading: const Icon(Icons.lock_outline),
-                          title: Text(
-                            l10n.sleepNoPermissionTitle,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.sleepNoPermissionSubtitle),
-                        ),
-                      if (permission.state ==
-                              SleepPermissionState.unavailable ||
-                          permission.state == SleepPermissionState.notInstalled)
-                        ListTile(
-                          leading: const Icon(Icons.mobiledata_off_outlined),
-                          title: Text(
-                            l10n.sleepFeatureUnavailableTitle,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.sleepFeatureUnavailableSubtitle),
-                        ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.lock_open_outlined),
-                        title: Text(l10n.sleepRequestAccessTitle),
-                        subtitle: Text(l10n.sleepRequestAccessSubtitle),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () async {
+                      subtitle: Text(l10n.sleepEnableTrackingSubtitle),
+                      value: _sleepTrackingEnabled,
+                      onChanged: (value) async {
+                        final wasEnabled = _sleepTrackingEnabled;
+                        await _sleepSyncService.setTrackingEnabled(value);
+                        if (value && !wasEnabled) {
                           await _sleepPermissionController.requestAccess();
-                          if (!mounted) return;
-                          setState(() {});
-                        },
+                        }
+                        await _sleepPermissionController.refresh();
+                        if (!mounted) return;
+                        setState(() {
+                          _sleepTrackingEnabled = value;
+                          _hasChanges = true;
+                        });
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.health_and_safety_outlined),
+                      title: Text(
+                        l10n.sleepHealthConnectionStatusTitle,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      subtitle: Text(_sleepStatusSubtitle(permission, l10n)),
+                      trailing: Icon(
+                        _sleepStatusIcon(permission.state),
+                        color: _sleepStatusColor(context, permission.state),
+                      ),
+                    ),
+                    if (permission.state == SleepPermissionState.ready)
                       ListTile(
-                        leading: const Icon(Icons.sync),
-                        title: Text(l10n.sleepImportNowTitle),
-                        subtitle: Text(l10n.sleepImportNowSubtitle),
-                        trailing: _isSleepImporting
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.chevron_right),
-                        onTap: _isSleepImporting
-                            ? null
-                            : () async {
-                                setState(() => _isSleepImporting = true);
-                                final result =
-                                    await _sleepSyncService.importRecent(
-                                  lookbackDays: 36500,
-                                );
-                                if (!mounted) return;
-                                setState(() {
-                                  _isSleepImporting = false;
-                                  _hasChanges = true;
-                                });
-                                ScaffoldMessenger.of(this.context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      result.success
-                                          ? l10n.sleepImportFinishedSessions(
-                                              result.importedSessions,
-                                            )
-                                          : (result.message ??
-                                              l10n.sleepImportUnavailableCheckPermissions),
-                                    ),
+                        leading: const Icon(Icons.info_outline),
+                        title: Text(
+                          l10n.sleepDataStatusTitle,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(l10n.sleepDataStatusSubtitle),
+                      ),
+                    if (permission.state == SleepPermissionState.denied ||
+                        permission.state == SleepPermissionState.partial)
+                      ListTile(
+                        leading: const Icon(Icons.lock_outline),
+                        title: Text(
+                          l10n.sleepNoPermissionTitle,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(l10n.sleepNoPermissionSubtitle),
+                      ),
+                    if (permission.state == SleepPermissionState.unavailable ||
+                        permission.state == SleepPermissionState.notInstalled)
+                      ListTile(
+                        leading: const Icon(Icons.mobiledata_off_outlined),
+                        title: Text(
+                          l10n.sleepFeatureUnavailableTitle,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(l10n.sleepFeatureUnavailableSubtitle),
+                      ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.lock_open_outlined),
+                      title: Text(l10n.sleepRequestAccessTitle),
+                      subtitle: Text(l10n.sleepRequestAccessSubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await _sleepPermissionController.requestAccess();
+                        if (!mounted) return;
+                        setState(() {});
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.sync),
+                      title: Text(l10n.sleepImportNowTitle),
+                      subtitle: Text(l10n.sleepImportNowSubtitle),
+                      trailing: _isSleepImporting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.chevron_right),
+                      onTap: _isSleepImporting
+                          ? null
+                          : () async {
+                              setState(() => _isSleepImporting = true);
+                              final result =
+                                  await _sleepSyncService.importRecent(
+                                lookbackDays: 36500,
+                              );
+                              if (!mounted) return;
+                              setState(() {
+                                _isSleepImporting = false;
+                                _hasChanges = true;
+                              });
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    result.success
+                                        ? l10n.sleepImportFinishedSessions(
+                                            result.importedSessions,
+                                          )
+                                        : (result.message ??
+                                            l10n.sleepImportUnavailableCheckPermissions),
                                   ),
-                                );
-                                await _sleepPermissionController.refresh();
-                              },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.data_object_outlined),
-                        title: Text(l10n.sleepRawImportsTitle),
-                        subtitle: Text(l10n.sleepRawImportsSubtitle),
-                        trailing: _isSleepRawLoading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.chevron_right),
-                        onTap: _isSleepRawLoading ? null : _showRawSleepImports,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
+                                ),
+                              );
+                              await _sleepPermissionController.refresh();
+                            },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.data_object_outlined),
+                      title: Text(l10n.sleepRawImportsTitle),
+                      subtitle: Text(l10n.sleepRawImportsSubtitle),
+                      trailing: _isSleepRawLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.chevron_right),
+                      onTap: _isSleepRawLoading ? null : _showRawSleepImports,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

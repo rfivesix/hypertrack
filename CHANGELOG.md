@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.2] - 2026-05-07
+### Added
+- Minor UI polish and accessibility improvements across Nutrition and Statistics screens.
+- Improved offline catalog import resilience for certain published SQLite artifacts.
+
+### Changed
+- Performance improvements for Statistics and Pulse aggregate queries.
+- Deferred non-critical startup initialization to reduce first-frame work.
+
+### Fixed
+- Fixed several layout overflows on small screens and compact devices.
+- Fixed backup restore edge cases for some legacy backup variants.
+- Miscellaneous bug fixes and stability improvements.
+
+### Internal
+- Dependency updates, documentation tweaks, and additional test coverage for catalog refresh and Pulse aggregation.
+
 ## [0.9.1] - 2026-05-06
 ### Changed
 - Redesigned the Nutrition Recommendation UI: improved layout, clearer action affordances, and more consistent responsive behavior across device sizes.

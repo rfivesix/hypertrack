@@ -1240,6 +1240,8 @@ class WorkoutDatabaseHelper {
   Future<void> clearAllWorkoutData() async {
     final dbInstance = await database;
     await dbInstance.transaction(() async {
+      await dbInstance.delete(dbInstance.cardioSamples).go();
+      await dbInstance.delete(dbInstance.cardioActivities).go();
       await dbInstance.delete(dbInstance.setLogs).go();
       await dbInstance.delete(dbInstance.workoutLogs).go();
       await dbInstance.delete(dbInstance.routineSetTemplates).go();
@@ -1409,8 +1411,7 @@ class WorkoutDatabaseHelper {
             // toward the end, or store an internal structure.
             // Overwrite it for simplicity (the newest session wins if
             // the list is ascending).
-            prMap[bracket] =
-                setLog; // Simplification for "latest date wins"
+            prMap[bracket] = setLog; // Simplification for "latest date wins"
           }
         }
       }

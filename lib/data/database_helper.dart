@@ -94,6 +94,15 @@ class DatabaseHelper {
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
       await dbInstance.customStatement('DELETE FROM health_step_segments');
       await dbInstance.customStatement('DELETE FROM health_export_records');
+      await dbInstance.customStatement('DELETE FROM sleep_nightly_analyses');
+      await dbInstance.customStatement(
+        'DELETE FROM sleep_canonical_heart_rate_samples',
+      );
+      await dbInstance.customStatement(
+        'DELETE FROM sleep_canonical_stage_segments',
+      );
+      await dbInstance.customStatement('DELETE FROM sleep_canonical_sessions');
+      await dbInstance.customStatement('DELETE FROM sleep_raw_imports');
       await dbInstance.customStatement('DELETE FROM pulse_hourly_aggregates');
       await dbInstance.customStatement('DELETE FROM pulse_aggregate_metadata');
 

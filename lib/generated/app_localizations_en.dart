@@ -1632,6 +1632,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackbarAutoBackupFailed => 'Auto-Backup failed or was canceled.';
 
   @override
+  String get localDataDeletionCardTitle => 'Local app data';
+
+  @override
+  String get localDataDeletionCardDescription =>
+      'Permanently delete user-owned data stored on this device and reset Train Libre to a fresh local state.';
+
+  @override
+  String get deleteAllLocalAppData => 'Delete all local app data';
+
+  @override
+  String get localDataDeletionConfirmTitle => 'Delete all local app data?';
+
+  @override
+  String get localDataDeletionConfirmBody =>
+      'This permanently deletes locally stored workouts, nutrition logs, measurements, supplements, settings/state, cached analytics, and local app data.\n\nThis does not delete data already exported to Apple Health or Health Connect.\n\nThis does not delete external provider data or remote public catalog sources. Bundled app assets and required default catalogs are kept or recreated so the app can launch after reset.';
+
+  @override
+  String get localDataDeletionTypeDeleteLabel => 'Type DELETE to confirm';
+
+  @override
+  String get localDataDeletionSuccessTitle => 'Local data deleted';
+
+  @override
+  String get localDataDeletionSuccessBody =>
+      'Train Libre will return to its initial setup state.';
+
+  @override
+  String get localDataDeletionFailed =>
+      'Local data could not be deleted. Please try again.';
+
+  @override
   String get noUnknownExercisesFound => 'No unknown exercises found';
 
   @override
@@ -2206,17 +2237,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiCaptureTabPhoto => 'Photo';
 
   @override
-  String get aiCaptureTabVoice => 'Voice';
-
-  @override
   String get aiCaptureTabText => 'Text';
 
   @override
   String get aiCapturePhotoHint =>
       'Take or select up to 4 photos of your meal.';
-
-  @override
-  String get aiCaptureVoiceHint => 'Tap the microphone and describe your meal.';
 
   @override
   String get aiCaptureTextHint =>
