@@ -729,7 +729,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               hintText: '0.0',
-              suffixText: 'kg',
+              suffixText: l10n.unit_kilograms,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -1168,7 +1168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               color: Colors.orange,
             ),
             decoration: InputDecoration(
-              suffixText: 'kcal',
+              suffixText: l10n.unit_kcal,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -1186,10 +1186,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _StepTitle(title: "Makronährstoffe"),
+          _StepTitle(title: l10n.onboardingMacrosStepTitle),
           const SizedBox(height: 8),
           Text(
-            "Wie setzt sich deine Ernährung zusammen?",
+            l10n.onboardingMacrosStepSubtitle,
             style: TextStyle(color: Colors.grey[600], fontSize: 16),
           ),
           const SizedBox(height: 32),
@@ -1233,7 +1233,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               color: Colors.blue,
             ),
             decoration: InputDecoration(
-              suffixText: 'ml',
+              suffixText: l10n.unit_milliliters,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -1273,6 +1273,7 @@ class _MacroInput extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -1293,9 +1294,9 @@ class _MacroInput extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: color,
             ),
-            decoration: const InputDecoration(
-              suffixText: ' g',
-              contentPadding: EdgeInsets.symmetric(
+            decoration: InputDecoration(
+              suffixText: l10n.unit_grams,
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 12,
               ),

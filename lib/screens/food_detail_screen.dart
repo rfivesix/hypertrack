@@ -173,14 +173,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       }
 
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Gespeichert (Basis-DB)')));
+      ).showSnackBar(SnackBar(content: Text(l10n.foodDetailSavedBaseDb)));
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+      ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
     }
   }
 
@@ -196,9 +198,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Export-Fehler: $e')));
+      ).showSnackBar(SnackBar(content: Text(l10n.foodDetailExportError(e))));
     }
   }
 

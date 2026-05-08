@@ -4420,4 +4420,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsBaseFoodLanguageGerman => 'German';
+
+  @override
+  String get aiModelLabel => 'Model';
+
+  @override
+  String get autoBackupStoragePickerUnavailable =>
+      'Storage picker unavailable. Please fully restart/reinstall the app after updating.';
+
+  @override
+  String autoBackupFolderPickerFailed(Object error) {
+    return 'Folder picker failed: $error';
+  }
+
+  @override
+  String get healthExportPermissionDenied => 'Permission denied';
+
+  @override
+  String get healthExportAdapterUnavailable => 'Adapter unavailable';
+
+  @override
+  String get healthExportPlatformUnavailable => 'Platform unavailable';
+
+  @override
+  String get healthExportPlatformNotInstalled => 'Platform not installed';
+
+  @override
+  String get healthExportExportDisabled => 'Export disabled';
+
+  @override
+  String get onboardingMacrosStepTitle => 'Macronutrients';
+
+  @override
+  String get onboardingMacrosStepSubtitle => 'How is your nutrition composed?';
+
+  @override
+  String get statisticsProviderAppleHealth => 'Apple Health';
+
+  @override
+  String get statisticsProviderHealthConnect => 'Health Connect';
+
+  @override
+  String get statisticsProviderWithings => 'Withings';
+
+  @override
+  String get statisticsProviderGarmin => 'Garmin';
+
+  @override
+  String get statisticsProviderFitbit => 'Fitbit';
+
+  @override
+  String get statisticsProviderLocal => 'Local';
+
+  @override
+  String get unit_milliliters => 'ml';
+
+  @override
+  String get unit_kilograms => 'kg';
+
+  @override
+  String get mealEditorHintExample => 'e.g. Chicken bowl';
+
+  @override
+  String get mealEditorNoIngredientsYet => 'None yet – coming later';
+
+  @override
+  String get foodDetailSavedBaseDb => 'Saved (base DB)';
+
+  @override
+  String foodDetailExportError(Object error) {
+    return 'Export error: $error';
+  }
 }

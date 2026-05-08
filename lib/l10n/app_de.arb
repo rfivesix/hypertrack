@@ -1854,4 +1854,36 @@
   ,"settingsBaseFoodLanguageFollowApp": "App-Sprache verwenden"
   ,"settingsBaseFoodLanguageEnglish": "Englisch"
   ,"settingsBaseFoodLanguageGerman": "Deutsch"
+  ,"aiModelLabel": "Modell"
+  ,"autoBackupStoragePickerUnavailable": "Speicherordner-Auswahl nicht verfügbar. Bitte die App nach dem Update vollständig neu starten/neu installieren."
+  ,"autoBackupFolderPickerFailed": "Ordnerauswahl fehlgeschlagen: {error}"
+  ,"@autoBackupFolderPickerFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  }
+  ,"healthExportPermissionDenied": "Berechtigung verweigert"
+  ,"healthExportAdapterUnavailable": "Adapter nicht verfügbar"
+  ,"healthExportPlatformUnavailable": "Plattform nicht verfügbar"
+  ,"healthExportPlatformNotInstalled": "Plattform nicht installiert"
+  ,"healthExportExportDisabled": "Export deaktiviert"
+  ,"onboardingMacrosStepTitle": "Makronährstoffe"
+  ,"onboardingMacrosStepSubtitle": "Wie setzt sich deine Ernährung zusammen?"
+  ,"statisticsProviderAppleHealth": "Apple Health"
+  ,"statisticsProviderHealthConnect": "Health Connect"
+  ,"statisticsProviderWithings": "Withings"
+  ,"statisticsProviderGarmin": "Garmin"
+  ,"statisticsProviderFitbit": "Fitbit"
+  ,"statisticsProviderLocal": "Lokal"
+  ,"unit_milliliters": "ml"
+  ,"unit_kilograms": "kg"
+  ,"mealEditorHintExample": "z. B. Hähnchen Bowl"
+  ,"mealEditorNoIngredientsYet": "Noch keine – kommt später"
+  ,"foodDetailSavedBaseDb": "Gespeichert (Basis-DB)"
+  ,"foodDetailExportError": "Export-Fehler: {error}"
+  ,"@foodDetailExportError": {
+    "placeholders": {
+      "error": {}
+    }
+  }
 }

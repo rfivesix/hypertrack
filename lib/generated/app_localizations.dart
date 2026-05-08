@@ -7757,6 +7757,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'German'**
   String get settingsBaseFoodLanguageGerman;
+
+  /// No description provided for @aiModelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get aiModelLabel;
+
+  /// No description provided for @autoBackupStoragePickerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage picker unavailable. Please fully restart/reinstall the app after updating.'**
+  String get autoBackupStoragePickerUnavailable;
+
+  /// No description provided for @autoBackupFolderPickerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder picker failed: {error}'**
+  String autoBackupFolderPickerFailed(Object error);
+
+  /// No description provided for @healthExportPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
+  String get healthExportPermissionDenied;
+
+  /// No description provided for @healthExportAdapterUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Adapter unavailable'**
+  String get healthExportAdapterUnavailable;
+
+  /// No description provided for @healthExportPlatformUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform unavailable'**
+  String get healthExportPlatformUnavailable;
+
+  /// No description provided for @healthExportPlatformNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform not installed'**
+  String get healthExportPlatformNotInstalled;
+
+  /// No description provided for @healthExportExportDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Export disabled'**
+  String get healthExportExportDisabled;
+
+  /// No description provided for @onboardingMacrosStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macronutrients'**
+  String get onboardingMacrosStepTitle;
+
+  /// No description provided for @onboardingMacrosStepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How is your nutrition composed?'**
+  String get onboardingMacrosStepSubtitle;
+
+  /// No description provided for @statisticsProviderAppleHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health'**
+  String get statisticsProviderAppleHealth;
+
+  /// No description provided for @statisticsProviderHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get statisticsProviderHealthConnect;
+
+  /// No description provided for @statisticsProviderWithings.
+  ///
+  /// In en, this message translates to:
+  /// **'Withings'**
+  String get statisticsProviderWithings;
+
+  /// No description provided for @statisticsProviderGarmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Garmin'**
+  String get statisticsProviderGarmin;
+
+  /// No description provided for @statisticsProviderFitbit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitbit'**
+  String get statisticsProviderFitbit;
+
+  /// No description provided for @statisticsProviderLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get statisticsProviderLocal;
+
+  /// No description provided for @unit_milliliters.
+  ///
+  /// In en, this message translates to:
+  /// **'ml'**
+  String get unit_milliliters;
+
+  /// No description provided for @unit_kilograms.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get unit_kilograms;
+
+  /// No description provided for @mealEditorHintExample.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Chicken bowl'**
+  String get mealEditorHintExample;
+
+  /// No description provided for @mealEditorNoIngredientsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'None yet – coming later'**
+  String get mealEditorNoIngredientsYet;
+
+  /// No description provided for @foodDetailSavedBaseDb.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved (base DB)'**
+  String get foodDetailSavedBaseDb;
+
+  /// No description provided for @foodDetailExportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Export error: {error}'**
+  String foodDetailExportError(Object error);
 }
 
 class _AppLocalizationsDelegate

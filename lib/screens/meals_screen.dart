@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:train_libre/generated/app_localizations.dart';
 import '../data/database_helper.dart';
 import 'meal_editor_screen.dart';
 
@@ -33,14 +34,15 @@ class _MealsScreenState extends State<MealsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Meals')),
+      appBar: AppBar(title: Text(l10n.tabMeals)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _meals.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Noch keine Meals.\nTippe auf das +, um eines zu erstellen.',
+                    '${l10n.mealsEmptyTitle}\n${l10n.mealsEmptyBody}',
                     textAlign: TextAlign.center,
                   ),
                 )
@@ -62,7 +64,7 @@ class _MealsScreenState extends State<MealsScreen> {
                         await _reloadMeals();
                         if (!mounted) return;
                         ScaffoldMessenger.of(this.context).showSnackBar(
-                          const SnackBar(content: Text('Meal gespeichert')),
+                          SnackBar(content: Text(l10n.mealSaved)),
                         );
                       }
                     },
@@ -78,7 +80,7 @@ class _MealsScreenState extends State<MealsScreen> {
             await _reloadMeals();
             if (!mounted) return;
             ScaffoldMessenger.of(this.context).showSnackBar(
-              const SnackBar(content: Text('Meal gespeichert')),
+              SnackBar(content: Text(l10n.mealSaved)),
             );
           }
         },
