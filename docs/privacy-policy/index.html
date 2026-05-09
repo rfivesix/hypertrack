@@ -164,25 +164,21 @@
 
           <section class="policy-section reveal" id="health">
             <h2 data-i18n="p_health_t">Health and Fitness Data</h2>
-            <p data-i18n="p_health_c_1">Train Libre includes optional integrations with Apple Health and Google Health
-              Connect.</p>
-            <p data-i18n="p_health_c_2">When permitted, the app can read steps for activity summaries, sleep sessions
-              and stages for recovery metrics, and heart-rate data for pulse analysis.</p>
-            <p data-i18n="p_health_c_3">When permitted, the app can export measurements (weight, body fat), aggregate
-              nutrition and hydration, and workout sessions.</p>
-            <p data-i18n="p_health_c_4">This is a one-way export; Train Libre remains the authoritative record for your
-              tracking data.</p>
+            <p data-i18n="p_health_c_1">Integration with platform health services (Apple Health on iOS, Google Health Connect on Android) is entirely optional. Access only occurs after you explicitly grant permission.</p>
+            <p data-i18n="p_health_c_2">Depending on enabled features, Train Libre may read: steps, sleep sessions and stages, heart-rate data, and workout-related health data where available.</p>
+            <p data-i18n="p_health_c_3">Train Libre may write/export supported app-recorded data such as: workouts, body measurements, nutrition aggregates, and hydration data.</p>
+            <p data-i18n="p_health_c_4">Export is one-way from Train Libre to the platform health service. Train Libre remains the primary local source of truth.</p>
+            <p data-i18n="p_health_c_5">Health data is used for personal tracking, statistics, and training context. It is not used for advertising, tracking, profiling, or sale.</p>
+            <p data-i18n="p_health_c_6">The app is not a medical device and does not provide medical diagnosis or treatment. Permissions can be revoked in system settings.</p>
           </section>
 
           <section class="policy-section reveal" id="ai">
-            <h2 data-i18n="p_ai_t">AI / Camera / Photos Features</h2>
-            <p data-i18n="p_ai_c_1">AI meal features are optional and disabled by default. They use a "Bring Your Own
-              Key" (BYOK) model.</p>
-            <p data-i18n="p_ai_c_2">If you enable AI features and provide an API key, it is stored in native secure
-              storage. When you use AI meal capture, the app may send meal descriptions or photos to your selected
-              provider.</p>
-            <p data-i18n="p_ai_c_3">The AI provider returns suggested food names and gram estimates, which the app then
-              validates against the local food database before you save them.</p>
+            <h2 data-i18n="p_ai_t">AI Features</h2>
+            <p data-i18n="p_ai_c_1">AI meal recognition and AI meal recommendations are optional and disabled by default. The app uses a "Bring Your Own Key" (BYOK) model where you choose and configure a supported provider.</p>
+            <p data-i18n="p_ai_c_2">Only when you actively use an AI feature are selected inputs sent to the configured provider (e.g., meal description text, selected images, nutrient context).</p>
+            <p data-i18n="p_ai_c_3">API keys are stored locally and securely. Train Libre does not operate its own AI backend for these requests. Provider processing is governed by their own terms and privacy policies.</p>
+            <p data-i18n="p_ai_c_4">AI outputs are estimates. Results are shown for review before saving. You can edit, remove, or reject items before they become part of the local diary.</p>
+            <p data-i18n="p_ai_c_5">AI data is not used by Train Libre for advertising or tracking.</p>
           </section>
 
           <section class="policy-section reveal" id="backups">
