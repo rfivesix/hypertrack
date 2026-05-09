@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
 import '../services/ai_service.dart';
 import '../services/theme_service.dart';
+import '../theme/color_constants.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -245,9 +246,11 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                       children: [
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          secondary: Icon(
-                            Icons.auto_awesome,
-                            color: theme.colorScheme.primary,
+                          secondary: ShaderMask(
+                            blendMode: BlendMode.srcIn,
+                            shaderCallback: (bounds) =>
+                                createAiGradientShader(bounds),
+                            child: const Icon(Icons.auto_awesome),
                           ),
                           title: Text(
                             l10n.aiEnableTitle,

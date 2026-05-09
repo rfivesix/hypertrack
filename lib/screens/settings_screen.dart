@@ -10,6 +10,7 @@ import '../features/sleep/platform/permissions/sleep_permission_controller.dart'
 import '../features/sleep/platform/sleep_sync_service.dart';
 import '../generated/app_localizations.dart';
 import '../services/app_tour_service.dart';
+import '../theme/color_constants.dart';
 import '../services/base_food_language_service.dart';
 import '../services/off_catalog_country_service.dart';
 import '../util/design_constants.dart';
@@ -619,14 +620,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  static const _aiGradientColors = [
-    Color(0xFFE88DCC),
-    Color(0xFFF4A77A),
-    Color(0xFFF7D06B),
-    Color(0xFF7DDEAE),
-    Color(0xFF6DC8D9),
-  ];
-
   Widget _buildNavigationCard({
     required BuildContext context,
     required IconData icon,
@@ -645,11 +638,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (useGradientIcon) {
       iconWidget = ShaderMask(
         blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) => const LinearGradient(
-          colors: _aiGradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bounds),
+        shaderCallback: (bounds) => createAiGradientShader(bounds),
         child: Icon(icon, size: 36),
       );
     }

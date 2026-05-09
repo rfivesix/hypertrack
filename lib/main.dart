@@ -13,6 +13,7 @@ import 'services/profile_service.dart';
 import 'services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
+import 'theme/color_constants.dart';
 import 'package:intl/date_symbol_data_local.dart'; // FIX: Initialize intl formatting
 
 void main() async {
@@ -76,7 +77,6 @@ class _MyAppState extends State<MyApp> {
 
     const cardDark = Color(0xFF171717);
     const cardLight = Color(0xFFF3F3F3);
-    const brandAccentColor = Color(0xFFDDFF00);
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -88,17 +88,21 @@ class _MyAppState extends State<MyApp> {
 
         // Use brand accent by default; optional Android toggle enables dynamic Material colors.
         final Color lightSeed = useDynamicMaterialColors
-            ? (lightDynamic?.primary ?? brandAccentColor)
-            : brandAccentColor;
+            ? (lightDynamic?.primary ?? brandAccentColorLightMode)
+            : brandAccentColorLightMode;
         final Color darkSeed = useDynamicMaterialColors
-            ? (darkDynamic?.primary ?? lightSeed)
+            ? (darkDynamic?.primary ?? brandAccentColor)
             : brandAccentColor;
 
         // --- Light scheme from seed, but without Material You UI ---
         final lightScheme = ColorScheme.fromSeed(
           seedColor: lightSeed,
           brightness: Brightness.light,
-        ).copyWith(surface: Colors.white);
+        ).copyWith(
+          primary: lightSeed,
+          onPrimary: Colors.black,
+          surface: Colors.white,
+        );
 
         // --- Dark scheme from seed + OLED black ---
         final seededDark = ColorScheme.fromSeed(
@@ -106,6 +110,8 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark,
         );
         final darkScheme = seededDark.copyWith(
+          primary: darkSeed,
+          onPrimary: Colors.black,
           surface: Colors.black,
           surfaceDim: Colors.black,
           surfaceBright: Colors.black,

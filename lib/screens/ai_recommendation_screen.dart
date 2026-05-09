@@ -10,6 +10,7 @@ import '../services/ai_meal_validation.dart';
 import '../services/ai_service.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
+import '../theme/color_constants.dart';
 import '../util/ai_validation_localization.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/global_app_bar.dart';
@@ -882,7 +883,11 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
             children: [
               Row(
                 children: [
-                  const Icon(Icons.auto_awesome_rounded, size: 20),
+                  ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) => createAiGradientShader(bounds),
+                    child: const Icon(Icons.auto_awesome_rounded, size: 20),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

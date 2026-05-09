@@ -26,6 +26,8 @@ import '../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
+import '../theme/color_constants.dart';
+
 
 // lib/screens/add_food_screen.dart
 
@@ -684,17 +686,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               ),
               icon: ShaderMask(
                 blendMode: BlendMode.srcIn,
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    Color(0xFFE88DCC),
-                    Color(0xFFF4A77A),
-                    Color(0xFFF7D06B),
-                    Color(0xFF7DDEAE),
-                    Color(0xFF6DC8D9),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ).createShader(bounds),
+                shaderCallback: (bounds) => createAiGradientShader(bounds),
                 child: const Icon(Icons.auto_awesome),
               ),
               onPressed: () async {

@@ -22,6 +22,7 @@ import 'supplement_track_screen.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
+import '../theme/color_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/measurement_chart_widget.dart';
 import '../widgets/nutrition_summary_widget.dart';
@@ -1264,8 +1265,11 @@ class DiaryScreenState extends State<DiaryScreen> {
                 const SizedBox(width: 4),
                 if (Provider.of<ThemeService>(context).isAiEnabled)
                   IconButton(
-                    icon: const Icon(Icons.auto_awesome_rounded),
-                    color: theme.colorScheme.tertiary,
+                    icon: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => createAiGradientShader(bounds),
+                      child: const Icon(Icons.auto_awesome_rounded),
+                    ),
                     iconSize: 20,
                     onPressed: () async {
                       final result = await Navigator.of(context).push<bool>(
