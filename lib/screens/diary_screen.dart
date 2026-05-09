@@ -1129,8 +1129,8 @@ class DiaryScreenState extends State<DiaryScreen> {
                   : StepsSyncService.defaultStepsGoal)
               .toDouble(),
           color: theme.colorScheme.primary,
-          height: 50,
-          borderRadius: 16,
+          height: 54,
+          borderRadius: DesignConstants.borderRadiusL,
         ),
       ),
     );

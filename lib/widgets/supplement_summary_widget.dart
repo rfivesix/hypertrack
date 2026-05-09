@@ -4,6 +4,7 @@ import '../models/supplement.dart';
 import '../models/tracked_supplement.dart';
 import 'glass_progress_bar.dart';
 import '../theme/color_constants.dart';
+import '../util/design_constants.dart';
 
 /// A widget that displays a list of tracked supplements for the current day.
 ///
@@ -72,8 +73,8 @@ class SupplementSummaryWidget extends StatelessWidget {
                 value: ts.totalDosedToday,
                 target: supplement.dailyLimit!,
                 color: Colors.amber.shade600,
-                height: 50,
-                borderRadius: 16,
+                height: 54,
+                borderRadius: DesignConstants.borderRadiusL,
               ),
             ),
           );
@@ -122,12 +123,12 @@ class _CheckmarkCard extends StatelessWidget {
         : summaryCardWhiteMode;
 
     return Container(
-      height: 50,
+      height: 54,
       margin: const EdgeInsets.symmetric(vertical: 4.0),
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
       ),
       child: Row(
         children: [
