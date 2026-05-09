@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+    content="Technical details on Train Libre's AI meal recognition, volume estimation limits, and local-first architecture.">
+  <meta name="theme-color" content="#000000">
+  <title>AI Meal Recognition | Train Libre</title>
+  <link rel="icon" href="../../web/favicon.png">
+  <link rel="stylesheet" href="../style.css">
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="page">
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="../#top" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <div class="nav-links">
+          <a href="../#features" data-i18n="nav_features">Features</a>
+          <a href="../#intelligence" data-i18n="nav_guidance">AI Guidance</a>
+          <a href="../#privacy" data-i18n="nav_privacy">Privacy</a>
+          <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
+            rel="noreferrer">GitHub</a>
+        </div>
+        <div class="nav-controls">
+          <button id="lang-toggle" class="control-btn" aria-label="Switch Language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+              </path>
+            </svg>
+          </button>
+          <button id="theme-toggle" class="control-btn" aria-label="Toggle Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero-minimal">
+        <div class="hero-content reveal">
+          <div class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span data-i18n="intel_c1_label">AI meal recognition</span>
+          </div>
+          <h1 data-i18n="ai_meal_hero_t">AI Meal Recognition</h1>
+          <p class="hero-copy" data-i18n="ai_meal_hero_c">A review-first approach to capturing nutrition data using large language models as a proposing layer for local deterministic validation.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="feature-grid">
+          <article class="feature-card reveal delay-1" style="--feature: var(--orange); --feature-rgb: 255, 155, 5;">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              </svg>
+            </div>
+            <h3 data-i18n="ai_meal_what_t">What this feature does</h3>
+            <ul class="feature-list">
+                <li data-i18n="ai_meal_what_l1">Proposes food names and weight estimates from photos or text descriptions.</li>
+                <li data-i18n="ai_meal_what_l2">Matches AI suggestions against the app's local database of foods.</li>
+                <li data-i18n="ai_meal_what_l3">Calculates nutrition totals locally using matched product data.</li>
+                <li data-i18n="ai_meal_what_l4">Provides a manual review interface to edit or reject every entry.</li>
+            </ul>
+          </article>
+
+          <article class="feature-card reveal delay-2" style="--feature: var(--red); --feature-rgb: 245, 83, 83;">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+              </svg>
+            </div>
+            <h3 data-i18n="ai_meal_not_t">What it does NOT do</h3>
+            <ul class="feature-list">
+                <li data-i18n="ai_meal_not_l1">It does not provide medical-grade nutrition analysis.</li>
+                <li data-i18n="ai_meal_not_l2">It does not automatically 'know' the caloric density of a specific restaurant dish.</li>
+                <li data-i18n="ai_meal_not_l3">It does not silently save data without your explicit review and confirmation.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="ai_meal_how_t">The Architecture: Local-First & BYOK</h2>
+          <p class="section-copy" data-i18n="ai_meal_how_c1">Train Libre uses a "Bring Your Own Key" (BYOK) model. You choose a provider and model; the app handles the orchestration. Your data stays local, and the AI is only called when you trigger a capture.</p>
+          <p class="section-copy" data-i18n="ai_meal_how_c2">Recognition is treated as a noisy proposal. Once the AI returns food names and grams, the app runs a deterministic validation pass. It attempts to repair common errors and flags low-confidence matches before you see the result.</p>
+        </div>
+      </section>
+
+      <section class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="ai_meal_limits_t">Scientific & Technical Limitations</h2>
+          <p class="section-copy" data-i18n="ai_meal_limits_c1">Research into computer-vision-based nutrition estimation highlights several fundamental hurdles that make 100% accuracy impossible for consumer apps:</p>
+          <div class="info-grid">
+            <div class="info-item">
+              <strong data-i18n="ai_meal_limits_l1">The Volume Problem: A 2D photo lacks depth information. Studies show that without a reference object or multiple angles, volume error rates typically range from 10% to 30%.</strong>
+            </div>
+            <div class="info-item">
+              <strong data-i18n="ai_meal_limits_l2">Hidden Ingredients: AI cannot 'see' the oils, butter, or sugar used in preparation. A grilled breast and a sautéed one may look identical but differ significantly in caloric density.</strong>
+            </div>
+            <div class="info-item">
+              <strong data-i18n="ai_meal_limits_l3">Mixed Dishes: Ingredients in dishes like stir-fries or burritos are often occluded. If the rice is under the curry, the AI will likely underestimate the portion.</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="ai_meal_guidance_t">Practical Guidance</h2>
+          <p class="section-copy" data-i18n="ai_meal_guidance_c">Treat AI capture as a friction-reduction tool, not a ground truth. Always use the review screen to adjust gram estimates and ensure the matched foods align with what you actually ate.</p>
+        </div>
+      </section>
+
+      <section class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="evidence_read_more">Evidence & further reading</h2>
+          <ul class="evidence-links">
+            <li>
+              <a href="https://doi.org/10.3390/healthcare10010059" target="_blank" rel="noreferrer">Puri et al. (2022) - Mobile Computer Vision-Based Applications for Food Recognition and Volume Estimation</a>
+            </li>
+            <li>
+              <a href="https://pubmed.ncbi.nlm.nih.gov/38354039/" target="_blank" rel="noreferrer"> systematic review (2024) - AI-based digital image dietary assessment methods compared to reference measures</a>
+            </li>
+            <li>
+              <a href="https://doi.org/10.3390/nu16152573" target="_blank" rel="noreferrer">Leigh et al. (2024) - Validity of AI-Enabled Food Image Recognition in Apps for Nutrition Care</a>
+            </li>
+            <li>
+              <a href="https://doi.org/10.2196/ijmr.9359" target="_blank" rel="noreferrer">Noronha et al. (2018) - Calorie Estimation From Pictures of Food: Crowdsourcing Study</a>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand" href="../#top" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <p class="fine-print" data-i18n="footer_medical">Fitness, nutrition, recovery, and pulse features are for
+          personal tracking and training
+          context, not medical diagnosis or treatment.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../ai-nutrition/" data-i18n="intel_c1_label">AI meal recognition</a>
+        <a href="../adaptive-nutrition/" data-i18n="intel_c2_label">Calorie estimation</a>
+        <a href="../recovery/" data-i18n="footer_recovery">Recovery Tracker</a>
+        <a href="../privacy-policy/" data-i18n="footer_privacy">Privacy Policy</a>
+        <a href="../impressum.html" data-i18n="footer_imprint">Imprint</a>
+        <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="../script.js"></script>
+</body>
+
+</html>

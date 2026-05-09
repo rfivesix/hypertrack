@@ -37,27 +37,33 @@ You can manage these permissions in your device settings.
 
 ## Health and Fitness Data
 
-Train Libre includes optional integrations with Apple Health and Google Health Connect.
+Integration with platform health services (Apple Health on iOS, Google Health Connect on Android) is entirely optional. Access only occurs after you explicitly grant permission.
 
-When permitted, the app can read:
+Depending on enabled features, Train Libre may read:
 - **Steps** for activity summaries.
 - **Sleep sessions and stages** for recovery metrics.
 - **Heart-rate data** for pulse analysis and workout summaries.
+- **Workout-related health data** where available.
 
-When permitted, the app can export:
-- **Measurements** (weight, body fat).
-- **Aggregate nutrition and hydration**.
-- **Workout sessions**.
+Train Libre may write/export supported app-recorded data such as:
+- **Workouts**.
+- **Body measurements** (weight, body fat).
+- **Nutrition aggregates**.
+- **Hydration data**.
 
-This is a one-way export; Train Libre remains the authoritative record for your tracking data.
+This is a one-way export from Train Libre to the platform health service. Train Libre remains the primary local source of truth. Health data is used for personal tracking, statistics, and training context. It is not used for advertising, tracking, profiling, or sale. The app is not a medical device and does not provide medical diagnosis or treatment. Permissions can be revoked in system settings.
 
-## AI / Camera / Photos Features
+## AI Features
 
-AI meal features are optional and disabled by default. They use a "Bring Your Own Key" (BYOK) model.
+AI meal recognition and AI meal recommendations are optional and disabled by default. The app uses a "Bring Your Own Key" (BYOK) model where you choose and configure a supported provider.
 
-If you enable AI features and provide an API key, it is stored in native secure storage. When you use AI meal capture, the app may send meal descriptions or photos to your selected provider. A recent meal-history summary is only shared if you enable the specific opt-in setting.
+Only when you actively use an AI feature are selected inputs sent to the configured provider. This may include:
+- **Meal description text**.
+- **Selected images**.
+- **Relevant nutrient context**.
+- **Optional recent meal context** (only if the user enables that setting).
 
-The AI provider returns suggested food names and gram estimates, which the app then validates against the local food database before you save them.
+API keys are stored locally and securely. Train Libre does not operate its own AI backend for these requests. Provider processing is governed by their own terms and privacy policies. AI outputs are estimates. Results are shown for review before saving. You can edit, remove, or reject items before they become part of the local diary. AI data is not used by Train Libre for advertising or tracking.
 
 ## Backups and Data Portability
 
