@@ -4,28 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.9.2] - 2026-05-07
+## [0.9.2] - 2026-05-09
 ### Added
-- Minor UI polish and accessibility improvements across Nutrition and Statistics screens.
-- Improved offline catalog import resilience for certain published SQLite artifacts.
 - Added a macro and caffeine summary to the Water & Drinks section in the Diary.
+- Added comprehensive localization for missing user-facing strings across workout, nutrition, and settings screens.
 
 ### Changed
+- Redesigned "Today in Focus" layout with improved spacing, better visual hierarchy, and polished macro/micro nutrient rendering.
+- Minor UI polish and accessibility improvements across Nutrition and Statistics screens.
+- Improved offline catalog import resilience for certain published SQLite artifacts.
 - Performance improvements for Statistics and Pulse aggregate queries.
 - Deferred non-critical startup initialization to reduce first-frame work.
+- Removed unused microphone and speech recognition permission declarations and documentation references.
 
 ### Fixed
 - Fixed several layout overflows on small screens and compact devices.
 - Fixed backup restore edge cases for some legacy backup variants.
+- Fixed hydration and caffeine totals not updating correctly after editing tracked foods/drinks.
+- Fixed the edit dialog not correctly restoring liquid toggle, caffeine, and sugar states.
+- Fixed kcal missing in the Water & Drinks section for food-derived liquid entries.
+- Fixed default entry time being incorrectly set to 00:00 for new entries.
 - Miscellaneous bug fixes and stability improvements.
-- Fixed hydration totals not updating correctly after editing tracked foods/drinks.
-- Fixed caffeine totals not updating correctly after editing tracked foods/drinks.
-- Fixed the edit dialog not correctly restoring the liquid toggle, caffeine, and sugar states for previously logged liquid entries.
-- Fixed kcal missing in the Water & Drinks section when liquid entries are generated from tracked food items.
-- Fixed default entry time being incorrectly set to 00:00 instead of the current time when tracking entries for the current day.
 
 ### Internal
-- Dependency updates, documentation tweaks, and additional test coverage for catalog refresh and Pulse aggregation.
+- Documentation audit and cleanup: removed outdated behavioral statements, fixed broken links, and updated privacy policy.
+- Permission metadata audit: verified iOS and Android manifests for accuracy and removed obsolete entries.
+- Dependency updates and additional test coverage.
 
 ## [0.9.1] - 2026-05-06
 ### Changed

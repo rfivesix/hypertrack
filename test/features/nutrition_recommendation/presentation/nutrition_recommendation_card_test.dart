@@ -401,7 +401,8 @@ void main() {
               body: NutritionRecommendationCard(
                 goal: BodyweightGoal.maintainWeight,
                 targetRateKgPerWeek: 0,
-                recommendation: _recommendation().copyWith(confidence: confidence),
+                recommendation:
+                    _recommendation().copyWith(confidence: confidence),
                 maintenanceEstimate: _estimate(),
                 generatedAt: DateTime(2026, 4, 5, 9, 0),
                 nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
@@ -453,8 +454,7 @@ void main() {
     };
 
     for (final entry in expectedFills.entries) {
-      testWidgets(
-          'confidence bar fill for ${entry.key} is ${entry.value}',
+      testWidgets('confidence bar fill for ${entry.key} is ${entry.value}',
           (tester) async {
         await tester.pumpWidget(
           MaterialApp(

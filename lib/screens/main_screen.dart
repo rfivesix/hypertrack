@@ -1105,8 +1105,7 @@ class _MainScreenState extends State<MainScreen>
                     title: l10n.discard_button, // "Discard"
                     content:
                         l10n.deleteWorkoutConfirmContent, // "Really delete?"
-                    confirmLabel:
-                        l10n.discard_button, // Red button: "Discard"
+                    confirmLabel: l10n.discard_button, // Red button: "Discard"
                   );
 
                   if (confirmed) {

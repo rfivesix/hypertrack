@@ -1,6 +1,6 @@
 # Train Libre Privacy Policy
 
-Last updated: May 6, 2026
+Last updated: May 9, 2026
 
 ## Overview
 
@@ -58,7 +58,7 @@ The repository documents this as a one-way export. It is not a bidirectional syn
 
 Train Libre also stores step segments locally after import. Sleep persistence tables store raw import records, normalized sleep sessions, sleep stage segments, sleep heart-rate samples, and derived nightly analyses. Pulse analysis reads platform heart-rate samples and stores hourly aggregate pulse data in the current repository.
 
-## AI / Camera / Photos / Microphone / Speech Features
+## AI / Camera / Photos Features
 
 AI meal features are optional and disabled by default in the repository documentation and settings flow. They use a bring-your-own-key design.
 
@@ -142,5 +142,5 @@ This policy may be updated as Train Libre changes. Updates should revise the "La
 
 ## Contact
 
-support@schotte.me
-support@schotte.me
+Richard Georg Schotte  
+Email: richard@schotte.me

@@ -322,47 +322,47 @@ class _NutritionScreenState extends State<NutritionScreen> {
               initialSugar: linkedFluid?.sugarPer100ml,
               initialCaffeine: linkedFluid?.caffeinePer100ml,
             ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(l10n.cancel),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(l10n.cancel),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () {
-                    final state = dialogStateKey.currentState;
-                    if (state != null) {
-                      final quantity = int.tryParse(state.quantityText);
-                      final sugar = double.tryParse(
-                        state.sugarText.replaceAll(',', '.'),
-                      );
-                      final caffeine = double.tryParse(
-                        state.caffeineText.replaceAll(',', '.'),
-                      );
-                      if (quantity != null && quantity > 0) {
-                        Navigator.of(ctx).pop((
-                          quantity: quantity,
-                          timestamp: state.selectedDateTime,
-                          mealType: state.selectedMealType,
-                          isLiquid: state.isLiquid,
-                          sugarPer100ml: sugar,
-                          caffeinePer100ml: caffeine,
-                        ));
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final state = dialogStateKey.currentState;
+                      if (state != null) {
+                        final quantity = int.tryParse(state.quantityText);
+                        final sugar = double.tryParse(
+                          state.sugarText.replaceAll(',', '.'),
+                        );
+                        final caffeine = double.tryParse(
+                          state.caffeineText.replaceAll(',', '.'),
+                        );
+                        if (quantity != null && quantity > 0) {
+                          Navigator.of(ctx).pop((
+                            quantity: quantity,
+                            timestamp: state.selectedDateTime,
+                            mealType: state.selectedMealType,
+                            isLiquid: state.isLiquid,
+                            sugarPer100ml: sugar,
+                            caffeinePer100ml: caffeine,
+                          ));
+                        }
                       }
-                    }
-                  },
-                  child: Text(l10n.save),
+                    },
+                    child: Text(l10n.save),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      );
+              ],
+            ),
+          ],
+        );
       },
     );
 

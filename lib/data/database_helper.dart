@@ -1144,10 +1144,12 @@ class DatabaseHelper {
     final supplementRow = await (dbInstance.select(dbInstance.supplements)
           ..where((tbl) => tbl.code.equals('caffeine')))
         .getSingleOrNull();
-    
+
     if (supplementRow != null) {
       await (dbInstance.delete(dbInstance.supplementLogs)
-            ..where((tbl) => tbl.supplementId.equals(supplementRow.id) & tbl.takenAt.equals(timestamp)))
+            ..where((tbl) =>
+                tbl.supplementId.equals(supplementRow.id) &
+                tbl.takenAt.equals(timestamp)))
           .go();
     }
   }

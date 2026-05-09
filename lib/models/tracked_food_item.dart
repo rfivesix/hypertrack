@@ -5,10 +5,8 @@ import 'food_item.dart';
 // from two different sources (the diary entry and the product catalog),
 // so the UI can read everything from one place.
 class TrackedFoodItem {
-  final FoodEntry
-      entry; // The actual diary entry (with ID, amount, and time)
-  final FoodItem
-      item; // Food details (with name, calories, etc.)
+  final FoodEntry entry; // The actual diary entry (with ID, amount, and time)
+  final FoodItem item; // Food details (with name, calories, etc.)
 
   TrackedFoodItem({required this.entry, required this.item});
 

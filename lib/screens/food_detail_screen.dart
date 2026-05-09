@@ -272,7 +272,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           DesignConstants.cardPaddingInternal,
           totalTopPadding,
           DesignConstants.cardPaddingInternal,
-          DesignConstants.cardPaddingInternal + 80.0, // + space for the FAB at the bottom
+          DesignConstants.cardPaddingInternal +
+              80.0, // + space for the FAB at the bottom
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

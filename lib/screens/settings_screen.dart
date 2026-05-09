@@ -166,8 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextButton(
-                      onPressed: () =>
-                          Navigator.of(dialogContext).pop(draft),
+                      onPressed: () => Navigator.of(dialogContext).pop(draft),
                       child: Text(l10n.save),
                     ),
                   ),

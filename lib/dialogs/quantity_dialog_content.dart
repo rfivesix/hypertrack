@@ -64,11 +64,15 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
     );
     _sugarController = TextEditingController(
       text: widget.initialSugar?.toStringAsFixed(1).replaceAll('.0', '') ??
-            widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+          widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ??
+          '',
     );
     _caffeineController = TextEditingController(
       text: widget.initialCaffeine?.toStringAsFixed(1).replaceAll('.0', '') ??
-            widget.item.caffeineMgPer100ml?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+          widget.item.caffeineMgPer100ml
+              ?.toStringAsFixed(1)
+              .replaceAll('.0', '') ??
+          '',
     );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
     _selectedMealType = widget.initialMealType ?? "mealtypeSnack";

@@ -60,7 +60,8 @@ class AppSettings extends Table with HybridId, MetaColumns {
 // 3. Exercises
 /// Table definition for exercises.
 class Exercises extends Table with HybridId, MetaColumns {
-  TextColumn get createdBy => text().nullable()(); // Nullable for system exercises
+  TextColumn get createdBy =>
+      text().nullable()(); // Nullable for system exercises
   TextColumn get nameDe => text()();
   TextColumn get nameEn => text()();
 
@@ -144,8 +145,7 @@ class SetLogs extends Table with HybridId, MetaColumns {
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   IntColumn get logOrder => integer().withDefault(const Constant(0))();
   RealColumn get distance => real().nullable()(); // For cardio in the set
-  IntColumn get durationSeconds =>
-      integer().nullable()(); // For cardio/static
+  IntColumn get durationSeconds => integer().nullable()(); // For cardio/static
   TextColumn get notes => text().nullable()();
 }
 
@@ -187,7 +187,8 @@ class Products extends Table with HybridId, MetaColumns {
   RealColumn get sugar => real().nullable()();
   RealColumn get fiber => real().nullable()();
   RealColumn get salt => real().nullable()();
-  RealColumn get caffeine => real().nullable()(); // Important for supplement logic
+  RealColumn get caffeine =>
+      real().nullable()(); // Important for supplement logic
 
   BoolColumn get isLiquid => boolean().withDefault(const Constant(false))();
   TextColumn get source =>

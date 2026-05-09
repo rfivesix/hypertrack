@@ -40,7 +40,9 @@ void main() {
       expect(logs, isEmpty);
     });
 
-    test('deleting a fluid entry deletes its associated caffeine logs by timestamp', () async {
+    test(
+        'deleting a fluid entry deletes its associated caffeine logs by timestamp',
+        () async {
       final timestamp = DateTime(2026, 3, 30, 10, 0);
       final fluidId = await dbHelper.insertFluidEntry(
         FluidEntry(
@@ -76,7 +78,8 @@ void main() {
       expect(logs, isEmpty);
     });
 
-    test('updating a fluid entry deletes old caffeine logs by timestamp', () async {
+    test('updating a fluid entry deletes old caffeine logs by timestamp',
+        () async {
       final oldTimestamp = DateTime(2026, 3, 30, 10, 0);
       final newTimestamp = DateTime(2026, 3, 30, 11, 0);
       final fluidId = await dbHelper.insertFluidEntry(
@@ -107,18 +110,16 @@ void main() {
       var logs = await db.select(db.supplementLogs).get();
       expect(logs.length, 1);
 
-      await dbHelper.updateFluidEntry(
-        FluidEntry(
-          id: fluidId,
-          timestamp: newTimestamp,
-          quantityInMl: 500,
-          name: 'Energy Drink',
-          kcal: null,
-          sugarPer100ml: null,
-          carbsPer100ml: null,
-          caffeinePer100ml: 32,
-        )
-      );
+      await dbHelper.updateFluidEntry(FluidEntry(
+        id: fluidId,
+        timestamp: newTimestamp,
+        quantityInMl: 500,
+        name: 'Energy Drink',
+        kcal: null,
+        sugarPer100ml: null,
+        carbsPer100ml: null,
+        caffeinePer100ml: 32,
+      ));
 
       logs = await db.select(db.supplementLogs).get();
       expect(logs, isEmpty); // Old caffeine log is deleted

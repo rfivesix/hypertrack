@@ -103,8 +103,7 @@ class HomeState extends State<Home> {
     );
     newTodaysNutrition.water = waterIntake;
 
-    final newWorkoutStats =
-        await _getWorkoutStats(); // FIX: Method renamed
+    final newWorkoutStats = await _getWorkoutStats(); // FIX: Method renamed
     await _loadChartData(); // Loads chart data and sets _weightChartData
 
     for (final entry in entries) {

@@ -864,9 +864,8 @@ class _IngredientCard extends StatelessWidget {
 
     Widget buildCard(FoodItem? fi) {
       final name = (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
-      final unit = (fi?.isLiquid == true)
-          ? l10n.unit_milliliters
-          : l10n.unit_grams;
+      final unit =
+          (fi?.isLiquid == true) ? l10n.unit_milliliters : l10n.unit_grams;
 
       // per-ingredient macros & kcal
       int kcal = 0;
