@@ -945,12 +945,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   Future<String> _loadStepsProviderName() async {
     final providerFilter = await _stepsSyncService.getProviderFilter();
     final providerRaw = StepsSyncService.providerFilterToRaw(providerFilter);
-    if (providerRaw == 'appleHealth') return 'Apple Health';
-    if (providerRaw == 'healthConnect') return 'Health Connect';
-    if (providerRaw == 'withings') return 'Withings';
-    if (providerRaw == 'garmin') return 'Garmin';
-    if (providerRaw == 'fitbit') return 'Fitbit';
-    return 'Local';
+    if (providerRaw == 'appleHealth') return l10n.statisticsProviderAppleHealth;
+    if (providerRaw == 'healthConnect') {
+      return l10n.statisticsProviderHealthConnect;
+    }
+    if (providerRaw == 'withings') return l10n.statisticsProviderWithings;
+    if (providerRaw == 'garmin') return l10n.statisticsProviderGarmin;
+    if (providerRaw == 'fitbit') return l10n.statisticsProviderFitbit;
+    return l10n.statisticsProviderLocal;
   }
 
   List<String> get _timeRanges => [

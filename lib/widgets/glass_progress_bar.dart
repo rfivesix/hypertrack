@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import '../theme/color_constants.dart';
 
+import '../util/design_constants.dart';
+
 /// A progress bar widget with a glass background and a solid fill color.
 ///
 /// Displays a [label], [unit], current [value], and optional [target].
@@ -34,8 +36,8 @@ class GlassProgressBar extends StatelessWidget {
     required this.value,
     required this.target,
     required this.color,
-    this.height = 60.0,
-    this.borderRadius = 20.0,
+    this.height = 54.0,
+    this.borderRadius = DesignConstants.borderRadiusL,
   });
 
   @override

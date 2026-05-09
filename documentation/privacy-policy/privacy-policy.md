@@ -1,6 +1,6 @@
 # Train Libre Privacy Policy
 
-Last updated: May 6, 2026
+Last updated: May 9, 2026
 
 ## Overview
 
@@ -58,7 +58,7 @@ The repository documents this as a one-way export. It is not a bidirectional syn
 
 Train Libre also stores step segments locally after import. Sleep persistence tables store raw import records, normalized sleep sessions, sleep stage segments, sleep heart-rate samples, and derived nightly analyses. Pulse analysis reads platform heart-rate samples and stores hourly aggregate pulse data in the current repository.
 
-## AI / Camera / Photos / Microphone / Speech Features
+## AI / Camera / Photos Features
 
 AI meal features are optional and disabled by default in the repository documentation and settings flow. They use a bring-your-own-key design.
 
@@ -120,8 +120,8 @@ No system can guarantee perfect security. Use device-level protections and be ca
 
 You control Train Libre data and permissions in several ways:
 
-- Do not enable optional AI features, health integrations, catalog refreshes, sharing, backups, imports, notifications, camera, photos, microphone, or speech features if you do not want to use them.
-- Revoke camera, microphone, photo, notification, health, or file permissions in your device settings.
+- Do not enable optional AI features, health integrations, catalog refreshes, sharing, backups, imports, notifications, camera, or photos if you do not want to use them.
+- Revoke camera, photo, notification, health, or file permissions in your device settings.
 - Delete entries inside the app where deletion is available.
 - Delete profile images and other local files where the app provides that control.
 - Remove a saved AI API key from the AI settings screen.
@@ -142,4 +142,5 @@ This policy may be updated as Train Libre changes. Updates should revise the "La
 
 ## Contact
 
-support@schotte.me
+Richard Georg Schotte  
+Email: richard@schotte.me

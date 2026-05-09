@@ -10,12 +10,7 @@
     <!-- Optional, but recommended for image access on newer Android versions. -->
     <!-- <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/> -->
     <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-    <uses-feature
-        android:name="android.hardware.microphone"
-        android:required="false"/>
 
     <!-- Required for Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_STEPS"/>

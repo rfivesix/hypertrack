@@ -173,14 +173,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       }
 
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Gespeichert (Basis-DB)')));
+      ).showSnackBar(SnackBar(content: Text(l10n.foodDetailSavedBaseDb)));
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+      ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
     }
   }
 
@@ -196,9 +198,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Export-Fehler: $e')));
+      ).showSnackBar(SnackBar(content: Text(l10n.foodDetailExportError(e))));
     }
   }
 
@@ -269,7 +272,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           DesignConstants.cardPaddingInternal,
           totalTopPadding,
           DesignConstants.cardPaddingInternal,
-          DesignConstants.cardPaddingInternal + 80.0, // + space for the FAB at the bottom
+          DesignConstants.cardPaddingInternal +
+              80.0, // + space for the FAB at the bottom
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,14 +413,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                           ElevatedButton.icon(
                             onPressed: _saveDevEdits,
                             icon: const Icon(Icons.save),
-                            label: const Text('Speichern'),
+                            label: Text(l10n.save),
                           ),
                           const SizedBox(width: 12),
                           TextButton.icon(
                             onPressed: () =>
                                 setState(() => _devEditing = false),
                             icon: const Icon(Icons.close),
-                            label: const Text('Fertig'),
+                            label: Text(l10n.doneButtonLabel),
                           ),
                           const Spacer(),
                           IconButton(

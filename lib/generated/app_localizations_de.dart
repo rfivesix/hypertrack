@@ -1074,6 +1074,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get secondary_muscles_hint => 'z.B. Schultern';
 
   @override
+  String get fluidNameLabel => 'Name';
+
+  @override
+  String get sugarPer100mlLabel => 'Zucker (g / 100ml)';
+
+  @override
   String get set_type_normal => 'Normal';
 
   @override
@@ -1636,6 +1642,38 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get snackbarAutoBackupFailed =>
       'Auto-Backup fehlgeschlagen oder abgebrochen.';
+
+  @override
+  String get localDataDeletionCardTitle => 'Lokale App-Daten';
+
+  @override
+  String get localDataDeletionCardDescription =>
+      'Löscht dauerhaft deine auf diesem Gerät gespeicherten Daten und setzt Train Libre in einen frischen lokalen Zustand zurück.';
+
+  @override
+  String get deleteAllLocalAppData => 'Alle lokalen App-Daten löschen';
+
+  @override
+  String get localDataDeletionConfirmTitle => 'Alle lokalen App-Daten löschen?';
+
+  @override
+  String get localDataDeletionConfirmBody =>
+      'Dies löscht dauerhaft lokal gespeicherte Workouts, Ernährungslogs, Messwerte, Supplements, Einstellungen/Zustand, zwischengespeicherte Analysen und lokale App-Daten.\n\nDies löscht keine Daten, die bereits zu Apple Health oder Health Connect exportiert wurden.\n\nDies löscht keine Daten externer Anbieter und keine entfernten öffentlichen Katalogquellen. Gebündelte App-Assets und erforderliche Standardkataloge bleiben erhalten oder werden neu angelegt, damit die App nach dem Zurücksetzen starten kann.';
+
+  @override
+  String get localDataDeletionTypeDeleteLabel =>
+      'Zum Bestätigen DELETE eingeben';
+
+  @override
+  String get localDataDeletionSuccessTitle => 'Lokale Daten gelöscht';
+
+  @override
+  String get localDataDeletionSuccessBody =>
+      'Train Libre kehrt nun zum initialen Einrichtungszustand zurück.';
+
+  @override
+  String get localDataDeletionFailed =>
+      'Lokale Daten konnten nicht gelöscht werden. Bitte versuche es erneut.';
 
   @override
   String get noUnknownExercisesFound => 'Keine unbekannten Übungen gefunden';
@@ -2216,18 +2254,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aiCaptureTabPhoto => 'Foto';
 
   @override
-  String get aiCaptureTabVoice => 'Sprache';
-
-  @override
   String get aiCaptureTabText => 'Text';
 
   @override
   String get aiCapturePhotoHint =>
       'Mache oder wähle bis zu 4 Fotos deiner Mahlzeit.';
-
-  @override
-  String get aiCaptureVoiceHint =>
-      'Tippe auf das Mikrofon und beschreibe deine Mahlzeit.';
 
   @override
   String get aiCaptureTextHint =>
@@ -4411,4 +4442,155 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthExportHealthConnectStatusTitle =>
       'Export-Status Health Connect';
+
+  @override
+  String get settingsBaseFoodLanguageTitle =>
+      'Anzeigesprache Grundnahrungsmittel';
+
+  @override
+  String get settingsBaseFoodLanguageSubtitle =>
+      'Wähle, in welcher Sprache Grundnahrungsmittel angezeigt werden.';
+
+  @override
+  String get settingsBaseFoodLanguageFollowApp => 'App-Sprache verwenden';
+
+  @override
+  String get settingsBaseFoodLanguageEnglish => 'Englisch';
+
+  @override
+  String get settingsBaseFoodLanguageGerman => 'Deutsch';
+
+  @override
+  String get aiModelLabel => 'Modell';
+
+  @override
+  String get autoBackupStoragePickerUnavailable =>
+      'Speicherordner-Auswahl nicht verfügbar. Bitte die App nach dem Update vollständig neu starten/neu installieren.';
+
+  @override
+  String autoBackupFolderPickerFailed(Object error) {
+    return 'Ordnerauswahl fehlgeschlagen: $error';
+  }
+
+  @override
+  String get healthExportPermissionDenied => 'Berechtigung verweigert';
+
+  @override
+  String get healthExportAdapterUnavailable => 'Adapter nicht verfügbar';
+
+  @override
+  String get healthExportPlatformUnavailable => 'Plattform nicht verfügbar';
+
+  @override
+  String get healthExportPlatformNotInstalled => 'Plattform nicht installiert';
+
+  @override
+  String get healthExportExportDisabled => 'Export deaktiviert';
+
+  @override
+  String get onboardingMacrosStepTitle => 'Makronährstoffe';
+
+  @override
+  String get onboardingMacrosStepSubtitle =>
+      'Wie setzt sich deine Ernährung zusammen?';
+
+  @override
+  String get statisticsProviderAppleHealth => 'Apple Health';
+
+  @override
+  String get statisticsProviderHealthConnect => 'Health Connect';
+
+  @override
+  String get statisticsProviderWithings => 'Withings';
+
+  @override
+  String get statisticsProviderGarmin => 'Garmin';
+
+  @override
+  String get statisticsProviderFitbit => 'Fitbit';
+
+  @override
+  String get statisticsProviderLocal => 'Lokal';
+
+  @override
+  String get unit_milliliters => 'ml';
+
+  @override
+  String get unit_kilograms => 'kg';
+
+  @override
+  String get mealEditorHintExample => 'z. B. Hähnchen Bowl';
+
+  @override
+  String get mealEditorNoIngredientsYet => 'Noch keine – kommt später';
+
+  @override
+  String get foodDetailSavedBaseDb => 'Gespeichert (Basis-DB)';
+
+  @override
+  String foodDetailExportError(Object error) {
+    return 'Export-Fehler: $error';
+  }
+
+  @override
+  String get stepsModulePrevious => 'Zurück';
+
+  @override
+  String get stepsModuleNext => 'Weiter';
+
+  @override
+  String get stepsModuleTotalSteps => 'Schritte insgesamt';
+
+  @override
+  String get stepsModuleThisWeek => 'Diese Woche';
+
+  @override
+  String get stepsModuleThisMonth => 'Diesen Monat';
+
+  @override
+  String stepsModuleUpdated(String time) {
+    return 'Aktualisiert $time';
+  }
+
+  @override
+  String get stepsModuleScopeSwitcherSemantics => 'Schrittansicht wechseln';
+
+  @override
+  String get stepsModuleDay => 'Tag';
+
+  @override
+  String get stepsModuleWeek => 'Woche';
+
+  @override
+  String get stepsModuleMonth => 'Monat';
+
+  @override
+  String get stepsModuleHourlyTimeline => 'Stündlicher Verlauf';
+
+  @override
+  String get stepsModuleTotal => 'Gesamt';
+
+  @override
+  String get stepsModuleActiveHours => 'Aktive Stunden';
+
+  @override
+  String get stepsModulePeakHour => 'Aktivste Stunde';
+
+  @override
+  String get stepsModuleAvgPerDay => 'Durchschnitt / Tag';
+
+  @override
+  String get stepsModuleGoalHit => 'Ziel erreicht';
+
+  @override
+  String get stepsModuleGoalDays => 'Tage am Ziel';
+
+  @override
+  String get diarySyncingSteps => 'Schritte werden synchronisiert...';
+
+  @override
+  String get diaryLoadingSleep => 'Schlaf wird geladen...';
+
+  @override
+  String get unit_milligrams => 'mg';
 }

@@ -3,7 +3,7 @@
   "packages": [
     {
       "name": "train_libre",
-      "version": "0.9.0-beta.6+90009",
+      "version": "0.9.2+90013",
       "kind": "root",
       "source": "root",
       "dependencies": [
@@ -38,7 +38,6 @@
         "soft_edge_blur",
         "http",
         "flutter_secure_storage",
-        "speech_to_text",
         "flutter_local_notifications",
         "timezone",
         "crypto",
@@ -84,7 +83,6 @@
         "soft_edge_blur",
         "http",
         "flutter_secure_storage",
-        "speech_to_text",
         "flutter_local_notifications",
         "timezone",
         "crypto",
@@ -1600,84 +1598,6 @@
       ]
     },
     {
-      "name": "speech_to_text",
-      "version": "7.3.0",
-      "kind": "direct",
-      "source": "hosted",
-      "dependencies": [
-        "flutter",
-        "speech_to_text_platform_interface",
-        "json_annotation",
-        "clock",
-        "pedantic",
-        "flutter_web_plugins",
-        "meta",
-        "web",
-        "speech_to_text_windows"
-      ],
-      "directDependencies": [
-        "flutter",
-        "speech_to_text_platform_interface",
-        "json_annotation",
-        "clock",
-        "pedantic",
-        "flutter_web_plugins",
-        "meta",
-        "web",
-        "speech_to_text_windows"
-      ]
-    },
-    {
-      "name": "speech_to_text_windows",
-      "version": "1.0.0+beta.8",
-      "kind": "transitive",
-      "source": "hosted",
-      "dependencies": [
-        "flutter",
-        "speech_to_text_platform_interface"
-      ],
-      "directDependencies": [
-        "flutter",
-        "speech_to_text_platform_interface"
-      ]
-    },
-    {
-      "name": "speech_to_text_platform_interface",
-      "version": "2.3.0",
-      "kind": "transitive",
-      "source": "hosted",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "plugin_platform_interface"
-      ],
-      "directDependencies": [
-        "flutter",
-        "meta",
-        "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "flutter_web_plugins",
-      "version": "0.0.0",
-      "kind": "transitive",
-      "source": "sdk",
-      "dependencies": [
-        "flutter"
-      ],
-      "directDependencies": [
-        "flutter"
-      ]
-    },
-    {
-      "name": "pedantic",
-      "version": "1.11.1",
-      "kind": "transitive",
-      "source": "hosted",
-      "dependencies": [],
-      "directDependencies": []
-    },
-    {
       "name": "flutter_secure_storage",
       "version": "10.0.0",
       "kind": "direct",
@@ -1947,6 +1867,18 @@
         "flutter_secure_storage_platform_interface",
         "flutter_web_plugins",
         "web"
+      ]
+    },
+    {
+      "name": "flutter_web_plugins",
+      "version": "0.0.0",
+      "kind": "transitive",
+      "source": "sdk",
+      "dependencies": [
+        "flutter"
+      ],
+      "directDependencies": [
+        "flutter"
       ]
     },
     {

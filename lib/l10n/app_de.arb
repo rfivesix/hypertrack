@@ -432,6 +432,8 @@
   "primary_muscles_hint": "z.B. Brust, Trizeps",
   "secondary_muscles_label": "Sekundäre Muskeln (optional)",
   "secondary_muscles_hint": "z.B. Schultern",
+  "fluidNameLabel": "Name",
+  "sugarPer100mlLabel": "Zucker (g / 100ml)",
   "set_type_normal": "Normal",
   "set_type_warmup": "Warmup",
   "set_type_failure": "Failure",
@@ -654,6 +656,15 @@
   "autoBackupRunNow": "Jetzt Auto-Backup prüfen & ausführen",
   "snackbarAutoBackupSuccess": "Auto-Backup durchgeführt.",
   "snackbarAutoBackupFailed": "Auto-Backup fehlgeschlagen oder abgebrochen.",
+  "localDataDeletionCardTitle": "Lokale App-Daten",
+  "localDataDeletionCardDescription": "Löscht dauerhaft deine auf diesem Gerät gespeicherten Daten und setzt Train Libre in einen frischen lokalen Zustand zurück.",
+  "deleteAllLocalAppData": "Alle lokalen App-Daten löschen",
+  "localDataDeletionConfirmTitle": "Alle lokalen App-Daten löschen?",
+  "localDataDeletionConfirmBody": "Dies löscht dauerhaft lokal gespeicherte Workouts, Ernährungslogs, Messwerte, Supplements, Einstellungen/Zustand, zwischengespeicherte Analysen und lokale App-Daten.\n\nDies löscht keine Daten, die bereits zu Apple Health oder Health Connect exportiert wurden.\n\nDies löscht keine Daten externer Anbieter und keine entfernten öffentlichen Katalogquellen. Gebündelte App-Assets und erforderliche Standardkataloge bleiben erhalten oder werden neu angelegt, damit die App nach dem Zurücksetzen starten kann.",
+  "localDataDeletionTypeDeleteLabel": "Zum Bestätigen DELETE eingeben",
+  "localDataDeletionSuccessTitle": "Lokale Daten gelöscht",
+  "localDataDeletionSuccessBody": "Train Libre kehrt nun zum initialen Einrichtungszustand zurück.",
+  "localDataDeletionFailed": "Lokale Daten konnten nicht gelöscht werden. Bitte versuche es erneut.",
   "noUnknownExercisesFound": "Keine unbekannten Übungen gefunden",
   "snackbarAutoBackupFolderSet": "Auto-Backup-Ordner gesetzt:\n{path}",
   "@snackbarAutoBackupFolderSet": {
@@ -862,10 +873,8 @@
   "aiMealCapture": "KI-Mahlzeit",
   "aiCaptureTitle": "KI-Mahlzeitenerkennung",
   "aiCaptureTabPhoto": "Foto",
-  "aiCaptureTabVoice": "Sprache",
   "aiCaptureTabText": "Text",
   "aiCapturePhotoHint": "Mache oder wähle bis zu 4 Fotos deiner Mahlzeit.",
-  "aiCaptureVoiceHint": "Tippe auf das Mikrofon und beschreibe deine Mahlzeit.",
   "aiCaptureTextHint": "Beschreibe deine Mahlzeit (z.B. \"Gegrilltes Hähnchen mit Reis und Salat\")...",
   "aiAnalyzeButton": "Analysieren",
   "aiAnalyzing": "Mahlzeit wird analysiert...",
@@ -1840,4 +1849,68 @@
   ,"healthExportHealthConnectSubtitle": "Einweg-Export von Train Libre nach Health Connect"
   ,"healthExportAppleHealthStatusTitle": "Export-Status Apple Health"
   ,"healthExportHealthConnectStatusTitle": "Export-Status Health Connect"
+  ,"settingsBaseFoodLanguageTitle": "Anzeigesprache Grundnahrungsmittel"
+  ,"settingsBaseFoodLanguageSubtitle": "Wähle, in welcher Sprache Grundnahrungsmittel angezeigt werden."
+  ,"settingsBaseFoodLanguageFollowApp": "App-Sprache verwenden"
+  ,"settingsBaseFoodLanguageEnglish": "Englisch"
+  ,"settingsBaseFoodLanguageGerman": "Deutsch"
+  ,"aiModelLabel": "Modell"
+  ,"autoBackupStoragePickerUnavailable": "Speicherordner-Auswahl nicht verfügbar. Bitte die App nach dem Update vollständig neu starten/neu installieren."
+  ,"autoBackupFolderPickerFailed": "Ordnerauswahl fehlgeschlagen: {error}"
+  ,"@autoBackupFolderPickerFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  }
+  ,"healthExportPermissionDenied": "Berechtigung verweigert"
+  ,"healthExportAdapterUnavailable": "Adapter nicht verfügbar"
+  ,"healthExportPlatformUnavailable": "Plattform nicht verfügbar"
+  ,"healthExportPlatformNotInstalled": "Plattform nicht installiert"
+  ,"healthExportExportDisabled": "Export deaktiviert"
+  ,"onboardingMacrosStepTitle": "Makronährstoffe"
+  ,"onboardingMacrosStepSubtitle": "Wie setzt sich deine Ernährung zusammen?"
+  ,"statisticsProviderAppleHealth": "Apple Health"
+  ,"statisticsProviderHealthConnect": "Health Connect"
+  ,"statisticsProviderWithings": "Withings"
+  ,"statisticsProviderGarmin": "Garmin"
+  ,"statisticsProviderFitbit": "Fitbit"
+  ,"statisticsProviderLocal": "Lokal"
+  ,"unit_milliliters": "ml"
+  ,"unit_kilograms": "kg"
+  ,"mealEditorHintExample": "z. B. Hähnchen Bowl"
+  ,"mealEditorNoIngredientsYet": "Noch keine – kommt später"
+  ,"foodDetailSavedBaseDb": "Gespeichert (Basis-DB)"
+  ,"foodDetailExportError": "Export-Fehler: {error}"
+  ,"@foodDetailExportError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "stepsModulePrevious": "Zurück",
+  "stepsModuleNext": "Weiter",
+  "stepsModuleTotalSteps": "Schritte insgesamt",
+  "stepsModuleThisWeek": "Diese Woche",
+  "stepsModuleThisMonth": "Diesen Monat",
+  "stepsModuleUpdated": "Aktualisiert {time}",
+  "@stepsModuleUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stepsModuleScopeSwitcherSemantics": "Schrittansicht wechseln",
+  "stepsModuleDay": "Tag",
+  "stepsModuleWeek": "Woche",
+  "stepsModuleMonth": "Monat",
+  "stepsModuleHourlyTimeline": "Stündlicher Verlauf",
+  "stepsModuleTotal": "Gesamt",
+  "stepsModuleActiveHours": "Aktive Stunden",
+  "stepsModulePeakHour": "Aktivste Stunde",
+  "stepsModuleAvgPerDay": "Durchschnitt / Tag",
+  "stepsModuleGoalHit": "Ziel erreicht",
+  "stepsModuleGoalDays": "Tage am Ziel",
+  "diarySyncingSteps": "Schritte werden synchronisiert...",
+  "diaryLoadingSleep": "Schlaf wird geladen...",
+  "unit_milligrams": "mg"
 }

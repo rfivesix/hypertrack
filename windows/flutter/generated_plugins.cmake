@@ -7,7 +7,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   flutter_secure_storage_windows
   share_plus
-  speech_to_text_windows
   url_launcher_windows
 )
 

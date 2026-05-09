@@ -94,6 +94,15 @@ class DatabaseHelper {
       await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
       await dbInstance.customStatement('DELETE FROM health_step_segments');
       await dbInstance.customStatement('DELETE FROM health_export_records');
+      await dbInstance.customStatement('DELETE FROM sleep_nightly_analyses');
+      await dbInstance.customStatement(
+        'DELETE FROM sleep_canonical_heart_rate_samples',
+      );
+      await dbInstance.customStatement(
+        'DELETE FROM sleep_canonical_stage_segments',
+      );
+      await dbInstance.customStatement('DELETE FROM sleep_canonical_sessions');
+      await dbInstance.customStatement('DELETE FROM sleep_raw_imports');
       await dbInstance.customStatement('DELETE FROM pulse_hourly_aggregates');
       await dbInstance.customStatement('DELETE FROM pulse_aggregate_metadata');
 
@@ -263,6 +272,13 @@ class DatabaseHelper {
     if (entry.id == null) return;
     final dbInstance = await database;
 
+    final oldRow = await (dbInstance.select(dbInstance.nutritionLogs)
+          ..where((tbl) => tbl.localId.equals(entry.id!)))
+        .getSingleOrNull();
+    if (oldRow != null) {
+      await deleteCaffeineLogsByTimestamp(oldRow.consumedAt);
+    }
+
     final companion = db.NutritionLogsCompanion(
       legacyBarcode: drift.Value(entry.barcode),
       consumedAt: drift.Value(entry.timestamp),
@@ -410,6 +426,13 @@ class DatabaseHelper {
 
   Future<void> deleteFoodEntry(int id) async {
     final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.nutritionLogs)
+          ..where((tbl) => tbl.localId.equals(id)))
+        .getSingleOrNull();
+    if (row != null) {
+      await deleteCaffeineLogsByTimestamp(row.consumedAt);
+    }
+
     await (dbInstance.delete(
       dbInstance.nutritionLogs,
     )..where((tbl) => tbl.localId.equals(id)))
@@ -474,6 +497,14 @@ class DatabaseHelper {
   Future<int> insertFluidEntry(FluidEntry entry) async {
     final dbInstance = await database;
 
+    String? linkedUuid;
+    if (entry.linkedFoodEntryId != null) {
+      final nutritionLog = await (dbInstance.select(dbInstance.nutritionLogs)
+            ..where((tbl) => tbl.localId.equals(entry.linkedFoodEntryId!)))
+          .getSingleOrNull();
+      linkedUuid = nutritionLog?.id;
+    }
+
     // 1. Save drink
     final companion = db.FluidLogsCompanion(
       consumedAt: drift.Value(entry.timestamp),
@@ -482,6 +513,7 @@ class DatabaseHelper {
       kcal: drift.Value(entry.kcal),
       sugarPer100ml: drift.Value(entry.sugarPer100ml),
       caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
+      linkedNutritionLogId: drift.Value(linkedUuid),
     );
 
     final row =
@@ -500,6 +532,22 @@ class DatabaseHelper {
     )..where((tbl) => tbl.consumedAt.isBetweenValues(start, end)))
         .get();
 
+    // Build a UUID -> localId lookup for all referenced NutritionLogs.
+    final linkedUuids = rows
+        .map((r) => r.linkedNutritionLogId)
+        .whereType<String>()
+        .toSet()
+        .toList();
+    final Map<String, int> uuidToLocalId = {};
+    if (linkedUuids.isNotEmpty) {
+      final nutritionRows = await (dbInstance.select(dbInstance.nutritionLogs)
+            ..where((tbl) => tbl.id.isIn(linkedUuids)))
+          .get();
+      for (final nr in nutritionRows) {
+        uuidToLocalId[nr.id] = nr.localId;
+      }
+    }
+
     return rows
         .map(
           (row) => FluidEntry(
@@ -511,7 +559,9 @@ class DatabaseHelper {
             sugarPer100ml: row.sugarPer100ml,
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
-            linkedFoodEntryId: null,
+            linkedFoodEntryId: row.linkedNutritionLogId != null
+                ? uuidToLocalId[row.linkedNutritionLogId]
+                : null,
             updatedAt: row.updatedAt,
           ),
         )
@@ -567,6 +617,13 @@ class DatabaseHelper {
     if (entry.id == null) return;
     final dbInstance = await database;
 
+    final oldRow = await (dbInstance.select(dbInstance.fluidLogs)
+          ..where((tbl) => tbl.localId.equals(entry.id!)))
+        .getSingleOrNull();
+    if (oldRow != null) {
+      await deleteCaffeineLogsByTimestamp(oldRow.consumedAt);
+    }
+
     await (dbInstance.update(
       dbInstance.fluidLogs,
     )..where((tbl) => tbl.localId.equals(entry.id!)))
@@ -584,6 +641,13 @@ class DatabaseHelper {
 
   Future<void> deleteFluidEntry(int id) async {
     final dbInstance = await database;
+    final row = await (dbInstance.select(dbInstance.fluidLogs)
+          ..where((tbl) => tbl.localId.equals(id)))
+        .getSingleOrNull();
+    if (row != null) {
+      await deleteCaffeineLogsByTimestamp(row.consumedAt);
+    }
+
     await (dbInstance.delete(
       dbInstance.fluidLogs,
     )..where((tbl) => tbl.localId.equals(id)))
@@ -598,6 +662,13 @@ class DatabaseHelper {
         .getSingleOrNull();
 
     if (nutritionLog != null) {
+      final oldFluidRow = await (dbInstance.select(dbInstance.fluidLogs)
+            ..where((tbl) => tbl.linkedNutritionLogId.equals(nutritionLog.id)))
+          .getSingleOrNull();
+      if (oldFluidRow != null) {
+        await deleteCaffeineLogsByTimestamp(oldFluidRow.consumedAt);
+      }
+
       await (dbInstance.delete(
         dbInstance.fluidLogs,
       )..where((tbl) => tbl.linkedNutritionLogId.equals(nutritionLog.id)))
@@ -1066,6 +1137,21 @@ class DatabaseHelper {
       dbInstance.supplementLogs,
     )..where((tbl) => tbl.localId.equals(id)))
         .go();
+  }
+
+  Future<void> deleteCaffeineLogsByTimestamp(DateTime timestamp) async {
+    final dbInstance = await database;
+    final supplementRow = await (dbInstance.select(dbInstance.supplements)
+          ..where((tbl) => tbl.code.equals('caffeine')))
+        .getSingleOrNull();
+
+    if (supplementRow != null) {
+      await (dbInstance.delete(dbInstance.supplementLogs)
+            ..where((tbl) =>
+                tbl.supplementId.equals(supplementRow.id) &
+                tbl.takenAt.equals(timestamp)))
+          .go();
+    }
   }
 
   Future<List<SupplementLog>> getAllSupplementLogs() async {

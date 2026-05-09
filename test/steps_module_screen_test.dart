@@ -44,20 +44,20 @@ void main() {
 
     await _pumpUntilScopeLoaded(tester);
 
-    expect(find.text('Hourly timeline'), findsOneWidget);
+    expect(find.text('Hourly Timeline'), findsOneWidget);
     expect(find.byType(StatisticsStepsCard), findsNothing);
 
     await tester.tap(find.text('Week'));
     await _pumpScopeTransition(tester);
 
-    expect(find.text('Hourly timeline'), findsNothing);
+    expect(find.text('Hourly Timeline'), findsNothing);
     expect(find.byType(StatisticsStepsCard), findsNothing);
 
     await tester.tap(find.text('Month'));
     await _pumpScopeTransition(tester);
 
     expect(find.byType(StatisticsStepsCard), findsOneWidget);
-    expect(find.textContaining('This month •'), findsOneWidget);
+    expect(find.textContaining('This Month •'), findsOneWidget);
   });
 }
 

@@ -92,7 +92,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     Navigator.of(context).pop();
     if (fullRoutine != null) {
       HapticFeedbackService.instance.confirmationFeedback();
-      final l10n = AppLocalizations.of(context)!; // Get l10n from the build context
+      final l10n =
+          AppLocalizations.of(context)!; // Get l10n from the build context
       Navigator.of(context)
           .push(
             MaterialPageRoute(
@@ -123,7 +124,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   }
 
   void _createNewRoutine() {
-    final l10n = AppLocalizations.of(context)!; // Get l10n from the build context
+    final l10n =
+        AppLocalizations.of(context)!; // Get l10n from the build context
     Navigator.of(context)
         .push(
           MaterialPageRoute(builder: (context) => const EditRoutineScreen()),
@@ -133,7 +135,8 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
   // New methods for the menu
   void _duplicateRoutine(int routineId) async {
-    final l10n = AppLocalizations.of(context)!; // Get l10n from the build context
+    final l10n =
+        AppLocalizations.of(context)!; // Get l10n from the build context
     await WorkoutDatabaseHelper.instance.duplicateRoutine(routineId);
     HapticFeedbackService.instance.confirmationFeedback();
     _loadRoutines(l10n); // Pass l10n here

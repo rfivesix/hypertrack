@@ -418,20 +418,22 @@
     "description": "Label for muscle split bar chart"
   },
   "muscleSplitLabel": "Muscle Split",
-  "snackbar_could_not_open_open_link": "Konnte Link nicht öffnen",
+  "snackbar_could_not_open_open_link": "Could not open link",
   "chart_no_data_for_period": "No chart data for this period",
-  "amount_in_milliliters": "Menge in Millilitern",
-  "amount_in_grams": "Menge in Gramm",
-  "meal_label": "Mahlzeit",
-  "add_to_water_intake": "Zur Trinkmenge hinzufügen",
-  "create_exercise_screen_title": "Eigene Übung erstellen",
-  "exercise_name_label": "Name der Übung",
-  "category_label": "Kategorie",
-  "description_optional_label": "Beschreibung (optional)",
-  "primary_muscles_label": "Primäre Muskeln",
-  "primary_muscles_hint": "z.B. Brust, Trizeps",
-  "secondary_muscles_label": "Sekundäre Muskeln (optional)",
-  "secondary_muscles_hint": "z.B. Schultern",
+  "amount_in_milliliters": "Amount in milliliters",
+  "amount_in_grams": "Amount in grams",
+  "meal_label": "Meal",
+  "add_to_water_intake": "Add to water intake",
+  "create_exercise_screen_title": "Create Custom Exercise",
+  "exercise_name_label": "Exercise name",
+  "category_label": "Category",
+  "description_optional_label": "Description (optional)",
+  "primary_muscles_label": "Primary muscles",
+  "primary_muscles_hint": "e.g. Chest, Triceps",
+  "secondary_muscles_label": "Secondary muscles (optional)",
+  "secondary_muscles_hint": "e.g. Shoulders",
+  "fluidNameLabel": "Name",
+  "sugarPer100mlLabel": "Sugar (g / 100ml)",
   "set_type_normal": "Normal",
   "set_type_warmup": "Warmup",
   "set_type_failure": "Failure",
@@ -649,6 +651,15 @@
   "autoBackupRunNow": "Check & Run Auto-Backup Now",
   "snackbarAutoBackupSuccess": "Auto-Backup completed.",
   "snackbarAutoBackupFailed": "Auto-Backup failed or was canceled.",
+  "localDataDeletionCardTitle": "Local app data",
+  "localDataDeletionCardDescription": "Permanently delete user-owned data stored on this device and reset Train Libre to a fresh local state.",
+  "deleteAllLocalAppData": "Delete all local app data",
+  "localDataDeletionConfirmTitle": "Delete all local app data?",
+  "localDataDeletionConfirmBody": "This permanently deletes locally stored workouts, nutrition logs, measurements, supplements, settings/state, cached analytics, and local app data.\n\nThis does not delete data already exported to Apple Health or Health Connect.\n\nThis does not delete external provider data or remote public catalog sources. Bundled app assets and required default catalogs are kept or recreated so the app can launch after reset.",
+  "localDataDeletionTypeDeleteLabel": "Type DELETE to confirm",
+  "localDataDeletionSuccessTitle": "Local data deleted",
+  "localDataDeletionSuccessBody": "Train Libre will return to its initial setup state.",
+  "localDataDeletionFailed": "Local data could not be deleted. Please try again.",
   "noUnknownExercisesFound": "No unknown exercises found",
   "snackbarAutoBackupFolderSet": "Auto-backup folder set:\n{path}",
   "@snackbarAutoBackupFolderSet": {
@@ -725,7 +736,7 @@
   "deleted": "deleted",
   "operationNotAllowed": "This operation isn't allowed",
   "emptySupplements": "No supplements available",
-  "undo": "Rückgängig",
+  "undo": "Undo",
   "deleteSupplementConfirm": "Are you sure you want to delete this supplement? All historical data will be lost.\n\nTip: You can simply untrack it by editing the supplement instead.",
   "unitLabel": "Unit",
   "fieldRequired": "Required",
@@ -857,10 +868,8 @@
   "aiMealCapture": "AI Meal",
   "aiCaptureTitle": "AI Meal Capture",
   "aiCaptureTabPhoto": "Photo",
-  "aiCaptureTabVoice": "Voice",
   "aiCaptureTabText": "Text",
   "aiCapturePhotoHint": "Take or select up to 4 photos of your meal.",
-  "aiCaptureVoiceHint": "Tap the microphone and describe your meal.",
   "aiCaptureTextHint": "Describe your meal (e.g. \"Grilled chicken with rice and salad\")...",
   "aiAnalyzeButton": "Analyze",
   "aiAnalyzing": "Analyzing your meal...",
@@ -1835,4 +1844,68 @@
   ,"healthExportHealthConnectSubtitle": "One-way export from Train Libre to Health Connect"
   ,"healthExportAppleHealthStatusTitle": "Apple Health export status"
   ,"healthExportHealthConnectStatusTitle": "Health Connect export status"
+  ,"settingsBaseFoodLanguageTitle": "Base food display language"
+  ,"settingsBaseFoodLanguageSubtitle": "Choose which language to use for base food names."
+  ,"settingsBaseFoodLanguageFollowApp": "Follow app language"
+  ,"settingsBaseFoodLanguageEnglish": "English"
+  ,"settingsBaseFoodLanguageGerman": "German"
+  ,"aiModelLabel": "Model"
+  ,"autoBackupStoragePickerUnavailable": "Storage picker unavailable. Please fully restart/reinstall the app after updating."
+  ,"autoBackupFolderPickerFailed": "Folder picker failed: {error}"
+  ,"@autoBackupFolderPickerFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  }
+  ,"healthExportPermissionDenied": "Permission denied"
+  ,"healthExportAdapterUnavailable": "Adapter unavailable"
+  ,"healthExportPlatformUnavailable": "Platform unavailable"
+  ,"healthExportPlatformNotInstalled": "Platform not installed"
+  ,"healthExportExportDisabled": "Export disabled"
+  ,"onboardingMacrosStepTitle": "Macronutrients"
+  ,"onboardingMacrosStepSubtitle": "How is your nutrition composed?"
+  ,"statisticsProviderAppleHealth": "Apple Health"
+  ,"statisticsProviderHealthConnect": "Health Connect"
+  ,"statisticsProviderWithings": "Withings"
+  ,"statisticsProviderGarmin": "Garmin"
+  ,"statisticsProviderFitbit": "Fitbit"
+  ,"statisticsProviderLocal": "Local"
+  ,"unit_milliliters": "ml"
+  ,"unit_kilograms": "kg"
+  ,"mealEditorHintExample": "e.g. Chicken bowl"
+  ,"mealEditorNoIngredientsYet": "None yet – coming later"
+  ,"foodDetailSavedBaseDb": "Saved (base DB)"
+  ,"foodDetailExportError": "Export error: {error}"
+  ,"@foodDetailExportError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "stepsModulePrevious": "Previous",
+  "stepsModuleNext": "Next",
+  "stepsModuleTotalSteps": "Total Steps",
+  "stepsModuleThisWeek": "This Week",
+  "stepsModuleThisMonth": "This Month",
+  "stepsModuleUpdated": "Updated {time}",
+  "@stepsModuleUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stepsModuleScopeSwitcherSemantics": "Switch step scope",
+  "stepsModuleDay": "Day",
+  "stepsModuleWeek": "Week",
+  "stepsModuleMonth": "Month",
+  "stepsModuleHourlyTimeline": "Hourly Timeline",
+  "stepsModuleTotal": "Total",
+  "stepsModuleActiveHours": "Active Hours",
+  "stepsModulePeakHour": "Peak Hour",
+  "stepsModuleAvgPerDay": "Avg / Day",
+  "stepsModuleGoalHit": "Goal Hit",
+  "stepsModuleGoalDays": "Goal Days",
+  "diarySyncingSteps": "Syncing steps...",
+  "diaryLoadingSleep": "Loading sleep...",
+  "unit_milligrams": "mg"
 }

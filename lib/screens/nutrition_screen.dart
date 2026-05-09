@@ -292,65 +292,118 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
 
-    final result = await showGlassBottomMenu<(int, DateTime, String, double?)?>(
+    final result = await showGlassBottomMenu<
+        ({
+          int quantity,
+          DateTime timestamp,
+          String mealType,
+          bool isLiquid,
+          double? sugarPer100ml,
+          double? caffeinePer100ml,
+        })?>(
       context: context,
       title: trackedItem.item.name,
-      contentBuilder: (ctx, close) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          QuantityDialogContent(
-            key: dialogStateKey,
-            item: trackedItem.item,
-            initialQuantity: trackedItem.entry.quantityInGrams,
-            initialTimestamp: trackedItem.entry.timestamp,
-            initialMealType: trackedItem.entry.mealType,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(l10n.cancel),
+      contentBuilder: (ctx, close) {
+        final linkedFluid = _displayItems
+            .whereType<FluidTimelineEntry>()
+            .map((e) => e.fluidEntry)
+            .where((f) => f.linkedFoodEntryId == trackedItem.entry.id)
+            .firstOrNull;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            QuantityDialogContent(
+              key: dialogStateKey,
+              item: trackedItem.item,
+              initialQuantity: trackedItem.entry.quantityInGrams,
+              initialTimestamp: trackedItem.entry.timestamp,
+              initialMealType: trackedItem.entry.mealType,
+              initialIsLiquid: linkedFluid != null ? true : null,
+              initialSugar: linkedFluid?.sugarPer100ml,
+              initialCaffeine: linkedFluid?.caffeinePer100ml,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(l10n.cancel),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () {
-                    final state = dialogStateKey.currentState;
-                    if (state != null) {
-                      final quantity = int.tryParse(state.quantityText);
-                      if (quantity != null && quantity > 0) {
-                        Navigator.of(ctx).pop((
-                          quantity,
-                          state.selectedDateTime,
-                          state.selectedMealType,
-                          double.tryParse(
-                            state.caffeineText.replaceAll(',', '.'),
-                          ),
-                        ));
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final state = dialogStateKey.currentState;
+                      if (state != null) {
+                        final quantity = int.tryParse(state.quantityText);
+                        final sugar = double.tryParse(
+                          state.sugarText.replaceAll(',', '.'),
+                        );
+                        final caffeine = double.tryParse(
+                          state.caffeineText.replaceAll(',', '.'),
+                        );
+                        if (quantity != null && quantity > 0) {
+                          Navigator.of(ctx).pop((
+                            quantity: quantity,
+                            timestamp: state.selectedDateTime,
+                            mealType: state.selectedMealType,
+                            isLiquid: state.isLiquid,
+                            sugarPer100ml: sugar,
+                            caffeinePer100ml: caffeine,
+                          ));
+                        }
                       }
-                    }
-                  },
-                  child: Text(l10n.save),
+                    },
+                    child: Text(l10n.save),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        );
+      },
     );
 
     if (result != null) {
       final updatedEntry = FoodEntry(
         id: trackedItem.entry.id,
         barcode: trackedItem.item.barcode,
-        quantityInGrams: result.$1,
-        timestamp: result.$2,
-        mealType: result.$3,
+        quantityInGrams: result.quantity,
+        timestamp: result.timestamp,
+        mealType: result.mealType,
       );
       await DatabaseHelper.instance.updateFoodEntry(updatedEntry);
+
+      // 1. Delete FluidEntry if linked.
+      if (trackedItem.entry.id != null) {
+        await DatabaseHelper.instance.deleteFluidEntryByLinkedFoodId(
+          trackedItem.entry.id!,
+        );
+      }
+      // 2. Recreate FluidEntry if it is now liquid.
+      if (result.isLiquid) {
+        final newFluidEntry = FluidEntry(
+          timestamp: result.timestamp,
+          quantityInMl: result.quantity,
+          name: trackedItem.item.name,
+          kcal: (trackedItem.item.calories / 100 * result.quantity).round(),
+          sugarPer100ml: result.sugarPer100ml,
+          carbsPer100ml: result.sugarPer100ml, // Spiegeln
+          caffeinePer100ml: result.caffeinePer100ml,
+          linkedFoodEntryId: trackedItem.entry.id, // Preserve the link
+        );
+        await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+      }
+
+      // 3. Update/delete caffeine log in every case.
+      await _logCaffeineDose(
+        (result.caffeinePer100ml ?? 0) * (result.quantity / 100.0),
+        result.timestamp,
+        foodEntryId: trackedItem.entry.id,
+      );
+
       _loadEntriesForDateRange(_selectedDateRange);
     }
   }

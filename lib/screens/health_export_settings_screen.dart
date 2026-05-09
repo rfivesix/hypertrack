@@ -64,8 +64,16 @@ class _HealthExportSettingsScreenState
           await _healthExportService.requestPermissions(platform);
       if (!permission.success) {
         if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(permission.message ?? 'Permission denied')),
+          SnackBar(
+            content: Text(
+              _localizeHealthExportMessage(
+                permission.message ?? l10n.healthExportPermissionDenied,
+                l10n,
+              ),
+            ),
+          ),
         );
       }
     } else {
@@ -162,7 +170,23 @@ class _HealthExportSettingsScreenState
     if (result.success) {
       return l10n.healthExportResultComplete;
     }
-    return result.message ?? l10n.healthExportResultFailed;
+    return _localizeHealthExportMessage(
+      result.message ?? l10n.healthExportResultFailed,
+      l10n,
+    );
+  }
+
+  String _localizeHealthExportMessage(String message, AppLocalizations l10n) {
+    // Keep in sync with HealthExportService fallback messages.
+    // Unknown values are returned unchanged to preserve diagnostics.
+    return switch (message) {
+      'Adapter unavailable' => l10n.healthExportAdapterUnavailable,
+      'Platform unavailable' => l10n.healthExportPlatformUnavailable,
+      'Platform not installed' => l10n.healthExportPlatformNotInstalled,
+      'Export disabled' => l10n.healthExportExportDisabled,
+      'Permission denied' => l10n.healthExportPermissionDenied,
+      _ => message,
+    };
   }
 
   @override
@@ -170,150 +194,143 @@ class _HealthExportSettingsScreenState
     final l10n = AppLocalizations.of(context)!;
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        Navigator.of(context).pop(_hasChanges);
-      },
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: GlobalAppBar(
-          title: l10n.healthExportTitle,
-          leading: BackButton(
-            onPressed: () => Navigator.of(context).pop(_hasChanges),
-          ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: l10n.healthExportTitle,
+        leading: BackButton(
+          onPressed: () => Navigator.of(context).pop(_hasChanges),
         ),
-        body: ListView(
-          padding: DesignConstants.cardPadding.copyWith(
-            top: DesignConstants.cardPadding.top + topPadding,
-          ),
-          children: [
-            _buildSectionTitle(
-              context,
-              l10n.healthExportTitle,
-            ),
-            SummaryCard(
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    secondary: const Icon(Icons.favorite_outline),
-                    title: Text(
-                      _exportPlatformTitle(
-                        HealthExportPlatform.appleHealth,
-                        l10n,
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      l10n.healthExportAppleHealthSubtitle,
-                    ),
-                    value: _appleExportEnabled,
-                    onChanged: (value) => _toggleHealthExport(
-                      platform: HealthExportPlatform.appleHealth,
-                      enabled: value,
-                    ),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      _exportStateIcon(
-                        _exportStatuses[HealthExportPlatform.appleHealth]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                      color: _exportStateColor(
-                        context,
-                        _exportStatuses[HealthExportPlatform.appleHealth]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                    ),
-                    title: Text(
-                      l10n.healthExportAppleHealthStatusTitle,
-                    ),
-                    subtitle: Text(
-                      HealthExportDomain.values.map((domain) {
-                        final status =
-                            _exportStatuses[HealthExportPlatform.appleHealth]
-                                ?.statusFor(domain);
-                        return '${_domainLabel(domain, l10n)}: ${_stateLabel(status?.state ?? HealthExportState.idle, l10n)}';
-                      }).join(' · '),
-                    ),
-                    trailing: _isAppleExporting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.chevron_right),
-                    onTap: _appleExportEnabled
-                        ? () => _exportNow(HealthExportPlatform.appleHealth)
-                        : null,
-                  ),
-                  const Divider(height: 1),
-                  SwitchListTile(
-                    secondary: const Icon(Icons.favorite_border),
-                    title: Text(
-                      _exportPlatformTitle(
-                        HealthExportPlatform.healthConnect,
-                        l10n,
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      l10n.healthExportHealthConnectSubtitle,
-                    ),
-                    value: _healthConnectExportEnabled,
-                    onChanged: (value) => _toggleHealthExport(
-                      platform: HealthExportPlatform.healthConnect,
-                      enabled: value,
-                    ),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      _exportStateIcon(
-                        _exportStatuses[HealthExportPlatform.healthConnect]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                      color: _exportStateColor(
-                        context,
-                        _exportStatuses[HealthExportPlatform.healthConnect]
-                                ?.statusFor(HealthExportDomain.measurements)
-                                .state ??
-                            HealthExportState.idle,
-                      ),
-                    ),
-                    title: Text(
-                      l10n.healthExportHealthConnectStatusTitle,
-                    ),
-                    subtitle: Text(
-                      HealthExportDomain.values.map((domain) {
-                        final status =
-                            _exportStatuses[HealthExportPlatform.healthConnect]
-                                ?.statusFor(domain);
-                        return '${_domainLabel(domain, l10n)}: ${_stateLabel(status?.state ?? HealthExportState.idle, l10n)}';
-                      }).join(' · '),
-                    ),
-                    trailing: _isHealthConnectExporting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.chevron_right),
-                    onTap: _healthConnectExportEnabled
-                        ? () => _exportNow(HealthExportPlatform.healthConnect)
-                        : null,
-                  ),
-                ],
-              ),
-            ),
-          ],
+      ),
+      body: ListView(
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
         ),
+        children: [
+          _buildSectionTitle(
+            context,
+            l10n.healthExportTitle,
+          ),
+          SummaryCard(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.favorite_outline),
+                  title: Text(
+                    _exportPlatformTitle(
+                      HealthExportPlatform.appleHealth,
+                      l10n,
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    l10n.healthExportAppleHealthSubtitle,
+                  ),
+                  value: _appleExportEnabled,
+                  onChanged: (value) => _toggleHealthExport(
+                    platform: HealthExportPlatform.appleHealth,
+                    enabled: value,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(
+                    _exportStateIcon(
+                      _exportStatuses[HealthExportPlatform.appleHealth]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                    color: _exportStateColor(
+                      context,
+                      _exportStatuses[HealthExportPlatform.appleHealth]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                  ),
+                  title: Text(
+                    l10n.healthExportAppleHealthStatusTitle,
+                  ),
+                  subtitle: Text(
+                    HealthExportDomain.values.map((domain) {
+                      final status =
+                          _exportStatuses[HealthExportPlatform.appleHealth]
+                              ?.statusFor(domain);
+                      return '${_domainLabel(domain, l10n)}: ${_stateLabel(status?.state ?? HealthExportState.idle, l10n)}';
+                    }).join(' · '),
+                  ),
+                  trailing: _isAppleExporting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: _appleExportEnabled
+                      ? () => _exportNow(HealthExportPlatform.appleHealth)
+                      : null,
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: const Icon(Icons.favorite_border),
+                  title: Text(
+                    _exportPlatformTitle(
+                      HealthExportPlatform.healthConnect,
+                      l10n,
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    l10n.healthExportHealthConnectSubtitle,
+                  ),
+                  value: _healthConnectExportEnabled,
+                  onChanged: (value) => _toggleHealthExport(
+                    platform: HealthExportPlatform.healthConnect,
+                    enabled: value,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(
+                    _exportStateIcon(
+                      _exportStatuses[HealthExportPlatform.healthConnect]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                    color: _exportStateColor(
+                      context,
+                      _exportStatuses[HealthExportPlatform.healthConnect]
+                              ?.statusFor(HealthExportDomain.measurements)
+                              .state ??
+                          HealthExportState.idle,
+                    ),
+                  ),
+                  title: Text(
+                    l10n.healthExportHealthConnectStatusTitle,
+                  ),
+                  subtitle: Text(
+                    HealthExportDomain.values.map((domain) {
+                      final status =
+                          _exportStatuses[HealthExportPlatform.healthConnect]
+                              ?.statusFor(domain);
+                      return '${_domainLabel(domain, l10n)}: ${_stateLabel(status?.state ?? HealthExportState.idle, l10n)}';
+                    }).join(' · '),
+                  ),
+                  trailing: _isHealthConnectExporting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: _healthConnectExportEnabled
+                      ? () => _exportNow(HealthExportPlatform.healthConnect)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

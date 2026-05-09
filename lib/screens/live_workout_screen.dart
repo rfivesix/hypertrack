@@ -602,8 +602,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         Expanded(
           flex: 3,
           child: isCardio
-              ? const SizedBox
-                  .shrink() // For cardio, do not show history yet.
+              ? const SizedBox.shrink() // For cardio, do not show history yet.
               : Text(
                   (rowIndex < lastPerfSets.length)
                       ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"

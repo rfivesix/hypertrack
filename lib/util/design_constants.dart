@@ -8,7 +8,8 @@ class DesignConstants {
   // === SPACING ===
   // Card Padding
   static const double cardPaddingInternal = 16.0; // Innenabstand von Cards
-  static const double cardPaddingExternal = 8.0; // External spacing between cards
+  static const double cardPaddingExternal =
+      8.0; // External spacing between cards
 
   // General Spacing
   static const double spacingXS = 4.0; // Extra-small spacing
@@ -26,7 +27,7 @@ class DesignConstants {
   // === BORDER RADIUS ===
   static const double borderRadiusS = 8.0; // Kleine Rundung
   static const double borderRadiusM = 12.0; // Standard corner radius
-  static const double borderRadiusL = 16.0; // Large corner radius
+  static const double borderRadiusL = 19.0; // Large corner radius
 
   // === LIST SPACING ===
   static const double listItemSpacing = 8.0;

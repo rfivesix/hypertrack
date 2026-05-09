@@ -1188,7 +1188,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                             final fi = products[bc];
                             final displayName =
                                 (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
-                            final unit = (fi?.isLiquid == true) ? 'ml' : 'g';
+                            final unit = (fi?.isLiquid == true)
+                                ? l10n.unit_milliliters
+                                : l10n.unit_grams;
 
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,0 +1,4 @@
+- Design-Update für "Heute im Fokus" für bessere Lesbarkeit und Abstände.
+- Makro- und Koffein-Zusammenfassungen für Getränke im Tagebuch hinzugefügt.
+- Verbesserte Lokalisierung für Training und Ernährung.
+- Performance- und Stabilitätsverbesserungen für Statistiken und Puls.

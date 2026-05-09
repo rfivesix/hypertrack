@@ -1799,7 +1799,7 @@ abstract class AppLocalizations {
   /// No description provided for @snackbar_could_not_open_open_link.
   ///
   /// In en, this message translates to:
-  /// **'Konnte Link nicht öffnen'**
+  /// **'Could not open link'**
   String get snackbar_could_not_open_open_link;
 
   /// No description provided for @chart_no_data_for_period.
@@ -1811,74 +1811,86 @@ abstract class AppLocalizations {
   /// No description provided for @amount_in_milliliters.
   ///
   /// In en, this message translates to:
-  /// **'Menge in Millilitern'**
+  /// **'Amount in milliliters'**
   String get amount_in_milliliters;
 
   /// No description provided for @amount_in_grams.
   ///
   /// In en, this message translates to:
-  /// **'Menge in Gramm'**
+  /// **'Amount in grams'**
   String get amount_in_grams;
 
   /// No description provided for @meal_label.
   ///
   /// In en, this message translates to:
-  /// **'Mahlzeit'**
+  /// **'Meal'**
   String get meal_label;
 
   /// No description provided for @add_to_water_intake.
   ///
   /// In en, this message translates to:
-  /// **'Zur Trinkmenge hinzufügen'**
+  /// **'Add to water intake'**
   String get add_to_water_intake;
 
   /// No description provided for @create_exercise_screen_title.
   ///
   /// In en, this message translates to:
-  /// **'Eigene Übung erstellen'**
+  /// **'Create Custom Exercise'**
   String get create_exercise_screen_title;
 
   /// No description provided for @exercise_name_label.
   ///
   /// In en, this message translates to:
-  /// **'Name der Übung'**
+  /// **'Exercise name'**
   String get exercise_name_label;
 
   /// No description provided for @category_label.
   ///
   /// In en, this message translates to:
-  /// **'Kategorie'**
+  /// **'Category'**
   String get category_label;
 
   /// No description provided for @description_optional_label.
   ///
   /// In en, this message translates to:
-  /// **'Beschreibung (optional)'**
+  /// **'Description (optional)'**
   String get description_optional_label;
 
   /// No description provided for @primary_muscles_label.
   ///
   /// In en, this message translates to:
-  /// **'Primäre Muskeln'**
+  /// **'Primary muscles'**
   String get primary_muscles_label;
 
   /// No description provided for @primary_muscles_hint.
   ///
   /// In en, this message translates to:
-  /// **'z.B. Brust, Trizeps'**
+  /// **'e.g. Chest, Triceps'**
   String get primary_muscles_hint;
 
   /// No description provided for @secondary_muscles_label.
   ///
   /// In en, this message translates to:
-  /// **'Sekundäre Muskeln (optional)'**
+  /// **'Secondary muscles (optional)'**
   String get secondary_muscles_label;
 
   /// No description provided for @secondary_muscles_hint.
   ///
   /// In en, this message translates to:
-  /// **'z.B. Schultern'**
+  /// **'e.g. Shoulders'**
   String get secondary_muscles_hint;
+
+  /// No description provided for @fluidNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get fluidNameLabel;
+
+  /// No description provided for @sugarPer100mlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sugar (g / 100ml)'**
+  String get sugarPer100mlLabel;
 
   /// No description provided for @set_type_normal.
   ///
@@ -2930,6 +2942,60 @@ abstract class AppLocalizations {
   /// **'Auto-Backup failed or was canceled.'**
   String get snackbarAutoBackupFailed;
 
+  /// No description provided for @localDataDeletionCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local app data'**
+  String get localDataDeletionCardTitle;
+
+  /// No description provided for @localDataDeletionCardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete user-owned data stored on this device and reset Train Libre to a fresh local state.'**
+  String get localDataDeletionCardDescription;
+
+  /// No description provided for @deleteAllLocalAppData.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all local app data'**
+  String get deleteAllLocalAppData;
+
+  /// No description provided for @localDataDeletionConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all local app data?'**
+  String get localDataDeletionConfirmTitle;
+
+  /// No description provided for @localDataDeletionConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes locally stored workouts, nutrition logs, measurements, supplements, settings/state, cached analytics, and local app data.\n\nThis does not delete data already exported to Apple Health or Health Connect.\n\nThis does not delete external provider data or remote public catalog sources. Bundled app assets and required default catalogs are kept or recreated so the app can launch after reset.'**
+  String get localDataDeletionConfirmBody;
+
+  /// No description provided for @localDataDeletionTypeDeleteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm'**
+  String get localDataDeletionTypeDeleteLabel;
+
+  /// No description provided for @localDataDeletionSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data deleted'**
+  String get localDataDeletionSuccessTitle;
+
+  /// No description provided for @localDataDeletionSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Train Libre will return to its initial setup state.'**
+  String get localDataDeletionSuccessBody;
+
+  /// No description provided for @localDataDeletionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data could not be deleted. Please try again.'**
+  String get localDataDeletionFailed;
+
   /// No description provided for @noUnknownExercisesFound.
   ///
   /// In en, this message translates to:
@@ -3335,7 +3401,7 @@ abstract class AppLocalizations {
   /// No description provided for @undo.
   ///
   /// In en, this message translates to:
-  /// **'Rückgängig'**
+  /// **'Undo'**
   String get undo;
 
   /// No description provided for @deleteSupplementConfirm.
@@ -4022,12 +4088,6 @@ abstract class AppLocalizations {
   /// **'Photo'**
   String get aiCaptureTabPhoto;
 
-  /// No description provided for @aiCaptureTabVoice.
-  ///
-  /// In en, this message translates to:
-  /// **'Voice'**
-  String get aiCaptureTabVoice;
-
   /// No description provided for @aiCaptureTabText.
   ///
   /// In en, this message translates to:
@@ -4039,12 +4099,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Take or select up to 4 photos of your meal.'**
   String get aiCapturePhotoHint;
-
-  /// No description provided for @aiCaptureVoiceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap the microphone and describe your meal.'**
-  String get aiCaptureVoiceHint;
 
   /// No description provided for @aiCaptureTextHint.
   ///
@@ -7673,6 +7727,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health Connect export status'**
   String get healthExportHealthConnectStatusTitle;
+
+  /// No description provided for @settingsBaseFoodLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Base food display language'**
+  String get settingsBaseFoodLanguageTitle;
+
+  /// No description provided for @settingsBaseFoodLanguageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which language to use for base food names.'**
+  String get settingsBaseFoodLanguageSubtitle;
+
+  /// No description provided for @settingsBaseFoodLanguageFollowApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow app language'**
+  String get settingsBaseFoodLanguageFollowApp;
+
+  /// No description provided for @settingsBaseFoodLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsBaseFoodLanguageEnglish;
+
+  /// No description provided for @settingsBaseFoodLanguageGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get settingsBaseFoodLanguageGerman;
+
+  /// No description provided for @aiModelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get aiModelLabel;
+
+  /// No description provided for @autoBackupStoragePickerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage picker unavailable. Please fully restart/reinstall the app after updating.'**
+  String get autoBackupStoragePickerUnavailable;
+
+  /// No description provided for @autoBackupFolderPickerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder picker failed: {error}'**
+  String autoBackupFolderPickerFailed(Object error);
+
+  /// No description provided for @healthExportPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
+  String get healthExportPermissionDenied;
+
+  /// No description provided for @healthExportAdapterUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Adapter unavailable'**
+  String get healthExportAdapterUnavailable;
+
+  /// No description provided for @healthExportPlatformUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform unavailable'**
+  String get healthExportPlatformUnavailable;
+
+  /// No description provided for @healthExportPlatformNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform not installed'**
+  String get healthExportPlatformNotInstalled;
+
+  /// No description provided for @healthExportExportDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Export disabled'**
+  String get healthExportExportDisabled;
+
+  /// No description provided for @onboardingMacrosStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macronutrients'**
+  String get onboardingMacrosStepTitle;
+
+  /// No description provided for @onboardingMacrosStepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How is your nutrition composed?'**
+  String get onboardingMacrosStepSubtitle;
+
+  /// No description provided for @statisticsProviderAppleHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health'**
+  String get statisticsProviderAppleHealth;
+
+  /// No description provided for @statisticsProviderHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get statisticsProviderHealthConnect;
+
+  /// No description provided for @statisticsProviderWithings.
+  ///
+  /// In en, this message translates to:
+  /// **'Withings'**
+  String get statisticsProviderWithings;
+
+  /// No description provided for @statisticsProviderGarmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Garmin'**
+  String get statisticsProviderGarmin;
+
+  /// No description provided for @statisticsProviderFitbit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitbit'**
+  String get statisticsProviderFitbit;
+
+  /// No description provided for @statisticsProviderLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get statisticsProviderLocal;
+
+  /// No description provided for @unit_milliliters.
+  ///
+  /// In en, this message translates to:
+  /// **'ml'**
+  String get unit_milliliters;
+
+  /// No description provided for @unit_kilograms.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get unit_kilograms;
+
+  /// No description provided for @mealEditorHintExample.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Chicken bowl'**
+  String get mealEditorHintExample;
+
+  /// No description provided for @mealEditorNoIngredientsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'None yet – coming later'**
+  String get mealEditorNoIngredientsYet;
+
+  /// No description provided for @foodDetailSavedBaseDb.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved (base DB)'**
+  String get foodDetailSavedBaseDb;
+
+  /// No description provided for @foodDetailExportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Export error: {error}'**
+  String foodDetailExportError(Object error);
+
+  /// No description provided for @stepsModulePrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get stepsModulePrevious;
+
+  /// No description provided for @stepsModuleNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get stepsModuleNext;
+
+  /// No description provided for @stepsModuleTotalSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Steps'**
+  String get stepsModuleTotalSteps;
+
+  /// No description provided for @stepsModuleThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get stepsModuleThisWeek;
+
+  /// No description provided for @stepsModuleThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get stepsModuleThisMonth;
+
+  /// No description provided for @stepsModuleUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String stepsModuleUpdated(String time);
+
+  /// No description provided for @stepsModuleScopeSwitcherSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch step scope'**
+  String get stepsModuleScopeSwitcherSemantics;
+
+  /// No description provided for @stepsModuleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get stepsModuleDay;
+
+  /// No description provided for @stepsModuleWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get stepsModuleWeek;
+
+  /// No description provided for @stepsModuleMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get stepsModuleMonth;
+
+  /// No description provided for @stepsModuleHourlyTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly Timeline'**
+  String get stepsModuleHourlyTimeline;
+
+  /// No description provided for @stepsModuleTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get stepsModuleTotal;
+
+  /// No description provided for @stepsModuleActiveHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Hours'**
+  String get stepsModuleActiveHours;
+
+  /// No description provided for @stepsModulePeakHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak Hour'**
+  String get stepsModulePeakHour;
+
+  /// No description provided for @stepsModuleAvgPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg / Day'**
+  String get stepsModuleAvgPerDay;
+
+  /// No description provided for @stepsModuleGoalHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Hit'**
+  String get stepsModuleGoalHit;
+
+  /// No description provided for @stepsModuleGoalDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Days'**
+  String get stepsModuleGoalDays;
+
+  /// No description provided for @diarySyncingSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing steps...'**
+  String get diarySyncingSteps;
+
+  /// No description provided for @diaryLoadingSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading sleep...'**
+  String get diaryLoadingSleep;
+
+  /// No description provided for @unit_milligrams.
+  ///
+  /// In en, this message translates to:
+  /// **'mg'**
+  String get unit_milligrams;
 }
 
 class _AppLocalizationsDelegate

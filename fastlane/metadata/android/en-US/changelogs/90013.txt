@@ -1,0 +1,4 @@
+- Redesigned "Today in Focus" layout for better readability and spacing.
+- Added macro and caffeine summaries for drinks in the Diary.
+- Improved localization across workout and nutrition flows.
+- Performance and stability improvements for Statistics and Pulse.

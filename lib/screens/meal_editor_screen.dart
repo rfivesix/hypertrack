@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../generated/app_localizations.dart';
 
 enum MealType { breakfast, lunch, dinner, snack }
 
@@ -55,18 +56,20 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Fehler beim Speichern: $e')));
+      ).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
       setState(() => _saving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meal bearbeiten'),
+        title: Text(l10n.mealsEdit),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -78,7 +81,7 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Speichern'),
+                  : Text(l10n.save),
             ),
           ),
         ],
@@ -89,9 +92,9 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
           TextField(
             controller: _nameCtrl,
             textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'Meal-Name',
-              hintText: 'z. B. Hähnchen Bowl',
+            decoration: InputDecoration(
+              labelText: l10n.mealNameLabel,
+              hintText: l10n.mealEditorHintExample,
             ),
             onSubmitted: (_) => _onSave(),
           ),
@@ -99,17 +102,20 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
           DropdownButtonFormField<MealType>(
             initialValue: _type,
             onChanged: (v) => setState(() => _type = v ?? _type),
-            decoration: const InputDecoration(labelText: 'Meal-Typ'),
+            decoration: InputDecoration(labelText: l10n.mealTypeLabel),
             items: MealType.values
-                .map((t) => DropdownMenuItem(value: t, child: Text(_label(t))))
+                .map(
+                  (t) =>
+                      DropdownMenuItem(value: t, child: Text(_label(t, l10n))),
+                )
                 .toList(),
           ),
           const SizedBox(height: 24),
           // Placeholder: later ingredients/per-ingredient display
           Card(
             child: ListTile(
-              title: const Text('Zutaten'),
-              subtitle: const Text('Noch keine – kommt später'),
+              title: Text(l10n.mealIngredientsTitle),
+              subtitle: Text(l10n.mealEditorNoIngredientsYet),
               trailing: IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
@@ -124,15 +130,15 @@ class _MealEditorScreenState extends State<MealEditorScreen> {
   }
 }
 
-String _label(MealType t) {
+String _label(MealType t, AppLocalizations l10n) {
   switch (t) {
     case MealType.breakfast:
-      return 'Frühstück';
+      return l10n.mealtypeBreakfast;
     case MealType.lunch:
-      return 'Mittag';
+      return l10n.mealtypeLunch;
     case MealType.dinner:
-      return 'Abend';
+      return l10n.mealtypeDinner;
     case MealType.snack:
-      return 'Snack';
+      return l10n.mealtypeSnack;
   }
 }

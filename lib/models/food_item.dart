@@ -93,10 +93,11 @@ class FoodItem {
 
   /// Returns the name of the food item localized to the user's language.
   ///
+  /// If [languageCode] is provided it takes precedence over the app locale.
   /// Priority: [nameDe] for German, [nameEn] for other languages, then [name] as fallback.
-  String getLocalizedName(BuildContext context) {
-    final locale = Localizations.localeOf(context).languageCode;
-    if (locale == 'de' && nameDe.isNotEmpty) {
+  String getLocalizedName(BuildContext context, {String? languageCode}) {
+    final lang = languageCode ?? Localizations.localeOf(context).languageCode;
+    if (lang == 'de' && nameDe.isNotEmpty) {
       return nameDe;
     }
     // Fall back to English if 'en' exists or the language is not German

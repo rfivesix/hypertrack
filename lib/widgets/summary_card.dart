@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/color_constants.dart';
+import '../util/design_constants.dart';
 
 /// A standardized card for displaying summary information with a glass aesthetic.
 ///
@@ -40,7 +41,7 @@ class SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: background,
         //borderRadius: BorderRadius.circular(10),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
         /*
         boxShadow: [
           BoxShadow(

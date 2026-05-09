@@ -39,17 +39,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Train Libre uses the camera to scan food barcodes.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Train Libre uses the microphone for voice input when logging meals with AI features.</string>
+	<string>Train Libre uses the camera for barcode scanning and optional AI meal photo analysis.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Train Libre reads steps, sleep, and heart-rate data from Apple Health to show health and recovery views you enable.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Train Libre writes measurements, nutrition, hydration, and workouts to Apple Health when you enable one-way health export.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Train Libre uses photo library access so you can choose a profile picture.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Train Libre uses speech recognition to turn your spoken meal notes into meal log entries.</string>
+	<string>Train Libre uses photo library access for optional AI meal analysis and profile images.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -41,64 +41,57 @@ class _PulseSettingsScreenState extends State<PulseSettingsScreen> {
   Widget build(BuildContext context) {
     final copy = _PulseSettingsCopy(context);
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        Navigator.of(context).pop(_hasChanges);
-      },
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: GlobalAppBar(
-          title: copy.title,
-          leading: BackButton(
-            onPressed: () => Navigator.of(context).pop(_hasChanges),
-          ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: GlobalAppBar(
+        title: copy.title,
+        leading: BackButton(
+          onPressed: () => Navigator.of(context).pop(_hasChanges),
         ),
-        body: ListView(
-          padding: DesignConstants.cardPadding.copyWith(
-            top: DesignConstants.cardPadding.top + topPadding,
-          ),
-          children: [
-            _buildSectionTitle(context, copy.title),
-            SummaryCard(
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    key: const Key('pulse_tracking_toggle'),
-                    secondary: const Icon(Icons.favorite_outline),
-                    title: Text(
-                      copy.enableTitle,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(copy.enableSubtitle),
-                    value: _enabled,
-                    onChanged: _requesting ? null : _setEnabled,
+      ),
+      body: ListView(
+        padding: DesignConstants.cardPadding.copyWith(
+          top: DesignConstants.cardPadding.top + topPadding,
+        ),
+        children: [
+          _buildSectionTitle(context, copy.title),
+          SummaryCard(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  key: const Key('pulse_tracking_toggle'),
+                  secondary: const Icon(Icons.favorite_outline),
+                  title: Text(
+                    copy.enableTitle,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.lock_open_outlined),
-                    title: Text(copy.permissionTitle),
-                    subtitle: Text(copy.permissionSubtitle),
-                    trailing: _requesting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.chevron_right),
-                    onTap: _requesting ? null : _requestAccess,
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.info_outline),
-                    title: Text(copy.honestTitle),
-                    subtitle: Text(copy.honestSubtitle),
-                  ),
-                ],
-              ),
+                  subtitle: Text(copy.enableSubtitle),
+                  value: _enabled,
+                  onChanged: _requesting ? null : _setEnabled,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.lock_open_outlined),
+                  title: Text(copy.permissionTitle),
+                  subtitle: Text(copy.permissionSubtitle),
+                  trailing: _requesting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: _requesting ? null : _requestAccess,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(copy.honestTitle),
+                  subtitle: Text(copy.honestSubtitle),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

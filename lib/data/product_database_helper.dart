@@ -189,7 +189,13 @@ class ProductDatabaseHelper {
     }
 
     if (search != null && search.isNotEmpty) {
-      query = query..where((t) => t.name.like('%$search%'));
+      query = query
+        ..where(
+          (t) =>
+              t.name.like('%$search%') |
+              t.nameDe.like('%$search%') |
+              t.nameEn.like('%$search%'),
+        );
     }
 
     final rows = await query.get();
@@ -209,7 +215,10 @@ class ProductDatabaseHelper {
     final priorityRows = await (db.select(db.products)
           ..where(
             (t) =>
-                (t.name.like('%$term%') | t.brand.like('%$term%')) &
+                (t.name.like('%$term%') |
+                    t.nameDe.like('%$term%') |
+                    t.nameEn.like('%$term%') |
+                    t.brand.like('%$term%')) &
                 t.source.isIn(['user', 'base']),
           )
           ..orderBy([
@@ -230,7 +239,10 @@ class ProductDatabaseHelper {
       final offRows = await (db.select(db.products)
             ..where(
               (t) =>
-                  (t.name.like('%$term%') | t.brand.like('%$term%')) &
+                  (t.name.like('%$term%') |
+                      t.nameDe.like('%$term%') |
+                      t.nameEn.like('%$term%') |
+                      t.brand.like('%$term%')) &
                   t.source.equals('off'),
             )
             ..orderBy([
@@ -287,6 +299,8 @@ class ProductDatabaseHelper {
     return FoodItem(
       barcode: row.barcode,
       name: row.name,
+      nameDe: row.nameDe ?? '',
+      nameEn: row.nameEn ?? '',
       brand: row.brand ?? '',
       calories: row.calories,
       protein: row.protein,

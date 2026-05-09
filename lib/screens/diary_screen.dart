@@ -573,6 +573,9 @@ class DiaryScreenState extends State<DiaryScreen> {
       context: context,
       title: trackedItem.item.getLocalizedName(context),
       contentBuilder: (ctx, close) {
+        final linkedFluid = _fluidEntries
+            .where((f) => f.linkedFoodEntryId == trackedItem.entry.id)
+            .firstOrNull;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -583,9 +586,9 @@ class DiaryScreenState extends State<DiaryScreen> {
               initialQuantity: trackedItem.entry.quantityInGrams,
               initialTimestamp: trackedItem.entry.timestamp,
               initialMealType: trackedItem.entry.mealType,
-              // Current nutrients of the entry as initial values
-              // Assumption: if the entry exists, the nutrients are fixed.
-              // Set only the liquid status when needed.
+              initialIsLiquid: linkedFluid != null ? true : null,
+              initialSugar: linkedFluid?.sugarPer100ml,
+              initialCaffeine: linkedFluid?.caffeinePer100ml,
             ),
             const SizedBox(height: 12),
             Row(
@@ -657,7 +660,7 @@ class DiaryScreenState extends State<DiaryScreen> {
           timestamp: result.timestamp,
           quantityInMl: result.quantity,
           name: trackedItem.item.name,
-          kcal: null,
+          kcal: (trackedItem.item.calories / 100 * result.quantity).round(),
           sugarPer100ml: result.sugarPer100ml,
           carbsPer100ml: result.sugarPer100ml, // Spiegeln
           caffeinePer100ml: result.caffeinePer100ml,
@@ -729,10 +732,10 @@ class DiaryScreenState extends State<DiaryScreen> {
         timestamp: timestamp,
         quantityInMl: quantity,
         name: selectedFoodItem.name,
-        kcal: null,
-        sugarPer100ml: null,
-        carbsPer100ml: null,
-        caffeinePer100ml: null,
+        kcal: (selectedFoodItem.calories / 100 * quantity).round(),
+        sugarPer100ml: result.sugarPer100ml,
+        carbsPer100ml: result.sugarPer100ml,
+        caffeinePer100ml: result.caffeinePer100ml,
         linkedFoodEntryId: newFoodEntryId,
       );
       await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
@@ -780,8 +783,9 @@ class DiaryScreenState extends State<DiaryScreen> {
               key: dialogStateKey,
               item: item,
               initialMealType: mealType,
-              initialTimestamp: initialDate ??
-                  _selectedDate, // <--- FIX: Use parameter or fallback
+              initialTimestamp: initialDate != null
+                  ? _getInitialTimestampForDate(initialDate)
+                  : _getInitialTimestampForDate(_selectedDate),
             ),
             // ... (rest of the method: buttons, etc. stays the same) ...
             const SizedBox(height: 12),
@@ -1079,20 +1083,20 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   Widget _buildStepsSummaryCard() {
     if (_isStepsWidgetLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 4),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: SummaryCard(
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               children: [
-                SizedBox(
+                const SizedBox(
                   height: 16,
                   width: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                SizedBox(width: 12),
-                Text('Syncing steps...'),
+                const SizedBox(width: 12),
+                Text(AppLocalizations.of(context)!.diarySyncingSteps),
               ],
             ),
           ),
@@ -1125,8 +1129,8 @@ class DiaryScreenState extends State<DiaryScreen> {
                   : StepsSyncService.defaultStepsGoal)
               .toDouble(),
           color: theme.colorScheme.primary,
-          height: 50,
-          borderRadius: 16,
+          height: 54,
+          borderRadius: DesignConstants.borderRadiusL,
         ),
       ),
     );
@@ -1134,21 +1138,21 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   Widget _buildSleepSummaryCard() {
     if (_isSleepWidgetLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 4),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: SummaryCard(
-          margin: EdgeInsets.symmetric(vertical: 4.0),
+          margin: const EdgeInsets.symmetric(vertical: 4.0),
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               children: [
-                SizedBox(
+                const SizedBox(
                   height: 16,
                   width: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                SizedBox(width: 12),
-                Text('Loading sleep...'),
+                const SizedBox(width: 12),
+                Text(AppLocalizations.of(context)!.diaryLoadingSleep),
               ],
             ),
           ),
@@ -1337,7 +1341,7 @@ class DiaryScreenState extends State<DiaryScreen> {
           children: [
             FluidDialogContent(
               key: key,
-              initialTimestamp: _selectedDate, // <--- FIX: Pass date
+              initialTimestamp: _getInitialTimestampForDate(_selectedDate),
             ),
             const SizedBox(height: 12),
             // ... (rest of the method stays the same: buttons row, etc.)
@@ -1488,6 +1492,44 @@ class DiaryScreenState extends State<DiaryScreen> {
               ],
             ),
           ),
+          // Summary row — always visible, above the expand/collapse section
+          if (_fluidEntries.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Builder(
+              builder: (ctx) {
+                int totalMl = 0;
+                int totalKcal = 0;
+                double totalSugar = 0;
+                double totalCaffeine = 0;
+                for (var entry in _fluidEntries) {
+                  totalMl += entry.quantityInMl;
+                  if (entry.kcal != null) totalKcal += entry.kcal!;
+                  if (entry.sugarPer100ml != null) {
+                    totalSugar +=
+                        (entry.sugarPer100ml! / 100) * entry.quantityInMl;
+                  }
+                  if (entry.caffeinePer100ml != null) {
+                    totalCaffeine +=
+                        (entry.caffeinePer100ml! / 100) * entry.quantityInMl;
+                  }
+                }
+                final l10n = AppLocalizations.of(ctx)!;
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '$totalKcal kcal · '
+                    '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar} · '
+                    '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine} · '
+                    '${totalMl}ml',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
           AnimatedCrossFade(
             crossFadeState:
                 isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
@@ -1505,6 +1547,18 @@ class DiaryScreenState extends State<DiaryScreen> {
         ],
       ),
     );
+  }
+
+  DateTime _getInitialTimestampForDate(DateTime targetDate) {
+    final now = DateTime.now();
+    if (targetDate.year == now.year &&
+        targetDate.month == now.month &&
+        targetDate.day == now.day) {
+      return now;
+    } else {
+      return DateTime(targetDate.year, targetDate.month, targetDate.day,
+          now.hour, now.minute);
+    }
   }
 
   Widget _buildFluidEntryTile(AppLocalizations l10n, FluidEntry entry) {
@@ -1535,10 +1589,15 @@ class DiaryScreenState extends State<DiaryScreen> {
       child: SummaryCard(
         child: ListTile(
           title: Text(entry.name),
-          subtitle: Text(
-            "${entry.quantityInMl}ml · Sugar: ${totalSugar}g · Caffeine: ${totalCaffeine}mg",
+          subtitle: Builder(
+            builder: (ctx) {
+              final l10n = AppLocalizations.of(ctx)!;
+              return Text(
+                '${entry.quantityInMl}${l10n.unit_milliliters} · ${l10n.sugar}: $totalSugar${l10n.unit_grams} · ${l10n.supplement_caffeine}: $totalCaffeine${l10n.unit_milligrams}',
+              );
+            },
           ),
-          trailing: Text("${entry.kcal ?? 0} kcal"),
+          trailing: Text('${entry.kcal ?? 0} ${l10n.unit_kcal}'),
         ),
       ),
     );
@@ -1577,8 +1636,10 @@ class DiaryScreenState extends State<DiaryScreen> {
       child: SummaryCard(
         child: ListTile(
           title: Text(trackedItem.item.name),
-          subtitle: Text("${trackedItem.entry.quantityInGrams}g"),
-          trailing: Text("${trackedItem.calculatedCalories} kcal"),
+          subtitle: Text(
+            '${trackedItem.entry.quantityInGrams}${l10n.unit_grams}',
+          ),
+          trailing: Text('${trackedItem.calculatedCalories} ${l10n.unit_kcal}'),
           onTap: () {
             Navigator.of(context)
                 .push(

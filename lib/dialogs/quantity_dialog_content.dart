@@ -15,6 +15,9 @@ class QuantityDialogContent extends StatefulWidget {
   final int? initialQuantity;
   final DateTime? initialTimestamp;
   final String? initialMealType;
+  final bool? initialIsLiquid;
+  final double? initialSugar;
+  final double? initialCaffeine;
 
   const QuantityDialogContent({
     super.key,
@@ -22,6 +25,9 @@ class QuantityDialogContent extends StatefulWidget {
     this.initialQuantity,
     this.initialTimestamp,
     this.initialMealType,
+    this.initialIsLiquid,
+    this.initialSugar,
+    this.initialCaffeine,
   });
 
   @override
@@ -57,17 +63,20 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
       text: widget.initialQuantity?.toString() ?? '100',
     );
     _sugarController = TextEditingController(
-      text: widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ?? '',
+      text: widget.initialSugar?.toStringAsFixed(1).replaceAll('.0', '') ??
+          widget.item.sugar?.toStringAsFixed(1).replaceAll('.0', '') ??
+          '',
     );
     _caffeineController = TextEditingController(
-      text: widget.item.caffeineMgPer100ml
+      text: widget.initialCaffeine?.toStringAsFixed(1).replaceAll('.0', '') ??
+          widget.item.caffeineMgPer100ml
               ?.toStringAsFixed(1)
               .replaceAll('.0', '') ??
           '',
     );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
     _selectedMealType = widget.initialMealType ?? "mealtypeSnack";
-    _isLiquid = widget.item.isLiquid ?? false;
+    _isLiquid = widget.initialIsLiquid ?? widget.item.isLiquid ?? false;
   }
 
   @override
@@ -124,7 +133,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
     final locale = Localizations.localeOf(context).toString();
     final formattedDate = DateFormat.yMd(locale).format(_selectedDateTime);
     final formattedTime = DateFormat.Hm(locale).format(_selectedDateTime);
-    final unit = _isLiquid ? 'ml' : 'g';
+    final unit = _isLiquid ? l10n.unit_milliliters : l10n.unit_grams;
 
     String getLocalizedMealName(String key) {
       switch (key) {
@@ -137,7 +146,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
         case "mealtypeSnack":
           return l10n.mealtypeSnack;
         default:
-          return "Snack";
+          return l10n.mealtypeSnack;
       }
     }
 
@@ -198,8 +207,8 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             controller: _sugarController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: '${l10n.sugar} (g / 100ml)',
-              suffixText: 'g',
+              labelText: l10n.sugarPer100mlLabel,
+              suffixText: l10n.unit_grams,
             ),
           ),
           const SizedBox(height: DesignConstants.spacingL),
@@ -208,7 +217,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: l10n.caffeinePrompt,
-              suffixText: 'mg / 100ml',
+              suffixText: l10n.caffeineUnit,
             ),
           ),
         ],

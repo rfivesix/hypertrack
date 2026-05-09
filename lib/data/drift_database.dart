@@ -60,7 +60,8 @@ class AppSettings extends Table with HybridId, MetaColumns {
 // 3. Exercises
 /// Table definition for exercises.
 class Exercises extends Table with HybridId, MetaColumns {
-  TextColumn get createdBy => text().nullable()(); // Nullable for system exercises
+  TextColumn get createdBy =>
+      text().nullable()(); // Nullable for system exercises
   TextColumn get nameDe => text()();
   TextColumn get nameEn => text()();
 
@@ -144,8 +145,7 @@ class SetLogs extends Table with HybridId, MetaColumns {
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   IntColumn get logOrder => integer().withDefault(const Constant(0))();
   RealColumn get distance => real().nullable()(); // For cardio in the set
-  IntColumn get durationSeconds =>
-      integer().nullable()(); // For cardio/static
+  IntColumn get durationSeconds => integer().nullable()(); // For cardio/static
   TextColumn get notes => text().nullable()();
 }
 
@@ -173,6 +173,8 @@ class CardioSamples extends Table with HybridId, MetaColumns {
 class Products extends Table with HybridId, MetaColumns {
   TextColumn get barcode => text().unique()(); // Eindeutiger Identifier
   TextColumn get name => text()();
+  TextColumn get nameDe => text().nullable()();
+  TextColumn get nameEn => text().nullable()();
   TextColumn get brand => text().nullable()();
 
   // Nutrients per 100g/ml
@@ -185,7 +187,8 @@ class Products extends Table with HybridId, MetaColumns {
   RealColumn get sugar => real().nullable()();
   RealColumn get fiber => real().nullable()();
   RealColumn get salt => real().nullable()();
-  RealColumn get caffeine => real().nullable()(); // Important for supplement logic
+  RealColumn get caffeine =>
+      real().nullable()(); // Important for supplement logic
 
   BoolColumn get isLiquid => boolean().withDefault(const Constant(false))();
   TextColumn get source =>
@@ -393,7 +396,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -508,6 +511,19 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 13) {
             await _createPulsePersistenceSchema(this);
+          }
+          if (from < 14) {
+            await customStatement(
+              'ALTER TABLE products ADD COLUMN name_de TEXT NULL',
+            );
+            await customStatement(
+              'ALTER TABLE products ADD COLUMN name_en TEXT NULL',
+            );
+            // Back-fill: copy existing name into name_de for base products
+            // so they have a value until the next re-import.
+            await customStatement(
+              "UPDATE products SET name_de = name WHERE source = 'base'",
+            );
           }
         },
       );

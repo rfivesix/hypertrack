@@ -1027,46 +1027,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muscleSplitLabel => 'Muscle Split';
 
   @override
-  String get snackbar_could_not_open_open_link => 'Konnte Link nicht öffnen';
+  String get snackbar_could_not_open_open_link => 'Could not open link';
 
   @override
   String get chart_no_data_for_period => 'No chart data for this period';
 
   @override
-  String get amount_in_milliliters => 'Menge in Millilitern';
+  String get amount_in_milliliters => 'Amount in milliliters';
 
   @override
-  String get amount_in_grams => 'Menge in Gramm';
+  String get amount_in_grams => 'Amount in grams';
 
   @override
-  String get meal_label => 'Mahlzeit';
+  String get meal_label => 'Meal';
 
   @override
-  String get add_to_water_intake => 'Zur Trinkmenge hinzufügen';
+  String get add_to_water_intake => 'Add to water intake';
 
   @override
-  String get create_exercise_screen_title => 'Eigene Übung erstellen';
+  String get create_exercise_screen_title => 'Create Custom Exercise';
 
   @override
-  String get exercise_name_label => 'Name der Übung';
+  String get exercise_name_label => 'Exercise name';
 
   @override
-  String get category_label => 'Kategorie';
+  String get category_label => 'Category';
 
   @override
-  String get description_optional_label => 'Beschreibung (optional)';
+  String get description_optional_label => 'Description (optional)';
 
   @override
-  String get primary_muscles_label => 'Primäre Muskeln';
+  String get primary_muscles_label => 'Primary muscles';
 
   @override
-  String get primary_muscles_hint => 'z.B. Brust, Trizeps';
+  String get primary_muscles_hint => 'e.g. Chest, Triceps';
 
   @override
-  String get secondary_muscles_label => 'Sekundäre Muskeln (optional)';
+  String get secondary_muscles_label => 'Secondary muscles (optional)';
 
   @override
-  String get secondary_muscles_hint => 'z.B. Schultern';
+  String get secondary_muscles_hint => 'e.g. Shoulders';
+
+  @override
+  String get fluidNameLabel => 'Name';
+
+  @override
+  String get sugarPer100mlLabel => 'Sugar (g / 100ml)';
 
   @override
   String get set_type_normal => 'Normal';
@@ -1632,6 +1638,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackbarAutoBackupFailed => 'Auto-Backup failed or was canceled.';
 
   @override
+  String get localDataDeletionCardTitle => 'Local app data';
+
+  @override
+  String get localDataDeletionCardDescription =>
+      'Permanently delete user-owned data stored on this device and reset Train Libre to a fresh local state.';
+
+  @override
+  String get deleteAllLocalAppData => 'Delete all local app data';
+
+  @override
+  String get localDataDeletionConfirmTitle => 'Delete all local app data?';
+
+  @override
+  String get localDataDeletionConfirmBody =>
+      'This permanently deletes locally stored workouts, nutrition logs, measurements, supplements, settings/state, cached analytics, and local app data.\n\nThis does not delete data already exported to Apple Health or Health Connect.\n\nThis does not delete external provider data or remote public catalog sources. Bundled app assets and required default catalogs are kept or recreated so the app can launch after reset.';
+
+  @override
+  String get localDataDeletionTypeDeleteLabel => 'Type DELETE to confirm';
+
+  @override
+  String get localDataDeletionSuccessTitle => 'Local data deleted';
+
+  @override
+  String get localDataDeletionSuccessBody =>
+      'Train Libre will return to its initial setup state.';
+
+  @override
+  String get localDataDeletionFailed =>
+      'Local data could not be deleted. Please try again.';
+
+  @override
   String get noUnknownExercisesFound => 'No unknown exercises found';
 
   @override
@@ -1838,7 +1875,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptySupplements => 'No supplements available';
 
   @override
-  String get undo => 'Rückgängig';
+  String get undo => 'Undo';
 
   @override
   String get deleteSupplementConfirm =>
@@ -2206,17 +2243,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiCaptureTabPhoto => 'Photo';
 
   @override
-  String get aiCaptureTabVoice => 'Voice';
-
-  @override
   String get aiCaptureTabText => 'Text';
 
   @override
   String get aiCapturePhotoHint =>
       'Take or select up to 4 photos of your meal.';
-
-  @override
-  String get aiCaptureVoiceHint => 'Tap the microphone and describe your meal.';
 
   @override
   String get aiCaptureTextHint =>
@@ -4373,4 +4404,153 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthExportHealthConnectStatusTitle =>
       'Health Connect export status';
+
+  @override
+  String get settingsBaseFoodLanguageTitle => 'Base food display language';
+
+  @override
+  String get settingsBaseFoodLanguageSubtitle =>
+      'Choose which language to use for base food names.';
+
+  @override
+  String get settingsBaseFoodLanguageFollowApp => 'Follow app language';
+
+  @override
+  String get settingsBaseFoodLanguageEnglish => 'English';
+
+  @override
+  String get settingsBaseFoodLanguageGerman => 'German';
+
+  @override
+  String get aiModelLabel => 'Model';
+
+  @override
+  String get autoBackupStoragePickerUnavailable =>
+      'Storage picker unavailable. Please fully restart/reinstall the app after updating.';
+
+  @override
+  String autoBackupFolderPickerFailed(Object error) {
+    return 'Folder picker failed: $error';
+  }
+
+  @override
+  String get healthExportPermissionDenied => 'Permission denied';
+
+  @override
+  String get healthExportAdapterUnavailable => 'Adapter unavailable';
+
+  @override
+  String get healthExportPlatformUnavailable => 'Platform unavailable';
+
+  @override
+  String get healthExportPlatformNotInstalled => 'Platform not installed';
+
+  @override
+  String get healthExportExportDisabled => 'Export disabled';
+
+  @override
+  String get onboardingMacrosStepTitle => 'Macronutrients';
+
+  @override
+  String get onboardingMacrosStepSubtitle => 'How is your nutrition composed?';
+
+  @override
+  String get statisticsProviderAppleHealth => 'Apple Health';
+
+  @override
+  String get statisticsProviderHealthConnect => 'Health Connect';
+
+  @override
+  String get statisticsProviderWithings => 'Withings';
+
+  @override
+  String get statisticsProviderGarmin => 'Garmin';
+
+  @override
+  String get statisticsProviderFitbit => 'Fitbit';
+
+  @override
+  String get statisticsProviderLocal => 'Local';
+
+  @override
+  String get unit_milliliters => 'ml';
+
+  @override
+  String get unit_kilograms => 'kg';
+
+  @override
+  String get mealEditorHintExample => 'e.g. Chicken bowl';
+
+  @override
+  String get mealEditorNoIngredientsYet => 'None yet – coming later';
+
+  @override
+  String get foodDetailSavedBaseDb => 'Saved (base DB)';
+
+  @override
+  String foodDetailExportError(Object error) {
+    return 'Export error: $error';
+  }
+
+  @override
+  String get stepsModulePrevious => 'Previous';
+
+  @override
+  String get stepsModuleNext => 'Next';
+
+  @override
+  String get stepsModuleTotalSteps => 'Total Steps';
+
+  @override
+  String get stepsModuleThisWeek => 'This Week';
+
+  @override
+  String get stepsModuleThisMonth => 'This Month';
+
+  @override
+  String stepsModuleUpdated(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get stepsModuleScopeSwitcherSemantics => 'Switch step scope';
+
+  @override
+  String get stepsModuleDay => 'Day';
+
+  @override
+  String get stepsModuleWeek => 'Week';
+
+  @override
+  String get stepsModuleMonth => 'Month';
+
+  @override
+  String get stepsModuleHourlyTimeline => 'Hourly Timeline';
+
+  @override
+  String get stepsModuleTotal => 'Total';
+
+  @override
+  String get stepsModuleActiveHours => 'Active Hours';
+
+  @override
+  String get stepsModulePeakHour => 'Peak Hour';
+
+  @override
+  String get stepsModuleAvgPerDay => 'Avg / Day';
+
+  @override
+  String get stepsModuleGoalHit => 'Goal Hit';
+
+  @override
+  String get stepsModuleGoalDays => 'Goal Days';
+
+  @override
+  String get diarySyncingSteps => 'Syncing steps...';
+
+  @override
+  String get diaryLoadingSleep => 'Loading sleep...';
+
+  @override
+  String get unit_milligrams => 'mg';
 }
