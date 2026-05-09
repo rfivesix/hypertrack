@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+    content="Technical details on Train Libre's recovery tracker heuristic, muscle-specific readiness, and resistance training volume.">
+  <meta name="theme-color" content="#000000">
+  <title>Recovery Tracker | Train Libre</title>
+  <link rel="icon" href="../../web/favicon.png">
+  <link rel="stylesheet" href="../style.css">
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="page">
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="../#top" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <div class="nav-links">
+          <a href="../#features" data-i18n="nav_features">Features</a>
+          <a href="../#intelligence" data-i18n="nav_guidance">AI Guidance</a>
+          <a href="../#privacy" data-i18n="nav_privacy">Privacy</a>
+          <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
+            rel="noreferrer">GitHub</a>
+        </div>
+        <div class="nav-controls">
+          <button id="lang-toggle" class="control-btn" aria-label="Switch Language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+              </path>
+            </svg>
+          </button>
+          <button id="theme-toggle" class="control-btn" aria-label="Toggle Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero-minimal">
+        <div class="hero-content reveal">
+          <div class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span data-i18n="f4_title">Recovery & pulse insights.</span>
+          </div>
+          <h1 data-i18n="recovery_hero_t">Recovery & Readiness Heuristic</h1>
+          <p class="hero-copy" data-i18n="recovery_hero_c">A planning aid that estimates muscle-specific readiness based on training-load accumulation and decay over time.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="feature-grid">
+          <article class="feature-card reveal delay-1" style="--feature: var(--green); --feature-rgb: 102, 200, 109;">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21a8 8 0 0 0 8-8c0-4-3-7-8-10-5 3-8 6-8 10a8 8 0 0 0 8 8Z"></path>
+              </svg>
+            </div>
+            <h3 data-i18n="recovery_what_t">What this system does</h3>
+            <ul class="feature-list">
+                <li data-i18n="recovery_what_l1">Estimates the recovery status of individual muscle groups.</li>
+                <li data-i18n="recovery_what_l2">Accounts for primary and secondary muscle involvement (overlapping sets).</li>
+                <li data-i18n="recovery_what_l3">Adjusts recovery windows based on proximity to failure (RIR/RPE).</li>
+                <li data-i18n="recovery_what_l4">Uses muscle-specific base recovery curves (e.g., lower back vs. delts).</li>
+            </ul>
+          </article>
+
+          <article class="feature-card reveal delay-2" style="--feature: var(--red); --feature-rgb: 245, 83, 83;">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+              </svg>
+            </div>
+            <h3 data-i18n="recovery_not_t">What it does NOT do</h3>
+            <ul class="feature-list">
+                <li data-i18n="recovery_not_l1">It does not measure actual physiological biomarkers or CNS fatigue.</li>
+                <li data-i18n="recovery_not_l2">It cannot predict injury or account for unlogged pain.</li>
+                <li data-i18n="recovery_not_l3">It is not a substitute for subjective feeling or coaching judgment.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="recovery_how_t">The Science of Inferred Readiness</h2>
+          <p class="section-copy" data-i18n="recovery_how_c1">The tracker uses an 'Equivalent Set' model. Research (e.g., Vieira et al., 2021) shows that training to failure (0 RIR) significantly elongates recovery time, sometimes by 24–48 hours, compared to submaximal training.</p>
+          <p class="section-copy" data-i18n="recovery_how_c2">Train Libre applies this by weighting your working sets. A set at 0 RIR is flagged as high-fatigue, extending the estimated recovery window. The system also recognizes that compound movements like bench pressing create recovery pressure not just for the chest, but also for the triceps and front delts.</p>
+          <p class="section-copy" data-i18n="recovery_how_c3">Different muscle groups recover at different rates. Larger, high-load groups (like the quads or lower back) are assigned longer base windows than smaller groups (like the biceps or calves).</p>
+        </div>
+      </section>
+
+      <section class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="recovery_limits_t">Why it is a guide, not a measurement</h2>
+          <p class="section-copy" data-i18n="recovery_limits_c1">Logged data is a proxy for training stress. The heuristic cannot 'see' external factors like sleep debt, nutritional deficiencies, or systemic life stress unless they are manually logged or integrated via health services.</p>
+          <div class="info-grid">
+            <div class="info-item">
+              <strong data-i18n="recovery_limits_l1">Subjectivity: Use the status as a data-informed suggestion. If the app says a muscle is 'Ready' but you feel significant soreness or lethargy, prioritize your body's feedback.</strong>
+            </div>
+            <div class="info-item">
+              <strong data-i18n="recovery_limits_l2">Novelty: New exercises or sudden volume spikes may cause disproportionate fatigue that the base heuristic may not fully capture.</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="evidence_read_more">Evidence & further reading</h2>
+          <ul class="evidence-links">
+            <li>
+              <a href="https://doi.org/10.1007/s00421-017-3704-9" target="_blank" rel="noreferrer">Morán-Navarro et al. (2017) - Time course of recovery following resistance training leading or not to failure</a>
+            </li>
+            <li>
+              <a href="https://doi.org/10.1080/02640414.2016.1243800" target="_blank" rel="noreferrer">Schoenfeld et al. (2017) - Dose-response relationship between weekly volume and muscle mass</a>
+            </li>
+            <li>
+                <a href="https://doi.org/10.1249/MSS.0b013e318213f880" target="_blank" rel="noreferrer">Sánchez-Medina & González-Badillo (2011) - Velocity loss as an indicator of neuromuscular fatigue</a>
+            </li>
+            <li>
+                <a href="https://doi.org/10.1249/MSS.0000000000001764" target="_blank" rel="noreferrer">Schoenfeld et al. (2019) - Resistance Training Volume Enhances Muscle Hypertrophy in Trained Men</a>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand" href="../#top" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <p class="fine-print" data-i18n="footer_medical">Fitness, nutrition, recovery, and pulse features are for
+          personal tracking and training
+          context, not medical diagnosis or treatment.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../ai-nutrition/" data-i18n="intel_c1_label">AI meal recognition</a>
+        <a href="../adaptive-nutrition/" data-i18n="intel_c2_label">Calorie estimation</a>
+        <a href="../recovery/" data-i18n="footer_recovery">Recovery Tracker</a>
+        <a href="../privacy-policy/" data-i18n="footer_privacy">Privacy Policy</a>
+        <a href="../impressum.html" data-i18n="footer_imprint">Imprint</a>
+        <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="../script.js"></script>
+</body>
+
+</html>

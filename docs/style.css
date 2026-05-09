@@ -1458,3 +1458,102 @@ h1 {
   outline: 3px solid var(--accent);
   outline-offset: 4px;
 }
+
+.card-link {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.88rem;
+  transition: opacity 180ms ease;
+}
+
+[data-theme="light"] .card-link {
+  color: #8da100;
+}
+
+.card-link:hover {
+  opacity: 0.8;
+}
+
+.card-link::after {
+  content: "→";
+}
+
+.button-small {
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+.hero-minimal {
+  padding: clamp(140px, 15vw, 180px) 24px clamp(40px, 5vw, 80px);
+  text-align: center;
+}
+
+.feature-list {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+
+.feature-list li {
+  position: relative;
+  padding-left: 28px;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
+.feature-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 900;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.info-grid {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.info-item {
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+}
+
+.evidence-links {
+  margin-top: 24px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+
+.evidence-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fg);
+  font-weight: 700;
+  transition: color 180ms ease;
+}
+
+.evidence-links a:hover {
+  color: var(--accent);
+}
+
+.evidence-links a::before {
+  content: "🔗";
+  font-size: 1.1rem;
+}

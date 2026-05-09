@@ -148,7 +148,72 @@
       p_ctrl_l2: "You can delete entries or your entire profile within the app.",
       p_ctrl_l3: "You can remove saved AI API keys at any time.",
       p_ctrl_l4: "Uninstalling the app removes its local data from your device.",
-      p_cont_t: "Contact"
+      p_cont_t: "Contact",
+      learn_more: "Learn more",
+      evidence_read_more: "Evidence & further reading",
+      ai_meal_hero_t: "AI Meal Recognition",
+      ai_meal_hero_c: "A review-first approach to capturing nutrition data using large language models as a proposing layer for local deterministic validation.",
+      ai_meal_what_t: "What this feature does",
+      ai_meal_what_l1: "Proposes food names and weight estimates from photos or text descriptions.",
+      ai_meal_what_l2: "Matches AI suggestions against the app's local database of foods.",
+      ai_meal_what_l3: "Calculates nutrition totals locally using matched product data.",
+      ai_meal_what_l4: "Provides a manual review interface to edit or reject every entry.",
+      ai_meal_not_t: "What it does NOT do",
+      ai_meal_not_l1: "It does not provide medical-grade nutrition analysis.",
+      ai_meal_not_l2: "It does not automatically 'know' the caloric density of a specific restaurant dish.",
+      ai_meal_not_l3: "It does not silently save data without your explicit review and confirmation.",
+      ai_meal_how_t: "The Architecture: Local-First & BYOK",
+      ai_meal_how_c1: "Train Libre uses a \"Bring Your Own Key\" (BYOK) model. You choose a provider and model; the app handles the orchestration. Your data stays local, and the AI is only called when you trigger a capture.",
+      ai_meal_how_c2: "Recognition is treated as a noisy proposal. Once the AI returns food names and grams, the app runs a deterministic validation pass. It attempts to repair common errors and flags low-confidence matches before you see the result.",
+      ai_meal_limits_t: "Scientific & Technical Limitations",
+      ai_meal_limits_c1: "Research into computer-vision-based nutrition estimation highlights several fundamental hurdles that make 100% accuracy impossible for consumer apps:",
+      ai_meal_limits_l1: "The Volume Problem: A 2D photo lacks depth information. Studies show that without a reference object or multiple angles, volume error rates typically range from 10% to 30%.",
+      ai_meal_limits_l2: "Hidden Ingredients: AI cannot 'see' the oils, butter, or sugar used in preparation. A grilled breast and a sautéed one may look identical but differ significantly in caloric density.",
+      ai_meal_limits_l3: "Mixed Dishes: Ingredients in dishes like stir-fries or burritos are often occluded. If the rice is under the curry, the AI will likely underestimate the portion.",
+      ai_meal_guidance_t: "Practical Guidance",
+      ai_meal_guidance_c: "Treat AI capture as a friction-reduction tool, not a ground truth. Always use the review screen to adjust gram estimates and ensure the matched foods align with what you actually ate.",
+
+      adapt_nut_hero_t: "Adaptive Nutrition Estimation",
+      adapt_nut_hero_c: "A recursive estimation system designed to infer maintenance calories (TDEE) from noisy bodyweight and intake data.",
+      adapt_nut_what_t: "What this system does",
+      adapt_nut_what_l1: "Estimates your maintenance calories (TDEE) based on your real-world progress.",
+      adapt_nut_what_l2: "Analyzes bodyweight trends using smoothing to filter out daily noise.",
+      adapt_nut_what_l3: "Updates weekly targets conservatively to avoid overreacting to fluctuations.",
+      adapt_nut_what_l4: "Provides an uncertainty range based on the consistency of your logged data.",
+      adapt_nut_not_t: "What it does NOT do",
+      adapt_nut_not_l1: "It is not a replacement for metabolic testing or medical advice.",
+      adapt_nut_not_l2: "It cannot predict weight change with 100% precision due to individual variability.",
+      adapt_nut_not_l3: "It does not account for illness, travel, or extreme stress unless reflected in your logs.",
+      adapt_nut_how_t: "How it works: Bayesian Recursive Estimation",
+      adapt_nut_how_c1: "Instead of relying on static formulas like Mifflin-St Jeor—which research shows can be significantly off for individuals—Train Libre treats your metabolism as a dynamic 'hidden state'.",
+      adapt_nut_how_c2: "The app uses a Bayesian-inspired recursive estimator (similar to a Kalman filter). Every week, it compares its prediction (based on your intake) with the actual weight trend. It then calculates the 'gain'—deciding how much to trust the new data versus the previous estimate.",
+      adapt_nut_how_c3: "To handle the 'noise' of water retention and glycogen shifts, the system uses a 7-day confirmation rule for goal changes and a phase-dependent scaling factor for energy density (kcal/kg).",
+      adapt_nut_limits_t: "Uncertainty & Interpretation",
+      adapt_nut_limits_c1: "Daily scale weight is high-noise data. Factors like sodium intake, hydration, and muscle glycogen can cause shifts of several kilograms that do not represent changes in body tissue.",
+      adapt_nut_limits_l1: "Trend vs. Noise: The algorithm prioritizes the long-term trend. This means it may feel slow to respond to rapid, short-term changes.",
+      adapt_nut_limits_l2: "Logging Consistency: The precision of the estimate depends entirely on the consistency of your logs. Sparse data will result in wider uncertainty ranges.",
+      adapt_nut_limits_l3: "Stabilization: During the first 2-4 weeks, the system relies on profile 'priors'. It becomes significantly more accurate once it has sufficient user-specific history.",
+
+      recovery_hero_t: "Recovery & Readiness Heuristic",
+      recovery_hero_c: "A planning aid that estimates muscle-specific readiness based on training-load accumulation and decay over time.",
+      recovery_what_t: "What this system does",
+      recovery_what_l1: "Estimates the recovery status of individual muscle groups.",
+      recovery_what_l2: "Accounts for primary and secondary muscle involvement (overlapping sets).",
+      recovery_what_l3: "Adjusts recovery windows based on proximity to failure (RIR/RPE).",
+      recovery_what_l4: "Uses muscle-specific base recovery curves (e.g., lower back vs. delts).",
+      recovery_not_t: "What it does NOT do",
+      recovery_not_l1: "It does not measure actual physiological biomarkers or CNS fatigue.",
+      recovery_not_l2: "It cannot predict injury or account for unlogged pain.",
+      recovery_not_l3: "It is not a substitute for subjective feeling or coaching judgment.",
+      recovery_how_t: "The Science of Inferred Readiness",
+      recovery_how_c1: "The tracker uses an 'Equivalent Set' model. Research (e.g., Vieira et al., 2021) shows that training to failure (0 RIR) significantly elongates recovery time, sometimes by 24–48 hours, compared to submaximal training.",
+      recovery_how_c2: "Train Libre applies this by weighting your working sets. A set at 0 RIR is flagged as high-fatigue, extending the estimated recovery window. The system also recognizes that compound movements like bench pressing create recovery pressure not just for the chest, but also for the triceps and front delts.",
+      recovery_how_c3: "Different muscle groups recover at different rates. Larger, high-load groups (like the quads or lower back) are assigned longer base windows than smaller groups (like the biceps or calves).",
+      recovery_limits_t: "Why it is a guide, not a measurement",
+      recovery_limits_c1: "Logged data is a proxy for training stress. The heuristic cannot 'see' external factors like sleep debt, nutritional deficiencies, or systemic life stress unless they are manually logged or integrated via health services.",
+      recovery_limits_l1: "Subjectivity: Use the status as a data-informed suggestion. If the app says a muscle is 'Ready' but you feel significant soreness or lethargy, prioritize your body's feedback.",
+      recovery_limits_l2: "Novelty: New exercises or sudden volume spikes may cause disproportionate fatigue that the base heuristic may not fully capture.",
+      footer_recovery: "Recovery Tracker"
     },
     de: {
       nav_features: "Funktionen",
@@ -298,134 +363,199 @@
       p_ctrl_l2: "Du kannst Einträge oder dein gesamtes Profil jederzeit in der App löschen.",
       p_ctrl_l3: "KI-Schlüssel können jederzeit entfernt werden.",
       p_ctrl_l4: "Das Deinstallieren der App löscht alle lokalen Daten vom Gerät.",
-      p_cont_t: "Kontakt"
+      p_cont_t: "Kontakt",
+      learn_more: "Mehr erfahren",
+      evidence_read_more: "Evidenz & Quellen",
+      ai_meal_hero_t: "KI-Mahlzeitenerkennung",
+      ai_meal_hero_c: "Ein review-basierter Ansatz zur Erfassung von Ernährungsdaten, der LLMs als Vorschlagsebene für eine lokale, deterministische Validierung nutzt.",
+      ai_meal_what_t: "Was diese Funktion tut",
+      ai_meal_what_l1: "Schlägt Lebensmittelnamen und Gewichtsschätzungen basierend auf Fotos oder Textbeschreibungen vor.",
+      ai_meal_what_l2: "Gleicht KI-Vorschläge mit der lokalen Lebensmitteldatenbank der App ab.",
+      ai_meal_what_l3: "Berechnet Nährwertsummen lokal unter Verwendung gematchter Produktdaten.",
+      ai_meal_what_l4: "Bietet eine Review-Oberfläche, um jeden Eintrag manuell zu bearbeiten oder abzulehnen.",
+      ai_meal_not_t: "Was sie NICHT tut",
+      ai_meal_not_l1: "Sie bietet keine medizinische Nährwertanalyse.",
+      ai_meal_not_l2: "Sie 'weiß' nicht automatisch um die Kaloriendichte eines spezifischen Restaurantgerichts.",
+      ai_meal_not_l3: "Sie speichert keine Daten ohne deine ausdrückliche Prüfung und Bestätigung.",
+      ai_meal_how_t: "Die Architektur: Lokal & BYOK",
+      ai_meal_how_c1: "Train Libre nutzt ein \"Bring Your Own Key\" (BYOK)-Modell. Du wählst Provider und Modell; die App übernimmt die Orchestrierung. Deine Daten bleiben lokal.",
+      ai_meal_how_c2: "Die Erkennung wird als ungenauer Vorschlag behandelt. Sobald die KI Namen und Mengen liefert, führt die App eine deterministische Validierung durch, um Fehler zu korrigieren.",
+      ai_meal_limits_t: "Wissenschaftliche & technische Grenzen",
+      ai_meal_limits_c1: "Die Forschung zur bildbasierten Nährwertschätzung zeigt fundamentale Hürden auf, die eine 100%ige Genauigkeit unmöglich machen:",
+      ai_meal_limits_l1: "Das Volumen-Problem: Einem 2D-Foto fehlt die Tiefeninformation. Ohne Referenzobjekte liegen die Fehlerraten bei der Volumenschätzung oft zwischen 10% und 30%.",
+      ai_meal_limits_l2: "Versteckte Zutaten: Die KI kann Öle, Butter oder Zucker nicht 'sehen'. Ein gedünstetes und ein in Butter gebratenes Gericht können identisch aussehen, sich aber kalorisch stark unterscheiden.",
+      ai_meal_limits_l3: "Verdeckte Lebensmittel: In gemischten Gerichten wie Burritos sind Zutaten oft verdeckt. Wenn der Reis unter dem Curry liegt, wird die Portion wahrscheinlich unterschätzt.",
+      ai_meal_guidance_t: "Praktische Hinweise",
+      ai_meal_guidance_c: "Betrachte die KI-Erfassung als Werkzeug zur Zeitersparnis, nicht als absolute Wahrheit. Nutze immer den Review-Bildschirm, um Schätzungen anzupassen.",
+
+      adapt_nut_hero_t: "Adaptive Kalorienschätzung",
+      adapt_nut_hero_c: "Ein rekursives Schätzsystem, das darauf ausgelegt ist, die Erhaltungskalorien (TDEE) aus schwankenden Körpergewichts- und Log-Daten abzuleiten.",
+      adapt_nut_what_t: "Was dieses System tut",
+      adapt_nut_what_l1: "Schätzt deine Erhaltungskalorien (TDEE) basierend auf deinem tatsächlichen Fortschritt.",
+      adapt_nut_what_l2: "Analysiert Gewichtstrends mittels Glättung, um tägliche Schwankungen zu filtern.",
+      adapt_nut_what_l3: "Aktualisiert wöchentliche Ziele konservativ, um Überreaktionen zu vermeiden.",
+      adapt_nut_what_l4: "Liefert einen Unsicherheitsbereich basierend auf der Konstanz deiner Daten.",
+      adapt_nut_not_t: "Was es NICHT tut",
+      adapt_nut_not_l1: "Es ist kein Ersatz für medizinische Stoffwechseltests oder ärztlichen Rat.",
+      adapt_nut_not_l2: "Es kann Gewichtsänderungen aufgrund individueller Variabilität nicht mit 100%iger Präzision vorhersagen.",
+      adapt_nut_not_l3: "Es berücksichtigt keine Krankheiten oder extremen Stress, sofern diese nicht in den Logs sichtbar sind.",
+      adapt_nut_how_t: "Funktionsweise: Rekursive Schätzung",
+      adapt_nut_how_c1: "Statt auf statische Formeln wie Mifflin-St. Jeor zu vertrauen – die laut Forschung bei Einzelpersonen stark abweichen können – betrachtet Train Libre deinen Stoffwechsel als dynamischen Zustand.",
+      adapt_nut_how_c2: "Die App nutzt einen bayesianisch inspirierten rekursiven Schätzer. Jede Woche wird die Vorhersage mit dem tatsächlichen Trend verglichen und die Schätzung entsprechend angepasst.",
+      adapt_nut_how_c3: "Um Wassereinlagerungen und Glykogen-Schwankungen abzufangen, nutzt das System eine 7-Tage-Bestätigungsregel für Zieländerungen und eine phasenabhängige Skalierung der Energiedichte.",
+      adapt_nut_limits_t: "Unsicherheit & Interpretation",
+      adapt_nut_limits_c1: "Das tägliche Körpergewicht ist ein extrem 'verrauschtes' Datum. Faktoren wie Natriumzufuhr und Hydration können Schwankungen verursachen, die kein Körperfett darstellen.",
+      adapt_nut_limits_l1: "Trend vs. Rauschen: Der Algorithmus priorisiert den langfristigen Trend. Er reagiert daher bewusst langsam auf kurzfristige Sprünge.",
+      adapt_nut_limits_l2: "Konstanz der Logs: Die Präzision der Schätzung hängt direkt von der Regelmäßigkeit deiner Einträge ab. Lückenhafte Daten führen zu größeren Unsicherheitsbereichen.",
+      adapt_nut_limits_l3: "Stabilisierung: In den ersten 2-4 Wochen stützt sich das System auf profilbasierte Annahmen. Es wird präziser, je mehr spezifische Daten vorliegen.",
+
+      recovery_hero_t: "Regenerations-Heuristik",
+      recovery_hero_c: "Eine Planungshilfe, die die muskelspezifische Bereitschaft basierend auf der Akkumulation und dem Abklingen der Trainingsbelastung schätzt.",
+      recovery_what_t: "Was dieses System tut",
+      recovery_what_l1: "Schätzt den Regenerationsstatus einzelner Muskelgruppen.",
+      recovery_what_l2: "Berücksichtigt primäre und sekundäre Muskelbeteiligung (Überschneidungen).",
+      recovery_what_l3: "Passt Regenerationsfenster basierend auf der Nähe zum Versagen (RIR/RPE) an.",
+      recovery_what_l4: "Nutzt muskelspezifische Basis-Regenerationskurven (z. B. unterer Rücken vs. Delta).",
+      recovery_not_t: "Was es NICHT tut",
+      recovery_not_l1: "Es misst keine tatsächlichen physiologischen Biomarker oder ZNS-Ermüdung.",
+      recovery_not_l2: "Es kann keine Verletzungen vorhersagen oder nicht dokumentierte Schmerzen erfassen.",
+      recovery_not_l3: "Es ist kein Ersatz für das subjektive Körpergefühl oder trainerisches Urteilsvermögen.",
+      recovery_how_t: "Die Wissenschaft hinter der Schätzung",
+      recovery_how_c1: "Der Tracker nutzt ein 'Equivalent Set'-Modell. Forschungsergebnisse (z. B. Morán-Navarro et al., 2017) legen nahe, dass Training bis zum Versagen (0 RIR) die Regenerationszeit signifikant verlängert.",
+      recovery_how_c2: "Train Libre gewichtet Arbeitssätze entsprechend: Ein Satz mit 0 RIR wird in der Heuristik als belastender eingestuft, was das geschätzte Zeitfenster verlängert. Das System erkennt zudem, dass Verbundübungen mehrere Muskelgruppen gleichzeitig beanspruchen.",
+      recovery_how_c3: "Verschiedene Muskelgruppen regenerieren unterschiedlich schnell. Große Muskelgruppen (wie Quads oder unterer Rücken) haben längere Basis-Fenster im Abkling-Modell als kleinere Gruppen (wie Bizeps oder Waden).",
+      recovery_limits_t: "Warum es ein Leitfaden ist, keine Messung",
+      recovery_limits_c1: "Daten aus dem Logbuch sind ein Proxy für Trainingsstress. Die Heuristik kann externe Faktoren wie Schlafmangel oder Stress nicht direkt 'sehen'.",
+      recovery_limits_l1: "Subjektivität: Nutze den Status als datengestützte Empfehlung. Wenn die App 'Bereit' anzeigt, du aber Schmerzen fühlst, priorisiere dein Körpergefühl.",
+      recovery_limits_l2: "Anpassung: Neue Übungen oder plötzliche Volumen-Steigerungen können zu einer Ermüdung führen, die die Basis-Heuristik nicht vollständig erfasst.",
+      footer_recovery: "Regenerations-Tracker"
     }
   };
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Theme logic
-  const updateTheme = (theme) => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  };
+// Theme logic
+const updateTheme = (theme) => {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("theme", theme);
+};
 
-  const initTheme = () => {
-    const themeToggle = document.getElementById("theme-toggle");
-    const currentTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-    updateTheme(currentTheme);
+const initTheme = () => {
+  const themeToggle = document.getElementById("theme-toggle");
+  const currentTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  updateTheme(currentTheme);
 
-    if (themeToggle) {
-      // Remove old listeners to avoid multiple attachments
-      const newToggle = themeToggle.cloneNode(true);
-      themeToggle.parentNode.replaceChild(newToggle, themeToggle);
-      
-      newToggle.addEventListener("click", () => {
-        const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        updateTheme(theme);
-      });
-    }
-  };
+  if (themeToggle) {
+    // Remove old listeners to avoid multiple attachments
+    const newToggle = themeToggle.cloneNode(true);
+    themeToggle.parentNode.replaceChild(newToggle, themeToggle);
 
-  // Language logic
-  const updateTranslations = (lang) => {
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-      const key = el.getAttribute("data-i18n");
-      if (TRANSLATIONS[lang][key]) {
-        el.textContent = TRANSLATIONS[lang][key];
-      }
+    newToggle.addEventListener("click", () => {
+      const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      updateTheme(theme);
     });
-    document.documentElement.setAttribute("lang", lang);
-  };
+  }
+};
 
-  const initLang = () => {
-    const langToggle = document.getElementById("lang-toggle");
-    let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("de") ? "de" : "en");
-    updateTranslations(currentLang);
-
-    if (langToggle) {
-        const newToggle = langToggle.cloneNode(true);
-        langToggle.parentNode.replaceChild(newToggle, langToggle);
-        
-        newToggle.addEventListener("click", () => {
-          currentLang = currentLang === "en" ? "de" : "en";
-          updateTranslations(currentLang);
-          localStorage.setItem("lang", currentLang);
-        });
+// Language logic
+const updateTranslations = (lang) => {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (TRANSLATIONS[lang][key]) {
+      el.textContent = TRANSLATIONS[lang][key];
     }
-  };
-
-  // Reveal logic
-  const initReveal = () => {
-    const revealTargets = document.querySelectorAll(".reveal");
-    if ("IntersectionObserver" in window && !reduceMotion) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.16, rootMargin: "0px 0px -8% 0px" });
-
-      revealTargets.forEach((target) => observer.observe(target));
-    } else {
-      revealTargets.forEach((target) => target.classList.add("is-visible"));
-    }
-  };
-
-  // Parallax/Scroll logic
-  const initParallax = () => {
-    if (reduceMotion) return;
-
-    const heroStage = document.querySelector(".hero-stage");
-    const heroContent = document.querySelector(".hero-content");
-    const phoneRow = document.querySelector(".phone-row");
-
-    if (heroStage) {
-      window.addEventListener("pointermove", (event) => {
-        const mx = (event.clientX / window.innerWidth - 0.5).toFixed(3);
-        const my = (event.clientY / window.innerHeight - 0.5).toFixed(3);
-        heroStage.style.setProperty("--mx", mx);
-        heroStage.style.setProperty("--my", my);
-      }, { passive: true });
-    }
-
-    const syncScroll = () => {
-      const y = Math.min(window.scrollY, 520);
-      if (heroStage) heroStage.style.setProperty("--scroll", y.toFixed(0));
-      if (heroContent) heroContent.style.setProperty("--hero-copy-scroll", y.toFixed(0));
-      if (phoneRow) {
-          const rowY = Math.max(0, window.scrollY - phoneRow.offsetTop + 650);
-          phoneRow.style.setProperty("--row-scroll", rowY.toFixed(0));
-      }
-    };
-
-    syncScroll();
-    window.addEventListener("scroll", syncScroll, { passive: true });
-  };
-
-  // Fallback images
-  const initImages = () => {
-      document.querySelectorAll("img[data-fallback-src]").forEach((image) => {
-        image.addEventListener("error", () => {
-          if (image.dataset.fallbackLoaded === "true") return;
-          image.dataset.fallbackLoaded = "true";
-          image.src = image.dataset.fallbackSrc;
-        });
-      });
-  };
-
-  // Execution
-  document.addEventListener("DOMContentLoaded", () => {
-      initTheme();
-      initLang();
-      initReveal();
-      initParallax();
-      initImages();
   });
-  
-  // Early theme initialization to prevent flash
-  const savedTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-  document.documentElement.setAttribute("data-theme", savedTheme);
-})();
+  document.documentElement.setAttribute("lang", lang);
+};
+
+const initLang = () => {
+  const langToggle = document.getElementById("lang-toggle");
+  let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("de") ? "de" : "en");
+  updateTranslations(currentLang);
+
+  if (langToggle) {
+    const newToggle = langToggle.cloneNode(true);
+    langToggle.parentNode.replaceChild(newToggle, langToggle);
+
+    newToggle.addEventListener("click", () => {
+      currentLang = currentLang === "en" ? "de" : "en";
+      updateTranslations(currentLang);
+      localStorage.setItem("lang", currentLang);
+    });
+  }
+};
+
+// Reveal logic
+const initReveal = () => {
+  const revealTargets = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && !reduceMotion) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.16, rootMargin: "0px 0px -8% 0px" });
+
+    revealTargets.forEach((target) => observer.observe(target));
+  } else {
+    revealTargets.forEach((target) => target.classList.add("is-visible"));
+  }
+};
+
+// Parallax/Scroll logic
+const initParallax = () => {
+  if (reduceMotion) return;
+
+  const heroStage = document.querySelector(".hero-stage");
+  const heroContent = document.querySelector(".hero-content");
+  const phoneRow = document.querySelector(".phone-row");
+
+  if (heroStage) {
+    window.addEventListener("pointermove", (event) => {
+      const mx = (event.clientX / window.innerWidth - 0.5).toFixed(3);
+      const my = (event.clientY / window.innerHeight - 0.5).toFixed(3);
+      heroStage.style.setProperty("--mx", mx);
+      heroStage.style.setProperty("--my", my);
+    }, { passive: true });
+  }
+
+  const syncScroll = () => {
+    const y = Math.min(window.scrollY, 520);
+    if (heroStage) heroStage.style.setProperty("--scroll", y.toFixed(0));
+    if (heroContent) heroContent.style.setProperty("--hero-copy-scroll", y.toFixed(0));
+    if (phoneRow) {
+      const rowY = Math.max(0, window.scrollY - phoneRow.offsetTop + 650);
+      phoneRow.style.setProperty("--row-scroll", rowY.toFixed(0));
+    }
+  };
+
+  syncScroll();
+  window.addEventListener("scroll", syncScroll, { passive: true });
+};
+
+// Fallback images
+const initImages = () => {
+  document.querySelectorAll("img[data-fallback-src]").forEach((image) => {
+    image.addEventListener("error", () => {
+      if (image.dataset.fallbackLoaded === "true") return;
+      image.dataset.fallbackLoaded = "true";
+      image.src = image.dataset.fallbackSrc;
+    });
+  });
+};
+
+// Execution
+document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  initLang();
+  initReveal();
+  initParallax();
+  initImages();
+});
+
+// Early theme initialization to prevent flash
+const savedTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+document.documentElement.setAttribute("data-theme", savedTheme);
+}) ();
