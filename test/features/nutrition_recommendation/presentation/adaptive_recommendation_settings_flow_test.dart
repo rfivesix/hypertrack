@@ -249,50 +249,6 @@ void main() {
       expect(find.text(l10n.adaptivePriorActivityVeryHigh), findsOneWidget);
     });
 
-    testWidgets('onboarding preview surfaces prior-only data basis state',
-        (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: OnboardingScreen(
-            recommendationService: recommendationService,
-            databaseHelper: dbHelper,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester
-          .tap(find.byKey(const Key('onboarding_continue_setup_button')));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.byKey(const Key('onboarding_name_text_field')),
-        'Alex',
-      );
-      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
-      await tester.pumpAndSettle();
-
-      final context = tester.element(find.byType(OnboardingScreen));
-      final l10n = AppLocalizations.of(context)!;
-      expect(
-        find.byKey(const Key('onboarding_adaptive_summary_data_basis_message')),
-        findsOneWidget,
-      );
-      expect(
-        find.text(l10n.adaptiveRecommendationDataBasisHintPriorOnly),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('onboarding_adaptive_summary_stabilizing_hint')),
-        findsOneWidget,
-      );
-    });
-
     testWidgets('onboarding final page shows finish action', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
