@@ -116,7 +116,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                      BorderRadius.circular(DesignConstants.borderRadiusL),
                 ),
                 child: Image.asset(
                   widget.exercise.imagePath!,
@@ -126,6 +127,10 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     height: 200,
                     alignment: Alignment.center,
                     color: Colors.black12,
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          BorderRadius.circular(DesignConstants.borderRadiusL),
+                    ),
                     child: const Icon(Icons.image_not_supported_outlined),
                   ),
                 ),
