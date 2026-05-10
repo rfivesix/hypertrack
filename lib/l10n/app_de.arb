@@ -1912,5 +1912,9 @@
   "stepsModuleGoalDays": "Tage am Ziel",
   "diarySyncingSteps": "Schritte werden synchronisiert...",
   "diaryLoadingSleep": "Schlaf wird geladen...",
-  "unit_milligrams": "mg"
+  "unit_milligrams": "mg",
+  "scannerPermissionRequired": "Kamerazugriff wird benötigt, um Barcodes zu scannen.",
+  "scannerPermissionPermanentlyDenied": "Der Kamerazugriff wurde dauerhaft verweigert. Bitte aktiviere ihn in den Einstellungen, um Barcodes zu scannen.",
+  "scannerOpenSettings": "Einstellungen öffnen",
+  "scannerGrantPermission": "Berechtigung erteilen"
 }

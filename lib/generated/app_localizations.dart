@@ -8009,6 +8009,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'mg'**
   String get unit_milligrams;
+
+  /// No description provided for @scannerPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is required to scan barcodes.'**
+  String get scannerPermissionRequired;
+
+  /// No description provided for @scannerPermissionPermanentlyDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is permanently denied. Please enable it in settings to scan barcodes.'**
+  String get scannerPermissionPermanentlyDenied;
+
+  /// No description provided for @scannerOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get scannerOpenSettings;
+
+  /// No description provided for @scannerGrantPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Permission'**
+  String get scannerGrantPermission;
 }
 
 class _AppLocalizationsDelegate
