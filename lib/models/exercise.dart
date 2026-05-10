@@ -1,5 +1,6 @@
 // lib/models/exercise.dart
 import 'dart:convert' show jsonDecode, jsonEncode;
+import 'package:flutter/widgets.dart';
 
 /// Represents a physical exercise in the system.
 ///
@@ -150,13 +151,29 @@ class Exercise {
   // Optional hilfreich im UI:
   /// Returns the name of the exercise localized to the user's language.
   ///
-  /// Currently fallbacks to [nameDe] if available, otherwise [nameEn].
-  String getLocalizedName(Object context) =>
-      nameDe.isNotEmpty ? nameDe : nameEn;
+  /// Priority: [nameDe] for German, [nameEn] for other languages, then fallbacks.
+  String getLocalizedName(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    if (locale == 'de' && nameDe.isNotEmpty) {
+      return nameDe;
+    }
+    if (nameEn.isNotEmpty) {
+      return nameEn;
+    }
+    return nameDe;
+  }
 
   /// Returns the description of the exercise localized to the user's language.
   ///
-  /// Currently fallbacks to [descriptionDe] if available, otherwise [descriptionEn].
-  String getLocalizedDescription(Object context) =>
-      descriptionDe.isNotEmpty ? descriptionDe : descriptionEn;
+  /// Priority: [descriptionDe] for German, [descriptionEn] for other languages, then fallbacks.
+  String getLocalizedDescription(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    if (locale == 'de' && descriptionDe.isNotEmpty) {
+      return descriptionDe;
+    }
+    if (descriptionEn.isNotEmpty) {
+      return descriptionEn;
+    }
+    return descriptionDe;
+  }
 }

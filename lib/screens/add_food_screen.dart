@@ -26,6 +26,7 @@ import '../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
+import '../services/base_food_language_service.dart';
 import '../theme/color_constants.dart';
 
 
@@ -552,6 +553,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   Widget _buildFoodListItem(FoodItem item) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final themeService = Provider.of<ThemeService>(context);
+    final baseFoodLang = BaseFoodLanguageService.resolveLanguageCode(
+      choice: themeService.baseFoodLanguage,
+      context: context,
+    );
 
     IconData sourceIcon;
     switch (item.source) {
@@ -569,9 +575,12 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         leading: Icon(sourceIcon, color: colorScheme.primary),
         // --- Change starts here ---
         title: Text(
-          item.getLocalizedName(context).isNotEmpty
-              ? item.getLocalizedName(context)
-              : l10n.unknown,
+          () {
+            final name = item.source == FoodItemSource.base
+                ? item.getLocalizedName(context, languageCode: baseFoodLang)
+                : item.getLocalizedName(context);
+            return name.isNotEmpty ? name : l10n.unknown;
+          }(),
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         // --- Change ends here ---
@@ -747,11 +756,16 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   final cat = _baseCategories[idx];
                   final key = cat['key'] as String;
                   final emoji = (cat['emoji'] as String?)?.trim();
-                  final locale = Localizations.localeOf(context).languageCode;
+                  final themeService = Provider.of<ThemeService>(context);
+                  final baseFoodLang =
+                      BaseFoodLanguageService.resolveLanguageCode(
+                        choice: themeService.baseFoodLanguage,
+                        context: context,
+                      );
                   final title = () {
                     final de = (cat['name_de'] as String?)?.trim();
                     final en = (cat['name_en'] as String?)?.trim();
-                    if (locale == 'de') {
+                    if (baseFoodLang == 'de') {
                       return (de?.isNotEmpty == true)
                           ? de!
                           : (en?.isNotEmpty == true ? en! : key);

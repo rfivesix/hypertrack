@@ -16,6 +16,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:provider/provider.dart';
+import '../services/theme_service.dart';
+import '../services/base_food_language_service.dart';
 
 // Dev flag: keep disabled for production or remove dev-only sections entirely.
 const bool kDevEditEnabled = false;
@@ -254,7 +257,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         label: l10n.mealsAddToDiary,
       ),
       appBar: GlobalAppBar(
-        title: _displayItem.getLocalizedName(context),
+        title: () {
+          final themeService = Provider.of<ThemeService>(context);
+          final baseFoodLang = BaseFoodLanguageService.resolveLanguageCode(
+            choice: themeService.baseFoodLanguage,
+            context: context,
+          );
+          return _displayItem.source == FoodItemSource.base
+              ? _displayItem.getLocalizedName(context, languageCode: baseFoodLang)
+              : _displayItem.getLocalizedName(context);
+        }(),
         actions: [
           IconButton(
             icon: Icon(

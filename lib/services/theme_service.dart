@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'haptic_feedback_service.dart';
+import 'base_food_language_service.dart';
 
 /// Service responsible for managing the application's theme and visual style.
 ///
@@ -19,6 +20,7 @@ class ThemeService extends ChangeNotifier {
   bool _isAiRecommendationContextEnabled = false;
   bool _materialColorsEnabled = false;
   bool _hapticsEnabled = true;
+  BaseFoodLanguage _baseFoodLanguage = BaseFoodLanguage.auto;
 
   /// The current theme mode (light, dark, or system).
   ThemeMode get themeMode => _themeMode;
@@ -39,6 +41,9 @@ class ThemeService extends ChangeNotifier {
   /// Whether haptic feedback is enabled globally.
   bool get hapticsEnabled => _hapticsEnabled;
 
+  /// The user's preferred display language for base foods.
+  BaseFoodLanguage get baseFoodLanguage => _baseFoodLanguage;
+
   /// Creates a [ThemeService] and loads saved preferences.
   ThemeService() {
     _loadThemeMode();
@@ -47,6 +52,7 @@ class ThemeService extends ChangeNotifier {
     _loadAiRecommendationContextEnabled();
     _loadMaterialColorsEnabled();
     _loadHapticsEnabled();
+    _loadBaseFoodLanguage();
   }
 
   Future<void> _loadThemeMode() async {
@@ -107,6 +113,11 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _loadBaseFoodLanguage() async {
+    _baseFoodLanguage = await BaseFoodLanguageService.readChoice();
+    notifyListeners();
+  }
+
   /// Sets whether AI features are enabled and persists it to storage.
   Future<void> setAiEnabled(bool enabled) async {
     if (enabled == _isAiEnabled) return;
@@ -142,5 +153,13 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_hapticsEnabledKey, enabled);
+  }
+
+  /// Sets the base food display language and persists it to storage.
+  Future<void> setBaseFoodLanguage(BaseFoodLanguage language) async {
+    if (language == _baseFoodLanguage) return;
+    _baseFoodLanguage = language;
+    notifyListeners();
+    await BaseFoodLanguageService.writeChoice(language);
   }
 }
