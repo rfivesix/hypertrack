@@ -4,7 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.9.3] - 2026-05-1x
+## [0.9.3] - 2026-05-10
+### Added
+- Replaced the barcode scanner with a FLOSS-compatible ZXing-based implementation, improving privacy and removing dependencies on proprietary Google Play Services.
+
+### Changed
+- Simplified the onboarding nutrition recommendation flow: generated targets are now automatically applied when continuing through setup.
+- Improved localized display names for exercises and food items where translations are available.
+- Updated screenshots and README/website documentation to reflect the latest design and privacy-first positioning.
+- Refined the primary color in light mode for a more polished visual experience.
+- Set scanner resolution to maximum to improve barcode detection reliability across devices.
+
+### Fixed
+- Fixed a crash when manually adding food items during AI meal review.
+- Fixed inconsistent border radius for uploaded images in the AI recommendation screen.
+- Improved layout and input handling on the onboarding calorie recommendation page.
+
+### Internal
+- Removed Google ML Kit / Google Play Services from the barcode scanner dependency path.
+- Updated website and README wording to clarify Train Libre’s privacy-first, offline-first positioning.
 
 ## [0.9.2] - 2026-05-09
 ### Added

@@ -1,0 +1,5 @@
+- Barcode-Scanner auf FLOSS-kompatible ZXing-Implementierung umgestellt.
+- Onboarding-Ablauf für Ernährungsempfehlungen vereinfacht.
+- Lokalisierung von Übungen und Lebensmitteln verbessert.
+- Absturz bei manueller Artikeleingabe in der KI-Mahlzeitenprüfung behoben.
+- Allgemeine UI-Verbesserungen und Aktualisierung der Dokumentation.
