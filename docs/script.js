@@ -435,9 +435,22 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Theme logic
+const updateScreenshots = (theme) => {
+  const oldTheme = theme === "dark" ? "light" : "dark";
+  document.querySelectorAll("img").forEach((img) => {
+    if (img.src.includes(`assets/screenshots/iOS/${oldTheme}/`)) {
+      img.src = img.src.replace(`/${oldTheme}/`, `/${theme}/`).replace(`_${oldTheme}_`, `_${theme}_`);
+    }
+    if (img.dataset.fallbackSrc && img.dataset.fallbackSrc.includes(`assets/screenshots/iOS/${oldTheme}/`)) {
+      img.dataset.fallbackSrc = img.dataset.fallbackSrc.replace(`/${oldTheme}/`, `/${theme}/`).replace(`_${oldTheme}_`, `_${theme}_`);
+    }
+  });
+};
+
 const updateTheme = (theme) => {
   document.documentElement.setAttribute("data-theme", theme);
   localStorage.setItem("theme", theme);
+  updateScreenshots(theme);
 };
 
 const initTheme = () => {

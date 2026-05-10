@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_zxing/flutter_zxing.dart';
 
 /// A screen that utilizes the device camera to scan barcodes for product identification.
 ///
-/// Uses the `mobile_scanner` package to detect barcodes and returns the first
-/// successfully scanned code to the calling screen.
+/// Uses the `flutter_zxing` package (FLOSS-compatible) to detect barcodes and
+/// returns the first successfully scanned code to the calling screen.
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
 
@@ -16,27 +16,11 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
-  final MobileScannerController _controller = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
-    facing: CameraFacing.back,
-  );
   bool _isDone = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final size = MediaQuery.of(context).size;
-    final scanWindow = Rect.fromCenter(
-      center: size.center(Offset.zero),
-      width: 250,
-      height: 250,
-    );
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -53,58 +37,22 @@ class _ScannerScreenState extends State<ScannerScreen> {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          MobileScanner(
-            controller: _controller,
-            scanWindow: scanWindow,
-            onDetect: (capture) {
-              if (!_isDone) {
-                final String? code = capture.barcodes.first.rawValue;
-                if (code != null) {
-                  setState(() {
-                    _isDone = true;
-                  });
-                  Navigator.of(context).pop(code);
-                }
-              }
-            },
-          ),
-          CustomPaint(painter: ScannerOverlay(scanWindow: scanWindow)),
-        ],
+      body: ReaderWidget(
+        onScan: (Code result) {
+          if (!_isDone && result.isValid && result.text != null) {
+            setState(() {
+              _isDone = true;
+            });
+            Navigator.of(context).pop(result.text);
+          }
+        },
+        showFlashlight: true,
+        showGallery: false,
+        showToggleCamera: false,
+        showScannerOverlay: true,
+        cropPercent: 0.6, // Balanced crop for barcodes
+        scanDelay: const Duration(milliseconds: 500),
       ),
     );
   }
-}
-
-class ScannerOverlay extends CustomPainter {
-  final Rect scanWindow;
-  ScannerOverlay({required this.scanWindow});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final backgroundPath = Path()..addRect(Rect.largest);
-    final cutoutPath = Path()..addRect(scanWindow);
-    final backgroundPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.5)
-      ..style = PaintingStyle.fill
-      ..blendMode = BlendMode.dstOut;
-
-    final backgroundWithCutout = Path.combine(
-      PathOperation.difference,
-      backgroundPath,
-      cutoutPath,
-    );
-    canvas.drawPath(backgroundWithCutout, backgroundPaint);
-
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawRect(scanWindow, borderPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
