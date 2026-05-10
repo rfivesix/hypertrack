@@ -1,8 +1,10 @@
 # Train Libre
 
-Train Libre is an offline-first fitness app for **workouts, nutrition, analytics, sleep, steps, measurements, and supplements**.
+**Private workout and nutrition tracking for Android and iOS.**
 
-Designed for experienced lifters and athletes, it provides structured tracking and long-term progress analysis without gamification. Train Libre prioritizes **privacy**, **local data ownership**, and **transparent analytics**.
+Train Libre is an open-source, offline-first fitness app for logging workouts, calories, macros, bodyweight, and recovery — without ads, mandatory accounts, or analytics SDKs.
+
+Designed for people who want serious tracking without social feeds, gamification, or subscription pressure, Train Libre prioritizes **privacy**, **local data ownership**, and **transparent analytics**.
 
 ## Download & Install
 
@@ -42,20 +44,18 @@ Train Libre is built with Flutter and supports:
 
 ## Key Features
 
-- **Workout Tracking:** Structured sets (warm-up, failure, dropsets), history, and session reviews.
-- **Nutrition:** Calorie and macro tracking with adaptive weekly guidance.
-- **AI Meal Features (Optional):** AI-assisted meal capture via BYOK (Bring Your Own Key) setup. Disabled by default.
-- **Analytics:** Deep insights into performance, volume, recovery, and trends.
-- **Sleep & Steps:** Integration of recovery and activity context from system health services.
-- **Supplements:** Track caffeine, creatine, and custom supplements.
-- **Local Data:** One-way export to Apple Health and Google Health Connect.
+- **Workout Tracker:** Log sets (warm-up, failure, dropsets), routines, and session history.
+- **Calorie & Macro Tracker:** Track nutrition, hydration, and supplements with adaptive weekly guidance.
+- **Bodyweight & Recovery Analytics:** Deep insights into muscle readiness, volume trends, and body measurements.
+- **Optional AI Meal Tools:** Capture meals from photos or text via BYOK (Bring Your Own Key) setup. Always reviewable before saving.
+- **Privacy & Local-First:** Data stays on device. Optional one-way health export to Apple Health and Google Health Connect.
 
 ## Privacy & Philosophy
 
-- **Offline-First:** Your data stays on your device by default.
-- **No Accounts:** No mandatory cloud account or registration required.
-- **Transparency:** Open-source and avoids opaque tracking or gamification.
-- **BYOK AI:** Optional AI features require your own API key; no data is sent to AI providers unless you opt-in.
+- **No Ads. No Mandatory Account. No Analytics SDKs.**
+- **Offline-First:** Your data stays local unless you explicitly choose otherwise.
+- **Open-Source Transparency:** Trust through public code and understandable data flows.
+- **User-Controlled AI:** Optional AI features require your own API key; no data is sent to providers without opt-in.
 
 ## Documentation
 
