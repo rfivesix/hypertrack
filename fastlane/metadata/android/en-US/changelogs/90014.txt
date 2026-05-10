@@ -1,0 +1,5 @@
+- Replaced the barcode scanner with a FLOSS-compatible ZXing implementation.
+- Simplified onboarding nutrition recommendation flow.
+- Improved exercise and food localization.
+- Fixed a crash in AI meal review when adding items manually.
+- General UI polish and landing page updates.

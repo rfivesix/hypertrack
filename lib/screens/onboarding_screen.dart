@@ -9,11 +9,8 @@ import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
-import '../features/nutrition_recommendation/domain/bayesian_tdee_estimator.dart';
-import '../features/nutrition_recommendation/domain/confidence_models.dart';
 import '../features/nutrition_recommendation/presentation/body_fat_guidance_sheet.dart';
 import '../features/nutrition_recommendation/presentation/prior_activity_help_block.dart';
-import '../features/nutrition_recommendation/presentation/recommendation_ui_copy.dart';
 import '../features/nutrition_recommendation/domain/goal_models.dart';
 import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 import '../services/app_tour_service.dart';
@@ -46,6 +43,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
   bool _isRestoring = false;
   bool _isGeneratingOnboardingRecommendation = false;
+  Future<void>? _onboardingRecommendationFuture;
 
   late final AdaptiveNutritionRecommendationService _recommendationService;
   late final DatabaseHelper _databaseHelper;
@@ -54,8 +52,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     BodyweightGoal.maintainWeight,
   ).kgPerWeek;
   NutritionRecommendation? _onboardingRecommendation;
-  BayesianMaintenanceEstimate? _onboardingMaintenanceEstimate;
-  bool _hasAppliedOnboardingRecommendationToGoals = false;
 
   // --- CONTROLLER ---
   final TextEditingController _nameController = TextEditingController();
@@ -136,7 +132,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _refreshOnboardingRecommendationPreview() async {
-    if (_isGeneratingOnboardingRecommendation) return;
+    if (_isGeneratingOnboardingRecommendation &&
+        _onboardingRecommendationFuture != null) {
+      return _onboardingRecommendationFuture!;
+    }
+
+    _onboardingRecommendationFuture = _performRefreshOnboardingRecommendation();
+    return _onboardingRecommendationFuture!;
+  }
+
+  Future<void> _performRefreshOnboardingRecommendation() async {
     setState(() => _isGeneratingOnboardingRecommendation = true);
 
     final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
@@ -162,8 +167,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!mounted) return;
       setState(() {
         _onboardingRecommendation = preview.recommendation;
-        _onboardingMaintenanceEstimate = preview.maintenanceEstimate;
       });
+    } catch (e) {
+      debugPrint('Error refreshing onboarding recommendation: $e');
     } finally {
       if (mounted) {
         setState(() => _isGeneratingOnboardingRecommendation = false);
@@ -179,7 +185,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _protController.text = recommendation.recommendedProteinGrams.toString();
       _carbController.text = recommendation.recommendedCarbsGrams.toString();
       _fatController.text = recommendation.recommendedFatGrams.toString();
-      _hasAppliedOnboardingRecommendationToGoals = true;
     });
   }
 
@@ -384,9 +389,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  void _nextPage() {
+  Future<void> _nextPage() async {
     if (_currentPage == 1) {
       if (_nameController.text.trim().isEmpty) return;
+    }
+
+    if (_currentPage == _adaptiveGoalPageIndex) {
+      // Ensure we have a recommendation and apply it automatically.
+      await _refreshOnboardingRecommendationPreview();
+      _applyOnboardingRecommendationToGoals();
     }
 
     if (_currentPage < _lastPageIndex) {
@@ -463,7 +474,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const Spacer(),
                     ElevatedButton(
                       key: const Key('onboarding_bottom_next_button'),
-                      onPressed: _nextPage,
+                      onPressed: _isGeneratingOnboardingRecommendation ? null : _nextPage,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
@@ -473,12 +484,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: Text(
-                        _currentPage == _lastPageIndex
-                            ? l10n.onboardingFinish.toUpperCase()
-                            : l10n.onboardingNext.toUpperCase(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      child: _isGeneratingOnboardingRecommendation &&
+                              _currentPage == _adaptiveGoalPageIndex
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              _currentPage == _lastPageIndex
+                                  ? l10n.onboardingFinish.toUpperCase()
+                                  : l10n.onboardingNext.toUpperCase(),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ],
                 ),
@@ -638,11 +659,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       key: const Key('onboarding_height_text_field'),
                       controller: _heightController,
                       keyboardType: TextInputType.number,
-                      onChanged: (_) {
-                        setState(() {
-                          _hasAppliedOnboardingRecommendationToGoals = false;
-                        });
-                      },
                       decoration: InputDecoration(
                         labelText: l10n.onboardingHeightLabel,
                         border: OutlineInputBorder(
@@ -690,7 +706,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ],
                       onChanged: (val) => setState(() {
                         _selectedGender = val;
-                        _hasAppliedOnboardingRecommendationToGoals = false;
                       }),
                     ),
                   ],
@@ -720,11 +735,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           TextField(
             controller: _weightController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) {
-              setState(() {
-                _hasAppliedOnboardingRecommendationToGoals = false;
-              });
-            },
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
@@ -766,9 +776,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             controller: _bodyFatPercentController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) {
-              setState(() {
-                _hasAppliedOnboardingRecommendationToGoals = false;
-              });
               if (_currentPage >= _adaptiveGoalPageIndex) {
                 _refreshOnboardingRecommendationPreview();
               }
@@ -836,7 +843,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _selectedGoal = goal;
                 _selectedTargetRateKgPerWeek =
                     WeeklyTargetRateCatalog.defaultForGoal(goal).kgPerWeek;
-                _hasAppliedOnboardingRecommendationToGoals = false;
               });
               _refreshOnboardingRecommendationPreview();
             },
@@ -860,7 +866,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               if (level == null) return;
               setState(() {
                 _selectedPriorActivityLevel = level;
-                _hasAppliedOnboardingRecommendationToGoals = false;
               });
               _refreshOnboardingRecommendationPreview();
             },
@@ -889,7 +894,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               if (option == null) return;
               setState(() {
                 _selectedExtraCardioHoursOption = option;
-                _hasAppliedOnboardingRecommendationToGoals = false;
               });
               _refreshOnboardingRecommendationPreview();
             },
@@ -915,7 +919,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onSelected: (_) {
                   setState(() {
                     _selectedTargetRateKgPerWeek = option.kgPerWeek;
-                    _hasAppliedOnboardingRecommendationToGoals = false;
                   });
                   _refreshOnboardingRecommendationPreview();
                 },
@@ -923,167 +926,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             }).toList(growable: false),
           ),
           const SizedBox(height: 20),
-          FilledButton.tonal(
-            onPressed: _isGeneratingOnboardingRecommendation
-                ? null
-                : _refreshOnboardingRecommendationPreview,
-            child: Text(
-              _isGeneratingOnboardingRecommendation
-                  ? l10n.adaptiveRecommendationGenerating
-                  : l10n.adaptiveRecommendationRefresh,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildOnboardingRecommendationSummary(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOnboardingRecommendationSummary() {
-    final l10n = AppLocalizations.of(context)!;
-    final recommendation = _onboardingRecommendation;
-    final maintenanceEstimate = _onboardingMaintenanceEstimate;
-    if (recommendation == null) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        ),
-        child: Text(
-          l10n.onboardingAdaptiveSummaryEmpty,
-        ),
-      );
-    }
-    final warningMessage = RecommendationUiCopy.warningMessage(
-      l10n,
-      recommendation,
-    );
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.onboardingAdaptiveSummaryTitle,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingAdaptiveSummaryCalories(
-              recommendation.recommendedCalories,
-            ),
-          ),
-          Text(
-            l10n.onboardingAdaptiveSummaryProtein(
-              recommendation.recommendedProteinGrams,
-            ),
-          ),
-          Text(
-            l10n.onboardingAdaptiveSummaryCarbs(
-              recommendation.recommendedCarbsGrams,
-            ),
-          ),
-          Text(
-            l10n.onboardingAdaptiveSummaryFat(
-              recommendation.recommendedFatGrams,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingAdaptiveSummaryConfidence(
-              RecommendationUiCopy.confidenceLabel(
-                l10n,
-                recommendation.confidence,
-              ),
-            ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (maintenanceEstimate != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              l10n.adaptiveRecommendationMaintenanceLine(
-                recommendation.estimatedMaintenanceCalories,
-              ),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.adaptiveRecommendationMaintenanceRangeLine(
-                maintenanceEstimate.credibleIntervalLowerCalories(),
-                maintenanceEstimate.credibleIntervalUpperCalories(),
-              ),
-              key: const Key('onboarding_adaptive_summary_range_line'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              RecommendationUiCopy.uncertaintyHint(l10n, maintenanceEstimate),
-              key: const Key('onboarding_adaptive_summary_uncertainty_hint'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (RecommendationUiCopy.isStabilizing(maintenanceEstimate))
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  l10n.adaptiveRecommendationStabilizingHint,
-                  key:
-                      const Key('onboarding_adaptive_summary_stabilizing_hint'),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-          ],
-          const SizedBox(height: 4),
-          Text(
-            l10n.adaptiveRecommendationDataBasisLine(
-              recommendation.inputSummary.windowDays,
-              recommendation.inputSummary.weightLogCount,
-              recommendation.inputSummary.intakeLoggedDays,
-            ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            RecommendationUiCopy.dataBasisMessage(l10n, recommendation),
-            key: const Key('onboarding_adaptive_summary_data_basis_message'),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (warningMessage != null) ...[
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: recommendation.warningState.warningLevel ==
-                        RecommendationWarningLevel.high
-                    ? Theme.of(context).colorScheme.errorContainer
-                    : Theme.of(context).colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                warningMessage,
-                key: const Key('onboarding_adaptive_summary_warning_text'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: _applyOnboardingRecommendationToGoals,
-            child: Text(
-              _hasAppliedOnboardingRecommendationToGoals
-                  ? l10n.onboardingAdaptiveSummaryApplied
-                  : l10n.onboardingAdaptiveSummaryApply,
-            ),
-          ),
         ],
       ),
     );

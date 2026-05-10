@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../generated/app_localizations.dart';
-import '../models/supplement.dart';
 import '../models/tracked_supplement.dart';
 import 'glass_progress_bar.dart';
 import '../theme/color_constants.dart';
@@ -22,21 +20,9 @@ class SupplementSummaryWidget extends StatelessWidget {
     required this.trackedSupplements,
     required this.onTap,
   });
-  String localizeSupplementName(Supplement s, AppLocalizations l10n) {
-    switch (s.code) {
-      case 'caffeine':
-        return l10n.supplement_caffeine;
-      case 'creatine_monohydrate':
-        return l10n.supplement_creatine_monohydrate;
-      default:
-        // Fallback: custom supplements keep their name.
-        return s.name;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final goalOnlySupplements = trackedSupplements
         .where(
           (ts) =>
@@ -68,7 +54,7 @@ class SupplementSummaryWidget extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: GlassProgressBar(
-                label: localizeSupplementName(supplement, l10n),
+                label: supplement.getLocalizedName(context),
                 unit: supplement.unit,
                 value: ts.totalDosedToday,
                 target: supplement.dailyLimit!,
@@ -88,18 +74,6 @@ class _CheckmarkCard extends StatelessWidget {
   final TrackedSupplement trackedSupplement;
   const _CheckmarkCard({required this.trackedSupplement});
 
-  String localizeSupplementName(Supplement s, AppLocalizations l10n) {
-    switch (s.code) {
-      case 'caffeine':
-        return l10n.supplement_caffeine;
-      case 'creatine_monohydrate':
-        return l10n.supplement_creatine_monohydrate;
-      default:
-        // Fallback: custom supplements keep their name.
-        return s.name;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -107,7 +81,6 @@ class _CheckmarkCard extends StatelessWidget {
     final supplement = trackedSupplement.supplement;
     final doseTaken = trackedSupplement.totalDosedToday;
     final isDone = doseTaken > 0;
-    final l10n = AppLocalizations.of(context)!;
 
     final String displayText;
     if (isDone) {
@@ -140,7 +113,7 @@ class _CheckmarkCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              localizeSupplementName(supplement, l10n),
+              supplement.getLocalizedName(context),
               style: TextStyle(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,

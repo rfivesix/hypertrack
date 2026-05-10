@@ -1,4 +1,8 @@
 // lib/models/supplement.dart
+
+import 'package:flutter/widgets.dart';
+import '../generated/app_localizations.dart';
+
 /// Represents a supplement that can be tracked by the user.
 ///
 /// Contains basic information about the supplement, such as its name,
@@ -47,6 +51,24 @@ class Supplement {
     this.isBuiltin = false,
     this.isTracked = true,
   });
+
+  /// Returns the name of the supplement localized to the user's language if it's built-in.
+  String getLocalizedName(BuildContext context) {
+    if (!isBuiltin || code == null) return name;
+
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return name;
+
+    switch (code) {
+      case 'caffeine':
+        return l10n.supplement_caffeine;
+      case 'creatine':
+      case 'creatine_monohydrate':
+        return l10n.supplement_creatine_monohydrate;
+      default:
+        return name;
+    }
+  }
 
   /// Creates a [Supplement] instance from a Map, typically from a database row.
   factory Supplement.fromMap(Map<String, dynamic> map) {

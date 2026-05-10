@@ -1334,29 +1334,7 @@ class _MainScreenState extends State<MainScreen>
                                                               BlendMode.srcIn,
                                                           shaderCallback:
                                                               (bounds) =>
-                                                                  const LinearGradient(
-                                                            colors: [
-                                                              Color(
-                                                                0xFFE88DCC,
-                                                              ),
-                                                              Color(
-                                                                0xFFF4A77A,
-                                                              ),
-                                                              Color(
-                                                                0xFFF7D06B,
-                                                              ),
-                                                              Color(
-                                                                0xFF7DDEAE,
-                                                              ),
-                                                              Color(
-                                                                0xFF6DC8D9,
-                                                              ),
-                                                            ],
-                                                            begin: Alignment
-                                                                .topLeft,
-                                                            end: Alignment
-                                                                .bottomRight,
-                                                          ).createShader(
+                                                                  createAiGradientShader(
                                                             bounds,
                                                           ),
                                                           child: Icon(

@@ -4553,4 +4553,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unit_milligrams => 'mg';
+
+  @override
+  String get scannerPermissionRequired =>
+      'Camera access is required to scan barcodes.';
+
+  @override
+  String get scannerPermissionPermanentlyDenied =>
+      'Camera access is permanently denied. Please enable it in settings to scan barcodes.';
+
+  @override
+  String get scannerOpenSettings => 'Open Settings';
+
+  @override
+  String get scannerGrantPermission => 'Grant Permission';
 }

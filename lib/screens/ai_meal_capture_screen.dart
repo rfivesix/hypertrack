@@ -12,6 +12,7 @@ import '../widgets/glass_bottom_menu.dart';
 import '../widgets/global_app_bar.dart';
 import 'ai_meal_review_screen.dart';
 import 'ai_settings_screen.dart';
+import '../util/design_constants.dart';
 
 /// Screen for capturing meal input via photo(s) or text before AI analysis.
 ///
@@ -343,19 +344,16 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     return Stack(
       children: [
         Container(
+          width: 140,
+          height: 140,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
             border: Border.all(
               color: theme.colorScheme.outlineVariant,
               width: 1.5,
             ),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.file(
-              _images[index],
-              width: 140,
-              height: 140,
+            image: DecorationImage(
+              image: FileImage(_images[index]),
               fit: BoxFit.cover,
             ),
           ),
@@ -406,14 +404,16 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
                 vertical: 12,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius:
+                    BorderRadius.circular(DesignConstants.borderRadiusL),
                 borderSide: BorderSide(
                   color: theme.colorScheme.outlineVariant,
                   width: 1,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius:
+                    BorderRadius.circular(DesignConstants.borderRadiusL),
                 borderSide: BorderSide(
                   color: theme.colorScheme.primary,
                   width: 1.5,
@@ -523,7 +523,7 @@ class _AiAnalyzeButton extends StatelessWidget {
         child: Container(
           height: 60,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
             color: theme.colorScheme.surfaceContainerHighest,
           ),
           child: buttonContent,
@@ -542,7 +542,8 @@ class _AiAnalyzeButton extends StatelessWidget {
           return Container(
             height: 60,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius:
+                  BorderRadius.circular(DesignConstants.borderRadiusL),
               gradient: isAnalyzing
                   ? LinearGradient(
                       begin: Alignment(-1.0 + (t * 4.0), 0),

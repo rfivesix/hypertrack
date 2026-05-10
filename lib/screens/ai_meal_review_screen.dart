@@ -144,7 +144,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
             nutrition: item.nutrition,
           ),
         )
-        .toList(growable: false);
+        .toList();
   }
 
   // ---------------------------------------------------------------------------

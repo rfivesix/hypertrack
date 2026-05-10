@@ -22,6 +22,7 @@ import 'supplement_track_screen.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
+import '../theme/color_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/measurement_chart_widget.dart';
 import '../widgets/nutrition_summary_widget.dart';
@@ -33,6 +34,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/tracked_supplement.dart';
 import '../data/workout_database_helper.dart';
 import '../services/theme_service.dart';
+import '../services/base_food_language_service.dart';
 import '../services/health/steps_sync_service.dart';
 import '../features/steps/data/steps_aggregation_repository.dart';
 import '../features/steps/domain/steps_models.dart';
@@ -1264,8 +1266,11 @@ class DiaryScreenState extends State<DiaryScreen> {
                 const SizedBox(width: 4),
                 if (Provider.of<ThemeService>(context).isAiEnabled)
                   IconButton(
-                    icon: const Icon(Icons.auto_awesome_rounded),
-                    color: theme.colorScheme.tertiary,
+                    icon: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => createAiGradientShader(bounds),
+                      child: const Icon(Icons.auto_awesome_rounded),
+                    ),
                     iconSize: 20,
                     onPressed: () async {
                       final result = await Navigator.of(context).push<bool>(
@@ -1607,6 +1612,12 @@ class DiaryScreenState extends State<DiaryScreen> {
     AppLocalizations l10n,
     TrackedFoodItem trackedItem,
   ) {
+    final themeService = Provider.of<ThemeService>(context);
+    final baseFoodLang = BaseFoodLanguageService.resolveLanguageCode(
+      choice: themeService.baseFoodLanguage,
+      context: context,
+    );
+
     return Dismissible(
       key: Key('food_hub_entry_${trackedItem.entry.id}'),
       background: const SwipeActionBackground(
@@ -1635,7 +1646,14 @@ class DiaryScreenState extends State<DiaryScreen> {
       },
       child: SummaryCard(
         child: ListTile(
-          title: Text(trackedItem.item.name),
+          title: Text(
+            trackedItem.item.source == FoodItemSource.base
+                ? trackedItem.item.getLocalizedName(
+                    context,
+                    languageCode: baseFoodLang,
+                  )
+                : trackedItem.item.getLocalizedName(context),
+          ),
           subtitle: Text(
             '${trackedItem.entry.quantityInGrams}${l10n.unit_grams}',
           ),

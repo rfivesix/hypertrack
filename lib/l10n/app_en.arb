@@ -1907,5 +1907,9 @@
   "stepsModuleGoalDays": "Goal Days",
   "diarySyncingSteps": "Syncing steps...",
   "diaryLoadingSleep": "Loading sleep...",
-  "unit_milligrams": "mg"
+  "unit_milligrams": "mg",
+  "scannerPermissionRequired": "Camera access is required to scan barcodes.",
+  "scannerPermissionPermanentlyDenied": "Camera access is permanently denied. Please enable it in settings to scan barcodes.",
+  "scannerOpenSettings": "Open Settings",
+  "scannerGrantPermission": "Grant Permission"
 }
