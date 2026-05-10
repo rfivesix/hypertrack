@@ -134,7 +134,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         // Reduced delay for a faster, "snappier" detection feel
         scanDelay: const Duration(milliseconds: 200),
         // Balanced resolution for faster processing in the ZXing engine
-        resolution: ResolutionPreset.ultraHigh,
+        resolution: ResolutionPreset.max,
       );
     }
 
