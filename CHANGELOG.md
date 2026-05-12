@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.4] - 2026-05-1x
 ## [0.9.3] - 2026-05-10
 ### Added
 - Replaced the barcode scanner with a FLOSS-compatible ZXing-based implementation, improving privacy and removing dependencies on proprietary Google Play Services.
