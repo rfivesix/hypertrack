@@ -2021,10 +2021,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVisualStyleTitle => 'Visual Style';
 
   @override
-  String get settingsVisualStyleStandard => 'Standard (Glass)';
+  String get settingsVisualStyleStandard => 'Frosted Glass';
 
   @override
-  String get settingsVisualStyleLiquid => 'Fluid (Liquid Glass)';
+  String get settingsVisualStyleLiquid => 'Liquid Glass (Fluid)';
 
   @override
   String get settingsVisualStyleLiquidDesc => 'Rounded, floating UI elements';

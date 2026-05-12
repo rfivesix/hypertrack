@@ -3677,13 +3677,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVisualStyleStandard.
   ///
   /// In en, this message translates to:
-  /// **'Standard (Glass)'**
+  /// **'Frosted Glass'**
   String get settingsVisualStyleStandard;
 
   /// No description provided for @settingsVisualStyleLiquid.
   ///
   /// In en, this message translates to:
-  /// **'Fluid (Liquid Glass)'**
+  /// **'Liquid Glass (Fluid)'**
   String get settingsVisualStyleLiquid;
 
   /// No description provided for @settingsVisualStyleLiquidDesc.
