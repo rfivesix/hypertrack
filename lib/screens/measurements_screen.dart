@@ -48,28 +48,35 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
 
   Future<void> _loadMeasurements() async {
     setState(() => _isLoading = true);
-    final sessions = await DatabaseHelper.instance.getMeasurementSessions();
+    try {
+      final sessions = await DatabaseHelper.instance.getMeasurementSessions();
 
-    final Set<String> types = {};
-    for (final session in sessions) {
-      for (final measurement in session.measurements) {
-        types.add(measurement.type);
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _sessions = sessions;
-        _availableMeasurementTypes = types.toList()..sort();
-        if (_selectedChartType == null &&
-            _availableMeasurementTypes.isNotEmpty) {
-          _selectedChartType = _availableMeasurementTypes.contains('weight')
-              ? 'weight'
-              : _availableMeasurementTypes.first;
+      final Set<String> types = {};
+      for (final session in sessions) {
+        for (final measurement in session.measurements) {
+          types.add(measurement.type);
         }
-        _isLoading = false;
-      });
-      _loadChartData();
+      }
+
+      if (mounted) {
+        setState(() {
+          _sessions = sessions;
+          _availableMeasurementTypes = types.toList()..sort();
+          if (_selectedChartType == null &&
+              _availableMeasurementTypes.isNotEmpty) {
+            _selectedChartType = _availableMeasurementTypes.contains('weight')
+                ? 'weight'
+                : _availableMeasurementTypes.first;
+          }
+        });
+        _loadChartData();
+      }
+    } catch (e) {
+      debugPrint('Error loading measurements: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

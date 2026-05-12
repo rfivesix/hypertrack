@@ -474,7 +474,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const Spacer(),
                     ElevatedButton(
                       key: const Key('onboarding_bottom_next_button'),
-                      onPressed: _isGeneratingOnboardingRecommendation ? null : _nextPage,
+                      onPressed: _isGeneratingOnboardingRecommendation
+                          ? null
+                          : _nextPage,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,

@@ -495,31 +495,37 @@ class DatabaseHelper {
 
   /// Records a new [FluidEntry].
   Future<int> insertFluidEntry(FluidEntry entry) async {
-    final dbInstance = await database;
+    try {
+      final dbInstance = await database;
 
-    String? linkedUuid;
-    if (entry.linkedFoodEntryId != null) {
-      final nutritionLog = await (dbInstance.select(dbInstance.nutritionLogs)
-            ..where((tbl) => tbl.localId.equals(entry.linkedFoodEntryId!)))
-          .getSingleOrNull();
-      linkedUuid = nutritionLog?.id;
+      String? linkedUuid;
+      if (entry.linkedFoodEntryId != null) {
+        final nutritionLog = await (dbInstance.select(dbInstance.nutritionLogs)
+              ..where((tbl) => tbl.localId.equals(entry.linkedFoodEntryId!)))
+            .getSingleOrNull();
+        linkedUuid = nutritionLog?.id;
+      }
+
+      // 1. Save drink
+      final companion = db.FluidLogsCompanion(
+        consumedAt: drift.Value(entry.timestamp),
+        amountMl: drift.Value(entry.quantityInMl),
+        name: drift.Value(entry.name),
+        kcal: drift.Value(entry.kcal),
+        sugarPer100ml: drift.Value(entry.sugarPer100ml),
+        caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
+        linkedNutritionLogId: drift.Value(linkedUuid),
+      );
+
+      final row = await dbInstance
+          .into(dbInstance.fluidLogs)
+          .insertReturning(companion);
+
+      return row.localId;
+    } catch (e, stack) {
+      debugPrint('Error inserting fluid entry: $e\n$stack');
+      rethrow;
     }
-
-    // 1. Save drink
-    final companion = db.FluidLogsCompanion(
-      consumedAt: drift.Value(entry.timestamp),
-      amountMl: drift.Value(entry.quantityInMl),
-      name: drift.Value(entry.name),
-      kcal: drift.Value(entry.kcal),
-      sugarPer100ml: drift.Value(entry.sugarPer100ml),
-      caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
-      linkedNutritionLogId: drift.Value(linkedUuid),
-    );
-
-    final row =
-        await dbInstance.into(dbInstance.fluidLogs).insertReturning(companion);
-
-    return row.localId;
   }
 
   Future<List<FluidEntry>> getFluidEntriesForDate(DateTime date) async {
@@ -640,18 +646,23 @@ class DatabaseHelper {
   }
 
   Future<void> deleteFluidEntry(int id) async {
-    final dbInstance = await database;
-    final row = await (dbInstance.select(dbInstance.fluidLogs)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .getSingleOrNull();
-    if (row != null) {
-      await deleteCaffeineLogsByTimestamp(row.consumedAt);
-    }
+    try {
+      final dbInstance = await database;
+      final row = await (dbInstance.select(dbInstance.fluidLogs)
+            ..where((tbl) => tbl.localId.equals(id)))
+          .getSingleOrNull();
+      if (row != null) {
+        await deleteCaffeineLogsByTimestamp(row.consumedAt);
+      }
 
-    await (dbInstance.delete(
-      dbInstance.fluidLogs,
-    )..where((tbl) => tbl.localId.equals(id)))
-        .go();
+      await (dbInstance.delete(
+        dbInstance.fluidLogs,
+      )..where((tbl) => tbl.localId.equals(id)))
+          .go();
+    } catch (e, stack) {
+      debugPrint('Error deleting fluid entry: $e\n$stack');
+      rethrow;
+    }
   }
 
   Future<void> deleteFluidEntryByLinkedFoodId(int foodEntryId) async {
@@ -702,23 +713,28 @@ class DatabaseHelper {
   // ===========================================================================
 
   Future<void> insertMeasurementSession(MeasurementSession session) async {
-    final dbInstance = await database;
-    final legacySessionId = session.timestamp.millisecondsSinceEpoch;
+    try {
+      final dbInstance = await database;
+      final legacySessionId = session.timestamp.millisecondsSinceEpoch;
 
-    await dbInstance.batch((batch) {
-      for (final m in session.measurements) {
-        batch.insert(
-          dbInstance.measurements,
-          db.MeasurementsCompanion(
-            date: drift.Value(session.timestamp),
-            type: drift.Value(m.type),
-            value: drift.Value(m.value),
-            unit: drift.Value(m.unit),
-            legacySessionId: drift.Value(legacySessionId),
-          ),
-        );
-      }
-    });
+      await dbInstance.batch((batch) {
+        for (final m in session.measurements) {
+          batch.insert(
+            dbInstance.measurements,
+            db.MeasurementsCompanion(
+              date: drift.Value(session.timestamp),
+              type: drift.Value(m.type),
+              value: drift.Value(m.value),
+              unit: drift.Value(m.unit),
+              legacySessionId: drift.Value(legacySessionId),
+            ),
+          );
+        }
+      });
+    } catch (e, stack) {
+      debugPrint('Error inserting measurement session: $e\n$stack');
+      rethrow;
+    }
   }
 
   Future<List<MeasurementSession>> getMeasurementSessions({
@@ -782,21 +798,26 @@ class DatabaseHelper {
     int id, {
     DateTime? fallbackTimestamp,
   }) async {
-    final dbInstance = await database;
-    final deletedByLegacyId = await (dbInstance.delete(
-      dbInstance.measurements,
-    )..where((tbl) => tbl.legacySessionId.equals(id)))
-        .go();
-
-    if (deletedByLegacyId == 0 && fallbackTimestamp != null) {
-      await (dbInstance.delete(
+    try {
+      final dbInstance = await database;
+      final deletedByLegacyId = await (dbInstance.delete(
         dbInstance.measurements,
-      )..where(
-              (tbl) =>
-                  tbl.legacySessionId.isNull() &
-                  tbl.date.equals(fallbackTimestamp),
-            ))
+      )..where((tbl) => tbl.legacySessionId.equals(id)))
           .go();
+
+      if (deletedByLegacyId == 0 && fallbackTimestamp != null) {
+        await (dbInstance.delete(
+          dbInstance.measurements,
+        )..where(
+                (tbl) =>
+                    tbl.legacySessionId.isNull() &
+                    tbl.date.equals(fallbackTimestamp),
+              ))
+            .go();
+      }
+    } catch (e, stack) {
+      debugPrint('Error deleting measurement session: $e\n$stack');
+      rethrow;
     }
   }
 
@@ -1054,30 +1075,35 @@ class DatabaseHelper {
   // ===========================================================================
 
   Future<SupplementLog> insertSupplementLog(SupplementLog log) async {
-    final dbInstance = await database;
+    try {
+      final dbInstance = await database;
 
-    final supplementRow = await (dbInstance.select(
-      dbInstance.supplements,
-    )..where((tbl) => tbl.localId.equals(log.supplementId)))
-        .getSingle();
+      final supplementRow = await (dbInstance.select(
+        dbInstance.supplements,
+      )..where((tbl) => tbl.localId.equals(log.supplementId)))
+          .getSingle();
 
-    final companion = db.SupplementLogsCompanion(
-      supplementId: drift.Value(supplementRow.id),
-      amount: drift.Value(log.dose),
-      takenAt: drift.Value(log.timestamp),
-    );
+      final companion = db.SupplementLogsCompanion(
+        supplementId: drift.Value(supplementRow.id),
+        amount: drift.Value(log.dose),
+        takenAt: drift.Value(log.timestamp),
+      );
 
-    final row = await dbInstance
-        .into(dbInstance.supplementLogs)
-        .insertReturning(companion);
+      final row = await dbInstance
+          .into(dbInstance.supplementLogs)
+          .insertReturning(companion);
 
-    return SupplementLog(
-      id: row.localId,
-      supplementId: log.supplementId,
-      dose: row.amount,
-      unit: 'mg',
-      timestamp: row.takenAt,
-    );
+      return SupplementLog(
+        id: row.localId,
+        supplementId: log.supplementId,
+        dose: row.amount,
+        unit: 'mg',
+        timestamp: row.takenAt,
+      );
+    } catch (e, stack) {
+      debugPrint('Error inserting supplement log: $e\n$stack');
+      rethrow;
+    }
   }
 
   Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date) async {
@@ -1132,11 +1158,16 @@ class DatabaseHelper {
   }
 
   Future<void> deleteSupplementLog(int id) async {
-    final dbInstance = await database;
-    await (dbInstance.delete(
-      dbInstance.supplementLogs,
-    )..where((tbl) => tbl.localId.equals(id)))
-        .go();
+    try {
+      final dbInstance = await database;
+      await (dbInstance.delete(
+        dbInstance.supplementLogs,
+      )..where((tbl) => tbl.localId.equals(id)))
+          .go();
+    } catch (e, stack) {
+      debugPrint('Error deleting supplement log: $e\n$stack');
+      rethrow;
+    }
   }
 
   Future<void> deleteCaffeineLogsByTimestamp(DateTime timestamp) async {

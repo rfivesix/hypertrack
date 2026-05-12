@@ -51,66 +51,73 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
   Future<void> _loadData(DateTime date) async {
     setState(() => _isLoading = true);
-    final db = DatabaseHelper.instance;
-    final supplementsForDate = await db.getSupplementsForDate(date);
-    final logsForDate = await db.getSupplementLogsForDate(date);
+    try {
+      final db = DatabaseHelper.instance;
+      final supplementsForDate = await db.getSupplementsForDate(date);
+      final logsForDate = await db.getSupplementLogsForDate(date);
 
-    final Map<int, Supplement> byId = {
-      for (final s in supplementsForDate)
-        if (s.id != null) s.id!: s,
-    };
+      final Map<int, Supplement> byId = {
+        for (final s in supplementsForDate)
+          if (s.id != null) s.id!: s,
+      };
 
-    final allSupplements = await db.getAllSupplements();
-    for (final s in allSupplements) {
-      if (s.id != null && !byId.containsKey(s.id!)) {
-        byId[s.id!] = s;
+      final allSupplements = await db.getAllSupplements();
+      for (final s in allSupplements) {
+        if (s.id != null && !byId.containsKey(s.id!)) {
+          byId[s.id!] = s;
+        }
       }
-    }
 
-    final Map<int, double> todaysDoses = {};
-    for (final log in logsForDate) {
-      todaysDoses.update(
-        log.supplementId,
-        (value) => value + log.dose,
-        ifAbsent: () => log.dose,
-      );
-    }
-
-    final List<TrackedSupplement> tracked = [];
-    for (final s in supplementsForDate) {
-      final hasLog = todaysDoses.containsKey(s.id);
-      if (s.isTracked || hasLog) {
-        tracked.add(
-          TrackedSupplement(
-            supplement: s,
-            totalDosedToday: todaysDoses[s.id] ?? 0.0,
-          ),
+      final Map<int, double> todaysDoses = {};
+      for (final log in logsForDate) {
+        todaysDoses.update(
+          log.supplementId,
+          (value) => value + log.dose,
+          ifAbsent: () => log.dose,
         );
       }
-    }
 
-    for (final id in todaysDoses.keys) {
-      if (!tracked.any((ts) => ts.supplement.id == id)) {
-        if (byId.containsKey(id)) {
+      final List<TrackedSupplement> tracked = [];
+      for (final s in supplementsForDate) {
+        final hasLog = todaysDoses.containsKey(s.id);
+        if (s.isTracked || hasLog) {
           tracked.add(
             TrackedSupplement(
-              supplement: byId[id]!,
-              totalDosedToday: todaysDoses[id]!,
+              supplement: s,
+              totalDosedToday: todaysDoses[s.id] ?? 0.0,
             ),
           );
         }
       }
-    }
 
-    if (!mounted) return;
-    setState(() {
-      _supplementsById
-        ..clear()
-        ..addAll(byId);
-      _trackedSupplements = tracked;
-      _todaysLogs = logsForDate;
-      _isLoading = false;
-    });
+      for (final id in todaysDoses.keys) {
+        if (!tracked.any((ts) => ts.supplement.id == id)) {
+          if (byId.containsKey(id)) {
+            tracked.add(
+              TrackedSupplement(
+                supplement: byId[id]!,
+                totalDosedToday: todaysDoses[id]!,
+              ),
+            );
+          }
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _supplementsById
+          ..clear()
+          ..addAll(byId);
+        _trackedSupplements = tracked;
+        _todaysLogs = logsForDate;
+      });
+    } catch (e) {
+      debugPrint('Error loading supplement data: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _logSupplement(Supplement supplement) async {

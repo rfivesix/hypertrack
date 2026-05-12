@@ -29,7 +29,6 @@ import '../services/theme_service.dart';
 import '../services/base_food_language_service.dart';
 import '../theme/color_constants.dart';
 
-
 // lib/screens/add_food_screen.dart
 
 class MealCardNutritionTotals {
@@ -759,9 +758,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   final themeService = Provider.of<ThemeService>(context);
                   final baseFoodLang =
                       BaseFoodLanguageService.resolveLanguageCode(
-                        choice: themeService.baseFoodLanguage,
-                        context: context,
-                      );
+                    choice: themeService.baseFoodLanguage,
+                    context: context,
+                  );
                   final title = () {
                     final de = (cat['name_de'] as String?)?.trim();
                     final en = (cat['name_en'] as String?)?.trim();

@@ -426,7 +426,6 @@ class DiaryScreenState extends State<DiaryScreen> {
         _stepsTrackingEnabled = stepsEnabled;
         _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
         _showSugarInOverview = showSugarInOverview;
-        _isLoading = false;
       });
       await _loadStepsForDate(
         diaryDate,
@@ -441,13 +440,16 @@ class DiaryScreenState extends State<DiaryScreen> {
         force: forceStepsRefresh,
         loadGeneration: loadGeneration,
       );
-    } catch (_) {
-      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
-      setState(() {
-        _isLoading = false;
-        _isStepsWidgetLoading = false;
-        _isSleepWidgetLoading = false;
-      });
+    } catch (e, stack) {
+      debugPrint('Diary load failed: $e\n$stack');
+    } finally {
+      if (_isCurrentLoad(loadGeneration, diaryDate)) {
+        setState(() {
+          _isLoading = false;
+          _isStepsWidgetLoading = false;
+          _isSleepWidgetLoading = false;
+        });
+      }
     }
   }
 
@@ -1268,7 +1270,8 @@ class DiaryScreenState extends State<DiaryScreen> {
                   IconButton(
                     icon: ShaderMask(
                       blendMode: BlendMode.srcIn,
-                      shaderCallback: (bounds) => createAiGradientShader(bounds),
+                      shaderCallback: (bounds) =>
+                          createAiGradientShader(bounds),
                       child: const Icon(Icons.auto_awesome_rounded),
                     ),
                     iconSize: 20,

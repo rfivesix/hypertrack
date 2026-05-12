@@ -264,7 +264,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             context: context,
           );
           return _displayItem.source == FoodItemSource.base
-              ? _displayItem.getLocalizedName(context, languageCode: baseFoodLang)
+              ? _displayItem.getLocalizedName(context,
+                  languageCode: baseFoodLang)
               : _displayItem.getLocalizedName(context);
         }(),
         actions: [

@@ -203,12 +203,14 @@ class _MainScreenState extends State<MainScreen>
 
   Future<void> _refreshHomeScreen() async {
     final targetDate = _currentActiveDate;
-    await _stepsRepository.refresh(force: true);
     if (_currentIndex == 0) {
       await _tagebuchKey.currentState?.loadDataForDate(
         targetDate,
-        forceStepsRefresh: true,
+        forceStepsRefresh: false, // Don't force 30-day refresh on every log
       );
+    } else {
+      // If we're not on the diary tab, we still want to trigger a background sync if due
+      await _stepsRepository.refresh(force: false);
     }
   }
 
@@ -262,8 +264,18 @@ class _MainScreenState extends State<MainScreen>
         unit: selectedSupplement.unit,
         timestamp: result.$2,
       );
-      await DatabaseHelper.instance.insertSupplementLog(newLog);
-      _refreshHomeScreen();
+      try {
+        await DatabaseHelper.instance.insertSupplementLog(newLog);
+        HapticFeedbackService.instance.confirmationFeedback();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.error)),
+          );
+        }
+      } finally {
+        _refreshHomeScreen();
+      }
     }
   }
 
@@ -446,6 +458,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   Future<void> _handleAddFood() async {
+    final l10n = AppLocalizations.of(context)!;
     // FIX: Get date
     final targetDate = _currentActiveDate;
 
@@ -495,37 +508,45 @@ class _MainScreenState extends State<MainScreen>
       mealType: mealType,
     );
 
-    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
-      newFoodEntry,
-    );
-    HapticFeedbackService.instance.confirmationFeedback();
-
-    if (isLiquid) {
-      // ... insertFluidEntry with timestamp ...
-      final newFluidEntry = FluidEntry(
-        timestamp: timestamp,
-        quantityInMl: quantity,
-        name: selectedFoodItem.name,
-        kcal: null,
-        sugarPer100ml: null,
-        carbsPer100ml: null,
-        caffeinePer100ml: null,
-        linkedFoodEntryId: newFoodEntryId,
+    try {
+      final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+        newFoodEntry,
       );
-      await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
-    }
+      HapticFeedbackService.instance.confirmationFeedback();
 
-    if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
-      // ... logCaffeineDose ...
-      final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(
-        totalCaffeine,
-        timestamp,
-        foodEntryId: newFoodEntryId,
-      );
-    }
+      if (isLiquid) {
+        // ... insertFluidEntry with timestamp ...
+        final newFluidEntry = FluidEntry(
+          timestamp: timestamp,
+          quantityInMl: quantity,
+          name: selectedFoodItem.name,
+          kcal: null,
+          sugarPer100ml: null,
+          carbsPer100ml: null,
+          caffeinePer100ml: null,
+          linkedFoodEntryId: newFoodEntryId,
+        );
+        await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+      }
 
-    _refreshHomeScreen();
+      if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
+        // ... logCaffeineDose ...
+        final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
+        await _logCaffeineDose(
+          totalCaffeine,
+          timestamp,
+          foodEntryId: newFoodEntryId,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.error)),
+        );
+      }
+    } finally {
+      _refreshHomeScreen();
+    }
   }
 
   Future<void> _showAddFluidMenu() async {
@@ -586,6 +607,7 @@ class _MainScreenState extends State<MainScreen>
                       try {
                         final newId = await DatabaseHelper.instance
                             .insertFluidEntry(newEntry);
+                        HapticFeedbackService.instance.confirmationFeedback();
 
                         if (caffeinePer100ml != null && caffeinePer100ml > 0) {
                           final totalCaffeine =
@@ -596,16 +618,16 @@ class _MainScreenState extends State<MainScreen>
                             fluidEntryId: newId,
                           );
                         }
-                      } catch (_) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.error)),
-                        );
-                        return;
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.error)),
+                          );
+                        }
+                      } finally {
+                        close();
+                        await _refreshDiaryForActiveDate(queueIfInFlight: true);
                       }
-
-                      close();
-                      await _refreshDiaryForActiveDate(queueIfInFlight: true);
                     },
                     child: Text(l10n.add_button),
                   ),
