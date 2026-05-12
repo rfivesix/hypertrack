@@ -44,7 +44,6 @@ class GlassProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = theme.brightness;
-    final colorScheme = theme.colorScheme;
 
     final hasTarget = target > 0;
     final rawProgress = hasTarget ? (value / target) : 0.0;
@@ -53,6 +52,19 @@ class GlassProgressBar extends StatelessWidget {
     final backgroundColor = brightness == Brightness.dark
         ? summaryCardDarkMode
         : summaryCardWhiteMode;
+
+    // FIX: Apply a subtle shadow if the fill color is bright to ensure readability 
+    // while keeping the original text color.
+    final isBright = color.computeLuminance() > 0.5;
+    final textShadows = isBright
+        ? [
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              offset: const Offset(0, 1),
+              blurRadius: 4.0,
+            ),
+          ]
+        : null;
 
     return Container(
       height: height,
@@ -87,9 +99,10 @@ class GlassProgressBar extends StatelessWidget {
                       label,
                       maxLines: 1,
                       style: TextStyle(
-                        color: colorScheme.onSurface,
+                        color: theme.colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        shadows: textShadows,
                       ),
                     ),
                   ),
@@ -99,8 +112,9 @@ class GlassProgressBar extends StatelessWidget {
                         ? '${value.toStringAsFixed(1)} / ${target.toStringAsFixed(0)} $unit'
                         : '${value.toStringAsFixed(1)} $unit',
                     style: TextStyle(
-                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                       fontSize: 14,
+                      shadows: textShadows,
                     ),
                   ),
                 ],
