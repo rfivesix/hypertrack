@@ -124,17 +124,17 @@ class _ScannerScreenState extends State<ScannerScreen>
         showGallery: false,
         showToggleCamera: false,
         showScannerOverlay: true,
-        // Using tryHarder and tryRotate to improve detection reliability
-        // for standard barcodes like EAN-13, EAN-8, UPC-A, UPC-E.
-        tryHarder: true,
-        tryRotate: true,
+        // Using false for tryHarder and tryRotate to reduce CPU load and
+        // thermal impact. Standard barcodes scan reliably at medium resolution.
+        tryHarder: false,
+        tryRotate: false,
         // Increased cropPercent for better reliability with EAN barcodes
         // which are often wider and need more context.
         cropPercent: 0.8,
-        // Reduced delay for a faster, "snappier" detection feel
-        scanDelay: const Duration(milliseconds: 200),
-        // Balanced resolution for faster processing in the ZXing engine
-        resolution: ResolutionPreset.max,
+        // Increased delay to reduce CPU overhead while maintaining usability
+        scanDelay: const Duration(milliseconds: 500),
+        // Medium resolution to prevent Out-Of-Memory crashes on high-end devices
+        resolution: ResolutionPreset.medium,
       );
     }
 
