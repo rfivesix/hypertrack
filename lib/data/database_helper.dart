@@ -651,9 +651,24 @@ class DatabaseHelper {
       final row = await (dbInstance.select(dbInstance.fluidLogs)
             ..where((tbl) => tbl.localId.equals(id)))
           .getSingleOrNull();
-      if (row != null) {
-        await deleteCaffeineLogsByTimestamp(row.consumedAt);
+      if (row == null) return;
+
+      if (row.linkedNutritionLogId != null) {
+        // If linked to a food entry, we delete the food entry instead.
+        // The foreign key constraint with KeyAction.cascade will automatically
+        // delete this fluid entry as well.
+        final nutritionLog = await (dbInstance.select(dbInstance.nutritionLogs)
+              ..where((tbl) => tbl.id.equals(row.linkedNutritionLogId!)))
+            .getSingleOrNull();
+
+        if (nutritionLog != null) {
+          await deleteFoodEntry(nutritionLog.localId);
+          return;
+        }
       }
+
+      // If no link or nutrition log not found, proceed with standalone deletion.
+      await deleteCaffeineLogsByTimestamp(row.consumedAt);
 
       await (dbInstance.delete(
         dbInstance.fluidLogs,

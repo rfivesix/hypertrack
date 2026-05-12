@@ -171,5 +171,67 @@ void main() {
         expect(afterSecondHistory.first.isTracked, isTrue);
       },
     );
+
+    test('deleteFluidEntry deletes linked nutrition log', () async {
+      // Enable foreign keys for the memory database to test cascading
+      await database.customStatement('PRAGMA foreign_keys = ON;');
+
+      // 1. Create a food entry
+      final foodLog =
+          await database.into(database.nutritionLogs).insertReturning(
+                db.NutritionLogsCompanion.insert(
+                  legacyBarcode: const drift.Value('test-drink'),
+                  consumedAt: DateTime(2026, 4, 1, 10, 0),
+                  amount: 250,
+                  mealType: const drift.Value('Snack'),
+                ),
+              );
+
+      // 2. Create a linked fluid entry
+      final fluidLogLocalId = await database.into(database.fluidLogs).insert(
+            db.FluidLogsCompanion.insert(
+              consumedAt: DateTime(2026, 4, 1, 10, 0),
+              amountMl: 250,
+              name: 'Test Drink',
+              linkedNutritionLogId: drift.Value(foodLog.id),
+            ),
+          );
+
+      // 3. Verify they both exist
+      final fluidCountBefore =
+          (await database.select(database.fluidLogs).get()).length;
+      final foodCountBefore =
+          (await database.select(database.nutritionLogs).get()).length;
+      expect(fluidCountBefore, 1);
+      expect(foodCountBefore, 1);
+
+      // 4. Delete the fluid entry
+      await dbHelper.deleteFluidEntry(fluidLogLocalId);
+
+      // 5. Verify both are gone
+      final fluidCountAfter =
+          (await database.select(database.fluidLogs).get()).length;
+      final foodCountAfter =
+          (await database.select(database.nutritionLogs).get()).length;
+      expect(fluidCountAfter, 0);
+      expect(foodCountAfter, 0);
+    });
+
+    test('deleteFluidEntry handles standalone fluid without crashing',
+        () async {
+      final fluidLogLocalId = await database.into(database.fluidLogs).insert(
+            db.FluidLogsCompanion(
+              consumedAt: drift.Value(DateTime(2026, 4, 1, 10, 0)),
+              amountMl: const drift.Value(250),
+              name: const drift.Value('Water'),
+            ),
+          );
+
+      await dbHelper.deleteFluidEntry(fluidLogLocalId);
+
+      final fluidCountAfter =
+          (await database.select(database.fluidLogs).get()).length;
+      expect(fluidCountAfter, 0);
+    });
   });
 }

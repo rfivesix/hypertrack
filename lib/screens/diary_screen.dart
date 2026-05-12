@@ -560,7 +560,117 @@ class DiaryScreenState extends State<DiaryScreen> {
     loadDataForDate(_selectedDate);
   }
 
-  // lib/screens/diary_screen.dart - replace the entire method
+  Future<void> _editFluidEntry(FluidEntry entry) async {
+    if (entry.linkedFoodEntryId != null) {
+      TrackedFoodItem? trackedItem;
+      // Search in all meals for the linked food entry
+      for (var mealList in _entriesByMeal.values) {
+        for (var item in mealList) {
+          if (item.entry.id == entry.linkedFoodEntryId) {
+            trackedItem = item;
+            break;
+          }
+        }
+        if (trackedItem != null) break;
+      }
+
+      if (trackedItem != null) {
+        // Reuse the existing food edit logic
+        await _editFoodEntry(trackedItem);
+        return;
+      }
+    }
+
+    // Standalone fluid entry edit (e.g. water added via FAB)
+    final l10n = AppLocalizations.of(context)!;
+    final key = GlobalKey<FluidDialogContentState>();
+
+    await showGlassBottomMenu(
+      context: context,
+      title: l10n.add_liquid_title, // Reuse the same title or similar
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FluidDialogContent(
+              key: key,
+              initialQuantity: entry.quantityInMl,
+              initialTimestamp: entry.timestamp,
+              initialName: entry.name,
+              initialSugar: entry.sugarPer100ml,
+              initialCaffeine: entry.caffeinePer100ml,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: close,
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () async {
+                      final state = key.currentState;
+                      if (state == null) return;
+                      final quantity = int.tryParse(state.quantityText);
+                      if (quantity == null || quantity <= 0) return;
+
+                      final name = state.nameText;
+                      final sugar = double.tryParse(
+                        state.sugarText.replaceAll(',', '.'),
+                      );
+                      final caffeine = double.tryParse(
+                        state.caffeineText.replaceAll(',', '.'),
+                      );
+                      final kcal = (sugar != null)
+                          ? ((sugar / 100) * quantity * 4).round()
+                          : null;
+
+                      final updated = FluidEntry(
+                        id: entry.id,
+                        timestamp: state.selectedDateTime,
+                        quantityInMl: quantity,
+                        name: name,
+                        kcal: kcal,
+                        sugarPer100ml: sugar,
+                        carbsPer100ml: sugar,
+                        caffeinePer100ml: caffeine,
+                        linkedFoodEntryId: entry.linkedFoodEntryId,
+                      );
+
+                      try {
+                        await DatabaseHelper.instance.updateFluidEntry(updated);
+
+                        // Update caffeine dose
+                        await _logCaffeineDose(
+                          (caffeine ?? 0) * (quantity / 100.0),
+                          state.selectedDateTime,
+                          fluidEntryId: entry.id,
+                        );
+
+                        close();
+                        loadDataForDate(_selectedDate);
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.error)),
+                        );
+                      }
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _editFoodEntry(TrackedFoodItem trackedItem) async {
     final l10n = AppLocalizations.of(context)!;
     final GlobalKey<QuantityDialogContentState> dialogStateKey = GlobalKey();
@@ -1568,17 +1678,28 @@ class DiaryScreenState extends State<DiaryScreen> {
     return Dismissible(
       key: Key('fluid_entry_${entry.id}'),
       background: const SwipeActionBackground(
+        color: Colors.blueAccent,
+        icon: Icons.edit,
+        alignment: Alignment.centerLeft,
+      ),
+      secondaryBackground: const SwipeActionBackground(
         color: Colors.redAccent,
         icon: Icons.delete,
         alignment: Alignment.centerRight,
       ),
-      direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
-        // New helper
-        return await showDeleteConfirmation(context);
+        if (direction == DismissDirection.startToEnd) {
+          _editFluidEntry(entry);
+          return false;
+        } else {
+          // New helper
+          return await showDeleteConfirmation(context);
+        }
       },
       onDismissed: (direction) {
-        _deleteFluidEntry(entry.id!);
+        if (direction == DismissDirection.endToStart) {
+          _deleteFluidEntry(entry.id!);
+        }
       },
       child: SummaryCard(
         child: ListTile(
@@ -1592,6 +1713,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             },
           ),
           trailing: Text('${entry.kcal ?? 0} ${l10n.unit_kcal}'),
+          onTap: () => _editFluidEntry(entry),
         ),
       ),
     );
