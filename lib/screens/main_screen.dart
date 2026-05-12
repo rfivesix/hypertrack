@@ -563,7 +563,7 @@ class _MainScreenState extends State<MainScreen>
           children: [
             FluidDialogContent(
               key: key,
-              initialTimestamp: targetDate, // <--- FIX: Pass date
+              initialTimestamp: targetDate.withCurrentTime,
             ),
             const SizedBox(height: 12),
             Row(
@@ -695,8 +695,7 @@ class _MainScreenState extends State<MainScreen>
             QuantityDialogContent(
               key: dialogStateKey,
               item: item,
-              initialTimestamp:
-                  initialDate ?? DateTime.now().dateOnly, // <--- FIX: Use
+              initialTimestamp: (initialDate ?? DateTime.now()).withCurrentTime,
             ),
             const SizedBox(height: 12),
             Row(

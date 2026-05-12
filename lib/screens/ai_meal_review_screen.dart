@@ -10,6 +10,7 @@ import '../models/food_item.dart';
 import '../services/ai_meal_validation.dart';
 import '../services/ai_service.dart';
 import '../services/haptic_feedback_service.dart';
+import '../util/date_util.dart';
 import '../util/design_constants.dart';
 import '../util/ai_validation_localization.dart';
 import '../widgets/global_app_bar.dart';
@@ -61,7 +62,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   void initState() {
     super.initState();
     _selectedMealType = widget.initialMealType ?? 'mealtypeSnack';
-    _selectedTimestamp = widget.initialDate ?? DateTime.now();
+    _selectedTimestamp = (widget.initialDate ?? DateTime.now()).withCurrentTime;
     final initialValidation = widget.initialValidation;
     if (initialValidation != null) {
       _applyValidationResult(initialValidation);

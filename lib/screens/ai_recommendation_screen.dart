@@ -11,6 +11,7 @@ import '../services/ai_service.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 import '../theme/color_constants.dart';
+import '../util/date_util.dart';
 import '../util/ai_validation_localization.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/global_app_bar.dart';
@@ -249,7 +250,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         final entry = FoodEntry(
           barcode: item.matchedFood!.barcode,
           quantityInGrams: item.ingredient.amountInGrams,
-          timestamp: widget.date,
+          timestamp: widget.date.withCurrentTime,
           mealType: widget.mealType,
         );
         await db.insertFoodEntry(entry);

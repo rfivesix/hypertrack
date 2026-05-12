@@ -787,9 +787,7 @@ class DiaryScreenState extends State<DiaryScreen> {
               key: dialogStateKey,
               item: item,
               initialMealType: mealType,
-              initialTimestamp: initialDate != null
-                  ? _getInitialTimestampForDate(initialDate)
-                  : _getInitialTimestampForDate(_selectedDate),
+              initialTimestamp: (initialDate ?? _selectedDate).withCurrentTime,
             ),
             // ... (rest of the method: buttons, etc. stays the same) ...
             const SizedBox(height: 12),
@@ -1349,7 +1347,7 @@ class DiaryScreenState extends State<DiaryScreen> {
           children: [
             FluidDialogContent(
               key: key,
-              initialTimestamp: _getInitialTimestampForDate(_selectedDate),
+              initialTimestamp: _selectedDate.withCurrentTime,
             ),
             const SizedBox(height: 12),
             // ... (rest of the method stays the same: buttons row, etc.)
@@ -1555,18 +1553,6 @@ class DiaryScreenState extends State<DiaryScreen> {
         ],
       ),
     );
-  }
-
-  DateTime _getInitialTimestampForDate(DateTime targetDate) {
-    final now = DateTime.now();
-    if (targetDate.year == now.year &&
-        targetDate.month == now.month &&
-        targetDate.day == now.day) {
-      return now;
-    } else {
-      return DateTime(targetDate.year, targetDate.month, targetDate.day,
-          now.hour, now.minute);
-    }
   }
 
   Widget _buildFluidEntryTile(AppLocalizations l10n, FluidEntry entry) {
