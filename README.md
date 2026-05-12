@@ -11,7 +11,7 @@ Designed for people who want serious tracking without social feeds, gamification
 <table align="center">
   <tr>
     <td align="center" valign="middle" width="300">
-      <a href="https://testflight.apple.com/join/VpG7r9z4">
+      <a href="https://testflight.apple.com/join/x1UaM6TQ">
         <img
           src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
           alt="Download on the App Store"

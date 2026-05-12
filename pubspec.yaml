@@ -80,6 +80,7 @@ flutter:
     - assets/icon/train-libre_icon_dark_bg.png
     - assets/images/max_mustermann.png
     - assets/db/
+    - assets/legal/
 
   fonts:
     - family: Inter
