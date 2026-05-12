@@ -3074,6 +3074,18 @@ abstract class AppLocalizations {
   /// **'Apply Mapping'**
   String get applyMapping;
 
+  /// No description provided for @mappingSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get mappingSuggestions;
+
+  /// No description provided for @mappingSuggestionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching exercises found'**
+  String get mappingSuggestionsEmpty;
+
   /// No description provided for @personalData.
   ///
   /// In en, this message translates to:

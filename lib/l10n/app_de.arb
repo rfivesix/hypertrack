@@ -685,6 +685,8 @@
   "selectButton": "Auswählen",
   "applyingChanges": "Wird angewendet...",
   "applyMapping": "Zuordnung anwenden",
+  "mappingSuggestions": "Vorschläge",
+  "mappingSuggestionsEmpty": "Keine passenden Übungen gefunden",
   "personalData": "Persönliche Daten",
   "personalDataCL": "PERSÖNLICHE DATEN",
   "macroDistribution": "Makronährstoff-Verteilung",

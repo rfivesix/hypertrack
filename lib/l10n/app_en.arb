@@ -680,6 +680,8 @@
   "selectButton": "Select",
   "applyingChanges": "Applying changes...",
   "applyMapping": "Apply Mapping",
+  "mappingSuggestions": "Suggestions",
+  "mappingSuggestionsEmpty": "No matching exercises found",
   "personalData": "Personal Data",
   "personalDataCL": "PERSONAL DATA",
   "macroDistribution": "Macronutrient Distribution",

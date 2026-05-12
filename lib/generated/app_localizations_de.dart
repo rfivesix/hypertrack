@@ -1717,6 +1717,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get applyMapping => 'Zuordnung anwenden';
 
   @override
+  String get mappingSuggestions => 'Vorschläge';
+
+  @override
+  String get mappingSuggestionsEmpty => 'Keine passenden Übungen gefunden';
+
+  @override
   String get personalData => 'Persönliche Daten';
 
   @override

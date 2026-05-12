@@ -1710,6 +1710,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applyMapping => 'Apply Mapping';
 
   @override
+  String get mappingSuggestions => 'Suggestions';
+
+  @override
+  String get mappingSuggestionsEmpty => 'No matching exercises found';
+
+  @override
   String get personalData => 'Personal Data';
 
   @override

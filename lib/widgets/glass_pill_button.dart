@@ -94,10 +94,8 @@ class _GlassPillButtonState extends State<GlassPillButton>
       bg.withValues(alpha: isDark ? 0.8 : 0.5),
     );
 
-    // Adaptive border radius: round if not Row, pill if Row
-    final bool isCircle = widget.child is! Row;
-    final double effectiveRadius =
-        isCircle ? widget.height / 2 : widget.borderRadius;
+    // The radius is half the height to create a stadium (pill) shape.
+    final double effectiveRadius = widget.height / 2;
 
     Widget surface;
 
@@ -119,8 +117,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
             glowColor: Colors.white.withValues(alpha: isDark ? 0.24 : 0.18),
             glowRadius: 1.0,
             child: Container(
-              // height and width removed here; enforced outside with SizedBox
-              padding: isCircle ? EdgeInsets.zero : widget.padding,
+              padding: widget.padding,
               decoration: BoxDecoration(
                 color: neutralTint,
                 borderRadius: BorderRadius.circular(effectiveRadius),
@@ -134,7 +131,10 @@ class _GlassPillButtonState extends State<GlassPillButton>
                   width: 1.2,
                 ),
               ),
-              child: Center(child: widget.child),
+              child: Center(
+                widthFactor: 1.0,
+                child: widget.child,
+              ),
             ),
           ),
         ),
@@ -146,8 +146,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            // height and width removed here; enforced outside with SizedBox
-            padding: isCircle ? EdgeInsets.zero : widget.padding,
+            padding: widget.padding,
             decoration: BoxDecoration(
               color: bg.withValues(alpha: 0.80),
               borderRadius: BorderRadius.circular(effectiveRadius),
@@ -158,16 +157,18 @@ class _GlassPillButtonState extends State<GlassPillButton>
                 width: 1.5,
               ),
             ),
-            child: Center(child: widget.child),
+            child: Center(
+              widthFactor: 1.0,
+              child: widget.child,
+            ),
           ),
         ),
       );
     }
 
-    // Wrap the surface in a SizedBox to enforce height and width
+    // Wrap the surface in a SizedBox to enforce height but allow dynamic width
     final Widget constrainedSurface = SizedBox(
       height: widget.height,
-      width: isCircle ? widget.height : null,
       child: surface,
     );
 
