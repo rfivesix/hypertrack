@@ -68,6 +68,7 @@ Widget _wrap(Widget child) {
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('en'),
       home: child,
     ),
   );
@@ -154,8 +155,17 @@ void main() {
     );
 
     expect(find.text('Denied'), findsOneWidget);
+
+    // 1. Tap the tile to open the bottom menu
     await tester.tap(requestAccessTile);
     await tester.pumpAndSettle();
+
+    // 2. Tap the confirmation button inside the showGlassBottomMenu dialog
+    // The controller uses a FilledButton for the confirmation action.
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    // 3. Verify the state updated
     expect(find.text('Ready'), findsOneWidget);
   });
 
