@@ -6,6 +6,7 @@ import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/measurement.dart';
 import '../models/measurement_session.dart';
+import '../util/date_util.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart'; // Added
@@ -50,7 +51,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedDateTime = widget.initialDate ?? DateTime.now();
+    _selectedDateTime = (widget.initialDate ?? DateTime.now()).withCurrentTime;
     for (var key in _measurementTypes.keys) {
       _controllers[key] = TextEditingController();
     }

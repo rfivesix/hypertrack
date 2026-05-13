@@ -9,4 +9,14 @@ extension DateOnlyCompare on DateTime {
   bool isSameDate(DateTime other) {
     return year == other.year && month == other.month && day == other.day;
   }
+
+  /// Returns a [DateTime] based on this instance (date component) but
+  /// using the current hour/minute. If it's today, it returns [DateTime.now()].
+  DateTime get withCurrentTime {
+    final now = DateTime.now();
+    if (isSameDate(now)) {
+      return now;
+    }
+    return DateTime(year, month, day, now.hour, now.minute);
+  }
 }

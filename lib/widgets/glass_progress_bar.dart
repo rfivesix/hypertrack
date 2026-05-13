@@ -1,6 +1,5 @@
 // lib/widgets/glass_progress_bar.dart
 import 'package:flutter/material.dart';
-import '../theme/color_constants.dart';
 
 import '../util/design_constants.dart';
 
@@ -43,70 +42,100 @@ class GlassProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final brightness = theme.brightness;
-    final colorScheme = theme.colorScheme;
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     final hasTarget = target > 0;
     final rawProgress = hasTarget ? (value / target) : 0.0;
     final progress = rawProgress.clamp(0.0, 1.0);
+    final radius = BorderRadius.circular(borderRadius);
 
-    final backgroundColor = brightness == Brightness.dark
-        ? summaryCardDarkMode
-        : summaryCardWhiteMode;
+    // Subtle universal text shadow for readability on both bg and progress color
+    final textShadows = [
+      Shadow(
+        color: Colors.black.withValues(alpha: 0.2),
+        offset: const Offset(0, 1),
+        blurRadius: 2.0,
+      ),
+    ];
 
     return Container(
-      height: height,
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: radius,
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 7,
+            offset: const Offset(0, 2),
+            color: cs.shadow.withValues(alpha: isDark ? 0.2 : 0.06),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: progress,
-                child: Container(color: color),
-              ),
+        borderRadius: radius,
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF2A2A2A)
+                : cs.surface.withValues(alpha: 0.95),
+            borderRadius: radius,
+          ),
+          foregroundDecoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(
+              color: cs.onSurface.withValues(alpha: 0.08),
+              width: 1,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 4.0,
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FractionallySizedBox(
+                  widthFactor: progress,
+                  heightFactor: 1.0,
+                  child: ColoredBox(color: color),
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: colorScheme.onSurface,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 4.0,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          shadows: textShadows,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    hasTarget
-                        ? '${value.toStringAsFixed(1)} / ${target.toStringAsFixed(0)} $unit'
-                        : '${value.toStringAsFixed(1)} $unit',
-                    style: TextStyle(
-                      color: colorScheme.onSurface.withValues(alpha: 0.8),
-                      fontSize: 14,
+                    const SizedBox(height: 2),
+                    Text(
+                      hasTarget
+                          ? '${value.toStringAsFixed(1)} / ${target.toStringAsFixed(0)} $unit'
+                          : '${value.toStringAsFixed(1)} $unit',
+                      style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        shadows: textShadows,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
 import '../services/theme_service.dart';
 import '../util/design_constants.dart';
+import '../widgets/analytics_section_header.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 
@@ -133,15 +134,6 @@ class AppearanceSettingsScreen extends StatelessWidget {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
+    return AnalyticsSectionHeader(title: title.toUpperCase());
   }
 }

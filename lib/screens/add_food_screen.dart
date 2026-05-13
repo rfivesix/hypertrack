@@ -16,6 +16,7 @@ import 'food_detail_screen.dart';
 import 'meal_screen.dart';
 import 'scanner_screen.dart';
 import 'ai_meal_capture_screen.dart';
+import '../util/date_util.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/glass_bottom_menu.dart';
@@ -28,7 +29,6 @@ import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 import '../services/base_food_language_service.dart';
 import '../theme/color_constants.dart';
-
 
 // lib/screens/add_food_screen.dart
 
@@ -759,9 +759,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   final themeService = Provider.of<ThemeService>(context);
                   final baseFoodLang =
                       BaseFoodLanguageService.resolveLanguageCode(
-                        choice: themeService.baseFoodLanguage,
-                        context: context,
-                      );
+                    choice: themeService.baseFoodLanguage,
+                    context: context,
+                  );
                   final title = () {
                     final de = (cat['name_de'] as String?)?.trim();
                     final en = (cat['name_en'] as String?)?.trim();
@@ -1063,7 +1063,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       selectedMealType = internalTypes.first;
     }
 
-    DateTime selectedDate = widget.initialDate ?? DateTime.now();
+    DateTime selectedDate =
+        (widget.initialDate ?? DateTime.now()).withCurrentTime;
 
     final Map<String, String> mealTypeLabel = {
       'mealtypeBreakfast': l10n.mealtypeBreakfast,

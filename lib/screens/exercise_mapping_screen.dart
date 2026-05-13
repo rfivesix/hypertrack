@@ -6,6 +6,8 @@ import '../models/exercise.dart';
 import 'general_exercise_selection_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/glass_pill_button.dart';
 
 /// A screen for mapping unknown exercise names to known database [Exercise] objects.
 ///
@@ -21,11 +23,31 @@ class ExerciseMappingScreen extends StatefulWidget {
 
 class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
   final Map<String, Exercise> _selection = {};
+  final Map<String, List<Exercise>> _suggestions = {};
   bool _applying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSuggestions();
+  }
+
+  Future<void> _loadSuggestions() async {
+    for (final name in widget.unknownNames) {
+      final matches = await WorkoutDatabaseHelper.instance.searchExercises(
+        query: name,
+      );
+      if (matches.isNotEmpty && mounted) {
+        setState(() => _suggestions[name] = matches.take(3).toList());
+      }
+    }
+  }
 
   Future<void> _pickTarget(String sourceName) async {
     final Exercise? picked = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const GeneralExerciseSelectionScreen()),
+      MaterialPageRoute(
+        builder: (_) => const GeneralExerciseSelectionScreen(),
+      ),
     );
     if (picked != null && mounted) {
       setState(() => _selection[sourceName] = picked);
@@ -42,6 +64,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
       for (final e in _selection.entries)
         e.key: e.value.nameDe.isNotEmpty ? e.value.nameDe : e.value.nameEn,
     };
+    // Apply the selected exercise mapping to the workout database
     await WorkoutDatabaseHelper.instance.applyExerciseNameMapping(mapping);
     if (mounted) {
       setState(() => _applying = false);
@@ -52,6 +75,8 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -64,27 +89,94 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
         ),
         child: Column(
           children: [
-            const SizedBox(height: DesignConstants.spacingS),
             Expanded(
               child: ListView.builder(
+                padding: const EdgeInsets.only(top: DesignConstants.spacingS),
                 itemCount: widget.unknownNames.length,
                 itemBuilder: (context, index) {
                   final src = widget.unknownNames[index];
                   final picked = _selection[src];
-                  return ListTile(
-                    title: Text(src),
-                    subtitle: picked == null
-                        ? Text(l10n.noSelection)
-                        : Text('→ ${picked.nameDe} / ${picked.nameEn}'),
-                    trailing: TextButton.icon(
-                      icon: const Icon(Icons.search),
-                      label: Text(l10n.selectButton),
-                      onPressed: () => _pickTarget(src),
+                  final suggestions = _suggestions[src] ?? [];
+
+                  return SummaryCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            src,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: picked == null
+                              ? Text(
+                                  l10n.noSelection,
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                )
+                              : Text(
+                                  '→ ${picked.getLocalizedName(context)}',
+                                  style: TextStyle(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () => _pickTarget(src),
+                            tooltip: l10n.selectButton,
+                          ),
+                        ),
+                        if (picked == null && suggestions.isNotEmpty) ...[
+                          const Divider(height: 24),
+                          Text(
+                            l10n.mappingSuggestions,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: DesignConstants.spacingS),
+                          Wrap(
+                            spacing: DesignConstants.spacingS,
+                            runSpacing: DesignConstants.spacingS,
+                            children: suggestions.map((s) {
+                              return GlassPillButton(
+                                height: 28,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                onTap: () {
+                                  setState(() => _selection[src] = s);
+                                },
+                                child: Text(
+                                  s.getLocalizedName(context),
+                                  style: theme.textTheme.bodySmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ] else if (picked != null)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                setState(() => _selection.remove(src));
+                              },
+                              child: Text(l10n.cancel),
+                            ),
+                          ),
+                      ],
                     ),
                   );
                 },
               ),
             ),
+            const SizedBox(height: DesignConstants.spacingM),
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.only(

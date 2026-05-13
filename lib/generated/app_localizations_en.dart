@@ -1632,6 +1632,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoBackupRunNow => 'Check & Run Auto-Backup Now';
 
   @override
+  String get autoBackupRequestAccessSubtitle =>
+      'To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there.';
+
+  @override
   String get snackbarAutoBackupSuccess => 'Auto-Backup completed.';
 
   @override
@@ -1708,6 +1712,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get applyMapping => 'Apply Mapping';
+
+  @override
+  String get mappingSuggestions => 'Suggestions';
+
+  @override
+  String get mappingSuggestionsEmpty => 'No matching exercises found';
 
   @override
   String get personalData => 'Personal Data';
@@ -2021,10 +2031,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVisualStyleTitle => 'Visual Style';
 
   @override
-  String get settingsVisualStyleStandard => 'Standard (Glass)';
+  String get settingsVisualStyleStandard => 'Frosted Glass';
 
   @override
-  String get settingsVisualStyleLiquid => 'Fluid (Liquid Glass)';
+  String get settingsVisualStyleLiquid => 'Liquid Glass (Fluid)';
 
   @override
   String get settingsVisualStyleLiquidDesc => 'Rounded, floating UI elements';
@@ -4567,4 +4577,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scannerGrantPermission => 'Grant Permission';
+
+  @override
+  String get about_train_libre => 'About Train Libre';
+
+  @override
+  String get legal_notice => 'Legal Notice';
+
+  @override
+  String get privacy_policy => 'Privacy Policy';
+
+  @override
+  String get view_in_browser => 'View in Browser';
+
+  @override
+  String get legal_document_version => 'Version';
+
+  @override
+  String get legal_document_last_updated => 'Last update';
+
+  @override
+  String get used_libraries => 'Used Libraries';
+
+  @override
+  String get licensing_info => 'Licensing Information';
+
+  @override
+  String get project_website => 'Project Website';
+
+  @override
+  String get github_repository => 'GitHub Repository';
+
+  @override
+  String get health_permission_dialog_title => 'Health Data & Privacy';
+
+  @override
+  String get health_permission_dialog_body =>
+      'Train Libre needs to read your step data to show daily/weekly statistics. Your data stays locally on your device; there is no external server.';
+
+  @override
+  String get health_permission_continue => 'Continue';
+
+  @override
+  String get health_permission_not_now => 'Not now';
+
+  @override
+  String get welcome_privacy_title => 'Welcome & Privacy';
+
+  @override
+  String get welcome_privacy_body =>
+      'By using Train Libre, you agree to the processing of your data as described in our Privacy Policy and Legal Notice.';
+
+  @override
+  String get i_agree_to_privacy_policy =>
+      'I have read and agree to the processing of my health data as described in the Privacy Policy.';
+
+  @override
+  String get accept_and_get_started => 'Accept & Get Started';
+
+  @override
+  String get about_section => 'About';
+
+  @override
+  String get legal_section => 'Legal';
 }

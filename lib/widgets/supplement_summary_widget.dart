@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/tracked_supplement.dart';
 import 'glass_progress_bar.dart';
-import '../theme/color_constants.dart';
+import 'summary_card.dart';
 import '../util/design_constants.dart';
 
 /// A widget that displays a list of tracked supplements for the current day.
@@ -77,7 +77,6 @@ class _CheckmarkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final brightness = theme.brightness;
     final supplement = trackedSupplement.supplement;
     final doseTaken = trackedSupplement.totalDosedToday;
     final isDone = doseTaken > 0;
@@ -91,43 +90,39 @@ class _CheckmarkCard extends StatelessWidget {
           '${supplement.dailyGoal?.toStringAsFixed(1).replaceAll('.0', '') ?? ''} ${supplement.unit}';
     }
 
-    final backgroundColor = brightness == Brightness.dark
-        ? summaryCardDarkMode
-        : summaryCardWhiteMode;
-
-    return Container(
-      height: 54,
+    return SummaryCard(
       margin: const EdgeInsets.symmetric(vertical: 4.0),
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: isDone ? Colors.green.shade400 : Colors.grey.shade600,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              supplement.getLocalizedName(context),
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
+      child: SizedBox(
+        height: 54,
+        child: Row(
+          children: [
+            Icon(
+              isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: isDone
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.56),
+              size: 20,
+            ),
+            const SizedBox(width: DesignConstants.spacingM),
+            Expanded(
+              child: Text(
+                supplement.getLocalizedName(context),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          Text(
-            displayText,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-              fontSize: 14,
+            Text(
+              displayText,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                fontSize: 14,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

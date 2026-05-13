@@ -98,10 +98,12 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
     // Navigate to the next screen.
     setState(() => _isDone = true);
 
+    Widget targetScreen =
+        hasSeenOnboarding ? const MainScreen() : const OnboardingScreen();
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) =>
-            hasSeenOnboarding ? const MainScreen() : const OnboardingScreen(),
+        pageBuilder: (_, __, ___) => targetScreen,
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
       ),

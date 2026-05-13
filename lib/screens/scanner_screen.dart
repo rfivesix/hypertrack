@@ -119,22 +119,26 @@ class _ScannerScreenState extends State<ScannerScreen>
             developer.log('Scanner controller error: $error', error: error);
           }
         },
-        codeFormat: Format.any,
+        codeFormat: Format.ean8 |
+            Format.ean13, // Only EAN-8 / EAN-13 to cut decoder work.
         showFlashlight: false, // Hidden to match app design
         showGallery: false,
         showToggleCamera: false,
         showScannerOverlay: true,
-        // Using tryHarder and tryRotate to improve detection reliability
-        // for standard barcodes like EAN-13, EAN-8, UPC-A, UPC-E.
-        tryHarder: true,
+        // Using false for tryHarder and tryRotate to reduce CPU load and
+        // thermal impact. Standard barcodes scan reliably at medium resolution.
+        tryHarder: false,
         tryRotate: true,
+        tryDownscale: true,
+        tryInverted: false, //just for testing with front camera
         // Increased cropPercent for better reliability with EAN barcodes
         // which are often wider and need more context.
         cropPercent: 0.8,
-        // Reduced delay for a faster, "snappier" detection feel
-        scanDelay: const Duration(milliseconds: 200),
-        // Balanced resolution for faster processing in the ZXing engine
-        resolution: ResolutionPreset.max,
+        // Throttle frames to balance processing power and detection accuracy
+        scanDelay: const Duration(milliseconds: 300),
+        scanDelaySuccess: const Duration(milliseconds: 800),
+        // Medium resolution to prevent Out-Of-Memory crashes on high-end devices
+        resolution: ResolutionPreset.veryHigh,
       );
     }
 

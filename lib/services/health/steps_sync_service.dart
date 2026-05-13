@@ -24,6 +24,7 @@ class StepsSyncService {
 
   final HealthPlatformSteps _platform;
   final DatabaseHelper _dbHelper;
+  bool _isSyncing = false;
 
   StepsSyncService({HealthPlatformSteps? platform, DatabaseHelper? dbHelper})
       : _platform = platform ?? const HealthPlatformSteps(),
@@ -129,8 +130,10 @@ class StepsSyncService {
     DateTime? now,
     bool forceRefresh = false,
   }) async {
-    final enabled = await isTrackingEnabled();
-    if (!enabled) {
+    if (_isSyncing) {
+      if (kDebugMode) {
+        debugPrint('[StepsSync] sync already in progress, skipping.');
+      }
       return const StepsSyncResult(
         skipped: true,
         fetchedCount: 0,
@@ -138,103 +141,117 @@ class StepsSyncService {
       );
     }
 
-    final availability = await _platform.getAvailability();
-    if (availability == StepsAvailability.notAvailable) {
-      return const StepsSyncResult(
-        skipped: true,
-        fetchedCount: 0,
-        upsertedCount: 0,
-      );
-    }
-
-    // Permissions are requested from Settings when tracking is enabled.
-    // Sync treats missing permission as a skipped refresh instead of an error.
-
-    final nowUtc = (now ?? DateTime.now()).toUtc();
-    final lastSync = await getLastSyncAt();
-    final fromUtc = _resolveSyncWindowStart(
-      forceRefresh: forceRefresh,
-      nowUtc: nowUtc,
-      lastSync: lastSync,
-    );
-    if (kDebugMode) {
-      debugPrint(
-        '[StepsSync] sync start force=$forceRefresh from=${fromUtc.toIso8601String()} to=${nowUtc.toIso8601String()} lastSync=${lastSync?.toIso8601String()}',
-      );
-    }
-
-    final provider = HealthPlatformSteps.providerForPlatform();
-
-    // Gracefully handle missing permissions – don't crash, just skip.
-    final List<HealthStepSegmentDto> segments;
+    _isSyncing = true;
     try {
-      segments = await _platform.readStepSegments(
-        fromUtc: fromUtc,
-        toUtc: nowUtc,
-      );
-    } on PlatformException catch (e) {
-      if (e.code == 'permission_denied' || e.code == 'not_available') {
+      final enabled = await isTrackingEnabled();
+      if (!enabled) {
         return const StepsSyncResult(
           skipped: true,
           fetchedCount: 0,
           upsertedCount: 0,
         );
       }
-      rethrow;
-    }
 
-    final rows = segments.map((segment) {
-      final source = segment.sourceId ?? '';
-      final fallback = sha1
-          .convert(
-            utf8.encode(
-              [
-                source,
-                segment.startAtUtc.toIso8601String(),
-                segment.endAtUtc.toIso8601String(),
-                segment.stepCount.toString(),
-              ].join('\u0000'),
-            ),
-          )
-          .toString();
-      final externalKey =
-          segment.nativeId != null && segment.nativeId!.isNotEmpty
-              ? '$provider:${segment.nativeId}'
-              : '$provider:$fallback';
-      return <String, dynamic>{
-        'provider': provider,
-        'sourceId': segment.sourceId,
-        'startAt': segment.startAtUtc.toIso8601String(),
-        'endAt': segment.endAtUtc.toIso8601String(),
-        'stepCount': segment.stepCount,
-        'externalKey': externalKey,
-      };
-    }).toList();
+      final availability = await _platform.getAvailability();
+      if (availability == StepsAvailability.notAvailable) {
+        return const StepsSyncResult(
+          skipped: true,
+          fetchedCount: 0,
+          upsertedCount: 0,
+        );
+      }
 
-    await _dbHelper.deleteHealthStepSegmentsInRange(
-      provider: provider,
-      fromUtc: fromUtc,
-      toUtc: nowUtc,
-    );
-    await _dbHelper.upsertHealthStepSegments(rows);
-    await _setLastSyncAt(nowUtc);
-    if (kDebugMode) {
-      final sourceTotals = await _dbHelper.getDailyStepsTotalsBySource(
-        dayLocal: nowUtc.toLocal(),
+      // Permissions are requested from Settings when tracking is enabled.
+      // Sync treats missing permission as a skipped refresh instead of an error.
+
+      final nowUtc = (now ?? DateTime.now()).toUtc();
+      final lastSync = await getLastSyncAt();
+      final fromUtc = _resolveSyncWindowStart(
+        forceRefresh: forceRefresh,
+        nowUtc: nowUtc,
+        lastSync: lastSync,
       );
-      final sourceDebug = sourceTotals
-          .map((row) => '${row['sourceId']}:${row['totalSteps']}')
-          .join(', ');
-      debugPrint(
-        '[StepsSync] sync done fetched=${segments.length} upserted=${rows.length} todaySources=[$sourceDebug]',
-      );
-    }
+      if (kDebugMode) {
+        debugPrint(
+          '[StepsSync] sync start force=$forceRefresh from=${fromUtc.toIso8601String()} to=${nowUtc.toIso8601String()} lastSync=${lastSync?.toIso8601String()}',
+        );
+      }
 
-    return StepsSyncResult(
-      skipped: false,
-      fetchedCount: segments.length,
-      upsertedCount: rows.length,
-    );
+      final provider = HealthPlatformSteps.providerForPlatform();
+
+      // Gracefully handle missing permissions – don't crash, just skip.
+      final List<HealthStepSegmentDto> segments;
+      try {
+        segments = await _platform.readStepSegments(
+          fromUtc: fromUtc,
+          toUtc: nowUtc,
+        );
+      } on PlatformException catch (e) {
+        if (e.code == 'permission_denied' || e.code == 'not_available') {
+          return const StepsSyncResult(
+            skipped: true,
+            fetchedCount: 0,
+            upsertedCount: 0,
+          );
+        }
+        rethrow;
+      }
+
+      final rows = segments.map((segment) {
+        final source = segment.sourceId ?? '';
+        final fallback = sha1
+            .convert(
+              utf8.encode(
+                [
+                  source,
+                  segment.startAtUtc.toIso8601String(),
+                  segment.endAtUtc.toIso8601String(),
+                  segment.stepCount.toString(),
+                ].join('\u0000'),
+              ),
+            )
+            .toString();
+        final externalKey =
+            segment.nativeId != null && segment.nativeId!.isNotEmpty
+                ? '$provider:${segment.nativeId}'
+                : '$provider:$fallback';
+        return <String, dynamic>{
+          'provider': provider,
+          'sourceId': segment.sourceId,
+          'startAt': segment.startAtUtc.toIso8601String(),
+          'endAt': segment.endAtUtc.toIso8601String(),
+          'stepCount': segment.stepCount,
+          'externalKey': externalKey,
+        };
+      }).toList();
+
+      await _dbHelper.deleteHealthStepSegmentsInRange(
+        provider: provider,
+        fromUtc: fromUtc,
+        toUtc: nowUtc,
+      );
+      await _dbHelper.upsertHealthStepSegments(rows);
+      await _setLastSyncAt(nowUtc);
+      if (kDebugMode) {
+        final sourceTotals = await _dbHelper.getDailyStepsTotalsBySource(
+          dayLocal: nowUtc.toLocal(),
+        );
+        final sourceDebug = sourceTotals
+            .map((row) => '${row['sourceId']}:${row['totalSteps']}')
+            .join(', ');
+        debugPrint(
+          '[StepsSync] sync done fetched=${segments.length} upserted=${rows.length} todaySources=[$sourceDebug]',
+        );
+      }
+
+      return StepsSyncResult(
+        skipped: false,
+        fetchedCount: segments.length,
+        upsertedCount: rows.length,
+      );
+    } finally {
+      _isSyncing = false;
+    }
   }
 
   DateTime _resolveSyncWindowStart({

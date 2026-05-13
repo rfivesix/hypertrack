@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../data/backup_manager.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
+import '../services/health/steps_sync_service.dart';
 import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -200,6 +201,57 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             recommendation.recommendedFatGrams;
   }
 
+  Future<void> _requestStepsPermission() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showGlassBottomMenu<bool>(
+      context: context,
+      title: l10n.health_permission_dialog_title,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                l10n.health_permission_dialog_body,
+                textAlign: TextAlign.center,
+                style: Theme.of(ctx).textTheme.bodyMedium,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(false);
+                    },
+                    child: Text(l10n.health_permission_not_now),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(true);
+                    },
+                    child: Text(l10n.health_permission_continue),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await StepsSyncService().requestPermissions();
+    }
+  }
+
   Future<void> _finishOnboarding() async {
     final db = _databaseHelper;
     final prefs = await SharedPreferences.getInstance();
@@ -231,6 +283,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           persistGenerated: false,
           markAsApplied: false,
         );
+
+    await _requestStepsPermission();
 
     // 1. Save profile (DB)
     await db.saveUserProfile(
@@ -474,7 +528,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const Spacer(),
                     ElevatedButton(
                       key: const Key('onboarding_bottom_next_button'),
-                      onPressed: _isGeneratingOnboardingRecommendation ? null : _nextPage,
+                      onPressed: _isGeneratingOnboardingRecommendation
+                          ? null
+                          : _nextPage,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
@@ -1140,7 +1196,6 @@ class _MacroInput extends StatelessWidget {
               suffixText: l10n.unit_grams,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
-                vertical: 12,
               ),
             ),
           ),

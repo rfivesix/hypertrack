@@ -304,7 +304,8 @@ class RecommendationInputAdapter {
   }) {
     final caloriesByDay = <DateTime, double>{...foodCaloriesByDay};
 
-    for (final entry in fluidEntries) {
+    for (final entry
+        in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
       final day = normalizeDay(entry.timestamp);
       final addedCalories = (entry.kcal ?? 0).toDouble();
       caloriesByDay[day] = (caloriesByDay[day] ?? 0.0) + addedCalories;

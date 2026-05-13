@@ -810,6 +810,54 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   Future<void> _pickAutoBackupDirectory() async {
     final l10n = AppLocalizations.of(context)!;
     final prefs = await SharedPreferences.getInstance();
+
+    final confirmed = await showGlassBottomMenu<bool>(
+      // ignore: use_build_context_synchronously
+      context: context,
+      title: l10n.autoBackupChooseFolder,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                l10n.autoBackupRequestAccessSubtitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(ctx).textTheme.bodyMedium,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(false);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(true);
+                    },
+                    child: Text(l10n.onboardingNext),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
     if (Platform.isAndroid) {
       SafPickedDirectory? picked;
       try {

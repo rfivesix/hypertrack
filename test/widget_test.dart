@@ -12,7 +12,7 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => ThemeService(),
-        child: const MyApp(),
+        child: const MyApp(home: Scaffold()),
       ),
     );
 

@@ -15,7 +15,7 @@ class ThemeService extends ChangeNotifier {
   static const _materialColorsEnabledKey = 'material_colors_enabled';
   static const _hapticsEnabledKey = 'haptics_enabled';
   ThemeMode _themeMode = ThemeMode.system;
-  int _visualStyle = 0; // 0 = Standard, 1 = Liquid
+  int _visualStyle = 1; // 1 = Liquid (Standard), 0 = Frosted
   bool _isAiEnabled = false;
   bool _isAiRecommendationContextEnabled = false;
   bool _materialColorsEnabled = false;
@@ -65,7 +65,7 @@ class ThemeService extends ChangeNotifier {
   // --- New method ---
   Future<void> _loadVisualStyle() async {
     final prefs = await SharedPreferences.getInstance();
-    _visualStyle = prefs.getInt(_styleKey) ?? 0;
+    _visualStyle = prefs.getInt(_styleKey) ?? 1;
     notifyListeners();
   }
 

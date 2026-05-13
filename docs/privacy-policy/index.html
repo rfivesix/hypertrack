@@ -94,135 +94,128 @@
         <aside class="toc reveal" aria-label="Privacy policy sections">
           <p class="toc-title">Sections</p>
           <nav>
-            <a href="#overview">Overview</a>
-            <a href="#data">Data We Process</a>
-            <a href="#permissions">Permissions</a>
-            <a href="#health">Health Data</a>
-            <a href="#ai">AI Features</a>
-            <a href="#backups">Backups</a>
-            <a href="#catalogs">Catalogs</a>
-            <a href="#tracking">Tracking</a>
-            <a href="#security">Security</a>
-            <a href="#controls">Controls</a>
-            <a href="#contact">Contact</a>
+            <a href="#section1" data-i18n="p_1_t">1. General Information</a>
+            <a href="#section2" data-i18n="p_2_t">2. Local-First & Privacy by Design</a>
+            <a href="#section3" data-i18n="p_3_t">3. Legal Bases for Processing</a>
+            <a href="#section4" data-i18n="p_4_t">4. Categories of Recipients</a>
+            <a href="#section5" data-i18n="p_5_t">5. International Data Transfers (BYOK AI)</a>
+            <a href="#section6" data-i18n="p_6_t">6. HealthKit & Health Connect Integration</a>
+            <a href="#section7" data-i18n="p_7_t">7. No Tracking / No Analytics</a>
+            <a href="#section8" data-i18n="p_8_t">8. Retention Periods</a>
+            <a href="#section9" data-i18n="p_9_t">9. Web Hosting (GitHub Pages)</a>
+            <a href="#section10" data-i18n="p_10_t">10. Your Data Subject Rights</a>
+            <a href="#contact" data-i18n="p_cont_t">Contact</a>
           </nav>
         </aside>
 
         <article class="policy-card">
           <div class="policy-section reveal">
             <div class="last-updated-box">
-              <span data-i18n="p_last_updated">Last updated:</span> May 9, 2026
+              <span data-i18n="legal_version">Version: 1.1</span> | <span data-i18n="legal_date">Date: May 12, 2026</span>
             </div>
+            <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" data-i18n="legal_intro">This document contains the Technical Data Inventory...</p>
           </div>
 
-          <section class="policy-section reveal" id="overview">
-            <h2 data-i18n="p_ov_t">Overview</h2>
-            <p data-i18n="p_ov_c_1">Train Libre is an offline-first fitness and nutrition tracking app. Your data is
-              stored locally on your device by default and does not require a cloud account.</p>
-            <p data-i18n="p_ov_c_2">Sensitive data stays on your device unless you explicitly use a feature that
-              accesses another app, a system health service, a third-party AI provider, a share/export target, or a
-              remote public catalog source.</p>
-            <p data-i18n="p_ov_c_3">Train Libre is not a medical service. Health, recovery, sleep, pulse, nutrition, and
-              training features are for personal tracking and training context only. They are not intended to diagnose,
-              treat, cure, or prevent any disease or medical condition.</p>
+          <section class="policy-section reveal" id="section1">
+            <h2 data-i18n="p_1_t">1. General Information</h2>
+            <p data-i18n="p_1_c1">This Privacy Policy informs you according to Art. 13 GDPR about the processing of personal data in “Train Libre”.</p>
+            <p data-i18n="p_1_c2">Controller: Richard Georg Schotte, Berlin (see Legal Notice for address). E-Mail: feedback@schotte.me</p>
           </section>
 
-          <section class="policy-section reveal" id="data">
-            <h2 data-i18n="p_data_t">Data We Process</h2>
-            <p data-i18n="p_data_c_1">Depending on the features you use, Train Libre stores or processes the following
-              data on your device:</p>
+          <section class="policy-section reveal" id="section2">
+            <h2 data-i18n="p_2_t">2. Local-First & Privacy by Design</h2>
+            <p data-i18n="p_2_c1">Train Libre is a "local-first" application. All sensitive health data remains exclusively on your device. We do not operate a cloud backend and have no access to your data.</p>
+          </section>
+
+          <section class="policy-section reveal" id="section3">
+            <h2 data-i18n="p_3_t">3. Legal Bases for Processing</h2>
+            <div style="margin-bottom: 1.5rem;">
+              <h3 data-i18n="p_3_a_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">A. Health Data (Art. 9 GDPR)</h3>
+              <p data-i18n="p_3_a_c1">The app processes special categories of personal data (weight, heart rate, sleep data, nutrition).</p>
+              <ul>
+                <li data-i18n="p_3_a_l1">Legal Basis: Your explicit consent according to Art. 9(2)(a) GDPR in conjunction with Art. 6(1)(a) GDPR.</li>
+                <li data-i18n="p_3_a_l2">Voluntary Nature: Providing health data is not legally or contractually required. However, without it, tracking and analysis features are not available.</li>
+              </ul>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+              <h3 data-i18n="p_3_b_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">B. App Functionality</h3>
+              <p data-i18n="p_3_b_c1">Processing of settings and profiles is based on Art. 6(1)(b) GDPR (performance of a contract/usage agreement).</p>
+            </div>
+            <div>
+              <h3 data-i18n="p_3_c_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">C. Support & Feedback</h3>
+              <p data-i18n="p_3_c_c1">Handled based on Art. 6(1)(b) GDPR and our legitimate interest in support quality and abuse prevention (Art. 6(1)(f) GDPR).</p>
+            </div>
+          </section>
+
+          <section class="policy-section reveal" id="section4">
+            <h2 data-i18n="p_4_t">4. Categories of Recipients</h2>
+            <p data-i18n="p_4_c1">Apart from technical connection data processed by the hosting provider and third-party services described below, we do not receive the contents of your in‑app data. Recipients of technical or user-generated data may be:</p>
             <ul>
-              <li data-i18n="p_data_l1">Profile and settings: Username, height, gender, goals, and unit preferences.
-              </li>
-              <li data-i18n="p_data_l2">Workouts: Routines, exercises, sets, reps, weights, RIR/RPE, rest times, and
-                duration.</li>
-              <li data-i18n="p_data_l3">Nutrition: Foods, meals, barcodes, calories, macros, hydration, and supplements.
-              </li>
-              <li data-i18n="p_data_l4">Body data: Bodyweight and body measurements.</li>
-              <li data-i18n="p_data_l5">Health integration: Steps, sleep sessions, and heart-rate samples (when
-                permissions are granted).</li>
-              <li data-i18n="p_data_l6">Local analytics: Training statistics, recovery estimates, and body/nutrition
-                trend calculations.</li>
+              <li data-i18n="p_4_l1">AI Providers (OpenAI, Google, etc.): Act as separate controllers when you use BYOK AI features.</li>
+              <li data-i18n="p_4_l2">Catalog Services (Open Food Facts, wger, GitHub): Receive technical connection data (IP, User-Agent) during updates.</li>
+              <li data-i18n="p_4_l3">Cloud Providers (Apple/Google): Receive data via your system-wide backups if enabled.</li>
             </ul>
-            <p data-i18n="p_data_c_2">The app uses local storage (SQLite/Drift), SharedPreferences, and secure native
-              storage for AI API keys.</p>
           </section>
 
-          <section class="policy-section reveal" id="permissions">
-            <h2 data-i18n="p_perm_t">Permissions and Device Access</h2>
-            <p data-i18n="p_perm_c_1">Train Libre requests the following permissions for specific features:</p>
+          <section class="policy-section reveal" id="section5">
+            <h2 data-i18n="p_5_t">5. International Data Transfers (BYOK AI)</h2>
+            <p data-i18n="p_5_c1">When using AI services, data may be transferred to third countries (especially the USA) subject to Art. 44 et seq. GDPR.</p>
             <ul>
-              <li data-i18n="p_perm_l1">Camera: Used for barcode scanning and AI meal photo capture.</li>
-              <li data-i18n="p_perm_l2">Photos/Gallery: Used for selecting a profile image or meal photos for AI
-                analysis.</li>
-              <li data-i18n="p_perm_l3">Notifications: Used for reminders or recommendations where enabled.</li>
-              <li data-i18n="p_perm_l4">File Access: Used for data import/export and backups.</li>
-              <li data-i18n="p_perm_l5">Health Access: Used for Apple Health or Google Health Connect features.</li>
+              <li data-i18n="p_5_l1">Safeguards: Providers typically use Standard Contractual Clauses (SCCs) or other legal mechanisms.</li>
+              <li data-i18n="p_5_l2">Note: As you use your own API key, processing is subject to the provider's privacy policy. Please review their policies before transmitting health data.</li>
             </ul>
-            <p data-i18n="p_perm_c_2">You can manage these permissions in your device settings.</p>
           </section>
 
-          <section class="policy-section reveal" id="health">
-            <h2 data-i18n="p_health_t">Health and Fitness Data</h2>
-            <p data-i18n="p_health_c_1">Integration with platform health services (Apple Health on iOS, Google Health Connect on Android) is entirely optional. Access only occurs after you explicitly grant permission.</p>
-            <p data-i18n="p_health_c_2">Depending on enabled features, Train Libre may read: steps, sleep sessions and stages, heart-rate data, and workout-related health data where available.</p>
-            <p data-i18n="p_health_c_3">Train Libre may write/export supported app-recorded data such as: workouts, body measurements, nutrition aggregates, and hydration data.</p>
-            <p data-i18n="p_health_c_4">Export is one-way from Train Libre to the platform health service. Train Libre remains the primary local source of truth.</p>
-            <p data-i18n="p_health_c_5">Health data is used for personal tracking, statistics, and training context. It is not used for advertising, tracking, profiling, or sale.</p>
-            <p data-i18n="p_health_c_6">The app is not a medical device and does not provide medical diagnosis or treatment. Permissions can be revoked in system settings.</p>
+          <section class="policy-section reveal" id="section6">
+            <h2 data-i18n="p_6_t">6. HealthKit & Health Connect Integration</h2>
+            <p data-i18n="p_6_c1">Train Libre can read and write health data via Apple HealthKit and Google Health Connect. This synchronization happens entirely on your device.</p>
+            <p data-i18n="p_6_c2">The app only accesses these services if you explicitly grant permission in your system settings.</p>
+            <p data-i18n="p_6_c3">Please also review Apple’s and Google’s separate privacy policies for these health platforms.</p>
           </section>
 
-          <section class="policy-section reveal" id="ai">
-            <h2 data-i18n="p_ai_t">AI Features</h2>
-            <p data-i18n="p_ai_c_1">AI meal recognition and AI meal recommendations are optional and disabled by default. The app uses a "Bring Your Own Key" (BYOK) model where you choose and configure a supported provider.</p>
-            <p data-i18n="p_ai_c_2">Only when you actively use an AI feature are selected inputs sent to the configured provider (e.g., meal description text, selected images, nutrient context).</p>
-            <p data-i18n="p_ai_c_3">API keys are stored locally and securely. Train Libre does not operate its own AI backend for these requests. Provider processing is governed by their own terms and privacy policies.</p>
-            <p data-i18n="p_ai_c_4">AI outputs are estimates. Results are shown for review before saving. You can edit, remove, or reject items before they become part of the local diary.</p>
-            <p data-i18n="p_ai_c_5">AI data is not used by Train Libre for advertising or tracking.</p>
+          <section class="policy-section reveal" id="section7">
+            <h2 data-i18n="p_7_t">7. No Tracking / No Analytics</h2>
+            <p data-i18n="p_7_c1">The app does not use tracking or analytics SDKs (e.g., Firebase Analytics, Google Analytics, Sentry). No profiling for marketing purposes is performed.</p>
           </section>
 
-          <section class="policy-section reveal" id="backups">
-            <h2 data-i18n="p_back_t">Backups and Data Portability</h2>
-            <p data-i18n="p_back_c_1">You can create JSON backups, encrypted backups, or CSV exports. If you choose a
-              non-encrypted format, the file contents are readable by anyone with access to the file.</p>
-            <p data-i18n="p_back_c_2">You are responsible for where you save or share these exported files. Imports
-              allow you to restore data from previous backups or other supported formats.</p>
-          </section>
-
-          <section class="policy-section reveal" id="catalogs">
-            <h2 data-i18n="p_cat_t">Remote Catalogs</h2>
-            <p data-i18n="p_cat_c_1">The app can fetch public exercise and food catalog updates from official Train
-              Libre sources. These requests only download data and do not upload your personal tracking logs.</p>
-          </section>
-
-          <section class="policy-section reveal" id="tracking">
-            <h2 data-i18n="p_ads_t">Ads, Analytics, and Tracking</h2>
-            <p data-i18n="p_ads_c_1">Train Libre does not include advertising, third-party analytics SDKs, or trackers.
-              All statistics and insights are computed locally on your device. Your data is never sold or shared for
-              advertising purposes.</p>
-          </section>
-
-          <section class="policy-section reveal" id="security">
-            <h2 data-i18n="p_sec_t">Data Storage and Security</h2>
-            <p data-i18n="p_sec_c_1">Primary data is stored locally. Security depends on your device's operating system
-              and lock screen protections. Be cautious when sharing exported files or using unencrypted backups.</p>
-          </section>
-
-          <section class="policy-section reveal" id="controls">
-            <h2 data-i18n="p_ctrl_t">Your Controls</h2>
+          <section class="policy-section reveal" id="section8">
+            <h2 data-i18n="p_8_t">8. Retention Periods</h2>
             <ul>
-              <li data-i18n="p_ctrl_l1">You decide which optional features and permissions to enable.</li>
-              <li data-i18n="p_ctrl_l2">You can delete entries or your entire profile within the app.</li>
-              <li data-i18n="p_ctrl_l3">You can remove saved AI API keys at any time.</li>
-              <li data-i18n="p_ctrl_l4">Uninstalling the app removes its local data from your device.</li>
+              <li data-i18n="p_8_l1">App Data: Stored on your device until deleted or uninstalled.</li>
+              <li data-i18n="p_8_l2">E-Mails: Retained only as long as needed for handling the request and documentation, subject to statutory retention duties.</li>
             </ul>
+          </section>
+
+          <section class="policy-section reveal" id="section9">
+            <h2 data-i18n="p_9_t">9. Web Hosting (GitHub Pages)</h2>
+            <p data-i18n="p_9_c1">This website is hosted on GitHub Pages. The service provider is GitHub Inc., 88 Colin P. Kelly Jr St, San Francisco, CA 94107, USA (and GitHub B.V., Vijzelstraat 68-72, 1017 HL Amsterdam, The Netherlands, according to GitHub’s privacy statement).</p>
+            <p data-i18n="p_9_c2">When you access our website, your browser connects to GitHub’s servers. In this context, technical data such as your IP address, requested URL, date and time, browser and operating system information may be stored in server log files.</p>
+            <p data-i18n="p_9_c3">The legal basis is our legitimate interest in providing a secure and efficient website according to Art. 6(1)(f) GDPR.</p>
+            <p data-i18n="p_9_c4">For details, please see GitHub’s privacy statement at https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement.</p>
+          </section>
+
+          <section class="policy-section reveal" id="section10">
+            <h2 data-i18n="p_10_t">10. Your Data Subject Rights</h2>
+            <p data-i18n="p_10_c1">You have the following rights:</p>
+            <ul>
+              <li data-i18n="p_10_l1">Access (Art. 15)</li>
+              <li data-i18n="p_10_l2">Rectification (Art. 16)</li>
+              <li data-i18n="p_10_l3">Erasure (Art. 17)</li>
+              <li data-i18n="p_10_l4">Restriction of processing (Art. 18)</li>
+              <li data-i18n="p_10_l5">Data portability (Art. 20)</li>
+              <li data-i18n="p_10_l6">Objection (Art. 21)</li>
+              <li data-i18n="p_10_l7">Withdrawal of consent (Art. 7(3)) with future effect.</li>
+            </ul>
+            <p data-i18n="p_10_c2">You also have the right to lodge a complaint with a supervisory authority (Art. 77), such as the Berlin Commissioner for Data Protection and Freedom of Information.</p>
           </section>
 
           <section class="policy-section reveal" id="contact">
             <h2 data-i18n="p_cont_t">Contact</h2>
-            <p>
-              Richard Georg Schotte<br>
-              Email: <a href="mailto:richard@schotte.me" class="contact-link">richard@schotte.me</a>
+            <p class="hero-copy" style="font-size: 0.95rem; line-height: 1.6;">
+              <strong data-i18n="imp_name">Richard Georg Schotte</strong><br>
+              <span data-i18n="imp_address">Bundesallee 114<br>12161 Berlin<br>Germany</span><br><br>
+              <span data-i18n="imp_email">E-Mail: feedback@schotte.me</span><br>
+              <span data-i18n="imp_phone">Phone: (+49) 1520 6915571</span>
             </p>
           </section>
         </article>

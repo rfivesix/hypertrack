@@ -26,6 +26,7 @@ class ShadowContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shadowColor = Theme.of(context).colorScheme.shadow;
     return Container(
       margin: margin,
       decoration: BoxDecoration(
@@ -34,7 +35,7 @@ class ShadowContainer extends StatelessWidget {
             [
               // Standard shadow when none is provided
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: shadowColor.withValues(alpha: 0.12),
                 blurRadius: 15,
                 spreadRadius: 0,
                 offset: const Offset(0, 8),

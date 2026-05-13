@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.5] - 2026-05-13
+### Added
+
+* **Linked Nutrition Logic:** Integrated a system to link fluid entries with nutrition logs. The `DatabaseHelper` now resolves UUIDs to local IDs, ensuring that calories and macros are not double-counted when a drink is part of a tracked meal.
+* **Refined Progress Bars:** Replaced standard indicators in `CompactNutritionBar` with the custom `GlassProgressBar` for a more consistent visual language across the dashboard.
+
+### Changed
+
+* **UI Performance Optimization:** Removed `BackdropFilter` and `ImageFilter.blur` from several core widgets, including `SummaryCard`, `FrostedContainer`, and `GlassProgressBar`. These now use high-opacity solid surfaces to reduce GPU strain and improve frame rates.
+* **Visual Polish:** * Updated `GlassBottomNavBar` and `GlassFab` to use refined background colors (`summaryCardDarkMode`/`summaryCardWhiteMode`) and adjusted rim borders for better visibility.
+* Simplified background decorations in `LegalScreen` by replacing gradients with solid surface colors.
+
+
+* **Scanner Enhancements:** Optimized `ScannerScreen` by restricting barcode formats to **EAN-8** and **EAN-13**. Increased resolution to `veryHigh` while adjusting scan delays to balance detection speed and thermal impact.
+* **Default Settings:** The default `visualStyle` has been updated to `1` in `ThemeService`.
+
+### Fixed
+
+* **Calorie Calculation:** Fixed a bug where liquid calories were duplicated; the app now filters out fluid entries linked to food logs when calculating total daily intake.
+* **Test Stability:** Updated `SleepSettingsScreen` tests to include the explicit confirmation step required by the glass bottom menu and fixed locale-dependent string matching.
+* **Dark Mode Accessibility:** Adjusted contrast and shadow depths in `FrostedContainer` and `SummaryCard` to ensure elements remain distinct from the background in dark mode.
+
+### Removed
+
+* Unused `dart:ui` imports across multiple widget files to clean up the codebase.
+
+## [0.9.4] - 2026-05-13
+### Added
+- Integrated legal information (Imprint and Privacy Policy) directly into the app for better transparency and accessibility.
+- Introduced the "Liquid Glass" theme as the new default visual style, providing a modern and premium look.
+- Added a "Supplement Tracker" to the daily overview, supporting both daily goals (checkmark style) and daily limits (progress bar style).
+
+### Changed
+- Improved visual clarity and text visibility on progress bars when using glass-inspired themes.
+- Enhanced database stability and reload performance for a smoother user experience.
+- Refined food and exercise mapping logic for better accuracy.
+
+### Fixed
+- Fixed Issue #323: Improved deletion logic for water and drinks to prevent orphaned database entries and enabled direct editing.
+- Fixed Issue #322: Resolved a crash occurring during certain nutrition summary updates.
+- Fixed barcode scanner issues and added necessary network permissions for catalog refreshes.
+- Hardened database actions to prevent potential data inconsistencies during concurrent operations.
+
 ## [0.9.3] - 2026-05-10
 ### Added
 - Replaced the barcode scanner with a FLOSS-compatible ZXing-based implementation, improving privacy and removing dependencies on proprietary Google Play Services.

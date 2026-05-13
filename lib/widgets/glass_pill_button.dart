@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
 import '../services/haptic_feedback_service.dart';
-import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -84,20 +82,23 @@ class _GlassPillButtonState extends State<GlassPillButton>
   @override
   Widget build(BuildContext context) {
     final themeService = context.watch<ThemeService>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final glassColor = Color.alphaBlend(
+      cs.surfaceTint.withValues(alpha: isDark ? 0.08 : 0.04),
+      cs.surface.withValues(alpha: isDark ? 0.62 : 0.72),
+    );
+    final rimColor = cs.onSurface.withValues(alpha: 0.08);
 
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withValues(alpha: 0.10);
+    final Color neutralTint = cs.onSurface.withValues(alpha: 0.08);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      bg.withValues(alpha: isDark ? 0.8 : 0.5),
+      glassColor,
     );
 
-    // Adaptive border radius: round if not Row, pill if Row
-    final bool isCircle = widget.child is! Row;
-    final double effectiveRadius =
-        isCircle ? widget.height / 2 : widget.borderRadius;
+    // The radius is half the height to create a stadium (pill) shape.
+    final double effectiveRadius = widget.height / 2;
 
     Widget surface;
 
@@ -119,8 +120,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
             glowColor: Colors.white.withValues(alpha: isDark ? 0.24 : 0.18),
             glowRadius: 1.0,
             child: Container(
-              // height and width removed here; enforced outside with SizedBox
-              padding: isCircle ? EdgeInsets.zero : widget.padding,
+              padding: widget.padding,
               decoration: BoxDecoration(
                 color: neutralTint,
                 borderRadius: BorderRadius.circular(effectiveRadius),
@@ -128,46 +128,50 @@ class _GlassPillButtonState extends State<GlassPillButton>
               foregroundDecoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(effectiveRadius),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.20)
-                      : Colors.black.withValues(alpha: 0.08),
+                  color: rimColor,
                   width: 1.2,
                 ),
               ),
-              child: Center(child: widget.child),
+              child: Center(
+                widthFactor: 1.0,
+                child: widget.child,
+              ),
             ),
           ),
         ),
       );
     } else {
-      // Fallback-Glass
+      // Fallback-Glass (solid high-opacity surface without blur)
       surface = ClipRRect(
         borderRadius: BorderRadius.circular(effectiveRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            // height and width removed here; enforced outside with SizedBox
-            padding: isCircle ? EdgeInsets.zero : widget.padding,
-            decoration: BoxDecoration(
-              color: bg.withValues(alpha: 0.80),
-              borderRadius: BorderRadius.circular(effectiveRadius),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.30)
-                    : Colors.black.withValues(alpha: 0.10),
-                width: 1.5,
-              ),
+        child: Container(
+          padding: widget.padding,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2A2A2A) : glassColor,
+            borderRadius: BorderRadius.circular(effectiveRadius),
+            border: Border.all(
+              color: rimColor,
+              width: 1,
             ),
-            child: Center(child: widget.child),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+                color: cs.shadow.withValues(alpha: isDark ? 0.4 : 0.16),
+              ),
+            ],
+          ),
+          child: Center(
+            widthFactor: 1.0,
+            child: widget.child,
           ),
         ),
       );
     }
 
-    // Wrap the surface in a SizedBox to enforce height and width
+    // Wrap the surface in a SizedBox to enforce height but allow dynamic width
     final Widget constrainedSurface = SizedBox(
       height: widget.height,
-      width: isCircle ? widget.height : null,
       child: surface,
     );
 

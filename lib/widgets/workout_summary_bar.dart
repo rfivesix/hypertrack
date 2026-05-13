@@ -93,8 +93,8 @@ class WorkoutSummaryBar extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: theme.textTheme.labelSmall?.copyWith(
-            color: Colors.grey[600],
-            letterSpacing: 0.8,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+            letterSpacing: 0,
           ),
         ),
         const SizedBox(height: 4),
@@ -111,7 +111,7 @@ class _WorkoutProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bg = Colors.white.withValues(alpha: 0.10); // dezentes Grau
+    final bg = cs.onSurface.withValues(alpha: 0.10);
     final fg = cs.primary;
 
     final bar = ClipRRect(

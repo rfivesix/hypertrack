@@ -2930,6 +2930,12 @@ abstract class AppLocalizations {
   /// **'Check & Run Auto-Backup Now'**
   String get autoBackupRunNow;
 
+  /// No description provided for @autoBackupRequestAccessSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there.'**
+  String get autoBackupRequestAccessSubtitle;
+
   /// No description provided for @snackbarAutoBackupSuccess.
   ///
   /// In en, this message translates to:
@@ -3073,6 +3079,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply Mapping'**
   String get applyMapping;
+
+  /// No description provided for @mappingSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get mappingSuggestions;
+
+  /// No description provided for @mappingSuggestionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching exercises found'**
+  String get mappingSuggestionsEmpty;
 
   /// No description provided for @personalData.
   ///
@@ -3677,13 +3695,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVisualStyleStandard.
   ///
   /// In en, this message translates to:
-  /// **'Standard (Glass)'**
+  /// **'Frosted Glass'**
   String get settingsVisualStyleStandard;
 
   /// No description provided for @settingsVisualStyleLiquid.
   ///
   /// In en, this message translates to:
-  /// **'Fluid (Liquid Glass)'**
+  /// **'Liquid Glass (Fluid)'**
   String get settingsVisualStyleLiquid;
 
   /// No description provided for @settingsVisualStyleLiquidDesc.
@@ -8033,6 +8051,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Grant Permission'**
   String get scannerGrantPermission;
+
+  /// No description provided for @about_train_libre.
+  ///
+  /// In en, this message translates to:
+  /// **'About Train Libre'**
+  String get about_train_libre;
+
+  /// No description provided for @legal_notice.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Notice'**
+  String get legal_notice;
+
+  /// No description provided for @privacy_policy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacy_policy;
+
+  /// No description provided for @view_in_browser.
+  ///
+  /// In en, this message translates to:
+  /// **'View in Browser'**
+  String get view_in_browser;
+
+  /// No description provided for @legal_document_version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get legal_document_version;
+
+  /// No description provided for @legal_document_last_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last update'**
+  String get legal_document_last_updated;
+
+  /// No description provided for @used_libraries.
+  ///
+  /// In en, this message translates to:
+  /// **'Used Libraries'**
+  String get used_libraries;
+
+  /// No description provided for @licensing_info.
+  ///
+  /// In en, this message translates to:
+  /// **'Licensing Information'**
+  String get licensing_info;
+
+  /// No description provided for @project_website.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Website'**
+  String get project_website;
+
+  /// No description provided for @github_repository.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub Repository'**
+  String get github_repository;
+
+  /// No description provided for @health_permission_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Data & Privacy'**
+  String get health_permission_dialog_title;
+
+  /// No description provided for @health_permission_dialog_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Train Libre needs to read your step data to show daily/weekly statistics. Your data stays locally on your device; there is no external server.'**
+  String get health_permission_dialog_body;
+
+  /// No description provided for @health_permission_continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get health_permission_continue;
+
+  /// No description provided for @health_permission_not_now.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get health_permission_not_now;
+
+  /// No description provided for @welcome_privacy_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome & Privacy'**
+  String get welcome_privacy_title;
+
+  /// No description provided for @welcome_privacy_body.
+  ///
+  /// In en, this message translates to:
+  /// **'By using Train Libre, you agree to the processing of your data as described in our Privacy Policy and Legal Notice.'**
+  String get welcome_privacy_body;
+
+  /// No description provided for @i_agree_to_privacy_policy.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the processing of my health data as described in the Privacy Policy.'**
+  String get i_agree_to_privacy_policy;
+
+  /// No description provided for @accept_and_get_started.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept & Get Started'**
+  String get accept_and_get_started;
+
+  /// No description provided for @about_section.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about_section;
+
+  /// No description provided for @legal_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legal_section;
 }
 
 class _AppLocalizationsDelegate

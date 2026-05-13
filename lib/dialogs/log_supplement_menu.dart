@@ -30,12 +30,21 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
   }
 
   Future<void> _loadSupplements() async {
-    final supplements = await DatabaseHelper.instance.getAllSupplements();
-    if (mounted) {
-      setState(() {
-        _supplements = supplements;
-        _isLoading = false;
-      });
+    try {
+      final supplements = await DatabaseHelper.instance.getAllSupplements();
+      if (mounted) {
+        setState(() {
+          _supplements = supplements;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading supplements: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
