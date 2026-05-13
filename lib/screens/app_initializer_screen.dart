@@ -9,7 +9,6 @@ import '../services/local_notification_service.dart';
 import '../services/workout_session_manager.dart';
 import 'main_screen.dart';
 import 'onboarding_screen.dart';
-import 'initial_consent_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -90,10 +89,9 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
       debugPrint("Auto-backup startup failed: $e");
     }
 
-    // 3) Decide target route based on onboarding and consent state.
+    // 3) Decide target route based on onboarding state.
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') == true;
-    final hasAcceptedConsent = prefs.getBool('hasAcceptedConsent') == true;
 
     if (!mounted) return;
 
@@ -102,10 +100,6 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
 
     Widget targetScreen =
         hasSeenOnboarding ? const MainScreen() : const OnboardingScreen();
-
-    if (!hasAcceptedConsent) {
-      targetScreen = InitialConsentScreen(nextScreen: targetScreen);
-    }
 
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(

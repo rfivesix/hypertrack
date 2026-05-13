@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.9.4] - 2026-05-1x
+## [0.9.4] - 2026-05-13
+### Added
+- Integrated legal information (Imprint and Privacy Policy) directly into the app for better transparency and accessibility.
+- Introduced the "Liquid Glass" theme as the new default visual style, providing a modern and premium look.
+- Added a "Supplement Tracker" to the daily overview, supporting both daily goals (checkmark style) and daily limits (progress bar style).
+
+### Changed
+- Improved visual clarity and text visibility on progress bars when using glass-inspired themes.
+- Enhanced database stability and reload performance for a smoother user experience.
+- Refined food and exercise mapping logic for better accuracy.
+
+### Fixed
+- Fixed Issue #323: Improved deletion logic for water and drinks to prevent orphaned database entries and enabled direct editing.
+- Fixed Issue #322: Resolved a crash occurring during certain nutrition summary updates.
+- Fixed barcode scanner issues and added necessary network permissions for catalog refreshes.
+- Hardened database actions to prevent potential data inconsistencies during concurrent operations.
+
 ## [0.9.3] - 2026-05-10
 ### Added
 - Replaced the barcode scanner with a FLOSS-compatible ZXing-based implementation, improving privacy and removing dependencies on proprietary Google Play Services.

@@ -98,7 +98,8 @@ class _InitialConsentScreenState extends State<InitialConsentScreen> {
                           MaterialPageRoute(
                               builder: (_) => const LegalScreen()),
                         ),
-                        child: Text('${l10n.legal_notice} & ${l10n.privacy_policy}'),
+                        child: Text(
+                            '${l10n.legal_notice} & ${l10n.privacy_policy}'),
                       ),
                     ),
                     const Divider(),

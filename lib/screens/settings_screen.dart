@@ -29,7 +29,6 @@ import '../widgets/analytics_section_header.dart';
 import 'app_initializer_screen.dart';
 import 'package:provider/provider.dart';
 
-
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
@@ -711,7 +710,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: FilledButton(
-                        onPressed: canConfirm ? () => Navigator.of(ctx).pop(true) : null,
+                        onPressed: canConfirm
+                            ? () => Navigator.of(ctx).pop(true)
+                            : null,
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,

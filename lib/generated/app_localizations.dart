@@ -2930,6 +2930,12 @@ abstract class AppLocalizations {
   /// **'Check & Run Auto-Backup Now'**
   String get autoBackupRunNow;
 
+  /// No description provided for @autoBackupRequestAccessSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there.'**
+  String get autoBackupRequestAccessSubtitle;
+
   /// No description provided for @snackbarAutoBackupSuccess.
   ///
   /// In en, this message translates to:

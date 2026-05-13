@@ -649,6 +649,7 @@
   "autoBackupChooseFolder": "Choose Folder",
   "autoBackupCopyPath": "Copy Path",
   "autoBackupRunNow": "Check & Run Auto-Backup Now",
+  "autoBackupRequestAccessSubtitle": "Train Libre needs permission to write the backup file to your chosen directory.",
   "snackbarAutoBackupSuccess": "Auto-Backup completed.",
   "snackbarAutoBackupFailed": "Auto-Backup failed or was canceled.",
   "localDataDeletionCardTitle": "Local app data",
@@ -1933,5 +1934,6 @@
   "i_agree_to_privacy_policy": "I have read and agree to the processing of my health data as described in the Privacy Policy.",
   "accept_and_get_started": "Accept & Get Started",
   "about_section": "About",
-  "legal_section": "Legal"
+  "legal_section": "Legal",
+  "autoBackupRequestAccessSubtitle": "To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there."
 }

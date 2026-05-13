@@ -16,6 +16,9 @@ import 'services/theme_service.dart';
 import 'theme/color_constants.dart';
 import 'package:intl/date_symbol_data_local.dart'; // FIX: Initialize intl formatting
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/initial_consent_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -26,6 +29,9 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  final prefs = await SharedPreferences.getInstance();
+  final hasAcceptedConsent = prefs.getBool('hasAcceptedConsent') ?? false;
 
   // Create the workout session manager before injecting it. Restoration is
   // handled by AppInitializerScreen after the first frame is visible.
@@ -47,7 +53,11 @@ void main() async {
         ),
         ChangeNotifierProvider.value(value: themeService),
       ],
-      child: const MyApp(),
+      child: MyApp(
+        home: hasAcceptedConsent
+            ? const AppInitializerScreen()
+            : InitialConsentScreen(nextScreen: const AppInitializerScreen()),
+      ),
     ),
   );
 
@@ -59,8 +69,10 @@ void main() async {
 /// This application is a fitness tracker that allows users to log workouts,
 /// manage supplements, and track body measurements.
 class MyApp extends StatefulWidget {
+  final Widget home;
+
   /// Creates the root widget for the application.
-  const MyApp({super.key});
+  const MyApp({super.key, required this.home});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -367,7 +379,7 @@ class _MyAppState extends State<MyApp> {
           themeMode: themeService.themeMode,
           onGenerateRoute: SleepNavigation.onGenerateRoute,
           // FIX: The extracted screen is now used here.
-          home: const AppInitializerScreen(),
+          home: widget.home,
         );
       },
     );

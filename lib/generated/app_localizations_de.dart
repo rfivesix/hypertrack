@@ -1637,6 +1637,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get autoBackupRunNow => 'Jetzt Auto-Backup prüfen & ausführen';
 
   @override
+  String get autoBackupRequestAccessSubtitle =>
+      'Um deine Daten automatisch zu sichern, benötigt Train Libre Zugriff auf einen von dir gewählten Ordner. Deine Backups werden dort gespeichert.';
+
+  @override
   String get snackbarAutoBackupSuccess => 'Auto-Backup durchgeführt.';
 
   @override

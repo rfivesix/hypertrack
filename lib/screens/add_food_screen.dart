@@ -1063,7 +1063,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       selectedMealType = internalTypes.first;
     }
 
-    DateTime selectedDate = (widget.initialDate ?? DateTime.now()).withCurrentTime;
+    DateTime selectedDate =
+        (widget.initialDate ?? DateTime.now()).withCurrentTime;
 
     final Map<String, String> mealTypeLabel = {
       'mealtypeBreakfast': l10n.mealtypeBreakfast,

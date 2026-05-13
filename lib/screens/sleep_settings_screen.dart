@@ -225,7 +225,9 @@ class _SleepSettingsScreenState extends State<SleepSettingsScreen> {
                         final wasEnabled = _sleepTrackingEnabled;
                         await _sleepSyncService.setTrackingEnabled(value);
                         if (value && !wasEnabled) {
-                          await _sleepPermissionController.requestAccess();
+                          await _sleepPermissionController
+                              // ignore: use_build_context_synchronously
+                              .requestAccess(context);
                         }
                         await _sleepPermissionController.refresh();
                         if (!mounted) return;
@@ -284,7 +286,7 @@ class _SleepSettingsScreenState extends State<SleepSettingsScreen> {
                       subtitle: Text(l10n.sleepRequestAccessSubtitle),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
-                        await _sleepPermissionController.requestAccess();
+                        await _sleepPermissionController.requestAccess(context);
                         if (!mounted) return;
                         setState(() {});
                       },
