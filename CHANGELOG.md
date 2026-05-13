@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.9.5] - 2026-05-13
+### Added
+
+* **Linked Nutrition Logic:** Integrated a system to link fluid entries with nutrition logs. The `DatabaseHelper` now resolves UUIDs to local IDs, ensuring that calories and macros are not double-counted when a drink is part of a tracked meal.
+* **Refined Progress Bars:** Replaced standard indicators in `CompactNutritionBar` with the custom `GlassProgressBar` for a more consistent visual language across the dashboard.
+
+### Changed
+
+* **UI Performance Optimization:** Removed `BackdropFilter` and `ImageFilter.blur` from several core widgets, including `SummaryCard`, `FrostedContainer`, and `GlassProgressBar`. These now use high-opacity solid surfaces to reduce GPU strain and improve frame rates.
+* **Visual Polish:** * Updated `GlassBottomNavBar` and `GlassFab` to use refined background colors (`summaryCardDarkMode`/`summaryCardWhiteMode`) and adjusted rim borders for better visibility.
+* Simplified background decorations in `LegalScreen` by replacing gradients with solid surface colors.
+
+
+* **Scanner Enhancements:** Optimized `ScannerScreen` by restricting barcode formats to **EAN-8** and **EAN-13**. Increased resolution to `veryHigh` while adjusting scan delays to balance detection speed and thermal impact.
+* **Default Settings:** The default `visualStyle` has been updated to `1` in `ThemeService`.
+
+### Fixed
+
+* **Calorie Calculation:** Fixed a bug where liquid calories were duplicated; the app now filters out fluid entries linked to food logs when calculating total daily intake.
+* **Test Stability:** Updated `SleepSettingsScreen` tests to include the explicit confirmation step required by the glass bottom menu and fixed locale-dependent string matching.
+* **Dark Mode Accessibility:** Adjusted contrast and shadow depths in `FrostedContainer` and `SummaryCard` to ensure elements remain distinct from the background in dark mode.
+
+### Removed
+
+* Unused `dart:ui` imports across multiple widget files to clean up the codebase.
 
 ## [0.9.4] - 2026-05-13
 ### Added
