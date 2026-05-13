@@ -4,7 +4,10 @@ import '../generated/app_localizations.dart';
 import '../services/health/health_models.dart';
 import '../services/health/health_platform_steps.dart';
 import '../services/health/steps_sync_service.dart';
+import '../util/permission_dialogs.dart';
+
 import '../util/design_constants.dart';
+import '../widgets/analytics_section_header.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 
@@ -81,9 +84,28 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
                     if (value) {
                       const platform = HealthPlatformSteps();
                       final availability = await platform.getAvailability();
+                      if (!mounted || !context.mounted) return;
                       if (availability == StepsAvailability.available) {
-                        await platform.requestPermissions();
-                        _stepsSyncService.sync();
+                        final currentL10n = AppLocalizations.of(context)!;
+                        final confirmed = await showPrePermissionDialog(
+                          context: context,
+                          title: currentL10n.health_permission_dialog_title,
+                          body: currentL10n.health_permission_dialog_body,
+                          continueLabel: currentL10n.health_permission_continue,
+                          cancelLabel: currentL10n.health_permission_not_now,
+                        );
+                        if (!mounted || !context.mounted) return;
+                        if (confirmed) {
+                          await platform.requestPermissions();
+                          _stepsSyncService.sync();
+                        } else {
+                          await _stepsSyncService.setTrackingEnabled(false);
+                          if (mounted) {
+                            setState(() {
+                              _stepsTrackingEnabled = false;
+                            });
+                          }
+                        }
                       }
                     }
                   },
@@ -181,15 +203,6 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
+    return AnalyticsSectionHeader(title: title.toUpperCase());
   }
 }

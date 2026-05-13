@@ -1,6 +1,7 @@
 //lib/widgets/frosted_container.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../util/design_constants.dart';
 
 /// A container widget that applies a frosted glass (blur) effect to its background.
 ///
@@ -24,15 +25,28 @@ class FrostedContainer extends StatelessWidget {
   const FrostedContainer({
     super.key,
     required this.child,
-    this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    this.radius = 20,
+    this.margin = const EdgeInsets.symmetric(
+      horizontal: DesignConstants.screenPaddingHorizontal,
+      vertical: DesignConstants.screenPaddingVertical,
+    ),
+    this.padding = const EdgeInsets.symmetric(
+      horizontal: DesignConstants.spacingL,
+      vertical: DesignConstants.spacingM,
+    ),
+    this.radius = DesignConstants.borderRadiusL,
     this.blurSigma = 14,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final glassColor = Color.alphaBlend(
+      cs.surfaceTint
+          .withValues(alpha: theme.brightness == Brightness.dark ? 0.08 : 0.04),
+      cs.surface
+          .withValues(alpha: theme.brightness == Brightness.dark ? 0.62 : 0.72),
+    );
     return Padding(
       padding: margin,
       child: ClipRRect(
@@ -42,19 +56,17 @@ class FrostedContainer extends StatelessWidget {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withValues(alpha: 0.6)
-                  : Colors.white.withValues(alpha: 0.7),
+              color: glassColor,
               borderRadius: BorderRadius.circular(radius),
               border: Border.all(
                 color: cs.onSurface.withValues(alpha: 0.08),
                 width: 1,
               ),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
                   blurRadius: 18,
                   offset: Offset(0, 6),
-                  color: Colors.black26,
+                  color: cs.shadow.withValues(alpha: 0.16),
                 ),
               ],
             ),

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_data_sources.dart';
@@ -24,6 +23,12 @@ import 'health_export_settings_screen.dart';
 import 'pulse_settings_screen.dart';
 import 'sleep_settings_screen.dart';
 import 'steps_settings_screen.dart';
+import '../services/local_app_data_reset_service.dart';
+import '../services/workout_session_manager.dart';
+import '../widgets/analytics_section_header.dart';
+import 'app_initializer_screen.dart';
+import 'package:provider/provider.dart';
+
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -44,7 +49,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const String _showSugarInDiaryOverviewPrefKey =
       'showSugarInDiaryOverview';
 
-  String _appVersion = '';
   bool _showSugarInDiaryOverview = false;
   OffCatalogCountry _activeOffCatalogCountry =
       AppDataSources.defaultOffCatalogCountry;
@@ -56,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final bool _ownsSleepPermissionController;
 
   bool hasStepsSettingsChanged = false;
+  bool _isLocalResetRunning = false;
 
   @override
   void initState() {
@@ -66,7 +71,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _sleepPermissionController = widget._sleepPermissionController ??
         _sleepSyncService.buildPermissionController();
 
-    _loadAppVersion();
     _loadDiaryOverviewSettings();
     _loadOffCatalogSettings();
     _loadBaseFoodLanguage();
@@ -81,14 +85,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       unawaited(_sleepSyncService.dispose());
     }
     super.dispose();
-  }
-
-  Future<void> _loadAppVersion() async {
-    final packageInfo = await PackageInfo.fromPlatform();
-    if (!mounted) return;
-    setState(() {
-      _appVersion = '${packageInfo.version} (${packageInfo.buildNumber})';
-    });
   }
 
   Future<void> _loadDiaryOverviewSettings() async {
@@ -551,50 +547,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-          _buildNavigationCard(
-            context: context,
-            icon: Icons.info_outline_rounded,
-            title: l10n.attribution_and_license,
-            subtitle: l10n.data_from_off_and_wger,
-            tileKey: const Key('settings_about_legal_entry'),
-            onTap: () {
-              showGlassBottomMenu<void>(
-                context: context,
-                title: l10n.attribution_title,
-                contentBuilder: (ctx, close) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 320),
-                      child: SingleChildScrollView(
-                        child: Text(l10n.attributionText),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: Text(l10n.snackbar_button_ok),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+          const SizedBox(height: DesignConstants.spacingXL),
+          _buildSectionTitle(
+            context,
+            l10n.localDataDeletionCardTitle,
+            key: const Key('settings_section_reset'),
           ),
           SummaryCard(
-            child: ListTile(
-              leading: Icon(
-                Icons.info_outline_rounded,
-                size: 36,
-                color: Theme.of(context).colorScheme.primary,
+            child: Padding(
+              padding: DesignConstants.cardPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.localDataDeletionCardTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: DesignConstants.spacingS),
+                  Text(
+                    l10n.localDataDeletionCardDescription,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: DesignConstants.spacingL),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      key: const Key('delete_all_local_app_data_button'),
+                      icon: const Icon(Icons.delete_forever_outlined),
+                      label: Text(l10n.deleteAllLocalAppData),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        foregroundColor: Theme.of(context).colorScheme.onError,
+                      ),
+                      onPressed: _isLocalResetRunning
+                          ? null
+                          : _confirmAndDeleteLocalData,
+                    ),
+                  ),
+                  if (_isLocalResetRunning)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                ],
               ),
-              title: Text(
-                l10n.app_version,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(_appVersion),
             ),
           ),
         ],
@@ -607,17 +605,130 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String title, {
     Key? key,
   }) {
-    return Padding(
+    return AnalyticsSectionHeader(
       key: key,
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
+      title: title.toUpperCase(),
     );
+  }
+
+  Future<void> _confirmAndDeleteLocalData() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await _showLocalDataDeletionConfirmation(l10n);
+    if (!confirmed || !mounted) return;
+
+    WorkoutSessionManager? sessionManager;
+    try {
+      sessionManager = context.read<WorkoutSessionManager>();
+    } catch (_) {
+      sessionManager = null;
+    }
+
+    setState(() => _isLocalResetRunning = true);
+    try {
+      final resetter = LocalAppDataResetService();
+      await resetter.deleteAllLocalAppData();
+      await sessionManager?.clearLocalSessionState();
+
+      if (!mounted) return;
+      setState(() => _isLocalResetRunning = false);
+
+      await showGlassBottomMenu<void>(
+        context: context,
+        title: l10n.localDataDeletionSuccessTitle,
+        isDismissible: false,
+        enableDrag: false,
+        contentBuilder: (ctx, close) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.localDataDeletionSuccessBody,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(l10n.snackbarButtonOK),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AppInitializerScreen()),
+        (route) => false,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLocalResetRunning = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.localDataDeletionFailed),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<bool> _showLocalDataDeletionConfirmation(
+    AppLocalizations l10n,
+  ) async {
+    final controller = TextEditingController();
+    final result = await showGlassBottomMenu<bool>(
+      context: context,
+      title: l10n.localDataDeletionConfirmTitle,
+      contentBuilder: (ctx, close) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final canConfirm = controller.text.trim() == 'DELETE';
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.localDataDeletionConfirmBody,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    labelText: l10n.localDataDeletionTypeDeleteLabel,
+                  ),
+                  onChanged: (_) => setDialogState(() {}),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: Text(l10n.cancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: canConfirm ? () => Navigator.of(ctx).pop(true) : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(l10n.delete),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   Widget _buildNavigationCard({

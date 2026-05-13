@@ -4613,4 +4613,68 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get scannerGrantPermission => 'Berechtigung erteilen';
+
+  @override
+  String get about_train_libre => 'Über Train Libre';
+
+  @override
+  String get legal_notice => 'Impressum';
+
+  @override
+  String get privacy_policy => 'Datenschutzerklärung';
+
+  @override
+  String get view_in_browser => 'Im Browser ansehen';
+
+  @override
+  String get legal_document_version => 'Version';
+
+  @override
+  String get legal_document_last_updated => 'Letzte Aktualisierung';
+
+  @override
+  String get used_libraries => 'Verwendete Bibliotheken';
+
+  @override
+  String get licensing_info => 'Lizenz-Informationen';
+
+  @override
+  String get project_website => 'Projekt-Website';
+
+  @override
+  String get github_repository => 'GitHub Repository';
+
+  @override
+  String get health_permission_dialog_title =>
+      'Gesundheitsdaten & Privatsphäre';
+
+  @override
+  String get health_permission_dialog_body =>
+      'Train Libre möchte deine Schrittdaten lesen, um dir tägliche/wöchentliche Statistiken anzuzeigen. Deine Daten bleiben lokal auf deinem Gerät; es gibt keinen externen Server.';
+
+  @override
+  String get health_permission_continue => 'Fortfahren';
+
+  @override
+  String get health_permission_not_now => 'Jetzt nicht';
+
+  @override
+  String get welcome_privacy_title => 'Willkommen & Datenschutz';
+
+  @override
+  String get welcome_privacy_body =>
+      'Durch die Nutzung von Train Libre erklärst du dich mit der Verarbeitung deiner Daten einverstanden, wie sie in der Datenschutzerklärung und im Impressum beschrieben ist.';
+
+  @override
+  String get i_agree_to_privacy_policy =>
+      'Ich habe die Datenschutzerklärung gelesen und stimme der Verarbeitung meiner Gesundheitsdaten zu.';
+
+  @override
+  String get accept_and_get_started => 'Akzeptieren & Loslegen';
+
+  @override
+  String get about_section => 'Über';
+
+  @override
+  String get legal_section => 'Rechtliches';
 }

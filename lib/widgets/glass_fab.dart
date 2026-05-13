@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
 import '../services/haptic_feedback_service.dart';
-import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -61,14 +60,20 @@ class _GlassFabState extends State<GlassFab>
   @override
   Widget build(BuildContext context) {
     final themeService = context.watch<ThemeService>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final hasLabel = widget.label != null;
-    final Color neutralTint = (isDark ? Colors.white : Colors.black)
-        .withValues(alpha: isDark ? 0.1 : 0.1);
+    final glassColor = Color.alphaBlend(
+      cs.surfaceTint.withValues(alpha: isDark ? 0.08 : 0.04),
+      cs.surface.withValues(alpha: isDark ? 0.62 : 0.72),
+    );
+    final rimColor = cs.onSurface.withValues(alpha: 0.08);
+    final contentColor = cs.onSurface;
+    final Color neutralTint = cs.onSurface.withValues(alpha: 0.08);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      bg.withValues(alpha: isDark ? 0.8 : 0.5),
+      glassColor,
     );
 
     final iconAndText = Padding(
@@ -82,14 +87,14 @@ class _GlassFabState extends State<GlassFab>
           Icon(
             widget.icon,
             size: 30,
-            color: isDark ? Colors.white : Colors.black,
+            color: contentColor,
           ),
           if (hasLabel) ...[
             const SizedBox(width: 12),
             Text(
               widget.label!,
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
+                color: contentColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -135,9 +140,7 @@ class _GlassFabState extends State<GlassFab>
                         // << Rim layered on top
                         borderRadius: BorderRadius.circular(99),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.20)
-                              : Colors.black.withValues(alpha: 0.08),
+                          color: rimColor,
                           width: 1.2,
                         ),
                       ),
@@ -148,13 +151,13 @@ class _GlassFabState extends State<GlassFab>
                           Icon(
                             widget.icon,
                             size: 30,
-                            color: isDark ? Colors.white : Colors.black,
+                            color: contentColor,
                           ),
                           const SizedBox(width: 12),
                           Text(
                             widget.label!,
                             style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
+                              color: contentColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                             ),
@@ -173,9 +176,7 @@ class _GlassFabState extends State<GlassFab>
                       foregroundDecoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.20)
-                              : Colors.black.withValues(alpha: 0.08),
+                          color: rimColor,
                           width: 1.2,
                         ),
                       ),
@@ -183,7 +184,7 @@ class _GlassFabState extends State<GlassFab>
                       child: Icon(
                         widget.icon,
                         size: 30,
-                        color: isDark ? Colors.white : Colors.black,
+                        color: contentColor,
                       ),
                     ),
             ),
@@ -200,14 +201,19 @@ class _GlassFabState extends State<GlassFab>
               height: 76,
               width: hasLabel ? null : 76,
               decoration: BoxDecoration(
-                color: bg.withValues(alpha: 0.8),
+                color: glassColor,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.3)
-                      : Colors.black.withValues(alpha: 0.1),
-                  width: 1.5,
+                  color: rimColor,
+                  width: 1,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                    color: cs.shadow.withValues(alpha: 0.16),
+                  ),
+                ],
               ),
               child: iconAndText,
             ),

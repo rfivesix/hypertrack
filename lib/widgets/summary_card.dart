@@ -1,5 +1,5 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../theme/color_constants.dart';
 import '../util/design_constants.dart';
 
 /// A standardized card for displaying summary information with a glass aesthetic.
@@ -26,33 +26,45 @@ class SummaryCard extends StatelessWidget {
     this.onTap,
   });
 
-  ///*
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final radius = BorderRadius.circular(DesignConstants.borderRadiusL);
+    final glassColor = Color.alphaBlend(
+      cs.surfaceTint
+          .withValues(alpha: theme.brightness == Brightness.dark ? 0.08 : 0.04),
+      cs.surface
+          .withValues(alpha: theme.brightness == Brightness.dark ? 0.62 : 0.72),
+    );
 
-    final background = brightness == Brightness.dark
-        ? summaryCardDarkMode
-        : summaryCardWhiteMode;
-
-    final card = Container(
-      margin: margin,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: background,
-        //borderRadius: BorderRadius.circular(10),
-        borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
-        /*
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha:0.25),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+    final card = Padding(
+      padding: margin,
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              color: glassColor,
+              borderRadius: radius,
+              border: Border.all(
+                color: cs.onSurface.withValues(alpha: 0.08),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                  color: cs.shadow.withValues(alpha: 0.16),
+                ),
+              ],
+            ),
+            child: child,
           ),
-        ],
-        */
+        ),
       ),
-      child: child,
     );
 
     if (onTap != null) {
@@ -65,50 +77,3 @@ class SummaryCard extends StatelessWidget {
     return card;
   }
 }
-
-//*/
-/*
-  @override
-  Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-
-    // FIX: Make the light-mode background less transparent for better contrast.
-    final backgroundColor = brightness == Brightness.dark
-        ? Colors.white.withValues(alpha:0.10)
-        : Colors.white.withValues(alpha:0.65); // Was 0.40, now less transparent
-
-    // FIX: Light-mode border color is now dark gray instead of white.
-    final borderColor = brightness == Brightness.dark
-        ? Colors.white.withValues(alpha:0.20)
-        : Colors.black.withValues(alpha:0.12); // Was white, now transparent dark gray.
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
-      // Important: no padding here anymore; the child controls it now.
-      // padding: padding, // Remove or comment out this line
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderColor,
-          width: 1.5,
-        ),
-        boxShadow: const [],
-      ),
-      // Important: ClipRRect lets the blur effect respect corners.
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          // The actual frosted-glass effect
-          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-          child: Padding(
-            // Padding is now applied inside the blur effect.
-            padding: padding,
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-*/

@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
 import '../services/haptic_feedback_service.dart';
-import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -84,14 +83,19 @@ class _GlassPillButtonState extends State<GlassPillButton>
   @override
   Widget build(BuildContext context) {
     final themeService = context.watch<ThemeService>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final glassColor = Color.alphaBlend(
+      cs.surfaceTint.withValues(alpha: isDark ? 0.08 : 0.04),
+      cs.surface.withValues(alpha: isDark ? 0.62 : 0.72),
+    );
+    final rimColor = cs.onSurface.withValues(alpha: 0.08);
 
-    final Color neutralTint =
-        (isDark ? Colors.white : Colors.black).withValues(alpha: 0.10);
+    final Color neutralTint = cs.onSurface.withValues(alpha: 0.08);
     final Color effectiveGlass = Color.alphaBlend(
       neutralTint,
-      bg.withValues(alpha: isDark ? 0.8 : 0.5),
+      glassColor,
     );
 
     // The radius is half the height to create a stadium (pill) shape.
@@ -125,9 +129,7 @@ class _GlassPillButtonState extends State<GlassPillButton>
               foregroundDecoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(effectiveRadius),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.20)
-                      : Colors.black.withValues(alpha: 0.08),
+                  color: rimColor,
                   width: 1.2,
                 ),
               ),
@@ -148,14 +150,19 @@ class _GlassPillButtonState extends State<GlassPillButton>
           child: Container(
             padding: widget.padding,
             decoration: BoxDecoration(
-              color: bg.withValues(alpha: 0.80),
+              color: glassColor,
               borderRadius: BorderRadius.circular(effectiveRadius),
               border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.30)
-                    : Colors.black.withValues(alpha: 0.10),
-                width: 1.5,
+                color: rimColor,
+                width: 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                  color: cs.shadow.withValues(alpha: 0.16),
+                ),
+              ],
             ),
             child: Center(
               widthFactor: 1.0,

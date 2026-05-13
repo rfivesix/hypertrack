@@ -57,6 +57,7 @@ dependencies:
   json_annotation: ^4.8.1
   flutter_zxing: ^2.3.0
   permission_handler: ^12.0.1
+  flutter_markdown_plus: ^1.0.7
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -77,7 +78,6 @@ flutter:
 
   assets:
     - assets/icon/train-libre_icon_dark_green_no_bg.svg
-    - assets/icon/train-libre_icon_dark_bg.png
     - assets/images/max_mustermann.png
     - assets/db/
     - assets/legal/
