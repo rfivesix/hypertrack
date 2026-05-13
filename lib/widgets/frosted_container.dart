@@ -1,5 +1,4 @@
 //lib/widgets/frosted_container.dart
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../util/design_constants.dart';
 
@@ -41,37 +40,29 @@ class FrostedContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final glassColor = Color.alphaBlend(
-      cs.surfaceTint
-          .withValues(alpha: theme.brightness == Brightness.dark ? 0.08 : 0.04),
-      cs.surface
-          .withValues(alpha: theme.brightness == Brightness.dark ? 0.62 : 0.72),
-    );
+    final isDark = theme.brightness == Brightness.dark;
     return Padding(
       padding: margin,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: glassColor,
-              borderRadius: BorderRadius.circular(radius),
-              border: Border.all(
-                color: cs.onSurface.withValues(alpha: 0.08),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 18,
-                  offset: Offset(0, 6),
-                  color: cs.shadow.withValues(alpha: 0.16),
-                ),
-              ],
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2A2A2A) : cs.surface.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(
+              color: cs.onSurface.withValues(alpha: 0.08),
+              width: 1,
             ),
-            child: child,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                offset: Offset(0, 6),
+                color: cs.shadow.withValues(alpha: isDark ? 0.4 : 0.16),
+              ),
+            ],
           ),
+          child: child,
         ),
       ),
     );

@@ -141,12 +141,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
 
     // *** Fix block start ***
-    // Add nutrients from fluids to the total
-    newNutritionSummary.water = fluidEntries.fold(
+    // Add nutrients from fluids to the total, but skip linked entries (already counted with food)
+    final unlinkedFluidEntries =
+        fluidEntries.where((e) => e.linkedFoodEntryId == null).toList();
+    newNutritionSummary.water = unlinkedFluidEntries.fold(
       0,
       (sum, entry) => sum + entry.quantityInMl,
     );
-    for (final entry in fluidEntries) {
+    for (final entry in unlinkedFluidEntries) {
       final factor = entry.quantityInMl / 100.0;
       newNutritionSummary.calories += entry.kcal ?? 0;
       newNutritionSummary.carbs +=

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
+import '../theme/color_constants.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 
@@ -36,8 +37,9 @@ class GlassBottomNavBar extends StatelessWidget {
     VoidCallback onTap,
   ) {
     final cs = Theme.of(context).colorScheme;
+    final isDarkLocal = Theme.of(context).brightness == Brightness.dark;
     final color =
-        isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.78);
+        isSelected ? cs.primary : (isDarkLocal ? Colors.white : Colors.black);
     return Expanded(
       child: Material(
         type: MaterialType.transparency,
@@ -90,14 +92,9 @@ class GlassBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
     final themeService = context.watch<ThemeService>();
-    final glassColor = Color.alphaBlend(
-      cs.surfaceTint.withValues(alpha: isDark ? 0.08 : 0.04),
-      cs.surface.withValues(alpha: isDark ? 0.62 : 0.72),
-    );
-    final rimColor = cs.onSurface.withValues(alpha: 0.08);
 
     final navItemsRow = Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -115,12 +112,13 @@ class GlassBottomNavBar extends StatelessWidget {
     switch (themeService.visualStyle) {
       case 1:
         // Derive neutral tint (works on white and black).
-        final Color neutralTint = cs.onSurface.withValues(alpha: 0.08);
+        final Color neutralTint = (isDark ? Colors.white : Colors.black)
+            .withValues(alpha: isDark ? 0.1 : 0.1);
 
         // Smarter glass: blend bg color with neutral tint.
         final Color effectiveGlass = Color.alphaBlend(
           neutralTint,
-          glassColor,
+          bg.withValues(alpha: isDark ? 0.8 : 0.5),
         );
 
         // Drag-to-select + release-to-activate via GestureDetector.
@@ -203,7 +201,9 @@ class GlassBottomNavBar extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(99),
                                   border: Border.all(
-                                    color: rimColor,
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.20)
+                                        : Colors.black.withValues(alpha: 0.08),
                                     width: 1.2,
                                   ),
                                 ),
@@ -230,19 +230,14 @@ class GlassBottomNavBar extends StatelessWidget {
               height: barHeight,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: glassColor,
+                color: bg.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: rimColor,
-                  width: 1,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.30)
+                      : Colors.black.withValues(alpha: 0.10),
+                  width: 1.5,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
-                    color: cs.shadow.withValues(alpha: 0.16),
-                  ),
-                ],
               ),
               child: navItemsRow,
             ),

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../util/design_constants.dart';
 
@@ -30,36 +29,35 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final radius = BorderRadius.circular(DesignConstants.borderRadiusL);
-    final glassColor = Color.alphaBlend(
-      cs.surfaceTint
-          .withValues(alpha: theme.brightness == Brightness.dark ? 0.08 : 0.04),
-      cs.surface
-          .withValues(alpha: theme.brightness == Brightness.dark ? 0.62 : 0.72),
-    );
 
     final card = Padding(
       padding: margin,
-      child: ClipRRect(
-        borderRadius: radius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 9,
+              offset: const Offset(0, 3),
+              color: cs.shadow.withValues(alpha: isDark ? 0.2 : 0.08),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: glassColor,
+              color: isDark
+                  ? const Color(0xFF2A2A2A)
+                  : cs.surface.withValues(alpha: 0.95),
               borderRadius: radius,
               border: Border.all(
                 color: cs.onSurface.withValues(alpha: 0.08),
                 width: 1,
               ),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                  color: cs.shadow.withValues(alpha: 0.16),
-                ),
-              ],
             ),
             child: child,
           ),

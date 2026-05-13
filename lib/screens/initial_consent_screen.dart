@@ -1,6 +1,5 @@
 // lib/screens/initial_consent_screen.dart
 
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,9 +57,8 @@ class _InitialConsentScreenState extends State<InitialConsentScreen> {
             ),
           ),
           Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(color: Colors.black.withValues(alpha: 0.4)),
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.5),
             ),
           ),
           // Consent Card

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/theme_service.dart';
 import '../services/haptic_feedback_service.dart';
@@ -142,32 +141,29 @@ class _GlassPillButtonState extends State<GlassPillButton>
         ),
       );
     } else {
-      // Fallback-Glass
+      // Fallback-Glass (solid high-opacity surface without blur)
       surface = ClipRRect(
         borderRadius: BorderRadius.circular(effectiveRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: widget.padding,
-            decoration: BoxDecoration(
-              color: glassColor,
-              borderRadius: BorderRadius.circular(effectiveRadius),
-              border: Border.all(
-                color: rimColor,
-                width: 1,
+        child: Container(
+          padding: widget.padding,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2A2A2A) : glassColor,
+            borderRadius: BorderRadius.circular(effectiveRadius),
+            border: Border.all(
+              color: rimColor,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+                color: cs.shadow.withValues(alpha: isDark ? 0.4 : 0.16),
               ),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                  color: cs.shadow.withValues(alpha: 0.16),
-                ),
-              ],
-            ),
-            child: Center(
-              widthFactor: 1.0,
-              child: widget.child,
-            ),
+            ],
+          ),
+          child: Center(
+            widthFactor: 1.0,
+            child: widget.child,
           ),
         ),
       );

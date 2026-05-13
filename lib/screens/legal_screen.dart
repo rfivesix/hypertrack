@@ -64,16 +64,7 @@ class _LegalScreenState extends State<LegalScreen> {
 
   Widget _buildBackground(ThemeData theme) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.surface,
-            theme.colorScheme.surfaceContainerHighest,
-          ],
-        ),
-      ),
+      color: theme.colorScheme.surface,
     );
   }
 

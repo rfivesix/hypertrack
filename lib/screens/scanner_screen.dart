@@ -131,8 +131,8 @@ class _ScannerScreenState extends State<ScannerScreen>
         // Increased cropPercent for better reliability with EAN barcodes
         // which are often wider and need more context.
         cropPercent: 0.8,
-        // Increased delay to reduce CPU overhead while maintaining usability
-        scanDelay: const Duration(milliseconds: 500),
+        // Throttle frames to balance processing power and detection accuracy
+        scanDelay: const Duration(milliseconds: 150),
         // Medium resolution to prevent Out-Of-Memory crashes on high-end devices
         resolution: ResolutionPreset.medium,
       );

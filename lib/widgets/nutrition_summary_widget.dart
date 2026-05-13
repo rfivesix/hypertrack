@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
 import '../models/daily_nutrition.dart';
 import '../util/design_constants.dart';
-
-import 'glass_progress_bar.dart'; // For ImageFilter.blur
+import 'glass_progress_bar.dart';
 
 /// A comprehensive summary widget for daily nutrition and macro tracking.
 ///
