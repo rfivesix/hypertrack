@@ -90,9 +90,7 @@ class HomeState extends State<Home> {
 
     final entries = await dbHelper.getEntriesForDate(DateTime.now());
     final fluidEntries = await dbHelper.getFluidEntriesForDate(DateTime.now());
-    final unlinkedFluidEntries =
-        fluidEntries.where((e) => e.linkedFoodEntryId == null).toList();
-    final waterIntake = unlinkedFluidEntries.fold<int>(
+    final waterIntake = fluidEntries.fold<int>(
       0,
       (sum, entry) => sum + entry.quantityInMl,
     );

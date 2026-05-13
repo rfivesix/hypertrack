@@ -594,6 +594,21 @@ class DatabaseHelper {
 
     final rows = await query.get();
 
+    final linkedUuids = rows
+        .map((r) => r.linkedNutritionLogId)
+        .whereType<String>()
+        .toSet()
+        .toList();
+    final Map<String, int> uuidToLocalId = {};
+    if (linkedUuids.isNotEmpty) {
+      final nutritionRows = await (dbInstance.select(dbInstance.nutritionLogs)
+            ..where((tbl) => tbl.id.isIn(linkedUuids)))
+          .get();
+      for (final nr in nutritionRows) {
+        uuidToLocalId[nr.id] = nr.localId;
+      }
+    }
+
     final result = rows
         .map(
           (row) => FluidEntry(
@@ -605,7 +620,9 @@ class DatabaseHelper {
             sugarPer100ml: row.sugarPer100ml,
             caffeinePer100ml: row.caffeinePer100ml,
             carbsPer100ml: row.sugarPer100ml,
-            linkedFoodEntryId: null,
+            linkedFoodEntryId: row.linkedNutritionLogId != null
+                ? uuidToLocalId[row.linkedNutritionLogId]
+                : null,
             updatedAt: row.updatedAt,
           ),
         )

@@ -291,7 +291,8 @@ class DiaryScreenState extends State<DiaryScreen> {
       );
       summary.water = waterIntake;
 
-      for (final entry in fluidEntries) {
+      for (final entry
+          in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
         summary.calories += entry.kcal ?? 0;
         final factor = entry.quantityInMl / 100.0;
         summary.sugar += (entry.sugarPer100ml ?? 0) * factor;
