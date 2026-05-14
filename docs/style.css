@@ -236,6 +236,77 @@ svg {
   background: var(--line);
 }
 
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 140px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
+  z-index: 100;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.dropdown-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.dropdown-item:hover {
+  color: var(--fg);
+  background: var(--line);
+}
+
+.dropdown-item.is-active {
+  color: var(--accent);
+  background: rgba(var(--feature-rgb), 0.1);
+}
+
+[data-theme="light"] .dropdown-item.is-active {
+  color: #8da100;
+}
+
+.dropdown-item .check-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+}
+
+.dropdown-item.is-active .check-icon {
+  opacity: 1;
+}
+
 .control-btn svg {
   width: 20px;
   height: 20px;
