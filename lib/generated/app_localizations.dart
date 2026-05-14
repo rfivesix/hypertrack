@@ -8183,6 +8183,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Legal'**
   String get legal_section;
+
+  /// No description provided for @aiSettingsInstructionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How AI Meal Recognition Works'**
+  String get aiSettingsInstructionTitle;
+
+  /// No description provided for @aiSettingsInstructionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature uses AI to analyze food images and provide nutrient estimates. Your images are only sent to the selected AI provider when you use the feature. It relies on a Bring-Your-Own-Key (BYOK) architecture, keeping your data locally on your device until analysis.'**
+  String get aiSettingsInstructionBody;
+
+  /// No description provided for @aiSettingsSetupGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup Guide'**
+  String get aiSettingsSetupGuideTitle;
+
+  /// No description provided for @aiSettingsSetupGuideBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.'**
+  String get aiSettingsSetupGuideBody;
+
+  /// No description provided for @aiSettingsGetApiKeyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View Setup Guide'**
+  String get aiSettingsGetApiKeyButton;
 }
 
 class _AppLocalizationsDelegate

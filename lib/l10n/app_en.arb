@@ -1937,5 +1937,10 @@
   "accept_and_get_started": "Accept & Get Started",
   "about_section": "About",
   "legal_section": "Legal",
-  "autoBackupRequestAccessSubtitle": "To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there."
+  "autoBackupRequestAccessSubtitle": "To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there.",
+  "aiSettingsInstructionTitle": "How AI Meal Recognition Works",
+  "aiSettingsInstructionBody": "This feature uses AI to analyze food images and provide nutrient estimates. Your images are only sent to the selected AI provider when you use the feature. It relies on a Bring-Your-Own-Key (BYOK) architecture, keeping your data locally on your device until analysis.",
+  "aiSettingsSetupGuideTitle": "Setup Guide",
+  "aiSettingsSetupGuideBody": "To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.",
+  "aiSettingsGetApiKeyButton": "View Setup Guide"
 }

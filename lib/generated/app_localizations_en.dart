@@ -4646,4 +4646,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legal_section => 'Legal';
+
+  @override
+  String get aiSettingsInstructionTitle => 'How AI Meal Recognition Works';
+
+  @override
+  String get aiSettingsInstructionBody =>
+      'This feature uses AI to analyze food images and provide nutrient estimates. Your images are only sent to the selected AI provider when you use the feature. It relies on a Bring-Your-Own-Key (BYOK) architecture, keeping your data locally on your device until analysis.';
+
+  @override
+  String get aiSettingsSetupGuideTitle => 'Setup Guide';
+
+  @override
+  String get aiSettingsSetupGuideBody =>
+      'To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.';
+
+  @override
+  String get aiSettingsGetApiKeyButton => 'View Setup Guide';
 }

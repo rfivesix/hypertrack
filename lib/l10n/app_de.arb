@@ -1942,5 +1942,10 @@
   "accept_and_get_started": "Akzeptieren & Loslegen",
   "about_section": "Über",
   "legal_section": "Rechtliches",
-  "autoBackupRequestAccessSubtitle": "Um deine Daten automatisch zu sichern, benötigt Train Libre Zugriff auf einen von dir gewählten Ordner. Deine Backups werden dort gespeichert."
+  "autoBackupRequestAccessSubtitle": "Um deine Daten automatisch zu sichern, benötigt Train Libre Zugriff auf einen von dir gewählten Ordner. Deine Backups werden dort gespeichert.",
+  "aiSettingsInstructionTitle": "Wie die KI-Mahlzeitenerkennung funktioniert",
+  "aiSettingsInstructionBody": "Diese Funktion nutzt KI zur Analyse von Lebensmittelbildern und liefert Nährwertschätzungen. Deine Bilder werden nur dann an den ausgewählten KI-Anbieter gesendet, wenn du die Funktion nutzt. Sie basiert auf einer Bring-Your-Own-Key (BYOK)-Architektur, wodurch deine Daten lokal auf dem Gerät bleiben, bis sie analysiert werden.",
+  "aiSettingsSetupGuideTitle": "Einrichtungs-Anleitung",
+  "aiSettingsSetupGuideBody": "Um diese Funktion zu nutzen, benötigst du einen API-Key von einem KI-Anbieter (z. B. Google Gemini, da hierfür aktuell ein kostenloser Key erhältlich ist).",
+  "aiSettingsGetApiKeyButton": "Schritt-für-Schritt Anleitung"
 }

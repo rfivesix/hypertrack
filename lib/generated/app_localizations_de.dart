@@ -4687,4 +4687,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get legal_section => 'Rechtliches';
+
+  @override
+  String get aiSettingsInstructionTitle =>
+      'Wie die KI-Mahlzeitenerkennung funktioniert';
+
+  @override
+  String get aiSettingsInstructionBody =>
+      'Diese Funktion nutzt KI zur Analyse von Lebensmittelbildern und liefert Nährwertschätzungen. Deine Bilder werden nur dann an den ausgewählten KI-Anbieter gesendet, wenn du die Funktion nutzt. Sie basiert auf einer Bring-Your-Own-Key (BYOK)-Architektur, wodurch deine Daten lokal auf dem Gerät bleiben, bis sie analysiert werden.';
+
+  @override
+  String get aiSettingsSetupGuideTitle => 'Einrichtungs-Anleitung';
+
+  @override
+  String get aiSettingsSetupGuideBody =>
+      'Um diese Funktion zu nutzen, benötigst du einen API-Key von einem KI-Anbieter (z. B. Google Gemini, da hierfür aktuell ein kostenloser Key erhältlich ist).';
+
+  @override
+  String get aiSettingsGetApiKeyButton => 'Schritt-für-Schritt Anleitung';
 }

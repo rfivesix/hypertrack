@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../generated/app_localizations.dart';
 import '../services/ai_service.dart';
 import '../services/theme_service.dart';
@@ -238,6 +239,44 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                 top: DesignConstants.cardPadding.top + topPadding,
               ),
               children: [
+                _buildSectionTitle(context, l10n.aiSettingsInstructionTitle),
+                SummaryCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.aiSettingsInstructionBody,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.aiSettingsSetupGuideTitle,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.aiSettingsSetupGuideBody,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: () => launchUrl(
+                            Uri.parse('https://ai.google.dev/gemini-api/docs/api-key'),
+                            mode: LaunchMode.externalApplication,
+                          ),
+                          icon: const Icon(Icons.open_in_new),
+                          label: Text(l10n.aiSettingsGetApiKeyButton),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DesignConstants.spacingXL),
+
                 _buildSectionTitle(context, l10n.aiSettingsTitle),
                 SummaryCard(
                   child: Padding(
