@@ -73,7 +73,7 @@
       priv_c2_title: "Portable when needed",
       priv_c2_copy: "Backups, imports, exports, and share sheets make data movable without turning it into a hosted account.",
       priv_c3_title: "Clear boundaries",
-      priv_c3_copy: "Optional AI and health features are separate choices, with your API key and platform permissions in your control.",
+      priv_c3_copy: "Optional AI and health features separate choices, with your API key and platform permissions in your control.",
       show_kicker: "Product Showcase",
       show_heading: "The actual app, framed with care.",
       show_note: "Dark surfaces, bold typography, glass controls, and restrained color accents carry the same visual language from logging to AI capture to training review.",
@@ -170,7 +170,65 @@
       p_cont_t: "Contact",
       
       learn_more: "Learn more",
-      evidence_read_more: "Evidence & further reading"
+      evidence_read_more: "Evidence & further reading",
+      footer_recovery: "Recovery Tracker",
+      recovery_hero_t: "Recovery & Readiness Heuristic",
+      recovery_hero_c: "A planning aid that estimates muscle-specific readiness based on training-load accumulation and decay over time.",
+      recovery_what_t: "What this system does",
+      recovery_what_l1: "Estimates the recovery status of individual muscle groups.",
+      recovery_what_l2: "Accounts for primary and secondary muscle involvement (overlapping sets).",
+      recovery_what_l3: "Adjusts recovery windows based on proximity to failure (RIR/RPE).",
+      recovery_what_l4: "Uses muscle-specific base recovery curves (e.g., lower back vs. delts).",
+      recovery_not_t: "What it does NOT do",
+      recovery_not_l1: "It does not measure actual physiological biomarkers or CNS fatigue.",
+      recovery_not_l2: "It cannot predict injury or account for unlogged pain.",
+      recovery_not_l3: "It is not a substitute for subjective feeling or coaching judgment.",
+      recovery_how_t: "The Science of Inferred Readiness",
+      recovery_how_c1: "The tracker uses an 'Equivalent Set' model. Research (e.g., Vieira et al., 2021) shows that training to failure (0 RIR) significantly elongates recovery time, sometimes by 24–48 hours, compared to submaximal training.",
+      recovery_how_c2: "Train Libre applies this by weighting your working sets. A set at 0 RIR is flagged as high-fatigue, extending the estimated recovery window. The system also recognizes that compound movements like bench pressing create recovery pressure not just for the chest, but also for the triceps and front delts.",
+      recovery_how_c3: "Different muscle groups recover at different rates. Larger, high-load groups (like the quads or lower back) are assigned longer base windows than smaller groups (like the biceps or calves).",
+      recovery_limits_t: "Why it is a guide, not a measurement",
+      recovery_limits_l1: "Subjectivity: Use the status as a data-informed suggestion. If the app says a muscle is 'Ready' but you feel significant soreness or lethargy, prioritize your body's feedback.",
+      recovery_limits_l2: "Novelty: New exercises or sudden volume spikes may cause disproportionate fatigue that the base heuristic may not fully capture.",
+      adapt_nut_hero_t: "Adaptive Nutrition Estimation",
+      adapt_nut_hero_c: "A recursive estimation system designed to infer maintenance calories (TDEE) from noisy bodyweight and intake data.",
+      adapt_nut_what_t: "What this system does",
+      adapt_nut_what_l1: "Estimates your maintenance calories (TDEE) based on your real-world progress.",
+      adapt_nut_what_l2: "Analyzes bodyweight trends using smoothing to filter out daily noise.",
+      adapt_nut_what_l3: "Updates weekly targets conservatively to avoid overreacting to fluctuations.",
+      adapt_nut_what_l4: "Provides an uncertainty range based on the consistency of your logged data.",
+      adapt_nut_not_t: "What it does NOT do",
+      adapt_nut_not_l1: "It is not a replacement for metabolic testing or medical advice.",
+      adapt_nut_not_l2: "It cannot predict weight change with 100% precision due to individual variability.",
+      adapt_nut_not_l3: "It does not account for illness, travel, or extreme stress unless reflected in your logs.",
+      adapt_nut_how_t: "How it works: Bayesian Recursive Estimation",
+      adapt_nut_how_c1: "Instead of relying on static formulas like Mifflin-St Jeor—which research shows can be significantly off for individuals—Train Libre treats your metabolism as a dynamic 'hidden state'.",
+      adapt_nut_how_c2: "The app uses a Bayesian-inspired recursive estimator (similar to a Kalman filter). Every week, it compares its prediction (based on your intake) with the actual weight trend. It then calculates the 'gain'—deciding how much to trust the new data versus the previous estimate.",
+      adapt_nut_how_c3: "To handle the 'noise' of water retention and glycogen shifts, the system uses a 7-day confirmation rule for goal changes and a phase-dependent scaling factor for energy density (kcal/kg).",
+      adapt_nut_limits_t: "Uncertainty & Interpretation",
+      adapt_nut_limits_l1: "Trend vs. Noise: The algorithm prioritizes the long-term trend. This means it may feel slow to respond to rapid, short-term changes.",
+      adapt_nut_limits_l2: "Logging Consistency: The precision of the estimate depends entirely on the consistency of your logs. Sparse data will result in wider uncertainty ranges.",
+      adapt_nut_limits_l3: "Stabilization: During the first 2-4 weeks, the system relies on profile 'priors'. It becomes significantly more accurate once it has sufficient user-specific history.",
+      ai_meal_hero_t: "AI Meal Recognition",
+      ai_meal_hero_c: "A review-first approach to capturing nutrition data using large language models as a proposing layer for local deterministic validation.",
+      ai_meal_what_t: "What this feature does",
+      ai_meal_what_l1: "Proposes food names and weight estimates from photos or text descriptions.",
+      ai_meal_what_l2: "Matches AI suggestions against the app's local database of foods.",
+      ai_meal_what_l3: "Calculates nutrition totals locally using matched product data.",
+      ai_meal_what_l4: "Provides a manual review interface to edit or reject every entry.",
+      ai_meal_not_t: "What it does NOT do",
+      ai_meal_not_l1: "It does not provide medical-grade nutrition analysis.",
+      ai_meal_not_l2: "It does not automatically 'know' the caloric density of a specific restaurant dish.",
+      ai_meal_not_l3: "It does not silently save data without your explicit review and confirmation.",
+      ai_meal_how_t: "The Architecture: Local-First & BYOK",
+      ai_meal_how_c1: "Train Libre uses a 'Bring Your Own Key' (BYOK) model. You choose a provider and model; the app handles the orchestration. Your data stays local, and the AI is only called when you trigger a capture.",
+      ai_meal_how_c2: "Recognition is treated as a noisy proposal. Once the AI returns food names and grams, the app runs a deterministic validation pass. It attempts to repair common errors and flags low-confidence matches before you see the result.",
+      ai_meal_limits_t: "Scientific & Technical Limitations",
+      ai_meal_limits_l1: "The Volume Problem: A 2D photo lacks depth information. Studies show that without a reference object or multiple angles, volume error rates typically range from 10% to 30%.",
+      ai_meal_limits_l2: "Hidden Ingredients: AI cannot 'see' the oils, butter, or sugar used in preparation. A grilled breast and a sautéed one may look identical but differ significantly in caloric density.",
+      ai_meal_limits_l3: "Mixed Dishes: Ingredients in dishes like stir-fries or burritos are often occluded. If the rice is under the curry, the AI will likely underestimate the portion.",
+      ai_meal_guidance_t: "Practical Guidance",
+      ai_meal_guidance_c: "Treat AI capture as a friction-reduction tool, not a ground truth. Always use the review screen to adjust gram estimates and ensure the matched foods align with what you actually ate."
     },
     de: {
       nav_features: "Funktionen",
@@ -342,7 +400,65 @@
       p_cont_t: "Kontakt",
       
       learn_more: "Mehr erfahren",
-      evidence_read_more: "Evidenz & Quellen"
+      evidence_read_more: "Evidenz & Quellen",
+      footer_recovery: "Regenerations-Tracker",
+      recovery_hero_t: "Regenerations-Heuristik",
+      recovery_hero_c: "Eine Planungshilfe, die die muskelspezifische Bereitschaft basierend auf Trainingsbelastung und Erholung über die Zeit schätzt.",
+      recovery_what_t: "Was dieses System leistet",
+      recovery_what_l1: "Schätzt den Regenerationsstatus einzelner Muskelgruppen.",
+      recovery_what_l2: "Berücksichtigt primäre und sekundäre Muskelbeteiligung (überlappende Sätze).",
+      recovery_what_l3: "Passt Regenerationsfenster basierend auf der Nähe zum Versagen (RIR/RPE) an.",
+      recovery_what_l4: "Nutzt muskelspezifische Basis-Regenerationskurven (z. B. unterer Rücken vs. Schultern).",
+      recovery_not_t: "Was es NICHT leistet",
+      recovery_not_l1: "Es misst keine tatsächlichen physiologischen Biomarker oder ZNS-Ermüdung.",
+      recovery_not_l2: "Es kann keine Verletzungen vorhersagen oder nicht protokollierte Schmerzen berücksichtigen.",
+      recovery_not_l3: "Es ist kein Ersatz für das subjektive Empfinden oder Trainer-Urteil.",
+      recovery_how_t: "Die Wissenschaft hinter der geschätzten Bereitschaft",
+      recovery_how_c1: "Der Tracker nutzt ein 'Equivalent Set'-Modell. Studien (z. B. Vieira et al., 2021) zeigen, dass Training bis zum Versagen (0 RIR) die Regenerationszeit signifikant verlängert, teils um 24–48 Stunden im Vergleich zu submaximalem Training.",
+      recovery_how_c2: "Train Libre gewichtet Arbeitssätze entsprechend. Ein Satz mit 0 RIR wird als hochgradig ermüdend markiert, was das geschätzte Regenerationsfenster erweitert. Das System erkennt zudem, dass Verbundübungen wie Bankdrücken nicht nur die Brust, sondern auch Trizeps und vordere Schultern belasten.",
+      recovery_how_c3: "Verschiedene Muskelgruppen regenerieren unterschiedlich schnell. Große, hoch belastbare Gruppen (wie Quads oder unterer Rücken) haben längere Basis-Fenster als kleinere Gruppen (wie Bizeps oder Waden).",
+      recovery_limits_t: "Warum es ein Leitfaden ist, keine Messung",
+      recovery_limits_l1: "Subjektivität: Nutze den Status als datengestützten Vorschlag. Wenn die App 'Bereit' anzeigt, du dich aber erschöpft fühlst, priorisiere dein Körpergefühl.",
+      recovery_limits_l2: "Neuheit: Neue Übungen oder plötzliche Volumensteigerungen können überproportionale Ermüdung verursachen, die die Basis-Heuristik eventuell nicht voll erfasst.",
+      adapt_nut_hero_t: "Adaptive Ernährungs-Schätzung",
+      adapt_nut_hero_c: "Ein rekursives Schätzsystem, das Erhaltungskalorien (TDEE) aus Körpergewichts- und Aufnahmedaten ableitet.",
+      adapt_nut_what_t: "Was dieses System leistet",
+      adapt_nut_what_l1: "Schätzt deine Erhaltungskalorien (TDEE) basierend auf deinem tatsächlichen Fortschritt.",
+      adapt_nut_what_l2: "Analysiert Gewichtstrends mittels Glättung, um tägliche Schwankungen zu filtern.",
+      adapt_nut_what_l3: "Aktualisiert wöchentliche Ziele konservativ, um Überreaktionen auf Schwankungen zu vermeiden.",
+      adapt_nut_what_l4: "Gibt einen Unsicherheitsbereich basierend auf der Konsistenz deiner Daten an.",
+      adapt_nut_not_t: "Was es NICHT leistet",
+      adapt_nut_not_l1: "Es ist kein Ersatz für Stoffwechseluntersuchungen oder medizinischen Rat.",
+      adapt_nut_not_l2: "Es kann Gewichtsänderungen aufgrund individueller Variabilität nicht mit 100% Präzision vorhersagen.",
+      adapt_nut_not_l3: "Krankheit, Reisen oder extremer Stress werden nur berücksichtigt, wenn sie sich in deinen Logs widerspiegeln.",
+      adapt_nut_how_t: "Funktionsweise: Bayesian Recursive Estimation",
+      adapt_nut_how_c1: "Statt auf statische Formeln wie Mifflin-St Jeor zu setzen – die laut Forschung bei Individuen stark abweichen können – betrachtet Train Libre deinen Stoffwechsel als dynamischen 'Hidden State'.",
+      adapt_nut_how_c2: "Die App nutzt einen Bayesian-inspirierten rekursiven Schätzer (ähnlich einem Kalman-Filter). Jede Woche wird die Vorhersage mit dem tatsächlichen Trend verglichen. Das System berechnet den 'Gain' – also wie sehr den neuen Daten gegenüber der bisherigen Schätzung vertraut wird.",
+      adapt_nut_how_c3: "Um das 'Rauschen' durch Wassereinlagerungen und Glykogenspringer zu handhaben, nutzt das System eine 7-Tage-Bestätigungsregel für Zieländerungen und phasenspezifische Skalierungsfaktoren für die Energiedichte (kcal/kg).",
+      adapt_nut_limits_t: "Unsicherheit & Interpretation",
+      adapt_nut_limits_l1: "Trend vs. Rauschen: Der Algorithmus priorisiert den langfristigen Trend. Er reagiert daher eventuell verzögert auf schnelle, kurzfristige Änderungen.",
+      adapt_nut_limits_l2: "Logging-Konsistenz: Die Präzision der Schätzung hängt vollständig von der Konsistenz deiner Aufzeichnungen ab. Lückenhafte Daten führen zu breiteren Unsicherheitsbereichen.",
+      adapt_nut_limits_l3: "Stabilisierung: In den ersten 2-4 Wochen stützt sich das System auf Profil-Startwerte (Priors). Es wird signifikant genauer, sobald ausreichend nutzerspezifische Historie vorliegt.",
+      ai_meal_hero_t: "KI-Mahlzeitenerkennung",
+      ai_meal_hero_c: "Ein prüfbasierter Ansatz zur Erfassung von Ernährungsdaten, der Large Language Models als Vorschlagsebene für lokale Validierung nutzt.",
+      ai_meal_what_t: "Was diese Funktion leistet",
+      ai_meal_what_l1: "Schlägt Lebensmittelnamen und Gewichte anhand von Fotos oder Textbeschreibungen vor.",
+      ai_meal_what_l2: "Gleicht KI-Vorschläge mit der lokalen Lebensmitteldatenbank der App ab.",
+      ai_meal_what_l3: "Berechnet Nährwertsummen lokal unter Verwendung der gematchten Produktdaten.",
+      ai_meal_what_l4: "Bietet eine manuelle Review-Oberfläche, um jeden Eintrag zu bearbeiten oder abzulehnen.",
+      ai_meal_not_t: "Was sie NICHT leistet",
+      ai_meal_not_l1: "Sie bietet keine medizinisch fundierte Ernährungsanalyse.",
+      ai_meal_not_l2: "Sie 'weiß' nicht automatisch die Kaloriendichte eines spezifischen Restaurantgerichts.",
+      ai_meal_not_l3: "Sie speichert keine Daten ohne deine explizite Prüfung und Bestätigung.",
+      ai_meal_how_t: "Die Architektur: Local-First & BYOK",
+      ai_meal_how_c1: "Train Libre nutzt ein 'Bring Your Own Key' (BYOK) Modell. Du wählst Anbieter und Modell; die App übernimmt die Orchestrierung. Deine Daten bleiben lokal, und die KI wird nur bei einer Erfassung aufgerufen.",
+      ai_meal_how_c2: "Erkennung wird als unscharfer Vorschlag behandelt. Sobald die KI Ergebnisse liefert, führt die App eine deterministische Validierung durch. Sie versucht Fehler zu korrigieren und markiert unsichere Treffer.",
+      ai_meal_limits_t: "Wissenschaftliche & technische Grenzen",
+      ai_meal_limits_l1: "Das Volumen-Problem: Ein 2D-Foto hat keine Tiefeninformationen. Studien zeigen, dass ohne Referenzobjekt die Fehlerraten beim Volumen meist zwischen 10% und 30% liegen.",
+      ai_meal_limits_l2: "Versteckte Zutaten: Die KI kann Öle, Butter oder Zucker nicht 'sehen'. Ein gegrilltes Hähnchen und ein in Fett gebratenes können identisch aussehen, unterscheiden sich aber massiv in der Kaloriendichte.",
+      ai_meal_limits_l3: "Mischgerichte: Zutaten in Pfannengerichten oder Burritos sind oft verdeckt. Wenn der Reis unter dem Curry liegt, wird die KI die Portion wahrscheinlich unterschätzen.",
+      ai_meal_guidance_t: "Praktische Hinweise",
+      ai_meal_guidance_c: "Betrachte die KI-Erfassung als Werkzeug zur Reibungsreduzierung, nicht als absolute Wahrheit. Nutze immer den Review-Screen, um Schätzungen anzupassen."
     }
   };
 
@@ -401,18 +517,57 @@ const updateTranslations = (lang) => {
 };
 
 const initLang = () => {
-  const langToggle = document.getElementById("lang-toggle");
+  const dropdown = document.getElementById("lang-dropdown");
+  const toggleBtn = dropdown?.querySelector(".control-btn");
+  const menu = dropdown?.querySelector(".dropdown-menu");
+  const items = dropdown?.querySelectorAll(".dropdown-item");
+  
   let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("de") ? "de" : "en");
   updateTranslations(currentLang);
 
-  if (langToggle) {
-    const newToggle = langToggle.cloneNode(true);
-    langToggle.parentNode.replaceChild(newToggle, langToggle);
+  // Update active state in menu
+  const updateActiveState = (lang) => {
+    items?.forEach(item => {
+      if (item.dataset.lang === lang) {
+        item.classList.add("is-active");
+      } else {
+        item.classList.remove("is-active");
+      }
+    });
+  };
 
-    newToggle.addEventListener("click", () => {
-      currentLang = currentLang === "en" ? "de" : "en";
-      updateTranslations(currentLang);
-      localStorage.setItem("lang", currentLang);
+  updateActiveState(currentLang);
+
+  if (toggleBtn && menu) {
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = menu.classList.contains("is-open");
+      if (isOpen) {
+        menu.classList.remove("is-open");
+        toggleBtn.setAttribute("aria-expanded", "false");
+      } else {
+        menu.classList.add("is-open");
+        toggleBtn.setAttribute("aria-expanded", "true");
+      }
+    });
+
+    items?.forEach(item => {
+      item.addEventListener("click", () => {
+        const lang = item.dataset.lang;
+        if (lang !== currentLang) {
+          currentLang = lang;
+          updateTranslations(currentLang);
+          localStorage.setItem("lang", currentLang);
+          updateActiveState(currentLang);
+        }
+        menu.classList.remove("is-open");
+        toggleBtn.setAttribute("aria-expanded", "false");
+      });
+    });
+
+    document.addEventListener("click", () => {
+      menu.classList.remove("is-open");
+      toggleBtn.setAttribute("aria-expanded", "false");
     });
   }
 };
