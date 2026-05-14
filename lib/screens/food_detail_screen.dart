@@ -357,7 +357,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             ),
             if (_displayItem.sugar != null ||
                 _displayItem.fiber != null ||
-                _displayItem.salt != null) ...[
+                _displayItem.salt != null ||
+                (_displayItem.caffeineMgPer100ml != null &&
+                    _displayItem.caffeineMgPer100ml! > 0)) ...[
               const SizedBox(height: DesignConstants.spacingM),
               SummaryCard(
                 child: Column(
@@ -376,6 +378,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       _buildNutrientRow(
                         l10n.salt,
                         "${_getDisplayValue(_displayItem.salt).toStringAsFixed(1)} g",
+                      ),
+                    if (_displayItem.caffeineMgPer100ml != null &&
+                        _displayItem.caffeineMgPer100ml! > 0)
+                      _buildNutrientRow(
+                        l10n.caffeine,
+                        "${_getDisplayValue(_displayItem.caffeineMgPer100ml).round()} mg",
                       ),
                   ],
                 ),

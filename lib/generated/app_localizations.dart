@@ -416,6 +416,12 @@ abstract class AppLocalizations {
   /// **'Salt'**
   String get salt;
 
+  /// No description provided for @caffeine.
+  ///
+  /// In en, this message translates to:
+  /// **'Caffeine'**
+  String get caffeine;
+
   /// No description provided for @explorerScreenTitle.
   ///
   /// In en, this message translates to:
@@ -3769,6 +3775,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Germany (DE)'**
   String get settingsFoodDbRegionGermany;
+
+  /// No description provided for @settingsFoodDbRegionSwitzerland.
+  ///
+  /// In en, this message translates to:
+  /// **'Switzerland (CH)'**
+  String get settingsFoodDbRegionSwitzerland;
 
   /// No description provided for @settingsFoodDbRegionUnitedStates.
   ///

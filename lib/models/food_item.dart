@@ -134,7 +134,7 @@ class FoodItem {
       sodium: (map['sodium_100g'] as num?)?.toDouble(),
       calcium: (map['calcium_100g'] as num?)?.toDouble(),
       isLiquid: _readBool(map['is_liquid']),
-      caffeineMgPer100ml: _toDoubleOrNull(map['caffeine_mg_per_100ml']),
+      caffeineMgPer100ml: _toDoubleOrNull(map['caffeine_mg_per_100ml']) ?? _toDoubleOrNull(map['caffeine']),
     );
   }
 

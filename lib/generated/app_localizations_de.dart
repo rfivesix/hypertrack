@@ -173,6 +173,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get salt => 'Salz';
 
   @override
+  String get caffeine => 'Koffein';
+
+  @override
   String get explorerScreenTitle => 'Lebensmittel-Explorer';
 
   @override
@@ -2082,6 +2085,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsFoodDbRegionGermany => 'Deutschland (DE)';
+
+  @override
+  String get settingsFoodDbRegionSwitzerland => 'Schweiz (CH)';
 
   @override
   String get settingsFoodDbRegionUnitedStates => 'Vereinigte Staaten (US)';

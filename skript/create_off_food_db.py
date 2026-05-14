@@ -407,7 +407,8 @@ def initialize_output_db(db_path: str) -> sqlite3.Connection:
           fiber REAL NOT NULL DEFAULT 0,
           salt REAL NOT NULL DEFAULT 0,
           source TEXT NOT NULL DEFAULT 'base',
-          is_liquid INTEGER NOT NULL DEFAULT 0
+          is_liquid INTEGER NOT NULL DEFAULT 0,
+          caffeine REAL
         )
         """)
     conn.execute("""
@@ -500,6 +501,8 @@ def build_records(
         sugar = float(_parse_float(getattr(row, "sugar", 0)))
         fiber = float(_parse_float(getattr(row, "fiber", 0)))
         salt = float(_parse_float(getattr(row, "salt", 0)))
+        caffeine_g = float(_parse_float(getattr(row, "caffeine", 0)))
+        caffeine_mg = caffeine_g * 1000.0 if caffeine_g > 0 else None
 
         records.append(
             (
@@ -516,6 +519,7 @@ def build_records(
                 salt,
                 "base",
                 0,
+                caffeine_mg,
             )
         )
 
@@ -700,6 +704,15 @@ def main() -> int:
         args = parse_args()
         ctx = build_context(args)
         return process(ctx)
+    except Exception as exc:
+        print(f"OFF catalog build failed: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+))
+rn process(ctx)
     except Exception as exc:
         print(f"OFF catalog build failed: {exc}", file=sys.stderr)
         return 2

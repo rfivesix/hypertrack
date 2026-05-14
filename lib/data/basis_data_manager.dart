@@ -786,7 +786,7 @@ class BasisDataManager {
     // Auto: derive from the food DB region.
     return switch (offCountry) {
       OffCatalogCountry.us || OffCatalogCountry.uk => 'en',
-      OffCatalogCountry.de => 'de',
+      OffCatalogCountry.de || OffCatalogCountry.ch => 'de',
     };
   }
 
