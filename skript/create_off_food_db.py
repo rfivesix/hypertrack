@@ -39,6 +39,15 @@ COUNTRY_CONFIG: Dict[str, Dict[str, Any]] = {
             "en:great-britain",
         ),
     },
+    "ch": {
+        "preferred_languages": ("de", "fr", "it", "en"),
+        "country_tags": (
+            "en:switzerland",
+            "en:ch",
+            "en:suisse",
+            "en:schweiz",
+        ),
+    },
 }
 
 NUTRIENT_NAME_MAP = {
