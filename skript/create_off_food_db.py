@@ -569,8 +569,8 @@ def process(ctx: BuildContext) -> int:
         cursor = conn.cursor()
         insert_sql = """
             INSERT OR IGNORE INTO products (
-              id, barcode, brand, name, calories, protein, carbs, fat, sugar, fiber, salt, source, is_liquid
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              id, barcode, brand, name, calories, protein, carbs, fat, sugar, fiber, salt, source, is_liquid, caffeine
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
         for batch_index, batch in enumerate(
