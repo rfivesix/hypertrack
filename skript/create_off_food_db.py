@@ -711,12 +711,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-))
-rn process(ctx)
-    except Exception as exc:
-        print(f"OFF catalog build failed: {exc}", file=sys.stderr)
-        return 2
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
