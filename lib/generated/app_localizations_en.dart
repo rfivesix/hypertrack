@@ -2601,7 +2601,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'e.g. Include leftover rice, high protein, etc.';
 
   @override
-  String get currentlyTracking => 'Currently tracking';
+  String get currentlyTracking => 'Currently';
 
   @override
   String get currentlyTrackingDesc => 'Show in daily tracker hub';

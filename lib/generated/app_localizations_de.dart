@@ -2623,7 +2623,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'z. B. auf restlichen Reis achten, viel Protein, usw.';
 
   @override
-  String get currentlyTracking => 'Aktuell tracken';
+  String get currentlyTracking => 'Aktuell';
 
   @override
   String get currentlyTrackingDesc => 'In der täglichen Übersicht anzeigen';

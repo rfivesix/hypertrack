@@ -4646,7 +4646,7 @@ abstract class AppLocalizations {
   /// No description provided for @currentlyTracking.
   ///
   /// In en, this message translates to:
-  /// **'Currently tracking'**
+  /// **'Currently'**
   String get currentlyTracking;
 
   /// No description provided for @currentlyTrackingDesc.

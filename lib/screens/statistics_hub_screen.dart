@@ -1592,8 +1592,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   ready: ready,
                   fresh: fresh,
                 ),
-                const SizedBox(height: 6),
-                _buildMicroCaption(l10n.currentlyTracking),
               ],
             ],
           ),
