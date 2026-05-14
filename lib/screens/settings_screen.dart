@@ -199,6 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _offCountryLabel(OffCatalogCountry country, AppLocalizations l10n) {
     return switch (country) {
       OffCatalogCountry.de => l10n.settingsFoodDbRegionGermany,
+      OffCatalogCountry.ch => l10n.settingsFoodDbRegionSwitzerland,
       OffCatalogCountry.us => l10n.settingsFoodDbRegionUnitedStates,
       OffCatalogCountry.uk => l10n.settingsFoodDbRegionUnitedKingdom,
     };
