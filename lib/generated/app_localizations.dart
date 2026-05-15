@@ -5654,31 +5654,43 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsBodyNutritionTrendContext.
   ///
   /// In en, this message translates to:
-  /// **'Body weight and calorie trends'**
+  /// **'Weight and calories over time'**
   String get analyticsBodyNutritionTrendContext;
 
   /// No description provided for @analyticsBodyNutritionTrendContextHint.
   ///
   /// In en, this message translates to:
-  /// **'These lines show relative trend movement over the same period.'**
+  /// **'The chart scales each series to fit the same space; tooltips show raw kg and kcal values.'**
   String get analyticsBodyNutritionTrendContextHint;
 
   /// No description provided for @analyticsBodyNutritionNormalizedHint.
   ///
   /// In en, this message translates to:
-  /// **'Both lines are normalized to the same starting baseline to compare relative direction.'**
+  /// **'The chart scales weight and calories to fit the same space; tooltips show raw kg and kcal values.'**
   String get analyticsBodyNutritionNormalizedHint;
+
+  /// No description provided for @analyticsBodyNutritionTotalWeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total weight (kg)'**
+  String get analyticsBodyNutritionTotalWeightLabel;
+
+  /// No description provided for @analyticsBodyNutritionTotalCaloriesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total calories (kcal)'**
+  String get analyticsBodyNutritionTotalCaloriesLabel;
 
   /// No description provided for @analyticsWeightTrendLabel.
   ///
   /// In en, this message translates to:
-  /// **'Body weight (smoothed)'**
+  /// **'Weight (kg)'**
   String get analyticsWeightTrendLabel;
 
   /// No description provided for @analyticsCaloriesTrendLabel.
   ///
   /// In en, this message translates to:
-  /// **'Calories (daily avg trend)'**
+  /// **'Calories (kcal)'**
   String get analyticsCaloriesTrendLabel;
 
   /// No description provided for @analyticsInterpretationTitle.

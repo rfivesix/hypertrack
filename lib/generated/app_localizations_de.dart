@@ -3190,21 +3190,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsBodyNutritionTrendContext =>
-      'Gewichts- und Kalorientrends';
+      'Gewicht und Kalorien im Zeitverlauf';
 
   @override
   String get analyticsBodyNutritionTrendContextHint =>
-      'Diese Linien zeigen die relative Trendbewegung im gleichen Zeitraum.';
+      'Das Diagramm skaliert beide Reihen auf denselben Platz; Tooltips zeigen die Rohwerte in kg und kcal.';
 
   @override
   String get analyticsBodyNutritionNormalizedHint =>
-      'Beide Linien starten auf derselben Basis, damit du die relative Richtung direkt vergleichen kannst.';
+      'Das Diagramm skaliert Gewicht und Kalorien auf denselben Platz; Tooltips zeigen die Rohwerte in kg und kcal.';
 
   @override
-  String get analyticsWeightTrendLabel => 'Körpergewicht (geglattet)';
+  String get analyticsBodyNutritionTotalWeightLabel => 'Gesamtgewicht (kg)';
 
   @override
-  String get analyticsCaloriesTrendLabel => 'Kalorien (tägl. Trend)';
+  String get analyticsBodyNutritionTotalCaloriesLabel =>
+      'Gesamtkalorien (kcal)';
+
+  @override
+  String get analyticsWeightTrendLabel => 'Gewicht (kg)';
+
+  @override
+  String get analyticsCaloriesTrendLabel => 'Kalorien (kcal)';
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';

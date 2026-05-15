@@ -2032,7 +2032,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         : '${body!.weightChangeKg! >= 0 ? '+' : ''}${body.weightChangeKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
     final caloriesValue = body == null || body.loggedCalorieDays <= 0
         ? '-'
-        : '${body.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';
+        : '${body.caloriesDaily.fold<double>(0.0, (sum, point) => sum + point.value).round()} kcal';
     final relationship = body == null
         ? l10n.analyticsInsightNotEnoughData
         : StatisticsPresentationFormatter.bodyNutritionRelationshipLabel(
@@ -2077,7 +2077,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     l10n.metricsWeightChange,
                     weightChangeValue,
                   ),
-                  _buildBodyTrendPill(l10n.metricsAvgCalories, caloriesValue),
+                  _buildBodyTrendPill(
+                    l10n.analyticsBodyNutritionTotalCaloriesLabel,
+                    caloriesValue,
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -2117,12 +2120,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 children: [
                   _legendDot(
                     color: Theme.of(context).colorScheme.primary,
-                    label: l10n.analyticsWeightTrendLabel,
+                    label: l10n.analyticsBodyNutritionTotalWeightLabel,
                   ),
                   const SizedBox(width: 12),
                   _legendDot(
-                    color: Theme.of(context).colorScheme.secondary,
-                    label: l10n.analyticsCaloriesTrendLabel,
+                    color: const Color(0xFFF97316),
+                    label: l10n.analyticsBodyNutritionTotalCaloriesLabel,
                   ),
                 ],
               ),
@@ -2130,9 +2133,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               SizedBox(
                 height: 84,
                 child: BodyNutritionNormalizedTrendChart(
-                  range: body?.normalizedTrendRange,
-                  weightSeries: body?.normalizedWeightTrend ?? const [],
-                  calorieSeries: body?.normalizedCaloriesTrend ?? const [],
+                  range: body?.range,
+                  weightSeries: body?.weightDaily ?? const [],
+                  calorieSeries: body?.caloriesDaily ?? const [],
                   compact: true,
                 ),
               ),
@@ -2245,7 +2248,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
       ],
     );
   }

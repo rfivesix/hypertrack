@@ -3166,21 +3166,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsBodyNutritionTrendContext =>
-      'Body weight and calorie trends';
+      'Weight and calories over time';
 
   @override
   String get analyticsBodyNutritionTrendContextHint =>
-      'These lines show relative trend movement over the same period.';
+      'The chart scales each series to fit the same space; tooltips show raw kg and kcal values.';
 
   @override
   String get analyticsBodyNutritionNormalizedHint =>
-      'Both lines are normalized to the same starting baseline to compare relative direction.';
+      'The chart scales weight and calories to fit the same space; tooltips show raw kg and kcal values.';
 
   @override
-  String get analyticsWeightTrendLabel => 'Body weight (smoothed)';
+  String get analyticsBodyNutritionTotalWeightLabel => 'Total weight (kg)';
 
   @override
-  String get analyticsCaloriesTrendLabel => 'Calories (daily avg trend)';
+  String get analyticsBodyNutritionTotalCaloriesLabel =>
+      'Total calories (kcal)';
+
+  @override
+  String get analyticsWeightTrendLabel => 'Weight (kg)';
+
+  @override
+  String get analyticsCaloriesTrendLabel => 'Calories (kcal)';
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';

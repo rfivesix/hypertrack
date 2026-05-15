@@ -10,14 +10,16 @@ class BodyNutritionAnalyticsEngine {
   const BodyNutritionAnalyticsEngine._();
 
   static DateTime normalizeDay(DateTime date) =>
-      DateTime(date.year, date.month, date.day);
+      DateTime.utc(date.year, date.month, date.day);
 
   static BodyNutritionAnalyticsResult build({
     required DateTimeRange range,
     required List<ChartDataPoint> weightPoints,
     required Map<DateTime, double> caloriesByDay,
   }) {
-    final allDays = _enumerateDays(range.start, range.end);
+    final normalizedRangeStart = normalizeDay(range.start);
+    final normalizedRangeEnd = normalizeDay(range.end);
+    final allDays = _enumerateDays(normalizedRangeStart, normalizedRangeEnd);
     final totalDays = allDays.length;
     final weightByDay = _latestWeightPerDay(weightPoints);
     final loggedCaloriesByDay = <DateTime, double>{};

@@ -7,8 +7,8 @@ import 'package:train_libre/models/chart_data_point.dart';
 void main() {
   group('BodyNutritionAnalyticsEngine trend summary', () {
     test('classifies clear cut-like pattern as aligned', () {
-      final start = DateTime(2026, 1, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 2, 14));
+      final start = DateTime.utc(2026, 1, 1);
+      final range = DateTimeRange(start: start, end: DateTime.utc(2026, 2, 14));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: List.generate(
@@ -38,8 +38,8 @@ void main() {
     });
 
     test('classifies stable maintenance-like pattern', () {
-      final start = DateTime(2026, 3, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 4, 10));
+      final start = DateTime.utc(2026, 3, 1);
+      final range = DateTimeRange(start: start, end: DateTime.utc(2026, 4, 10));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: List.generate(
@@ -64,8 +64,8 @@ void main() {
     });
 
     test('classifies clear bulk-like pattern as aligned', () {
-      final start = DateTime(2026, 5, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 6, 20));
+      final start = DateTime.utc(2026, 5, 1);
+      final range = DateTimeRange(start: start, end: DateTime.utc(2026, 6, 20));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: List.generate(
@@ -90,8 +90,8 @@ void main() {
     });
 
     test('gates sparse data as insufficient', () {
-      final start = DateTime(2026, 7, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 7, 14));
+      final start = DateTime.utc(2026, 7, 1);
+      final range = DateTimeRange(start: start, end: DateTime.utc(2026, 7, 14));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: [
@@ -113,8 +113,8 @@ void main() {
     });
 
     test('classifies opposing trends as mixed or unclear', () {
-      final start = DateTime(2026, 8, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 9, 15));
+      final start = DateTime.utc(2026, 8, 1);
+      final range = DateTimeRange(start: start, end: DateTime.utc(2026, 9, 15));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: List.generate(
@@ -137,8 +137,8 @@ void main() {
     });
 
     test('normalized comparison starts both series from same baseline', () {
-      final start = DateTime(2026, 10, 1);
-      final range = DateTimeRange(start: start, end: DateTime(2026, 10, 30));
+      final start = DateTime.utc(2026, 10, 1);
+      final range = DateTimeRange(start: start, end: DateTime.utc(2026, 10, 30));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: List.generate(

@@ -109,8 +109,8 @@ void main() {
       expect(result.weightPoints.length, 1);
       expect(result.weightPoints.first.date, measurementDate);
       expect(result.weightPoints.first.value, 80.0);
-      expect(result.caloriesByDay[DateTime(2026, 4, 2)], closeTo(420.0, 0.001));
-      expect(result.caloriesByDay[DateTime(2026, 4, 3)], closeTo(80.0, 0.001));
+      expect(result.caloriesByDay[DateTime.utc(2026, 4, 2)], closeTo(420.0, 0.001));
+      expect(result.caloriesByDay[DateTime.utc(2026, 4, 3)], closeTo(80.0, 0.001));
     });
 
     test('all-time range without data falls back to current day only',
