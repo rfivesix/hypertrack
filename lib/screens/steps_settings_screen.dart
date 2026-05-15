@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../generated/app_localizations.dart';
@@ -183,14 +185,16 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
                         title: Text(l10n.filterAll),
                         value: StepsProviderFilter.all,
                       ),
-                      RadioListTile<StepsProviderFilter>(
-                        title: Text(l10n.statisticsProviderAppleHealth),
-                        value: StepsProviderFilter.apple,
-                      ),
-                      RadioListTile<StepsProviderFilter>(
-                        title: Text(l10n.statisticsProviderHealthConnect),
-                        value: StepsProviderFilter.google,
-                      ),
+                      if (Platform.isIOS)
+                        RadioListTile<StepsProviderFilter>(
+                          title: Text(l10n.statisticsProviderAppleHealth),
+                          value: StepsProviderFilter.apple,
+                        ),
+                      if (Platform.isAndroid)
+                        RadioListTile<StepsProviderFilter>(
+                          title: Text(l10n.statisticsProviderHealthConnect),
+                          value: StepsProviderFilter.google,
+                        ),
                     ],
                   ),
                 ),

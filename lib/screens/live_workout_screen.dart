@@ -2,6 +2,7 @@
 // FINAL: Cardio fix + null safety + header logic
 
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../util/design_constants.dart';
@@ -17,6 +18,7 @@ import '../models/workout_log.dart';
 import '../models/set_template.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/workout_session_manager.dart';
+import '../services/unit_service.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
 import 'general_exercise_selection_screen.dart';
@@ -43,7 +45,8 @@ class LiveWorkoutScreen extends StatefulWidget {
   State<LiveWorkoutScreen> createState() => _LiveWorkoutScreenState();
 }
 
-class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
+class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
+    with TickerProviderStateMixin {
   final Map<int, TextEditingController> _weightControllers = {};
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _rirControllers = {};
@@ -54,9 +57,31 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   late final VoidCallback _onManagerUpdateCallback;
   WorkoutSessionManager? _manager;
 
+  // PR Celebration State
+  StreamSubscription<PREvent>? _prEventsSubscription;
+  final List<PREvent> _prQueue = [];
+  bool _isShowingPR = false;
+  PREvent? _currentPR;
+  late final AnimationController _prAnimationController;
+  late final Animation<Offset> _prSlideAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    _prAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _prSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _prAnimationController,
+      curve: Curves.elasticOut,
+      reverseCurve: Curves.easeInBack,
+    ));
+
     _onManagerUpdateCallback = () {
       if (mounted) {
         final manager = Provider.of<WorkoutSessionManager>(
@@ -77,12 +102,37 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       );
       _manager = manager;
       manager.addListener(_onManagerUpdateCallback);
+
+      _prEventsSubscription = manager.prEvents.listen((event) {
+        _prQueue.add(event);
+        _processPRQueue();
+      });
     });
+  }
+
+  void _processPRQueue() async {
+    if (_isShowingPR || _prQueue.isEmpty) return;
+
+    _isShowingPR = true;
+    _currentPR = _prQueue.removeAt(0);
+    if (mounted) setState(() {});
+
+    await _prAnimationController.forward();
+    await Future.delayed(const Duration(milliseconds: 3500));
+    if (mounted) {
+      await _prAnimationController.reverse();
+      _isShowingPR = false;
+      _currentPR = null;
+      setState(() {});
+      _processPRQueue();
+    }
   }
 
   @override
   void dispose() {
     _manager?.removeListener(_onManagerUpdateCallback);
+    _prEventsSubscription?.cancel();
+    _prAnimationController.dispose();
     _clearControllers();
     super.dispose();
   }
@@ -118,6 +168,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   }
 
   void _syncControllersWithManager(WorkoutSessionManager manager) {
+    final unitService = context.read<UnitService>();
     manager.setLogs.forEach((templateId, setLog) {
       // Find the associated exercise
       final exercise = manager.exercises.firstWhere(
@@ -136,8 +187,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         } else {
           // Strength: weight
-          initText =
-              setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+          initText = setLog.weightKg == null
+              ? ''
+              : unitService
+                  .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
+                  .toStringAsFixed(1)
+                  .replaceAll('.0', '');
         }
 
         _weightControllers[templateId] = TextEditingController(text: initText);
@@ -158,10 +213,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             }
           } else {
             // Update Weight
-            if (val != manager.setLogs[templateId]?.weightKg || clearValue) {
+            final metricValue = val == null
+                ? null
+                : unitService.convertToMetric(val, UnitDimension.weight);
+            if (metricValue != manager.setLogs[templateId]?.weightKg ||
+                clearValue) {
               manager.updateSet(
                 templateId,
-                weight: val,
+                weight: metricValue,
                 clearWeight: clearValue,
               );
             }
@@ -229,8 +288,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       // update the UI text fields to show the accepted fallback number.
       if (setLog.weightKg != null &&
           _weightControllers[templateId]?.text.isEmpty == true) {
-        _weightControllers[templateId]!.text =
-            setLog.weightKg!.toStringAsFixed(1).replaceAll('.0', '');
+        _weightControllers[templateId]!.text = unitService
+            .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
+            .toStringAsFixed(1)
+            .replaceAll('.0', '');
       }
       if (setLog.distanceKm != null &&
           _weightControllers[templateId]?.text.isEmpty == true &&
@@ -486,6 +547,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   Widget _buildHeaderRow(RoutineExercise re, AppLocalizations l10n) {
     // Important: cardio check here.
     final bool isCardio = _isCardio(re);
+    final unitService = context.read<UnitService>();
 
     if (isCardio) {
       return Row(
@@ -507,7 +569,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       children: [
         _buildHeader(l10n.setLabel, flex: 2),
         _buildHeader(l10n.lastTimeLabel, flex: 3),
-        _buildHeader(l10n.kgLabel, flex: 2),
+        _buildHeader(unitService.suffixFor(UnitDimension.weight), flex: 2),
         const SizedBox(width: 8),
         _buildHeader(l10n.repsLabel, flex: 2),
         const SizedBox(width: 8),
@@ -534,6 +596,185 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
   }
 
+  String _getLocalizedRecordType(String recordType) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (recordType) {
+      case "Best Max Weight":
+        return l10n.prBannerBestMaxWeight;
+      case "Best Volume Set":
+        return l10n.prBannerBestVolumeSet;
+      case "Best 1-Rep Max":
+        return l10n.prBannerBest1RM;
+      default:
+        return recordType;
+    }
+  }
+
+  Widget _buildPRCelebrationBanner() {
+    if (_currentPR == null) return const SizedBox.shrink();
+
+    final localizedRecordType = _getLocalizedRecordType(_currentPR!.recordType);
+    final unitService = context.read<UnitService>();
+    final String achievementText = _formatDisplayWeightText(
+      _currentPR!.achievementValue,
+      unitService,
+    );
+    final String diffText = _currentPR!.diff != null
+        ? " (+${_formatDisplayWeightValue(_currentPR!.diff!, unitService)} ${unitService.suffixFor(UnitDimension.weight)})"
+        : "";
+
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
+    final backgroundColor = isLightMode
+        ? Colors.white.withValues(alpha: 0.8)
+        : Colors.black.withValues(alpha: 0.8);
+    final borderColor = isLightMode
+        ? Colors.grey.withValues(alpha: 0.3)
+        : Colors.amber.withValues(alpha: 0.4);
+    final primaryTextColor = isLightMode ? Colors.black : Colors.white;
+    final secondaryTextColor = isLightMode ? Colors.black87 : Colors.white70;
+
+    return SlideTransition(
+      position: _prSlideAnimation,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: borderColor,
+                    width: 1.5,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _currentPR!.exerciseName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: secondaryTextColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.emoji_events,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: primaryTextColor,
+                              ),
+                              children: [
+                                TextSpan(text: "$localizedRecordType - "),
+                                TextSpan(
+                                  text: achievementText,
+                                  style: const TextStyle(color: Colors.amber),
+                                ),
+                                if (diffText.isNotEmpty)
+                                  TextSpan(
+                                    text: diffText,
+                                    style: TextStyle(
+                                      color:
+                                          Colors.amber.withValues(alpha: 0.8),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPRBadge(SetLog setLog) {
+    final l10n = AppLocalizations.of(context)!;
+    final unitService = context.read<UnitService>();
+    String label = l10n.newPersonalRecordLabel;
+
+    if (setLog.isMaxWeightPR && setLog.weightPRDiff != null) {
+      label =
+          "+${_formatDisplayWeightValue(setLog.weightPRDiff!, unitService)} ${unitService.suffixFor(UnitDimension.weight)}";
+    } else if (setLog.isMaxEst1RMPR && setLog.est1rmPRDiff != null) {
+      label =
+          "+${_formatDisplayWeightValue(setLog.est1rmPRDiff!, unitService)} ${unitService.suffixFor(UnitDimension.weight)} (1RM)";
+    } else if (setLog.isMaxVolumePR && setLog.volumePRDiff != null) {
+      label =
+          "+${_formatDisplayWeightValue(setLog.volumePRDiff!, unitService, fractionDigits: 0)} ${unitService.suffixFor(UnitDimension.weight)} (Vol)";
+    }
+
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 600),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: child,
+        );
+      },
+      child: Tooltip(
+        message: l10n.prBadgeTooltip,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.emoji_events,
+                color: Colors.amber,
+                size: 14,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSetRow(
     int setIndex,
     int rowIndex,
@@ -545,6 +786,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     final l10n = AppLocalizations.of(context)!;
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final bool isCompleted = setLog.isCompleted ?? false;
+    final unitService = context.read<UnitService>();
 
     // Cardio Check
     final exercise = manager.exercises.firstWhere(
@@ -571,8 +813,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       repHint = "-"; // Time Hint
     } else {
       final double tWeight = template.targetWeight ?? 0.0;
-      weightHint =
-          tWeight > 0 ? tWeight.toStringAsFixed(1).replaceAll('.0', '') : '0';
+      weightHint = tWeight > 0
+          ? unitService
+              .convertDisplayValue(tWeight, UnitDimension.weight)
+              .toStringAsFixed(1)
+              .replaceAll('.0', '')
+          : '0';
       repHint = (template.targetReps?.isNotEmpty == true)
           ? template.targetReps!
           : '0';
@@ -590,7 +836,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                 _getSetDisplayText(setLog.setType, setIndex),
                 style: TextStyle(
                   color: _getSetTypeColor(setLog.setType),
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -605,10 +851,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               ? const SizedBox.shrink() // For cardio, do not show history yet.
               : Text(
                   (rowIndex < lastPerfSets.length)
-                      ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
+                      ? "${unitService.convertDisplayValue(lastPerfSets[rowIndex].weightKg ?? 0, UnitDimension.weight).toStringAsFixed(1).replaceAll('.0', '')}${unitService.suffixFor(UnitDimension.weight)} × ${lastPerfSets[rowIndex].reps}"
                       : "-",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
         ),
 
@@ -619,12 +869,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             controller: _weightControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
               hintText: weightHint,
-              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
+              hintStyle: TextStyle(
+                color: Colors.grey.withValues(alpha: 0.5),
+                fontSize: 18,
+              ),
             ),
             enabled: !isCompleted,
           ),
@@ -638,6 +892,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             controller: _repsControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
@@ -645,7 +900,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
               hintText: repHint,
               hintStyle: TextStyle(
                 color: Colors.grey.withValues(alpha: 0.5),
-                fontSize: 14,
+                fontSize: 18,
               ),
             ),
             enabled: !isCompleted,
@@ -661,12 +916,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
               hintText: rirHint,
-              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
+              hintStyle: TextStyle(
+                color: Colors.grey.withValues(alpha: 0.5),
+                fontSize: 18,
+              ),
             ),
             enabled: !isCompleted,
           ),
@@ -675,17 +934,24 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         // 6. CHECKBOX
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
-          child: SizedBox(
-            width: 48,
-            child: IconButton(
-              icon: Icon(
-                isCompleted ? Icons.check_circle : Icons.check_circle_outline,
-                color: isCompleted ? Colors.green : Colors.grey,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 48,
+                child: IconButton(
+                  icon: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    color: isCompleted ? Colors.green : Colors.grey,
+                  ),
+                  onPressed: () {
+                    manager.updateSet(templateId, isCompleted: !isCompleted);
+                  },
+                ),
               ),
-              onPressed: () {
-                manager.updateSet(templateId, isCompleted: !isCompleted);
-              },
-            ),
+            ],
           ),
         ),
       ],
@@ -697,22 +963,34 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     );
     final showCurrentSetE1rm = !isCardio && currentSetE1rm != null;
 
-    final rowWithE1rm = Column(
+    final bool hasPR = isCompleted &&
+        (setLog.isMaxWeightPR || setLog.isMaxVolumePR || setLog.isMaxEst1RMPR);
+
+    final rowWithSubInfo = Column(
       children: [
         rowContent,
-        if (showCurrentSetE1rm)
+        if (showCurrentSetE1rm || hasPR)
           Padding(
             padding: const EdgeInsets.only(right: 12.0, bottom: 4.0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                l10n.liveWorkoutE1rmCurrentSet(_formatKg(currentSetE1rm)),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (hasPR) ...[
+                  _buildPRBadge(setLog),
+                  if (showCurrentSetE1rm) const SizedBox(width: 8),
+                ],
+                if (showCurrentSetE1rm)
+                  Text(
+                    l10n.liveWorkoutE1rmCurrentSet(
+                      _formatDisplayWeightValue(currentSetE1rm, unitService),
+                    ),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
             ),
           ),
       ],
@@ -737,7 +1015,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
                   isCompleted ? Colors.green.withValues(alpha: 0.2) : rowColor,
             ),
           ),
-          rowWithE1rm,
+          rowWithSubInfo,
         ],
       ),
     );
@@ -748,6 +1026,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     RoutineExercise routineExercise,
     WorkoutSessionManager manager,
   ) {
+    final unitService = context.read<UnitService>();
     final sessionBest = _getSessionBestE1rm(routineExercise, manager);
     if (sessionBest == null) return const SizedBox.shrink();
 
@@ -767,7 +1046,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
         children: [
           Expanded(
             child: Text(
-              l10n.liveWorkoutE1rmBestSession(_formatKg(sessionBest)),
+              l10n.liveWorkoutE1rmBestSession(
+                _formatDisplayWeightValue(sessionBest, unitService),
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -776,7 +1057,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
           if (hasDelta)
             Text(
               l10n.liveWorkoutE1rmVsLastSession(
-                '$deltaPrefix${_formatKg(delta!.abs())}',
+                '$deltaPrefix${_formatDisplayWeightValue(delta!.abs(), unitService)}',
               ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isPositive
@@ -831,6 +1112,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    context.watch<UnitService>();
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final manager = Provider.of<WorkoutSessionManager>(context);
@@ -942,187 +1224,215 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : Stack(
               children: [
-                WorkoutSummaryBar(
-                  duration: mgr.elapsedDuration,
-                  volume: mgr.totalVolume,
-                  sets: planned,
-                  progress: progress,
-                ),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
-                ),
-                Expanded(
-                  child: manager.exercises.isEmpty
-                      ? _buildEmptyState(l10n)
-                      : ReorderableListView.builder(
-                          padding: const EdgeInsets.only(
-                            bottom: DesignConstants.bottomContentSpacer,
-                          ),
-                          onReorder: _onReorder,
-                          itemCount: manager.exercises.length,
-                          itemBuilder: (context, index) {
-                            final routineExercise = manager.exercises[index];
-                            final showE1rmSummary = !_isCardio(routineExercise);
-                            return WorkoutCard(
-                              key: ValueKey(routineExercise.id),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0,
-                                      vertical: 8.0,
-                                    ),
-                                    leading: ReorderableDragStartListener(
-                                      index: index,
-                                      child: const Icon(Icons.drag_handle),
-                                    ),
-                                    title: InkWell(
-                                      onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ExerciseDetailScreen(
-                                            exercise: routineExercise.exercise,
+                Column(
+                  children: [
+                    WorkoutSummaryBar(
+                      duration: mgr.elapsedDuration,
+                      volume: mgr.totalVolume,
+                      sets: planned,
+                      progress: progress,
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
+                    ),
+                    Expanded(
+                      child: manager.exercises.isEmpty
+                          ? _buildEmptyState(l10n)
+                          : ReorderableListView.builder(
+                              padding: const EdgeInsets.only(
+                                bottom: DesignConstants.bottomContentSpacer,
+                              ),
+                              onReorder: _onReorder,
+                              itemCount: manager.exercises.length,
+                              itemBuilder: (context, index) {
+                                final routineExercise =
+                                    manager.exercises[index];
+                                final showE1rmSummary =
+                                    !_isCardio(routineExercise);
+                                return WorkoutCard(
+                                  key: ValueKey(routineExercise.id),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ListTile(
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 16.0,
+                                          vertical: 8.0,
+                                        ),
+                                        leading: ReorderableDragStartListener(
+                                          index: index,
+                                          child: const Icon(Icons.drag_handle),
+                                        ),
+                                        title: InkWell(
+                                          onTap: () =>
+                                              Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ExerciseDetailScreen(
+                                                exercise:
+                                                    routineExercise.exercise,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 4.0,
-                                        ),
-                                        child: Text(
-                                          routineExercise.exercise
-                                              .getLocalizedName(context),
-                                          style: textTheme.titleLarge?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (manager.pauseTimes[
-                                                    routineExercise.id!] !=
-                                                null &&
-                                            manager.pauseTimes[
-                                                    routineExercise.id!]! >
-                                                0)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              right: 4.0,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 4.0,
                                             ),
                                             child: Text(
-                                              "${manager.pauseTimes[routineExercise.id!]}s",
-                                              style: textTheme.bodyMedium
+                                              routineExercise.exercise
+                                                  .getLocalizedName(context),
+                                              style: textTheme.titleLarge
                                                   ?.copyWith(
-                                                color: colorScheme.primary,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.timer_outlined,
-                                          ),
-                                          tooltip: l10n.editPauseTime,
-                                          onPressed: () =>
-                                              editPauseTime(routineExercise),
                                         ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.redAccent,
-                                          ),
-                                          tooltip: l10n.removeExercise,
-                                          onPressed: () =>
-                                              _removeExercise(routineExercise),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (manager.pauseTimes[
+                                                        routineExercise.id!] !=
+                                                    null &&
+                                                manager.pauseTimes[
+                                                        routineExercise.id!]! >
+                                                    0)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  right: 4.0,
+                                                ),
+                                                child: Text(
+                                                  "${manager.pauseTimes[routineExercise.id!]}s",
+                                                  style: textTheme.bodyMedium
+                                                      ?.copyWith(
+                                                    color: colorScheme.primary,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.timer_outlined,
+                                              ),
+                                              tooltip: l10n.editPauseTime,
+                                              onPressed: () => editPauseTime(
+                                                routineExercise,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.redAccent,
+                                              ),
+                                              tooltip: l10n.removeExercise,
+                                              onPressed: () => _removeExercise(
+                                                routineExercise,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      if (showE1rmSummary)
+                                        _buildExerciseE1rmSummary(
+                                          l10n,
+                                          routineExercise,
+                                          manager,
+                                        ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 0.0,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // FIX: Insert header row dynamically.
+                                            _buildHeaderRow(
+                                              routineExercise,
+                                              l10n,
+                                            ),
+
+                                            // Set Rows
+                                            ...routineExercise.setTemplates
+                                                .asMap()
+                                                .entries
+                                                .map((setEntry) {
+                                              final templateId =
+                                                  setEntry.value.id!;
+                                              final template = setEntry
+                                                  .value; // <--- Template
+                                              final setLog =
+                                                  manager.setLogs[templateId];
+
+                                              if (setLog == null) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              int workingSetIndex = 0;
+                                              for (int i = 0;
+                                                  i <= setEntry.key;
+                                                  i++) {
+                                                final currentTemplateId =
+                                                    routineExercise
+                                                        .setTemplates[i].id!;
+                                                if (manager
+                                                        .setLogs[
+                                                            currentTemplateId]
+                                                        ?.setType !=
+                                                    'warmup') {
+                                                  workingSetIndex++;
+                                                }
+                                              }
+
+                                              return _buildSetRow(
+                                                workingSetIndex,
+                                                setEntry.key,
+                                                templateId,
+                                                setLog,
+                                                _lastPerformances[
+                                                        routineExercise
+                                                            .exercise.nameEn] ??
+                                                    [],
+                                                template, // <--- Pass template
+                                              );
+                                            }),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 16.0,
+                                              ),
+                                              child: TextButton.icon(
+                                                onPressed: () =>
+                                                    _addSet(routineExercise),
+                                                icon: const Icon(Icons.add),
+                                                label: Text(l10n.addSetButton),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  if (showE1rmSummary)
-                                    _buildExerciseE1rmSummary(
-                                      l10n,
-                                      routineExercise,
-                                      manager,
-                                    ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // FIX: Insert header row dynamically.
-                                        _buildHeaderRow(routineExercise, l10n),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
 
-                                        // Set Rows
-                                        ...routineExercise.setTemplates
-                                            .asMap()
-                                            .entries
-                                            .map((setEntry) {
-                                          final templateId = setEntry.value.id!;
-                                          final template =
-                                              setEntry.value; // <--- Template
-                                          final setLog =
-                                              manager.setLogs[templateId];
-
-                                          if (setLog == null) {
-                                            return const SizedBox.shrink();
-                                          }
-                                          int workingSetIndex = 0;
-                                          for (int i = 0;
-                                              i <= setEntry.key;
-                                              i++) {
-                                            final currentTemplateId =
-                                                routineExercise
-                                                    .setTemplates[i].id!;
-                                            if (manager
-                                                    .setLogs[currentTemplateId]
-                                                    ?.setType !=
-                                                'warmup') {
-                                              workingSetIndex++;
-                                            }
-                                          }
-
-                                          return _buildSetRow(
-                                            workingSetIndex,
-                                            setEntry.key,
-                                            templateId,
-                                            setLog,
-                                            _lastPerformances[routineExercise
-                                                    .exercise.nameEn] ??
-                                                [],
-                                            template, // <--- Pass template
-                                          );
-                                        }),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0,
-                                          ),
-                                          child: TextButton.icon(
-                                            onPressed: () =>
-                                                _addSet(routineExercise),
-                                            icon: const Icon(Icons.add),
-                                            label: Text(l10n.addSetButton),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                // --- Top Celebration Banner ---
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildPRCelebrationBanner(),
                 ),
               ],
             ),
@@ -1323,5 +1633,30 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen> {
     return best;
   }
 
-  String _formatKg(double value) => value.toStringAsFixed(1);
+  String _formatDisplayWeightText(
+    String metricText,
+    UnitService unitService, {
+    int fractionDigits = 1,
+  }) {
+    final value = _extractNumericValue(metricText);
+    if (value == null) return metricText;
+    return '${_formatDisplayWeightValue(value, unitService, fractionDigits: fractionDigits)} ${unitService.suffixFor(UnitDimension.weight)}';
+  }
+
+  String _formatDisplayWeightValue(
+    double metricValue,
+    UnitService unitService, {
+    int fractionDigits = 1,
+  }) {
+    return unitService
+        .convertDisplayValue(metricValue, UnitDimension.weight)
+        .toStringAsFixed(fractionDigits)
+        .replaceAll('.0', '');
+  }
+
+  double? _extractNumericValue(String text) {
+    final match = RegExp(r'[-+]?\d+(?:[.,]\d+)?').firstMatch(text);
+    if (match == null) return null;
+    return double.tryParse(match.group(0)!.replaceAll(',', '.'));
+  }
 }

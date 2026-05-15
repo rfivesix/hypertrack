@@ -12,6 +12,21 @@ import '../data/workout_database_helper.dart';
 import '../models/set_template.dart';
 import 'local_notification_service.dart';
 
+/// Represents a Personal Record event for UI celebration.
+class PREvent {
+  final String exerciseName;
+  final String recordType; // e.g., "Max Weight", "Volume", "Est. 1RM"
+  final String achievementValue; // e.g., "115.4 kg"
+  final double? diff; // e.g., 5.0
+
+  PREvent({
+    required this.exerciseName,
+    required this.recordType,
+    required this.achievementValue,
+    this.diff,
+  });
+}
+
 /// Manager responsible for the lifecycle and state of an active workout session.
 ///
 /// Handles session timing, set tracking, rest periods, and data persistence
@@ -66,11 +81,21 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   /// The total number of sets recorded in the current session.
   int _totalSets = 0;
 
+  /// Map of historical bests per exercise name for PR detection.
+  final Map<String, Map<String, double>> _exerciseBests = {};
+
   /// Returns the total volume lifted.
   double get totalVolume => _totalVolume;
 
   /// Returns the total number of sets.
   int get totalSets => _totalSets;
+
+  /// Stream controller for PR events to trigger UI celebrations.
+  final StreamController<PREvent> _prEventsController =
+      StreamController<PREvent>.broadcast();
+
+  /// Stream of PR events.
+  Stream<PREvent> get prEvents => _prEventsController.stream;
 
   /// The active [WorkoutLog] being recorded.
   WorkoutLog? get workoutLog => _workoutLog;
@@ -104,6 +129,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     _workoutLog = null;
     _exercises.clear();
     _setLogs.clear();
+    _exerciseBests.clear();
     pauseTimes.clear();
     _remainingRestSeconds = 0;
     _showRestDone = false;
@@ -312,6 +338,109 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
   // ACTIONS
   // ===========================================================================
 
+  Future<void> _checkAndApplyPRs(SetLog setLog, int templateId) async {
+    final exName = setLog.exerciseName;
+
+    if (!_exerciseBests.containsKey(exName)) {
+      // Resolve exercise to get UUID for better matching if possible
+      final exercise = await _workoutDb.getExerciseByName(exName);
+      final altName = exercise?.nameEn != exName ? exercise?.nameEn : null;
+      final exerciseUuid = exercise?.id != null
+          ? await _workoutDb.getExerciseUuidByLocalId(exercise!.id!)
+          : null;
+
+      final bests = await _workoutDb.getExerciseBests(
+        exName,
+        altName: altName,
+        exerciseUuid: exerciseUuid,
+      );
+      _exerciseBests[exName] = bests;
+    }
+
+    final bests = _exerciseBests[exName]!;
+    final currentWeight = setLog.weightKg ?? 0.0;
+    final currentReps = setLog.reps ?? 0;
+    final currentVolume = currentWeight * currentReps;
+    double currentEst1rm = 0.0;
+    if (currentReps > 0 && currentReps <= 10) {
+      currentEst1rm = currentWeight * (36 / (37 - currentReps));
+    }
+
+    bool isMaxWeightPR = false;
+    bool isMaxVolumePR = false;
+    bool isMaxEst1RMPR = false;
+
+    double? weightDiff;
+    double? volumeDiff;
+    double? est1rmDiff;
+
+    if (currentWeight > 0) {
+      final oldMaxWeight = bests['maxWeight'] ?? 0.0;
+      if (currentWeight > oldMaxWeight) {
+        isMaxWeightPR = true;
+        weightDiff = oldMaxWeight > 0 ? currentWeight - oldMaxWeight : null;
+        bests['maxWeight'] = currentWeight;
+      }
+
+      final oldMaxVolume = bests['maxVolume'] ?? 0.0;
+      if (currentVolume > oldMaxVolume) {
+        isMaxVolumePR = true;
+        volumeDiff = oldMaxVolume > 0 ? currentVolume - oldMaxVolume : null;
+        bests['maxVolume'] = currentVolume;
+      }
+
+      final oldMaxEst1rm = bests['maxEst1rm'] ?? 0.0;
+      if (currentEst1rm > oldMaxEst1rm) {
+        isMaxEst1RMPR = true;
+        est1rmDiff = oldMaxEst1rm > 0 ? currentEst1rm - oldMaxEst1rm : null;
+        bests['maxEst1rm'] = currentEst1rm;
+      }
+    }
+
+    if (isMaxWeightPR || isMaxVolumePR || isMaxEst1RMPR) {
+      // Trigger Haptic Feedback
+      HapticFeedback.heavyImpact();
+
+      _setLogs[templateId] = _setLogs[templateId]!.copyWith(
+        isMaxWeightPR: isMaxWeightPR,
+        isMaxVolumePR: isMaxVolumePR,
+        isMaxEst1RMPR: isMaxEst1RMPR,
+        weightPRDiff: weightDiff,
+        volumePRDiff: volumeDiff,
+        est1rmPRDiff: est1rmDiff,
+      );
+
+      // Emit Events for UI Celebration
+      if (isMaxWeightPR) {
+        _prEventsController.add(PREvent(
+          exerciseName: exName,
+          recordType: "Best Max Weight",
+          achievementValue:
+              "${currentWeight.toStringAsFixed(1).replaceAll('.0', '')} kg",
+          diff: weightDiff,
+        ));
+      }
+      if (isMaxVolumePR) {
+        _prEventsController.add(PREvent(
+          exerciseName: exName,
+          recordType: "Best Volume Set",
+          achievementValue:
+              "${currentVolume.toStringAsFixed(0)} kg",
+          diff: volumeDiff,
+        ));
+      }
+      if (isMaxEst1RMPR) {
+        _prEventsController.add(PREvent(
+          exerciseName: exName,
+          recordType: "Best 1-Rep Max",
+          achievementValue:
+              "${currentEst1rm.toStringAsFixed(1).replaceAll('.0', '')} kg",
+          diff: est1rmDiff,
+        ));
+      }
+    }
+  }
+
   /// Updates a specific set identified by [templateId] with new data.
   ///
   /// Handles fallback logic for empty inputs when a set is completed and
@@ -403,7 +532,13 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     );
 
     _setLogs[templateId] = newLog;
-    await _workoutDb.insertSetLog(newLog); // Update in DB
+
+    // PR Detection logic
+    if (newlyCompleted && newLog.setType != 'warmup') {
+      await _checkAndApplyPRs(newLog, templateId);
+    }
+
+    await _workoutDb.insertSetLog(_setLogs[templateId]!); // Update in DB
 
     // Timer logic (unchanged)
     if (isCompleted == true && oldLog.isCompleted != true) {
@@ -815,6 +950,7 @@ class WorkoutSessionManager extends ChangeNotifier with WidgetsBindingObserver {
     _restTimer?.cancel();
     _restDoneBannerTimer?.cancel();
     _workoutDurationTimer?.cancel();
+    _prEventsController.close();
     if (_registerLifecycleObserver) {
       WidgetsBinding.instance.removeObserver(this);
     }

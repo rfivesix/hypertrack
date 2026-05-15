@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/measurement_session.dart';
@@ -15,6 +16,7 @@ import '../widgets/measurement_chart_widget.dart';
 import '../widgets/summary_card.dart';
 import '../util/l10n_ext.dart';
 import '../widgets/swipe_action_background.dart';
+import '../services/unit_service.dart';
 
 /// A screen for viewing and analyzing body measurement history.
 ///
@@ -229,67 +231,64 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     ColorScheme colorScheme,
     TextTheme textTheme,
   ) {
+    final unitService = context.watch<UnitService>();
     if (_selectedChartType == null) return const SizedBox.shrink();
 
     return SummaryCard(
-      child: Padding(
-        padding: DesignConstants.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedChartType,
-                      isExpanded: true,
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            _selectedChartType = newValue;
-                          });
-                          _loadChartData();
-                        }
-                      },
-                      items: _availableMeasurementTypes
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(
-                            l10n.getLocalizedMeasurementName(value),
-                          ),
-                        );
-                      }).toList(),
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      icon: Icon(
-                        Icons.arrow_drop_down,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+      padding: DesignConstants.cardPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedChartType,
+                    isExpanded: true,
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _selectedChartType = newValue;
+                        });
+                        _loadChartData();
+                      }
+                    },
+                    items: _availableMeasurementTypes
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          l10n.getLocalizedMeasurementName(value),
+                        ),
+                      );
+                    }).toList(),
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    icon: Icon(
+                      Icons.arrow_drop_down,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _chartDateRangeKeys
-                      .map((key) => _buildFilterButton(key, key))
-                      .toList(),
-                ),
-              ],
-            ),
-            const SizedBox(height: DesignConstants.spacingL),
-            MeasurementChartWidget(
-              chartType: _selectedChartType!,
-              dateRange: _currentChartDateRange,
-              // FIX: The following line was removed.
-              // lineColor: colorScheme.primary,
-              unit: _getMeasurementUnit(_selectedChartType!),
-            ),
-          ],
-        ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: _chartDateRangeKeys
+                    .map((key) => _buildFilterButton(key, key))
+                    .toList(),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignConstants.spacingS),
+          MeasurementChartWidget(
+            chartType: _selectedChartType!,
+            dateRange: _currentChartDateRange,
+            unit: _getMeasurementUnit(_selectedChartType!, unitService),
+          ),
+        ],
       ),
     );
   }
@@ -331,6 +330,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     ColorScheme colorScheme,
     MeasurementSession session,
   ) {
+    final unitService = context.watch<UnitService>();
     final locale = Localizations.localeOf(context).toString();
     final sortedMeasurements = session.measurements.toList()
       ..sort((a, b) => a.type.compareTo(b.type));
@@ -391,7 +391,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                 leading: _getMeasurementIcon(measurement.type),
                 title: Text(l10n.getLocalizedMeasurementName(measurement.type)),
                 trailing: Text(
-                  "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                  "${_displayMeasurementValue(measurement.type, measurement.value, unitService).toStringAsFixed(1)} ${_getMeasurementUnit(measurement.type, unitService)}",
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -402,11 +402,39 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     );
   }
 
-  String _getMeasurementUnit(String type) {
+  double _displayMeasurementValue(
+    String type,
+    double value,
+    UnitService unitService,
+  ) {
+    switch (type) {
+      case 'weight':
+        return unitService.convertDisplayValue(value, UnitDimension.weight);
+      case 'neck':
+      case 'shoulder':
+      case 'chest':
+      case 'left_bicep':
+      case 'right_bicep':
+      case 'left_forearm':
+      case 'right_forearm':
+      case 'abdomen':
+      case 'waist':
+      case 'hips':
+      case 'left_thigh':
+      case 'right_thigh':
+      case 'left_calf':
+      case 'right_calf':
+        return unitService.convertDisplayValue(value, UnitDimension.height);
+      default:
+        return value;
+    }
+  }
+
+  String _getMeasurementUnit(String type, UnitService unitService) {
     // Return units based on the type here.
     switch (type) {
       case 'weight':
-        return 'kg';
+        return unitService.suffixFor(UnitDimension.weight);
       case 'fat_percent':
         return '%';
       case 'neck':
@@ -423,7 +451,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
       case 'right_thigh':
       case 'left_calf':
       case 'right_calf':
-        return 'cm';
+        return unitService.suffixFor(UnitDimension.height);
       default:
         return '';
     }

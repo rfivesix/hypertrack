@@ -12,6 +12,8 @@ import '../../widgets/analytics_chart_defaults.dart';
 import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
+import 'package:provider/provider.dart';
+import '../../services/unit_service.dart';
 
 enum _ConsistencyMetric { volume, duration, frequency }
 
@@ -100,7 +102,8 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
 
   String _metricUnit(AppLocalizations l10n) {
     return switch (_selectedMetric) {
-      _ConsistencyMetric.volume => l10n.analyticsUnitKg,
+      _ConsistencyMetric.volume =>
+        context.read<UnitService>().suffixFor(UnitDimension.weight),
       _ConsistencyMetric.duration => 'min',
       _ConsistencyMetric.frequency => l10n.analyticsPerWeekAbbrev,
     };

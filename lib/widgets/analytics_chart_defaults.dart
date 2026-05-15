@@ -35,14 +35,17 @@ class AnalyticsChartDefaults {
     required Color color,
     double barWidth = 2.5,
     bool showDots = false,
+    bool isStrokeCapRound = false,
+    FlDotData? dotData,
     BarAreaData? belowBarData,
   }) {
     return LineChartBarData(
       spots: spots,
       isCurved: false,
       barWidth: barWidth,
+      isStrokeCapRound: isStrokeCapRound,
       color: color,
-      dotData: FlDotData(show: showDots),
+      dotData: dotData ?? FlDotData(show: showDots),
       belowBarData: belowBarData ?? BarAreaData(show: false),
     );
   }

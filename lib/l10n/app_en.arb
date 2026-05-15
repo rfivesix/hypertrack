@@ -196,16 +196,24 @@
   "workoutNotFound": "Workout not found.",
   "totalVolumeLabel": "Total Volume",
   "notesLabel": "Notes",
-  "hevyImportTitle": "Hevy Import",
-  "hevyImportDescription": "Import your entire training history from a Hevy CSV export file.",
-  "hevyImportButton": "Import Hevy Data",
-  "hevyImportSuccess": "Successfully imported {count} workouts!",
-  "@hevyImportSuccess": {
+  "workoutImportTitle": "External Workout Import",
+  "workoutImportDescription": "Import your training history from a CSV or Excel export file.",
+  "workoutImportButton": "Import Workout Data",
+  "workoutImportSuccess": "Successfully imported {count} workouts!",
+  "@workoutImportSuccess": {
     "placeholders": {
       "count": {}
     }
   },
-  "hevyImportFailed": "Import failed. Please check the file.",
+  "workoutImportFailed": "Import failed. Please check the file.",
+  "importUnitSelectionTitle": "Import Unit",
+  "importUnitSelectionDescription": "In which unit is the data in the file provided?",
+  "unitMetricLabel": "Metric (kg)",
+  "unitImperialLabel": "Imperial (lbs)",
+  "excelExportButton": "Excel Export (.xlsx)",
+  "exportWorkoutHistory": "Workout History",
+  "exportNutritionDiary": "Nutrition Diary",
+  "exportMeasurements": "Measurements",
   "startWorkout": "Start Workout",
   "addMeasurement": "Add Measurement",
   "filterToday": "Today",
@@ -836,7 +844,7 @@
   "onboardingDobError": "Please select your date of birth",
 
   "onboardingWeightTitle": "Current Weight",
-  "onboardingWeightLabel": "Weight (kg)",
+  "onboardingWeightLabel": "Weight",
   "onboardingWeightError": "Please enter a valid weight",
 
   "onboardingGoalsTitle": "Your Nutrition Goals",
@@ -846,12 +854,18 @@
   "onboardingGoalProtein": "Protein (g)",
   "onboardingGoalCarbs": "Carbs (g)",
   "onboardingGoalFat": "Fat (g)",
-  "onboardingGoalWater": "Water (ml)",
+  "onboardingGoalWater": "Water",
 
   "onboardingNext": "Next",
   "onboardingBack": "Back",
   "onboardingFinish": "Start Tracking",
-  "onboardingHeightLabel": "Height (cm)",
+  "onboardingUnitSystemTitle": "Choose your Unit System",
+  "onboardingUnitSystemSubtitle": "You can change this later in Settings.",
+  "onboardingUnitMetric": "Metric",
+  "onboardingUnitMetricSubtitle": "kg, cm, ml",
+  "onboardingUnitImperial": "Imperial",
+  "onboardingUnitImperialSubtitle": "lbs, in, fl oz",
+  "onboardingHeightLabel": "Height",
   "onboardingGenderLabel": "Gender",
   "genderMale": "Male",
   "genderFemale": "Female",
@@ -1059,7 +1073,7 @@
   "aiRecommendRemainingMacros": "Remaining today",
   "aiRecommendCustomRequest": "Custom request",
   "aiRecommendCustomRequestHint": "e.g. Include leftover rice, high protein, etc.",
-  "currentlyTracking": "Currently tracking",
+  "currentlyTracking": "Currently",
   "currentlyTrackingDesc": "Show in daily tracker hub",
   "filter3Months": "3 Months",
   "filter6Months": "6 Months",
@@ -1183,6 +1197,15 @@
   "exerciseAnalyticsChartWeight": "Weight Over Time (kg)",
   "exerciseAnalyticsChartVolume": "Volume Over Time (kg)",
   "exerciseAnalyticsChartSets": "Sets Over Time",
+  "exerciseMetricMaxWeight": "Max Weight",
+  "exerciseMetricVolume": "Volume",
+  "exerciseMetricEst1RM": "Est. 1RM",
+  "prBannerBestMaxWeight": "Best Max Weight",
+  "prBannerBestVolumeSet": "Best Volume Set",
+  "prBannerBest1RM": "Best 1-Rep Max",
+  "newPersonalRecordLabel": "New Personal Record",
+  "prBadgeTooltip": "New Personal Record!",
+  "workoutSummaryNewRecordsTitle": "New Records",
   "allTimeRecordsLabel": "All-Time Records",
   "recentActivityLabel": "Recent Activity",
   "prsByRepRangeLabel": "Best Set by Rep Range",
@@ -1317,11 +1340,13 @@
   ,"analyticsHighConfidenceLabel": "Higher-confidence pattern"
   ,"analyticsLowConfidenceLabel": "Lower-confidence pattern"
   ,"analyticsObservedPatternLabel": "Observed pattern"
-  ,"analyticsBodyNutritionTrendContext": "Body weight and calorie trends"
-  ,"analyticsBodyNutritionTrendContextHint": "These lines show relative trend movement over the same period."
-  ,"analyticsBodyNutritionNormalizedHint": "Both lines are normalized to the same starting baseline to compare relative direction."
-  ,"analyticsWeightTrendLabel": "Body weight (smoothed)"
-  ,"analyticsCaloriesTrendLabel": "Calories (daily avg trend)"
+  ,"analyticsBodyNutritionTrendContext": "Weight and calories over time"
+  ,"analyticsBodyNutritionTrendContextHint": "The chart scales each series to fit the same space; tooltips show raw kg and kcal values."
+  ,"analyticsBodyNutritionNormalizedHint": "The chart scales weight and calories to fit the same space; tooltips show raw kg and kcal values."
+  ,"analyticsBodyNutritionTotalWeightLabel": "Total weight (kg)"
+  ,"analyticsBodyNutritionTotalCaloriesLabel": "Total calories (kcal)"
+  ,"analyticsWeightTrendLabel": "Weight (kg)"
+  ,"analyticsCaloriesTrendLabel": "Calories (kcal)"
   ,"analyticsInterpretationTitle": "Interpretation"
   ,"analyticsBodyNutritionConfidenceHighHint": "Data coverage in this range is strong enough for a more reliable pattern read."
   ,"analyticsBodyNutritionConfidenceModerateHint": "Data coverage is moderate. Trends are useful context, but keep logging for stronger confidence."
@@ -1937,5 +1962,10 @@
   "accept_and_get_started": "Accept & Get Started",
   "about_section": "About",
   "legal_section": "Legal",
-  "autoBackupRequestAccessSubtitle": "To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there."
+  "autoBackupRequestAccessSubtitle": "To automatically back up your data, Train Libre needs access to a folder you choose. Your backups will be stored there.",
+  "aiSettingsInstructionTitle": "How AI Meal Recognition Works",
+  "aiSettingsInstructionBody": "This feature uses AI to analyze food images and provide nutrient estimates. Your images are only sent to the selected AI provider when you use the feature. It relies on a Bring-Your-Own-Key (BYOK) architecture, keeping your data locally on your device until analysis.",
+  "aiSettingsSetupGuideTitle": "Setup Guide",
+  "aiSettingsSetupGuideBody": "To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.",
+  "aiSettingsGetApiKeyButton": "View Setup Guide"
 }

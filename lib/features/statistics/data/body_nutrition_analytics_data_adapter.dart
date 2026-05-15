@@ -144,7 +144,11 @@ class BodyNutritionAnalyticsDataAdapter {
     );
 
     for (final entry in foodEntries) {
-      final day = normalizeDay(entry.timestamp);
+      final day = DateTime.utc(
+        entry.timestamp.year,
+        entry.timestamp.month,
+        entry.timestamp.day,
+      );
       final barcode = entry.barcode;
       final caloriesPer100g = foodCaloriesPer100gCache[barcode] ?? 0;
       final amountGrams = entry.quantityInGrams.toDouble();
@@ -153,7 +157,11 @@ class BodyNutritionAnalyticsDataAdapter {
     }
 
     for (final entry in fluidEntries) {
-      final day = normalizeDay(entry.timestamp);
+      final day = DateTime.utc(
+        entry.timestamp.year,
+        entry.timestamp.month,
+        entry.timestamp.day,
+      );
       final added = (entry.kcal ?? 0).toDouble();
       map[day] = (map[day] ?? 0.0) + added;
     }

@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../data/database_helper.dart';
 import '../data/drift_database.dart' as db; // Access to Profile class
 import '../generated/app_localizations.dart';
@@ -10,6 +11,7 @@ import 'goals_screen.dart';
 import 'onboarding_screen.dart';
 import 'settings_screen.dart';
 import '../services/profile_service.dart';
+import '../services/unit_service.dart';
 import 'about_screen.dart';
 import 'legal_screen.dart';
 
@@ -18,7 +20,6 @@ import '../widgets/analytics_section_header.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/summary_card.dart';
-import 'package:provider/provider.dart';
 import '../widgets/global_app_bar.dart';
 
 /// A screen for managing user-specific identity and data.
@@ -78,6 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// Opens the editor for profile data.
   Future<void> _showEditProfileDialog() async {
     final l10n = AppLocalizations.of(context)!;
+    final unitService = context.read<UnitService>();
 
     // Initialize controllers with current values
     final nameCtrl = TextEditingController(text: _userProfile?.username ?? '');
@@ -85,7 +87,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String? selectedGender = _userProfile?.gender ?? 'male';
     // Height fallback in case it should be edited here too (optional)
     final heightCtrl = TextEditingController(
-      text: _userProfile?.height?.toString() ?? '',
+      text: _userProfile?.height == null
+          ? ''
+          : unitService
+              .convertDisplayValue(
+                _userProfile!.height!.toDouble(),
+                UnitDimension.height,
+              )
+              .toStringAsFixed(1)
+              .replaceAll('.0', ''),
     );
 
     await showGlassBottomMenu(
@@ -203,9 +213,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           await DatabaseHelper.instance.saveUserProfile(
                             name: nameCtrl.text.trim(),
                             birthday: selectedDate,
-                            height: int.tryParse(
-                              heightCtrl.text,
-                            ), // Optional; otherwise keep null when not in the UI.
+                            height: double.tryParse(
+                                      heightCtrl.text.replaceAll(',', '.'),
+                                    ) ==
+                                    null
+                                ? null
+                                : unitService
+                                    .convertToMetric(
+                                      double.parse(
+                                        heightCtrl.text.replaceAll(',', '.'),
+                                      ),
+                                      UnitDimension.height,
+                                    )
+                                    .round(),
                             gender: selectedGender,
                           );
                           if (!ctx.mounted) return;

@@ -10,6 +10,7 @@ import 'navigation/app_route_observer.dart';
 // App startup routing is delegated to the dedicated initializer screen.
 import 'screens/app_initializer_screen.dart';
 import 'services/profile_service.dart';
+import 'services/unit_service.dart';
 import 'services/workout_session_manager.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
@@ -38,6 +39,7 @@ void main() async {
   final workoutSessionManager = WorkoutSessionManager();
 
   final themeService = ThemeService(); // Create an instance
+  final unitService = UnitService();
 
   // Start the app with all required providers.
   runApp(
@@ -51,6 +53,7 @@ void main() async {
             return profileService;
           },
         ),
+        ChangeNotifierProvider.value(value: unitService),
         ChangeNotifierProvider.value(value: themeService),
       ],
       child: MyApp(

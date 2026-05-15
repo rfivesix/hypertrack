@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/workout_log.dart';
@@ -162,7 +164,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${totalVolume.toStringAsFixed(0)} kg',
+                                    '${context.read<UnitService>().convertDisplayValue(totalVolume, UnitDimension.weight).toStringAsFixed(0)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,

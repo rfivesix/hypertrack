@@ -1,5 +1,6 @@
 // lib/screens/exercise_catalog_screen.dart (Final & De-Materialisiert)
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
@@ -40,18 +41,27 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
   final _searchController = TextEditingController();
   List<String> _allCategories = [];
   List<String> _selectedCategories = [];
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() => _runFilter(_searchController.text));
+    _searchController.addListener(_onSearchChanged);
     _loadCategories();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _runFilter(_searchController.text);
+    });
   }
 
   Future<void> _loadCategories() async {

@@ -9,6 +9,8 @@ import '../../util/design_constants.dart';
 import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
+import 'package:provider/provider.dart';
+import '../../services/unit_service.dart';
 
 class BodyNutritionCorrelationScreen extends StatefulWidget {
   final int initialRangeIndex;
@@ -165,12 +167,13 @@ class _BodyNutritionCorrelationScreenState
     AppLocalizations l10n,
     BodyNutritionAnalyticsResult data,
   ) {
+    final unitService = Provider.of<UnitService>(context);
     final currentWeight = data.currentWeightKg == null
         ? '-'
-        : '${data.currentWeightKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${unitService.convertDisplayValue(data.currentWeightKg!, UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final weightChange = data.weightChangeKg == null
         ? '-'
-        : '${data.weightChangeKg! >= 0 ? '+' : ''}${data.weightChangeKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${data.weightChangeKg! >= 0 ? '+' : ''}${unitService.convertDisplayValue(data.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final avgCalories = data.loggedCalorieDays <= 0
         ? '-'
         : '${data.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';
@@ -326,20 +329,24 @@ class _BodyNutritionCorrelationScreenState
                 _legendDot(
                   color: Theme.of(context).colorScheme.primary,
                   label: l10n.analyticsWeightTrendLabel,
+                  shape: BoxShape.circle,
                 ),
                 _legendDot(
-                  color: Theme.of(context).colorScheme.secondary,
+                  color: const Color(0xFFF97316),
                   label: l10n.analyticsCaloriesTrendLabel,
+                  shape: BoxShape.rectangle,
                 ),
               ],
             ),
             const SizedBox(height: 10),
             SizedBox(
-              height: 220,
+              height: 250,
               child: BodyNutritionNormalizedTrendChart(
-                range: data.normalizedTrendRange,
-                weightSeries: data.normalizedWeightTrend,
-                calorieSeries: data.normalizedCaloriesTrend,
+                range: data.range,
+                weightSeries: data.weightDaily,
+                calorieSeries: data.caloriesDaily
+                    .where((point) => point.value > 0)
+                    .toList(growable: false),
               ),
             ),
           ],
@@ -348,14 +355,23 @@ class _BodyNutritionCorrelationScreenState
     );
   }
 
-  Widget _legendDot({required Color color, required String label}) {
+  Widget _legendDot({
+    required Color color,
+    required String label,
+    required BoxShape shape,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color,
+            shape: shape,
+            borderRadius:
+                shape == BoxShape.rectangle ? BorderRadius.circular(2) : null,
+          ),
         ),
         const SizedBox(width: 6),
         Text(

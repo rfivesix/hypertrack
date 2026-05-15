@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 import 'package:intl/intl.dart';
 import '../data/database_helper.dart';
 import '../data/product_database_helper.dart';
@@ -42,6 +43,11 @@ import '../features/steps/presentation/steps_module_screen.dart';
 import '../features/sleep/data/sleep_day_repository.dart';
 import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/sleep/presentation/sleep_navigation.dart';
+import '../features/pulse/data/pulse_repository.dart';
+import '../features/pulse/domain/pulse_models.dart';
+import '../features/pulse/application/pulse_tracking_service.dart';
+import '../features/pulse/presentation/pulse_analysis_screen.dart';
+import '../features/sleep/presentation/widgets/sleep_period_scope_layout.dart';
 import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
@@ -143,6 +149,14 @@ class DiaryScreenState extends State<DiaryScreen> {
   SleepDayOverviewData? _sleepOverview;
   bool _isSleepWidgetLoading = false;
   bool _sleepTrackingEnabled = false;
+
+  final PulseTrackingSettingsService _pulseSyncService = PulseTrackingService();
+  final PulseAnalysisRepository _pulseRepository =
+      HealthPulseAnalysisRepository();
+  PulseAnalysisSummary? _pulseSummary;
+  bool _isPulseWidgetLoading = false;
+  bool _pulseTrackingEnabled = false;
+
   bool _showSugarInOverview = false;
   final DiaryLoadCoordinator _loadCoordinator = DiaryLoadCoordinator();
   Future<void>? _activeDiaryLoadFuture;
@@ -234,34 +248,16 @@ class DiaryScreenState extends State<DiaryScreen> {
       _isLoading = true;
       _isStepsWidgetLoading = false;
       _isSleepWidgetLoading = false;
+      _isPulseWidgetLoading = false;
     });
 
     try {
       final dbHelper = DatabaseHelper.instance;
 
-      // 1. Load goals from DB (historically accurate for the selected date)
+      // 1. Load primary data (Nutrition, Supplements, Workouts)
       final goals = await dbHelper.getGoalsForDate(diaryDate);
-
-      // 2. Prefs only for "Extra" values not in the DB schema
       final prefs = await SharedPreferences.getInstance();
-      final stepsEnabled = await _stepsSyncService.isTrackingEnabled();
-      final providerFilter = await _stepsSyncService.getProviderFilter();
-      final providerFilterRaw = StepsSyncService.providerFilterToRaw(
-        providerFilter,
-      );
 
-      // 3. Use values from DB or fallbacks
-      final targetCalories = goals?.targetCalories ?? 2500;
-      final targetProtein = goals?.targetProtein ?? 180;
-      final targetCarbs = goals?.targetCarbs ?? 250;
-      final targetFat = goals?.targetFat ?? 80;
-      final targetWater = goals?.targetWater ?? 3000;
-      final targetSugar = prefs.getInt('targetSugar') ?? 50;
-      final showSugarInOverview =
-          prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
-
-      // Caffeine and related targets still come from prefs (not in AppSettings yet).
-      final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
       final foodEntries = await DatabaseHelper.instance.getEntriesForDate(
         diaryDate,
       );
@@ -275,10 +271,16 @@ class DiaryScreenState extends State<DiaryScreen> {
       final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(
         diaryDate,
       );
-      final waterIntake = fluidEntries.fold<int>(
-        0,
-        (sum, entry) => sum + entry.quantityInMl,
-      );
+
+      final targetCalories = goals?.targetCalories ?? 2500;
+      final targetProtein = goals?.targetProtein ?? 180;
+      final targetCarbs = goals?.targetCarbs ?? 250;
+      final targetFat = goals?.targetFat ?? 80;
+      final targetWater = goals?.targetWater ?? 3000;
+      final targetSugar = prefs.getInt('targetSugar') ?? 50;
+      final showSugarInOverview =
+          prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
+      final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
 
       final summary = DailyNutrition(
         targetCalories: targetCalories,
@@ -289,7 +291,10 @@ class DiaryScreenState extends State<DiaryScreen> {
         targetSugar: targetSugar,
         targetCaffeine: targetCaffeine,
       );
-      summary.water = waterIntake;
+      summary.water = fluidEntries.fold<int>(
+        0,
+        (sum, entry) => sum + entry.quantityInMl,
+      );
 
       for (final entry
           in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
@@ -393,65 +398,103 @@ class DiaryScreenState extends State<DiaryScreen> {
       Map<String, dynamic>? workoutSummary;
 
       if (completedLogs.isNotEmpty) {
-        // --- Fix starts ---
         Duration totalDuration = Duration.zero;
         double totalVolume = 0.0;
         int totalSets = 0;
-
         for (final log in completedLogs) {
-          totalDuration += log.endTime!.difference(
-            log.startTime,
-          ); // Adds the full duration
+          totalDuration += log.endTime!.difference(log.startTime);
           totalSets += log.sets.length;
           for (final set in log.sets) {
             totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
           }
         }
-
         workoutSummary = {
-          'duration': totalDuration, // Uses the correct sum
+          'duration': totalDuration,
           'volume': totalVolume,
           'sets': totalSets,
           'count': completedLogs.length,
         };
-        // --- Fix ends ---
       }
 
       if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
+
+      // Update primary UI state and stop main spinner
       setState(() {
         _dailyNutrition = summary;
         _entriesByMeal = groupedEntries;
         _fluidEntries = fluidEntries;
         _trackedSupplements = trackedSupps;
         _workoutSummary = workoutSummary;
-        _stepsTrackingEnabled = stepsEnabled;
-        _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
         _showSugarInOverview = showSugarInOverview;
+        _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
+        _isLoading = false;
       });
-      await _loadStepsForDate(
+
+      // 2. Trigger secondary background loads (Health data)
+      final providerFilter = await _stepsSyncService.getProviderFilter();
+      final providerFilterRaw = StepsSyncService.providerFilterToRaw(
+        providerFilter,
+      );
+
+      // Start all background tasks concurrently
+      unawaited(_loadStepsForDate(
         diaryDate,
         providerFilterRaw: providerFilterRaw,
         loadGeneration: loadGeneration,
-      );
-      await _syncSleepIfDue(force: forceStepsRefresh);
-      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
-      await _loadSleepForDate(diaryDate, loadGeneration: loadGeneration);
-      await _syncStepsIfDue(
+      ).timeout(const Duration(seconds: 10), onTimeout: () {
+        if (_isCurrentLoad(loadGeneration, diaryDate)) {
+          setState(() => _isStepsWidgetLoading = false);
+        }
+      }));
+
+      unawaited(_loadSleepAndSyncIfDue(
         diaryDate,
         force: forceStepsRefresh,
         loadGeneration: loadGeneration,
-      );
+      ).timeout(const Duration(seconds: 15), onTimeout: () {
+        if (_isCurrentLoad(loadGeneration, diaryDate)) {
+          setState(() => _isSleepWidgetLoading = false);
+        }
+      }));
+
+      unawaited(_loadPulseForDate(
+        diaryDate,
+        loadGeneration: loadGeneration,
+      ).timeout(const Duration(seconds: 10), onTimeout: () {
+        if (_isCurrentLoad(loadGeneration, diaryDate)) {
+          setState(() => _isPulseWidgetLoading = false);
+        }
+      }));
+
+      unawaited(_syncStepsIfDue(
+        diaryDate,
+        force: forceStepsRefresh,
+        loadGeneration: loadGeneration,
+      ).timeout(const Duration(seconds: 15), onTimeout: () {
+        if (_isCurrentLoad(loadGeneration, diaryDate)) {
+          setState(() => _isStepsWidgetLoading = false);
+        }
+      }));
     } catch (e, stack) {
-      debugPrint('Diary load failed: $e\n$stack');
-    } finally {
+      debugPrint('Diary primary load failed: $e\n$stack');
       if (_isCurrentLoad(loadGeneration, diaryDate)) {
-        setState(() {
-          _isLoading = false;
-          _isStepsWidgetLoading = false;
-          _isSleepWidgetLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _loadSleepAndSyncIfDue(
+    DateTime date, {
+    required bool force,
+    required int loadGeneration,
+  }) async {
+    // 1. Load from cache first for immediate display
+    await _loadSleepForDate(date, loadGeneration: loadGeneration);
+    // 2. Sync in background
+    await _syncSleepIfDue(force: force);
+    if (!_isCurrentLoad(loadGeneration, date)) return;
+    // 3. Refresh if sync completed
+    await _loadSleepForDate(date, loadGeneration: loadGeneration);
   }
 
   Future<void> _loadStepsForDate(
@@ -459,55 +502,103 @@ class DiaryScreenState extends State<DiaryScreen> {
     required String providerFilterRaw,
     int? loadGeneration,
   }) async {
-    final enabled = await _stepsSyncService.isTrackingEnabled();
-    if (!_isCurrentLoad(loadGeneration, date)) return;
-    if (!enabled) {
+    try {
+      final enabled = await _stepsSyncService.isTrackingEnabled();
+      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!enabled) {
+        if (!mounted) return;
+        setState(() {
+          _stepsForSelectedDay = null;
+          _stepsTrackingEnabled = false;
+          _isStepsWidgetLoading = false;
+        });
+        return;
+      }
       if (!mounted) return;
+      setState(() => _isStepsWidgetLoading = true);
+      final sourcePolicy = await _stepsSyncService.getSourcePolicy();
+      final sourcePolicyRaw = StepsSyncService.sourcePolicyToRaw(sourcePolicy);
+      final total = await DatabaseHelper.instance.getDailyStepsTotal(
+        dayLocal: date,
+        providerFilter: providerFilterRaw,
+        sourcePolicy: sourcePolicyRaw,
+      );
+      if (!_isCurrentLoad(loadGeneration, date)) return;
       setState(() {
-        _stepsForSelectedDay = null;
-        _stepsTrackingEnabled = false;
+        _stepsForSelectedDay = total;
+        _stepsTrackingEnabled = true;
         _isStepsWidgetLoading = false;
       });
-      return;
+    } catch (e) {
+      debugPrint('Steps load failed: $e');
+      if (!_isCurrentLoad(loadGeneration, date)) return;
+      setState(() => _isStepsWidgetLoading = false);
     }
-    if (!mounted) return;
-    setState(() => _isStepsWidgetLoading = true);
-    final sourcePolicy = await _stepsSyncService.getSourcePolicy();
-    final sourcePolicyRaw = StepsSyncService.sourcePolicyToRaw(sourcePolicy);
-    final total = await DatabaseHelper.instance.getDailyStepsTotal(
-      dayLocal: date,
-      providerFilter: providerFilterRaw,
-      sourcePolicy: sourcePolicyRaw,
-    );
-    if (!_isCurrentLoad(loadGeneration, date)) return;
-    setState(() {
-      _stepsForSelectedDay = total;
-      _stepsTrackingEnabled = true;
-      _isStepsWidgetLoading = false;
-    });
   }
 
   Future<void> _loadSleepForDate(DateTime date, {int? loadGeneration}) async {
-    final enabled = await _sleepSyncService.isTrackingEnabled();
+    try {
+      final enabled = await _sleepSyncService.isTrackingEnabled();
+      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!enabled) {
+        if (!mounted) return;
+        setState(() {
+          _sleepOverview = null;
+          _sleepTrackingEnabled = false;
+          _isSleepWidgetLoading = false;
+        });
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _isSleepWidgetLoading = true);
+      final overview = await _sleepRepository.fetchOverview(date);
+      if (!_isCurrentLoad(loadGeneration, date)) return;
+      setState(() {
+        _sleepOverview = overview;
+        _sleepTrackingEnabled = true;
+        _isSleepWidgetLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Sleep load failed: $e');
+      if (!_isCurrentLoad(loadGeneration, date)) return;
+      setState(() => _isSleepWidgetLoading = false);
+    }
+  }
+
+  Future<void> _loadPulseForDate(DateTime date, {int? loadGeneration}) async {
+    final enabled = await _pulseSyncService.isTrackingEnabled();
     if (!_isCurrentLoad(loadGeneration, date)) return;
     if (!enabled) {
       if (!mounted) return;
       setState(() {
-        _sleepOverview = null;
-        _sleepTrackingEnabled = false;
-        _isSleepWidgetLoading = false;
+        _pulseSummary = null;
+        _pulseTrackingEnabled = false;
+        _isPulseWidgetLoading = false;
       });
       return;
     }
     if (!mounted) return;
-    setState(() => _isSleepWidgetLoading = true);
-    final overview = await _sleepRepository.fetchOverview(date);
-    if (!_isCurrentLoad(loadGeneration, date)) return;
-    setState(() {
-      _sleepOverview = overview;
-      _sleepTrackingEnabled = true;
-      _isSleepWidgetLoading = false;
-    });
+    setState(() => _isPulseWidgetLoading = true);
+
+    // Diary typically shows a 24h window for the selected date.
+    final start = DateTime(date.year, date.month, date.day).toUtc();
+    final end = start.add(const Duration(days: 1));
+
+    try {
+      final summary = await _pulseRepository.getAnalysis(
+        window: PulseAnalysisWindow(startUtc: start, endUtc: end),
+      );
+      if (!_isCurrentLoad(loadGeneration, date)) return;
+      setState(() {
+        _pulseSummary = summary;
+        _pulseTrackingEnabled = true;
+        _isPulseWidgetLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Pulse load failed: $e');
+      if (!_isCurrentLoad(loadGeneration, date)) return;
+      setState(() => _isPulseWidgetLoading = false);
+    }
   }
 
   Future<void> _syncStepsIfDue(
@@ -1009,43 +1100,35 @@ class DiaryScreenState extends State<DiaryScreen> {
     AppLocalizations l10n,
   ) {
     return SummaryCard(
-      child: Padding(
-        padding: DesignConstants.cardPadding,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.weightHistoryTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Wrap(
-                      spacing: 8.0,
-                      alignment: WrapAlignment.end,
-                      children: [
-                        '30D',
-                        '90D',
-                        'All',
-                      ].map((key) => _buildFilterButton(key, key)).toList(),
+      padding: DesignConstants.cardPadding,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.weightHistoryTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: DesignConstants.spacingL),
-            MeasurementChartWidget(
-              chartType: 'weight',
-              dateRange: _calculateDateRange(),
-              unit: "kg",
-            ),
-          ],
-        ),
+              ),
+              Wrap(
+                spacing: 8.0,
+                children: [
+                  '30D',
+                  '90D',
+                  'All',
+                ].map((key) => _buildFilterButton(key, key)).toList(),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignConstants.spacingS),
+          MeasurementChartWidget(
+            chartType: 'weight',
+            dateRange: _calculateDateRange(),
+            unit: context.read<UnitService>().suffixFor(UnitDimension.weight),
+          ),
+        ],
       ),
     );
   }
@@ -1161,9 +1244,9 @@ class DiaryScreenState extends State<DiaryScreen> {
                 ),
                 if (_stepsTrackingEnabled) ...[_buildStepsSummaryCard()],
                 if (_sleepTrackingEnabled) ...[_buildSleepSummaryCard()],
+                if (_pulseTrackingEnabled) ...[_buildPulseSummaryCard()],
                 // New section: insert workout summary here.
                 if (_workoutSummary != null) ...[
-                  //const SizedBox(height: DesignConstants.spacingXS),
                   TodaysWorkoutSummaryCard(
                     duration: _workoutSummary!['duration'] as Duration,
                     volume: _workoutSummary!['volume'] as double,
@@ -1318,6 +1401,101 @@ class DiaryScreenState extends State<DiaryScreen> {
                 const SizedBox(height: 4),
                 Text(
                   scoreText,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPulseSummaryCard() {
+    if (_isPulseWidgetLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: SummaryCard(
+          margin: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 12),
+                Text(AppLocalizations.of(context)!.load_dots),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    final summary = _pulseSummary;
+    if (summary == null || !summary.hasData) {
+      return const SizedBox.shrink();
+    }
+    final l10n = AppLocalizations.of(context)!;
+    final rangeText = summary.hasCoreMetrics
+        ? '${summary.minBpm!.round()}-${summary.maxBpm!.round()} ${l10n.sleepBpmUnit}'
+        : '--';
+    final restingText = summary.restingBpm != null
+        ? '${summary.restingBpm!.round()} ${l10n.sleepBpmUnit}'
+        : '--';
+
+    return SummaryCard(
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PulseAnalysisScreen(
+              initialDate: _selectedDate,
+              initialScope: SleepPeriodScope.day,
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.pulseTitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${l10n.pulseRangeLabel}: $rangeText',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  l10n.pulseRestingLabel,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  restingText,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

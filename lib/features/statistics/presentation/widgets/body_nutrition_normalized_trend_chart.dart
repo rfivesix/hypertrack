@@ -3,11 +3,14 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../widgets/analytics_chart_defaults.dart';
 import '../../domain/analytics_state.dart';
 import '../../domain/body_nutrition_analytics_models.dart';
+import '../../../../services/unit_service.dart';
 
 class BodyNutritionNormalizedTrendChart extends StatelessWidget {
   const BodyNutritionNormalizedTrendChart({
@@ -35,31 +38,80 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
       );
     }
 
-    final firstDay = DateTime(
+    final firstDay = DateTime.utc(
       range!.start.year,
       range!.start.month,
       range!.start.day,
     );
     final spanDays = math.max(
       1,
-      DateTime(range!.end.year, range!.end.month, range!.end.day)
+      DateTime.utc(range!.end.year, range!.end.month, range!.end.day)
               .difference(firstDay)
               .inDays +
           1,
     );
-    final maxX = math.max(1, spanDays - 1).toDouble();
+    final maxXInt = math.max(0, spanDays - 1);
+    final maxX = math.max(1, maxXInt).toDouble();
 
-    final weightSpots = _buildSpots(
-      series: weightSeries,
+    final unitService = Provider.of<UnitService>(context);
+
+    // Convert weight series (stored in metric kg) into display units according
+    // to the user's preference so scales, ticks and tooltips show the right
+    // values (kg or lbs).
+    final displayWeightSeries = weightSeries
+        .map((p) => DailyValuePoint(
+              day: p.day,
+              value: unitService.convertDisplayValue(
+                p.value,
+                UnitDimension.weight,
+              ),
+            ))
+        .toList(growable: false);
+
+    final weightScale = _SeriesScale.fromSeries(
+      displayWeightSeries,
+      unit: unitService.suffixFor(UnitDimension.weight),
+      fractionDigits: 1,
+    );
+    final calorieScale = _SeriesScale.fromSeries(
+      calorieSeries,
+      unit: 'kcal',
+      fractionDigits: 0,
+    );
+
+    final weightPoints = _buildPoints(
+      series: displayWeightSeries,
       firstDay: firstDay,
       maxX: maxX,
+      scale: weightScale,
     );
-    final calorieSpots = _buildSpots(
+    final caloriePoints = _buildPoints(
       series: calorieSeries,
       firstDay: firstDay,
       maxX: maxX,
+      scale: calorieScale,
     );
-    if (weightSpots.isEmpty || calorieSpots.isEmpty) {
+    // Debug: when used as compact (hub), print range and last raw-series dates
+    assert(() {
+      if (compact) {
+        try {
+          final lastWeight =
+              weightSeries.isNotEmpty ? weightSeries.last.day : null;
+          final lastCal =
+              calorieSeries.isNotEmpty ? calorieSeries.last.day : null;
+          debugPrint(
+              '[chart-debug] compact range=${range?.start}..${range?.end} spanDays=$spanDays');
+          debugPrint(
+              '[chart-debug] weightSeries count=${weightSeries.length} last=$lastWeight');
+          debugPrint(
+              '[chart-debug] calorieSeries count=${calorieSeries.length} last=$lastCal');
+        } catch (e, st) {
+          debugPrint('[chart-debug] error reading series: $e\n$st');
+        }
+      }
+      return true;
+    }());
+    if (weightPoints.isEmpty || caloriePoints.isEmpty) {
       return AnalyticsChartDefaults.stateView(
         context: context,
         l10n: l10n,
@@ -68,129 +120,296 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
       );
     }
 
-    final allYValues = [
-      ...weightSpots.map((spot) => spot.y),
-      ...calorieSpots.map((spot) => spot.y),
+    final series = [
+      _ChartSeries(
+        label: l10n.analyticsWeightTrendLabel,
+        color: Theme.of(context).colorScheme.primary,
+        scale: weightScale,
+        points: weightPoints,
+        dotShape: _SeriesDotShape.circle,
+      ),
+      _ChartSeries(
+        label: l10n.analyticsCaloriesTrendLabel,
+        color: const Color(0xFFF97316),
+        scale: calorieScale,
+        points: caloriePoints,
+        dotShape: _SeriesDotShape.square,
+      ),
     ];
-    final finiteYValues = allYValues.where((value) => value.isFinite);
-    final maxAbs =
-        finiteYValues.map((value) => value.abs()).fold<double>(0.0, math.max);
-    final rawLimit = maxAbs * 1.15;
-    final yLimit =
-        (rawLimit.isFinite && rawLimit > 0) ? math.max(0.6, rawLimit) : 0.6;
+
     final xLabelPositions = _xLabelPositions(spanDays);
 
     final chartData = LineChartData(
+      clipData: const FlClipData.none(),
       minX: 0,
       maxX: maxX,
-      minY: -yLimit,
-      maxY: yLimit,
+      minY: -0.06,
+      maxY: 1.06,
       gridData: compact
           ? AnalyticsChartDefaults.noGrid
-          : const FlGridData(show: true, drawVerticalLine: false),
+          : FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: 0.5,
+            ),
       borderData: AnalyticsChartDefaults.noBorder,
-      lineTouchData: const LineTouchData(enabled: false),
-      extraLinesData: ExtraLinesData(
-        horizontalLines: [
-          HorizontalLine(
-            y: 0,
-            color: Theme.of(context).colorScheme.outlineVariant,
-            strokeWidth: 1,
-            dashArray: const [5, 4],
+      lineTouchData: LineTouchData(
+        enabled: true,
+        handleBuiltInTouches: true,
+        touchSpotThreshold: 18,
+        touchTooltipData: LineTouchTooltipData(
+          fitInsideHorizontally: true,
+          fitInsideVertically: true,
+          tooltipPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
           ),
-        ],
+          getTooltipColor: (_) => Theme.of(context).colorScheme.inverseSurface,
+          getTooltipItems: (touchedSpots) {
+            if (compact) {
+              HapticFeedback.selectionClick();
+            }
+            return touchedSpots.map((touchedSpot) {
+              final seriesIndex = touchedSpot.barIndex;
+              if (seriesIndex < 0 || seriesIndex >= series.length) {
+                return null;
+              }
+              final selectedSeries = series[seriesIndex];
+              final pointIndex = touchedSpot.spotIndex;
+              if (pointIndex < 0 ||
+                  pointIndex >= selectedSeries.points.length) {
+                return null;
+              }
+
+              final point = selectedSeries.points[pointIndex];
+              final date = DateFormat.MMMd().format(point.day);
+              final valueText = selectedSeries.scale.formatRaw(point.rawValue);
+
+              return LineTooltipItem(
+                '$date\n',
+                Theme.of(context).textTheme.bodySmall!.copyWith(
+                      color: Theme.of(context).colorScheme.onInverseSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                    ),
+                children: [
+                  TextSpan(
+                    text: '${selectedSeries.label}: $valueText',
+                    style: TextStyle(
+                      color: selectedSeries.color,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              );
+            }).toList(growable: false);
+          },
+        ),
       ),
       titlesData: compact
           ? AnalyticsChartDefaults.hiddenTitles
-          : AnalyticsChartDefaults.standardTitles(
+          : FlTitlesData(
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
-                  reservedSize: 40,
+                  reservedSize: 42,
+                  interval: 0.5,
                   getTitlesWidget: (value, meta) {
-                    if ((value - 0).abs() < 0.0001) {
-                      return AnalyticsChartDefaults.tickLabel(context, '0%');
+                    if (!_isPrimaryTick(value)) {
+                      return const SizedBox.shrink();
                     }
-                    if ((value + yLimit).abs() < 0.4) {
-                      return AnalyticsChartDefaults.tickLabel(
+                    return SideTitleWidget(
+                      meta: meta,
+                      space: 8,
+                      child: _axisTitle(
                         context,
-                        '-${yLimit.round()}%',
-                      );
+                        value,
+                        weightScale,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 46,
+                  interval: 0.5,
+                  getTitlesWidget: (value, meta) {
+                    if (!_isPrimaryTick(value)) {
+                      return const SizedBox.shrink();
                     }
-                    if ((value - yLimit).abs() < 0.4) {
-                      return AnalyticsChartDefaults.tickLabel(
+                    return SideTitleWidget(
+                      meta: meta,
+                      space: 8,
+                      child: _axisTitle(
                         context,
-                        '+${yLimit.round()}%',
-                      );
-                    }
-                    return const SizedBox.shrink();
+                        value,
+                        calorieScale,
+                        alignRight: true,
+                      ),
+                    );
                   },
                 ),
               ),
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
-                  reservedSize: 26,
+                  reservedSize: 32,
                   getTitlesWidget: (value, meta) {
                     final rounded = value.round();
                     if (!xLabelPositions.contains(rounded)) {
                       return const SizedBox.shrink();
                     }
                     final day = firstDay.add(Duration(days: rounded));
-                    return AnalyticsChartDefaults.tickLabel(
-                      context,
-                      DateFormat('MMMd').format(day),
+                    final isStartLabel = rounded == 0;
+                    final isEndLabel = rounded == spanDays - 1;
+                    return SideTitleWidget(
+                      meta: meta,
+                      space: 8,
+                      child: SizedBox(
+                        width: 60,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: isStartLabel
+                              ? Alignment.centerLeft
+                              : isEndLabel
+                                  ? Alignment.centerRight
+                                  : Alignment.center,
+                          child: AnalyticsChartDefaults.tickLabel(
+                            context,
+                            DateFormat('MMMd').format(day),
+                          ),
+                        ),
+                      ),
                     );
                   },
                 ),
               ),
             ),
-      lineBarsData: [
-        AnalyticsChartDefaults.straightLine(
-          spots: weightSpots,
-          barWidth: compact ? 2.0 : 2.5,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        AnalyticsChartDefaults.straightLine(
-          spots: calorieSpots,
-          barWidth: compact ? 2.0 : 2.5,
-          color: Theme.of(context).colorScheme.secondary,
-        ),
-      ],
+      lineBarsData: series
+          .map(
+            (seriesConfig) => AnalyticsChartDefaults.straightLine(
+              spots: seriesConfig.points
+                  .map((point) => point.spot)
+                  .toList(growable: false),
+              barWidth: compact ? 2.6 : 3.2,
+              isStrokeCapRound: true,
+              color: seriesConfig.color,
+              belowBarData: seriesConfig.label == l10n.analyticsWeightTrendLabel
+                  ? BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          seriesConfig.color.withValues(alpha: 0.22),
+                          seriesConfig.color.withValues(alpha: 0.0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    )
+                  : BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          seriesConfig.color.withValues(alpha: 0.08),
+                          seriesConfig.color.withValues(alpha: 0.0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+              dotData: FlDotData(
+                show: true,
+                checkToShowDot: (spot, bar) {
+                  if (seriesConfig.points.length <= 2) {
+                    return true;
+                  }
+                  final index = bar.spots.indexOf(spot);
+                  return index == 0 || index == bar.spots.length - 1;
+                },
+                getDotPainter: (spot, percent, bar, index) {
+                  final strokeColor = Theme.of(context).scaffoldBackgroundColor;
+                  return switch (seriesConfig.dotShape) {
+                    _SeriesDotShape.circle => FlDotCirclePainter(
+                        radius: compact ? 3.0 : 4.5,
+                        color: seriesConfig.color,
+                        strokeWidth: 2,
+                        strokeColor: strokeColor,
+                      ),
+                    _SeriesDotShape.square => FlDotSquarePainter(
+                        size: compact ? 6.0 : 8.0,
+                        color: seriesConfig.color,
+                        strokeWidth: 2,
+                        strokeColor: strokeColor,
+                      ),
+                  };
+                },
+              ),
+            ),
+          )
+          .toList(growable: false),
     );
 
     return LineChart(chartData);
   }
 
-  double _xOf(DateTime day, DateTime firstDay) {
-    final normalizedDay = DateTime(day.year, day.month, day.day);
-    return normalizedDay.difference(firstDay).inDays.toDouble();
-  }
-
-  List<FlSpot> _buildSpots({
+  List<_ChartPoint> _buildPoints({
     required List<DailyValuePoint> series,
     required DateTime firstDay,
     required double maxX,
+    required _SeriesScale scale,
   }) {
-    final deduplicatedByX = <double, double>{};
+    final deduplicatedByX = <int, _ChartPoint>{};
+    final maxXInt = maxX.round();
     for (final point in series) {
-      final x = _xOf(point.day, firstDay);
+      final xIndex = _xOf(point.day, firstDay).round();
       final y = point.value;
-      if (!x.isFinite ||
-          !y.isFinite ||
-          x < 0 ||
-          x > maxX ||
-          y.isNaN ||
-          y.isInfinite) {
-        continue;
-      }
-      deduplicatedByX[x] = y;
+      if (!y.isFinite || xIndex < 0 || xIndex > maxXInt) continue;
+      deduplicatedByX[xIndex] = _ChartPoint(
+        day: point.day,
+        rawValue: y,
+        spot: FlSpot(xIndex.toDouble(), scale.toPlotValue(y)),
+      );
     }
-    final entries = deduplicatedByX.entries.toList(growable: false)
-      ..sort((a, b) => a.key.compareTo(b.key));
-    return entries
-        .map((entry) => FlSpot(entry.key, entry.value))
-        .toList(growable: false);
+    final orderedPoints = deduplicatedByX.values.toList(growable: true)
+      ..sort((a, b) => a.spot.x.compareTo(b.spot.x));
+    if (orderedPoints.isEmpty) {
+      return const [];
+    }
+    final firstPoint = orderedPoints.first;
+    final lastPoint = orderedPoints.last;
+    if (firstPoint.spot.x > 0) {
+      orderedPoints.insert(
+        0,
+        _ChartPoint(
+          day: firstPoint.day,
+          rawValue: firstPoint.rawValue,
+          spot: FlSpot(0, firstPoint.spot.y),
+        ),
+      );
+    }
+    if (lastPoint.spot.x < maxXInt) {
+      orderedPoints.add(
+        _ChartPoint(
+          day: lastPoint.day,
+          rawValue: lastPoint.rawValue,
+          spot: FlSpot(maxXInt.toDouble(), lastPoint.spot.y),
+        ),
+      );
+    }
+
+    return orderedPoints;
+  }
+
+  double _xOf(DateTime day, DateTime firstDay) {
+    final d1 = DateTime.utc(day.year, day.month, day.day);
+    final d2 = DateTime.utc(firstDay.year, firstDay.month, firstDay.day);
+    return d1.difference(d2).inDays.toDouble();
   }
 
   Set<int> _xLabelPositions(int spanDays) {
@@ -202,4 +421,137 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
     }
     return positions;
   }
+
+  bool _isPrimaryTick(double value) {
+    return (value - 0).abs() < 0.0001 ||
+        (value - 0.5).abs() < 0.0001 ||
+        (value - 1).abs() < 0.0001;
+  }
+
+  Widget _axisTitle(
+    BuildContext context,
+    double normalizedValue,
+    _SeriesScale scale, {
+    bool alignRight = false,
+  }) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: alignRight ? Alignment.centerRight : Alignment.centerLeft,
+      child: Text(
+        scale.formatTick(normalizedValue),
+        maxLines: 1,
+        softWrap: false,
+        textAlign: alignRight ? TextAlign.right : TextAlign.left,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    );
+  }
+}
+
+class _ChartPoint {
+  const _ChartPoint({
+    required this.day,
+    required this.rawValue,
+    required this.spot,
+  });
+
+  final DateTime day;
+  final double rawValue;
+  final FlSpot spot;
+}
+
+class _ChartSeries {
+  const _ChartSeries({
+    required this.label,
+    required this.color,
+    required this.scale,
+    required this.points,
+    required this.dotShape,
+  });
+
+  final String label;
+  final Color color;
+  final _SeriesScale scale;
+  final List<_ChartPoint> points;
+  final _SeriesDotShape dotShape;
+}
+
+enum _SeriesDotShape { circle, square }
+
+class _SeriesScale {
+  const _SeriesScale({
+    required this.min,
+    required this.max,
+    required this.unit,
+    required this.fractionDigits,
+  });
+
+  factory _SeriesScale.fromSeries(
+    List<DailyValuePoint> series, {
+    required String unit,
+    required int fractionDigits,
+  }) {
+    final finiteValues = series
+        .map((point) => point.value)
+        .where((value) => value.isFinite)
+        .toList(growable: false);
+    if (finiteValues.isEmpty) {
+      return _SeriesScale(
+        min: 0,
+        max: 1,
+        unit: unit,
+        fractionDigits: fractionDigits,
+      );
+    }
+
+    final min = finiteValues.reduce(math.min);
+    final max = finiteValues.reduce(math.max);
+    return _SeriesScale(
+      min: min,
+      max: max,
+      unit: unit,
+      fractionDigits: fractionDigits,
+    );
+  }
+
+  final double min;
+  final double max;
+  final String unit;
+  final int fractionDigits;
+
+  double toPlotValue(double rawValue) {
+    final span = max - min;
+    if (!span.isFinite || span.abs() < 0.0001) {
+      return 0.5;
+    }
+    return ((rawValue - min) / span).clamp(0.0, 1.0);
+  }
+
+  double fromPlotValue(double normalizedValue) {
+    final span = max - min;
+    if (!span.isFinite || span.abs() < 0.0001) {
+      return max;
+    }
+    return min + (span * normalizedValue);
+  }
+
+  String formatTick(double normalizedValue) {
+    return '${_formatNumber(fromPlotValue(normalizedValue), fractionDigits)} $unit';
+  }
+
+  String formatRaw(double rawValue) {
+    return '${_formatNumber(rawValue, fractionDigits)} $unit';
+  }
+}
+
+String _formatNumber(double value, int fractionDigits) {
+  final normalized = value.abs() < 0.0001 ? 0.0 : value;
+  if (fractionDigits <= 0) {
+    return NumberFormat.decimalPattern().format(normalized.round());
+  }
+
+  final fixed = normalized.toStringAsFixed(fractionDigits);
+  final parts = fixed.split('.');
+  final whole = NumberFormat.decimalPattern().format(int.parse(parts[0]));
+  return parts.length == 1 ? whole : '$whole.${parts[1]}';
 }

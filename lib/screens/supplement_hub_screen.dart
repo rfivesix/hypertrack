@@ -129,6 +129,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       contentBuilder: (ctx, close) {
         return LogSupplementDoseBody(
           supplement: supplement,
+          initialTimestamp: _selectedDate.withCurrentTime,
           primaryLabel: l10n.add_button,
           onCancel: close,
           onSubmit: (dose, ts) async {

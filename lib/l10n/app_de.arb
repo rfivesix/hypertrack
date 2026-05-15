@@ -196,16 +196,24 @@
   "workoutNotFound": "Workout nicht gefunden.",
   "totalVolumeLabel": "Gesamtvolumen",
   "notesLabel": "Notizen",
-  "hevyImportTitle": "Hevy Import",
-  "hevyImportDescription": "Importiere deine gesamte Trainings-Historie aus einer Hevy CSV-Exportdatei.",
-  "hevyImportButton": "Hevy-Daten importieren",
-  "hevyImportSuccess": "{count} Workouts erfolgreich importiert!",
-  "@hevyImportSuccess": {
+  "workoutImportTitle": "Externer Workout-Import",
+  "workoutImportDescription": "Importiere deinen Trainingsverlauf aus einer CSV- oder Excel-Exportdatei.",
+  "workoutImportButton": "Workout-Daten importieren",
+  "workoutImportSuccess": "{count} Workouts erfolgreich importiert!",
+  "@workoutImportSuccess": {
     "placeholders": {
       "count": {}
     }
   },
-  "hevyImportFailed": "Import fehlgeschlagen. Bitte überprüfe die Datei.",
+  "workoutImportFailed": "Import fehlgeschlagen. Bitte überprüfe die Datei.",
+  "importUnitSelectionTitle": "Einheit beim Import",
+  "importUnitSelectionDescription": "In welcher Einheit liegen die Daten der Datei vor?",
+  "unitMetricLabel": "Metrisch (kg)",
+  "unitImperialLabel": "Imperial (lbs)",
+  "excelExportButton": "Excel-Export (.xlsx)",
+  "exportWorkoutHistory": "Workout-Verlauf",
+  "exportNutritionDiary": "Ernährungstagebuch",
+  "exportMeasurements": "Messwerte",
   "startWorkout": "Workout starten",
   "addMeasurement": "Messwert hinzufügen",
   "filterToday": "Heute",
@@ -841,7 +849,7 @@
   "onboardingDobError": "Bitte wähle dein Geburtsdatum",
 
   "onboardingWeightTitle": "Aktuelles Gewicht",
-  "onboardingWeightLabel": "Gewicht (kg)",
+  "onboardingWeightLabel": "Gewicht",
   "onboardingWeightError": "Bitte gib ein gültiges Gewicht ein",
 
   "onboardingGoalsTitle": "Deine Ernährungsziele",
@@ -851,12 +859,18 @@
   "onboardingGoalProtein": "Protein (g)",
   "onboardingGoalCarbs": "Kohlenhydrate (g)",
   "onboardingGoalFat": "Fett (g)",
-  "onboardingGoalWater": "Wasser (ml)",
+  "onboardingGoalWater": "Wasser",
 
   "onboardingNext": "Weiter",
   "onboardingBack": "Zurück",
   "onboardingFinish": "Loslegen",
-  "onboardingHeightLabel": "Größe (cm)",
+  "onboardingUnitSystemTitle": "Wähle dein Einheitensystem",
+  "onboardingUnitSystemSubtitle": "Du kannst dies später in den Einstellungen ändern.",
+  "onboardingUnitMetric": "Metrisch",
+  "onboardingUnitMetricSubtitle": "kg, cm, ml",
+  "onboardingUnitImperial": "Imperial",
+  "onboardingUnitImperialSubtitle": "lbs, in, fl oz",
+  "onboardingHeightLabel": "Größe",
   "onboardingGenderLabel": "Geschlecht",
   "genderMale": "Männlich",
   "genderFemale": "Weiblich",
@@ -1064,7 +1078,7 @@
   "aiRecommendRemainingMacros": "Heute noch übrig",
   "aiRecommendCustomRequest": "Eigener Wunsch",
   "aiRecommendCustomRequestHint": "z. B. auf restlichen Reis achten, viel Protein, usw.",
-  "currentlyTracking": "Aktuell tracken",
+  "currentlyTracking": "Aktuell",
   "currentlyTrackingDesc": "In der täglichen Übersicht anzeigen",
   "filter3Months": "3 Monate",
   "filter6Months": "6 Monate",
@@ -1188,7 +1202,17 @@
   "exerciseAnalyticsChartWeight": "Gewicht im Zeitverlauf (kg)",
   "exerciseAnalyticsChartVolume": "Volumen im Zeitverlauf (kg)",
   "exerciseAnalyticsChartSets": "Sätze im Zeitverlauf",
-  "allTimeRecordsLabel": "Alle-Zeiten-Rekorde",
+  "exerciseMetricMaxWeight": "Max. Gewicht",
+  "exerciseMetricVolume": "Volumen",
+  "exerciseMetricEst1RM": "Schätz. 1RM",
+  "prBannerBestMaxWeight": "Bestes Max. Gewicht",
+  "prBannerBestVolumeSet": "Bestes Volumen-Set",
+  "prBannerBest1RM": "Bestes 1RM",
+  "newPersonalRecordLabel": "Neuer persönlicher Rekord",
+  "prBadgeTooltip": "Neuer persönlicher Rekord!",
+  "workoutSummaryNewRecordsTitle": "Neue Rekorde",
+  "allTimeRecordsLabel": "Allzeit-Rekorde",
+
   "recentActivityLabel": "Letzte Aktivität",
   "prsByRepRangeLabel": "Bestes Set nach Wiederholungsbereich",
   "volumeAnalyticsTitle": "Volumen-Analyse",
@@ -1322,11 +1346,13 @@
   ,"analyticsHighConfidenceLabel": "Muster mit höherer Verlässlichkeit"
   ,"analyticsLowConfidenceLabel": "Muster mit niedrigerer Verlässlichkeit"
   ,"analyticsObservedPatternLabel": "Beobachtetes Muster"
-  ,"analyticsBodyNutritionTrendContext": "Gewichts- und Kalorientrends"
-  ,"analyticsBodyNutritionTrendContextHint": "Diese Linien zeigen die relative Trendbewegung im gleichen Zeitraum."
-  ,"analyticsBodyNutritionNormalizedHint": "Beide Linien starten auf derselben Basis, damit du die relative Richtung direkt vergleichen kannst."
-  ,"analyticsWeightTrendLabel": "Körpergewicht (geglattet)"
-  ,"analyticsCaloriesTrendLabel": "Kalorien (tägl. Trend)"
+  ,"analyticsBodyNutritionTrendContext": "Gewicht und Kalorien im Zeitverlauf"
+  ,"analyticsBodyNutritionTrendContextHint": "Das Diagramm skaliert beide Reihen auf denselben Platz; Tooltips zeigen die Rohwerte in kg und kcal."
+  ,"analyticsBodyNutritionNormalizedHint": "Das Diagramm skaliert Gewicht und Kalorien auf denselben Platz; Tooltips zeigen die Rohwerte in kg und kcal."
+  ,"analyticsBodyNutritionTotalWeightLabel": "Gesamtgewicht (kg)"
+  ,"analyticsBodyNutritionTotalCaloriesLabel": "Gesamtkalorien (kcal)"
+  ,"analyticsWeightTrendLabel": "Gewicht (kg)"
+  ,"analyticsCaloriesTrendLabel": "Kalorien (kcal)"
   ,"analyticsInterpretationTitle": "Interpretation"
   ,"analyticsBodyNutritionConfidenceHighHint": "Die Datenabdeckung in diesem Bereich ist stark genug für eine verlässlichere Muster-Einordnung."
   ,"analyticsBodyNutritionConfidenceModerateHint": "Die Datenabdeckung ist mittel. Nützlich als Kontext, aber weiteres Logging erhöht die Verlässlichkeit."
@@ -1942,5 +1968,10 @@
   "accept_and_get_started": "Akzeptieren & Loslegen",
   "about_section": "Über",
   "legal_section": "Rechtliches",
-  "autoBackupRequestAccessSubtitle": "Um deine Daten automatisch zu sichern, benötigt Train Libre Zugriff auf einen von dir gewählten Ordner. Deine Backups werden dort gespeichert."
+  "autoBackupRequestAccessSubtitle": "Um deine Daten automatisch zu sichern, benötigt Train Libre Zugriff auf einen von dir gewählten Ordner. Deine Backups werden dort gespeichert.",
+  "aiSettingsInstructionTitle": "Wie die KI-Mahlzeitenerkennung funktioniert",
+  "aiSettingsInstructionBody": "Diese Funktion nutzt KI zur Analyse von Lebensmittelbildern und liefert Nährwertschätzungen. Deine Bilder werden nur dann an den ausgewählten KI-Anbieter gesendet, wenn du die Funktion nutzt. Sie basiert auf einer Bring-Your-Own-Key (BYOK)-Architektur, wodurch deine Daten lokal auf dem Gerät bleiben, bis sie analysiert werden.",
+  "aiSettingsSetupGuideTitle": "Einrichtungs-Anleitung",
+  "aiSettingsSetupGuideBody": "Um diese Funktion zu nutzen, benötigst du einen API-Key von einem KI-Anbieter (z. B. Google Gemini, da hierfür aktuell ein kostenloser Key erhältlich ist).",
+  "aiSettingsGetApiKeyButton": "Schritt-für-Schritt Anleitung"
 }

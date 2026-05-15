@@ -26,18 +26,6 @@ class AboutScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.surfaceContainerHighest,
-                ],
-              ),
-            ),
-          ),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {
@@ -163,7 +151,6 @@ class _UsedPackagesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final title = MaterialLocalizations.of(context).licensesPageTitle;
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
@@ -172,7 +159,6 @@ class _UsedPackagesScreen extends StatelessWidget {
       appBar: GlobalAppBar(title: title),
       body: Stack(
         children: [
-          _AboutBackground(theme: theme),
           FutureBuilder<List<_PackageLicenseBundle>>(
             future: _loadLicenses(),
             builder: (context, snapshot) {
@@ -257,7 +243,6 @@ class _PackageLicenseScreen extends StatelessWidget {
       appBar: GlobalAppBar(title: bundle.name),
       body: Stack(
         children: [
-          _AboutBackground(theme: theme),
           ListView(
             physics: const BouncingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
@@ -292,28 +277,6 @@ class _PackageLicenseScreen extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AboutBackground extends StatelessWidget {
-  const _AboutBackground({required this.theme});
-
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.surface,
-            theme.colorScheme.surfaceContainerHighest,
-          ],
-        ),
       ),
     );
   }

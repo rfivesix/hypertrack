@@ -199,17 +199,54 @@ class WorkoutDatabaseHelper {
     var stmt = dbInstance.select(dbInstance.exercises);
 
     if (query.isNotEmpty) {
+      final term = query.trim();
       stmt = stmt
         ..where(
-          (tbl) => tbl.nameDe.like('%$query%') | tbl.nameEn.like('%$query%'),
+          (tbl) => tbl.nameDe.like('%$term%') | tbl.nameEn.like('%$term%'),
         );
+
+      stmt = stmt
+        ..orderBy([
+          (t) => drift.OrderingTerm(
+                expression: drift.CaseWhenExpression(
+                  cases: [
+                    drift.CaseWhen(
+                      t.nameDe.equals(term) | t.nameEn.equals(term),
+                      then: const drift.Constant(0),
+                    ),
+                    drift.CaseWhen(
+                      t.nameDe.like('$term%') | t.nameEn.like('$term%'),
+                      then: const drift.Constant(1),
+                    ),
+                  ],
+                  orElse: const drift.Constant(2),
+                ),
+                mode: drift.OrderingMode.asc,
+              ),
+          (t) => drift.OrderingTerm(
+                expression: t.usageCount,
+                mode: drift.OrderingMode.desc,
+              ),
+          (t) => drift.OrderingTerm(
+              expression: t.nameDe, mode: drift.OrderingMode.asc),
+        ]);
+    } else {
+      stmt = stmt
+        ..orderBy([
+          (t) => drift.OrderingTerm(
+                expression: t.usageCount,
+                mode: drift.OrderingMode.desc,
+              ),
+          (t) => drift.OrderingTerm(
+              expression: t.nameDe, mode: drift.OrderingMode.asc),
+        ]);
     }
 
     if (selectedCategories.isNotEmpty) {
       stmt = stmt..where((tbl) => tbl.categoryName.isIn(selectedCategories));
     }
 
-    stmt = stmt..orderBy([(t) => drift.OrderingTerm(expression: t.nameDe)]);
+    stmt = stmt..limit(50);
 
     final rows = await stmt.get();
     return rows.map(_mapExerciseToModel).toList();
@@ -671,6 +708,35 @@ class WorkoutDatabaseHelper {
         notes: notes != null ? drift.Value(notes) : const drift.Value.absent(),
       ),
     );
+
+    // Increment usageCount for exercises used in this workout
+    try {
+      final logRow = await (dbInstance.select(dbInstance.workoutLogs)
+            ..where((t) => t.localId.equals(workoutLogId)))
+          .getSingle();
+
+      final setLogsQuery =
+          dbInstance.selectOnly(dbInstance.setLogs, distinct: true)
+            ..addColumns([dbInstance.setLogs.exerciseId])
+            ..where(dbInstance.setLogs.workoutLogId.equals(logRow.id))
+            ..where(dbInstance.setLogs.exerciseId.isNotNull());
+
+      final exerciseIds = (await setLogsQuery.get())
+          .map((r) => r.read(dbInstance.setLogs.exerciseId))
+          .whereType<String>()
+          .toList();
+
+      if (exerciseIds.isNotEmpty) {
+        await dbInstance.customUpdate(
+          'UPDATE exercises SET usage_count = usage_count + 1 WHERE id IN (${exerciseIds.map((_) => '?').join(',')})',
+          variables:
+              exerciseIds.map((id) => drift.Variable.withString(id)).toList(),
+          updates: {dbInstance.exercises},
+        );
+      }
+    } catch (e) {
+      // Non-critical: don't fail finishWorkout if usageCount update fails
+    }
   }
 
   Future<int> insertSetLog(SetLog setLog) async {
@@ -735,6 +801,20 @@ class WorkoutDatabaseHelper {
       // Insert
       final row =
           await dbInstance.into(dbInstance.setLogs).insertReturning(companion);
+
+      // Increment usageCount for the exercise if linked
+      if (exerciseUuid != null) {
+        try {
+          await dbInstance.customUpdate(
+            'UPDATE exercises SET usage_count = usage_count + 1 WHERE id = ?',
+            variables: [drift.Variable.withString(exerciseUuid)],
+            updates: {dbInstance.exercises},
+          );
+        } catch (_) {
+          // Non-critical
+        }
+      }
+
       return row.localId;
     }
   }
@@ -1348,76 +1428,158 @@ class WorkoutDatabaseHelper {
     final rows = await query.get();
 
     final prMap = <String, SetLog?>{
+      'Est. 1RM': null,
       '1 RM': null,
       '2-3 RM': null,
       '4-6 RM': null,
       '7-10 RM': null,
       '11-15 RM': null,
-      '15+ RM': null,
     };
 
+    double bestEst1rmValue = 0.0;
+    SetLog? bestEst1rmSet;
+
     // Helper function to determine the bracket name
-    String getBracket(int reps) {
+    String? getBracket(int reps) {
       if (reps == 1) return '1 RM';
       if (reps >= 2 && reps <= 3) return '2-3 RM';
       if (reps >= 4 && reps <= 6) return '4-6 RM';
       if (reps >= 7 && reps <= 10) return '7-10 RM';
       if (reps >= 11 && reps <= 15) return '11-15 RM';
-      return '15+ RM';
+      return null;
     }
 
-    // Map Drift rows to SetLog objects, including date.
-    final List<Map<String, dynamic>> qualifyingSets = rows.map((r) {
+    for (final r in rows) {
       final setRow = r.readTable(dbInstance.setLogs);
       final logRow = r.readTable(dbInstance.workoutLogs);
 
-      return {
-        'set': SetLog(
-          id: setRow.localId,
-          workoutLogId: logRow.localId,
-          exerciseName: setRow.exerciseNameSnapshot ?? exerciseName,
-          setType: setRow.setType,
-          weightKg: setRow.weight,
-          reps: setRow.reps,
-          isCompleted: setRow.isCompleted,
-        ),
-        'date': logRow.startTime,
-      };
-    }).toList();
+      final setLog = SetLog(
+        id: setRow.localId,
+        workoutLogId: logRow.localId,
+        exerciseName: setRow.exerciseNameSnapshot ?? exerciseName,
+        setType: setRow.setType,
+        weightKg: setRow.weight,
+        reps: setRow.reps,
+        isCompleted: setRow.isCompleted,
+      );
 
-    // Tie-breaker logic: Max weight, then max reps, then most recent date
-    for (final s in qualifyingSets) {
-      final setLog = s['set'] as SetLog;
-      // Date parameter would be used here if needed for deeper tie-breaking
-      // but 'most recent date wins' is handled naturally by list order iteration
-      final bracket = getBracket(setLog.reps ?? 0);
+      final reps = setLog.reps ?? 0;
+      final weight = setLog.weightKg ?? 0.0;
 
-      final currentPr = prMap[bracket];
+      if (reps <= 0 || weight <= 0) continue;
 
-      if (currentPr == null) {
-        prMap[bracket] = setLog;
-        // Store the date temporarily on the SetLog in case it is needed later,
-        // or compare it directly here (kept in scope here).
-      } else {
-        // Compare with current PR
-        if (setLog.weightKg! > currentPr.weightKg!) {
+      // Track absolute best Est. 1RM
+      if (reps <= 10) {
+        final est1rm = weight * (36 / (37 - reps));
+        if (est1rm > bestEst1rmValue) {
+          bestEst1rmValue = est1rm;
+          bestEst1rmSet = setLog;
+        }
+      }
+
+      final bracket = getBracket(reps);
+      if (bracket != null) {
+        final currentPr = prMap[bracket];
+        if (currentPr == null || weight > (currentPr.weightKg ?? 0.0)) {
           prMap[bracket] = setLog;
-        } else if (setLog.weightKg == currentPr.weightKg) {
-          if (setLog.reps! > currentPr.reps!) {
-            prMap[bracket] = setLog;
-          } else if (setLog.reps == currentPr.reps) {
-            // To get the date from the current PR, it would need to be stored with it.
-            // For v1, simply replace the current one because the list is usually iterated
-            // toward the end, or store an internal structure.
-            // Overwrite it for simplicity (the newest session wins if
-            // the list is ascending).
-            prMap[bracket] = setLog; // Simplification for "latest date wins"
-          }
+        } else if (weight == currentPr.weightKg &&
+            reps > (currentPr.reps ?? 0)) {
+          prMap[bracket] = setLog;
         }
       }
     }
 
+    if (bestEst1rmSet != null) {
+      prMap['Est. 1RM'] = bestEst1rmSet;
+    }
+
     return prMap;
+  }
+
+  /// Retrieves the historical bests (Max Weight, Max Volume, Max Est. 1RM)
+  /// for a specific exercise to use as a baseline for real-time PR detection.
+  Future<Map<String, double>> getExerciseBests(
+    String exerciseName, {
+    String? altName,
+    String? exerciseUuid,
+    int? excludeWorkoutLogId,
+    DateTime? beforeTimestamp,
+  }) async {
+    final dbInstance = await database;
+
+    final exerciseMatch = _buildExerciseMatchCondition(
+      dbInstance,
+      exerciseName,
+      altName: altName,
+      exerciseUuid: exerciseUuid,
+    );
+
+    // Get the UUID of the workout to exclude if provided
+    String? excludeUuid;
+    if (excludeWorkoutLogId != null) {
+      excludeUuid = await _getUuidFromLocalId(
+        dbInstance.workoutLogs,
+        excludeWorkoutLogId,
+      );
+    }
+
+    // Qualifying sets for PRs:
+    // isCompleted == true, setType != 'warmup', weight > 0, reps > 0
+    var query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(
+        dbInstance.workoutLogs,
+        dbInstance.workoutLogs.id.equalsExp(
+          dbInstance.setLogs.workoutLogId,
+        ),
+      ),
+    ])
+      ..where(
+        exerciseMatch &
+            dbInstance.setLogs.isCompleted.equals(true) &
+            dbInstance.setLogs.setType.isNotIn(['warmup']) &
+            dbInstance.setLogs.weight.isBiggerThanValue(0) &
+            dbInstance.setLogs.reps.isBiggerThanValue(0) &
+            dbInstance.workoutLogs.status.equals('completed'),
+      );
+
+    if (excludeUuid != null) {
+      query = query..where(dbInstance.workoutLogs.id.isNotValue(excludeUuid));
+    }
+
+    if (beforeTimestamp != null) {
+      query = query
+        ..where(dbInstance.workoutLogs.startTime.isSmallerThanValue(
+          beforeTimestamp,
+        ));
+    }
+
+    final rows = await query.get();
+
+    double maxWeight = 0.0;
+    double maxVolume = 0.0;
+    double maxEst1rm = 0.0;
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final weight = setRow.weight ?? 0.0;
+      final reps = setRow.reps ?? 0;
+
+      if (weight > maxWeight) maxWeight = weight;
+
+      final volume = weight * reps;
+      if (volume > maxVolume) maxVolume = volume;
+
+      if (reps > 0 && reps <= 10) {
+        final est1rm = weight * (36 / (37 - reps));
+        if (est1rm > maxEst1rm) maxEst1rm = est1rm;
+      }
+    }
+
+    return {
+      'maxWeight': maxWeight,
+      'maxVolume': maxVolume,
+      'maxEst1rm': maxEst1rm,
+    };
   }
 
   /// Calculates Time-Series data points for Weight, Volume, and Sets per session.
@@ -1472,6 +1634,7 @@ class WorkoutDatabaseHelper {
           'date': logRow.startTime,
           'maxWeight': 0.0,
           'totalVolume': 0.0,
+          'maxEst1rm': 0.0,
           'setCount': 0,
         };
       }
@@ -1487,6 +1650,14 @@ class WorkoutDatabaseHelper {
 
       // Update Volume
       agg['totalVolume'] += (weight * reps);
+
+      // Update Max Est. 1RM (Brzycki formula)
+      if (reps > 0 && reps <= 10) {
+        final est1rm = weight * (36 / (37 - reps));
+        if (est1rm > (agg['maxEst1rm'] as double)) {
+          agg['maxEst1rm'] = est1rm;
+        }
+      }
 
       // Update Set Count
       agg['setCount'] += 1;

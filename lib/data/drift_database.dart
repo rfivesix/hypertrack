@@ -77,6 +77,8 @@ class Exercises extends Table with HybridId, MetaColumns {
 
   BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
   TextColumn get source => text().withDefault(const Constant('user'))();
+
+  IntColumn get usageCount => integer().withDefault(const Constant(0))();
 }
 
 // 4. Routines
@@ -195,6 +197,8 @@ class Products extends Table with HybridId, MetaColumns {
       text().withDefault(const Constant('user'))(); // off, user, base
 
   TextColumn get category => text().nullable()(); // <-- Insert this line
+
+  IntColumn get usageCount => integer().withDefault(const Constant(0))();
 }
 
 // 12. NutritionLogs (replaces food_entries)
@@ -396,7 +400,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -415,6 +419,12 @@ class AppDatabase extends _$AppDatabase {
           )
         ''');
           await _createPulsePersistenceSchema(this);
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS exercises_usage_count_idx ON exercises (usage_count);',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS products_usage_count_idx ON products (usage_count);',
+          );
         },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
@@ -523,6 +533,16 @@ class AppDatabase extends _$AppDatabase {
             // so they have a value until the next re-import.
             await customStatement(
               "UPDATE products SET name_de = name WHERE source = 'base'",
+            );
+          }
+          if (from < 15) {
+            await m.addColumn(exercises, exercises.usageCount);
+            await m.addColumn(products, products.usageCount);
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS exercises_usage_count_idx ON exercises (usage_count);',
+            );
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS products_usage_count_idx ON products (usage_count);',
             );
           }
         },

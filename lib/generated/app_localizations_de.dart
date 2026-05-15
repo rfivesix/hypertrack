@@ -543,23 +543,48 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesLabel => 'Notizen';
 
   @override
-  String get hevyImportTitle => 'Hevy Import';
+  String get workoutImportTitle => 'Externer Workout-Import';
 
   @override
-  String get hevyImportDescription =>
-      'Importiere deine gesamte Trainings-Historie aus einer Hevy CSV-Exportdatei.';
+  String get workoutImportDescription =>
+      'Importiere deinen Trainingsverlauf aus einer CSV- oder Excel-Exportdatei.';
 
   @override
-  String get hevyImportButton => 'Hevy-Daten importieren';
+  String get workoutImportButton => 'Workout-Daten importieren';
 
   @override
-  String hevyImportSuccess(Object count) {
+  String workoutImportSuccess(Object count) {
     return '$count Workouts erfolgreich importiert!';
   }
 
   @override
-  String get hevyImportFailed =>
+  String get workoutImportFailed =>
       'Import fehlgeschlagen. Bitte überprüfe die Datei.';
+
+  @override
+  String get importUnitSelectionTitle => 'Einheit beim Import';
+
+  @override
+  String get importUnitSelectionDescription =>
+      'In welcher Einheit liegen die Daten der Datei vor?';
+
+  @override
+  String get unitMetricLabel => 'Metrisch (kg)';
+
+  @override
+  String get unitImperialLabel => 'Imperial (lbs)';
+
+  @override
+  String get excelExportButton => 'Excel-Export (.xlsx)';
+
+  @override
+  String get exportWorkoutHistory => 'Workout-Verlauf';
+
+  @override
+  String get exportNutritionDiary => 'Ernährungstagebuch';
+
+  @override
+  String get exportMeasurements => 'Messwerte';
 
   @override
   String get startWorkout => 'Workout starten';
@@ -2168,7 +2193,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingWeightTitle => 'Aktuelles Gewicht';
 
   @override
-  String get onboardingWeightLabel => 'Gewicht (kg)';
+  String get onboardingWeightLabel => 'Gewicht';
 
   @override
   String get onboardingWeightError => 'Bitte gib ein gültiges Gewicht ein';
@@ -2193,7 +2218,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingGoalFat => 'Fett (g)';
 
   @override
-  String get onboardingGoalWater => 'Wasser (ml)';
+  String get onboardingGoalWater => 'Wasser';
 
   @override
   String get onboardingNext => 'Weiter';
@@ -2205,7 +2230,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingFinish => 'Loslegen';
 
   @override
-  String get onboardingHeightLabel => 'Größe (cm)';
+  String get onboardingUnitSystemTitle => 'Wähle dein Einheitensystem';
+
+  @override
+  String get onboardingUnitSystemSubtitle =>
+      'Du kannst dies später in den Einstellungen ändern.';
+
+  @override
+  String get onboardingUnitMetric => 'Metrisch';
+
+  @override
+  String get onboardingUnitMetricSubtitle => 'kg, cm, ml';
+
+  @override
+  String get onboardingUnitImperial => 'Imperial';
+
+  @override
+  String get onboardingUnitImperialSubtitle => 'lbs, in, fl oz';
+
+  @override
+  String get onboardingHeightLabel => 'Größe';
 
   @override
   String get onboardingGenderLabel => 'Geschlecht';
@@ -2623,7 +2667,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'z. B. auf restlichen Reis achten, viel Protein, usw.';
 
   @override
-  String get currentlyTracking => 'Aktuell tracken';
+  String get currentlyTracking => 'Aktuell';
 
   @override
   String get currentlyTrackingDesc => 'In der täglichen Übersicht anzeigen';
@@ -2886,7 +2930,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String get exerciseAnalyticsChartSets => 'Sätze im Zeitverlauf';
 
   @override
-  String get allTimeRecordsLabel => 'Alle-Zeiten-Rekorde';
+  String get exerciseMetricMaxWeight => 'Max. Gewicht';
+
+  @override
+  String get exerciseMetricVolume => 'Volumen';
+
+  @override
+  String get exerciseMetricEst1RM => 'Schätz. 1RM';
+
+  @override
+  String get prBannerBestMaxWeight => 'Bestes Max. Gewicht';
+
+  @override
+  String get prBannerBestVolumeSet => 'Bestes Volumen-Set';
+
+  @override
+  String get prBannerBest1RM => 'Bestes 1RM';
+
+  @override
+  String get newPersonalRecordLabel => 'Neuer persönlicher Rekord';
+
+  @override
+  String get prBadgeTooltip => 'Neuer persönlicher Rekord!';
+
+  @override
+  String get workoutSummaryNewRecordsTitle => 'Neue Rekorde';
+
+  @override
+  String get allTimeRecordsLabel => 'Allzeit-Rekorde';
 
   @override
   String get recentActivityLabel => 'Letzte Aktivität';
@@ -3190,21 +3261,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsBodyNutritionTrendContext =>
-      'Gewichts- und Kalorientrends';
+      'Gewicht und Kalorien im Zeitverlauf';
 
   @override
   String get analyticsBodyNutritionTrendContextHint =>
-      'Diese Linien zeigen die relative Trendbewegung im gleichen Zeitraum.';
+      'Das Diagramm skaliert beide Reihen auf denselben Platz; Tooltips zeigen die Rohwerte in kg und kcal.';
 
   @override
   String get analyticsBodyNutritionNormalizedHint =>
-      'Beide Linien starten auf derselben Basis, damit du die relative Richtung direkt vergleichen kannst.';
+      'Das Diagramm skaliert Gewicht und Kalorien auf denselben Platz; Tooltips zeigen die Rohwerte in kg und kcal.';
 
   @override
-  String get analyticsWeightTrendLabel => 'Körpergewicht (geglattet)';
+  String get analyticsBodyNutritionTotalWeightLabel => 'Gesamtgewicht (kg)';
 
   @override
-  String get analyticsCaloriesTrendLabel => 'Kalorien (tägl. Trend)';
+  String get analyticsBodyNutritionTotalCaloriesLabel =>
+      'Gesamtkalorien (kcal)';
+
+  @override
+  String get analyticsWeightTrendLabel => 'Gewicht (kg)';
+
+  @override
+  String get analyticsCaloriesTrendLabel => 'Kalorien (kcal)';
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';
@@ -4687,4 +4765,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get legal_section => 'Rechtliches';
+
+  @override
+  String get aiSettingsInstructionTitle =>
+      'Wie die KI-Mahlzeitenerkennung funktioniert';
+
+  @override
+  String get aiSettingsInstructionBody =>
+      'Diese Funktion nutzt KI zur Analyse von Lebensmittelbildern und liefert Nährwertschätzungen. Deine Bilder werden nur dann an den ausgewählten KI-Anbieter gesendet, wenn du die Funktion nutzt. Sie basiert auf einer Bring-Your-Own-Key (BYOK)-Architektur, wodurch deine Daten lokal auf dem Gerät bleiben, bis sie analysiert werden.';
+
+  @override
+  String get aiSettingsSetupGuideTitle => 'Einrichtungs-Anleitung';
+
+  @override
+  String get aiSettingsSetupGuideBody =>
+      'Um diese Funktion zu nutzen, benötigst du einen API-Key von einem KI-Anbieter (z. B. Google Gemini, da hierfür aktuell ein kostenloser Key erhältlich ist).';
+
+  @override
+  String get aiSettingsGetApiKeyButton => 'Schritt-für-Schritt Anleitung';
 }

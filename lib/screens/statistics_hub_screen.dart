@@ -38,6 +38,8 @@ import 'measurements_screen.dart';
 import '../widgets/statistics_steps_card.dart';
 import '../data/database_helper.dart';
 import '../services/health/steps_sync_service.dart';
+import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 
 class StatisticsHubScreen extends StatefulWidget {
   const StatisticsHubScreen({
@@ -1592,8 +1594,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                   ready: ready,
                   fresh: fresh,
                 ),
-                const SizedBox(height: 6),
-                _buildMicroCaption(l10n.currentlyTracking),
               ],
             ],
           ),
@@ -2026,12 +2026,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       );
     }
     final body = _bodyNutrition;
+    final unitService = Provider.of<UnitService>(context);
     final weightValue = body?.currentWeightKg == null
         ? '-'
-        : '${body!.currentWeightKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${unitService.convertDisplayValue(body!.currentWeightKg!, UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final weightChangeValue = body?.weightChangeKg == null
         ? '-'
-        : '${body!.weightChangeKg! >= 0 ? '+' : ''}${body.weightChangeKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${body!.weightChangeKg! >= 0 ? '+' : ''}${unitService.convertDisplayValue(body.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final caloriesValue = body == null || body.loggedCalorieDays <= 0
         ? '-'
         : '${body.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';
@@ -2079,7 +2080,10 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     l10n.metricsWeightChange,
                     weightChangeValue,
                   ),
-                  _buildBodyTrendPill(l10n.metricsAvgCalories, caloriesValue),
+                  _buildBodyTrendPill(
+                    l10n.metricsAvgCalories,
+                    caloriesValue,
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -2119,12 +2123,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 children: [
                   _legendDot(
                     color: Theme.of(context).colorScheme.primary,
-                    label: l10n.analyticsWeightTrendLabel,
+                    label: l10n.analyticsBodyNutritionTotalWeightLabel,
                   ),
                   const SizedBox(width: 12),
                   _legendDot(
-                    color: Theme.of(context).colorScheme.secondary,
-                    label: l10n.analyticsCaloriesTrendLabel,
+                    color: const Color(0xFFF97316),
+                    label: l10n.analyticsBodyNutritionTotalCaloriesLabel,
                   ),
                 ],
               ),
@@ -2132,9 +2136,9 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               SizedBox(
                 height: 84,
                 child: BodyNutritionNormalizedTrendChart(
-                  range: body?.normalizedTrendRange,
-                  weightSeries: body?.normalizedWeightTrend ?? const [],
-                  calorieSeries: body?.normalizedCaloriesTrend ?? const [],
+                  range: body?.range,
+                  weightSeries: body?.weightDaily ?? const [],
+                  calorieSeries: body?.caloriesDaily ?? const [],
                   compact: true,
                 ),
               ),
@@ -2247,7 +2251,12 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
       ],
     );
   }

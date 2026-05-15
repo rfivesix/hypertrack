@@ -2,12 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/measurement.dart';
 import '../models/measurement_session.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
+import '../services/unit_service.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart'; // Added
 
@@ -64,16 +66,21 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
   }
 
   void _saveSession() async {
+    final unitService = context.read<UnitService>();
     final List<Measurement> measurements = [];
     _controllers.forEach((key, controller) {
       if (controller.text.isNotEmpty) {
         final value = double.tryParse(controller.text.replaceAll(',', '.'));
         if (value != null) {
+          final dimension = _measurementDimension(key);
+          final metricValue = dimension == null
+              ? value
+              : unitService.convertToMetric(value, dimension);
           measurements.add(
             Measurement(
               sessionId: 0,
               type: key,
-              value: value,
+              value: metricValue,
               unit: _measurementTypes[key]!,
             ),
           );
@@ -134,6 +141,30 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
     }
   }
 
+  UnitDimension? _measurementDimension(String key) {
+    switch (key) {
+      case 'weight':
+        return UnitDimension.weight;
+      case 'waist':
+      case 'abdomen':
+      case 'hips':
+      case 'neck':
+      case 'shoulder':
+      case 'chest':
+      case 'left_bicep':
+      case 'right_bicep':
+      case 'left_forearm':
+      case 'right_forearm':
+      case 'left_thigh':
+      case 'right_thigh':
+      case 'left_calf':
+      case 'right_calf':
+        return UnitDimension.height;
+      default:
+        return null;
+    }
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -176,6 +207,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme;
+    final unitService = context.watch<UnitService>();
 
     final formattedDate = DateFormat('dd.MM.yyyy').format(_selectedDateTime);
     final formattedTime = DateFormat.Hm().format(_selectedDateTime);
@@ -268,7 +300,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                     controller: _controllers[key],
                     decoration: InputDecoration(
                       labelText: _getLocalizedMeasurementName(key, l10n),
-                      suffixText: _measurementTypes[key],
+                      suffixText: _displayUnit(key, unitService),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -293,5 +325,13 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
         ),
       ),
     );
+  }
+
+  String _displayUnit(String key, UnitService unitService) {
+    final dimension = _measurementDimension(key);
+    if (dimension == null) {
+      return _measurementTypes[key] ?? '';
+    }
+    return unitService.suffixFor(dimension);
   }
 }

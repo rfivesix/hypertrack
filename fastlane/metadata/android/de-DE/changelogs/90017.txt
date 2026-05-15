@@ -1,0 +1,16 @@
+[Neue Funktionen]
+- Unterstützung für imperiale Einheiten: Nahtloser Wechsel zwischen metrischen (kg, cm) und imperialen (lbs, Zoll) Systemen, inklusive Gewichts- und Größenangaben beim Onboarding.
+- Import aus externen Apps: Verbesserter universeller CSV- und Excel-Import mit automatischer Einheitenumrechnung.
+- Rekord-Abzeichen: Neue PR-Abzeichen und Banner in der Live-Workout- und Historien-Ansicht.
+- e1RM-Analyse: Echtzeit-Berechnung und Visualisierung des geschätzten Maximalgewichts (1RM) während des Trainings.
+
+[UI/UX]
+- Intelligente Such-Rangliste: Suchergebnisse für Übungen und Ernährung werden nun basierend auf deiner tatsächlichen Nutzung sortiert.
+- Optimierte Trainingsansichten: Überarbeitete Live-Workout- und Historien-Screens für bessere Übersicht und Interaktion.
+- Design-Feinschliff: Verbessertes Design für Fortschrittsbalken, Diagramme und allgemeine Textlesbarkeit im Liquid-Glass-Thema.
+- Rechtliches & Datenschutz: Integration der Datenschutz-Audit-Bestandsaufnahme und aktualisierte rechtliche Dokumente direkt in der App.
+
+[Performance]
+- Asynchrones Laden: Puls- und Schlafdaten im Tagebuch werden nun asynchron geladen, um die Reaktionsfähigkeit der App zu gewährleisten.
+- Datenbank-Optimierung: Gehärtete SQLite-Operationen und verbesserte Reload-Logik für ein flüssigeres Erlebnis.
+- Schnellerer Start: Optimierter Initialisierungsfluss und verbesserte Datenbank-Migrationen.

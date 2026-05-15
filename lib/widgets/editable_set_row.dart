@@ -1,9 +1,11 @@
 // lib/widgets/editable_set_row.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/set_log.dart';
 import 'set_type_chip.dart';
 import '../generated/app_localizations.dart';
+import '../services/unit_service.dart';
 
 /// An interactive row for editing a single workout set's weight and repetitions.
 ///
@@ -44,9 +46,15 @@ class _EditableSetRowState extends State<EditableSetRow> {
   @override
   void initState() {
     super.initState();
+    final unitService = context.read<UnitService>();
     _weightController = TextEditingController(
-      text: widget.setLog.weightKg?.toStringAsFixed(2).replaceAll('.00', '') ??
-          '',
+      text: widget.setLog.weightKg == null
+          ? ''
+          : unitService
+              .convertDisplayValue(
+                  widget.setLog.weightKg!, UnitDimension.weight)
+              .toStringAsFixed(2)
+              .replaceAll('.00', ''),
     );
     _repsController = TextEditingController(
       text: widget.setLog.reps?.toString() ?? '',
@@ -71,6 +79,7 @@ class _EditableSetRowState extends State<EditableSetRow> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final unitService = context.watch<UnitService>();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -85,7 +94,7 @@ class _EditableSetRowState extends State<EditableSetRow> {
             child: TextFormField(
               controller: _weightController,
               decoration: InputDecoration(
-                labelText: l10n.kgLabel,
+                labelText: unitService.suffixFor(UnitDimension.weight),
                 isDense: true,
               ),
               keyboardType: const TextInputType.numberWithOptions(

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
 import '../data/backup_manager.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
@@ -15,6 +16,7 @@ import '../features/nutrition_recommendation/presentation/prior_activity_help_bl
 import '../features/nutrition_recommendation/domain/goal_models.dart';
 import '../features/nutrition_recommendation/domain/recommendation_models.dart';
 import '../services/app_tour_service.dart';
+import '../services/unit_service.dart';
 import '../widgets/glass_bottom_menu.dart';
 
 /// The initial setup flow for new users.
@@ -36,8 +38,9 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const int _adaptiveGoalPageIndex = 4;
-  static const int _pageCount = 8;
+  static const int _profilePageIndex = 2;
+  static const int _adaptiveGoalPageIndex = 5;
+  static const int _pageCount = 9;
   static const int _lastPageIndex = _pageCount - 1;
 
   final PageController _pageController = PageController();
@@ -45,6 +48,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isRestoring = false;
   bool _isGeneratingOnboardingRecommendation = false;
   Future<void>? _onboardingRecommendationFuture;
+  UnitSystem? _selectedUnitSystem;
 
   late final AdaptiveNutritionRecommendationService _recommendationService;
   late final DatabaseHelper _databaseHelper;
@@ -111,6 +115,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // --- LOGIC ---
 
+  UnitService get _unitService => context.read<UnitService>();
+
   // lib/screens/onboarding_screen.dart
 
   Future<void> _loadAdaptiveGoalSettings() async {
@@ -145,8 +151,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _performRefreshOnboardingRecommendation() async {
     setState(() => _isGeneratingOnboardingRecommendation = true);
 
-    final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
-    final height = int.tryParse(_heightController.text);
+    final unitService = _unitService;
+    final weightInput = double.tryParse(
+      _weightController.text.replaceAll(',', '.'),
+    );
+    final heightInput = double.tryParse(
+      _heightController.text.replaceAll(',', '.'),
+    );
+    final weight = weightInput == null
+        ? null
+        : unitService.convertToMetric(weightInput, UnitDimension.weight);
+    final height = heightInput == null
+        ? null
+        : unitService
+            .convertToMetric(heightInput, UnitDimension.height)
+            .round();
     final bodyFatPercent =
         double.tryParse(_bodyFatPercentController.text.replaceAll(',', '.'));
     try {
@@ -255,19 +274,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _finishOnboarding() async {
     final db = _databaseHelper;
     final prefs = await SharedPreferences.getInstance();
+    final unitService = _unitService;
 
     final int calories = int.tryParse(_calController.text) ?? 2500;
     final int protein = int.tryParse(_protController.text) ?? 180;
     final int carbs = int.tryParse(_carbController.text) ?? 250;
     final int fat = int.tryParse(_fatController.text) ?? 80;
-    final int water = int.tryParse(_waterController.text) ?? 3000;
-    final int? height = int.tryParse(_heightController.text);
-    final double? weight = double.tryParse(
+    final double? waterInput = double.tryParse(
+      _waterController.text.replaceAll(',', '.'),
+    );
+    final double? heightInput = double.tryParse(
+      _heightController.text.replaceAll(',', '.'),
+    );
+    final double? weightInput = double.tryParse(
       _weightController.text.replaceAll(',', '.'),
     );
     final double? bodyFatPercent = double.tryParse(
       _bodyFatPercentController.text.replaceAll(',', '.'),
     );
+    final int water = waterInput == null
+        ? 3000
+        : unitService.convertToMetric(waterInput, UnitDimension.liquid).round();
+    final int? height = heightInput == null
+        ? null
+        : unitService
+            .convertToMetric(heightInput, UnitDimension.height)
+            .round();
+    final double? weight = weightInput == null
+        ? null
+        : unitService.convertToMetric(weightInput, UnitDimension.weight);
 
     final onboardingRecommendation = _onboardingRecommendation ??
         await _recommendationService.generateOnboardingRecommendation(
@@ -444,7 +479,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _nextPage() async {
-    if (_currentPage == 1) {
+    if (_currentPage == _profilePageIndex) {
       if (_nameController.text.trim().isEmpty) return;
     }
 
@@ -505,6 +540,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
                 children: [
                   _buildWelcomePage(l10n),
+                  _buildUnitSystemPage(l10n),
                   _buildProfilePage(l10n),
                   _buildWeightPage(l10n),
                   _buildBodyFatPage(l10n),
@@ -642,7 +678,75 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  Future<void> _selectUnitSystem(UnitSystem system) async {
+    setState(() => _selectedUnitSystem = system);
+    await _unitService.setUnitSystem(system);
+
+    // Update default values based on system to avoid "3000 fl oz" or "100 ml"
+    if (system == UnitSystem.imperial) {
+      if (_waterController.text == '3000') {
+        _waterController.text = '100'; // ~3L in fl oz
+      }
+    } else {
+      if (_waterController.text == '100') {
+        _waterController.text = '3000'; // ~100 fl oz in ml
+      }
+    }
+
+    if (!mounted) return;
+    await _pageController.animateToPage(
+      _currentPage + 1,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Widget _buildUnitSystemPage(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final unitService = context.watch<UnitService>();
+    final selected = _selectedUnitSystem ?? unitService.unitSystem;
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _StepTitle(
+            title: l10n.onboardingUnitSystemTitle,
+            align: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.onboardingUnitSystemSubtitle,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 28),
+          _UnitSystemChoiceCard(
+            title: l10n.onboardingUnitMetric,
+            subtitle: l10n.onboardingUnitMetricSubtitle,
+            icon: Icons.straighten_rounded,
+            selected: selected == UnitSystem.metric,
+            onTap: () => _selectUnitSystem(UnitSystem.metric),
+          ),
+          const SizedBox(height: 16),
+          _UnitSystemChoiceCard(
+            title: l10n.onboardingUnitImperial,
+            subtitle: l10n.onboardingUnitImperialSubtitle,
+            icon: Icons.public_rounded,
+            selected: selected == UnitSystem.imperial,
+            onTap: () => _selectUnitSystem(UnitSystem.imperial),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfilePage(AppLocalizations l10n) {
+    final unitService = context.watch<UnitService>();
     return SingleChildScrollView(
       key: const Key('onboarding_profile_page'),
       padding: const EdgeInsets.all(24.0),
@@ -714,9 +818,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     TextField(
                       key: const Key('onboarding_height_text_field'),
                       controller: _heightController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: InputDecoration(
-                        labelText: l10n.onboardingHeightLabel,
+                        labelText:
+                            '${l10n.onboardingHeightLabel} (${unitService.suffixFor(UnitDimension.height)})',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -774,9 +881,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ... Remaining pages stay identical to the previous code ...
-
   Widget _buildWeightPage(AppLocalizations l10n) {
+    final unitService = context.watch<UnitService>();
+    final suffix = unitService.suffixFor(UnitDimension.weight);
     return Padding(
       key: const Key('onboarding_weight_page'),
       padding: const EdgeInsets.all(24.0),
@@ -784,7 +891,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _StepTitle(
-            title: l10n.onboardingWeightTitle,
+            title: '${l10n.onboardingWeightTitle} ($suffix)',
             align: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -795,7 +902,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               hintText: '0.0',
-              suffixText: l10n.unit_kilograms,
+              suffixText: suffix,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -1114,12 +1221,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildWaterPage(AppLocalizations l10n) {
+    final unitService = context.watch<UnitService>();
+    final suffix = unitService.suffixFor(UnitDimension.liquid);
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _StepTitle(title: l10n.onboardingGoalWater, align: TextAlign.center),
+          _StepTitle(
+            title: '${l10n.onboardingGoalWater} ($suffix)',
+            align: TextAlign.center,
+          ),
           const SizedBox(height: 32),
           TextField(
             controller: _waterController,
@@ -1131,7 +1243,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               color: Colors.blue,
             ),
             decoration: InputDecoration(
-              suffixText: l10n.unit_milliliters,
+              suffixText: suffix,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -1201,6 +1313,85 @@ class _MacroInput extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _UnitSystemChoiceCard extends StatelessWidget {
+  const _UnitSystemChoiceCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: cs.surface.withValues(alpha: selected ? 0.96 : 0.82),
+            border: Border.all(
+              color:
+                  selected ? cs.primary : cs.onSurface.withValues(alpha: 0.10),
+              width: selected ? 2 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+                color: cs.shadow.withValues(alpha: 0.14),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 34, color: selected ? cs.primary : cs.onSurface),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                selected ? Icons.check_circle : Icons.circle_outlined,
+                color: selected ? cs.primary : cs.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

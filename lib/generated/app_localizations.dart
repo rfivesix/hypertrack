@@ -1088,35 +1088,83 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get notesLabel;
 
-  /// No description provided for @hevyImportTitle.
+  /// No description provided for @workoutImportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hevy Import'**
-  String get hevyImportTitle;
+  /// **'External Workout Import'**
+  String get workoutImportTitle;
 
-  /// No description provided for @hevyImportDescription.
+  /// No description provided for @workoutImportDescription.
   ///
   /// In en, this message translates to:
-  /// **'Import your entire training history from a Hevy CSV export file.'**
-  String get hevyImportDescription;
+  /// **'Import your training history from a CSV or Excel export file.'**
+  String get workoutImportDescription;
 
-  /// No description provided for @hevyImportButton.
+  /// No description provided for @workoutImportButton.
   ///
   /// In en, this message translates to:
-  /// **'Import Hevy Data'**
-  String get hevyImportButton;
+  /// **'Import Workout Data'**
+  String get workoutImportButton;
 
-  /// No description provided for @hevyImportSuccess.
+  /// No description provided for @workoutImportSuccess.
   ///
   /// In en, this message translates to:
   /// **'Successfully imported {count} workouts!'**
-  String hevyImportSuccess(Object count);
+  String workoutImportSuccess(Object count);
 
-  /// No description provided for @hevyImportFailed.
+  /// No description provided for @workoutImportFailed.
   ///
   /// In en, this message translates to:
   /// **'Import failed. Please check the file.'**
-  String get hevyImportFailed;
+  String get workoutImportFailed;
+
+  /// No description provided for @importUnitSelectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Unit'**
+  String get importUnitSelectionTitle;
+
+  /// No description provided for @importUnitSelectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'In which unit is the data in the file provided?'**
+  String get importUnitSelectionDescription;
+
+  /// No description provided for @unitMetricLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric (kg)'**
+  String get unitMetricLabel;
+
+  /// No description provided for @unitImperialLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial (lbs)'**
+  String get unitImperialLabel;
+
+  /// No description provided for @excelExportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel Export (.xlsx)'**
+  String get excelExportButton;
+
+  /// No description provided for @exportWorkoutHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout History'**
+  String get exportWorkoutHistory;
+
+  /// No description provided for @exportNutritionDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Diary'**
+  String get exportNutritionDiary;
+
+  /// No description provided for @exportMeasurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get exportMeasurements;
 
   /// No description provided for @startWorkout.
   ///
@@ -3923,7 +3971,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWeightLabel.
   ///
   /// In en, this message translates to:
-  /// **'Weight (kg)'**
+  /// **'Weight'**
   String get onboardingWeightLabel;
 
   /// No description provided for @onboardingWeightError.
@@ -3971,7 +4019,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingGoalWater.
   ///
   /// In en, this message translates to:
-  /// **'Water (ml)'**
+  /// **'Water'**
   String get onboardingGoalWater;
 
   /// No description provided for @onboardingNext.
@@ -3992,10 +4040,46 @@ abstract class AppLocalizations {
   /// **'Start Tracking'**
   String get onboardingFinish;
 
+  /// No description provided for @onboardingUnitSystemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your Unit System'**
+  String get onboardingUnitSystemTitle;
+
+  /// No description provided for @onboardingUnitSystemSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this later in Settings.'**
+  String get onboardingUnitSystemSubtitle;
+
+  /// No description provided for @onboardingUnitMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get onboardingUnitMetric;
+
+  /// No description provided for @onboardingUnitMetricSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'kg, cm, ml'**
+  String get onboardingUnitMetricSubtitle;
+
+  /// No description provided for @onboardingUnitImperial.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial'**
+  String get onboardingUnitImperial;
+
+  /// No description provided for @onboardingUnitImperialSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'lbs, in, fl oz'**
+  String get onboardingUnitImperialSubtitle;
+
   /// No description provided for @onboardingHeightLabel.
   ///
   /// In en, this message translates to:
-  /// **'Height (cm)'**
+  /// **'Height'**
   String get onboardingHeightLabel;
 
   /// No description provided for @onboardingGenderLabel.
@@ -4646,7 +4730,7 @@ abstract class AppLocalizations {
   /// No description provided for @currentlyTracking.
   ///
   /// In en, this message translates to:
-  /// **'Currently tracking'**
+  /// **'Currently'**
   String get currentlyTracking;
 
   /// No description provided for @currentlyTrackingDesc.
@@ -5110,6 +5194,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sets Over Time'**
   String get exerciseAnalyticsChartSets;
+
+  /// No description provided for @exerciseMetricMaxWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Weight'**
+  String get exerciseMetricMaxWeight;
+
+  /// No description provided for @exerciseMetricVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get exerciseMetricVolume;
+
+  /// No description provided for @exerciseMetricEst1RM.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. 1RM'**
+  String get exerciseMetricEst1RM;
+
+  /// No description provided for @prBannerBestMaxWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Max Weight'**
+  String get prBannerBestMaxWeight;
+
+  /// No description provided for @prBannerBestVolumeSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Volume Set'**
+  String get prBannerBestVolumeSet;
+
+  /// No description provided for @prBannerBest1RM.
+  ///
+  /// In en, this message translates to:
+  /// **'Best 1-Rep Max'**
+  String get prBannerBest1RM;
+
+  /// No description provided for @newPersonalRecordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New Personal Record'**
+  String get newPersonalRecordLabel;
+
+  /// No description provided for @prBadgeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'New Personal Record!'**
+  String get prBadgeTooltip;
+
+  /// No description provided for @workoutSummaryNewRecordsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Records'**
+  String get workoutSummaryNewRecordsTitle;
 
   /// No description provided for @allTimeRecordsLabel.
   ///
@@ -5654,31 +5792,43 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsBodyNutritionTrendContext.
   ///
   /// In en, this message translates to:
-  /// **'Body weight and calorie trends'**
+  /// **'Weight and calories over time'**
   String get analyticsBodyNutritionTrendContext;
 
   /// No description provided for @analyticsBodyNutritionTrendContextHint.
   ///
   /// In en, this message translates to:
-  /// **'These lines show relative trend movement over the same period.'**
+  /// **'The chart scales each series to fit the same space; tooltips show raw kg and kcal values.'**
   String get analyticsBodyNutritionTrendContextHint;
 
   /// No description provided for @analyticsBodyNutritionNormalizedHint.
   ///
   /// In en, this message translates to:
-  /// **'Both lines are normalized to the same starting baseline to compare relative direction.'**
+  /// **'The chart scales weight and calories to fit the same space; tooltips show raw kg and kcal values.'**
   String get analyticsBodyNutritionNormalizedHint;
+
+  /// No description provided for @analyticsBodyNutritionTotalWeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total weight (kg)'**
+  String get analyticsBodyNutritionTotalWeightLabel;
+
+  /// No description provided for @analyticsBodyNutritionTotalCaloriesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total calories (kcal)'**
+  String get analyticsBodyNutritionTotalCaloriesLabel;
 
   /// No description provided for @analyticsWeightTrendLabel.
   ///
   /// In en, this message translates to:
-  /// **'Body weight (smoothed)'**
+  /// **'Weight (kg)'**
   String get analyticsWeightTrendLabel;
 
   /// No description provided for @analyticsCaloriesTrendLabel.
   ///
   /// In en, this message translates to:
-  /// **'Calories (daily avg trend)'**
+  /// **'Calories (kcal)'**
   String get analyticsCaloriesTrendLabel;
 
   /// No description provided for @analyticsInterpretationTitle.
@@ -8183,6 +8333,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Legal'**
   String get legal_section;
+
+  /// No description provided for @aiSettingsInstructionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How AI Meal Recognition Works'**
+  String get aiSettingsInstructionTitle;
+
+  /// No description provided for @aiSettingsInstructionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature uses AI to analyze food images and provide nutrient estimates. Your images are only sent to the selected AI provider when you use the feature. It relies on a Bring-Your-Own-Key (BYOK) architecture, keeping your data locally on your device until analysis.'**
+  String get aiSettingsInstructionBody;
+
+  /// No description provided for @aiSettingsSetupGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup Guide'**
+  String get aiSettingsSetupGuideTitle;
+
+  /// No description provided for @aiSettingsSetupGuideBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.'**
+  String get aiSettingsSetupGuideBody;
+
+  /// No description provided for @aiSettingsGetApiKeyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View Setup Guide'**
+  String get aiSettingsGetApiKeyButton;
 }
 
 class _AppLocalizationsDelegate

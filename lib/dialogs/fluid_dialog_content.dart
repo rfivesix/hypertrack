@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
+import '../services/unit_service.dart';
 import '../util/design_constants.dart';
 
 /// A dialog content widget for logging fluid intake (water, coffee, etc.).
@@ -126,6 +128,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
     final locale = Localizations.localeOf(context).toString();
     final formattedDate = DateFormat.yMd(locale).format(_selectedDateTime);
     final formattedTime = DateFormat.Hm(locale).format(_selectedDateTime);
+    final unitService = context.watch<UnitService>();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -141,7 +144,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: l10n.amount_in_milliliters,
-            suffixText: l10n.unit_milliliters,
+            suffixText: unitService.suffixFor(UnitDimension.liquid),
           ),
           autofocus: true,
         ),

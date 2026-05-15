@@ -540,22 +540,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesLabel => 'Notes';
 
   @override
-  String get hevyImportTitle => 'Hevy Import';
+  String get workoutImportTitle => 'External Workout Import';
 
   @override
-  String get hevyImportDescription =>
-      'Import your entire training history from a Hevy CSV export file.';
+  String get workoutImportDescription =>
+      'Import your training history from a CSV or Excel export file.';
 
   @override
-  String get hevyImportButton => 'Import Hevy Data';
+  String get workoutImportButton => 'Import Workout Data';
 
   @override
-  String hevyImportSuccess(Object count) {
+  String workoutImportSuccess(Object count) {
     return 'Successfully imported $count workouts!';
   }
 
   @override
-  String get hevyImportFailed => 'Import failed. Please check the file.';
+  String get workoutImportFailed => 'Import failed. Please check the file.';
+
+  @override
+  String get importUnitSelectionTitle => 'Import Unit';
+
+  @override
+  String get importUnitSelectionDescription =>
+      'In which unit is the data in the file provided?';
+
+  @override
+  String get unitMetricLabel => 'Metric (kg)';
+
+  @override
+  String get unitImperialLabel => 'Imperial (lbs)';
+
+  @override
+  String get excelExportButton => 'Excel Export (.xlsx)';
+
+  @override
+  String get exportWorkoutHistory => 'Workout History';
+
+  @override
+  String get exportNutritionDiary => 'Nutrition Diary';
+
+  @override
+  String get exportMeasurements => 'Measurements';
 
   @override
   String get startWorkout => 'Start Workout';
@@ -2158,7 +2183,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingWeightTitle => 'Current Weight';
 
   @override
-  String get onboardingWeightLabel => 'Weight (kg)';
+  String get onboardingWeightLabel => 'Weight';
 
   @override
   String get onboardingWeightError => 'Please enter a valid weight';
@@ -2183,7 +2208,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingGoalFat => 'Fat (g)';
 
   @override
-  String get onboardingGoalWater => 'Water (ml)';
+  String get onboardingGoalWater => 'Water';
 
   @override
   String get onboardingNext => 'Next';
@@ -2195,7 +2220,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingFinish => 'Start Tracking';
 
   @override
-  String get onboardingHeightLabel => 'Height (cm)';
+  String get onboardingUnitSystemTitle => 'Choose your Unit System';
+
+  @override
+  String get onboardingUnitSystemSubtitle =>
+      'You can change this later in Settings.';
+
+  @override
+  String get onboardingUnitMetric => 'Metric';
+
+  @override
+  String get onboardingUnitMetricSubtitle => 'kg, cm, ml';
+
+  @override
+  String get onboardingUnitImperial => 'Imperial';
+
+  @override
+  String get onboardingUnitImperialSubtitle => 'lbs, in, fl oz';
+
+  @override
+  String get onboardingHeightLabel => 'Height';
 
   @override
   String get onboardingGenderLabel => 'Gender';
@@ -2601,7 +2645,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'e.g. Include leftover rice, high protein, etc.';
 
   @override
-  String get currentlyTracking => 'Currently tracking';
+  String get currentlyTracking => 'Currently';
 
   @override
   String get currentlyTrackingDesc => 'Show in daily tracker hub';
@@ -2863,6 +2907,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exerciseAnalyticsChartSets => 'Sets Over Time';
+
+  @override
+  String get exerciseMetricMaxWeight => 'Max Weight';
+
+  @override
+  String get exerciseMetricVolume => 'Volume';
+
+  @override
+  String get exerciseMetricEst1RM => 'Est. 1RM';
+
+  @override
+  String get prBannerBestMaxWeight => 'Best Max Weight';
+
+  @override
+  String get prBannerBestVolumeSet => 'Best Volume Set';
+
+  @override
+  String get prBannerBest1RM => 'Best 1-Rep Max';
+
+  @override
+  String get newPersonalRecordLabel => 'New Personal Record';
+
+  @override
+  String get prBadgeTooltip => 'New Personal Record!';
+
+  @override
+  String get workoutSummaryNewRecordsTitle => 'New Records';
 
   @override
   String get allTimeRecordsLabel => 'All-Time Records';
@@ -3166,21 +3237,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsBodyNutritionTrendContext =>
-      'Body weight and calorie trends';
+      'Weight and calories over time';
 
   @override
   String get analyticsBodyNutritionTrendContextHint =>
-      'These lines show relative trend movement over the same period.';
+      'The chart scales each series to fit the same space; tooltips show raw kg and kcal values.';
 
   @override
   String get analyticsBodyNutritionNormalizedHint =>
-      'Both lines are normalized to the same starting baseline to compare relative direction.';
+      'The chart scales weight and calories to fit the same space; tooltips show raw kg and kcal values.';
 
   @override
-  String get analyticsWeightTrendLabel => 'Body weight (smoothed)';
+  String get analyticsBodyNutritionTotalWeightLabel => 'Total weight (kg)';
 
   @override
-  String get analyticsCaloriesTrendLabel => 'Calories (daily avg trend)';
+  String get analyticsBodyNutritionTotalCaloriesLabel =>
+      'Total calories (kcal)';
+
+  @override
+  String get analyticsWeightTrendLabel => 'Weight (kg)';
+
+  @override
+  String get analyticsCaloriesTrendLabel => 'Calories (kcal)';
 
   @override
   String get analyticsInterpretationTitle => 'Interpretation';
@@ -4646,4 +4724,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legal_section => 'Legal';
+
+  @override
+  String get aiSettingsInstructionTitle => 'How AI Meal Recognition Works';
+
+  @override
+  String get aiSettingsInstructionBody =>
+      'This feature uses AI to analyze food images and provide nutrient estimates. Your images are only sent to the selected AI provider when you use the feature. It relies on a Bring-Your-Own-Key (BYOK) architecture, keeping your data locally on your device until analysis.';
+
+  @override
+  String get aiSettingsSetupGuideTitle => 'Setup Guide';
+
+  @override
+  String get aiSettingsSetupGuideBody =>
+      'To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.';
+
+  @override
+  String get aiSettingsGetApiKeyButton => 'View Setup Guide';
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/product_database_helper.dart';
 import '../generated/app_localizations.dart';
@@ -22,6 +23,7 @@ class GeneralFoodSelectionScreen extends StatefulWidget {
 class _GeneralFoodSelectionScreenState
     extends State<GeneralFoodSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   List<FoodItem> _results = [];
   bool _isLoading = false;
   String _searchInitialText = '';
@@ -46,7 +48,15 @@ class _GeneralFoodSelectionScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _runFilter(query);
+    });
   }
 
   Future<void> _runFilter(String enteredKeyword) async {
@@ -148,7 +158,7 @@ class _GeneralFoodSelectionScreenState
           children: [
             TextField(
               controller: _searchController,
-              onChanged: _runFilter,
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: l10n.searchHintText,
                 prefixIcon: Icon(

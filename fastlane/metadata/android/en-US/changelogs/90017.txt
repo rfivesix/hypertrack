@@ -1,0 +1,16 @@
+[New Features]
+- Support for Imperial Units: Seamlessly switch between Metric (kg, cm) and Imperial (lbs, inches) systems, including weight and height during onboarding.
+- External App Import: Improved universal CSV and Excel import functionality with automatic unit conversion.
+- Personal Record Badges: New PR badges and banners in Live Workout and History screens.
+- e1RM Analytics: Real-time estimated 1RM calculation and visualization during workouts.
+
+[UI/UX]
+- Smart Search Ranking: Exercise and nutrition search results are now ranked based on your actual usage for faster access.
+- Enhanced Workout Screens: Redesigned Live Workout and Workout History for better clarity and interaction.
+- Visual Refinements: Improved design for glass progress bars, charts, and overall text visibility in Liquid Glass theme.
+- Legal & Privacy: Integrated privacy audit inventory and updated legal documents directly within the app.
+
+[Performance]
+- Async Background Loading: Pulse and Sleep data in the Diary now load asynchronously to ensure the UI remains responsive.
+- Database Hardening: Optimized SQLite operations and reload logic for a smoother experience.
+- Faster Startup: Improved initialization flow and database schema migrations.

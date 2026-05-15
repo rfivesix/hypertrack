@@ -81,24 +81,36 @@ class StatisticsStepsCard extends StatelessWidget {
                 // Left Column: Huge numbers
                 Expanded(
                   flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        numberFormat.format(currentSteps),
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            numberFormat.format(currentSteps),
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                          ),
                         ),
-                      ),
-                      Text(
-                        currentStepsSubtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: primaryColor,
-                          fontWeight: FontWeight.w500,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            currentStepsSubtitle,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 // Right Column: Bar Chart

@@ -18,6 +18,24 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
 
+DateTime resolveSupplementTrackLogTimestamp({
+  required DateTime selectedDate,
+  DateTime? now,
+}) {
+  final currentTime = now ?? DateTime.now();
+  if (selectedDate.isSameDate(currentTime)) {
+    return currentTime;
+  }
+
+  return DateTime(
+    selectedDate.year,
+    selectedDate.month,
+    selectedDate.day,
+    currentTime.hour,
+    currentTime.minute,
+  );
+}
+
 /// A screen for tracking daily supplement intake.
 ///
 /// Similar to [SupplementHubScreen], it focuses on logging and monitoring
@@ -142,7 +160,9 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
         return LogSupplementDoseBody(
           supplement: supplement,
           primaryLabel: l10n.add_button,
-          initialTimestamp: _selectedDate, // Fix #66: Pass the date.
+          initialTimestamp: resolveSupplementTrackLogTimestamp(
+            selectedDate: _selectedDate,
+          ),
           onCancel: close,
           onSubmit: (dose, ts) {
             close();

@@ -20,6 +20,8 @@ import '../widgets/global_app_bar.dart';
 import '../widgets/set_type_chip.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_card.dart';
+import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 
 /// A screen for creating or modifying a [Routine].
 ///
@@ -726,7 +728,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     return Row(
       children: [
         _buildHeader(l10n.setLabel, flex: 2),
-        _buildHeader(l10n.kgLabel, flex: 2),
+        _buildHeader(
+            context.read<UnitService>().suffixFor(UnitDimension.weight),
+            flex: 2),
         const SizedBox(width: 8),
         _buildHeader(l10n.repsLabel, flex: 2),
         const SizedBox(width: 8),
@@ -837,7 +841,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                     border: InputBorder.none,
                     isDense: true,
                     fillColor: Colors.transparent,
-                    hintText: l10n.kgLabelShort,
+                    hintText: context
+                        .read<UnitService>()
+                        .suffixFor(UnitDimension.weight),
                   ),
                 ),
               ),

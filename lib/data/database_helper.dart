@@ -265,6 +265,20 @@ class DatabaseHelper {
     final row = await dbInstance
         .into(dbInstance.nutritionLogs)
         .insertReturning(companion);
+
+    // Increment usageCount for the product
+    if (entry.barcode.isNotEmpty) {
+      try {
+        await dbInstance.customUpdate(
+          'UPDATE products SET usage_count = usage_count + 1 WHERE barcode = ?',
+          variables: [drift.Variable.withString(entry.barcode)],
+          updates: {dbInstance.products},
+        );
+      } catch (e) {
+        // Non-critical
+      }
+    }
+
     return row.localId;
   }
 
@@ -1580,7 +1594,7 @@ class DatabaseHelper {
       ..orderBy([
         drift.OrderingTerm(expression: maxDate, mode: drift.OrderingMode.desc),
       ])
-      ..limit(20);
+      ..limit(100);
 
     final result = await query.get();
 

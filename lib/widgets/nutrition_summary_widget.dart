@@ -1,8 +1,10 @@
 // lib/widgets/nutrition_summary_widget.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
 import '../models/daily_nutrition.dart';
+import '../services/unit_service.dart';
 import '../util/design_constants.dart';
 import 'glass_progress_bar.dart';
 
@@ -32,6 +34,7 @@ class NutritionSummaryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showSugarTile = !isExpandedView && showSugarInOverview;
+    final unitService = context.watch<UnitService>();
 
     return IntrinsicHeight(
       child: Row(
@@ -54,9 +57,15 @@ class NutritionSummaryWidget extends StatelessWidget {
                 Expanded(
                   child: GlassProgressBar(
                     label: l10n.water,
-                    unit: 'ml',
-                    value: nutritionData.water.toDouble(),
-                    target: nutritionData.targetWater.toDouble(),
+                    unit: unitService.suffixFor(UnitDimension.liquid),
+                    value: unitService.convertDisplayValue(
+                      nutritionData.water.toDouble(),
+                      UnitDimension.liquid,
+                    ),
+                    target: unitService.convertDisplayValue(
+                      nutritionData.targetWater.toDouble(),
+                      UnitDimension.liquid,
+                    ),
                     color: Colors.blue,
                   ),
                 ),

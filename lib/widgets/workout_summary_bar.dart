@@ -1,7 +1,9 @@
 // lib/widgets/workout_summary_bar.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
+import '../services/unit_service.dart';
 import '../util/time_util.dart'; // This helper file is created separately.
 
 /// A horizontal bar displaying key workout metrics.
@@ -32,6 +34,11 @@ class WorkoutSummaryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final unitService = context.watch<UnitService>();
+    final volumeValue = unitService.convertDisplayValue(
+      volume,
+      UnitDimension.weight,
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -52,7 +59,8 @@ class WorkoutSummaryBar extends StatelessWidget {
               _buildStatColumn(
                 context: context,
                 label: l10n.volumeLabel,
-                value: "${volume.toStringAsFixed(0)} kg",
+                value:
+                    "${volumeValue.toStringAsFixed(0)} ${unitService.suffixFor(UnitDimension.weight)}",
               ),
               _buildStatColumn(
                 context: context,

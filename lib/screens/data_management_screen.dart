@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import '../data/backup_manager.dart';
+import '../data/export_manager.dart';
 import '../data/import_manager.dart';
 import '../generated/app_localizations.dart';
 import '../screens/app_initializer_screen.dart';
@@ -23,7 +24,7 @@ import '../services/storage/saf_storage_service.dart';
 /// A screen for managing application data and backups.
 ///
 /// Provides tools for manual and automated backups (JSON), CSV exports for
-/// nutrition and workouts, and importing data from third-party services like Hevy.
+/// nutrition and workouts, and importing data from third-party services.
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({
     super.key,
@@ -177,10 +178,45 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
   }
 
-  // --- Unchanged: Hevy import logic ---
-  void _performHevyImport() async {
+  // --- Externer Workout-Import (neutral) ---
+  void _performWorkoutImport() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // 1. Ask for unit
+    final bool? isImperial = await showGlassBottomMenu<bool>(
+      context: context,
+      title: l10n.importUnitSelectionTitle,
+      contentBuilder: (ctx, close) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l10n.importUnitSelectionDescription),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.unitMetricLabel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(l10n.unitImperialLabel),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (isImperial == null) return;
+
     setState(() => _isMigrationRunning = true);
-    final count = await ImportManager().importHevyCsv();
+    final count =
+        await ImportManager().importWorkoutFile(isImperial: isImperial);
     if (!mounted) return;
     setState(() => _isMigrationRunning = false);
 
@@ -196,18 +232,35 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       }
     }
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
     if (count > 0) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.hevyImportSuccess(count))));
-    } else {
+      ).showSnackBar(SnackBar(content: Text(l10n.workoutImportSuccess(count))));
+    } else if (count == -1) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.hevyImportFailed),
+          content: Text(l10n.workoutImportFailed),
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  void _performExcelExport() async {
+    setState(() => _isCsvExportRunning = true);
+    try {
+      await ExportManager.exportToExcel();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.snackbarExportFailed),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isCsvExportRunning = false);
     }
   }
 
@@ -379,6 +432,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             Text(l10n.csvExportDescription, style: theme.textTheme.bodyMedium),
             const SizedBox(height: DesignConstants.spacingS),
             _buildExportTile(
+              icon: Icons.table_chart_outlined,
+              title: l10n.excelExportButton,
+              onTap: _isCsvExportRunning ? null : _performExcelExport,
+            ),
+            const Divider(),
+            _buildExportTile(
               icon: Icons.restaurant_menu,
               title: l10n.nutritionDiary,
               onTap: _isCsvExportRunning
@@ -433,16 +492,17 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.hevyImportTitle, style: theme.textTheme.headlineSmall),
+            Text(l10n.workoutImportTitle, style: theme.textTheme.headlineSmall),
             const SizedBox(height: DesignConstants.spacingS),
-            Text(l10n.hevyImportDescription, style: theme.textTheme.bodyMedium),
+            Text(l10n.workoutImportDescription,
+                style: theme.textTheme.bodyMedium),
             const SizedBox(height: DesignConstants.spacingL),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.sync_alt),
-                label: Text(l10n.hevyImportButton),
-                onPressed: _isMigrationRunning ? null : _performHevyImport,
+                label: Text(l10n.workoutImportButton),
+                onPressed: _isMigrationRunning ? null : _performWorkoutImport,
               ),
             ),
             if (_isMigrationRunning)
