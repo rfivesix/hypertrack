@@ -3923,7 +3923,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWeightLabel.
   ///
   /// In en, this message translates to:
-  /// **'Weight (kg)'**
+  /// **'Weight'**
   String get onboardingWeightLabel;
 
   /// No description provided for @onboardingWeightError.
@@ -3971,7 +3971,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingGoalWater.
   ///
   /// In en, this message translates to:
-  /// **'Water (ml)'**
+  /// **'Water'**
   String get onboardingGoalWater;
 
   /// No description provided for @onboardingNext.
@@ -3992,10 +3992,46 @@ abstract class AppLocalizations {
   /// **'Start Tracking'**
   String get onboardingFinish;
 
+  /// No description provided for @onboardingUnitSystemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your Unit System'**
+  String get onboardingUnitSystemTitle;
+
+  /// No description provided for @onboardingUnitSystemSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this later in Settings.'**
+  String get onboardingUnitSystemSubtitle;
+
+  /// No description provided for @onboardingUnitMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get onboardingUnitMetric;
+
+  /// No description provided for @onboardingUnitMetricSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'kg, cm, ml'**
+  String get onboardingUnitMetricSubtitle;
+
+  /// No description provided for @onboardingUnitImperial.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial'**
+  String get onboardingUnitImperial;
+
+  /// No description provided for @onboardingUnitImperialSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'lbs, in, fl oz'**
+  String get onboardingUnitImperialSubtitle;
+
   /// No description provided for @onboardingHeightLabel.
   ///
   /// In en, this message translates to:
-  /// **'Height (cm)'**
+  /// **'Height'**
   String get onboardingHeightLabel;
 
   /// No description provided for @onboardingGenderLabel.

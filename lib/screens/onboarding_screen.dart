@@ -681,6 +681,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _selectUnitSystem(UnitSystem system) async {
     setState(() => _selectedUnitSystem = system);
     await _unitService.setUnitSystem(system);
+
+    // Update default values based on system to avoid "3000 fl oz" or "100 ml"
+    if (system == UnitSystem.imperial) {
+      if (_waterController.text == '3000') {
+        _waterController.text = '100'; // ~3L in fl oz
+      }
+    } else {
+      if (_waterController.text == '100') {
+        _waterController.text = '3000'; // ~100 fl oz in ml
+      }
+    }
+
     if (!mounted) return;
     await _pageController.animateToPage(
       _currentPage + 1,
@@ -701,12 +713,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _StepTitle(
-            title: 'Choose your Unit System',
+            title: l10n.onboardingUnitSystemTitle,
             align: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'You can change this later in Settings.',
+            l10n.onboardingUnitSystemSubtitle,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -714,16 +726,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 28),
           _UnitSystemChoiceCard(
-            title: 'Metric',
-            subtitle: 'kg, cm, ml',
+            title: l10n.onboardingUnitMetric,
+            subtitle: l10n.onboardingUnitMetricSubtitle,
             icon: Icons.straighten_rounded,
             selected: selected == UnitSystem.metric,
             onTap: () => _selectUnitSystem(UnitSystem.metric),
           ),
           const SizedBox(height: 16),
           _UnitSystemChoiceCard(
-            title: 'Imperial',
-            subtitle: 'lbs, in, fl oz',
+            title: l10n.onboardingUnitImperial,
+            subtitle: l10n.onboardingUnitImperialSubtitle,
             icon: Icons.public_rounded,
             selected: selected == UnitSystem.imperial,
             onTap: () => _selectUnitSystem(UnitSystem.imperial),
@@ -811,7 +823,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       decoration: InputDecoration(
                         labelText:
-                            'Height (${unitService.suffixFor(UnitDimension.height)})',
+                            '${l10n.onboardingHeightLabel} (${unitService.suffixFor(UnitDimension.height)})',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -869,10 +881,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ... Remaining pages stay identical to the previous code ...
-
   Widget _buildWeightPage(AppLocalizations l10n) {
     final unitService = context.watch<UnitService>();
+    final suffix = unitService.suffixFor(UnitDimension.weight);
     return Padding(
       key: const Key('onboarding_weight_page'),
       padding: const EdgeInsets.all(24.0),
@@ -880,7 +891,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _StepTitle(
-            title: l10n.onboardingWeightTitle,
+            title: '${l10n.onboardingWeightTitle} ($suffix)',
             align: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -891,7 +902,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               hintText: '0.0',
-              suffixText: unitService.suffixFor(UnitDimension.weight),
+              suffixText: suffix,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -1211,12 +1222,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildWaterPage(AppLocalizations l10n) {
     final unitService = context.watch<UnitService>();
+    final suffix = unitService.suffixFor(UnitDimension.liquid);
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _StepTitle(title: l10n.onboardingGoalWater, align: TextAlign.center),
+          _StepTitle(
+            title: '${l10n.onboardingGoalWater} ($suffix)',
+            align: TextAlign.center,
+          ),
           const SizedBox(height: 32),
           TextField(
             controller: _waterController,
@@ -1228,7 +1243,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               color: Colors.blue,
             ),
             decoration: InputDecoration(
-              suffixText: unitService.suffixFor(UnitDimension.liquid),
+              suffixText: suffix,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
               ),

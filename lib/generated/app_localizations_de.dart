@@ -2168,7 +2168,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingWeightTitle => 'Aktuelles Gewicht';
 
   @override
-  String get onboardingWeightLabel => 'Gewicht (kg)';
+  String get onboardingWeightLabel => 'Gewicht';
 
   @override
   String get onboardingWeightError => 'Bitte gib ein gültiges Gewicht ein';
@@ -2193,7 +2193,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingGoalFat => 'Fett (g)';
 
   @override
-  String get onboardingGoalWater => 'Wasser (ml)';
+  String get onboardingGoalWater => 'Wasser';
 
   @override
   String get onboardingNext => 'Weiter';
@@ -2205,7 +2205,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingFinish => 'Loslegen';
 
   @override
-  String get onboardingHeightLabel => 'Größe (cm)';
+  String get onboardingUnitSystemTitle => 'Wähle dein Einheitensystem';
+
+  @override
+  String get onboardingUnitSystemSubtitle =>
+      'Du kannst dies später in den Einstellungen ändern.';
+
+  @override
+  String get onboardingUnitMetric => 'Metrisch';
+
+  @override
+  String get onboardingUnitMetricSubtitle => 'kg, cm, ml';
+
+  @override
+  String get onboardingUnitImperial => 'Imperial';
+
+  @override
+  String get onboardingUnitImperialSubtitle => 'lbs, in, fl oz';
+
+  @override
+  String get onboardingHeightLabel => 'Größe';
 
   @override
   String get onboardingGenderLabel => 'Geschlecht';
