@@ -84,14 +84,20 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
       extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(title: l10n.mapExercisesTitle),
       body: Padding(
-        padding: DesignConstants.cardPadding.copyWith(
-          top: DesignConstants.cardPadding.top + topPadding,
+        padding: EdgeInsets.fromLTRB(
+          DesignConstants.screenPaddingHorizontal,
+          DesignConstants.cardPaddingInternal + topPadding,
+          DesignConstants.screenPaddingHorizontal,
+          0,
         ),
         child: Column(
           children: [
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.only(top: DesignConstants.spacingS),
+                padding: const EdgeInsets.only(
+                  top: DesignConstants.spacingS,
+                  bottom: DesignConstants.spacingL,
+                ),
                 itemCount: widget.unknownNames.length,
                 itemBuilder: (context, index) {
                   final src = widget.unknownNames[index];
@@ -176,11 +182,11 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
                 },
               ),
             ),
-            const SizedBox(height: DesignConstants.spacingM),
             SafeArea(
+              top: false,
               child: Padding(
-                padding: const EdgeInsets.only(
-                  bottom: DesignConstants.spacingM,
+                padding: const EdgeInsets.symmetric(
+                  vertical: DesignConstants.spacingM,
                 ),
                 child: SizedBox(
                   width: double.infinity,
