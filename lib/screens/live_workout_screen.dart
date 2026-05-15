@@ -18,6 +18,7 @@ import '../models/workout_log.dart';
 import '../models/set_template.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/workout_session_manager.dart';
+import '../services/unit_service.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
 import 'general_exercise_selection_screen.dart';
@@ -167,6 +168,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   }
 
   void _syncControllersWithManager(WorkoutSessionManager manager) {
+    final unitService = context.read<UnitService>();
     manager.setLogs.forEach((templateId, setLog) {
       // Find the associated exercise
       final exercise = manager.exercises.firstWhere(
@@ -185,8 +187,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         } else {
           // Strength: weight
-          initText =
-              setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+          initText = setLog.weightKg == null
+              ? ''
+              : unitService
+                  .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
+                  .toStringAsFixed(1)
+                  .replaceAll('.0', '');
         }
 
         _weightControllers[templateId] = TextEditingController(text: initText);
@@ -207,10 +213,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             }
           } else {
             // Update Weight
-            if (val != manager.setLogs[templateId]?.weightKg || clearValue) {
+            final metricValue = val == null
+                ? null
+                : unitService.convertToMetric(val, UnitDimension.weight);
+            if (metricValue != manager.setLogs[templateId]?.weightKg ||
+                clearValue) {
               manager.updateSet(
                 templateId,
-                weight: val,
+                weight: metricValue,
                 clearWeight: clearValue,
               );
             }
@@ -278,8 +288,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
       // update the UI text fields to show the accepted fallback number.
       if (setLog.weightKg != null &&
           _weightControllers[templateId]?.text.isEmpty == true) {
-        _weightControllers[templateId]!.text =
-            setLog.weightKg!.toStringAsFixed(1).replaceAll('.0', '');
+        _weightControllers[templateId]!.text = unitService
+            .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
+            .toStringAsFixed(1)
+            .replaceAll('.0', '');
       }
       if (setLog.distanceKm != null &&
           _weightControllers[templateId]?.text.isEmpty == true &&
@@ -535,6 +547,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   Widget _buildHeaderRow(RoutineExercise re, AppLocalizations l10n) {
     // Important: cardio check here.
     final bool isCardio = _isCardio(re);
+    final unitService = context.read<UnitService>();
 
     if (isCardio) {
       return Row(
@@ -556,7 +569,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
       children: [
         _buildHeader(l10n.setLabel, flex: 2),
         _buildHeader(l10n.lastTimeLabel, flex: 3),
-        _buildHeader(l10n.kgLabel, flex: 2),
+        _buildHeader(unitService.suffixFor(UnitDimension.weight), flex: 2),
         const SizedBox(width: 8),
         _buildHeader(l10n.repsLabel, flex: 2),
         const SizedBox(width: 8),
@@ -601,8 +614,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     if (_currentPR == null) return const SizedBox.shrink();
 
     final localizedRecordType = _getLocalizedRecordType(_currentPR!.recordType);
+    final unitService = context.read<UnitService>();
+    final String achievementText = _formatDisplayWeightText(
+      _currentPR!.achievementValue,
+      unitService,
+    );
     final String diffText = _currentPR!.diff != null
-        ? " (+${_currentPR!.diff!.toStringAsFixed(1).replaceAll('.0', '')} kg)"
+        ? " (+${_formatDisplayWeightValue(_currentPR!.diff!, unitService)} ${unitService.suffixFor(UnitDimension.weight)})"
         : "";
 
     final isLightMode = Theme.of(context).brightness == Brightness.light;
@@ -670,7 +688,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                               children: [
                                 TextSpan(text: "$localizedRecordType - "),
                                 TextSpan(
-                                  text: _currentPR!.achievementValue,
+                                  text: achievementText,
                                   style: const TextStyle(color: Colors.amber),
                                 ),
                                 if (diffText.isNotEmpty)
@@ -700,16 +718,18 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
 
   Widget _buildPRBadge(SetLog setLog) {
     final l10n = AppLocalizations.of(context)!;
+    final unitService = context.read<UnitService>();
     String label = l10n.newPersonalRecordLabel;
 
     if (setLog.isMaxWeightPR && setLog.weightPRDiff != null) {
       label =
-          "+${setLog.weightPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} kg";
+          "+${_formatDisplayWeightValue(setLog.weightPRDiff!, unitService)} ${unitService.suffixFor(UnitDimension.weight)}";
     } else if (setLog.isMaxEst1RMPR && setLog.est1rmPRDiff != null) {
       label =
-          "+${setLog.est1rmPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} kg (1RM)";
+          "+${_formatDisplayWeightValue(setLog.est1rmPRDiff!, unitService)} ${unitService.suffixFor(UnitDimension.weight)} (1RM)";
     } else if (setLog.isMaxVolumePR && setLog.volumePRDiff != null) {
-      label = "+${setLog.volumePRDiff!.toStringAsFixed(0)} kg (Vol)";
+      label =
+          "+${_formatDisplayWeightValue(setLog.volumePRDiff!, unitService, fractionDigits: 0)} ${unitService.suffixFor(UnitDimension.weight)} (Vol)";
     }
 
     return TweenAnimationBuilder<double>(
@@ -766,6 +786,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     final l10n = AppLocalizations.of(context)!;
     final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
     final bool isCompleted = setLog.isCompleted ?? false;
+    final unitService = context.read<UnitService>();
 
     // Cardio Check
     final exercise = manager.exercises.firstWhere(
@@ -792,8 +813,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
       repHint = "-"; // Time Hint
     } else {
       final double tWeight = template.targetWeight ?? 0.0;
-      weightHint =
-          tWeight > 0 ? tWeight.toStringAsFixed(1).replaceAll('.0', '') : '0';
+      weightHint = tWeight > 0
+          ? unitService
+              .convertDisplayValue(tWeight, UnitDimension.weight)
+              .toStringAsFixed(1)
+              .replaceAll('.0', '')
+          : '0';
       repHint = (template.targetReps?.isNotEmpty == true)
           ? template.targetReps!
           : '0';
@@ -826,7 +851,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               ? const SizedBox.shrink() // For cardio, do not show history yet.
               : Text(
                   (rowIndex < lastPerfSets.length)
-                      ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
+                      ? "${unitService.convertDisplayValue(lastPerfSets[rowIndex].weightKg ?? 0, UnitDimension.weight).toStringAsFixed(1).replaceAll('.0', '')}${unitService.suffixFor(UnitDimension.weight)} × ${lastPerfSets[rowIndex].reps}"
                       : "-",
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -939,9 +964,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     final showCurrentSetE1rm = !isCardio && currentSetE1rm != null;
 
     final bool hasPR = isCompleted &&
-        (setLog.isMaxWeightPR ||
-            setLog.isMaxVolumePR ||
-            setLog.isMaxEst1RMPR);
+        (setLog.isMaxWeightPR || setLog.isMaxVolumePR || setLog.isMaxEst1RMPR);
 
     final rowWithSubInfo = Column(
       children: [
@@ -958,7 +981,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                 ],
                 if (showCurrentSetE1rm)
                   Text(
-                    l10n.liveWorkoutE1rmCurrentSet(_formatKg(currentSetE1rm)),
+                    l10n.liveWorkoutE1rmCurrentSet(
+                      _formatDisplayWeightValue(currentSetE1rm, unitService),
+                    ),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
                       fontSize: 11,
@@ -1001,6 +1026,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     RoutineExercise routineExercise,
     WorkoutSessionManager manager,
   ) {
+    final unitService = context.read<UnitService>();
     final sessionBest = _getSessionBestE1rm(routineExercise, manager);
     if (sessionBest == null) return const SizedBox.shrink();
 
@@ -1020,7 +1046,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
         children: [
           Expanded(
             child: Text(
-              l10n.liveWorkoutE1rmBestSession(_formatKg(sessionBest)),
+              l10n.liveWorkoutE1rmBestSession(
+                _formatDisplayWeightValue(sessionBest, unitService),
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -1029,7 +1057,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
           if (hasDelta)
             Text(
               l10n.liveWorkoutE1rmVsLastSession(
-                '$deltaPrefix${_formatKg(delta!.abs())}',
+                '$deltaPrefix${_formatDisplayWeightValue(delta!.abs(), unitService)}',
               ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isPositive
@@ -1084,6 +1112,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    context.watch<UnitService>();
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final manager = Provider.of<WorkoutSessionManager>(context);
@@ -1294,8 +1323,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                                                 Icons.timer_outlined,
                                               ),
                                               tooltip: l10n.editPauseTime,
-                                              onPressed: () =>
-                                                  editPauseTime(
+                                              onPressed: () => editPauseTime(
                                                 routineExercise,
                                               ),
                                             ),
@@ -1605,5 +1633,30 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     return best;
   }
 
-  String _formatKg(double value) => value.toStringAsFixed(1);
+  String _formatDisplayWeightText(
+    String metricText,
+    UnitService unitService, {
+    int fractionDigits = 1,
+  }) {
+    final value = _extractNumericValue(metricText);
+    if (value == null) return metricText;
+    return '${_formatDisplayWeightValue(value, unitService, fractionDigits: fractionDigits)} ${unitService.suffixFor(UnitDimension.weight)}';
+  }
+
+  String _formatDisplayWeightValue(
+    double metricValue,
+    UnitService unitService, {
+    int fractionDigits = 1,
+  }) {
+    return unitService
+        .convertDisplayValue(metricValue, UnitDimension.weight)
+        .toStringAsFixed(fractionDigits)
+        .replaceAll('.0', '');
+  }
+
+  double? _extractNumericValue(String text) {
+    final match = RegExp(r'[-+]?\d+(?:[.,]\d+)?').firstMatch(text);
+    if (match == null) return null;
+    return double.tryParse(match.group(0)!.replaceAll(',', '.'));
+  }
 }

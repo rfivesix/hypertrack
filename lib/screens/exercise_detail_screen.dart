@@ -9,6 +9,8 @@ import '../widgets/summary_card.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/measurement_chart_widget.dart';
+import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 
 enum ExerciseMetric { maxWeight, volume, est1rm }
 
@@ -277,14 +279,14 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   if (prSet != null) ...[
                     if (bracket == 'Est. 1RM')
                       Text(
-                        '${(prSet.weightKg! * (36 / (37 - prSet.reps!))).toStringAsFixed(1).replaceAll('.0', '')} kg',
+                        '${context.read<UnitService>().convertDisplayValue(prSet.weightKg! * (36 / (37 - prSet.reps!)), UnitDimension.weight).toStringAsFixed(1)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       )
                     else
                       Text(
-                        '${prSet.weightKg?.toStringAsFixed(1).replaceAll('.0', '')} kg',
+                        '${context.read<UnitService>().convertDisplayValue(prSet.weightKg ?? 0.0, UnitDimension.weight).toStringAsFixed(1)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -317,6 +319,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   }
 
   Widget _buildConsolidatedChart(AppLocalizations l10n) {
+    final unitService = context.watch<UnitService>();
     final filteredData = _filteredTimeSeriesData;
 
     if (filteredData.isEmpty) {
@@ -360,7 +363,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           const SizedBox(height: DesignConstants.spacingS),
           MeasurementChartWidget.fromData(
             dataPoints: dataPoints,
-            unit: 'kg',
+            unit: unitService.suffixFor(UnitDimension.weight),
             axisMode: MeasurementChartAxisMode.day,
           ),
         ],

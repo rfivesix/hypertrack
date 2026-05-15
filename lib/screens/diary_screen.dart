@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 import 'package:intl/intl.dart';
 import '../data/database_helper.dart';
 import '../data/product_database_helper.dart';
@@ -1035,7 +1036,7 @@ class DiaryScreenState extends State<DiaryScreen> {
           MeasurementChartWidget(
             chartType: 'weight',
             dateRange: _calculateDateRange(),
-            unit: "kg",
+            unit: context.read<UnitService>().suffixFor(UnitDimension.weight),
           ),
         ],
       ),

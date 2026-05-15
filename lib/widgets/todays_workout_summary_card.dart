@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import '../generated/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 import '../util/time_util.dart';
 import 'summary_card.dart';
 
@@ -39,8 +41,11 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Builds the subtitle text with all statistics.
+    final unitService = Provider.of<UnitService>(context);
+    final displayVolume =
+        unitService.convertDisplayValue(volume, UnitDimension.weight);
     final subtitleText =
-        '${formatDuration(duration)}  •  ${volume.toStringAsFixed(0)} kg  •  ${l10n.setCount(sets)}';
+        '${formatDuration(duration)}  •  ${displayVolume.toStringAsFixed(0)} ${unitService.suffixFor(UnitDimension.weight)}  •  ${l10n.setCount(sets)}';
 
     return SummaryCard(
       // Padding is handled by ListTile.

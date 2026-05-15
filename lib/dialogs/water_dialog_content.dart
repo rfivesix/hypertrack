@@ -3,7 +3,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
+import '../services/unit_service.dart';
 import '../util/design_constants.dart';
 
 // ===== App-wide modal helpers (temporary location — can be moved to a shared file) =====
@@ -173,6 +175,7 @@ class WaterDialogContentState extends State<WaterDialogContent> {
     final locale = Localizations.localeOf(context).toString();
     final formattedDate = DateFormat.yMd(locale).format(_selectedDateTime);
     final formattedTime = DateFormat.Hm(locale).format(_selectedDateTime);
+    final unitService = context.watch<UnitService>();
     return AppSheetScaffold(
       // Toggle between plain and glass depending on your feature flag or setting.
       style: AppSheetStyle.plain, // or AppSheetStyle.glass
@@ -184,7 +187,7 @@ class WaterDialogContentState extends State<WaterDialogContent> {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: l10n.amount_in_milliliters,
-              suffixText: l10n.unit_milliliters,
+              suffixText: unitService.suffixFor(UnitDimension.liquid),
             ),
             autofocus: true,
           ),

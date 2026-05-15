@@ -9,6 +9,8 @@ import '../../util/design_constants.dart';
 import '../../widgets/analytics_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
+import 'package:provider/provider.dart';
+import '../../services/unit_service.dart';
 
 class BodyNutritionCorrelationScreen extends StatefulWidget {
   final int initialRangeIndex;
@@ -165,12 +167,13 @@ class _BodyNutritionCorrelationScreenState
     AppLocalizations l10n,
     BodyNutritionAnalyticsResult data,
   ) {
+    final unitService = Provider.of<UnitService>(context);
     final currentWeight = data.currentWeightKg == null
         ? '-'
-        : '${data.currentWeightKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${unitService.convertDisplayValue(data.currentWeightKg!, UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final weightChange = data.weightChangeKg == null
         ? '-'
-        : '${data.weightChangeKg! >= 0 ? '+' : ''}${data.weightChangeKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${data.weightChangeKg! >= 0 ? '+' : ''}${unitService.convertDisplayValue(data.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final avgCalories = data.loggedCalorieDays <= 0
         ? '-'
         : '${data.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';

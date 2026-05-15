@@ -6,6 +6,8 @@ import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
+import 'package:provider/provider.dart';
+import '../../services/unit_service.dart';
 
 class PRDashboardScreen extends StatefulWidget {
   const PRDashboardScreen({super.key});
@@ -71,10 +73,12 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
   String _perfLabel(Map<String, dynamic> row) {
     final weight = (row['weight'] as num).toDouble();
     final reps = (row['reps'] as num).toInt();
-    return l10n.analyticsPerfWithReps(
-      StatisticsPresentationFormatter.formatWeight(weight),
-      reps,
-    );
+    final unitService = Provider.of<UnitService>(context);
+    final displayWeight =
+        unitService.convertDisplayValue(weight, UnitDimension.weight);
+    final weightText =
+        StatisticsPresentationFormatter.formatWeight(displayWeight);
+    return '$weightText ${unitService.suffixFor(UnitDimension.weight)} x $reps';
   }
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;

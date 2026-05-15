@@ -4,11 +4,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../widgets/analytics_chart_defaults.dart';
 import '../../domain/analytics_state.dart';
 import '../../domain/body_nutrition_analytics_models.dart';
+import '../../../../services/unit_service.dart';
 
 class BodyNutritionNormalizedTrendChart extends StatelessWidget {
   const BodyNutritionNormalizedTrendChart({
@@ -51,9 +53,24 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
     final maxXInt = math.max(0, spanDays - 1);
     final maxX = math.max(1, maxXInt).toDouble();
 
+    final unitService = Provider.of<UnitService>(context);
+
+    // Convert weight series (stored in metric kg) into display units according
+    // to the user's preference so scales, ticks and tooltips show the right
+    // values (kg or lbs).
+    final displayWeightSeries = weightSeries
+        .map((p) => DailyValuePoint(
+              day: p.day,
+              value: unitService.convertDisplayValue(
+                p.value,
+                UnitDimension.weight,
+              ),
+            ))
+        .toList(growable: false);
+
     final weightScale = _SeriesScale.fromSeries(
-      weightSeries,
-      unit: l10n.analyticsUnitKg,
+      displayWeightSeries,
+      unit: unitService.suffixFor(UnitDimension.weight),
       fractionDigits: 1,
     );
     final calorieScale = _SeriesScale.fromSeries(
@@ -63,7 +80,7 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
     );
 
     final weightPoints = _buildPoints(
-      series: weightSeries,
+      series: displayWeightSeries,
       firstDay: firstDay,
       maxX: maxX,
       scale: weightScale,

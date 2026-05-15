@@ -1,11 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/chart_data_point.dart';
 import '../services/haptic_feedback_service.dart';
+import '../services/unit_service.dart';
 import '../util/design_constants.dart';
 
 enum MeasurementChartAxisMode { day, time }
@@ -19,6 +21,7 @@ class MeasurementChartWidget extends StatefulWidget {
     required this.chartType,
     required this.dateRange,
     required this.unit,
+    this.valueDimension,
     this.emptyStateLabel,
     this.referenceLineValue,
     this.valueFractionDigits = 1,
@@ -32,6 +35,7 @@ class MeasurementChartWidget extends StatefulWidget {
     super.key,
     required this.dataPoints,
     required this.unit,
+    this.valueDimension,
     this.axisMode = MeasurementChartAxisMode.time,
     this.emptyStateLabel,
     this.referenceLineValue,
@@ -56,6 +60,9 @@ class MeasurementChartWidget extends StatefulWidget {
 
   /// The unit of measurement for axis labeling.
   final String unit;
+
+  /// Optional dimension used to convert metric values into display units.
+  final UnitDimension? valueDimension;
 
   /// Optional empty state label override.
   final String? emptyStateLabel;
@@ -218,9 +225,10 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         : lastIdx;
 
     final ChartDataPoint displayPoint = _dataPoints[shownIdx];
+    final double displayNumericValue = _displayValue(displayPoint.value);
     final String displayValue = widget.valueLabelBuilder
-            ?.call(displayPoint.value, widget.unit) ??
-        '${displayPoint.value.toStringAsFixed(widget.valueFractionDigits)} ${widget.unit}';
+            ?.call(displayNumericValue, widget.unit) ??
+        '${displayNumericValue.toStringAsFixed(widget.valueFractionDigits)} ${widget.unit}';
     final String displayDate =
         widget.selectedDateLabelBuilder?.call(displayPoint.date) ??
             _defaultSelectedDateLabel(context, displayPoint.date);
@@ -259,8 +267,10 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
           _defaultAxisLabel(value, spanUnits);
     }
 
-    final double? referenceLineValue = widget.referenceLineValue ??
-        (widget.usesExternalData ? null : _dataPoints.first.value);
+    final double? referenceLineValue = _displayValueOrNull(
+      widget.referenceLineValue ??
+          (widget.usesExternalData ? null : _dataPoints.first.value),
+    );
 
     return SizedBox(
       height: 250,
@@ -370,7 +380,12 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                 lineBarsData: [
                   LineChartBarData(
                     spots: _dataPoints
-                        .map((point) => FlSpot(xForPoint(point), point.value))
+                        .map(
+                          (point) => FlSpot(
+                            xForPoint(point),
+                            _displayValue(point.value),
+                          ),
+                        )
                         .toList(),
                     isCurved: false,
                     color: Theme.of(context).colorScheme.primary,
@@ -416,6 +431,36 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
         ],
       ),
     );
+  }
+
+  double _displayValue(double value) {
+    final dimension = _effectiveDimension;
+    if (dimension == null) return value;
+    return context.read<UnitService>().convertDisplayValue(value, dimension);
+  }
+
+  double? _displayValueOrNull(double? value) {
+    if (value == null) return null;
+    return _displayValue(value);
+  }
+
+  UnitDimension? get _effectiveDimension {
+    final explicit = widget.valueDimension;
+    if (explicit != null) return explicit;
+
+    switch (widget.unit.toLowerCase()) {
+      case 'kg':
+      case 'lbs':
+        return UnitDimension.weight;
+      case 'cm':
+      case 'in':
+        return UnitDimension.height;
+      case 'ml':
+      case 'fl oz':
+        return UnitDimension.liquid;
+      default:
+        return null;
+    }
   }
 
   DateTime _atStartOfDay(DateTime value) =>

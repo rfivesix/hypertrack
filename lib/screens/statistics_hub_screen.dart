@@ -38,6 +38,8 @@ import 'measurements_screen.dart';
 import '../widgets/statistics_steps_card.dart';
 import '../data/database_helper.dart';
 import '../services/health/steps_sync_service.dart';
+import 'package:provider/provider.dart';
+import '../services/unit_service.dart';
 
 class StatisticsHubScreen extends StatefulWidget {
   const StatisticsHubScreen({
@@ -2024,15 +2026,16 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       );
     }
     final body = _bodyNutrition;
+    final unitService = Provider.of<UnitService>(context);
     final weightValue = body?.currentWeightKg == null
         ? '-'
-        : '${body!.currentWeightKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${unitService.convertDisplayValue(body!.currentWeightKg!, UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final weightChangeValue = body?.weightChangeKg == null
         ? '-'
-        : '${body!.weightChangeKg! >= 0 ? '+' : ''}${body.weightChangeKg!.toStringAsFixed(1)} ${l10n.analyticsUnitKg}';
+        : '${body!.weightChangeKg! >= 0 ? '+' : ''}${unitService.convertDisplayValue(body.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final caloriesValue = body == null || body.loggedCalorieDays <= 0
         ? '-'
-        : '${body.caloriesDaily.fold<double>(0.0, (sum, point) => sum + point.value).round()} kcal';
+        : '${body.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';
     final relationship = body == null
         ? l10n.analyticsInsightNotEnoughData
         : StatisticsPresentationFormatter.bodyNutritionRelationshipLabel(
@@ -2078,7 +2081,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                     weightChangeValue,
                   ),
                   _buildBodyTrendPill(
-                    l10n.analyticsBodyNutritionTotalCaloriesLabel,
+                    l10n.metricsAvgCalories,
                     caloriesValue,
                   ),
                 ],

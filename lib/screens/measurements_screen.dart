@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/measurement_session.dart';
@@ -15,6 +16,7 @@ import '../widgets/measurement_chart_widget.dart';
 import '../widgets/summary_card.dart';
 import '../util/l10n_ext.dart';
 import '../widgets/swipe_action_background.dart';
+import '../services/unit_service.dart';
 
 /// A screen for viewing and analyzing body measurement history.
 ///
@@ -229,6 +231,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     ColorScheme colorScheme,
     TextTheme textTheme,
   ) {
+    final unitService = context.watch<UnitService>();
     if (_selectedChartType == null) return const SizedBox.shrink();
 
     return SummaryCard(
@@ -283,7 +286,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
           MeasurementChartWidget(
             chartType: _selectedChartType!,
             dateRange: _currentChartDateRange,
-            unit: _getMeasurementUnit(_selectedChartType!),
+            unit: _getMeasurementUnit(_selectedChartType!, unitService),
           ),
         ],
       ),
@@ -327,6 +330,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     ColorScheme colorScheme,
     MeasurementSession session,
   ) {
+    final unitService = context.watch<UnitService>();
     final locale = Localizations.localeOf(context).toString();
     final sortedMeasurements = session.measurements.toList()
       ..sort((a, b) => a.type.compareTo(b.type));
@@ -387,7 +391,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                 leading: _getMeasurementIcon(measurement.type),
                 title: Text(l10n.getLocalizedMeasurementName(measurement.type)),
                 trailing: Text(
-                  "${measurement.value.toStringAsFixed(1)} ${measurement.unit}",
+                  "${_displayMeasurementValue(measurement.type, measurement.value, unitService).toStringAsFixed(1)} ${_getMeasurementUnit(measurement.type, unitService)}",
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -398,11 +402,39 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     );
   }
 
-  String _getMeasurementUnit(String type) {
+  double _displayMeasurementValue(
+    String type,
+    double value,
+    UnitService unitService,
+  ) {
+    switch (type) {
+      case 'weight':
+        return unitService.convertDisplayValue(value, UnitDimension.weight);
+      case 'neck':
+      case 'shoulder':
+      case 'chest':
+      case 'left_bicep':
+      case 'right_bicep':
+      case 'left_forearm':
+      case 'right_forearm':
+      case 'abdomen':
+      case 'waist':
+      case 'hips':
+      case 'left_thigh':
+      case 'right_thigh':
+      case 'left_calf':
+      case 'right_calf':
+        return unitService.convertDisplayValue(value, UnitDimension.height);
+      default:
+        return value;
+    }
+  }
+
+  String _getMeasurementUnit(String type, UnitService unitService) {
     // Return units based on the type here.
     switch (type) {
       case 'weight':
-        return 'kg';
+        return unitService.suffixFor(UnitDimension.weight);
       case 'fat_percent':
         return '%';
       case 'neck':
@@ -419,7 +451,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
       case 'right_thigh':
       case 'left_calf':
       case 'right_calf':
-        return 'cm';
+        return unitService.suffixFor(UnitDimension.height);
       default:
         return '';
     }

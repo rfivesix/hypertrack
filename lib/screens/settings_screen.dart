@@ -12,6 +12,7 @@ import '../services/app_tour_service.dart';
 import '../theme/color_constants.dart';
 import '../services/base_food_language_service.dart';
 import '../services/off_catalog_country_service.dart';
+import '../services/unit_service.dart';
 import '../util/design_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/global_app_bar.dart';
@@ -310,6 +311,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final unitService = context.watch<UnitService>();
     final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
@@ -365,6 +367,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (!mounted) return;
                 setState(() => _showSugarInDiaryOverview = value);
                 hasStepsSettingsChanged = true;
+              },
+            ),
+          ),
+          SummaryCard(
+            child: SwitchListTile(
+              secondary: Icon(
+                Icons.straighten_rounded,
+                size: 36,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text(
+                'Unit System',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                unitService.isMetric
+                    ? 'Metric (kg, cm, ml)'
+                    : 'Imperial (lbs, in, fl oz)',
+              ),
+              value: unitService.isImperial,
+              onChanged: (value) {
+                unitService.setUnitSystem(
+                  value ? UnitSystem.imperial : UnitSystem.metric,
+                );
               },
             ),
           ),

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../data/workout_database_helper.dart';
 import '../features/sharing/share_service.dart';
 import '../generated/app_localizations.dart';
@@ -14,6 +15,7 @@ import '../services/health/workout_heart_rate_models.dart';
 import '../services/health/workout_heart_rate_service.dart';
 import '../services/haptic_feedback_service.dart';
 import '../features/pulse/application/pulse_tracking_service.dart';
+import '../services/unit_service.dart';
 import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import '../util/design_constants.dart';
@@ -131,6 +133,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     );
 
     final pulseTrackingFuture = PulseTrackingService().isTrackingEnabled();
+    // ignore: use_build_context_synchronously
+    final unitService = context.read<UnitService>();
 
     final groups = <String, List<SetLog>>{};
     for (var set in data.sets) {
@@ -181,7 +185,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         val2 = sec > 0 ? (sec / 60).toStringAsFixed(0) : '';
       } else {
         // Strength: Val1 = weight, Val2 = reps
-        val1 = setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+        val1 = setLog.weightKg == null
+            ? ''
+            : unitService
+                .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
+                .toStringAsFixed(1)
+                .replaceAll('.0', '');
         val2 = setLog.reps?.toString() ?? '';
       }
 
@@ -292,16 +301,18 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
   Widget _buildPRBadge(SetLog setLog) {
     final l10n = AppLocalizations.of(context)!;
+    final unitService = context.read<UnitService>();
     String label = l10n.newPersonalRecordLabel;
 
     if (setLog.isMaxWeightPR && setLog.weightPRDiff != null) {
       label =
-          "+${setLog.weightPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} kg";
+          "+${setLog.weightPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} ${unitService.suffixFor(UnitDimension.weight)}";
     } else if (setLog.isMaxEst1RMPR && setLog.est1rmPRDiff != null) {
       label =
-          "+${setLog.est1rmPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} kg (1RM)";
+          "+${setLog.est1rmPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} ${unitService.suffixFor(UnitDimension.weight)} (1RM)";
     } else if (setLog.isMaxVolumePR && setLog.volumePRDiff != null) {
-      label = "+${setLog.volumePRDiff!.toStringAsFixed(0)} kg (Vol)";
+      label =
+          "+${setLog.volumePRDiff!.toStringAsFixed(0)} ${unitService.suffixFor(UnitDimension.weight)} (Vol)";
     }
 
     return Container(
@@ -357,7 +368,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     return weight * (36 / (37 - reps));
   }
 
-  String _formatKg(double value) => value.toStringAsFixed(1);
+  // Formatting now uses UnitService so this helper is no longer needed.
 
   void _toggleEditMode() {
     setState(() {
@@ -403,6 +414,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
     final l10n = AppLocalizations.of(context)!;
     final dbHelper = WorkoutDatabaseHelper.instance;
+    final unitService = context.read<UnitService>();
 
     final initialSetIds = _log!.sets.map((s) => s.id!).toSet();
     final currentSets = _groupedSets.values.expand((sets) => sets).toList();
@@ -418,10 +430,13 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       // Distinguish again what the controller values mean.
       final isCardio = _isCardio(setLog.exerciseName);
 
-      final val1 = double.tryParse(
+      final val1Input = double.tryParse(
             _weightControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0',
           ) ??
           0.0;
+      final val1 = isCardio
+          ? val1Input
+          : unitService.convertToMetric(val1Input, UnitDimension.weight);
       final val2 = double.tryParse(
             _repsControllers[setLog.id!]?.text.replaceAll(',', '.') ?? '0',
           ) ??
@@ -486,6 +501,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    context.watch<UnitService>();
     final locale = Localizations.localeOf(context).toString();
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -1024,7 +1040,12 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   Row(
                     children: [
                       _buildHeader(l10n.setLabel, flex: 2),
-                      _buildHeader(l10n.kgLabel, flex: 2),
+                      _buildHeader(
+                        context
+                            .read<UnitService>()
+                            .suffixFor(UnitDimension.weight),
+                        flex: 2,
+                      ),
                       _buildHeader(l10n.repsLabel, flex: 2),
                       _buildHeader("RIR", flex: 2),
                       const SizedBox(width: 48),
@@ -1116,6 +1137,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
             ? Colors.grey.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.1))
         : Colors.transparent;
+    final unitService = context.read<UnitService>();
 
     // View Values
     String val1Display, val2Display;
@@ -1124,16 +1146,19 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       final sec = setLog.durationSeconds ?? 0;
       val2Display = sec > 0 ? (sec / 60).round().toString() : '-';
     } else {
-      val1Display =
-          setLog.weightKg?.toStringAsFixed(1).replaceAll('.0', '') ?? '-';
+      val1Display = setLog.weightKg == null
+          ? '-'
+          : unitService
+              .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
+              .toStringAsFixed(1)
+              .replaceAll('.0', '');
       val2Display = setLog.reps?.toString() ?? '-';
     }
 
     final currentSetE1rm = _calculateBrzyckiE1rm(setLog);
     final showCurrentSetE1rm = !isCardio && currentSetE1rm != null;
-    final bool hasPR = setLog.isMaxWeightPR ||
-        setLog.isMaxVolumePR ||
-        setLog.isMaxEst1RMPR;
+    final bool hasPR =
+        setLog.isMaxWeightPR || setLog.isMaxVolumePR || setLog.isMaxEst1RMPR;
 
     final rowContent = Row(
       children: [
@@ -1299,7 +1324,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   ],
                   if (showCurrentSetE1rm)
                     Text(
-                      l10n.liveWorkoutE1rmCurrentSet(_formatKg(currentSetE1rm)),
+                      '${context.read<UnitService>().convertDisplayValue(currentSetE1rm, UnitDimension.weight).toStringAsFixed(1)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                         fontSize: 11,

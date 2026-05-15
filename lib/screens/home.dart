@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/tracked_supplement.dart';
 import '../models/supplement.dart';
 //import 'supplement_hub_screen.dart';
@@ -20,6 +21,7 @@ import '../widgets/measurement_chart_widget.dart';
 import '../widgets/nutrition_summary_widget.dart';
 import '../widgets/summary_card.dart';
 import '../util/date_util.dart';
+import '../services/unit_service.dart';
 
 /// The primary dashboard of the application.
 ///
@@ -439,6 +441,7 @@ class HomeState extends State<Home> {
     ColorScheme colorScheme,
     AppLocalizations l10n,
   ) {
+    final unitService = context.watch<UnitService>();
     return SummaryCard(
       padding: DesignConstants.cardPadding,
       child: Column(
@@ -483,7 +486,7 @@ class HomeState extends State<Home> {
           MeasurementChartWidget(
             chartType: _chartType,
             dateRange: _currentDateRange,
-            unit: "kg",
+            unit: unitService.suffixFor(UnitDimension.weight),
           ),
         ],
       ),
