@@ -196,16 +196,24 @@
   "workoutNotFound": "Workout nicht gefunden.",
   "totalVolumeLabel": "Gesamtvolumen",
   "notesLabel": "Notizen",
-  "hevyImportTitle": "Hevy Import",
-  "hevyImportDescription": "Importiere deine gesamte Trainings-Historie aus einer Hevy CSV-Exportdatei.",
-  "hevyImportButton": "Hevy-Daten importieren",
-  "hevyImportSuccess": "{count} Workouts erfolgreich importiert!",
-  "@hevyImportSuccess": {
+  "workoutImportTitle": "Externer Workout-Import",
+  "workoutImportDescription": "Importiere deinen Trainingsverlauf aus einer CSV- oder Excel-Exportdatei.",
+  "workoutImportButton": "Workout-Daten importieren",
+  "workoutImportSuccess": "{count} Workouts erfolgreich importiert!",
+  "@workoutImportSuccess": {
     "placeholders": {
       "count": {}
     }
   },
-  "hevyImportFailed": "Import fehlgeschlagen. Bitte überprüfe die Datei.",
+  "workoutImportFailed": "Import fehlgeschlagen. Bitte überprüfe die Datei.",
+  "importUnitSelectionTitle": "Einheit beim Import",
+  "importUnitSelectionDescription": "In welcher Einheit liegen die Daten der Datei vor?",
+  "unitMetricLabel": "Metrisch (kg)",
+  "unitImperialLabel": "Imperial (lbs)",
+  "excelExportButton": "Excel-Export (.xlsx)",
+  "exportWorkoutHistory": "Workout-Verlauf",
+  "exportNutritionDiary": "Ernährungstagebuch",
+  "exportMeasurements": "Messwerte",
   "startWorkout": "Workout starten",
   "addMeasurement": "Messwert hinzufügen",
   "filterToday": "Heute",

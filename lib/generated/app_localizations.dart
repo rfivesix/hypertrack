@@ -1088,35 +1088,83 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get notesLabel;
 
-  /// No description provided for @hevyImportTitle.
+  /// No description provided for @workoutImportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hevy Import'**
-  String get hevyImportTitle;
+  /// **'External Workout Import'**
+  String get workoutImportTitle;
 
-  /// No description provided for @hevyImportDescription.
+  /// No description provided for @workoutImportDescription.
   ///
   /// In en, this message translates to:
-  /// **'Import your entire training history from a Hevy CSV export file.'**
-  String get hevyImportDescription;
+  /// **'Import your training history from a CSV or Excel export file.'**
+  String get workoutImportDescription;
 
-  /// No description provided for @hevyImportButton.
+  /// No description provided for @workoutImportButton.
   ///
   /// In en, this message translates to:
-  /// **'Import Hevy Data'**
-  String get hevyImportButton;
+  /// **'Import Workout Data'**
+  String get workoutImportButton;
 
-  /// No description provided for @hevyImportSuccess.
+  /// No description provided for @workoutImportSuccess.
   ///
   /// In en, this message translates to:
   /// **'Successfully imported {count} workouts!'**
-  String hevyImportSuccess(Object count);
+  String workoutImportSuccess(Object count);
 
-  /// No description provided for @hevyImportFailed.
+  /// No description provided for @workoutImportFailed.
   ///
   /// In en, this message translates to:
   /// **'Import failed. Please check the file.'**
-  String get hevyImportFailed;
+  String get workoutImportFailed;
+
+  /// No description provided for @importUnitSelectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Unit'**
+  String get importUnitSelectionTitle;
+
+  /// No description provided for @importUnitSelectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'In which unit is the data in the file provided?'**
+  String get importUnitSelectionDescription;
+
+  /// No description provided for @unitMetricLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric (kg)'**
+  String get unitMetricLabel;
+
+  /// No description provided for @unitImperialLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial (lbs)'**
+  String get unitImperialLabel;
+
+  /// No description provided for @excelExportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel Export (.xlsx)'**
+  String get excelExportButton;
+
+  /// No description provided for @exportWorkoutHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout History'**
+  String get exportWorkoutHistory;
+
+  /// No description provided for @exportNutritionDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Diary'**
+  String get exportNutritionDiary;
+
+  /// No description provided for @exportMeasurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get exportMeasurements;
 
   /// No description provided for @startWorkout.
   ///

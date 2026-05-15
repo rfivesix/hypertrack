@@ -227,8 +227,8 @@ class WorkoutDatabaseHelper {
                 expression: t.usageCount,
                 mode: drift.OrderingMode.desc,
               ),
-          (t) =>
-              drift.OrderingTerm(expression: t.nameDe, mode: drift.OrderingMode.asc),
+          (t) => drift.OrderingTerm(
+              expression: t.nameDe, mode: drift.OrderingMode.asc),
         ]);
     } else {
       stmt = stmt
@@ -237,8 +237,8 @@ class WorkoutDatabaseHelper {
                 expression: t.usageCount,
                 mode: drift.OrderingMode.desc,
               ),
-          (t) =>
-              drift.OrderingTerm(expression: t.nameDe, mode: drift.OrderingMode.asc),
+          (t) => drift.OrderingTerm(
+              expression: t.nameDe, mode: drift.OrderingMode.asc),
         ]);
     }
 
@@ -729,7 +729,8 @@ class WorkoutDatabaseHelper {
       if (exerciseIds.isNotEmpty) {
         await dbInstance.customUpdate(
           'UPDATE exercises SET usage_count = usage_count + 1 WHERE id IN (${exerciseIds.map((_) => '?').join(',')})',
-          variables: exerciseIds.map((id) => drift.Variable.withString(id)).toList(),
+          variables:
+              exerciseIds.map((id) => drift.Variable.withString(id)).toList(),
           updates: {dbInstance.exercises},
         );
       }
@@ -800,6 +801,20 @@ class WorkoutDatabaseHelper {
       // Insert
       final row =
           await dbInstance.into(dbInstance.setLogs).insertReturning(companion);
+
+      // Increment usageCount for the exercise if linked
+      if (exerciseUuid != null) {
+        try {
+          await dbInstance.customUpdate(
+            'UPDATE exercises SET usage_count = usage_count + 1 WHERE id = ?',
+            variables: [drift.Variable.withString(exerciseUuid)],
+            updates: {dbInstance.exercises},
+          );
+        } catch (_) {
+          // Non-critical
+        }
+      }
+
       return row.localId;
     }
   }
@@ -1467,7 +1482,8 @@ class WorkoutDatabaseHelper {
         final currentPr = prMap[bracket];
         if (currentPr == null || weight > (currentPr.weightKg ?? 0.0)) {
           prMap[bracket] = setLog;
-        } else if (weight == currentPr.weightKg && reps > (currentPr.reps ?? 0)) {
+        } else if (weight == currentPr.weightKg &&
+            reps > (currentPr.reps ?? 0)) {
           prMap[bracket] = setLog;
         }
       }

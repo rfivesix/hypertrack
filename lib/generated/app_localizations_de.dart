@@ -543,23 +543,48 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesLabel => 'Notizen';
 
   @override
-  String get hevyImportTitle => 'Hevy Import';
+  String get workoutImportTitle => 'Externer Workout-Import';
 
   @override
-  String get hevyImportDescription =>
-      'Importiere deine gesamte Trainings-Historie aus einer Hevy CSV-Exportdatei.';
+  String get workoutImportDescription =>
+      'Importiere deinen Trainingsverlauf aus einer CSV- oder Excel-Exportdatei.';
 
   @override
-  String get hevyImportButton => 'Hevy-Daten importieren';
+  String get workoutImportButton => 'Workout-Daten importieren';
 
   @override
-  String hevyImportSuccess(Object count) {
+  String workoutImportSuccess(Object count) {
     return '$count Workouts erfolgreich importiert!';
   }
 
   @override
-  String get hevyImportFailed =>
+  String get workoutImportFailed =>
       'Import fehlgeschlagen. Bitte überprüfe die Datei.';
+
+  @override
+  String get importUnitSelectionTitle => 'Einheit beim Import';
+
+  @override
+  String get importUnitSelectionDescription =>
+      'In welcher Einheit liegen die Daten der Datei vor?';
+
+  @override
+  String get unitMetricLabel => 'Metrisch (kg)';
+
+  @override
+  String get unitImperialLabel => 'Imperial (lbs)';
+
+  @override
+  String get excelExportButton => 'Excel-Export (.xlsx)';
+
+  @override
+  String get exportWorkoutHistory => 'Workout-Verlauf';
+
+  @override
+  String get exportNutritionDiary => 'Ernährungstagebuch';
+
+  @override
+  String get exportMeasurements => 'Messwerte';
 
   @override
   String get startWorkout => 'Workout starten';

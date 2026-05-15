@@ -86,7 +86,7 @@ Encrypted backups use a passphrase supplied by you. If you create an unencrypted
 
 Backups and exports are written to temporary files for sharing or to an app/user-selected storage location for automatic backups. On Android, automatic backups can use a folder selected through the Storage Access Framework. You are responsible for where you save, share, upload, or delete exported files and backups.
 
-Imports can read selected files, such as full Train Libre backups or Hevy CSV workout exports, and write parsed data into the local database.
+Imports can read selected files, such as full Train Libre backups or external workout export files (CSV/Excel), and write parsed data into the local database.
 
 Sharing features can create text or image summaries of workouts and routines and pass them to the operating system share sheet. The selected receiving app or service handles that shared content under its own terms and privacy policy.
 
