@@ -239,6 +239,7 @@ class _MainScreenState extends State<MainScreen>
 
     // FIX: Get date
     final targetDate = _currentActiveDate;
+    final initialTimestamp = targetDate.withCurrentTime;
 
     final result = await showGlassBottomMenu<(double, DateTime)?>(
       context: context,
@@ -246,7 +247,7 @@ class _MainScreenState extends State<MainScreen>
       contentBuilder: (ctx, close) {
         return LogSupplementDoseBody(
           supplement: selectedSupplement,
-          initialTimestamp: targetDate, // <--- FIX: Pass date
+          initialTimestamp: initialTimestamp, // <--- FIX: Pass date with time
           primaryLabel: l10n.add_button,
           onCancel: close,
           onSubmit: (dose, ts) {
