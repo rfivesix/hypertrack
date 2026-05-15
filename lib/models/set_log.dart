@@ -50,6 +50,24 @@ class SetLog {
   /// Reps in Reserve (how many more reps could have been performed).
   final int? rir;
 
+  /// Temporary flag: True if this set is a Max Weight PR.
+  final bool isMaxWeightPR;
+
+  /// Temporary flag: True if this set is a Max Volume PR.
+  final bool isMaxVolumePR;
+
+  /// Temporary flag: True if this set is an Estimated 1RM PR.
+  final bool isMaxEst1RMPR;
+
+  /// Temporary value: Difference to previous Weight PR.
+  final double? weightPRDiff;
+
+  /// Temporary value: Difference to previous Volume PR.
+  final double? volumePRDiff;
+
+  /// Temporary value: Difference to previous Estimated 1RM PR.
+  final double? est1rmPRDiff;
+
   /// Creates a new [SetLog] instance.
   SetLog({
     this.id,
@@ -67,6 +85,12 @@ class SetLog {
     this.rpe,
     this.rir,
     this.supersetId,
+    this.isMaxWeightPR = false,
+    this.isMaxVolumePR = false,
+    this.isMaxEst1RMPR = false,
+    this.weightPRDiff,
+    this.volumePRDiff,
+    this.est1rmPRDiff,
   });
 
   /// Creates a [SetLog] instance from a Map, typically from a database row.
@@ -88,6 +112,7 @@ class SetLog {
       rpe: map['rpe'],
       rir: map['rir'],
       supersetId: map['superset_id'],
+      // Note: PR flags are not stored in the database.
     );
   }
 
@@ -133,6 +158,12 @@ class SetLog {
     int? rpe,
     int? rir,
     int? supersetId,
+    bool? isMaxWeightPR,
+    bool? isMaxVolumePR,
+    bool? isMaxEst1RMPR,
+    double? weightPRDiff,
+    double? volumePRDiff,
+    double? est1rmPRDiff,
     bool clearWeight = false,
     bool clearReps = false,
     bool clearRir = false,
@@ -156,6 +187,12 @@ class SetLog {
       rpe: rpe ?? this.rpe,
       rir: clearRir ? null : (rir ?? this.rir),
       supersetId: supersetId ?? this.supersetId,
+      isMaxWeightPR: isMaxWeightPR ?? this.isMaxWeightPR,
+      isMaxVolumePR: isMaxVolumePR ?? this.isMaxVolumePR,
+      isMaxEst1RMPR: isMaxEst1RMPR ?? this.isMaxEst1RMPR,
+      weightPRDiff: weightPRDiff ?? this.weightPRDiff,
+      volumePRDiff: volumePRDiff ?? this.volumePRDiff,
+      est1rmPRDiff: est1rmPRDiff ?? this.est1rmPRDiff,
     );
   }
 }

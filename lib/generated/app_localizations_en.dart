@@ -2874,6 +2874,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseMetricEst1RM => 'Est. 1RM';
 
   @override
+  String get prBannerBestMaxWeight => 'Best Max Weight';
+
+  @override
+  String get prBannerBestVolumeSet => 'Best Volume Set';
+
+  @override
+  String get prBannerBest1RM => 'Best 1-Rep Max';
+
+  @override
+  String get newPersonalRecordLabel => 'New Personal Record';
+
+  @override
+  String get prBadgeTooltip => 'New Personal Record!';
+
+  @override
+  String get workoutSummaryNewRecordsTitle => 'New Records';
+
+  @override
   String get allTimeRecordsLabel => 'All-Time Records';
 
   @override

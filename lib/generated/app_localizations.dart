@@ -5129,6 +5129,42 @@ abstract class AppLocalizations {
   /// **'Est. 1RM'**
   String get exerciseMetricEst1RM;
 
+  /// No description provided for @prBannerBestMaxWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Max Weight'**
+  String get prBannerBestMaxWeight;
+
+  /// No description provided for @prBannerBestVolumeSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Volume Set'**
+  String get prBannerBestVolumeSet;
+
+  /// No description provided for @prBannerBest1RM.
+  ///
+  /// In en, this message translates to:
+  /// **'Best 1-Rep Max'**
+  String get prBannerBest1RM;
+
+  /// No description provided for @newPersonalRecordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New Personal Record'**
+  String get newPersonalRecordLabel;
+
+  /// No description provided for @prBadgeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'New Personal Record!'**
+  String get prBadgeTooltip;
+
+  /// No description provided for @workoutSummaryNewRecordsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Records'**
+  String get workoutSummaryNewRecordsTitle;
+
   /// No description provided for @allTimeRecordsLabel.
   ///
   /// In en, this message translates to:

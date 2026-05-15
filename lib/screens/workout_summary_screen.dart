@@ -39,6 +39,9 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   // because cardio and strength use different units.
   Map<String, String> _summaryPerExercise = {};
 
+  /// Stores new records achieved in this session per exercise.
+  Map<String, List<String>> _newRecordsPerExercise = {};
+
   @override
   void initState() {
     super.initState();
@@ -49,12 +52,16 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     final db = WorkoutDatabaseHelper.instance;
     final data = await db.getWorkoutLogById(widget.logId);
 
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+
     if (data != null) {
       final heartRateFuture = _heartRateService.loadForWorkoutWindow(
         startTime: data.startTime,
         endTime: data.endTime,
       );
       final Map<String, String> summaryMap = {};
+      final Map<String, List<String>> newRecordsMap = {};
 
       final groupedSets = <String, List<SetLog>>{};
       for (var set in data.sets) {
@@ -83,12 +90,62 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
               "${totalDist.toStringAsFixed(1)} km | $minutes min";
         } else {
           double totalVol = 0;
+          double sessionMaxWeight = 0;
+          double sessionMaxVolume = 0;
+          double sessionMaxEst1rm = 0;
+
           for (var s in sets) {
             final w = s.weightKg ?? 0.0;
             final r = s.reps ?? 0;
             totalVol += w * r;
+
+            if (s.isCompleted == true && s.setType != 'warmup') {
+              if (w > sessionMaxWeight) sessionMaxWeight = w;
+              final vol = w * r;
+              if (vol > sessionMaxVolume) sessionMaxVolume = vol;
+              if (r > 0 && r <= 10) {
+                final e1rm = w * (36 / (37 - r));
+                if (e1rm > sessionMaxEst1rm) sessionMaxEst1rm = e1rm;
+              }
+            }
           }
           summaryMap[name] = "${totalVol.toStringAsFixed(0)} kg";
+
+          // Calculate PRs for strength exercises
+          final historicalBests = await db.getExerciseBests(
+            name,
+            excludeWorkoutLogId: widget.logId,
+          );
+
+          List<String> records = [];
+          if (sessionMaxWeight > (historicalBests['maxWeight'] ?? 0)) {
+            final double old = historicalBests['maxWeight'] ?? 0;
+            final String diff =
+                old > 0 ? " (+${(sessionMaxWeight - old).toStringAsFixed(1)})" : "";
+            records.add(
+              "${l10n.exerciseMetricMaxWeight} (${sessionMaxWeight.toStringAsFixed(1).replaceAll('.0', '')} kg$diff)",
+            );
+          }
+          if (sessionMaxVolume > (historicalBests['maxVolume'] ?? 0)) {
+            final double old = historicalBests['maxVolume'] ?? 0;
+            final String diff =
+                old > 0 ? " (+${(sessionMaxVolume - old).toStringAsFixed(0)})" : "";
+            records.add(
+              "${l10n.exerciseMetricVolume} (${sessionMaxVolume.toStringAsFixed(0)} kg$diff)",
+            );
+          }
+          if (sessionMaxEst1rm > (historicalBests['maxEst1rm'] ?? 0)) {
+            final double old = historicalBests['maxEst1rm'] ?? 0;
+            final String diff =
+                old > 0 ? " (+${(sessionMaxEst1rm - old).toStringAsFixed(1)})" : "";
+            records.add(
+              "${l10n.exerciseMetricEst1RM} (${sessionMaxEst1rm.toStringAsFixed(1).replaceAll('.0', '')} kg$diff)",
+            );
+          }
+
+          if (records.isNotEmpty) {
+            newRecordsMap[name] = records;
+          }
         }
       }
 
@@ -98,6 +155,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
         setState(() {
           _log = data;
           _summaryPerExercise = summaryMap;
+          _newRecordsPerExercise = newRecordsMap;
           _heartRateSummary = heartRate;
           _isLoading = false;
         });
@@ -111,6 +169,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     // Calculate total volume only for strength, or omit it for mixed workouts?
     // Keep the global "Volume" header as the sum of all strength volume.
@@ -185,6 +244,37 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                               ),
                               const SizedBox(height: DesignConstants.spacingL),
                             ],
+
+                            // NEW RECORDS SECTION
+                            if (_newRecordsPerExercise.isNotEmpty) ...[
+                              Text(
+                                l10n.workoutSummaryNewRecordsTitle,
+                                style: textTheme.titleMedium?.copyWith(
+                                  color: Colors.amber[800],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: DesignConstants.spacingS),
+                              ..._newRecordsPerExercise.entries.map((entry) {
+                                return SummaryCard(
+                                  child: ListTile(
+                                    leading: const Icon(
+                                      Icons.emoji_events,
+                                      color: Colors.amber,
+                                    ),
+                                    title: Text(
+                                      entry.key,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(entry.value.join(", ")),
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: DesignConstants.spacingL),
+                            ],
+
                             Text(
                               l10n.workoutSummaryExerciseOverview,
                               style: textTheme.titleMedium,
@@ -218,13 +308,18 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
                           child: Text(
                             l10n.doneButtonLabel,
-                            style: const TextStyle(fontSize: 18),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),

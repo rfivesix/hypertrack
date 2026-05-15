@@ -2892,10 +2892,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get exerciseMetricVolume => 'Volumen';
 
   @override
-  String get exerciseMetricEst1RM => 'Est. 1RM';
+  String get exerciseMetricEst1RM => 'Schätz. 1RM';
 
   @override
-  String get allTimeRecordsLabel => 'Alle-Zeiten-Rekorde';
+  String get prBannerBestMaxWeight => 'Bestes Max. Gewicht';
+
+  @override
+  String get prBannerBestVolumeSet => 'Bestes Volumen-Set';
+
+  @override
+  String get prBannerBest1RM => 'Bestes 1RM';
+
+  @override
+  String get newPersonalRecordLabel => 'Neuer persönlicher Rekord';
+
+  @override
+  String get prBadgeTooltip => 'Neuer persönlicher Rekord!';
+
+  @override
+  String get workoutSummaryNewRecordsTitle => 'Neue Rekorde';
+
+  @override
+  String get allTimeRecordsLabel => 'Allzeit-Rekorde';
 
   @override
   String get recentActivityLabel => 'Letzte Aktivität';

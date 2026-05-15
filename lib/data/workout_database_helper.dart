@@ -1415,6 +1415,84 @@ class WorkoutDatabaseHelper {
     return prMap;
   }
 
+  /// Retrieves the historical bests (Max Weight, Max Volume, Max Est. 1RM)
+  /// for a specific exercise to use as a baseline for real-time PR detection.
+  Future<Map<String, double>> getExerciseBests(
+    String exerciseName, {
+    String? altName,
+    String? exerciseUuid,
+    int? excludeWorkoutLogId,
+  }) async {
+    final dbInstance = await database;
+
+    final exerciseMatch = _buildExerciseMatchCondition(
+      dbInstance,
+      exerciseName,
+      altName: altName,
+      exerciseUuid: exerciseUuid,
+    );
+
+    // Get the UUID of the workout to exclude if provided
+    String? excludeUuid;
+    if (excludeWorkoutLogId != null) {
+      excludeUuid = await _getUuidFromLocalId(
+        dbInstance.workoutLogs,
+        excludeWorkoutLogId,
+      );
+    }
+
+    // Qualifying sets for PRs:
+    // isCompleted == true, setType != 'warmup', weight > 0, reps > 0
+    var query = dbInstance.select(dbInstance.setLogs).join([
+      drift.innerJoin(
+        dbInstance.workoutLogs,
+        dbInstance.workoutLogs.id.equalsExp(
+          dbInstance.setLogs.workoutLogId,
+        ),
+      ),
+    ])
+      ..where(
+        exerciseMatch &
+            dbInstance.setLogs.isCompleted.equals(true) &
+            dbInstance.setLogs.setType.isNotIn(['warmup']) &
+            dbInstance.setLogs.weight.isBiggerThanValue(0) &
+            dbInstance.setLogs.reps.isBiggerThanValue(0) &
+            dbInstance.workoutLogs.status.equals('completed'),
+      );
+
+    if (excludeUuid != null) {
+      query = query..where(dbInstance.workoutLogs.id.isNotValue(excludeUuid));
+    }
+
+    final rows = await query.get();
+
+    double maxWeight = 0.0;
+    double maxVolume = 0.0;
+    double maxEst1rm = 0.0;
+
+    for (final r in rows) {
+      final setRow = r.readTable(dbInstance.setLogs);
+      final weight = setRow.weight ?? 0.0;
+      final reps = setRow.reps ?? 0;
+
+      if (weight > maxWeight) maxWeight = weight;
+
+      final volume = weight * reps;
+      if (volume > maxVolume) maxVolume = volume;
+
+      if (reps > 0 && reps <= 10) {
+        final est1rm = weight * (36 / (37 - reps));
+        if (est1rm > maxEst1rm) maxEst1rm = est1rm;
+      }
+    }
+
+    return {
+      'maxWeight': maxWeight,
+      'maxVolume': maxVolume,
+      'maxEst1rm': maxEst1rm,
+    };
+  }
+
   /// Calculates Time-Series data points for Weight, Volume, and Sets per session.
   /// Result is a List of Maps containing Date and the metrics.
   Future<List<Map<String, dynamic>>> getExerciseTimeSeriesData(
