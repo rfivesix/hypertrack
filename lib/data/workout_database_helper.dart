@@ -199,17 +199,54 @@ class WorkoutDatabaseHelper {
     var stmt = dbInstance.select(dbInstance.exercises);
 
     if (query.isNotEmpty) {
+      final term = query.trim();
       stmt = stmt
         ..where(
-          (tbl) => tbl.nameDe.like('%$query%') | tbl.nameEn.like('%$query%'),
+          (tbl) => tbl.nameDe.like('%$term%') | tbl.nameEn.like('%$term%'),
         );
+
+      stmt = stmt
+        ..orderBy([
+          (t) => drift.OrderingTerm(
+                expression: drift.CaseWhenExpression(
+                  cases: [
+                    drift.CaseWhen(
+                      t.nameDe.equals(term) | t.nameEn.equals(term),
+                      then: const drift.Constant(0),
+                    ),
+                    drift.CaseWhen(
+                      t.nameDe.like('$term%') | t.nameEn.like('$term%'),
+                      then: const drift.Constant(1),
+                    ),
+                  ],
+                  orElse: const drift.Constant(2),
+                ),
+                mode: drift.OrderingMode.asc,
+              ),
+          (t) => drift.OrderingTerm(
+                expression: t.usageCount,
+                mode: drift.OrderingMode.desc,
+              ),
+          (t) =>
+              drift.OrderingTerm(expression: t.nameDe, mode: drift.OrderingMode.asc),
+        ]);
+    } else {
+      stmt = stmt
+        ..orderBy([
+          (t) => drift.OrderingTerm(
+                expression: t.usageCount,
+                mode: drift.OrderingMode.desc,
+              ),
+          (t) =>
+              drift.OrderingTerm(expression: t.nameDe, mode: drift.OrderingMode.asc),
+        ]);
     }
 
     if (selectedCategories.isNotEmpty) {
       stmt = stmt..where((tbl) => tbl.categoryName.isIn(selectedCategories));
     }
 
-    stmt = stmt..orderBy([(t) => drift.OrderingTerm(expression: t.nameDe)]);
+    stmt = stmt..limit(50);
 
     final rows = await stmt.get();
     return rows.map(_mapExerciseToModel).toList();
@@ -671,6 +708,34 @@ class WorkoutDatabaseHelper {
         notes: notes != null ? drift.Value(notes) : const drift.Value.absent(),
       ),
     );
+
+    // Increment usageCount for exercises used in this workout
+    try {
+      final logRow = await (dbInstance.select(dbInstance.workoutLogs)
+            ..where((t) => t.localId.equals(workoutLogId)))
+          .getSingle();
+
+      final setLogsQuery =
+          dbInstance.selectOnly(dbInstance.setLogs, distinct: true)
+            ..addColumns([dbInstance.setLogs.exerciseId])
+            ..where(dbInstance.setLogs.workoutLogId.equals(logRow.id))
+            ..where(dbInstance.setLogs.exerciseId.isNotNull());
+
+      final exerciseIds = (await setLogsQuery.get())
+          .map((r) => r.read(dbInstance.setLogs.exerciseId))
+          .whereType<String>()
+          .toList();
+
+      if (exerciseIds.isNotEmpty) {
+        await dbInstance.customUpdate(
+          'UPDATE exercises SET usage_count = usage_count + 1 WHERE id IN (${exerciseIds.map((_) => '?').join(',')})',
+          variables: exerciseIds.map((id) => drift.Variable.withString(id)).toList(),
+          updates: {dbInstance.exercises},
+        );
+      }
+    } catch (e) {
+      // Non-critical: don't fail finishWorkout if usageCount update fails
+    }
   }
 
   Future<int> insertSetLog(SetLog setLog) async {

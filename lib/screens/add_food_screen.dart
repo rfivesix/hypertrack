@@ -125,6 +125,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   final TextEditingController _baseSearchCtrl = TextEditingController();
   // String _baseSearch = '';
   Timer? _baseSearchDebounce;
+  Timer? _searchDebounce;
 
   List<Map<String, dynamic>> _baseCategories = [];
   final Map<String, List<FoodItem>> _catItems = {}; // key -> Produkte
@@ -250,8 +251,16 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     _searchController.dispose();
     _tabController.dispose();
     _baseSearchDebounce?.cancel();
+    _searchDebounce?.cancel();
     _baseSearchCtrl.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _runFilter(query);
+    });
   }
 
   void _runFilter(String enteredKeyword) async {
@@ -660,7 +669,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           Expanded(
             child: TextField(
               controller: _searchController,
-              onChanged: _runFilter, // Uses the existing search
+              onChanged: _onSearchChanged, // Uses debounce
               decoration: InputDecoration(
                 hintText: l10n.searchHintText,
                 prefixIcon: Icon(

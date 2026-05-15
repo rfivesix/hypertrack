@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/workout_database_helper.dart';
 import '../generated/app_localizations.dart';
@@ -21,6 +22,7 @@ class GeneralExerciseSelectionScreen extends StatefulWidget {
 class _GeneralExerciseSelectionScreenState
     extends State<GeneralExerciseSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   List<Exercise> _results = [];
   bool _isLoading = false;
 
@@ -36,7 +38,15 @@ class _GeneralExerciseSelectionScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _runFilter(query);
+    });
   }
 
   Future<void> _runFilter(String enteredKeyword) async {
@@ -66,7 +76,7 @@ class _GeneralExerciseSelectionScreenState
           children: [
             TextField(
               controller: _searchController,
-              onChanged: _runFilter,
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: l10n.searchHintText,
                 prefixIcon: Icon(

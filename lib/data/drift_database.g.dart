@@ -1382,6 +1382,14 @@ class $ExercisesTable extends Exercises
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('user'));
+  static const VerificationMeta _usageCountMeta =
+      const VerificationMeta('usageCount');
+  @override
+  late final GeneratedColumn<int> usageCount = GeneratedColumn<int>(
+      'usage_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         localId,
@@ -1399,7 +1407,8 @@ class $ExercisesTable extends Exercises
         musclesPrimary,
         musclesSecondary,
         isCustom,
-        source
+        source,
+        usageCount
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1488,6 +1497,12 @@ class $ExercisesTable extends Exercises
       context.handle(_sourceMeta,
           source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
     }
+    if (data.containsKey('usage_count')) {
+      context.handle(
+          _usageCountMeta,
+          usageCount.isAcceptableOrUnknown(
+              data['usage_count']!, _usageCountMeta));
+    }
     return context;
   }
 
@@ -1529,6 +1544,8 @@ class $ExercisesTable extends Exercises
           .read(DriftSqlType.bool, data['${effectivePrefix}is_custom'])!,
       source: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      usageCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}usage_count'])!,
     );
   }
 
@@ -1555,6 +1572,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   final String? musclesSecondary;
   final bool isCustom;
   final String source;
+  final int usageCount;
   const Exercise(
       {required this.localId,
       required this.id,
@@ -1571,7 +1589,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       this.musclesPrimary,
       this.musclesSecondary,
       required this.isCustom,
-      required this.source});
+      required this.source,
+      required this.usageCount});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1607,6 +1626,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     }
     map['is_custom'] = Variable<bool>(isCustom);
     map['source'] = Variable<String>(source);
+    map['usage_count'] = Variable<int>(usageCount);
     return map;
   }
 
@@ -1644,6 +1664,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           : Value(musclesSecondary),
       isCustom: Value(isCustom),
       source: Value(source),
+      usageCount: Value(usageCount),
     );
   }
 
@@ -1667,6 +1688,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       musclesSecondary: serializer.fromJson<String?>(json['musclesSecondary']),
       isCustom: serializer.fromJson<bool>(json['isCustom']),
       source: serializer.fromJson<String>(json['source']),
+      usageCount: serializer.fromJson<int>(json['usageCount']),
     );
   }
   @override
@@ -1689,6 +1711,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       'musclesSecondary': serializer.toJson<String?>(musclesSecondary),
       'isCustom': serializer.toJson<bool>(isCustom),
       'source': serializer.toJson<String>(source),
+      'usageCount': serializer.toJson<int>(usageCount),
     };
   }
 
@@ -1708,7 +1731,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           Value<String?> musclesPrimary = const Value.absent(),
           Value<String?> musclesSecondary = const Value.absent(),
           bool? isCustom,
-          String? source}) =>
+          String? source,
+          int? usageCount}) =>
       Exercise(
         localId: localId ?? this.localId,
         id: id ?? this.id,
@@ -1732,6 +1756,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
             : this.musclesSecondary,
         isCustom: isCustom ?? this.isCustom,
         source: source ?? this.source,
+        usageCount: usageCount ?? this.usageCount,
       );
   Exercise copyWithCompanion(ExercisesCompanion data) {
     return Exercise(
@@ -1761,6 +1786,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           : this.musclesSecondary,
       isCustom: data.isCustom.present ? data.isCustom.value : this.isCustom,
       source: data.source.present ? data.source.value : this.source,
+      usageCount:
+          data.usageCount.present ? data.usageCount.value : this.usageCount,
     );
   }
 
@@ -1782,7 +1809,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('musclesPrimary: $musclesPrimary, ')
           ..write('musclesSecondary: $musclesSecondary, ')
           ..write('isCustom: $isCustom, ')
-          ..write('source: $source')
+          ..write('source: $source, ')
+          ..write('usageCount: $usageCount')
           ..write(')'))
         .toString();
   }
@@ -1804,7 +1832,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       musclesPrimary,
       musclesSecondary,
       isCustom,
-      source);
+      source,
+      usageCount);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1824,7 +1853,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.musclesPrimary == this.musclesPrimary &&
           other.musclesSecondary == this.musclesSecondary &&
           other.isCustom == this.isCustom &&
-          other.source == this.source);
+          other.source == this.source &&
+          other.usageCount == this.usageCount);
 }
 
 class ExercisesCompanion extends UpdateCompanion<Exercise> {
@@ -1844,6 +1874,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<String?> musclesSecondary;
   final Value<bool> isCustom;
   final Value<String> source;
+  final Value<int> usageCount;
   const ExercisesCompanion({
     this.localId = const Value.absent(),
     this.id = const Value.absent(),
@@ -1861,6 +1892,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.musclesSecondary = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.source = const Value.absent(),
+    this.usageCount = const Value.absent(),
   });
   ExercisesCompanion.insert({
     this.localId = const Value.absent(),
@@ -1879,6 +1911,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.musclesSecondary = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.source = const Value.absent(),
+    this.usageCount = const Value.absent(),
   })  : nameDe = Value(nameDe),
         nameEn = Value(nameEn);
   static Insertable<Exercise> custom({
@@ -1898,6 +1931,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<String>? musclesSecondary,
     Expression<bool>? isCustom,
     Expression<String>? source,
+    Expression<int>? usageCount,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -1916,6 +1950,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       if (musclesSecondary != null) 'muscles_secondary': musclesSecondary,
       if (isCustom != null) 'is_custom': isCustom,
       if (source != null) 'source': source,
+      if (usageCount != null) 'usage_count': usageCount,
     });
   }
 
@@ -1935,7 +1970,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       Value<String?>? musclesPrimary,
       Value<String?>? musclesSecondary,
       Value<bool>? isCustom,
-      Value<String>? source}) {
+      Value<String>? source,
+      Value<int>? usageCount}) {
     return ExercisesCompanion(
       localId: localId ?? this.localId,
       id: id ?? this.id,
@@ -1953,6 +1989,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       musclesSecondary: musclesSecondary ?? this.musclesSecondary,
       isCustom: isCustom ?? this.isCustom,
       source: source ?? this.source,
+      usageCount: usageCount ?? this.usageCount,
     );
   }
 
@@ -2007,6 +2044,9 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     if (source.present) {
       map['source'] = Variable<String>(source.value);
     }
+    if (usageCount.present) {
+      map['usage_count'] = Variable<int>(usageCount.value);
+    }
     return map;
   }
 
@@ -2028,7 +2068,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('musclesPrimary: $musclesPrimary, ')
           ..write('musclesSecondary: $musclesSecondary, ')
           ..write('isCustom: $isCustom, ')
-          ..write('source: $source')
+          ..write('source: $source, ')
+          ..write('usageCount: $usageCount')
           ..write(')'))
         .toString();
   }
@@ -6055,6 +6096,14 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   late final GeneratedColumn<String> category = GeneratedColumn<String>(
       'category', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _usageCountMeta =
+      const VerificationMeta('usageCount');
+  @override
+  late final GeneratedColumn<int> usageCount = GeneratedColumn<int>(
+      'usage_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         localId,
@@ -6077,7 +6126,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         caffeine,
         isLiquid,
         source,
-        category
+        category,
+        usageCount
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6184,6 +6234,12 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       context.handle(_categoryMeta,
           category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
     }
+    if (data.containsKey('usage_count')) {
+      context.handle(
+          _usageCountMeta,
+          usageCount.isAcceptableOrUnknown(
+              data['usage_count']!, _usageCountMeta));
+    }
     return context;
   }
 
@@ -6235,6 +6291,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
           .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
       category: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}category']),
+      usageCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}usage_count'])!,
     );
   }
 
@@ -6266,6 +6324,7 @@ class Product extends DataClass implements Insertable<Product> {
   final bool isLiquid;
   final String source;
   final String? category;
+  final int usageCount;
   const Product(
       {required this.localId,
       required this.id,
@@ -6287,7 +6346,8 @@ class Product extends DataClass implements Insertable<Product> {
       this.caffeine,
       required this.isLiquid,
       required this.source,
-      this.category});
+      this.category,
+      required this.usageCount});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6330,6 +6390,7 @@ class Product extends DataClass implements Insertable<Product> {
     if (!nullToAbsent || category != null) {
       map['category'] = Variable<String>(category);
     }
+    map['usage_count'] = Variable<int>(usageCount);
     return map;
   }
 
@@ -6367,6 +6428,7 @@ class Product extends DataClass implements Insertable<Product> {
       category: category == null && nullToAbsent
           ? const Value.absent()
           : Value(category),
+      usageCount: Value(usageCount),
     );
   }
 
@@ -6395,6 +6457,7 @@ class Product extends DataClass implements Insertable<Product> {
       isLiquid: serializer.fromJson<bool>(json['isLiquid']),
       source: serializer.fromJson<String>(json['source']),
       category: serializer.fromJson<String?>(json['category']),
+      usageCount: serializer.fromJson<int>(json['usageCount']),
     );
   }
   @override
@@ -6422,6 +6485,7 @@ class Product extends DataClass implements Insertable<Product> {
       'isLiquid': serializer.toJson<bool>(isLiquid),
       'source': serializer.toJson<String>(source),
       'category': serializer.toJson<String?>(category),
+      'usageCount': serializer.toJson<int>(usageCount),
     };
   }
 
@@ -6446,7 +6510,8 @@ class Product extends DataClass implements Insertable<Product> {
           Value<double?> caffeine = const Value.absent(),
           bool? isLiquid,
           String? source,
-          Value<String?> category = const Value.absent()}) =>
+          Value<String?> category = const Value.absent(),
+          int? usageCount}) =>
       Product(
         localId: localId ?? this.localId,
         id: id ?? this.id,
@@ -6469,6 +6534,7 @@ class Product extends DataClass implements Insertable<Product> {
         isLiquid: isLiquid ?? this.isLiquid,
         source: source ?? this.source,
         category: category.present ? category.value : this.category,
+        usageCount: usageCount ?? this.usageCount,
       );
   Product copyWithCompanion(ProductsCompanion data) {
     return Product(
@@ -6493,6 +6559,8 @@ class Product extends DataClass implements Insertable<Product> {
       isLiquid: data.isLiquid.present ? data.isLiquid.value : this.isLiquid,
       source: data.source.present ? data.source.value : this.source,
       category: data.category.present ? data.category.value : this.category,
+      usageCount:
+          data.usageCount.present ? data.usageCount.value : this.usageCount,
     );
   }
 
@@ -6519,7 +6587,8 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('caffeine: $caffeine, ')
           ..write('isLiquid: $isLiquid, ')
           ..write('source: $source, ')
-          ..write('category: $category')
+          ..write('category: $category, ')
+          ..write('usageCount: $usageCount')
           ..write(')'))
         .toString();
   }
@@ -6546,7 +6615,8 @@ class Product extends DataClass implements Insertable<Product> {
         caffeine,
         isLiquid,
         source,
-        category
+        category,
+        usageCount
       ]);
   @override
   bool operator ==(Object other) =>
@@ -6572,7 +6642,8 @@ class Product extends DataClass implements Insertable<Product> {
           other.caffeine == this.caffeine &&
           other.isLiquid == this.isLiquid &&
           other.source == this.source &&
-          other.category == this.category);
+          other.category == this.category &&
+          other.usageCount == this.usageCount);
 }
 
 class ProductsCompanion extends UpdateCompanion<Product> {
@@ -6597,6 +6668,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<bool> isLiquid;
   final Value<String> source;
   final Value<String?> category;
+  final Value<int> usageCount;
   const ProductsCompanion({
     this.localId = const Value.absent(),
     this.id = const Value.absent(),
@@ -6619,6 +6691,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.isLiquid = const Value.absent(),
     this.source = const Value.absent(),
     this.category = const Value.absent(),
+    this.usageCount = const Value.absent(),
   });
   ProductsCompanion.insert({
     this.localId = const Value.absent(),
@@ -6642,6 +6715,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.isLiquid = const Value.absent(),
     this.source = const Value.absent(),
     this.category = const Value.absent(),
+    this.usageCount = const Value.absent(),
   })  : barcode = Value(barcode),
         name = Value(name),
         calories = Value(calories),
@@ -6670,6 +6744,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<bool>? isLiquid,
     Expression<String>? source,
     Expression<String>? category,
+    Expression<int>? usageCount,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -6693,6 +6768,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (isLiquid != null) 'is_liquid': isLiquid,
       if (source != null) 'source': source,
       if (category != null) 'category': category,
+      if (usageCount != null) 'usage_count': usageCount,
     });
   }
 
@@ -6717,7 +6793,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       Value<double?>? caffeine,
       Value<bool>? isLiquid,
       Value<String>? source,
-      Value<String?>? category}) {
+      Value<String?>? category,
+      Value<int>? usageCount}) {
     return ProductsCompanion(
       localId: localId ?? this.localId,
       id: id ?? this.id,
@@ -6740,6 +6817,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       isLiquid: isLiquid ?? this.isLiquid,
       source: source ?? this.source,
       category: category ?? this.category,
+      usageCount: usageCount ?? this.usageCount,
     );
   }
 
@@ -6809,6 +6887,9 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     if (category.present) {
       map['category'] = Variable<String>(category.value);
     }
+    if (usageCount.present) {
+      map['usage_count'] = Variable<int>(usageCount.value);
+    }
     return map;
   }
 
@@ -6835,7 +6916,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('caffeine: $caffeine, ')
           ..write('isLiquid: $isLiquid, ')
           ..write('source: $source, ')
-          ..write('category: $category')
+          ..write('category: $category, ')
+          ..write('usageCount: $usageCount')
           ..write(')'))
         .toString();
   }
@@ -14574,6 +14656,7 @@ typedef $$ExercisesTableCreateCompanionBuilder = ExercisesCompanion Function({
   Value<String?> musclesSecondary,
   Value<bool> isCustom,
   Value<String> source,
+  Value<int> usageCount,
 });
 typedef $$ExercisesTableUpdateCompanionBuilder = ExercisesCompanion Function({
   Value<int> localId,
@@ -14592,6 +14675,7 @@ typedef $$ExercisesTableUpdateCompanionBuilder = ExercisesCompanion Function({
   Value<String?> musclesSecondary,
   Value<bool> isCustom,
   Value<String> source,
+  Value<int> usageCount,
 });
 
 final class $$ExercisesTableReferences
@@ -14689,6 +14773,9 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<String> get source => $composableBuilder(
       column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get usageCount => $composableBuilder(
+      column: $table.usageCount, builder: (column) => ColumnFilters(column));
 
   Expression<bool> routineExercisesRefs(
       Expression<bool> Function($$RoutineExercisesTableFilterComposer f) f) {
@@ -14794,6 +14881,9 @@ class $$ExercisesTableOrderingComposer
 
   ColumnOrderings<String> get source => $composableBuilder(
       column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get usageCount => $composableBuilder(
+      column: $table.usageCount, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ExercisesTableAnnotationComposer
@@ -14852,6 +14942,9 @@ class $$ExercisesTableAnnotationComposer
 
   GeneratedColumn<String> get source =>
       $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<int> get usageCount => $composableBuilder(
+      column: $table.usageCount, builder: (column) => column);
 
   Expression<T> routineExercisesRefs<T extends Object>(
       Expression<T> Function($$RoutineExercisesTableAnnotationComposer a) f) {
@@ -14935,6 +15028,7 @@ class $$ExercisesTableTableManager extends RootTableManager<
             Value<String?> musclesSecondary = const Value.absent(),
             Value<bool> isCustom = const Value.absent(),
             Value<String> source = const Value.absent(),
+            Value<int> usageCount = const Value.absent(),
           }) =>
               ExercisesCompanion(
             localId: localId,
@@ -14953,6 +15047,7 @@ class $$ExercisesTableTableManager extends RootTableManager<
             musclesSecondary: musclesSecondary,
             isCustom: isCustom,
             source: source,
+            usageCount: usageCount,
           ),
           createCompanionCallback: ({
             Value<int> localId = const Value.absent(),
@@ -14971,6 +15066,7 @@ class $$ExercisesTableTableManager extends RootTableManager<
             Value<String?> musclesSecondary = const Value.absent(),
             Value<bool> isCustom = const Value.absent(),
             Value<String> source = const Value.absent(),
+            Value<int> usageCount = const Value.absent(),
           }) =>
               ExercisesCompanion.insert(
             localId: localId,
@@ -14989,6 +15085,7 @@ class $$ExercisesTableTableManager extends RootTableManager<
             musclesSecondary: musclesSecondary,
             isCustom: isCustom,
             source: source,
+            usageCount: usageCount,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -18140,6 +18237,7 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   Value<bool> isLiquid,
   Value<String> source,
   Value<String?> category,
+  Value<int> usageCount,
 });
 typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<int> localId,
@@ -18163,6 +18261,7 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<bool> isLiquid,
   Value<String> source,
   Value<String?> category,
+  Value<int> usageCount,
 });
 
 final class $$ProductsTableReferences
@@ -18271,6 +18370,9 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<String> get category => $composableBuilder(
       column: $table.category, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get usageCount => $composableBuilder(
+      column: $table.usageCount, builder: (column) => ColumnFilters(column));
 
   Expression<bool> nutritionLogsRefs(
       Expression<bool> Function($$NutritionLogsTableFilterComposer f) f) {
@@ -18386,6 +18488,9 @@ class $$ProductsTableOrderingComposer
 
   ColumnOrderings<String> get category => $composableBuilder(
       column: $table.category, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get usageCount => $composableBuilder(
+      column: $table.usageCount, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ProductsTableAnnotationComposer
@@ -18459,6 +18564,9 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<int> get usageCount => $composableBuilder(
+      column: $table.usageCount, builder: (column) => column);
 
   Expression<T> nutritionLogsRefs<T extends Object>(
       Expression<T> Function($$NutritionLogsTableAnnotationComposer a) f) {
@@ -18547,6 +18655,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<bool> isLiquid = const Value.absent(),
             Value<String> source = const Value.absent(),
             Value<String?> category = const Value.absent(),
+            Value<int> usageCount = const Value.absent(),
           }) =>
               ProductsCompanion(
             localId: localId,
@@ -18570,6 +18679,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             isLiquid: isLiquid,
             source: source,
             category: category,
+            usageCount: usageCount,
           ),
           createCompanionCallback: ({
             Value<int> localId = const Value.absent(),
@@ -18593,6 +18703,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<bool> isLiquid = const Value.absent(),
             Value<String> source = const Value.absent(),
             Value<String?> category = const Value.absent(),
+            Value<int> usageCount = const Value.absent(),
           }) =>
               ProductsCompanion.insert(
             localId: localId,
@@ -18616,6 +18727,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             isLiquid: isLiquid,
             source: source,
             category: category,
+            usageCount: usageCount,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>

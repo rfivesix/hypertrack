@@ -189,13 +189,34 @@ class ProductDatabaseHelper {
     }
 
     if (search != null && search.isNotEmpty) {
+      final term = search.trim();
       query = query
         ..where(
           (t) =>
-              t.name.like('%$search%') |
-              t.nameDe.like('%$search%') |
-              t.nameEn.like('%$search%'),
+              t.name.like('%$term%') |
+              t.nameDe.like('%$term%') |
+              t.nameEn.like('%$term%'),
         );
+      
+      query = query..orderBy([
+        (t) => OrderingTerm(
+          expression: CaseWhenExpression<int>(
+            cases: [
+              CaseWhen(t.name.equals(term) | t.nameDe.equals(term) | t.nameEn.equals(term), then: const Constant(0)),
+              CaseWhen(t.name.like('$term%') | t.nameDe.like('$term%') | t.nameEn.like('$term%'), then: const Constant(1)),
+            ],
+            orElse: const Constant(2),
+          ),
+          mode: OrderingMode.asc,
+        ),
+        (t) => OrderingTerm(expression: t.usageCount, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+      ]);
+    } else {
+      query = query..orderBy([
+        (t) => OrderingTerm(expression: t.usageCount, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+      ]);
     }
 
     final rows = await query.get();
@@ -207,12 +228,29 @@ class ProductDatabaseHelper {
   Future<List<FoodItem>> searchProducts(String keyword) async {
     final term = keyword.trim();
     if (term.isEmpty) return [];
-    final db = await database;
+    final dbInstance = await database;
     const int limit = 50;
+
+    // Helper for ranking
+    Expression<int> searchPriority(db.Products t) {
+      return CaseWhenExpression<int>(
+        cases: [
+          CaseWhen(
+            t.name.equals(term) | t.nameDe.equals(term) | t.nameEn.equals(term),
+            then: const Constant(0),
+          ),
+          CaseWhen(
+            t.name.like('$term%') | t.nameDe.like('$term%') | t.nameEn.like('$term%'),
+            then: const Constant(1),
+          ),
+        ],
+        orElse: const Constant(2),
+      );
+    }
 
     // 1. Prioritized search: user foods and base foods
     // These are most important and should always be at the top.
-    final priorityRows = await (db.select(db.products)
+    final priorityRows = await (dbInstance.select(dbInstance.products)
           ..where(
             (t) =>
                 (t.name.like('%$term%') |
@@ -222,7 +260,9 @@ class ProductDatabaseHelper {
                 t.source.isIn(['user', 'base']),
           )
           ..orderBy([
-            // Shorter names first (exact matches to the top).
+            (t) => OrderingTerm(expression: searchPriority(t), mode: OrderingMode.asc),
+            (t) => OrderingTerm(expression: t.usageCount, mode: OrderingMode.desc),
+            // Shorter names first as tie-breaker
             (t) => OrderingTerm(
                   expression: t.name.length,
                   mode: OrderingMode.asc,
@@ -236,7 +276,7 @@ class ProductDatabaseHelper {
     // 2. Fill with Open Food Facts (OFF) if there is still space in the list.
     if (results.length < limit) {
       final int remaining = limit - results.length;
-      final offRows = await (db.select(db.products)
+      final offRows = await (dbInstance.select(dbInstance.products)
             ..where(
               (t) =>
                   (t.name.like('%$term%') |
@@ -246,6 +286,8 @@ class ProductDatabaseHelper {
                   t.source.equals('off'),
             )
             ..orderBy([
+              (t) => OrderingTerm(expression: searchPriority(t), mode: OrderingMode.asc),
+              (t) => OrderingTerm(expression: t.usageCount, mode: OrderingMode.desc),
               (t) => OrderingTerm(
                     expression: t.name.length,
                     mode: OrderingMode.asc,
