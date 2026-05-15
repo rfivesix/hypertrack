@@ -2886,6 +2886,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get exerciseAnalyticsChartSets => 'Sätze im Zeitverlauf';
 
   @override
+  String get exerciseMetricMaxWeight => 'Max. Gewicht';
+
+  @override
+  String get exerciseMetricVolume => 'Volumen';
+
+  @override
+  String get exerciseMetricEst1RM => 'Est. 1RM';
+
+  @override
   String get allTimeRecordsLabel => 'Alle-Zeiten-Rekorde';
 
   @override

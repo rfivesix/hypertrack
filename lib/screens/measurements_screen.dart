@@ -232,64 +232,60 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     if (_selectedChartType == null) return const SizedBox.shrink();
 
     return SummaryCard(
-      child: Padding(
-        padding: DesignConstants.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedChartType,
-                      isExpanded: true,
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            _selectedChartType = newValue;
-                          });
-                          _loadChartData();
-                        }
-                      },
-                      items: _availableMeasurementTypes
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(
-                            l10n.getLocalizedMeasurementName(value),
-                          ),
-                        );
-                      }).toList(),
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      icon: Icon(
-                        Icons.arrow_drop_down,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+      padding: DesignConstants.cardPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedChartType,
+                    isExpanded: true,
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _selectedChartType = newValue;
+                        });
+                        _loadChartData();
+                      }
+                    },
+                    items: _availableMeasurementTypes
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          l10n.getLocalizedMeasurementName(value),
+                        ),
+                      );
+                    }).toList(),
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    icon: Icon(
+                      Icons.arrow_drop_down,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _chartDateRangeKeys
-                      .map((key) => _buildFilterButton(key, key))
-                      .toList(),
-                ),
-              ],
-            ),
-            const SizedBox(height: DesignConstants.spacingL),
-            MeasurementChartWidget(
-              chartType: _selectedChartType!,
-              dateRange: _currentChartDateRange,
-              // FIX: The following line was removed.
-              // lineColor: colorScheme.primary,
-              unit: _getMeasurementUnit(_selectedChartType!),
-            ),
-          ],
-        ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: _chartDateRangeKeys
+                    .map((key) => _buildFilterButton(key, key))
+                    .toList(),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignConstants.spacingS),
+          MeasurementChartWidget(
+            chartType: _selectedChartType!,
+            dateRange: _currentChartDateRange,
+            unit: _getMeasurementUnit(_selectedChartType!),
+          ),
+        ],
       ),
     );
   }

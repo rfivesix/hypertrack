@@ -138,7 +138,8 @@ void main() {
 
     test('normalized comparison starts both series from same baseline', () {
       final start = DateTime.utc(2026, 10, 1);
-      final range = DateTimeRange(start: start, end: DateTime.utc(2026, 10, 30));
+      final range =
+          DateTimeRange(start: start, end: DateTime.utc(2026, 10, 30));
       final result = BodyNutritionAnalyticsEngine.build(
         range: range,
         weightPoints: List.generate(

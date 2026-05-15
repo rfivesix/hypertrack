@@ -5111,6 +5111,24 @@ abstract class AppLocalizations {
   /// **'Sets Over Time'**
   String get exerciseAnalyticsChartSets;
 
+  /// No description provided for @exerciseMetricMaxWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Weight'**
+  String get exerciseMetricMaxWeight;
+
+  /// No description provided for @exerciseMetricVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get exerciseMetricVolume;
+
+  /// No description provided for @exerciseMetricEst1RM.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. 1RM'**
+  String get exerciseMetricEst1RM;
+
   /// No description provided for @allTimeRecordsLabel.
   ///
   /// In en, this message translates to:

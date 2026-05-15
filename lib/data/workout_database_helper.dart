@@ -1348,73 +1348,68 @@ class WorkoutDatabaseHelper {
     final rows = await query.get();
 
     final prMap = <String, SetLog?>{
+      'Est. 1RM': null,
       '1 RM': null,
       '2-3 RM': null,
       '4-6 RM': null,
       '7-10 RM': null,
       '11-15 RM': null,
-      '15+ RM': null,
     };
 
+    double bestEst1rmValue = 0.0;
+    SetLog? bestEst1rmSet;
+
     // Helper function to determine the bracket name
-    String getBracket(int reps) {
+    String? getBracket(int reps) {
       if (reps == 1) return '1 RM';
       if (reps >= 2 && reps <= 3) return '2-3 RM';
       if (reps >= 4 && reps <= 6) return '4-6 RM';
       if (reps >= 7 && reps <= 10) return '7-10 RM';
       if (reps >= 11 && reps <= 15) return '11-15 RM';
-      return '15+ RM';
+      return null;
     }
 
-    // Map Drift rows to SetLog objects, including date.
-    final List<Map<String, dynamic>> qualifyingSets = rows.map((r) {
+    for (final r in rows) {
       final setRow = r.readTable(dbInstance.setLogs);
       final logRow = r.readTable(dbInstance.workoutLogs);
 
-      return {
-        'set': SetLog(
-          id: setRow.localId,
-          workoutLogId: logRow.localId,
-          exerciseName: setRow.exerciseNameSnapshot ?? exerciseName,
-          setType: setRow.setType,
-          weightKg: setRow.weight,
-          reps: setRow.reps,
-          isCompleted: setRow.isCompleted,
-        ),
-        'date': logRow.startTime,
-      };
-    }).toList();
+      final setLog = SetLog(
+        id: setRow.localId,
+        workoutLogId: logRow.localId,
+        exerciseName: setRow.exerciseNameSnapshot ?? exerciseName,
+        setType: setRow.setType,
+        weightKg: setRow.weight,
+        reps: setRow.reps,
+        isCompleted: setRow.isCompleted,
+      );
 
-    // Tie-breaker logic: Max weight, then max reps, then most recent date
-    for (final s in qualifyingSets) {
-      final setLog = s['set'] as SetLog;
-      // Date parameter would be used here if needed for deeper tie-breaking
-      // but 'most recent date wins' is handled naturally by list order iteration
-      final bracket = getBracket(setLog.reps ?? 0);
+      final reps = setLog.reps ?? 0;
+      final weight = setLog.weightKg ?? 0.0;
 
-      final currentPr = prMap[bracket];
+      if (reps <= 0 || weight <= 0) continue;
 
-      if (currentPr == null) {
-        prMap[bracket] = setLog;
-        // Store the date temporarily on the SetLog in case it is needed later,
-        // or compare it directly here (kept in scope here).
-      } else {
-        // Compare with current PR
-        if (setLog.weightKg! > currentPr.weightKg!) {
-          prMap[bracket] = setLog;
-        } else if (setLog.weightKg == currentPr.weightKg) {
-          if (setLog.reps! > currentPr.reps!) {
-            prMap[bracket] = setLog;
-          } else if (setLog.reps == currentPr.reps) {
-            // To get the date from the current PR, it would need to be stored with it.
-            // For v1, simply replace the current one because the list is usually iterated
-            // toward the end, or store an internal structure.
-            // Overwrite it for simplicity (the newest session wins if
-            // the list is ascending).
-            prMap[bracket] = setLog; // Simplification for "latest date wins"
-          }
+      // Track absolute best Est. 1RM
+      if (reps <= 10) {
+        final est1rm = weight * (36 / (37 - reps));
+        if (est1rm > bestEst1rmValue) {
+          bestEst1rmValue = est1rm;
+          bestEst1rmSet = setLog;
         }
       }
+
+      final bracket = getBracket(reps);
+      if (bracket != null) {
+        final currentPr = prMap[bracket];
+        if (currentPr == null || weight > (currentPr.weightKg ?? 0.0)) {
+          prMap[bracket] = setLog;
+        } else if (weight == currentPr.weightKg && reps > (currentPr.reps ?? 0)) {
+          prMap[bracket] = setLog;
+        }
+      }
+    }
+
+    if (bestEst1rmSet != null) {
+      prMap['Est. 1RM'] = bestEst1rmSet;
     }
 
     return prMap;
@@ -1472,6 +1467,7 @@ class WorkoutDatabaseHelper {
           'date': logRow.startTime,
           'maxWeight': 0.0,
           'totalVolume': 0.0,
+          'maxEst1rm': 0.0,
           'setCount': 0,
         };
       }
@@ -1487,6 +1483,14 @@ class WorkoutDatabaseHelper {
 
       // Update Volume
       agg['totalVolume'] += (weight * reps);
+
+      // Update Max Est. 1RM (Brzycki formula)
+      if (reps > 0 && reps <= 10) {
+        final est1rm = weight * (36 / (37 - reps));
+        if (est1rm > (agg['maxEst1rm'] as double)) {
+          agg['maxEst1rm'] = est1rm;
+        }
+      }
 
       // Update Set Count
       agg['setCount'] += 1;

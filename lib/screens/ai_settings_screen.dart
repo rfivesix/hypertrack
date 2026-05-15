@@ -265,7 +265,8 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                         const SizedBox(height: 16),
                         OutlinedButton.icon(
                           onPressed: () => launchUrl(
-                            Uri.parse('https://ai.google.dev/gemini-api/docs/api-key'),
+                            Uri.parse(
+                                'https://ai.google.dev/gemini-api/docs/api-key'),
                             mode: LaunchMode.externalApplication,
                           ),
                           icon: const Icon(Icons.open_in_new),

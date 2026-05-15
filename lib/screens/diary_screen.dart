@@ -1009,43 +1009,35 @@ class DiaryScreenState extends State<DiaryScreen> {
     AppLocalizations l10n,
   ) {
     return SummaryCard(
-      child: Padding(
-        padding: DesignConstants.cardPadding,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.weightHistoryTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Wrap(
-                      spacing: 8.0,
-                      alignment: WrapAlignment.end,
-                      children: [
-                        '30D',
-                        '90D',
-                        'All',
-                      ].map((key) => _buildFilterButton(key, key)).toList(),
+      padding: DesignConstants.cardPadding,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.weightHistoryTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: DesignConstants.spacingL),
-            MeasurementChartWidget(
-              chartType: 'weight',
-              dateRange: _calculateDateRange(),
-              unit: "kg",
-            ),
-          ],
-        ),
+              ),
+              Wrap(
+                spacing: 8.0,
+                children: [
+                  '30D',
+                  '90D',
+                  'All',
+                ].map((key) => _buildFilterButton(key, key)).toList(),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignConstants.spacingS),
+          MeasurementChartWidget(
+            chartType: 'weight',
+            dateRange: _calculateDateRange(),
+            unit: "kg",
+          ),
+        ],
       ),
     );
   }

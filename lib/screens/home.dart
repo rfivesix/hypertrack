@@ -440,62 +440,52 @@ class HomeState extends State<Home> {
     AppLocalizations l10n,
   ) {
     return SummaryCard(
-      child: Padding(
-        padding: DesignConstants.cardPadding,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.weightHistoryTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Wrap(
-                      spacing: 8.0,
-                      alignment: WrapAlignment.end,
-                      children: _chartDateRangeKeys
-                          .map((key) => _buildFilterButton(key, key))
-                          .toList(),
+      padding: DesignConstants.cardPadding,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.weightHistoryTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () => _navigateTimeRange(false),
-                ),
-                Text(
-                  "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: _currentDateRange.end.isSameDate(DateTime.now())
-                      ? null
-                      : () => _navigateTimeRange(true),
-                ),
-              ],
-            ),
-            const SizedBox(height: DesignConstants.spacingL),
-            MeasurementChartWidget(
-              chartType: _chartType,
-              dateRange: _currentDateRange,
-              // FIX: The following line was removed.
-              // lineColor: colorScheme.secondary,
-              unit: "kg",
-            ),
-          ],
-        ),
+              ),
+              Wrap(
+                spacing: 8.0,
+                children: _chartDateRangeKeys
+                    .map((key) => _buildFilterButton(key, key))
+                    .toList(),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: () => _navigateTimeRange(false),
+              ),
+              Text(
+                "${DateFormat.MMMd().format(_currentDateRange.start)} - ${DateFormat.MMMd().format(_currentDateRange.end)}",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _currentDateRange.end.isSameDate(DateTime.now())
+                    ? null
+                    : () => _navigateTimeRange(true),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignConstants.spacingS),
+          MeasurementChartWidget(
+            chartType: _chartType,
+            dateRange: _currentDateRange,
+            unit: "kg",
+          ),
+        ],
       ),
     );
   }

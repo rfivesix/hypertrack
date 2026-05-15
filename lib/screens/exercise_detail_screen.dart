@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../generated/app_localizations.dart';
 import '../models/exercise.dart';
 import '../models/set_log.dart';
+import '../models/chart_data_point.dart';
 import '../data/workout_database_helper.dart';
 import '../util/design_constants.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/global_app_bar.dart';
+import '../widgets/measurement_chart_widget.dart';
+
+enum ExerciseMetric { maxWeight, volume, est1rm }
 
 /// A screen displaying detailed information about a specific [Exercise].
 ///
@@ -24,20 +27,24 @@ class ExerciseDetailScreen extends StatefulWidget {
 
 class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   bool _isLoading = true;
-  int _selectedTimeRangeIndex = 1; // Default 30 Days
+  ExerciseMetric _selectedMetric = ExerciseMetric.maxWeight;
+  String _selectedRange = '30D';
 
   Map<String, SetLog?> _prMap = {};
   List<Map<String, dynamic>> _timeSeriesData = [];
 
-  List<String> get _timeRanges {
-    final l10n = AppLocalizations.of(context)!;
-    return [
-      l10n.filter7Days,
-      l10n.filter30Days,
-      l10n.filter3Months,
-      l10n.filter6Months,
-      l10n.filterAll,
-    ];
+  int? get _selectedRangeDays {
+    if (_selectedRange == '30D') return 30;
+    if (_selectedRange == '90D') return 90;
+    return null; // 'All'
+  }
+
+  List<Map<String, dynamic>> get _filteredTimeSeriesData {
+    if (_selectedRangeDays == null) return _timeSeriesData;
+    final cutoff = DateTime.now().subtract(Duration(days: _selectedRangeDays!));
+    return _timeSeriesData
+        .where((data) => (data['date'] as DateTime).isAfter(cutoff))
+        .toList();
   }
 
   @override
@@ -197,11 +204,13 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                 ),
               )
             else ...[
-              _buildTimeRangeFilter(),
-              const SizedBox(height: DesignConstants.spacingL),
+              _buildSectionTitle(
+                context,
+                l10n.workoutHistoryButton.toUpperCase(),
+              ),
+              _buildConsolidatedChart(l10n),
+              const SizedBox(height: DesignConstants.spacingXL),
               _buildPRSummarySection(l10n),
-              const SizedBox(height: DesignConstants.spacingL),
-              _buildChartsSection(l10n),
             ],
 
             const SizedBox(height: DesignConstants.spacingXL),
@@ -226,32 +235,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     );
   }
 
-  Widget _buildTimeRangeFilter() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(_timeRanges.length, (index) {
-          final range = _timeRanges[index];
-          final isSelected = _selectedTimeRangeIndex == index;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ChoiceChip(
-              label: Text(range),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() => _selectedTimeRangeIndex = index);
-                  // Not hooked up for v1
-                }
-              },
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
   Widget _buildPRSummarySection(AppLocalizations l10n) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -267,15 +252,13 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               width: (MediaQuery.of(context).size.width - 40) / 2, // 2 cols
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: prSet != null
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.3)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
                       : Colors.transparent,
                 ),
               ),
@@ -285,35 +268,43 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   Text(
                     bracket,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 4),
                   if (prSet != null) ...[
-                    Text(
-                      '${prSet.weightKg?.toStringAsFixed(1).replaceAll('.0', '')} kg',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
+                    if (bracket == 'Est. 1RM')
+                      Text(
+                        '${(prSet.weightKg! * (36 / (37 - prSet.reps!))).toStringAsFixed(1).replaceAll('.0', '')} kg',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    else
+                      Text(
+                        '${prSet.weightKg?.toStringAsFixed(1).replaceAll('.0', '')} kg',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     Text(
                       '${prSet.reps} Reps',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: theme.textTheme.bodySmall,
                     ),
                   ] else ...[
                     Text(
                       '-',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(color: Colors.grey),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.grey,
+                      ),
                     ),
                     Text(
                       'No data',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ],
@@ -325,214 +316,160 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     );
   }
 
-  Widget _buildChartsSection(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildConsolidatedChart(AppLocalizations l10n) {
+    final filteredData = _filteredTimeSeriesData;
+
+    if (filteredData.isEmpty) {
+      return SummaryCard(
+        child: Column(
+          children: [
+            _buildChartHeader(l10n),
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              width: double.infinity,
+              alignment: Alignment.center,
+              child: Text(l10n.exerciseAnalyticsNotEnoughData),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final dataPoints = filteredData.map((e) {
+      double y;
+      switch (_selectedMetric) {
+        case ExerciseMetric.maxWeight:
+          y = (e['maxWeight'] as num).toDouble();
+          break;
+        case ExerciseMetric.volume:
+          y = (e['totalVolume'] as num).toDouble();
+          break;
+        case ExerciseMetric.est1rm:
+          y = (e['maxEst1rm'] as num).toDouble();
+          break;
+      }
+      return ChartDataPoint(date: e['date'] as DateTime, value: y);
+    }).toList();
+
+    return SummaryCard(
+      padding: DesignConstants.cardPadding,
+      child: Column(
+        children: [
+          _buildChartHeader(l10n),
+          const SizedBox(height: DesignConstants.spacingS),
+          MeasurementChartWidget.fromData(
+            dataPoints: dataPoints,
+            unit: 'kg',
+            axisMode: MeasurementChartAxisMode.day,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartHeader(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    String metricTitle = '';
+    switch (_selectedMetric) {
+      case ExerciseMetric.maxWeight:
+        metricTitle = l10n.exerciseMetricMaxWeight;
+        break;
+      case ExerciseMetric.volume:
+        metricTitle = l10n.exerciseMetricVolume;
+        break;
+      case ExerciseMetric.est1rm:
+        metricTitle = l10n.exerciseMetricEst1RM;
+        break;
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildSectionTitle(context, l10n.exerciseAnalyticsTrendsLabel),
-        _buildLineChart(
-          title: l10n.exerciseAnalyticsChartWeight,
-          dataPoints: _timeSeriesData,
-          yValueExtractor: (data) => (data['maxWeight'] as num).toDouble(),
-          color: Theme.of(context).colorScheme.primary,
-          l10n: l10n,
+        MenuAnchor(
+          builder: (context, controller, child) {
+            return GestureDetector(
+              onTap: () {
+                if (controller.isOpen) {
+                  controller.close();
+                } else {
+                  controller.open();
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    metricTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 18,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
+            );
+          },
+          menuChildren: [
+            MenuItemButton(
+              onPressed: () =>
+                  setState(() => _selectedMetric = ExerciseMetric.maxWeight),
+              child: Text(l10n.exerciseMetricMaxWeight),
+            ),
+            MenuItemButton(
+              onPressed: () =>
+                  setState(() => _selectedMetric = ExerciseMetric.volume),
+              child: Text(l10n.exerciseMetricVolume),
+            ),
+            MenuItemButton(
+              onPressed: () =>
+                  setState(() => _selectedMetric = ExerciseMetric.est1rm),
+              child: Text(l10n.exerciseMetricEst1RM),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        _buildLineChart(
-          title: l10n.exerciseAnalyticsChartVolume,
-          dataPoints: _timeSeriesData,
-          yValueExtractor: (data) => (data['totalVolume'] as num).toDouble(),
-          color: Colors.orange, // Distinct color for volume
-          l10n: l10n,
-        ),
-        const SizedBox(height: 16),
-        _buildLineChart(
-          title: l10n.exerciseAnalyticsChartSets,
-          dataPoints: _timeSeriesData,
-          yValueExtractor: (data) => (data['setCount'] as num).toDouble(),
-          color: Colors.blue, // Distinct color for sets
-          l10n: l10n,
+        Wrap(
+          spacing: 8.0,
+          children: [
+            _buildFilterButton('30D', '30D'),
+            _buildFilterButton('90D', '90D'),
+            _buildFilterButton('All', 'All'),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildLineChart({
-    required String title,
-    required List<Map<String, dynamic>> dataPoints,
-    required double Function(Map<String, dynamic>) yValueExtractor,
-    required Color color,
-    required AppLocalizations l10n,
-  }) {
-    if (dataPoints.isEmpty) {
-      return Container(
-        height: 180,
-        width: double.infinity,
+  Widget _buildFilterButton(String label, String key) {
+    final theme = Theme.of(context);
+    final isSelected = _selectedRange == key;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRange = key),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
         decoration: BoxDecoration(
-          color: Theme.of(
-            context,
-          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+          borderRadius: BorderRadius.circular(8.0),
         ),
-        child: Center(child: Text(l10n.exerciseAnalyticsNotEnoughData)),
-      );
-    }
-
-    final spots = dataPoints.asMap().entries.map((e) {
-      return FlSpot(e.key.toDouble(), yValueExtractor(e.value));
-    }).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
-          child: Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+        child: Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        Container(
-          height: 180,
-          width: double.infinity,
-          padding: const EdgeInsets.only(
-            right: 16,
-            left: 0,
-            top: 16,
-            bottom: 8,
-          ),
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: LineChart(
-            LineChartData(
-              gridData: const FlGridData(show: false),
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipColor: (LineBarSpot touchedSpot) =>
-                      Theme.of(context).colorScheme.inverseSurface,
-                  getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                    return touchedSpots.map((LineBarSpot touchedSpot) {
-                      final int index = touchedSpot.x.toInt();
-                      final DateTime? date =
-                          (index >= 0 && index < dataPoints.length)
-                              ? dataPoints[index]['date'] as DateTime?
-                              : null;
-                      final String dateStr = date != null
-                          ? '${date.day}.${date.month}.${date.year}'
-                          : '';
-                      final String valueStr = touchedSpot.y
-                          .toStringAsFixed(1)
-                          .replaceAll(RegExp(r'\.0$'), '');
-
-                      return LineTooltipItem(
-                        '$dateStr\n',
-                        Theme.of(context).textTheme.bodySmall!.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onInverseSurface,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                        children: [
-                          TextSpan(
-                            text: valueStr,
-                            style: TextStyle(
-                              color: color,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList();
-                  },
-                ),
-              ),
-              titlesData: FlTitlesData(
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 22,
-                    getTitlesWidget: (value, meta) {
-                      final int index = value.toInt();
-                      if (index < 0 || index >= dataPoints.length) {
-                        return const SizedBox.shrink();
-                      }
-
-                      // Calculate step to avoid overlapping labels
-                      final step = (dataPoints.length / 5).ceil();
-                      if (index % step != 0 &&
-                          index != dataPoints.length - 1 &&
-                          index != 0) {
-                        return const SizedBox.shrink();
-                      }
-
-                      final date = dataPoints[index]['date'] as DateTime;
-                      final dateStr = '${date.day}.${date.month}.';
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          dateStr,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: Colors.grey[600], fontSize: 10),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 36,
-                    getTitlesWidget: (value, meta) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 4.0),
-                        child: Text(
-                          value.toInt().toString(),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: Colors.grey[600], fontSize: 10),
-                          textAlign: TextAlign.right,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: false,
-                  color: color,
-                  barWidth: 3,
-                  isStrokeCapRound: true,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: color.withValues(alpha: 0.1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 

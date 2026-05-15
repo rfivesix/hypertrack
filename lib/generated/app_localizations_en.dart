@@ -2865,6 +2865,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseAnalyticsChartSets => 'Sets Over Time';
 
   @override
+  String get exerciseMetricMaxWeight => 'Max Weight';
+
+  @override
+  String get exerciseMetricVolume => 'Volume';
+
+  @override
+  String get exerciseMetricEst1RM => 'Est. 1RM';
+
+  @override
   String get allTimeRecordsLabel => 'All-Time Records';
 
   @override
