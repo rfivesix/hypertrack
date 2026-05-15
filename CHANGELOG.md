@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.6] - 2026-05-15
+### Added
+
+* **Imperial Units Support:** Full support for Imperial units (lbs, inches) across the app, including height and weight tracking during onboarding and in settings.
+* **External App Import:** Enhanced universal CSV and Excel import functionality with automatic unit conversion and improved data mapping.
+* **PR & Achievement Tracking:** Integrated Personal Record (PR) badges and achievement banners in the Live Workout and Workout History screens.
+* **e1RM Analytics:** Real-time Estimated 1RM (e1RM) calculation and visualization integrated into workout tracking.
+* **Usage-Based Search Ranking:** Exercise and nutrition search results are now intelligently ranked based on individual usage patterns for faster access.
+
+### Changed
+
+* **Diary Screen Optimization:** Decoupled Pulse and Sleep data loading from the main Diary view. Primary nutrition and workout data now load instantly while health data populates in the background.
+* **Refined Workout Interface:** Updated the Live Workout and History screens for better interaction and visual clarity.
+* **Visual Style Improvements:** Adjusted spacing, chart defaults, and text visibility across the Liquid Glass theme.
+
+### Fixed
+
+* **Database Hardening:** Optimized SQLite operations and strengthened reload logic to prevent data inconsistencies during concurrent actions.
+* **Supplement Default Time:** Fixed an issue where the Supplement Diary FAB defaulted to 00:00 instead of the current time.
+* **Initialization Flow:** Improved the app initialization sequence to reduce startup latency.
+
 ## [0.9.5] - 2026-05-13
 ### Added
 
