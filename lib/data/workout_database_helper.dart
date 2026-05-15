@@ -1422,6 +1422,7 @@ class WorkoutDatabaseHelper {
     String? altName,
     String? exerciseUuid,
     int? excludeWorkoutLogId,
+    DateTime? beforeTimestamp,
   }) async {
     final dbInstance = await database;
 
@@ -1462,6 +1463,13 @@ class WorkoutDatabaseHelper {
 
     if (excludeUuid != null) {
       query = query..where(dbInstance.workoutLogs.id.isNotValue(excludeUuid));
+    }
+
+    if (beforeTimestamp != null) {
+      query = query
+        ..where(dbInstance.workoutLogs.startTime.isSmallerThanValue(
+          beforeTimestamp,
+        ));
     }
 
     final rows = await query.get();

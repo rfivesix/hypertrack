@@ -811,7 +811,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                 _getSetDisplayText(setLog.setType, setIndex),
                 style: TextStyle(
                   color: _getSetTypeColor(setLog.setType),
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -829,7 +829,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                       ? "${lastPerfSets[rowIndex].weightKg?.toStringAsFixed(1).replaceAll('.0', '')}kg × ${lastPerfSets[rowIndex].reps}"
                       : "-",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
         ),
 
@@ -840,12 +844,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             controller: _weightControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
               hintText: weightHint,
-              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
+              hintStyle: TextStyle(
+                color: Colors.grey.withValues(alpha: 0.5),
+                fontSize: 18,
+              ),
             ),
             enabled: !isCompleted,
           ),
@@ -859,6 +867,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             controller: _repsControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
@@ -866,7 +875,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               hintText: repHint,
               hintStyle: TextStyle(
                 color: Colors.grey.withValues(alpha: 0.5),
-                fontSize: 14,
+                fontSize: 18,
               ),
             ),
             enabled: !isCompleted,
@@ -882,12 +891,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
               fillColor: Colors.transparent,
               hintText: rirHint,
-              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
+              hintStyle: TextStyle(
+                color: Colors.grey.withValues(alpha: 0.5),
+                fontSize: 18,
+              ),
             ),
             enabled: !isCompleted,
           ),

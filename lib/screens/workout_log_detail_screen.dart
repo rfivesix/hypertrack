@@ -13,6 +13,7 @@ import '../models/workout_log.dart';
 import '../services/health/workout_heart_rate_models.dart';
 import '../services/health/workout_heart_rate_service.dart';
 import '../services/haptic_feedback_service.dart';
+import '../features/pulse/application/pulse_tracking_service.dart';
 import 'general_exercise_selection_screen.dart';
 import 'exercise_detail_screen.dart';
 import '../util/design_constants.dart';
@@ -54,6 +55,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   final Map<int, TextEditingController> _repsControllers = {};
   final Map<int, TextEditingController> _rirControllers = {};
 
+  bool _pulseTrackingEnabled = false;
   DateTime? _editedStartTime;
   Map<String, double> _categoryVolume = {};
   static const ShareService _shareService = ShareService();
@@ -128,6 +130,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       endTime: data.endTime,
     );
 
+    final pulseTrackingFuture = PulseTrackingService().isTrackingEnabled();
+
     final groups = <String, List<SetLog>>{};
     for (var set in data.sets) {
       groups.putIfAbsent(set.exerciseName, () => []).add(set);
@@ -190,19 +194,170 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
     if (!mounted) return;
     final heartRateSummary = await heartRateFuture;
+    final pulseTrackingEnabled = await pulseTrackingFuture;
     if (!mounted) return;
+
+    // Recalculate PRs for historical view
+    await _calculateHistoricalPRs(data.sets, beforeTimestamp: data.startTime);
+
+    // Re-group because copies were made
+    final updatedGroups = <String, List<SetLog>>{};
+    for (var set in data.sets) {
+      updatedGroups.putIfAbsent(set.exerciseName, () => []).add(set);
+    }
 
     setState(() {
       _log = data;
-      _groupedSets = groups;
+      _groupedSets = updatedGroups;
       _exerciseDetails = details;
       _categoryVolume = catVol;
       _heartRateSummary = heartRateSummary;
+      _pulseTrackingEnabled = pulseTrackingEnabled;
       if (!preserveEditState) {
         _isLoading = false;
       }
     });
   }
+
+  Future<void> _calculateHistoricalPRs(
+    List<SetLog> sets, {
+    DateTime? beforeTimestamp,
+  }) async {
+    final db = WorkoutDatabaseHelper.instance;
+    final Map<String, Map<String, double>> historicalBests = {};
+
+    for (var i = 0; i < sets.length; i++) {
+      final setLog = sets[i];
+      final exName = setLog.exerciseName;
+
+      if (!historicalBests.containsKey(exName)) {
+        historicalBests[exName] = await db.getExerciseBests(
+          exName,
+          excludeWorkoutLogId: widget.logId,
+          beforeTimestamp: beforeTimestamp,
+        );
+      }
+
+      final bests = historicalBests[exName]!;
+      final currentWeight = setLog.weightKg ?? 0.0;
+      final currentReps = setLog.reps ?? 0;
+      final currentVolume = currentWeight * currentReps;
+      double currentEst1rm = 0.0;
+      if (currentReps > 0 && currentReps <= 10) {
+        currentEst1rm = currentWeight * (36 / (37 - currentReps));
+      }
+
+      bool isMaxWeightPR = false;
+      bool isMaxVolumePR = false;
+      bool isMaxEst1RMPR = false;
+      double? weightDiff;
+      double? volumeDiff;
+      double? est1rmDiff;
+
+      if (currentWeight > 0 &&
+          setLog.isCompleted == true &&
+          setLog.setType != 'warmup') {
+        final oldMaxWeight = bests['maxWeight'] ?? 0.0;
+        if (currentWeight > oldMaxWeight) {
+          isMaxWeightPR = true;
+          weightDiff = oldMaxWeight > 0 ? currentWeight - oldMaxWeight : null;
+          bests['maxWeight'] = currentWeight;
+        }
+
+        final oldMaxVolume = bests['maxVolume'] ?? 0.0;
+        if (currentVolume > oldMaxVolume) {
+          isMaxVolumePR = true;
+          volumeDiff = oldMaxVolume > 0 ? currentVolume - oldMaxVolume : null;
+          bests['maxVolume'] = currentVolume;
+        }
+
+        final oldMaxEst1rm = bests['maxEst1rm'] ?? 0.0;
+        if (currentEst1rm > oldMaxEst1rm) {
+          isMaxEst1RMPR = true;
+          est1rmDiff = oldMaxEst1rm > 0 ? currentEst1rm - oldMaxEst1rm : null;
+          bests['maxEst1rm'] = currentEst1rm;
+        }
+      }
+
+      sets[i] = setLog.copyWith(
+        isMaxWeightPR: isMaxWeightPR,
+        isMaxVolumePR: isMaxVolumePR,
+        isMaxEst1RMPR: isMaxEst1RMPR,
+        weightPRDiff: weightDiff,
+        volumePRDiff: volumeDiff,
+        est1rmPRDiff: est1rmDiff,
+      );
+    }
+  }
+
+  Widget _buildPRBadge(SetLog setLog) {
+    final l10n = AppLocalizations.of(context)!;
+    String label = l10n.newPersonalRecordLabel;
+
+    if (setLog.isMaxWeightPR && setLog.weightPRDiff != null) {
+      label =
+          "+${setLog.weightPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} kg";
+    } else if (setLog.isMaxEst1RMPR && setLog.est1rmPRDiff != null) {
+      label =
+          "+${setLog.est1rmPRDiff!.toStringAsFixed(1).replaceAll('.0', '')} kg (1RM)";
+    } else if (setLog.isMaxVolumePR && setLog.volumePRDiff != null) {
+      label = "+${setLog.volumePRDiff!.toStringAsFixed(0)} kg (Vol)";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.emoji_events,
+            color: Colors.amber,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.amber,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isQualifyingSetForE1rm(SetLog setLog) {
+    final reps = setLog.reps;
+    final weight = setLog.weightKg;
+    final isWarmup = setLog.setType == 'warmup';
+    final isCompleted = setLog.isCompleted == true;
+
+    if (isWarmup) return false;
+    if (!isCompleted) return false;
+    if (weight == null || weight <= 0) return false;
+    if (reps == null || reps <= 0 || reps > 10) return false;
+
+    return true;
+  }
+
+  double? _calculateBrzyckiE1rm(SetLog setLog) {
+    if (!_isQualifyingSetForE1rm(setLog)) {
+      return null;
+    }
+
+    final reps = setLog.reps!;
+    final weight = setLog.weightKg!;
+    return weight * (36 / (37 - reps));
+  }
+
+  String _formatKg(double value) => value.toStringAsFixed(1);
 
   void _toggleEditMode() {
     setState(() {
@@ -473,7 +628,9 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                               ),
                             ),
                           ),
-                          if (_heartRateSummary != null)
+                          if (_heartRateSummary != null &&
+                              (_pulseTrackingEnabled ||
+                                  _heartRateSummary!.hasData))
                             Padding(
                               padding: DesignConstants.cardPadding.copyWith(
                                 top: 0,
@@ -867,10 +1024,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                   Row(
                     children: [
                       _buildHeader(l10n.setLabel, flex: 2),
-                      _buildHeader(
-                        l10n.lastTimeLabel,
-                        flex: 3,
-                      ), // Only useful in view mode, but reserved here as a placeholder
                       _buildHeader(l10n.kgLabel, flex: 2),
                       _buildHeader(l10n.repsLabel, flex: 2),
                       _buildHeader("RIR", flex: 2),
@@ -976,130 +1129,187 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       val2Display = setLog.reps?.toString() ?? '-';
     }
 
-    return Container(
-      color: rowColor,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: isCardio ? 2 : 2,
-              child: Center(
-                child: GestureDetector(
-                  onTap: () {
-                    if (_isEditMode) _showSetTypePicker(setLog.id!);
-                  },
-                  child: Text(
-                    _getSetDisplayText(setType, workingSetIndex),
-                    style: TextStyle(
-                      color: _getSetTypeColor(setType),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+    final currentSetE1rm = _calculateBrzyckiE1rm(setLog);
+    final showCurrentSetE1rm = !isCardio && currentSetE1rm != null;
+    final bool hasPR = setLog.isMaxWeightPR ||
+        setLog.isMaxVolumePR ||
+        setLog.isMaxEst1RMPR;
+
+    final rowContent = Row(
+      children: [
+        // 1. SET NUMBER
+        Expanded(
+          flex: isCardio ? 2 : 2,
+          child: Center(
+            child: GestureDetector(
+              onTap: () {
+                if (_isEditMode) _showSetTypePicker(setLog.id!);
+              },
+              child: Text(
+                _getSetDisplayText(setType, workingSetIndex),
+                style: TextStyle(
+                  color: _getSetTypeColor(setType),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
+          ),
+        ),
 
-            if (!isCardio)
-              const Expanded(
-                flex: 3,
-                child: Center(child: Text("-")),
-              ), // Last Time Placeholder
+        // 3. INPUT 1: WEIGHT / DISTANCE
+        Expanded(
+          flex: isCardio ? 2 : 2,
+          child: _isEditMode
+              ? TextFormField(
+                  controller: _weightControllers[setLog.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: "-",
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                )
+              : Text(
+                  val1Display,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+        ),
+        const SizedBox(width: 8),
 
-            Expanded(
-              flex: isCardio ? 2 : 2,
-              child: _isEditMode
-                  ? TextFormField(
-                      controller: _weightControllers[setLog.id!],
-                      textAlign: TextAlign.center,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        fillColor: Colors.transparent,
-                        hintText: "-",
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    )
-                  : Text(
-                      val1Display,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
+        // 4. INPUT 2: REPS / TIME
+        Expanded(
+          flex: isCardio ? 2 : 2,
+          child: _isEditMode
+              ? TextFormField(
+                  controller: _repsControllers[setLog.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: "-",
+                  ),
+                )
+              : Text(
+                  val2Display,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+        ),
+        const SizedBox(width: 8),
+
+        // 5. INPUT 3: RIR / INTENSITY
+        Expanded(
+          flex: 2,
+          child: _isEditMode
+              ? TextFormField(
+                  controller: _rirControllers[setLog.id!],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    fillColor: Colors.transparent,
+                    hintText: "-",
+                  ),
+                )
+              : Text(
+                  setLog.rir?.toString() ?? '-',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+        ),
+
+        // 6. CHECKBOX / DELETE
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: SizedBox(
+            width: 48,
+            child: _isEditMode
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
                     ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: isCardio ? 2 : 2,
-              child: _isEditMode
-                  ? TextFormField(
-                      controller: _repsControllers[setLog.id!],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        fillColor: Colors.transparent,
-                        hintText: "-",
-                      ),
-                    )
-                  : Text(
-                      val2Display,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-            ),
-            const SizedBox(width: 8),
-            // RIR / intensity
-            Expanded(
-              flex: 2,
-              child: _isEditMode
-                  ? TextFormField(
-                      controller: _rirControllers[setLog.id!],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        fillColor: Colors.transparent,
-                        hintText: "-",
-                      ),
-                    )
-                  : Text(
-                      setLog.rir?.toString() ?? '-',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-            ),
+                    onPressed: () {
+                      setState(() {
+                        _groupedSets[exerciseName]?.removeWhere(
+                          (s) => s.id == setLog.id,
+                        );
+                        _weightControllers.remove(setLog.id!)?.dispose();
+                        _repsControllers.remove(setLog.id!)?.dispose();
+                        _rirControllers.remove(setLog.id!)?.dispose();
+                      });
+                    },
+                  )
+                : const Icon(Icons.check_circle, color: Colors.green),
+          ),
+        ),
+      ],
+    );
+
+    return Container(
+      color: rowColor,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: rowContent,
+          ),
+          if (showCurrentSetE1rm || hasPR)
             Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: SizedBox(
-                width: 48,
-                child: _isEditMode
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _groupedSets[exerciseName]?.removeWhere(
-                              (s) => s.id == setLog.id,
-                            );
-                            _weightControllers.remove(setLog.id!)?.dispose();
-                            _repsControllers.remove(setLog.id!)?.dispose();
-                            _rirControllers.remove(setLog.id!)?.dispose();
-                          });
-                        },
-                      )
-                    : const Icon(Icons.check_circle, color: Colors.green),
+              padding: const EdgeInsets.only(right: 12.0, bottom: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (hasPR) ...[
+                    _buildPRBadge(setLog),
+                    if (showCurrentSetE1rm) const SizedBox(width: 8),
+                  ],
+                  if (showCurrentSetE1rm)
+                    Text(
+                      l10n.liveWorkoutE1rmCurrentSet(_formatKg(currentSetE1rm)),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
