@@ -8,6 +8,7 @@ import 'goals_screen.dart';
 import 'supplement_track_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
+import '../widgets/common/common.dart';
 import '../widgets/summary_card.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
 import '../features/nutrition_recommendation/presentation/nutrition_recommendation_card.dart';
@@ -176,14 +177,14 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
             child: ListView(
               padding: finalPadding,
               children: [
-                _buildSectionTitle(context, l10n.nutritionSectionTodayInFocus),
+                AppSectionHeader(title: l10n.nutritionSectionTodayInFocus),
                 _buildGoalsAndRecommendationCard(
                   context,
                   recommendationState,
                   targetCalories,
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.nutritionSectionMyMeals),
+                AppSectionHeader(title: l10n.nutritionSectionMyMeals),
                 SizedBox(
                   height: 150,
                   child: ListView.builder(
@@ -199,10 +200,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
                   ),
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(
-                  context,
-                  l10n.nutritionSectionToolsAndLibrary,
-                ),
+                AppSectionHeader(title: l10n.nutritionSectionToolsAndLibrary),
                 _buildNavigationCard(
                   context: context,
                   icon: Icons.medication_outlined,
@@ -275,18 +273,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 
   Widget _buildCreateMealCard(BuildContext context, AppLocalizations l10n) {
     final screenWidth = MediaQuery.of(context).size.width;

@@ -16,7 +16,7 @@ import 'about_screen.dart';
 import 'legal_screen.dart';
 
 import '../util/design_constants.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/summary_card.dart';
@@ -412,8 +412,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
 
-                const SizedBox(height: DesignConstants.spacingM),
-
                 // Navigation section (unchanged)
                 _buildNavigationCard(
                   icon: Icons.settings_outlined,
@@ -448,7 +446,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // const SizedBox(height: DesignConstants.spacingM),
                 _buildOnboardingCard(l10n),
                 const SizedBox(height: DesignConstants.spacingM),
-                _buildSectionTitle(context, l10n.about_section),
+                AppSectionHeader(title: l10n.about_section),
                 _buildNavigationCard(
                   icon: Icons.info_outline,
                   title: l10n.about_train_libre,
@@ -462,7 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
                 const SizedBox(height: DesignConstants.spacingM),
-                _buildSectionTitle(context, l10n.legal_section),
+                AppSectionHeader(title: l10n.legal_section),
                 _buildNavigationCard(
                   icon: Icons.gavel_outlined,
                   title: l10n.legal_section,
@@ -481,9 +479,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title.toUpperCase());
-  }
+
 
   Widget _buildNavigationCard({
     required IconData icon,

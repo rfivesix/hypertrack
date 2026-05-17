@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/pulse/application/pulse_tracking_service.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 
@@ -55,7 +55,7 @@ class _PulseSettingsScreenState extends State<PulseSettingsScreen> {
           top: DesignConstants.cardPadding.top + topPadding,
         ),
         children: [
-          _buildSectionTitle(context, copy.title),
+          AppSectionHeader(title: copy.title),
           SummaryCard(
             child: Column(
               children: [
@@ -133,9 +133,7 @@ class _PulseSettingsScreenState extends State<PulseSettingsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title.toUpperCase());
-  }
+
 }
 
 class _PulseSettingsCopy {

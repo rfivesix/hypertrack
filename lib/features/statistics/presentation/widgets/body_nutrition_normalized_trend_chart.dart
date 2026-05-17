@@ -188,11 +188,25 @@ class _BodyNutritionNormalizedTrendChartState
         touchTooltipData: LineTouchTooltipData(
           fitInsideHorizontally: true,
           fitInsideVertically: true,
+          tooltipBorderRadius: BorderRadius.circular(16),
           tooltipPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
+            horizontal: 14,
+            vertical: 10,
           ),
-          getTooltipColor: (_) => Theme.of(context).colorScheme.inverseSurface,
+          tooltipMargin: 12,
+          maxContentWidth: 200,
+          getTooltipColor: (_) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return isDark
+                ? const Color(0xFF2A2A2A)
+                : Theme.of(context).colorScheme.surface.withValues(alpha: 0.95);
+          },
+          tooltipBorder: BorderSide(
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withValues(alpha: 0.08),
+          ),
           getTooltipItems: (touchedSpots) {
             return touchedSpots.map((touchedSpot) {
               final seriesIndex = touchedSpot.barIndex;
@@ -209,18 +223,22 @@ class _BodyNutritionNormalizedTrendChartState
               final point = selectedSeries.points[pointIndex];
               final date = DateFormat.MMMd().format(point.day);
               final valueText = selectedSeries.scale.formatRaw(point.rawValue);
+              final baseStyle = Theme.of(context).textTheme.bodySmall!;
 
               return LineTooltipItem(
                 '$date\n',
-                Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: Theme.of(context).colorScheme.onInverseSurface,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
+                baseStyle.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
                     ),
                 children: [
                   TextSpan(
                     text: '${selectedSeries.label}: $valueText',
-                    style: TextStyle(
+                    style: baseStyle.copyWith(
                       color: selectedSeries.color,
                       fontWeight: FontWeight.w700,
                       fontSize: 13,

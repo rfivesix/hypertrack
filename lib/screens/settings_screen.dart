@@ -26,7 +26,7 @@ import 'sleep_settings_screen.dart';
 import 'steps_settings_screen.dart';
 import '../services/local_app_data_reset_service.dart';
 import '../services/workout_session_manager.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import 'app_initializer_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -327,10 +327,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           top: DesignConstants.cardPadding.top + topPadding,
         ),
         children: [
-          _buildSectionTitle(
-            context,
-            l10n.settingsSectionApp,
+          AppSectionHeader(
             key: const Key('settings_section_app'),
+            title: l10n.settingsSectionApp,
           ),
           _buildNavigationCard(
             context: context,
@@ -403,10 +402,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _restartAppTour,
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(
-            context,
-            l10n.settingsSectionHealthTracking,
+          AppSectionHeader(
             key: const Key('settings_section_health_tracking'),
+            title: l10n.settingsSectionHealthTracking,
           ),
           _buildNavigationCard(
             context: context,
@@ -480,10 +478,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(
-            context,
-            l10n.settingsSectionNutritionAndData,
+          AppSectionHeader(
             key: const Key('settings_section_nutrition_data'),
+            title: l10n.settingsSectionNutritionAndData,
           ),
           _buildNavigationCard(
             context: context,
@@ -577,10 +574,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(
-            context,
-            l10n.settingsSectionSupportAbout,
+          AppSectionHeader(
             key: const Key('settings_section_support_about'),
+            title: l10n.settingsSectionSupportAbout,
           ),
           _buildNavigationCard(
             context: context,
@@ -597,10 +593,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(
-            context,
-            l10n.localDataDeletionCardTitle,
+          AppSectionHeader(
             key: const Key('settings_section_reset'),
+            title: l10n.localDataDeletionCardTitle,
           ),
           SummaryCard(
             child: Padding(
@@ -649,16 +644,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(
-    BuildContext context,
-    String title, {
-    Key? key,
-  }) {
-    return AnalyticsSectionHeader(
-      key: key,
-      title: title.toUpperCase(),
-    );
-  }
+
 
   Future<void> _confirmAndDeleteLocalData() async {
     final l10n = AppLocalizations.of(context)!;

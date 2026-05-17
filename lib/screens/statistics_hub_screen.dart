@@ -25,7 +25,7 @@ import '../features/steps/domain/steps_models.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
 import '../util/perf_debug_timer.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../widgets/summary_card.dart';
 import '../features/steps/presentation/steps_module_screen.dart';
@@ -296,7 +296,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   int get _targetSteps =>
       _stepsState.data?.targetSteps ?? StepsSyncService.defaultStepsGoal;
 
-  String get _stepsProviderName => _stepsState.data?.providerName ?? '';
   @override
   void initState() {
     super.initState();
@@ -975,6 +974,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     final appBarHeight = MediaQuery.of(context).padding.top;
     final finalPadding = DesignConstants.cardPadding.copyWith(
       top: DesignConstants.cardPadding.top + appBarHeight + 16,
+      left: 0,
+      right: 0,
     );
 
     return Scaffold(
@@ -987,34 +988,44 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildTimeRangeFilter(),
                 const SizedBox(height: DesignConstants.spacingL),
-                if (_stepsTrackingEnabled) ...[
-                  _buildSectionTitle(context, l10n.steps),
-                  _buildStepsCard(),
-                  const SizedBox(height: DesignConstants.spacingL),
-                ],
-                _buildSectionTitle(context, l10n.sectionRecovery),
-                _buildRecoverySection(),
-                if (_sleepTrackingEnabled) ...[
-                  const SizedBox(height: 8),
-                  _buildSleepSection(),
-                ],
-                if (_pulseTrackingEnabled) ...[
-                  const SizedBox(height: 8),
-                  _buildPulseSection(),
-                ],
-                const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.statisticsSectionTraining),
-                _buildConsistencySection(),
-                const SizedBox(height: 8),
-                _buildPerformanceSection(),
-                const SizedBox(height: 8),
-                _buildMuscleVolumeSection(),
-                const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.statisticsSectionBody),
-                _buildBodyMetricsSection(),
-                const SizedBox(height: 8),
-                _buildMeasurementsShortcutCard(),
-                const BottomContentSpacer(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DesignConstants.cardPaddingInternal,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_stepsTrackingEnabled) ...[
+                        AppSectionHeader(title: l10n.steps),
+                        _buildStepsCard(),
+                        const SizedBox(height: DesignConstants.spacingL),
+                      ],
+                      AppSectionHeader(title: l10n.sectionRecovery),
+                      _buildRecoverySection(),
+                      if (_sleepTrackingEnabled) ...[
+                        const SizedBox(height: 8),
+                        _buildSleepSection(),
+                      ],
+                      if (_pulseTrackingEnabled) ...[
+                        const SizedBox(height: 8),
+                        _buildPulseSection(),
+                      ],
+                      const SizedBox(height: DesignConstants.spacingL),
+                      AppSectionHeader(title: l10n.statisticsSectionTraining),
+                      _buildConsistencySection(),
+                      const SizedBox(height: 8),
+                      _buildPerformanceSection(),
+                      const SizedBox(height: 8),
+                      _buildMuscleVolumeSection(),
+                      const SizedBox(height: DesignConstants.spacingL),
+                      AppSectionHeader(title: l10n.statisticsSectionBody),
+                      _buildBodyMetricsSection(),
+                      const SizedBox(height: 8),
+                      _buildMeasurementsShortcutCard(),
+                      const BottomContentSpacer(),
+                    ],
+                  ),
+                ),
               ]),
             ),
           ),
@@ -1024,33 +1035,39 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
   }
 
   Widget _buildTimeRangeFilter() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(_timeRanges.length, (index) {
-          final range = _timeRanges[index];
-          final isSelected = _selectedTimeRangeIndex == index;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ChoiceChip(
-              label: Text(range),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() => _selectedTimeRangeIndex = index);
-                  _loadHubAnalytics();
-                }
-              },
-            ),
-          );
-        }),
+    return SizedBox(
+      width: double.infinity,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        // Internal padding ensures chips start/end flush with screen edge
+        // while scrolling reveals the full first and last chip.
+        padding: const EdgeInsets.symmetric(
+          horizontal: DesignConstants.cardPaddingInternal,
+        ),
+        child: Row(
+          children: List.generate(_timeRanges.length, (index) {
+            final range = _timeRanges[index];
+            final isSelected = _selectedTimeRangeIndex == index;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: ChoiceChip(
+                label: Text(range),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() => _selectedTimeRangeIndex = index);
+                    _loadHubAnalytics();
+                  }
+                },
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title.toUpperCase());
-  }
+
 
   Widget _buildSectionLoadingCard(
     StatisticsHubSectionId sectionId,
@@ -1227,8 +1244,6 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       stepsSubtitle = l10n.statisticsTotalSteps;
     }
 
-    final subtitle = '$subtitleRange • $_stepsProviderName';
-
     return _decorateSectionCard(
       state: section,
       child: StatisticsStepsCard(
@@ -1238,7 +1253,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           );
         },
         title: stepsTitle,
-        subtitle: subtitle,
+        chipText: subtitleRange,
         currentSteps: currentSteps,
         currentStepsSubtitle: stepsSubtitle,
         dailyTotals: range.dailyTotals,
@@ -1314,7 +1329,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 avgWorkouts == '-' ? '-' : _formatPerWeek(avgWorkouts),
                 style: Theme.of(context)
                     .textTheme
-                    .headlineSmall
+                    .titleLarge
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
@@ -1401,7 +1416,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
                 _formatMuscleLabel(topMuscle?['muscleGroup'] as String?),
                 style: Theme.of(context)
                     .textTheme
-                    .headlineSmall
+                    .titleLarge
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
@@ -1492,7 +1507,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
               const SizedBox(height: 4),
               Text(
                 momentumValue,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: momentumColor,
                     ),
@@ -1567,20 +1582,13 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildCardHeading(
-                      label: l10n.metricsMuscleReadiness,
-                      chipText: hasData ? l10n.currentlyTracking : null,
-                    ),
-                  ),
-                  _buildDrillDownHint(),
-                ],
+              _buildHeaderWithChevron(
+                label: l10n.metricsMuscleReadiness,
+                chipText: hasData ? l10n.currentlyTracking : null,
               ),
               Text(
                 recoveryHeadline,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: iconColor,
                     ),
@@ -2037,7 +2045,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         : '${unitService.convertDisplayValue(body!.currentWeightKg!, UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final weightChangeValue = body?.weightChangeKg == null
         ? '-'
-        : '${body!.weightChangeKg! >= 0 ? '+' : ''}${unitService.convertDisplayValue(body.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
+        : '${body!.weightChangeKg! >= 0 ? '+' : '-'}${unitService.convertDisplayValue(body.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final caloriesValue = body == null || body.loggedCalorieDays <= 0
         ? '-'
         : '${body.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';
@@ -2317,7 +2325,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         if (chipText != null && chipText.isNotEmpty)

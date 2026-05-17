@@ -6,6 +6,7 @@ import '../generated/app_localizations.dart';
 import '../models/food_item.dart';
 import '../services/haptic_feedback_service.dart';
 import '../util/design_constants.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 
 /// A screen providing a form to create a new custom [FoodItem] or edit an existing one.
@@ -155,7 +156,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               ),
 
               const SizedBox(height: DesignConstants.spacingXL),
-              _buildSectionTitle(context, l10n.formSectionMainNutrients),
+              AppSectionHeader(title: l10n.formSectionMainNutrients),
               const SizedBox(height: DesignConstants.spacingL),
               _buildFoodInputField(
                 controller: _caloriesController,
@@ -179,7 +180,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
               ),
 
               const SizedBox(height: DesignConstants.spacingXL),
-              _buildSectionTitle(context, l10n.formSectionOptionalNutrients),
+              AppSectionHeader(title: l10n.formSectionOptionalNutrients),
               const SizedBox(height: DesignConstants.spacingL),
               _buildFoodInputField(
                 controller: _sugarController,
@@ -205,18 +206,7 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 
   Widget _buildFoodInputField({
     required TextEditingController controller,

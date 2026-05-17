@@ -584,6 +584,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                             .getLocalizedName(
                                           context,
                                         ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: textTheme.titleLarge?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),

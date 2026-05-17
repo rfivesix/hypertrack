@@ -5,6 +5,7 @@ import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/global_app_bar.dart';
+import '../../widgets/common/app_section_header.dart';
 import '../../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
 import '../../services/unit_service.dart';
@@ -101,7 +102,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildPrimarySectionHeader(l10n.analyticsNotableImprovements),
+                  AppSectionHeader(title: l10n.analyticsNotableImprovements),
                   Row(
                     children: [
                       _windowChip(7, l10n.filter7Days),
@@ -165,7 +166,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                   children: [
                                     Text(
                                       '+${improvement.toStringAsFixed(1)}%',
-                                      style: const TextStyle(
+                                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                         color: Colors.green,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -183,7 +184,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                           ),
                   ),
                   const SizedBox(height: DesignConstants.spacingL),
-                  _buildSectionHeader(l10n.analyticsRecentRecords),
+                  AppSectionHeader(title: l10n.analyticsRecentRecords),
                   SummaryCard(
                     child: _recentPrs.isEmpty
                         ? Padding(
@@ -202,7 +203,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                           ),
                   ),
                   const SizedBox(height: DesignConstants.spacingL),
-                  _buildSectionHeader(l10n.allTimeRecordsLabel),
+                  AppSectionHeader(title: l10n.allTimeRecordsLabel),
                   SummaryCard(
                     child: _allTimePrs.isEmpty
                         ? Padding(
@@ -273,7 +274,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                           ),
                   ),
                   const SizedBox(height: DesignConstants.spacingL),
-                  _buildSectionHeader(l10n.prsByRepRangeLabel),
+                  AppSectionHeader(title: l10n.prsByRepRangeLabel),
                   SummaryCard(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
@@ -359,32 +360,6 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
 
   double _calculateTileWidth(double availableWidth) {
     return (availableWidth - DesignConstants.spacingS) / _twoColumnGridCount;
-  }
-
-  Widget _buildPrimarySectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 6, top: 2),
-      child: Text(
-        title,
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 6, top: 2),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
-              color: Colors.grey[600],
-            ),
-      ),
-    );
   }
 
   Widget _buildRankedRow({

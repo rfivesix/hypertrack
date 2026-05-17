@@ -9,7 +9,7 @@ import '../services/health/steps_sync_service.dart';
 import '../util/permission_dialogs.dart';
 
 import '../util/design_constants.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 
@@ -63,7 +63,7 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
           top: DesignConstants.cardPadding.top + topPadding,
         ),
         children: [
-          _buildSectionTitle(context, l10n.steps),
+          AppSectionHeader(title: l10n.steps),
           SummaryCard(
             child: Column(
               children: [
@@ -206,7 +206,5 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title.toUpperCase());
-  }
+
 }

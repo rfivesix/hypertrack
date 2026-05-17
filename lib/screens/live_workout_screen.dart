@@ -577,13 +577,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildHeader(l10n.setLabel, flex: 2),
-        _buildHeader(l10n.lastTimeLabel, flex: 3),
+        _buildHeader(l10n.setLabel, flex: 1),
+        _buildHeader(l10n.lastTimeLabel, flex: 2),
         _buildHeader(unitService.suffixFor(UnitDimension.weight), flex: 2),
-        const SizedBox(width: 8),
         _buildHeader(l10n.repsLabel, flex: 2),
-        const SizedBox(width: 8),
-        _buildHeader("RIR", flex: 2),
+        _buildHeader("RIR", flex: 1),
         const SizedBox(width: 48),
       ],
     );
@@ -838,7 +836,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
       children: [
         // 1. SET NUMBER
         Expanded(
-          flex: 2,
+          flex: isCardio ? 2 : 1,
           child: Center(
             child: GestureDetector(
               onTap: () => isCompleted ? null : _showSetTypePicker(templateId),
@@ -846,7 +844,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                 _getSetDisplayText(setLog.setType, setIndex),
                 style: TextStyle(
                   color: _getSetTypeColor(setLog.setType),
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -854,27 +852,52 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
           ),
         ),
 
-        // 2. LAST PERFORMANCE
+        // 2. LAST PERFORMANCE (tap to apply)
         Expanded(
-          flex: 3,
+          flex: isCardio ? 3 : 2,
           child: isCardio
               ? const SizedBox.shrink() // For cardio, do not show history yet.
-              : Text(
-                  (rowIndex < lastPerfSets.length)
-                      ? "${unitService.convertDisplayValue(lastPerfSets[rowIndex].weightKg ?? 0, UnitDimension.weight).toStringAsFixed(1).replaceAll('.0', '')}${unitService.suffixFor(UnitDimension.weight)} × ${lastPerfSets[rowIndex].reps}"
-                      : "-",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+              : GestureDetector(
+                  onTap: (!isCompleted && rowIndex < lastPerfSets.length)
+                      ? () {
+                          final lastSet = lastPerfSets[rowIndex];
+                          // Apply weight
+                          if (lastSet.weightKg != null) {
+                            final displayWeight = unitService
+                                .convertDisplayValue(
+                                    lastSet.weightKg!, UnitDimension.weight)
+                                .toStringAsFixed(1)
+                                .replaceAll('.0', '');
+                            _weightControllers[templateId]?.text =
+                                displayWeight;
+                          }
+                          // Apply reps
+                          if (lastSet.reps != null) {
+                            _repsControllers[templateId]?.text =
+                                lastSet.reps.toString();
+                          }
+                          HapticFeedbackService.instance.selectionFeedback();
+                        }
+                      : null,
+                  child: Text(
+                    (rowIndex < lastPerfSets.length)
+                        ? "${unitService.convertDisplayValue(lastPerfSets[rowIndex].weightKg ?? 0, UnitDimension.weight).toStringAsFixed(1).replaceAll('.0', '')}${unitService.suffixFor(UnitDimension.weight)} × ${lastPerfSets[rowIndex].reps}"
+                        : "-",
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
         ),
 
         // 3. INPUT 1: WEIGHT / DISTANCE
         Expanded(
-          flex: isCardio ? 2 : 2, // More space for cardio distance
+          flex: isCardio ? 4 : 2, // More space for inputs
           child: TextFormField(
             controller: _weightControllers[templateId],
             textAlign: TextAlign.center,
@@ -893,11 +916,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             enabled: !isCompleted,
           ),
         ),
-        const SizedBox(width: 8),
 
         // 4. INPUT 2: REPS / TIME
         Expanded(
-          flex: isCardio ? 2 : 2, // More space for cardio time
+          flex: isCardio ? 4 : 2, // More space for inputs
           child: TextFormField(
             controller: _repsControllers[templateId],
             textAlign: TextAlign.center,
@@ -916,11 +938,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             enabled: !isCompleted,
           ),
         ),
-        const SizedBox(width: 8),
 
         // 5. INPUT 3: RIR / INTENSITY
         Expanded(
-          flex: 2,
+          flex: isCardio ? 2 : 1,
           child: TextFormField(
             controller: _rirControllers[templateId],
             textAlign: TextAlign.center,
@@ -1205,285 +1226,305 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     }
 
     return PopScope(
-      canPop: _canPop,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        // The system back swipe won't pop the route automatically because canPop is false.
-      },
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
-          automaticallyImplyLeading: false, // We will provide our own back button
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: _handleBack,
-          ),
-          elevation: 0,
+        canPop: _canPop,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          // The system back swipe won't pop the route automatically because canPop is false.
+        },
+        child: Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          foregroundColor: colorScheme.onSurface,
-          scrolledUnderElevation: 0,
-          centerTitle: false,
-          title: Text(
-            manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          actions: [
-            TextButton(
-              onPressed: _finishWorkout,
-              child: Text(
-                l10n.finishWorkoutButton,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+          appBar: AppBar(
+            automaticallyImplyLeading:
+                false, // We will provide our own back button
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _handleBack,
+            ),
+            elevation: 0,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            foregroundColor: colorScheme.onSurface,
+            scrolledUnderElevation: 0,
+            centerTitle: false,
+            title: Text(
+              manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            actions: [
+              TextButton(
+                onPressed: _finishWorkout,
+                child: Text(
+                  l10n.finishWorkoutButton,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                Column(
+            ],
+          ),
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Stack(
                   children: [
-                    WorkoutSummaryBar(
-                      duration: mgr.elapsedDuration,
-                      volume: mgr.totalVolume,
-                      sets: planned,
-                      progress: progress,
-                    ),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
-                    ),
-                    Expanded(
-                      child: manager.exercises.isEmpty
-                          ? _buildEmptyState(l10n)
-                          : ReorderableListView.builder(
-                              padding: const EdgeInsets.only(
-                                bottom: DesignConstants.bottomContentSpacer,
-                              ),
-                              onReorder: _onReorder,
-                              itemCount: manager.exercises.length,
-                              itemBuilder: (context, index) {
-                                final routineExercise =
-                                    manager.exercises[index];
-                                final showE1rmSummary =
-                                    !_isCardio(routineExercise);
-                                return WorkoutCard(
-                                  key: ValueKey(routineExercise.id),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      ListTile(
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                          horizontal: 16.0,
-                                          vertical: 8.0,
-                                        ),
-                                        leading: ReorderableDragStartListener(
-                                          index: index,
-                                          child: const Icon(Icons.drag_handle),
-                                        ),
-                                        title: InkWell(
-                                          onTap: () =>
-                                              Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ExerciseDetailScreen(
-                                                exercise:
-                                                    routineExercise.exercise,
+                    Column(
+                      children: [
+                        WorkoutSummaryBar(
+                          duration: mgr.elapsedDuration,
+                          volume: mgr.totalVolume,
+                          sets: planned,
+                          progress: progress,
+                        ),
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
+                        ),
+                        Expanded(
+                          child: manager.exercises.isEmpty
+                              ? _buildEmptyState(l10n)
+                              : ReorderableListView.builder(
+                                  padding: const EdgeInsets.only(
+                                    bottom: DesignConstants.bottomContentSpacer,
+                                  ),
+                                  onReorder: _onReorder,
+                                  itemCount: manager.exercises.length,
+                                  itemBuilder: (context, index) {
+                                    final routineExercise =
+                                        manager.exercises[index];
+                                    final showE1rmSummary =
+                                        !_isCardio(routineExercise);
+                                    return WorkoutCard(
+                                      key: ValueKey(routineExercise.id),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 16.0,
+                                              vertical: 8.0,
+                                            ),
+                                            leading:
+                                                ReorderableDragStartListener(
+                                              index: index,
+                                              child:
+                                                  const Icon(Icons.drag_handle),
+                                            ),
+                                            title: InkWell(
+                                              onTap: () =>
+                                                  Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ExerciseDetailScreen(
+                                                    exercise: routineExercise
+                                                        .exercise,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 4.0,
-                                            ),
-                                            child: Text(
-                                              routineExercise.exercise
-                                                  .getLocalizedName(context),
-                                              style: textTheme.titleLarge
-                                                  ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (manager.pauseTimes[
-                                                        routineExercise.id!] !=
-                                                    null &&
-                                                manager.pauseTimes[
-                                                        routineExercise.id!]! >
-                                                    0)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  right: 4.0,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  vertical: 4.0,
                                                 ),
                                                 child: Text(
-                                                  "${manager.pauseTimes[routineExercise.id!]}s",
-                                                  style: textTheme.bodyMedium
+                                                  routineExercise.exercise
+                                                      .getLocalizedName(
+                                                          context),
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: textTheme.titleLarge
                                                       ?.copyWith(
-                                                    color: colorScheme.primary,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                               ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.timer_outlined,
-                                              ),
-                                              tooltip: l10n.editPauseTime,
-                                              onPressed: () => editPauseTime(
-                                                routineExercise,
-                                              ),
                                             ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.delete_outline,
-                                                color: Colors.redAccent,
-                                              ),
-                                              tooltip: l10n.removeExercise,
-                                              onPressed: () => _removeExercise(
-                                                routineExercise,
-                                              ),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (manager.pauseTimes[
+                                                            routineExercise
+                                                                .id!] !=
+                                                        null &&
+                                                    manager.pauseTimes[
+                                                            routineExercise
+                                                                .id!]! >
+                                                        0)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                      right: 4.0,
+                                                    ),
+                                                    child: Text(
+                                                      "${manager.pauseTimes[routineExercise.id!]}s",
+                                                      style: textTheme
+                                                          .bodyMedium
+                                                          ?.copyWith(
+                                                        color:
+                                                            colorScheme.primary,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.timer_outlined,
+                                                  ),
+                                                  tooltip: l10n.editPauseTime,
+                                                  onPressed: () =>
+                                                      editPauseTime(
+                                                    routineExercise,
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  tooltip: l10n.removeExercise,
+                                                  onPressed: () =>
+                                                      _removeExercise(
+                                                    routineExercise,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (showE1rmSummary)
-                                        _buildExerciseE1rmSummary(
-                                          l10n,
-                                          routineExercise,
-                                          manager,
-                                        ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 0.0,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            // FIX: Insert header row dynamically.
-                                            _buildHeaderRow(
-                                              routineExercise,
+                                          ),
+                                          if (showE1rmSummary)
+                                            _buildExerciseE1rmSummary(
                                               l10n,
+                                              routineExercise,
+                                              manager,
                                             ),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 0.0,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // FIX: Insert header row dynamically.
+                                                _buildHeaderRow(
+                                                  routineExercise,
+                                                  l10n,
+                                                ),
 
-                                            // Set Rows
-                                            ...routineExercise.setTemplates
-                                                .asMap()
-                                                .entries
-                                                .map((setEntry) {
-                                              final templateId =
-                                                  setEntry.value.id!;
-                                              final template = setEntry
-                                                  .value; // <--- Template
-                                              final setLog =
-                                                  manager.setLogs[templateId];
+                                                // Set Rows
+                                                ...routineExercise.setTemplates
+                                                    .asMap()
+                                                    .entries
+                                                    .map((setEntry) {
+                                                  final templateId =
+                                                      setEntry.value.id!;
+                                                  final template = setEntry
+                                                      .value; // <--- Template
+                                                  final setLog = manager
+                                                      .setLogs[templateId];
 
-                                              if (setLog == null) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              int workingSetIndex = 0;
-                                              for (int i = 0;
-                                                  i <= setEntry.key;
-                                                  i++) {
-                                                final currentTemplateId =
-                                                    routineExercise
-                                                        .setTemplates[i].id!;
-                                                if (manager
-                                                        .setLogs[
-                                                            currentTemplateId]
-                                                        ?.setType !=
-                                                    'warmup') {
-                                                  workingSetIndex++;
-                                                }
-                                              }
-
-                                              return _buildSetRow(
-                                                workingSetIndex,
-                                                setEntry.key,
-                                                templateId,
-                                                setLog,
-                                                _lastPerformances[
+                                                  if (setLog == null) {
+                                                    return const SizedBox
+                                                        .shrink();
+                                                  }
+                                                  int workingSetIndex = 0;
+                                                  for (int i = 0;
+                                                      i <= setEntry.key;
+                                                      i++) {
+                                                    final currentTemplateId =
                                                         routineExercise
-                                                            .exercise.nameEn] ??
-                                                    [],
-                                                template, // <--- Pass template
-                                              );
-                                            }),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 16.0,
-                                              ),
-                                              child: TextButton.icon(
-                                                onPressed: () =>
-                                                    _addSet(routineExercise),
-                                                icon: const Icon(Icons.add),
-                                                label: Text(l10n.addSetButton),
-                                              ),
+                                                            .setTemplates[i]
+                                                            .id!;
+                                                    if (manager
+                                                            .setLogs[
+                                                                currentTemplateId]
+                                                            ?.setType !=
+                                                        'warmup') {
+                                                      workingSetIndex++;
+                                                    }
+                                                  }
+
+                                                  return _buildSetRow(
+                                                    workingSetIndex,
+                                                    setEntry.key,
+                                                    templateId,
+                                                    setLog,
+                                                    _lastPerformances[
+                                                            routineExercise
+                                                                .exercise
+                                                                .nameEn] ??
+                                                        [],
+                                                    template, // <--- Pass template
+                                                  );
+                                                }),
+                                                Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 16.0,
+                                                  ),
+                                                  child: TextButton.icon(
+                                                    onPressed: () => _addSet(
+                                                        routineExercise),
+                                                    icon: const Icon(Icons.add),
+                                                    label:
+                                                        Text(l10n.addSetButton),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+
+                    // --- Top Celebration Banner ---
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: _buildPRCelebrationBanner(),
                     ),
                   ],
                 ),
-
-                // --- Top Celebration Banner ---
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _buildPRCelebrationBanner(),
-                ),
-              ],
-            ),
-      floatingActionButton: GlassFab(
-        label: l10n.fabAddExercise,
-        onPressed: _addExercise,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          AnimatedBuilder(
-            animation: manager,
-            builder: (context, _) {
-              final bar = _buildRestBottomBar(l10n, colorScheme, manager);
-              return bar ?? const SizedBox.shrink();
-            },
+          floatingActionButton: GlassFab(
+            label: l10n.fabAddExercise,
+            onPressed: _addExercise,
           ),
-          if (manager.remainingRestSeconds <= 0 && !manager.showRestDone)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: WgerAttributionWidget(
-                textStyle: textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              AnimatedBuilder(
+                animation: manager,
+                builder: (context, _) {
+                  final bar = _buildRestBottomBar(l10n, colorScheme, manager);
+                  return bar ?? const SizedBox.shrink();
+                },
               ),
-            ),
-        ],
-      ),
-    ));
+              if (manager.remainingRestSeconds <= 0 && !manager.showRestDone)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: WgerAttributionWidget(
+                    textStyle: textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ));
   }
 
   Widget? _buildRestBottomBar(

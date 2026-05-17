@@ -8,7 +8,7 @@ import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/analytics_chart_defaults.dart';
-import '../../widgets/analytics_section_header.dart';
+import '../../widgets/common/app_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/muscle_radar_chart.dart';
 import '../../widgets/summary_card.dart';
@@ -425,20 +425,45 @@ class _MuscleGroupAnalyticsScreenState
                   ),
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (_) =>
-                          Theme.of(context).colorScheme.inverseSurface,
+                      tooltipBorderRadius: BorderRadius.circular(16),
+                      tooltipMargin: 12,
+                      tooltipPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      getTooltipColor: (_) {
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
+                        return isDark
+                            ? const Color(0xFF2A2A2A)
+                            : Theme.of(context)
+                                .colorScheme
+                                .surface
+                                .withValues(alpha: 0.95);
+                      },
+                      tooltipBorder: BorderSide(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.08),
+                      ),
                       getTooltipItem: (group, _, rod, __) {
                         final index = group.x.toInt();
                         final label = labels[index];
                         final value = values[index];
                         return BarTooltipItem(
                           '$label\n${_formatCompact(value)} $unit',
-                          TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onInverseSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ) ??
+                              TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                         );
                       },
                     ),
@@ -530,12 +555,11 @@ class _MuscleGroupAnalyticsScreenState
   }
 
   Widget _sectionLabel(String text, {bool isPrimary = false}) {
-    if (!isPrimary) {
-      return AnalyticsSectionHeader(title: text);
-    }
-    return AnalyticsSectionHeader(
+    return AppSectionHeader(
       title: text,
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      padding: isPrimary
+          ? const EdgeInsets.only(left: 4, bottom: 8, top: 4)
+          : null,
     );
   }
 }

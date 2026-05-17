@@ -343,7 +343,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           children: [
             Text(
               l10n.dataManagementBackupTitle,
-              style: theme.textTheme.headlineSmall,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: DesignConstants.spacingS),
             Text(
@@ -427,7 +427,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.csvExportTitle, style: theme.textTheme.headlineSmall),
+            Text(l10n.csvExportTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.csvExportDescription, style: theme.textTheme.bodyMedium),
             const SizedBox(height: DesignConstants.spacingS),
@@ -492,7 +492,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.workoutImportTitle, style: theme.textTheme.headlineSmall),
+            Text(l10n.workoutImportTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.workoutImportDescription,
                 style: theme.textTheme.bodyMedium),
@@ -529,7 +529,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           children: [
             Text(
               l10n.localDataDeletionCardTitle,
-              style: theme.textTheme.headlineSmall,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: DesignConstants.spacingS),
             Text(
@@ -723,7 +723,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.mapExercisesTitle, style: theme.textTheme.headlineSmall),
+            Text(l10n.mapExercisesTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(
               l10n.mapExercisesDescription,
@@ -756,7 +756,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.autoBackupTitle, style: theme.textTheme.headlineSmall),
+            Text(l10n.autoBackupTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.autoBackupDescription, style: theme.textTheme.bodyMedium),
             const SizedBox(height: DesignConstants.spacingS),

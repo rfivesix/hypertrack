@@ -142,6 +142,8 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                           leading: const Icon(Icons.event_note, size: 40),
                           title: Text(
                             log.routineName ?? l10n.freeWorkoutTitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           // FIX: Subtitle is now a Column with more information.
@@ -163,27 +165,35 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                                     color: Colors.grey[600],
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    '${context.read<UnitService>().convertDisplayValue(totalVolume, UnitDimension.weight).toStringAsFixed(0)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
+                                  Flexible(
+                                    child: Text(
+                                      '${context.read<UnitService>().convertDisplayValue(totalVolume, UnitDimension.weight).toStringAsFixed(0)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: DesignConstants.spacingM),
                                   Icon(
                                     Icons.replay_circle_filled_outlined,
                                     size: 14,
                                     color: Colors.grey[600],
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    l10n.setCount(
-                                      totalSets,
-                                    ), // Uses the plural function
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
+                                  Flexible(
+                                    child: Text(
+                                      l10n.setCount(
+                                        totalSets,
+                                      ), // Uses the plural function
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
                                 ],

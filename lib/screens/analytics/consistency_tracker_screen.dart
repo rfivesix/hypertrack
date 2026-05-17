@@ -9,7 +9,7 @@ import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
 import '../../widgets/analytics_chart_defaults.dart';
-import '../../widgets/analytics_section_header.dart';
+import '../../widgets/common/app_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
@@ -159,7 +159,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionHeader(l10n.analyticsKpisHeader),
+                  AppSectionHeader(title: l10n.analyticsKpisHeader),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -221,8 +221,8 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                     ],
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  _sectionHeader(
-                    '${_metricName(l10n)} · ${l10n.analyticsViewWeek}',
+                  AppSectionHeader(
+                    title: '${_metricName(l10n)} · ${l10n.analyticsViewWeek}',
                   ),
                   SummaryCard(
                     child: Column(
@@ -308,6 +308,31 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                       touchTooltipData: BarTouchTooltipData(
                                         fitInsideHorizontally: true,
                                         fitInsideVertically: true,
+                                        tooltipBorderRadius:
+                                            BorderRadius.circular(16),
+                                        tooltipMargin: 12,
+                                        tooltipPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 10,
+                                        ),
+                                        getTooltipColor: (_) {
+                                          final isDark =
+                                              Theme.of(context).brightness ==
+                                                  Brightness.dark;
+                                          return isDark
+                                              ? const Color(0xFF2A2A2A)
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .surface
+                                                  .withValues(alpha: 0.95);
+                                        },
+                                        tooltipBorder: BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.08),
+                                        ),
                                         getTooltipItem:
                                             (group, groupIndex, rod, rodIndex) {
                                           final i = group.x.toInt();
@@ -324,12 +349,14 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                                                     ?.copyWith(
                                                       color: Theme.of(context)
                                                           .colorScheme
-                                                          .onInverseSurface,
+                                                          .onSurface,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ) ??
                                                 TextStyle(
                                                   color: Theme.of(context)
                                                       .colorScheme
-                                                      .onInverseSurface,
+                                                      .onSurface,
                                                 ),
                                           );
                                         },
@@ -410,7 +437,7 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
                     ),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  _sectionHeader(l10n.trainingCalendarLabel),
+                  AppSectionHeader(title: l10n.trainingCalendarLabel),
                   SummaryCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -543,10 +570,6 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
               ),
             ),
     );
-  }
-
-  Widget _sectionHeader(String text) {
-    return AnalyticsSectionHeader(title: text);
   }
 
   Widget _metricCard(

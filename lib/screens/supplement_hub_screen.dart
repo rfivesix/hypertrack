@@ -9,8 +9,10 @@ import '../models/tracked_supplement.dart';
 import 'create_supplement_screen.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
+import '../widgets/common/common.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_fab.dart';
+import '../widgets/glass_progress_bar.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
@@ -238,87 +240,28 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     }
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 
   Widget _buildProgressCard(TrackedSupplement ts) {
     final supplement = ts.supplement;
     final isLimit = supplement.dailyLimit != null;
     final target = (isLimit ? supplement.dailyLimit : supplement.dailyGoal)!;
     final overTarget = isLimit && ts.totalDosedToday > target;
-    final hasTarget = target > 0;
-    final rawProgress = hasTarget ? (ts.totalDosedToday / target) : 0.0;
-    final progress = rawProgress.clamp(0.0, 1.0);
-    final progressColor =
-        overTarget ? Colors.red.shade400 : Colors.green.shade400;
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
-    return Container(
-      height: 60,
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: progress,
-                child: Container(color: progressColor),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 4.0,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      localizeSupplementName(supplement, l10n),
-                      maxLines: 1,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${ts.totalDosedToday.toStringAsFixed(1)} / ${target.toStringAsFixed(1)} ${supplement.unit}',
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+    final progressColor = overTarget
+        ? theme.colorScheme.error
+        : theme.colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: GlassProgressBar(
+        label: localizeSupplementName(supplement, l10n),
+        unit: supplement.unit,
+        value: ts.totalDosedToday,
+        target: target,
+        color: progressColor,
       ),
     );
   }
@@ -523,7 +466,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                     child: ListView(
                       padding: DesignConstants.cardPadding,
                       children: [
-                        _buildSectionTitle(context, l10n.dailyProgressTitle),
+                        AppSectionHeader(title: l10n.dailyProgressTitle),
                         if (_trackedSupplements
                             .where(
                               (ts) =>
@@ -546,12 +489,12 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                             )
                             .map((ts) => _buildProgressCard(ts)),
                         const SizedBox(height: DesignConstants.spacingXL),
-                        _buildSectionTitle(context, l10n.logIntakeTitle),
+                        AppSectionHeader(title: l10n.logIntakeTitle),
                         ..._trackedSupplements.map(
                           (ts) => _buildLogActionCard(ts.supplement),
                         ),
                         const SizedBox(height: DesignConstants.spacingXL),
-                        _buildSectionTitle(context, l10n.todaysLogTitle),
+                        AppSectionHeader(title: l10n.todaysLogTitle),
                         if (_todaysLogs.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),

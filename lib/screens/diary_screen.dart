@@ -22,6 +22,7 @@ import 'food_detail_screen.dart';
 import 'supplement_track_screen.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
+import '../widgets/common/common.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../theme/color_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
@@ -385,7 +386,8 @@ class DiaryScreenState extends State<DiaryScreen> {
         meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
       }
 
-      final supplementsForDate = await dbHelper.getSupplementsForDate(diaryDate);
+      final supplementsForDate =
+          await dbHelper.getSupplementsForDate(diaryDate);
       if (!mounted) return;
       final allSupplements = await dbHelper.getAllSupplements();
       if (!mounted) return;
@@ -1131,9 +1133,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             children: [
               Text(
                 l10n.weightHistoryTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               Wrap(
                 spacing: 8.0,
@@ -1182,7 +1182,6 @@ class DiaryScreenState extends State<DiaryScreen> {
             color: isSelected
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.bold,
           ),
         ),
       ),
@@ -1242,8 +1241,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             child: ListView(
               padding: finalPadding,
               children: [
-                const SizedBox(height: DesignConstants.spacingL),
-                _buildSectionTitle(context, l10n.today_overview_text),
+                AppSectionHeader(title: l10n.today_overview_text),
                 if (_dailyNutrition != null)
                   NutritionSummaryWidget(
                     nutritionData: _dailyNutrition!,
@@ -1285,10 +1283,10 @@ class DiaryScreenState extends State<DiaryScreen> {
                   ),
                 ],
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.protocol_today_capslock),
+                AppSectionHeader(title: l10n.protocol_today_capslock),
                 _buildTodaysLog(l10n),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.measurementWeightCapslock),
+                AppSectionHeader(title: l10n.measurementWeightCapslock),
                 _buildWeightChartCard(
                   context,
                   Theme.of(context).colorScheme,
@@ -1398,16 +1396,12 @@ class DiaryScreenState extends State<DiaryScreen> {
                 children: [
                   Text(
                     AppLocalizations.of(context)!.sleepSectionTitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${AppLocalizations.of(context)!.durationLabel}: $durationText',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -1417,16 +1411,12 @@ class DiaryScreenState extends State<DiaryScreen> {
               children: [
                 Text(
                   AppLocalizations.of(context)!.sleepHubScoreLabel,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   scoreText,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(context).textTheme.headlineLarge,
                 ),
               ],
             ),
@@ -1493,16 +1483,12 @@ class DiaryScreenState extends State<DiaryScreen> {
                 children: [
                   Text(
                     l10n.pulseTitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${l10n.pulseRangeLabel}: $rangeText',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -1512,16 +1498,12 @@ class DiaryScreenState extends State<DiaryScreen> {
               children: [
                 Text(
                   l10n.pulseRestingLabel,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   restingText,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(context).textTheme.headlineLarge,
                 ),
               ],
             ),
@@ -1537,18 +1519,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     return '${hours}h ${minutes}m';
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+  // Section headers now use the centralized AppSectionHeader widget.
 
   Widget _buildMealCard(
     String title,
@@ -1559,10 +1530,9 @@ class DiaryScreenState extends State<DiaryScreen> {
   ) {
     final isOpen = _mealExpanded[mealKey] ?? false;
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleLarge; // Inter, fett wie im Rest
+    final titleStyle = theme.textTheme.titleMedium;
 
-    return SummaryCard(
-      padding: const EdgeInsets.all(12),
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1611,26 +1581,19 @@ class DiaryScreenState extends State<DiaryScreen> {
           // <<< New: macro row below the title (own line, left aligned)
           if (items.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${macros.calories} kcal · '
-                '${macros.protein}g P · '
-                '${macros.carbs}g C · '
-                '${macros.fat}g F',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+            AppMetadataRow(items: [
+              '${macros.calories} kcal',
+              '${macros.protein}g P',
+              '${macros.carbs}g C',
+              '${macros.fat}g F',
+            ]),
           ],
 
           // Content (animated expand/collapse)
           AnimatedCrossFade(
             crossFadeState:
                 isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-            duration: const Duration(milliseconds: 180),
+            duration: DesignConstants.expandCollapseDuration,
             firstChild: Column(
               children: [
                 if (items.isNotEmpty) const Divider(height: 16),
@@ -1780,10 +1743,9 @@ class DiaryScreenState extends State<DiaryScreen> {
   Widget _buildFluidsCard(AppLocalizations l10n) {
     final isOpen = _mealExpanded['fluids'] ?? false;
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleLarge;
+    final titleStyle = theme.textTheme.titleMedium;
 
-    return SummaryCard(
-      padding: const EdgeInsets.all(12),
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1832,26 +1794,19 @@ class DiaryScreenState extends State<DiaryScreen> {
                   }
                 }
                 final l10n = AppLocalizations.of(ctx)!;
-                return Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '$totalKcal kcal · '
-                    '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar} · '
-                    '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine} · '
-                    '${totalMl}ml',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
+                return AppMetadataRow(items: [
+                  '$totalKcal kcal',
+                  '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar}',
+                  '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine}',
+                  '${totalMl}ml',
+                ]);
               },
             ),
           ],
           AnimatedCrossFade(
             crossFadeState:
                 isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-            duration: const Duration(milliseconds: 180),
+            duration: DesignConstants.expandCollapseDuration,
             firstChild: Column(
               children: [
                 if (_fluidEntries.isNotEmpty) const Divider(height: 16),
@@ -1868,6 +1823,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildFluidEntryTile(AppLocalizations l10n, FluidEntry entry) {
+    final theme = Theme.of(context);
     final totalSugar = (entry.sugarPer100ml != null)
         ? (entry.sugarPer100ml! / 100 * entry.quantityInMl).toStringAsFixed(1)
         : '0';
@@ -1905,16 +1861,22 @@ class DiaryScreenState extends State<DiaryScreen> {
       },
       child: SummaryCard(
         child: ListTile(
-          title: Text(entry.name),
+          title: Text(entry.name, style: theme.textTheme.titleMedium),
           subtitle: Builder(
             builder: (ctx) {
               final l10n = AppLocalizations.of(ctx)!;
               return Text(
-                '${entry.quantityInMl}${l10n.unit_milliliters} · ${l10n.sugar}: $totalSugar${l10n.unit_grams} · ${l10n.supplement_caffeine}: $totalCaffeine${l10n.unit_milligrams}',
+                '${entry.quantityInMl}${l10n.unit_milliliters} • ${l10n.sugar}: $totalSugar${l10n.unit_grams} • ${l10n.supplement_caffeine}: $totalCaffeine${l10n.unit_milligrams}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.textTheme.bodySmall?.color,
+                ),
               );
             },
           ),
-          trailing: Text('${entry.kcal ?? 0} ${l10n.unit_kcal}'),
+          trailing: Text(
+            '${entry.kcal ?? 0} ${l10n.unit_kcal}',
+            style: theme.textTheme.labelLarge,
+          ),
           onTap: () => _editFluidEntry(entry),
         ),
       ),
@@ -1966,11 +1928,18 @@ class DiaryScreenState extends State<DiaryScreen> {
                     languageCode: baseFoodLang,
                   )
                 : trackedItem.item.getLocalizedName(context),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
           subtitle: Text(
             '${trackedItem.entry.quantityInGrams}${l10n.unit_grams}',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
           ),
-          trailing: Text('${trackedItem.calculatedCalories} ${l10n.unit_kcal}'),
+          trailing: Text(
+            '${trackedItem.calculatedCalories} ${l10n.unit_kcal}',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
           onTap: () {
             Navigator.of(context)
                 .push(

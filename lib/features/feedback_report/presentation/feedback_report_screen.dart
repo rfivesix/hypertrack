@@ -3,6 +3,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
+import '../../../widgets/common/common.dart';
 import '../../../widgets/global_app_bar.dart';
 import '../../../widgets/summary_card.dart';
 import '../application/feedback_report_actions.dart';
@@ -273,7 +274,7 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
           top: DesignConstants.cardPadding.top + topPadding,
         ),
         children: [
-          _buildSectionTitle(context, l10n.feedbackReportScreenTitle),
+          AppSectionHeader(title: l10n.feedbackReportScreenTitle),
           SummaryCard(
             child: ListTile(
               leading: const Icon(Icons.privacy_tip_outlined),
@@ -285,7 +286,7 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(context, l10n.feedbackReportOptionalNoteTitle),
+          AppSectionHeader(title: l10n.feedbackReportOptionalNoteTitle),
           SummaryCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -303,7 +304,7 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
             ),
           ),
           const SizedBox(height: DesignConstants.spacingXL),
-          _buildSectionTitle(context, l10n.feedbackReportIncludeSectionTitle),
+          AppSectionHeader(title: l10n.feedbackReportIncludeSectionTitle),
           SummaryCard(
             child: Column(
               children: [
@@ -366,7 +367,7 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
           ),
           if (_previewText != null) ...[
             const SizedBox(height: DesignConstants.spacingXL),
-            _buildSectionTitle(context, l10n.feedbackReportPreviewTitle),
+            AppSectionHeader(title: l10n.feedbackReportPreviewTitle),
             SummaryCard(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -419,16 +420,5 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 }

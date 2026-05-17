@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../generated/app_localizations.dart';
 import '../services/theme_service.dart';
 import '../util/design_constants.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 
@@ -28,7 +28,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
           top: DesignConstants.cardPadding.top + topPadding,
         ),
         children: [
-          _buildSectionTitle(context, l10n.settingsAppearance),
+          AppSectionHeader(title: l10n.settingsAppearance),
           SummaryCard(
             child: Column(
               children: [
@@ -133,7 +133,5 @@ class AppearanceSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title.toUpperCase());
-  }
+
 }

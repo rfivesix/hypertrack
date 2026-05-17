@@ -50,14 +50,22 @@ class GlassProgressBar extends StatelessWidget {
     final progress = rawProgress.clamp(0.0, 1.0);
     final radius = BorderRadius.circular(borderRadius);
 
-    // Subtle universal text shadow for readability on both bg and progress color
-    final textShadows = [
-      Shadow(
-        color: Colors.black.withValues(alpha: 0.2),
-        offset: const Offset(0, 1),
-        blurRadius: 2.0,
-      ),
-    ];
+    // Crisp, minimal text shadow for edge definition, only if bar has progress
+    final textShadows = value > 0
+        ? [
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              offset: const Offset(0, 1),
+              blurRadius: 2.0,
+            ),
+          ]
+        : null;
+
+    // Heuristic for readability: if the bar color contrast with text is low,
+    // we add a subtle readability scrim behind the text area.
+    // Only applied if there is actual progress color to contrast with.
+    final luminance = color.computeLuminance();
+    final bool isLowContrast = isDark ? (luminance > 0.5) : (luminance < 0.5);
 
     return Container(
       decoration: BoxDecoration(
@@ -98,6 +106,24 @@ class GlassProgressBar extends StatelessWidget {
                   child: ColoredBox(color: color),
                 ),
               ),
+              // Readability Scrim: Subtle dark fade from the left to ensure
+              // text legibility against any progress color.
+              if ((isLowContrast || isDark) && value > 0)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.1),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.6],
+                      ),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12.0,
@@ -112,10 +138,7 @@ class GlassProgressBar extends StatelessWidget {
                       child: Text(
                         label,
                         maxLines: 1,
-                        style: TextStyle(
-                          color: cs.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        style: theme.textTheme.titleMedium?.copyWith(
                           shadows: textShadows,
                         ),
                       ),
@@ -125,9 +148,8 @@ class GlassProgressBar extends StatelessWidget {
                       hasTarget
                           ? '${value.toStringAsFixed(1)} / ${target.toStringAsFixed(0)} $unit'
                           : '${value.toStringAsFixed(1)} $unit',
-                      style: TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.9),
-                        fontSize: 13,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurface,
                         shadows: textShadows,
                       ),
                     ),

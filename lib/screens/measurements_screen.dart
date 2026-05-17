@@ -9,6 +9,7 @@ import '../models/measurement_session.dart';
 import 'add_measurement_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
+import '../widgets/common/common.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_fab.dart';
 import '../widgets/global_app_bar.dart';
@@ -173,7 +174,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
                       ),
                       const SizedBox(height: DesignConstants.spacingXL),
                     ],
-                    _buildSectionTitle(context, l10n.all_measurements),
+                    AppSectionHeader(title: l10n.all_measurements),
                     ..._sessions.map(
                       (session) => _buildMeasurementSessionCard(
                           l10n, colorScheme, session),
@@ -213,18 +214,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 
   Widget _buildChartSection(
     AppLocalizations l10n,

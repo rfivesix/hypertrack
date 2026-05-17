@@ -6,7 +6,7 @@ import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/body_nutrition_analytics_utils.dart';
 import '../../util/design_constants.dart';
-import '../../widgets/analytics_section_header.dart';
+import '../../widgets/common/app_section_header.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/summary_card.dart';
 import 'package:provider/provider.dart';
@@ -93,12 +93,12 @@ class _BodyNutritionCorrelationScreenState
                       const SizedBox(height: DesignConstants.spacingM),
                       _buildSummaryCard(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
-                      AnalyticsSectionHeader(
+                      AppSectionHeader(
                         title: l10n.analyticsBodyNutritionTrendContext,
                       ),
                       _buildTrendComparisonCard(l10n, _analytics!),
                       const SizedBox(height: DesignConstants.spacingM),
-                      AnalyticsSectionHeader(
+                      AppSectionHeader(
                         title: l10n.analyticsInterpretationTitle,
                       ),
                       _buildInterpretationCard(l10n, _analytics!),
@@ -173,7 +173,7 @@ class _BodyNutritionCorrelationScreenState
         : '${unitService.convertDisplayValue(data.currentWeightKg!, UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final weightChange = data.weightChangeKg == null
         ? '-'
-        : '${data.weightChangeKg! >= 0 ? '+' : ''}${unitService.convertDisplayValue(data.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
+        : '${data.weightChangeKg! >= 0 ? '+' : '-'}${unitService.convertDisplayValue(data.weightChangeKg!.abs(), UnitDimension.weight).toStringAsFixed(1)} ${unitService.suffixFor(UnitDimension.weight)}';
     final avgCalories = data.loggedCalorieDays <= 0
         ? '-'
         : '${data.avgDailyCalories.round()} ${l10n.analyticsKcalPerDay}';

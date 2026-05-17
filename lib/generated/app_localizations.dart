@@ -2585,7 +2585,7 @@ abstract class AppLocalizations {
   /// Settings item to reopen onboarding
   ///
   /// In en, this message translates to:
-  /// **'Show tutorial again'**
+  /// **'Show onboarding again'**
   String get onbShowTutorialAgain;
 
   /// No description provided for @appTourOfferTitle.
