@@ -5,16 +5,12 @@ import 'package:provider/provider.dart';
 import '../services/unit_service.dart';
 import 'package:intl/intl.dart';
 import '../data/database_helper.dart';
-import '../data/product_database_helper.dart';
 import '../dialogs/fluid_dialog_content.dart';
 import '../dialogs/quantity_dialog_content.dart';
 import '../generated/app_localizations.dart';
-import '../models/daily_nutrition.dart';
 import '../models/fluid_entry.dart';
 import '../models/food_entry.dart';
 import '../models/food_item.dart';
-import '../models/supplement.dart';
-import '../models/supplement_log.dart';
 import '../models/tracked_food_item.dart';
 import 'add_food_screen.dart';
 import 'add_food_navigation_result.dart';
@@ -32,138 +28,54 @@ import '../widgets/supplement_summary_widget.dart';
 import '../widgets/swipe_action_background.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/glass_progress_bar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../models/tracked_supplement.dart';
-import '../data/workout_database_helper.dart';
+import 'diary_view_model.dart';
 import '../services/theme_service.dart';
 import '../services/base_food_language_service.dart';
 import '../services/health/steps_sync_service.dart';
-import '../features/steps/data/steps_aggregation_repository.dart';
 import '../features/steps/domain/steps_models.dart';
 import '../features/steps/presentation/steps_module_screen.dart';
-import '../features/sleep/data/sleep_day_repository.dart';
-import '../features/sleep/platform/sleep_sync_service.dart';
 import '../features/sleep/presentation/sleep_navigation.dart';
-import '../features/pulse/data/pulse_repository.dart';
-import '../features/pulse/domain/pulse_models.dart';
-import '../features/pulse/application/pulse_tracking_service.dart';
 import '../features/pulse/presentation/pulse_analysis_screen.dart';
 import '../features/sleep/presentation/widgets/sleep_period_scope_layout.dart';
 import 'ai_recommendation_screen.dart';
 import 'workout_history_screen.dart';
 import '../widgets/todays_workout_summary_card.dart';
 
-DateTime resolveDiaryInitialDate({DateTime? initialDate, DateTime? now}) {
-  return (initialDate ?? now ?? DateTime.now()).dateOnly;
-}
-
-DateTime normalizeDiaryDate(DateTime date) => date.dateOnly;
-
-class DiaryLoadCoordinator {
-  int _generation = 0;
-  DateTime? _activeDate;
-  DateTime? _inFlightDate;
-  bool _hasPendingReload = false;
-  bool _pendingForceStepsRefresh = false;
-
-  int begin(DateTime date) {
-    _activeDate = normalizeDiaryDate(date);
-    return ++_generation;
-  }
-
-  bool isCurrent(int generation, DateTime date) {
-    return generation == _generation &&
-        (_activeDate?.isSameDate(normalizeDiaryDate(date)) ?? false);
-  }
-
-  bool coalesceIfInFlight(
-    DateTime date, {
-    required bool forceStepsRefresh,
-    required bool queueIfInFlight,
-  }) {
-    final diaryDate = normalizeDiaryDate(date);
-    if (!(_inFlightDate?.isSameDate(diaryDate) ?? false)) {
-      return false;
-    }
-    if (forceStepsRefresh || queueIfInFlight) {
-      _hasPendingReload = true;
-      _pendingForceStepsRefresh |= forceStepsRefresh;
-    }
-    return true;
-  }
-
-  void markInFlight(DateTime date) {
-    _inFlightDate = normalizeDiaryDate(date);
-  }
-
-  void clearInFlight(DateTime date) {
-    if (_inFlightDate?.isSameDate(normalizeDiaryDate(date)) ?? false) {
-      _inFlightDate = null;
-    }
-  }
-
-  void clearPendingReload() {
-    _hasPendingReload = false;
-    _pendingForceStepsRefresh = false;
-  }
-
-  bool get hasPendingReload => _hasPendingReload;
-
-  bool get pendingForceStepsRefresh => _pendingForceStepsRefresh;
-}
 
 /// The central hub for tracking and viewing daily nutritional and activity data.
 ///
 /// Displays a comprehensive overview of calories, macros, supplements, and workouts
 /// for a selected date. Allows users to manage food entries, fluid intake, and
 /// view historical measurements like weight.
-class DiaryScreen extends StatefulWidget {
+class DiaryScreen extends StatelessWidget {
   final DateTime? initialDate;
+  final GlobalKey<DiaryScreenState>? contentKey;
 
-  const DiaryScreen({super.key, this.initialDate});
+  const DiaryScreen({super.key, this.initialDate, this.contentKey});
 
   @override
-  State<DiaryScreen> createState() => DiaryScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => DiaryViewModel(initialDate: initialDate),
+      child: _DiaryScreenContent(key: contentKey ?? key),
+    );
+  }
 }
 
-class DiaryScreenState extends State<DiaryScreen> {
-  static const Duration _stepsSyncInterval = Duration(hours: 6);
-  static const Duration _sleepSyncInterval = Duration(hours: 6);
-  static const String _showSugarInDiaryOverviewPrefKey =
-      'showSugarInDiaryOverview';
-  bool _isLoading = true;
-  late final ValueNotifier<DateTime> selectedDateNotifier;
-  DateTime get _selectedDate => selectedDateNotifier.value;
-  DailyNutrition? _dailyNutrition;
-  Map<String, List<TrackedFoodItem>> _entriesByMeal = {};
-  List<FluidEntry> _fluidEntries = [];
-  List<TrackedSupplement> _trackedSupplements = [];
-  final StepsSyncService _stepsSyncService = StepsSyncService();
-  final StepsAggregationRepository _stepsRepository =
-      HealthStepsAggregationRepository();
-  int? _stepsForSelectedDay;
-  bool _isStepsWidgetLoading = false;
-  bool _stepsTrackingEnabled = true;
-  int _targetSteps = StepsSyncService.defaultStepsGoal;
-  final SleepSyncService _sleepSyncService = SleepSyncService();
-  final SleepDayDataRepository _sleepRepository = SleepDayRepository();
-  SleepDayOverviewData? _sleepOverview;
-  bool _isSleepWidgetLoading = false;
-  bool _sleepTrackingEnabled = false;
+class _DiaryScreenContent extends StatefulWidget {
+  const _DiaryScreenContent({super.key});
 
-  final PulseTrackingSettingsService _pulseSyncService = PulseTrackingService();
-  final PulseAnalysisRepository _pulseRepository =
-      HealthPulseAnalysisRepository();
-  PulseAnalysisSummary? _pulseSummary;
-  bool _isPulseWidgetLoading = false;
-  bool _pulseTrackingEnabled = false;
+  @override
+  State<_DiaryScreenContent> createState() => DiaryScreenState();
+}
 
-  bool _showSugarInOverview = false;
-  final DiaryLoadCoordinator _loadCoordinator = DiaryLoadCoordinator();
-  Future<void>? _activeDiaryLoadFuture;
+class DiaryScreenState extends State<_DiaryScreenContent> {
+  DiaryViewModel get viewModel => context.read<DiaryViewModel>();
+  ValueNotifier<DateTime> get selectedDateNotifier => viewModel.selectedDateNotifier;
 
-  // Workout summary state used by the daily overview card.
-  Map<String, dynamic>? _workoutSummary;
+  Future<void> loadDataForDate(DateTime date, {bool queueIfInFlight = false, bool forceStepsRefresh = false}) async {
+    return context.read<DiaryViewModel>().loadDataForDate(date, queueIfInFlight: queueIfInFlight, forceStepsRefresh: forceStepsRefresh);
+  }
 
   String _selectedChartRangeKey = '30D';
   final Map<String, bool> _mealExpanded = {
@@ -174,514 +86,23 @@ class DiaryScreenState extends State<DiaryScreen> {
     "fluids": false,
   };
 
-  @override
-  void initState() {
-    super.initState();
-    selectedDateNotifier = ValueNotifier(
-      resolveDiaryInitialDate(initialDate: widget.initialDate),
-    );
-    loadDataForDate(_selectedDate);
-  }
 
-  @override
-  void dispose() {
-    selectedDateNotifier.dispose();
-    super.dispose();
-  }
-
-  // Data-loading entry point for the currently selected date.
-  Future<void> loadDataForDate(
-    DateTime date, {
-    bool forceStepsRefresh = false,
-    bool queueIfInFlight = false,
-  }) async {
-    final diaryDate = normalizeDiaryDate(date);
-    final activeFuture = _activeDiaryLoadFuture;
-    if (activeFuture != null &&
-        _loadCoordinator.coalesceIfInFlight(
-          diaryDate,
-          forceStepsRefresh: forceStepsRefresh,
-          queueIfInFlight: queueIfInFlight,
-        )) {
-      return activeFuture;
-    }
-
-    _loadCoordinator.markInFlight(diaryDate);
-    late final Future<void> loadFuture;
-    loadFuture = _runDiaryLoadQueue(
-      diaryDate,
-      forceStepsRefresh: forceStepsRefresh,
-    ).whenComplete(() {
-      if (identical(_activeDiaryLoadFuture, loadFuture)) {
-        _activeDiaryLoadFuture = null;
-        _loadCoordinator.clearInFlight(diaryDate);
-      }
-    });
-    _activeDiaryLoadFuture = loadFuture;
-    return loadFuture;
-  }
-
-  Future<void> _runDiaryLoadQueue(
-    DateTime diaryDate, {
-    required bool forceStepsRefresh,
-  }) async {
-    var shouldForceStepsRefresh = forceStepsRefresh;
-    do {
-      _loadCoordinator.clearPendingReload();
-      await _loadDataForDateOnce(
-        diaryDate,
-        forceStepsRefresh: shouldForceStepsRefresh,
-      );
-      shouldForceStepsRefresh = _loadCoordinator.pendingForceStepsRefresh;
-    } while (mounted &&
-        _loadCoordinator.hasPendingReload &&
-        _selectedDate.isSameDate(diaryDate));
-  }
-
-  Future<void> _loadDataForDateOnce(
-    DateTime diaryDate, {
-    required bool forceStepsRefresh,
-  }) async {
-    if (!mounted) return;
-    final loadGeneration = _loadCoordinator.begin(diaryDate);
-    setState(() {
-      selectedDateNotifier.value = diaryDate;
-      _isLoading = true;
-      _isStepsWidgetLoading = false;
-      _isSleepWidgetLoading = false;
-      _isPulseWidgetLoading = false;
-    });
-
-    try {
-      final dbHelper = DatabaseHelper.instance;
-
-      // -----------------------------------------------------------------------
-      // TIER 1: INSTANT (Core Totals & SQL-only data)
-      // -----------------------------------------------------------------------
-      final goals = await dbHelper.getGoalsForDate(diaryDate);
-      if (!mounted) return;
-      final prefs = await SharedPreferences.getInstance();
-      if (!mounted) return;
-
-      final targetCalories = goals?.targetCalories ?? 2500;
-      final targetProtein = goals?.targetProtein ?? 180;
-      final targetCarbs = goals?.targetCarbs ?? 250;
-      final targetFat = goals?.targetFat ?? 80;
-      final targetWater = goals?.targetWater ?? 3000;
-      final targetSugar = prefs.getInt('targetSugar') ?? 50;
-      final showSugarInOverview =
-          prefs.getBool(_showSugarInDiaryOverviewPrefKey) ?? false;
-      final targetCaffeine = prefs.getInt('targetCaffeine') ?? 400;
-
-      final summary = DailyNutrition(
-        targetCalories: targetCalories,
-        targetProtein: targetProtein,
-        targetCarbs: targetCarbs,
-        targetFat: targetFat,
-        targetWater: targetWater,
-        targetSugar: targetSugar,
-        targetCaffeine: targetCaffeine,
-      );
-
-      // Load raw entries to calculate core totals without product database overhead
-      final foodEntries = await dbHelper.getEntriesForDate(diaryDate);
-      if (!mounted) return;
-      final fluidEntries = await dbHelper.getFluidEntriesForDate(diaryDate);
-      if (!mounted) return;
-      final workoutLogs = await WorkoutDatabaseHelper.instance
-          .getWorkoutLogsForDateRange(diaryDate, diaryDate);
-      if (!mounted) return;
-
-      final completedLogs =
-          workoutLogs.where((log) => log.endTime != null).toList();
-      Map<String, dynamic>? workoutSummary;
-
-      if (completedLogs.isNotEmpty) {
-        Duration totalDuration = Duration.zero;
-        double totalVolume = 0.0;
-        int totalSets = 0;
-        for (final log in completedLogs) {
-          totalDuration += log.endTime!.difference(log.startTime);
-          totalSets += log.sets.length;
-          for (final set in log.sets) {
-            totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
-          }
-        }
-        workoutSummary = {
-          'duration': totalDuration,
-          'volume': totalVolume,
-          'sets': totalSets,
-          'count': completedLogs.length,
-        };
-      }
-
-      // Calculate totals for fluids
-      summary.water = fluidEntries.fold<int>(
-        0,
-        (sum, entry) => sum + entry.quantityInMl,
-      );
-      for (final entry
-          in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
-        summary.calories += entry.kcal ?? 0;
-        final factor = entry.quantityInMl / 100.0;
-        summary.sugar += (entry.sugarPer100ml ?? 0) * factor;
-        summary.carbs += ((entry.carbsPer100ml ?? 0) * factor).round();
-      }
-
-      // At this point, we have enough to show the Nutrition Card and Workout Card.
-      // Detailed food macros will follow in Tier 2.
-      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
-
-      setState(() {
-        _dailyNutrition = summary;
-        _workoutSummary = workoutSummary;
-        _showSugarInOverview = showSugarInOverview;
-        _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
-        _isLoading = false; // Stop main spinner immediately
-        _entriesByMeal = {}; // Will be filled in Tier 2
-        _fluidEntries = fluidEntries;
-        _trackedSupplements = []; // Will be filled in Tier 2
-      });
-
-      // -----------------------------------------------------------------------
-      // TIER 2: DEFERRED (Product Details & Detailed Macros)
-      // -----------------------------------------------------------------------
-      final foodProducts =
-          await ProductDatabaseHelper.instance.getProductsByBarcodes(
-        foodEntries.map((entry) => entry.barcode).toSet().toList(),
-      );
-      if (!mounted) return;
-
-      final foodProductsByBarcode = {
-        for (final product in foodProducts) product.barcode: product,
-      };
-
-      final Map<String, List<TrackedFoodItem>> groupedEntries = {
-        'mealtypeBreakfast': [],
-        'mealtypeLunch': [],
-        'mealtypeDinner': [],
-        'mealtypeSnack': [],
-      };
-
-      // Recalculate summary with precise product macros
-      for (final entry in foodEntries) {
-        final foodItem = foodProductsByBarcode[entry.barcode];
-        if (foodItem != null) {
-          summary.calories +=
-              (foodItem.calories / 100 * entry.quantityInGrams).round();
-          summary.protein +=
-              (foodItem.protein / 100 * entry.quantityInGrams).round();
-          summary.carbs +=
-              (foodItem.carbs / 100 * entry.quantityInGrams).round();
-          summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
-          summary.sugar +=
-              (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
-
-          final trackedItem = TrackedFoodItem(entry: entry, item: foodItem);
-          groupedEntries[entry.mealType]?.add(trackedItem);
-        }
-      }
-
-      for (var meal in groupedEntries.values) {
-        meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
-      }
-
-      final supplementsForDate =
-          await dbHelper.getSupplementsForDate(diaryDate);
-      if (!mounted) return;
-      final allSupplements = await dbHelper.getAllSupplements();
-      if (!mounted) return;
-      final todaysSupplementLogs =
-          await dbHelper.getSupplementLogsForDate(diaryDate);
-      if (!mounted) return;
-
-      final Map<int, double> todaysDoses = {};
-      for (final log in todaysSupplementLogs) {
-        todaysDoses.update(
-          log.supplementId,
-          (value) => value + log.dose,
-          ifAbsent: () => log.dose,
-        );
-      }
-
-      Supplement? caffeineSupplement;
-      try {
-        caffeineSupplement = allSupplements.firstWhere(
-          (s) => s.code == 'caffeine',
-        );
-      } catch (e) {
-        caffeineSupplement = null;
-      }
-
-      if (caffeineSupplement != null && caffeineSupplement.id != null) {
-        summary.caffeine = todaysDoses[caffeineSupplement.id] ?? 0.0;
-      }
-
-      final Map<int, Supplement> byId = {
-        for (final s in allSupplements)
-          if (s.id != null) s.id!: s,
-      };
-
-      final List<TrackedSupplement> trackedSupps = [];
-      for (final s in supplementsForDate) {
-        final hasLog = todaysDoses.containsKey(s.id);
-        if (s.isTracked || hasLog) {
-          trackedSupps.add(
-            TrackedSupplement(
-              supplement: s,
-              totalDosedToday: todaysDoses[s.id] ?? 0.0,
-            ),
-          );
-        }
-      }
-      for (final id in todaysDoses.keys) {
-        if (!trackedSupps.any((ts) => ts.supplement.id == id)) {
-          if (byId.containsKey(id)) {
-            trackedSupps.add(
-              TrackedSupplement(
-                supplement: byId[id]!,
-                totalDosedToday: todaysDoses[id]!,
-              ),
-            );
-          }
-        }
-      }
-
-      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
-
-      setState(() {
-        _dailyNutrition = summary;
-        _entriesByMeal = groupedEntries;
-        _trackedSupplements = trackedSupps;
-      });
-
-      // -----------------------------------------------------------------------
-      // TIER 3: BACKGROUND (Health Platform Syncs)
-      // -----------------------------------------------------------------------
-      final providerFilter = await _stepsSyncService.getProviderFilter();
-      if (!mounted) return;
-      final providerFilterRaw = StepsSyncService.providerFilterToRaw(
-        providerFilter,
-      );
-
-      // Start all background tasks concurrently, unawaited
-      unawaited(_loadStepsForDate(
-        diaryDate,
-        providerFilterRaw: providerFilterRaw,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 10), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          setState(() => _isStepsWidgetLoading = false);
-        }
-      }));
-
-      unawaited(_loadSleepAndSyncIfDue(
-        diaryDate,
-        force: forceStepsRefresh,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 15), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          setState(() => _isSleepWidgetLoading = false);
-        }
-      }));
-
-      unawaited(_loadPulseForDate(
-        diaryDate,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 10), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          setState(() => _isPulseWidgetLoading = false);
-        }
-      }));
-
-      unawaited(_syncStepsIfDue(
-        diaryDate,
-        force: forceStepsRefresh,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 15), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          setState(() => _isStepsWidgetLoading = false);
-        }
-      }));
-    } catch (e, stack) {
-      debugPrint('Diary primary load failed: $e\n$stack');
-      if (_isCurrentLoad(loadGeneration, diaryDate)) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _loadSleepAndSyncIfDue(
-    DateTime date, {
-    required bool force,
-    required int loadGeneration,
-  }) async {
-    // 1. Load from cache first for immediate display
-    await _loadSleepForDate(date, loadGeneration: loadGeneration);
-    if (!mounted) return;
-    // 2. Sync in background
-    await _syncSleepIfDue(force: force);
-    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-    // 3. Refresh if sync completed
-    await _loadSleepForDate(date, loadGeneration: loadGeneration);
-  }
-
-  Future<void> _loadStepsForDate(
-    DateTime date, {
-    required String providerFilterRaw,
-    int? loadGeneration,
-  }) async {
-    try {
-      final enabled = await _stepsSyncService.isTrackingEnabled();
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      if (!enabled) {
-        setState(() {
-          _stepsForSelectedDay = null;
-          _stepsTrackingEnabled = false;
-          _isStepsWidgetLoading = false;
-        });
-        return;
-      }
-      setState(() => _isStepsWidgetLoading = true);
-      final sourcePolicy = await _stepsSyncService.getSourcePolicy();
-      if (!mounted) return;
-      final sourcePolicyRaw = StepsSyncService.sourcePolicyToRaw(sourcePolicy);
-      final total = await DatabaseHelper.instance.getDailyStepsTotal(
-        dayLocal: date,
-        providerFilter: providerFilterRaw,
-        sourcePolicy: sourcePolicyRaw,
-      );
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      setState(() {
-        _stepsForSelectedDay = total;
-        _stepsTrackingEnabled = true;
-        _isStepsWidgetLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Steps load failed: $e');
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      setState(() => _isStepsWidgetLoading = false);
-    }
-  }
-
-  Future<void> _loadSleepForDate(DateTime date, {int? loadGeneration}) async {
-    try {
-      final enabled = await _sleepSyncService.isTrackingEnabled();
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      if (!enabled) {
-        setState(() {
-          _sleepOverview = null;
-          _sleepTrackingEnabled = false;
-          _isSleepWidgetLoading = false;
-        });
-        return;
-      }
-      setState(() => _isSleepWidgetLoading = true);
-      final overview = await _sleepRepository.fetchOverview(date);
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      setState(() {
-        _sleepOverview = overview;
-        _sleepTrackingEnabled = true;
-        _isSleepWidgetLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Sleep load failed: $e');
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      setState(() => _isSleepWidgetLoading = false);
-    }
-  }
-
-  Future<void> _loadPulseForDate(DateTime date, {int? loadGeneration}) async {
-    final enabled = await _pulseSyncService.isTrackingEnabled();
-    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-    if (!enabled) {
-      setState(() {
-        _pulseSummary = null;
-        _pulseTrackingEnabled = false;
-        _isPulseWidgetLoading = false;
-      });
-      return;
-    }
-    setState(() => _isPulseWidgetLoading = true);
-
-    // Diary typically shows a 24h window for the selected date.
-    final start = DateTime(date.year, date.month, date.day).toUtc();
-    final end = start.add(const Duration(days: 1));
-
-    try {
-      final summary = await _pulseRepository.getAnalysis(
-        window: PulseAnalysisWindow(startUtc: start, endUtc: end),
-      );
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      setState(() {
-        _pulseSummary = summary;
-        _pulseTrackingEnabled = true;
-        _isPulseWidgetLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Pulse load failed: $e');
-      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-      setState(() => _isPulseWidgetLoading = false);
-    }
-  }
-
-  Future<void> _syncStepsIfDue(
-    DateTime date, {
-    bool force = false,
-    int? loadGeneration,
-  }) async {
-    final enabled = await _stepsSyncService.isTrackingEnabled();
-    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-    if (!enabled) return;
-    final lastSync = await _stepsSyncService.getLastSyncAt();
-    if (!mounted) return;
-    final shouldSync = force ||
-        lastSync == null ||
-        DateTime.now().toUtc().difference(lastSync) > _stepsSyncInterval;
-    if (!shouldSync) return;
-    setState(() => _isStepsWidgetLoading = true);
-    await _stepsRepository.refresh(force: force);
-    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
-    final providerFilter = await _stepsSyncService.getProviderFilter();
-    if (!mounted) return;
-    final providerFilterRaw = StepsSyncService.providerFilterToRaw(
-      providerFilter,
-    );
-    await _loadStepsForDate(
-      date,
-      providerFilterRaw: providerFilterRaw,
-      loadGeneration: loadGeneration,
-    );
-  }
-
-  bool _isCurrentLoad(int? loadGeneration, DateTime date) {
-    if (!mounted) return false;
-    return loadGeneration == null ||
-        _loadCoordinator.isCurrent(loadGeneration, date);
-  }
-
-  Future<void> _syncSleepIfDue({bool force = false}) async {
-    await _sleepSyncService.importRecentIfDue(
-      minInterval: _sleepSyncInterval,
-      force: force,
-    );
-  }
 
   Future<void> _deleteFoodEntry(int id) async {
-    await DatabaseHelper.instance.deleteFoodEntry(id);
-    loadDataForDate(_selectedDate);
+    final viewModel = context.read<DiaryViewModel>();
+    await viewModel.deleteFoodEntry(id);
   }
 
   Future<void> _deleteFluidEntry(int id) async {
-    await DatabaseHelper.instance.deleteFluidEntry(id);
-    loadDataForDate(_selectedDate);
+    final viewModel = context.read<DiaryViewModel>();
+    await viewModel.deleteFluidEntry(id);
   }
 
   Future<void> _editFluidEntry(FluidEntry entry) async {
     if (entry.linkedFoodEntryId != null) {
       TrackedFoodItem? trackedItem;
       // Search in all meals for the linked food entry
-      for (var mealList in _entriesByMeal.values) {
+      for (var mealList in viewModel.entriesByMeal.values) {
         for (var item in mealList) {
           if (item.entry.id == entry.linkedFoodEntryId) {
             trackedItem = item;
@@ -759,17 +180,17 @@ class DiaryScreenState extends State<DiaryScreen> {
                       );
 
                       try {
-                        await DatabaseHelper.instance.updateFluidEntry(updated);
+                        await context.read<DiaryViewModel>().updateFluidEntry(updated);
 
                         // Update caffeine dose
-                        await _logCaffeineDose(
+                        await context.read<DiaryViewModel>().logCaffeineDose(
                           (caffeine ?? 0) * (quantity / 100.0),
                           state.selectedDateTime,
                           fluidEntryId: entry.id,
                         );
 
                         close();
-                        loadDataForDate(_selectedDate);
+                        viewModel.loadDataForDate(viewModel.selectedDate);
                       } catch (e) {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -804,7 +225,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       context: context,
       title: trackedItem.item.getLocalizedName(context),
       contentBuilder: (ctx, close) {
-        final linkedFluid = _fluidEntries
+        final linkedFluid = viewModel.fluidEntries
             .where((f) => f.linkedFoodEntryId == trackedItem.entry.id)
             .firstOrNull;
         return Column(
@@ -877,11 +298,11 @@ class DiaryScreenState extends State<DiaryScreen> {
         timestamp: result.timestamp,
         mealType: result.mealType,
       );
-      await DatabaseHelper.instance.updateFoodEntry(updatedEntry);
+      await context.read<DiaryViewModel>().updateFoodEntry(updatedEntry);
 
       // 1. Delete FluidEntry if linked.
       if (trackedItem.entry.id != null) {
-        await DatabaseHelper.instance.deleteFluidEntryByLinkedFoodId(
+        await context.read<DiaryViewModel>().deleteFluidEntryByLinkedFoodId(
           trackedItem.entry.id!,
         );
       }
@@ -897,17 +318,17 @@ class DiaryScreenState extends State<DiaryScreen> {
           caffeinePer100ml: result.caffeinePer100ml,
           linkedFoodEntryId: trackedItem.entry.id, // Preserve the link
         );
-        await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+        await context.read<DiaryViewModel>().insertFluidEntry(newFluidEntry);
       }
 
       // 3. Update/delete caffeine log in every case.
-      await _logCaffeineDose(
+      await context.read<DiaryViewModel>().logCaffeineDose(
         (result.caffeinePer100ml ?? 0) * (result.quantity / 100.0),
         result.timestamp,
         foodEntryId: trackedItem.entry.id,
       );
 
-      loadDataForDate(_selectedDate);
+      viewModel.loadDataForDate(viewModel.selectedDate);
     }
   }
 
@@ -915,7 +336,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final routeResult = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(
         builder: (context) => AddFoodScreen(
-          initialDate: _selectedDate, // <--- Pass-through
+          initialDate: viewModel.selectedDate, // <--- Pass-through
           initialMealType: mealType, // <--- Pass-through
         ),
       ),
@@ -925,7 +346,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
     final addFoodResult = AddFoodNavigationResult.fromRouteResult(routeResult);
     if (addFoodResult.shouldRefresh) {
-      loadDataForDate(_selectedDate);
+      viewModel.loadDataForDate(viewModel.selectedDate);
       return;
     }
 
@@ -936,7 +357,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final result = await _showQuantityMenu(
       selectedFoodItem,
       mealType,
-      initialDate: _selectedDate, // <--- Add parameter (see point C)
+      initialDate: viewModel.selectedDate, // <--- Add parameter (see point C)
     );
 
     if (result == null || !mounted) return;
@@ -954,7 +375,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       quantityInGrams: quantity,
       mealType: resultMealType,
     );
-    final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+    final newFoodEntryId = await context.read<DiaryViewModel>().insertFoodEntry(
       newFoodEntry,
     );
 
@@ -969,19 +390,19 @@ class DiaryScreenState extends State<DiaryScreen> {
         caffeinePer100ml: result.caffeinePer100ml,
         linkedFoodEntryId: newFoodEntryId,
       );
-      await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
+      await context.read<DiaryViewModel>().insertFluidEntry(newFluidEntry);
     }
 
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await _logCaffeineDose(
+      await context.read<DiaryViewModel>().logCaffeineDose(
         totalCaffeine,
         timestamp,
         foodEntryId: newFoodEntryId,
       );
     }
 
-    loadDataForDate(_selectedDate);
+    viewModel.loadDataForDate(viewModel.selectedDate);
   }
 
   // Add these two new methods to the class.
@@ -1014,7 +435,7 @@ class DiaryScreenState extends State<DiaryScreen> {
               key: dialogStateKey,
               item: item,
               initialMealType: mealType,
-              initialTimestamp: (initialDate ?? _selectedDate).withCurrentTime,
+              initialTimestamp: (initialDate ?? viewModel.selectedDate).withCurrentTime,
             ),
             // ... (rest of the method: buttons, etc. stays the same) ...
             const SizedBox(height: 12),
@@ -1068,55 +489,21 @@ class DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  Future<void> _logCaffeineDose(
-    double doseMg,
-    DateTime timestamp, {
-    int? foodEntryId,
-    int? fluidEntryId,
-  }) async {
-    if (doseMg <= 0) return;
-
-    final supplements = await DatabaseHelper.instance.getAllSupplements();
-    Supplement? caffeineSupplement;
-    try {
-      caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
-    } catch (e) {
-      return;
-    }
-
-    if (caffeineSupplement.id == null) return;
-
-    await DatabaseHelper.instance.insertSupplementLog(
-      SupplementLog(
-        supplementId: caffeineSupplement.id!,
-        dose: doseMg,
-        unit: 'mg',
-        timestamp: timestamp,
-        sourceFoodEntryId: foodEntryId,
-        sourceFluidEntryId: fluidEntryId,
-      ),
-    );
-  }
-
   Future<void> pickDate() async {
+    final viewModel = context.read<DiaryViewModel>();
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: viewModel.selectedDate,
       firstDate: DateTime(2020),
-      // Allow future selections, for example for planning ahead.
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null && !picked.isSameDate(_selectedDate)) {
-      loadDataForDate(picked);
+    if (picked != null) {
+      viewModel.pickDate(picked);
     }
   }
 
   void navigateDay(bool forward) {
-    final newDay = _selectedDate.dateOnly.add(Duration(days: forward ? 1 : -1));
-    // Unlike NutritionScreen, allow navigation into the future here.
-    // if (forward && newDay.isAfter(DateTime.now())) return;
-
-    loadDataForDate(newDay);
+    context.read<DiaryViewModel>().navigateDay(forward);
   }
 
   Widget _buildWeightChartCard(
@@ -1218,6 +605,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<DiaryViewModel>();
     final l10n = AppLocalizations.of(context)!;
     final double appBarHeight = MediaQuery.of(
       context,
@@ -1233,46 +621,46 @@ class DiaryScreenState extends State<DiaryScreen> {
       top: basePadding.top + appBarHeight,
     );
 
-    return _isLoading
+    return viewModel.isLoading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
             onRefresh: () =>
-                loadDataForDate(_selectedDate, forceStepsRefresh: true),
+                loadDataForDate(viewModel.selectedDate, forceStepsRefresh: true),
             child: ListView(
               padding: finalPadding,
               children: [
                 AppSectionHeader(title: l10n.today_overview_text),
-                if (_dailyNutrition != null)
+                if (viewModel.dailyNutrition != null)
                   NutritionSummaryWidget(
-                    nutritionData: _dailyNutrition!,
+                    nutritionData: viewModel.dailyNutrition!,
                     l10n: l10n,
                     isExpandedView: false,
-                    showSugarInOverview: _showSugarInOverview,
+                    showSugarInOverview: viewModel.showSugarInOverview,
                   ),
 
                 const SizedBox(height: DesignConstants.spacingXS),
                 SupplementSummaryWidget(
-                  trackedSupplements: _trackedSupplements,
+                  trackedSupplements: viewModel.trackedSupplements,
                   onTap: () => Navigator.of(context)
                       .push(
                         MaterialPageRoute(
                           // FIX #65: Pass date along
                           builder: (context) =>
-                              SupplementTrackScreen(initialDate: _selectedDate),
+                              SupplementTrackScreen(initialDate: viewModel.selectedDate),
                         ),
                       )
-                      .then((_) => loadDataForDate(_selectedDate)),
+                      .then((_) => viewModel.loadDataForDate(viewModel.selectedDate)),
                 ),
-                if (_stepsTrackingEnabled) ...[_buildStepsSummaryCard()],
-                if (_sleepTrackingEnabled) ...[_buildSleepSummaryCard()],
-                if (_pulseTrackingEnabled) ...[_buildPulseSummaryCard()],
+                if (viewModel.stepsTrackingEnabled) ...[_buildStepsSummaryCard()],
+                if (viewModel.sleepTrackingEnabled) ...[_buildSleepSummaryCard()],
+                if (viewModel.pulseTrackingEnabled) ...[_buildPulseSummaryCard()],
                 // New section: insert workout summary here.
-                if (_workoutSummary != null) ...[
+                if (viewModel.workoutSummary != null) ...[
                   TodaysWorkoutSummaryCard(
-                    duration: _workoutSummary!['duration'] as Duration,
-                    volume: _workoutSummary!['volume'] as double,
-                    sets: _workoutSummary!['sets'] as int,
-                    workoutCount: _workoutSummary!['count'] as int,
+                    duration: viewModel.workoutSummary!['duration'] as Duration,
+                    volume: viewModel.workoutSummary!['volume'] as double,
+                    sets: viewModel.workoutSummary!['sets'] as int,
+                    workoutCount: viewModel.workoutSummary!['count'] as int,
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -1299,7 +687,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildStepsSummaryCard() {
-    if (_isStepsWidgetLoading) {
+    if (viewModel.isStepsWidgetLoading) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: SummaryCard(
@@ -1320,7 +708,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         ),
       );
     }
-    if ((_stepsForSelectedDay ?? 0) <= 0) {
+    if ((viewModel.stepsForSelectedDay ?? 0) <= 0) {
       return const SizedBox.shrink();
     }
     final theme = Theme.of(context);
@@ -1332,7 +720,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             MaterialPageRoute(
               builder: (_) => StepsModuleScreen(
                 initialScope: StepsScope.day,
-                initialDate: _selectedDate,
+                initialDate: viewModel.selectedDate,
               ),
             ),
           );
@@ -1340,9 +728,9 @@ class DiaryScreenState extends State<DiaryScreen> {
         child: GlassProgressBar(
           label: 'Steps',
           unit: 'steps',
-          value: (_stepsForSelectedDay ?? 0).toDouble(),
-          target: (_targetSteps > 0
-                  ? _targetSteps
+          value: (viewModel.stepsForSelectedDay ?? 0).toDouble(),
+          target: (viewModel.targetSteps > 0
+                  ? viewModel.targetSteps
                   : StepsSyncService.defaultStepsGoal)
               .toDouble(),
           color: theme.colorScheme.primary,
@@ -1354,7 +742,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildSleepSummaryCard() {
-    if (_isSleepWidgetLoading) {
+    if (viewModel.isSleepWidgetLoading) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: SummaryCard(
@@ -1376,7 +764,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         ),
       );
     }
-    final overview = _sleepOverview;
+    final overview = viewModel.sleepOverview;
     if (overview == null) {
       return const SizedBox.shrink();
     }
@@ -1385,7 +773,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final scoreText = score == null ? '--' : score.round().toString();
     return SummaryCard(
       margin: const EdgeInsets.symmetric(vertical: 4.0),
-      onTap: () => SleepNavigation.openDayForDate(context, _selectedDate),
+      onTap: () => SleepNavigation.openDayForDate(context, viewModel.selectedDate),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
@@ -1427,7 +815,7 @@ class DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildPulseSummaryCard() {
-    if (_isPulseWidgetLoading) {
+    if (viewModel.isPulseWidgetLoading) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: SummaryCard(
@@ -1449,7 +837,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         ),
       );
     }
-    final summary = _pulseSummary;
+    final summary = viewModel.pulseSummary;
     if (summary == null || !summary.hasData) {
       return const SizedBox.shrink();
     }
@@ -1467,7 +855,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => PulseAnalysisScreen(
-              initialDate: _selectedDate,
+              initialDate: viewModel.selectedDate,
               initialScope: SleepPeriodScope.day,
             ),
           ),
@@ -1560,11 +948,11 @@ class DiaryScreenState extends State<DiaryScreen> {
                         MaterialPageRoute(
                           builder: (_) => AiRecommendationScreen(
                             mealType: mealKey,
-                            date: _selectedDate,
+                            date: viewModel.selectedDate,
                           ),
                         ),
                       );
-                      if (result == true) loadDataForDate(_selectedDate);
+                      if (result == true) viewModel.loadDataForDate(viewModel.selectedDate);
                     },
                     tooltip: 'AI Recommend',
                   ),
@@ -1582,10 +970,10 @@ class DiaryScreenState extends State<DiaryScreen> {
           if (items.isNotEmpty) ...[
             const SizedBox(height: 4),
             AppMetadataRow(items: [
-              '${macros.calories} kcal',
-              '${macros.protein}g P',
-              '${macros.carbs}g C',
-              '${macros.fat}g F',
+              '${macros.calories.round()} kcal',
+              '${macros.protein.round()}g P',
+              '${macros.carbs.round()}g C',
+              '${macros.fat.round()}g F',
             ]),
           ],
 
@@ -1622,7 +1010,7 @@ class DiaryScreenState extends State<DiaryScreen> {
           children: [
             FluidDialogContent(
               key: key,
-              initialTimestamp: _selectedDate.withCurrentTime,
+              initialTimestamp: viewModel.selectedDate.withCurrentTime,
             ),
             const SizedBox(height: 12),
             // ... (rest of the method stays the same: buttons row, etc.)
@@ -1640,7 +1028,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                     onPressed: () async {
                       final state = key.currentState;
                       if (state == null) return;
-                      final diaryDate = _selectedDate;
+                      final diaryDate = viewModel.selectedDate;
                       final quantity = int.tryParse(state.quantityText);
                       if (quantity == null || quantity <= 0) return;
 
@@ -1673,7 +1061,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                         if (caffeinePer100ml != null && caffeinePer100ml > 0) {
                           final totalCaffeine =
                               (caffeinePer100ml / 100.0) * quantity;
-                          await _logCaffeineDose(
+                          await context.read<DiaryViewModel>().logCaffeineDose(
                             totalCaffeine,
                             state.selectedDateTime,
                             fluidEntryId: newId,
@@ -1689,7 +1077,7 @@ class DiaryScreenState extends State<DiaryScreen> {
 
                       close();
                       if (!mounted) return;
-                      loadDataForDate(diaryDate, queueIfInFlight: true);
+                      context.read<DiaryViewModel>().loadDataForDate(diaryDate, queueIfInFlight: true);
                     },
                     child: Text(l10n.add_button),
                   ),
@@ -1718,14 +1106,14 @@ class DiaryScreenState extends State<DiaryScreen> {
             return _buildFluidsCard(l10n);
           }
 
-          final entries = _entriesByMeal[mealKey] ?? [];
+          final entries = viewModel.entriesByMeal[mealKey] ?? [];
           final mealMacros = _MealMacros();
           for (var item in entries) {
             final factor = item.entry.quantityInGrams / 100.0;
-            mealMacros.calories += (item.item.calories * factor).round();
-            mealMacros.protein += (item.item.protein * factor).round();
-            mealMacros.carbs += (item.item.carbs * factor).round();
-            mealMacros.fat += (item.item.fat * factor).round();
+            mealMacros.calories += (item.item.calories * factor).toDouble();
+            mealMacros.protein += (item.item.protein * factor).toDouble();
+            mealMacros.carbs += (item.item.carbs * factor).toDouble();
+            mealMacros.fat += (item.item.fat * factor).toDouble();
           }
 
           return _buildMealCard(
@@ -1773,7 +1161,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             ),
           ),
           // Summary row — always visible, above the expand/collapse section
-          if (_fluidEntries.isNotEmpty) ...[
+          if (viewModel.fluidEntries.isNotEmpty) ...[
             const SizedBox(height: 4),
             Builder(
               builder: (ctx) {
@@ -1781,7 +1169,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                 int totalKcal = 0;
                 double totalSugar = 0;
                 double totalCaffeine = 0;
-                for (var entry in _fluidEntries) {
+                for (var entry in viewModel.fluidEntries) {
                   totalMl += entry.quantityInMl;
                   if (entry.kcal != null) totalKcal += entry.kcal!;
                   if (entry.sugarPer100ml != null) {
@@ -1809,8 +1197,8 @@ class DiaryScreenState extends State<DiaryScreen> {
             duration: DesignConstants.expandCollapseDuration,
             firstChild: Column(
               children: [
-                if (_fluidEntries.isNotEmpty) const Divider(height: 16),
-                ..._fluidEntries.map(
+                if (viewModel.fluidEntries.isNotEmpty) const Divider(height: 16),
+                ...viewModel.fluidEntries.map(
                   (entry) => _buildFluidEntryTile(l10n, entry),
                 ),
               ],
@@ -1948,7 +1336,7 @@ class DiaryScreenState extends State<DiaryScreen> {
                         FoodDetailScreen(trackedItem: trackedItem),
                   ),
                 )
-                .then((_) => loadDataForDate(_selectedDate));
+                .then((_) => context.read<DiaryViewModel>().loadDataForDate(context.read<DiaryViewModel>().selectedDate));
           },
         ),
       ),
@@ -1972,15 +1360,39 @@ class DiaryScreenState extends State<DiaryScreen> {
 }
 
 class _MealMacros {
-  int calories = 0;
-  int protein = 0;
-  int carbs = 0;
-  int fat = 0;
+  double calories = 0;
+  double protein = 0;
+  double carbs = 0;
+  double fat = 0;
 }
 
-class DiaryAppBar extends StatelessWidget {
-  final ValueNotifier<DateTime>? selectedDateNotifier;
-  const DiaryAppBar({super.key, required this.selectedDateNotifier});
+class DiaryAppBar extends StatefulWidget {
+  final GlobalKey<DiaryScreenState> diaryKey;
+  const DiaryAppBar({super.key, required this.diaryKey});
+
+  @override
+  State<DiaryAppBar> createState() => _DiaryAppBarState();
+}
+
+class _DiaryAppBarState extends State<DiaryAppBar> {
+  ValueNotifier<DateTime>? _notifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkNotifier();
+  }
+
+  void _checkNotifier() {
+    final notifier = widget.diaryKey.currentState?.selectedDateNotifier;
+    if (notifier != null) {
+      setState(() => _notifier = notifier);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _checkNotifier();
+      });
+    }
+  }
 
   String _getAppBarTitle(
     BuildContext context,
@@ -1994,9 +1406,9 @@ class DiaryAppBar extends StatelessWidget {
     if (selectedDate.isSameDate(today)) {
       return l10n.today;
     } else if (selectedDate.isSameDate(yesterday)) {
-      return l10n.yesterday; // ← NEW
+      return l10n.yesterday;
     } else if (selectedDate.isSameDate(dayBeforeYesterday)) {
-      return l10n.dayBeforeYesterday; // ← NEW
+      return l10n.dayBeforeYesterday;
     } else {
       return DateFormat.yMMMMd(
         Localizations.localeOf(context).toString(),
@@ -2008,12 +1420,11 @@ class DiaryAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    // Gracefully handle the case where the notifier might be null during the first frame
-    if (selectedDateNotifier == null) {
+    if (_notifier == null) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Text(
-          l10n.today, // Default to 'Today'
+          l10n.today,
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
@@ -2022,7 +1433,7 @@ class DiaryAppBar extends StatelessWidget {
     }
 
     return ValueListenableBuilder<DateTime>(
-      valueListenable: selectedDateNotifier!,
+      valueListenable: _notifier!,
       builder: (context, selectedDate, child) {
         final title = _getAppBarTitle(context, l10n, selectedDate);
         return Padding(

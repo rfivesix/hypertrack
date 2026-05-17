@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/screens/diary_screen.dart';
+import 'package:train_libre/screens/diary_view_model.dart';
 import 'package:train_libre/util/date_util.dart';
 
 void main() {

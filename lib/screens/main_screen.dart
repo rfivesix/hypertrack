@@ -787,8 +787,7 @@ class _MainScreenState extends State<MainScreen>
           automaticallyImplyLeading: false,
           titleSpacing: 0,
           titleWidget: DiaryAppBar(
-            selectedDateNotifier:
-                _tagebuchKey.currentState?.selectedDateNotifier,
+            diaryKey: _tagebuchKey,
           ),
           actions: [
             IconButton(
@@ -1083,7 +1082,7 @@ class _MainScreenState extends State<MainScreen>
             children: <Widget>[
               KeepAlivePage(
                 storageKey: const PageStorageKey('tab_tagebuch'),
-                child: DiaryScreen(key: _tagebuchKey),
+                child: DiaryScreen(contentKey: _tagebuchKey),
               ),
               const KeepAlivePage(
                 storageKey: PageStorageKey('tab_workout'),
