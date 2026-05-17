@@ -2210,6 +2210,30 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @settingsUpdateFoodDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Food Database'**
+  String get settingsUpdateFoodDatabase;
+
+  /// No description provided for @settingsUpdateFoodDatabaseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates to the Open Food Facts database manually.'**
+  String get settingsUpdateFoodDatabaseSubtitle;
+
+  /// No description provided for @settingsUpdateFoodDatabaseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Food database successfully updated.'**
+  String get settingsUpdateFoodDatabaseSuccess;
+
+  /// No description provided for @settingsUpdateFoodDatabaseError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating database: {error}'**
+  String settingsUpdateFoodDatabaseError(String error);
+
   /// No description provided for @settingsGuidedTourSectionTitle.
   ///
   /// In en, this message translates to:

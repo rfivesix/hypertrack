@@ -1239,6 +1239,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get settingsUpdateFoodDatabase => 'Update Food Database';
+
+  @override
+  String get settingsUpdateFoodDatabaseSubtitle =>
+      'Check for updates to the Open Food Facts database manually.';
+
+  @override
+  String get settingsUpdateFoodDatabaseSuccess =>
+      'Food database successfully updated.';
+
+  @override
+  String settingsUpdateFoodDatabaseError(String error) {
+    return 'Error updating database: $error';
+  }
+
+  @override
   String get settingsGuidedTourSectionTitle => 'Guided tour';
 
   @override

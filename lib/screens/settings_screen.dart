@@ -514,6 +514,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          _buildNavigationCard(
+            context: context,
+            icon: Icons.sync,
+            title: l10n.settingsUpdateFoodDatabase,
+            subtitle: l10n.settingsUpdateFoodDatabaseSubtitle,
+            tileKey: const Key('settings_sync_off_database'),
+            onTap: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AppInitializerScreen(
+                    forceUpdate: true,
+                    isModal: true,
+                  ),
+                ),
+              );
+
+              if (result == true && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.settingsUpdateFoodDatabaseSuccess)),
+                );
+              }
+            },
+          ),
           SummaryCard(
             child: ListTile(
               leading: Icon(

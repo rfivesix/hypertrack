@@ -17,6 +17,7 @@ import '../services/base_food_language_service.dart';
 import '../services/exercise_catalog_refresh_service.dart';
 import '../services/off_catalog_country_service.dart';
 import '../services/off_catalog_refresh_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 // Type definition for the callback
 typedef ProgressCallback = void Function(
@@ -181,6 +182,21 @@ class BasisDataManager {
       legacyAssetPath: AppDataSources.legacyFoodCategoriesAssetDbPath,
     );
 
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentAppVersion = packageInfo.version;
+    final lastDbSyncAppVersion = prefs.getString('last_db_sync_app_version');
+
+    final bool shouldSyncOff = force || currentAppVersion != lastDbSyncAppVersion;
+
+    if (!shouldSyncOff) {
+      onProgress?.call(
+        'Produktdatenbank (${activeOffCountry.upperCode})',
+        'OFF-Datenbank ist aktuell (Version: $currentAppVersion).',
+        1.0,
+      );
+      return;
+    }
+
     String? remoteOffDbPath;
     final installedOffVersion = prefs.getString(activeOffVersionKey) ?? '0';
     try {
@@ -232,6 +248,22 @@ class BasisDataManager {
       sourceFilePath: remoteOffDbPath,
       legacyAssetPath: activeOffSource.legacyBundledAssetDbPath,
       enableOffReplacementRetention: true,
+    );
+
+    await prefs.setString('last_db_sync_app_version', currentAppVersion);
+  }
+
+  /// Exposes a public method that bypasses the version check for manual triggers.
+  Future<void> forceSyncDatabase({
+    ProgressCallback? onProgress,
+    RemoteCatalogProgressCallback? onRemoteProgress,
+    RemoteCatalogSkipRequested? isRemoteSkipRequested,
+  }) async {
+    await checkForBasisDataUpdate(
+      force: true,
+      onProgress: onProgress,
+      onRemoteProgress: onRemoteProgress,
+      isRemoteSkipRequested: isRemoteSkipRequested,
     );
   }
 

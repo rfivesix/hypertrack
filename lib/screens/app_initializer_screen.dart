@@ -17,7 +17,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// It handles database updates, auto-backup checks, and determines
 /// whether to navigate to [OnboardingScreen] or [MainScreen].
 class AppInitializerScreen extends StatefulWidget {
-  const AppInitializerScreen({super.key});
+  final bool forceUpdate;
+  final bool isModal;
+
+  const AppInitializerScreen({
+    super.key,
+    this.forceUpdate = false,
+    this.isModal = false,
+  });
 
   @override
   State<AppInitializerScreen> createState() => _AppInitializerScreenState();
@@ -42,11 +49,13 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
   }
 
   Future<void> _initialize() async {
-    await _prepareCoreServices();
+    if (!widget.isModal) {
+      await _prepareCoreServices();
+    }
 
     // 1) Run basis-data update checks and stream progress to the UI.
     await BasisDataManager.instance.checkForBasisDataUpdate(
-      force: false,
+      force: widget.forceUpdate,
       onProgress: (task, detail, progress) {
         if (!mounted) return;
         setState(() {
@@ -80,6 +89,13 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
         _progress = 1.0;
         _canSkipRemoteCatalog = false;
       });
+    }
+
+    if (widget.isModal) {
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+      return;
     }
 
     // 2) Trigger due auto-backup checks.

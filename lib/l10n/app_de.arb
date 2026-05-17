@@ -487,6 +487,17 @@
   "profile_capslock":"PROFIL",
   "settings_capslock":"EINSTELLUNGEN",
   "settingsTitle":"Einstellungen",
+  "settingsUpdateFoodDatabase": "Lebensmittel-Datenbank aktualisieren",
+  "settingsUpdateFoodDatabaseSubtitle": "Manuell nach Updates für die Open Food Facts Datenbank suchen.",
+  "settingsUpdateFoodDatabaseSuccess": "Lebensmittel-Datenbank erfolgreich aktualisiert.",
+  "settingsUpdateFoodDatabaseError": "Fehler beim Aktualisieren: {error}",
+  "@settingsUpdateFoodDatabaseError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGuidedTourSectionTitle": "Geführte Tour",
   "settingsRestartAppTourTitle": "App-Tour neu starten",
   "settingsRestartAppTourSubtitle": "Starte die kurze Orientierung durch die App erneut.",

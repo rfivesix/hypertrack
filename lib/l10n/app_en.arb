@@ -487,6 +487,17 @@
   "profile_capslock":"PROFILE",
   "settings_capslock":"SETTINGS",
   "settingsTitle":"Settings",
+  "settingsUpdateFoodDatabase": "Update Food Database",
+  "settingsUpdateFoodDatabaseSubtitle": "Check for updates to the Open Food Facts database manually.",
+  "settingsUpdateFoodDatabaseSuccess": "Food database successfully updated.",
+  "settingsUpdateFoodDatabaseError": "Error updating database: {error}",
+  "@settingsUpdateFoodDatabaseError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGuidedTourSectionTitle": "Guided tour",
   "settingsRestartAppTourTitle": "Restart app tour",
   "settingsRestartAppTourSubtitle": "Run the short in-app walkthrough again.",
