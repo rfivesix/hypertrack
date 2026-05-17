@@ -8,6 +8,8 @@ import 'package:train_libre/features/nutrition_recommendation/data/recommendatio
 import 'package:train_libre/generated/app_localizations.dart';
 import 'package:train_libre/screens/goals_screen.dart';
 import 'package:train_libre/screens/onboarding_screen.dart';
+import 'package:train_libre/services/unit_service.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -40,15 +42,24 @@ void main() {
       await database.close();
     });
 
+    Widget wrapWithProviders(Widget child) {
+      return ChangeNotifierProvider<UnitService>(
+        create: (_) => UnitService(),
+        child: child,
+      );
+    }
+
     testWidgets('goals screen keeps adaptive sections above daily goals',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: GoalsScreen(
-            recommendationService: recommendationService,
-            databaseHelper: dbHelper,
+        wrapWithProviders(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: GoalsScreen(
+              recommendationService: recommendationService,
+              databaseHelper: dbHelper,
+            ),
           ),
         ),
       );
@@ -91,12 +102,14 @@ void main() {
         'onboarding flow includes dedicated body-fat page after bodyweight',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: OnboardingScreen(
-            recommendationService: recommendationService,
-            databaseHelper: dbHelper,
+        wrapWithProviders(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: OnboardingScreen(
+              recommendationService: recommendationService,
+              databaseHelper: dbHelper,
+            ),
           ),
         ),
       );
@@ -105,6 +118,11 @@ void main() {
       await tester
           .tap(find.byKey(const Key('onboarding_continue_setup_button')));
       await tester.pumpAndSettle();
+
+      // Now on page 1: Unit System. Need to tap Next to go to Profile.
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+
       await tester.enterText(
         find.byKey(const Key('onboarding_name_text_field')),
         'Alex',
@@ -144,12 +162,14 @@ void main() {
         'onboarding body-fat help opens guidance and shows male/female texts',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: OnboardingScreen(
-            recommendationService: recommendationService,
-            databaseHelper: dbHelper,
+        wrapWithProviders(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: OnboardingScreen(
+              recommendationService: recommendationService,
+              databaseHelper: dbHelper,
+            ),
           ),
         ),
       );
@@ -157,6 +177,10 @@ void main() {
 
       await tester
           .tap(find.byKey(const Key('onboarding_continue_setup_button')));
+      await tester.pumpAndSettle();
+
+      // Now on page 1: Unit System. Need to tap Next to go to Profile.
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -192,12 +216,14 @@ void main() {
         'prior activity dropdowns include the very-high activity option',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: OnboardingScreen(
-            recommendationService: recommendationService,
-            databaseHelper: dbHelper,
+        wrapWithProviders(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: OnboardingScreen(
+              recommendationService: recommendationService,
+              databaseHelper: dbHelper,
+            ),
           ),
         ),
       );
@@ -209,6 +235,11 @@ void main() {
       await tester
           .tap(find.byKey(const Key('onboarding_continue_setup_button')));
       await tester.pumpAndSettle();
+
+      // Now on page 1: Unit System. Need to tap Next to go to Profile.
+      await tester.tap(find.byKey(const Key('onboarding_bottom_next_button')));
+      await tester.pumpAndSettle();
+
       await tester.enterText(
         find.byKey(const Key('onboarding_name_text_field')),
         'Alex',
@@ -230,12 +261,14 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: GoalsScreen(
-            recommendationService: recommendationService,
-            databaseHelper: dbHelper,
+        wrapWithProviders(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: GoalsScreen(
+              recommendationService: recommendationService,
+              databaseHelper: dbHelper,
+            ),
           ),
         ),
       );
@@ -251,12 +284,14 @@ void main() {
 
     testWidgets('onboarding final page shows finish action', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: OnboardingScreen(
-            recommendationService: recommendationService,
-            databaseHelper: dbHelper,
+        wrapWithProviders(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: OnboardingScreen(
+              recommendationService: recommendationService,
+              databaseHelper: dbHelper,
+            ),
           ),
         ),
       );
@@ -268,6 +303,10 @@ void main() {
 
       await tester
           .tap(find.byKey(const Key('onboarding_continue_setup_button')));
+      await tester.pumpAndSettle();
+
+      // Now on page 1: Unit System. Need to tap Next to go to Profile.
+      await tester.tap(nextButton);
       await tester.pumpAndSettle();
 
       await tester.enterText(

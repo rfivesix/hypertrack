@@ -26,6 +26,7 @@ import 'package:train_libre/screens/measurements_screen.dart';
 import 'package:train_libre/screens/statistics_hub_screen.dart';
 import 'package:train_libre/services/health/steps_sync_service.dart';
 import 'package:train_libre/services/theme_service.dart';
+import 'package:train_libre/services/unit_service.dart';
 import 'package:train_libre/services/workout_session_manager.dart';
 import 'package:train_libre/widgets/analytics_section_header.dart';
 import 'package:provider/provider.dart';
@@ -515,6 +516,7 @@ void main() {
           value: WorkoutSessionManager(),
         ),
         ChangeNotifierProvider<ThemeService>(create: (_) => ThemeService()),
+        ChangeNotifierProvider<UnitService>(create: (_) => UnitService()),
       ],
       child: child,
     );

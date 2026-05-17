@@ -78,14 +78,14 @@ void main() {
             endAtUtc: DateTime.utc(2026, 3, 26, 11),
             stepCount: 400,
             sourceId: 'watch',
-            nativeId: 'native-a-new',
+            nativeId: 'native-a',
           ),
           HealthStepSegmentDto(
             startAtUtc: DateTime.utc(2026, 3, 26, 11),
             endAtUtc: DateTime.utc(2026, 3, 26, 12),
             stepCount: 600,
             sourceId: 'watch',
-            nativeId: 'native-b-new',
+            nativeId: 'native-b',
           ),
         ];
 

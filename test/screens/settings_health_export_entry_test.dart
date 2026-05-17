@@ -8,6 +8,7 @@ import 'package:train_libre/generated/app_localizations.dart';
 import 'package:train_libre/screens/health_export_settings_screen.dart';
 import 'package:train_libre/screens/settings_screen.dart';
 import 'package:train_libre/services/theme_service.dart';
+import 'package:train_libre/services/unit_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,8 +62,11 @@ class _FakeSleepSettingsService implements SleepSettingsService {
 }
 
 Widget _wrap(Widget child) {
-  return ChangeNotifierProvider(
-    create: (_) => ThemeService(),
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => ThemeService()),
+      ChangeNotifierProvider(create: (_) => UnitService()),
+    ],
     child: MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
