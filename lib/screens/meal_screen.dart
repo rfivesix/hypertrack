@@ -10,6 +10,7 @@ import '../models/supplement.dart';
 import '../models/supplement_log.dart';
 import '../services/haptic_feedback_service.dart';
 import 'food_detail_screen.dart';
+import '../widgets/common/common.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_fab.dart';
 import '../widgets/global_app_bar.dart';
@@ -104,18 +105,7 @@ class _MealScreenState extends State<MealScreen> {
     _totalP = p;
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +238,7 @@ class _MealScreenState extends State<MealScreen> {
                 const SizedBox(height: 18),
 
                 // === Nutrients (total sum) ===
-                _buildSectionTitle(context, l10n.nutritionSectionLabel),
+                AppSectionHeader(title: l10n.nutritionSectionLabel),
                 SummaryCard(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -304,7 +294,7 @@ class _MealScreenState extends State<MealScreen> {
                 const SizedBox(height: 18),
 
                 // === Ingredients ===
-                _buildSectionTitle(context, l10n.ingredientsCapsLock),
+                AppSectionHeader(title: l10n.ingredientsCapsLock),
 
                 if (_items.isEmpty)
                   Padding(

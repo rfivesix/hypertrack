@@ -8,7 +8,7 @@ import '../services/ai_service.dart';
 import '../services/theme_service.dart';
 import '../theme/color_constants.dart';
 import '../util/design_constants.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 
@@ -243,7 +243,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                 top: DesignConstants.cardPadding.top + topPadding,
               ),
               children: [
-                _buildSectionTitle(context, l10n.aiSettingsInstructionTitle),
+                AppSectionHeader(title: l10n.aiSettingsInstructionTitle),
                 SummaryCard(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -282,7 +282,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
 
-                _buildSectionTitle(context, l10n.aiSettingsTitle),
+                AppSectionHeader(title: l10n.aiSettingsTitle),
                 SummaryCard(
                   child: Padding(
                     padding: const EdgeInsets.all(14),
@@ -455,7 +455,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                 const SizedBox(height: DesignConstants.spacingXL),
 
                 // --- Privacy Disclosure ---
-                _buildSectionTitle(context, l10n.aiPrivacySection),
+                AppSectionHeader(title: l10n.aiPrivacySection),
                 SummaryCard(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -483,7 +483,5 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title.toUpperCase());
-  }
+
 }

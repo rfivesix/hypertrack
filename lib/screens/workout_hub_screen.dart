@@ -12,6 +12,7 @@ import 'routines_screen.dart';
 import 'workout_history_screen.dart';
 import '../util/design_constants.dart';
 import '../widgets/bottom_content_spacer.dart';
+import '../widgets/common/common.dart';
 import '../widgets/summary_card.dart';
 
 /// The central management screen for all workout-related activities.
@@ -123,7 +124,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
             child: ListView(
               padding: finalPadding,
               children: [
-                _buildSectionTitle(context, l10n.workoutSectionStart),
+                AppSectionHeader(title: l10n.workoutSectionStart),
                 SummaryCard(
                   child: InkWell(
                     onTap: _startEmptyWorkout,
@@ -147,9 +148,9 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                   ),
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.workoutSectionMyPlans),
+                AppSectionHeader(title: l10n.workoutSectionMyPlans),
                 SizedBox(
-                  height: 150,
+                  height: 160,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     clipBehavior: Clip.none,
@@ -178,7 +179,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
                       .then((_) => _loadData()),
                 ),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.workoutSectionHistoryLibrary),
+                AppSectionHeader(title: l10n.workoutSectionHistoryLibrary),
                 _buildNavigationTile(
                   context: context,
                   icon: Icons.history,
@@ -237,18 +238,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 
   Widget _buildRoutineCard(BuildContext context, Routine routine) {
     final screenWidth = MediaQuery.of(context).size.width;

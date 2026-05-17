@@ -22,7 +22,7 @@ void main() {
           body: StatisticsStepsCard(
             onTap: () {},
             title: 'Schritte',
-            subtitle: 'Letzte 7 Tage • Withings',
+            chipText: 'Letzte 7 Tage • Withings',
             currentSteps: 3388,
             currentStepsSubtitle: 'Heute',
             dailyTotals: buckets,
@@ -47,7 +47,7 @@ void main() {
           body: StatisticsStepsCard(
             onTap: () => tapped = true,
             title: 'Schritte',
-            subtitle: 'Letzte 7 Tage • Local',
+            chipText: 'Letzte 7 Tage • Local',
             currentSteps: 1200,
             currentStepsSubtitle: 'Heute',
             dailyTotals: buckets,

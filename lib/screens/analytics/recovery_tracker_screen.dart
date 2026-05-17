@@ -8,7 +8,7 @@ import '../../features/statistics/domain/recovery_payload_models.dart';
 import '../../features/statistics/presentation/statistics_formatter.dart';
 import '../../generated/app_localizations.dart';
 import '../../util/design_constants.dart';
-import '../../widgets/analytics_section_header.dart';
+import '../../widgets/common/app_section_header.dart';
 import '../../widgets/analytics_chart_defaults.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/muscle_radar_chart.dart';
@@ -265,7 +265,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AnalyticsSectionHeader(
+                  AppSectionHeader(
                     title: l10n.metricsMuscleReadiness,
                     padding: const EdgeInsets.only(left: 4, bottom: 6),
                   ),
@@ -385,7 +385,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                     ),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  AnalyticsSectionHeader(
+                  AppSectionHeader(
                     title: l10n.analyticsRecentDistributionHeatmap,
                     padding: const EdgeInsets.only(left: 4, bottom: 6),
                   ),
@@ -425,7 +425,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                     ),
                   ),
                   const SizedBox(height: DesignConstants.spacingM),
-                  AnalyticsSectionHeader(
+                  AppSectionHeader(
                     title: l10n.recoveryByMuscleTitle,
                     padding: const EdgeInsets.only(left: 4, bottom: 6),
                   ),

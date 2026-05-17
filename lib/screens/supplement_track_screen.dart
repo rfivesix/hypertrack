@@ -12,8 +12,10 @@ import 'manage_supplements_screen.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
 import '../util/supplement_l10n.dart';
+import '../widgets/common/common.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/glass_fab.dart';
+import '../widgets/glass_progress_bar.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/swipe_action_background.dart';
@@ -252,86 +254,28 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
     );
   }
 
-  Widget _sectionTitle(String title) => Padding(
-        padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-      );
+
 
   Widget _progressCard(TrackedSupplement ts) {
     final s = ts.supplement;
     final isLimit = s.dailyLimit != null;
     final target = (isLimit ? s.dailyLimit : s.dailyGoal) ?? 0.0;
     final overTarget = isLimit && ts.totalDosedToday > target;
-    final hasTarget = target > 0;
-    final progress =
-        hasTarget ? (ts.totalDosedToday / target).clamp(0.0, 1.0) : 0.0;
-    final color = overTarget ? Colors.red.shade400 : Colors.green.shade400;
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
-    return Container(
-      height: 60,
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: progress,
-                child: Container(color: color),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 4.0,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      localizeSupplementName(s, l10n),
-                      maxLines: 1,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    hasTarget
-                        ? '${ts.totalDosedToday.toStringAsFixed(1)} / ${target.toStringAsFixed(1)} ${s.unit}'
-                        : '${ts.totalDosedToday.toStringAsFixed(1)} ${s.unit}',
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+    final color = overTarget
+        ? theme.colorScheme.error
+        : theme.colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: GlassProgressBar(
+        label: localizeSupplementName(s, l10n),
+        unit: s.unit,
+        value: ts.totalDosedToday,
+        target: target,
+        color: color,
       ),
     );
   }
@@ -468,7 +412,7 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                   const SizedBox(height: DesignConstants.spacingL),
 
                   // Progress section
-                  _sectionTitle(l10n.dailyProgressTitle),
+                  AppSectionHeader(title: l10n.dailyProgressTitle),
                   if (_tracked
                       .where(
                         (t) =>
@@ -494,13 +438,13 @@ class _SupplementTrackScreenState extends State<SupplementTrackScreen> {
                   const SizedBox(height: DesignConstants.spacingXL),
 
                   // Log intake
-                  _sectionTitle(l10n.logIntakeTitle),
+                  AppSectionHeader(title: l10n.logIntakeTitle),
                   ..._tracked.map((t) => _logActionTile(t.supplement)),
 
                   const SizedBox(height: DesignConstants.spacingXL),
 
                   // Today's logs
-                  _sectionTitle(l10n.todaysLogTitle),
+                  AppSectionHeader(title: l10n.todaysLogTitle),
                   if (_todaysLogs.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),

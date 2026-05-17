@@ -1443,7 +1443,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onbFinishCta => 'Let’s go!';
 
   @override
-  String get onbShowTutorialAgain => 'Show tutorial again';
+  String get onbShowTutorialAgain => 'Show onboarding again';
 
   @override
   String get appTourOfferTitle => 'Take a quick app tour?';

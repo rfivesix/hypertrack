@@ -6,18 +6,20 @@ import 'summary_card.dart';
 class StatisticsStepsCard extends StatelessWidget {
   final VoidCallback? onTap;
   final String title;
-  final String subtitle;
+  final String? chipText;
   final int currentSteps;
   final String currentStepsSubtitle;
   final List<StepsBucket> dailyTotals;
   final int dailyGoal;
   final bool showChevron;
 
+  static const double _chipBackgroundOpacity = 0.12;
+
   const StatisticsStepsCard({
     super.key,
     this.onTap,
     required this.title,
-    required this.subtitle,
+    this.chipText,
     required this.currentSteps,
     required this.currentStepsSubtitle,
     required this.dailyTotals,
@@ -38,36 +40,50 @@ class StatisticsStepsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Header: label + pill chip + chevron (same as all hub cards)
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: Row(
                     children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.outline,
+                      if (chipText != null && chipText!.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(
+                              alpha: _chipBackgroundOpacity,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            chipText!,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ],
                   ),
                 ),
                 if (showChevron) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Icon(
                     Icons.chevron_right,
-                    size: 20,
+                    size: 18,
                     color: theme.colorScheme.outline,
                   ),
                 ],

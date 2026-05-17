@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../generated/app_localizations.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 import '../data/database_helper.dart';
 import '../features/nutrition_recommendation/data/recommendation_service.dart';
@@ -218,10 +219,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSectionTitle(
-                      context,
-                      l10n.personalDataCL,
+                    AppSectionHeader(
                       key: const Key('goals_personal_section_title'),
+                      title: l10n.personalDataCL,
                     ),
                     const SizedBox(height: DesignConstants.spacingM),
                     _buildSettingsField(
@@ -230,10 +230,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       fieldKey: const Key('goals_height_field'),
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    _buildSectionTitle(
-                      context,
-                      l10n.adaptiveBodyweightTargetSectionTitle,
+                    AppSectionHeader(
                       key: const Key('goals_adaptive_section_title'),
+                      title: l10n.adaptiveBodyweightTargetSectionTitle,
                     ),
                     const SizedBox(height: DesignConstants.spacingM),
                     DropdownButtonFormField<BodyweightGoal>(
@@ -284,12 +283,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       }).toList(growable: false),
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    _buildSectionTitle(
-                      context,
-                      l10n.adaptiveRecommendationSettingsSectionTitle,
+                    AppSectionHeader(
                       key: const Key(
                         'goals_recommendation_settings_section_title',
                       ),
+                      title: l10n.adaptiveRecommendationSettingsSectionTitle,
                     ),
                     const SizedBox(height: DesignConstants.spacingM),
                     DropdownButtonFormField<PriorActivityLevel>(
@@ -349,10 +347,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    _buildSectionTitle(
-                      context,
-                      l10n.profileDailyGoalsCL,
+                    AppSectionHeader(
                       key: const Key('goals_daily_section_title'),
+                      title: l10n.profileDailyGoalsCL,
                     ),
                     const SizedBox(height: DesignConstants.spacingM),
                     _buildSettingsField(
@@ -383,7 +380,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       label: l10n.steps,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-                    _buildSectionTitle(context, l10n.detailedNutrientGoalsCL),
+                    AppSectionHeader(title: l10n.detailedNutrientGoalsCL),
                     const SizedBox(height: DesignConstants.spacingM),
                     _buildSettingsField(
                       controller: _sugarController,
@@ -427,23 +424,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(
-    BuildContext context,
-    String title, {
-    Key? key,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        key: key,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 
   String _goalLabel(AppLocalizations l10n, BodyweightGoal goal) {
     switch (goal) {

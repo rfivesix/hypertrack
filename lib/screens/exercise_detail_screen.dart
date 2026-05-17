@@ -5,6 +5,7 @@ import '../models/set_log.dart';
 import '../models/chart_data_point.dart';
 import '../data/workout_database_helper.dart';
 import '../util/design_constants.dart';
+import '../widgets/common/common.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/global_app_bar.dart';
@@ -149,7 +150,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               const SizedBox(height: DesignConstants.spacingXL),
 
             // Beschreibung
-            _buildSectionTitle(context, l10n.descriptionLabel.toUpperCase()),
+            AppSectionHeader(title: l10n.descriptionLabel),
             SummaryCard(
               child: Padding(
                 padding: DesignConstants.cardPadding,
@@ -165,7 +166,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             const SizedBox(height: DesignConstants.spacingXL),
 
             // Muskeln
-            _buildSectionTitle(context, l10n.involvedMuscles.toUpperCase()),
+            AppSectionHeader(title: l10n.involvedMuscles),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -206,10 +207,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                 ),
               )
             else ...[
-              _buildSectionTitle(
-                context,
-                l10n.workoutHistoryButton.toUpperCase(),
-              ),
+              AppSectionHeader(title: l10n.workoutHistoryButton),
               _buildConsolidatedChart(l10n),
               const SizedBox(height: DesignConstants.spacingXL),
               _buildPRSummarySection(l10n),
@@ -242,7 +240,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(context, l10n.exerciseAnalyticsPrsLabel),
+        AppSectionHeader(title: l10n.exerciseAnalyticsPrsLabel),
         Wrap(
           spacing: 8.0,
           runSpacing: 8.0,
@@ -476,21 +474,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     );
   }
 
-  // -----------------------------
-  // Heading style
-  // -----------------------------
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
+
 }
 
 // -----------------------------

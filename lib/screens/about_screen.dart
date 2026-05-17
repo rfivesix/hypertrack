@@ -8,7 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../generated/app_localizations.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/global_app_bar.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/app_section_header.dart';
 import '../util/design_constants.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -69,8 +69,8 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: DesignConstants.spacingXXL),
-                  AnalyticsSectionHeader(
-                    title: l10n.about_section.toUpperCase(),
+                  AppSectionHeader(
+                    title: l10n.about_section,
                   ),
                   _buildInfoTile(
                     context,
@@ -132,7 +132,7 @@ class AboutScreen extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
           size: 28,
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
         trailing: const Icon(Icons.chevron_right),
       ),
     );
@@ -190,7 +190,7 @@ class _UsedPackagesScreen extends StatelessWidget {
                     child: ListTile(
                       title: Text(
                         package.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
                         '${package.entries.length} ${title.toLowerCase()}',

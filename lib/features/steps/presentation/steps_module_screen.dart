@@ -305,7 +305,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         );
         return StatisticsStepsCard(
           title: title,
-          subtitle: subtitle,
+          chipText: subtitle,
           currentSteps: data?.totalSteps ?? 0,
           currentStepsSubtitle: todayLabel,
           dailyTotals: [dayBucket],
@@ -317,7 +317,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         final subtitle = '${l10n.stepsModuleThisWeek} • $providerName';
         return StatisticsStepsCard(
           title: title,
-          subtitle: subtitle,
+          chipText: subtitle,
           currentSteps: data?.totalSteps ?? 0,
           currentStepsSubtitle: totalLabel,
           dailyTotals: data?.dailyTotals ?? const [],
@@ -329,7 +329,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         final subtitle = '${l10n.stepsModuleThisMonth} • $providerName';
         return StatisticsStepsCard(
           title: title,
-          subtitle: subtitle,
+          chipText: subtitle,
           currentSteps: data?.totalSteps ?? 0,
           currentStepsSubtitle: totalLabel,
           dailyTotals: data?.dailyTotals ?? const [],

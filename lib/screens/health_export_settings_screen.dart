@@ -8,7 +8,7 @@ import '../health_export/export_service.dart';
 import '../health_export/models/export_models.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
 
@@ -210,10 +210,7 @@ class _HealthExportSettingsScreenState
           top: DesignConstants.cardPadding.top + topPadding,
         ),
         children: [
-          _buildSectionTitle(
-            context,
-            l10n.healthExportTitle,
-          ),
+          AppSectionHeader(title: l10n.healthExportTitle),
           SummaryCard(
             child: Column(
               children: [
@@ -341,7 +338,5 @@ class _HealthExportSettingsScreenState
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return AnalyticsSectionHeader(title: title.toUpperCase());
-  }
+
 }

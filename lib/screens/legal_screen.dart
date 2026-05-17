@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../generated/app_localizations.dart';
 import '../widgets/global_app_bar.dart';
-import '../widgets/analytics_section_header.dart';
+import '../widgets/common/app_section_header.dart';
 import '../widgets/frosted_container.dart';
 import '../util/design_constants.dart';
 
@@ -144,7 +144,7 @@ class _LegalScreenState extends State<LegalScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AnalyticsSectionHeader(title: l10n.legal_notice.toUpperCase()),
+        AppSectionHeader(title: l10n.legal_notice),
         const SizedBox(height: DesignConstants.spacingS),
         FrostedContainer(
           margin: EdgeInsets.zero,
@@ -161,7 +161,7 @@ class _LegalScreenState extends State<LegalScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AnalyticsSectionHeader(title: l10n.privacy_policy.toUpperCase()),
+        AppSectionHeader(title: l10n.privacy_policy),
         const SizedBox(height: DesignConstants.spacingS),
         ...document.privacyPolicySections.map(_LegalAccordion.new),
       ],

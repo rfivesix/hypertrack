@@ -4,6 +4,7 @@ import '../data/workout_database_helper.dart';
 import '../models/exercise.dart';
 import '../generated/app_localizations.dart';
 import '../util/design_constants.dart';
+import '../widgets/common/common.dart';
 import '../widgets/global_app_bar.dart';
 
 /// A screen for creating custom exercises.
@@ -239,7 +240,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     const SizedBox(height: DesignConstants.spacingXL),
 
                     // --- Primary muscles ---
-                    _buildSectionTitle(context, l10n.primary_muscles_label),
+                    AppSectionHeader(title: l10n.primary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(
                       availableMuscles: _allMuscleGroups,
@@ -248,7 +249,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     const SizedBox(height: DesignConstants.spacingXL),
 
                     // --- Secondary muscles ---
-                    _buildSectionTitle(context, l10n.secondary_muscles_label),
+                    AppSectionHeader(title: l10n.secondary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(
                       availableMuscles: _allMuscleGroups,
@@ -263,15 +264,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Colors.grey[700],
-            fontWeight: FontWeight.bold,
-          ),
-    );
-  }
+
 
   Widget _buildMuscleSelector({
     required List<String> availableMuscles,

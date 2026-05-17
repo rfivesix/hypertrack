@@ -22,6 +22,7 @@ import 'food_detail_screen.dart';
 import 'supplement_track_screen.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
+import '../widgets/common/common.dart';
 import '../widgets/bottom_content_spacer.dart';
 import '../theme/color_constants.dart';
 import '../widgets/glass_bottom_menu.dart';
@@ -1240,7 +1241,7 @@ class DiaryScreenState extends State<DiaryScreen> {
             child: ListView(
               padding: finalPadding,
               children: [
-                _buildSectionTitle(context, l10n.today_overview_text),
+                AppSectionHeader(title: l10n.today_overview_text),
                 if (_dailyNutrition != null)
                   NutritionSummaryWidget(
                     nutritionData: _dailyNutrition!,
@@ -1282,10 +1283,10 @@ class DiaryScreenState extends State<DiaryScreen> {
                   ),
                 ],
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.protocol_today_capslock),
+                AppSectionHeader(title: l10n.protocol_today_capslock),
                 _buildTodaysLog(l10n),
                 const SizedBox(height: DesignConstants.spacingXL),
-                _buildSectionTitle(context, l10n.measurementWeightCapslock),
+                AppSectionHeader(title: l10n.measurementWeightCapslock),
                 _buildWeightChartCard(
                   context,
                   Theme.of(context).colorScheme,
@@ -1518,19 +1519,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     return '${hours}h ${minutes}m';
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0, top: 4.0),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
-            ),
-      ),
-    );
-  }
+  // Section headers now use the centralized AppSectionHeader widget.
 
   Widget _buildMealCard(
     String title,
@@ -1543,8 +1532,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.titleMedium;
 
-    return SummaryCard(
-      padding: const EdgeInsets.all(12),
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1593,25 +1581,19 @@ class DiaryScreenState extends State<DiaryScreen> {
           // <<< New: macro row below the title (own line, left aligned)
           if (items.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${macros.calories} kcal • '
-                '${macros.protein}g P • '
-                '${macros.carbs}g C • '
-                '${macros.fat}g F',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.textTheme.bodySmall?.color,
-                ),
-              ),
-            ),
+            AppMetadataRow(items: [
+              '${macros.calories} kcal',
+              '${macros.protein}g P',
+              '${macros.carbs}g C',
+              '${macros.fat}g F',
+            ]),
           ],
 
           // Content (animated expand/collapse)
           AnimatedCrossFade(
             crossFadeState:
                 isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-            duration: const Duration(milliseconds: 180),
+            duration: DesignConstants.expandCollapseDuration,
             firstChild: Column(
               children: [
                 if (items.isNotEmpty) const Divider(height: 16),
@@ -1763,8 +1745,7 @@ class DiaryScreenState extends State<DiaryScreen> {
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.titleMedium;
 
-    return SummaryCard(
-      padding: const EdgeInsets.all(12),
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1813,25 +1794,19 @@ class DiaryScreenState extends State<DiaryScreen> {
                   }
                 }
                 final l10n = AppLocalizations.of(ctx)!;
-                return Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '$totalKcal kcal • '
-                    '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar} • '
-                    '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine} • '
-                    '${totalMl}ml',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.bodySmall?.color,
-                    ),
-                  ),
-                );
+                return AppMetadataRow(items: [
+                  '$totalKcal kcal',
+                  '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar}',
+                  '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine}',
+                  '${totalMl}ml',
+                ]);
               },
             ),
           ],
           AnimatedCrossFade(
             crossFadeState:
                 isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-            duration: const Duration(milliseconds: 180),
+            duration: DesignConstants.expandCollapseDuration,
             firstChild: Column(
               children: [
                 if (_fluidEntries.isNotEmpty) const Divider(height: 16),
