@@ -1,6 +1,7 @@
 // lib/data/workout_database_helper.dart
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart' as drift;
 import 'database_helper.dart';
 import 'drift_database.dart' as db;
@@ -14,9 +15,33 @@ import '../features/statistics/domain/recovery_domain_service.dart';
 import '../util/muscle_analytics_utils.dart';
 import '../util/perf_debug_timer.dart';
 
+class MuscleAnalyticsBackgroundTaskParams {
+  final List<MuscleContributionRawData> rows;
+  final int daysBack;
+  final int weeksBack;
+  final DateTime now;
+
+  MuscleAnalyticsBackgroundTaskParams({
+    required this.rows,
+    required this.daysBack,
+    required this.weeksBack,
+    required this.now,
+  });
+}
+
+class MuscleContributionRawData {
+  final DateTime startTime;
+  final String? musclesPrimary;
+  final String? musclesSecondary;
+
+  MuscleContributionRawData({
+    required this.startTime,
+    this.musclesPrimary,
+    this.musclesSecondary,
+  });
+}
+
 /// Helper class for managing workout-specific data in the Drift database.
-///
-/// Handles routines, exercises, set templates, and historical workout logs.
 class WorkoutDatabaseHelper {
   /// Singleton instance of [WorkoutDatabaseHelper].
   static final WorkoutDatabaseHelper instance = WorkoutDatabaseHelper._init();
@@ -59,7 +84,7 @@ class WorkoutDatabaseHelper {
     return (row as dynamic)?.localId;
   }
 
-  List<String> _parseMuscleList(String? jsonStr) {
+  static List<String> _parseMuscleList(String? jsonStr) {
     if (jsonStr == null || jsonStr.isEmpty) return [];
     try {
       final decoded = jsonDecode(jsonStr);
@@ -1934,26 +1959,59 @@ class WorkoutDatabaseHelper {
 
     final rows = await query.get();
 
-    final contributions = <Map<String, dynamic>>[];
-
-    for (final row in rows) {
+    // Map QueryRows to simple data objects for Isolate transfer
+    final rawData = rows.map((row) {
       final logRow = row.readTable(dbInstance.workoutLogs);
       final exRow = row.readTableOrNull(dbInstance.exercises);
+      return MuscleContributionRawData(
+        startTime: logRow.startTime,
+        musclesPrimary: exRow?.musclesPrimary,
+        musclesSecondary: exRow?.musclesSecondary,
+      );
+    }).toList(growable: false);
 
+    final result = await compute(
+      _processMuscleGroupAnalyticsInBackground,
+      MuscleAnalyticsBackgroundTaskParams(
+        rows: rawData,
+        daysBack: daysBack,
+        weeksBack: weeksBack,
+        now: now,
+      ),
+    );
+
+    PerfDebugTimer.logDuration(
+      area: 'db',
+      label: 'getMuscleGroupAnalytics',
+      elapsed: stopwatch.elapsed,
+      fields: {
+        'rows': rows.length,
+        'range': '${daysBack}d',
+      },
+    );
+    return result;
+  }
+
+  static Map<String, dynamic> _processMuscleGroupAnalyticsInBackground(
+    MuscleAnalyticsBackgroundTaskParams params,
+  ) {
+    final contributions = <Map<String, dynamic>>[];
+
+    for (final row in params.rows) {
       final primary = <String>{
         ..._parseMuscleList(
-          exRow?.musclesPrimary,
+          row.musclesPrimary,
         ).map((m) => m.trim()).where((m) => m.isNotEmpty),
       };
       final secondary = <String>{
         ..._parseMuscleList(
-          exRow?.musclesSecondary,
+          row.musclesSecondary,
         ).map((m) => m.trim()).where((m) => m.isNotEmpty),
       }..removeAll(primary);
 
       if (primary.isEmpty && secondary.isEmpty) {
         contributions.add({
-          'day': logRow.startTime,
+          'day': row.startTime,
           'muscleGroup': 'Other',
           'equivalentSets': 1.0,
         });
@@ -1962,7 +2020,7 @@ class WorkoutDatabaseHelper {
 
       for (final muscle in primary) {
         contributions.add({
-          'day': logRow.startTime,
+          'day': row.startTime,
           'muscleGroup': muscle,
           'equivalentSets': 1.0,
         });
@@ -1970,30 +2028,19 @@ class WorkoutDatabaseHelper {
 
       for (final muscle in secondary) {
         contributions.add({
-          'day': logRow.startTime,
+          'day': row.startTime,
           'muscleGroup': muscle,
           'equivalentSets': 0.5,
         });
       }
     }
 
-    final result = MuscleAnalyticsUtils.buildSummary(
+    return MuscleAnalyticsUtils.buildSummary(
       contributions: contributions,
-      daysBack: daysBack,
-      weeksBack: weeksBack,
-      now: now,
+      daysBack: params.daysBack,
+      weeksBack: params.weeksBack,
+      now: params.now,
     );
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getMuscleGroupAnalytics',
-      elapsed: stopwatch.elapsed,
-      fields: {
-        'rows': rows.length,
-        'contributions': contributions.length,
-        'range': '${daysBack}d',
-      },
-    );
-    return result;
   }
 
   /// Recovery analytics based on shared v1 heuristics.

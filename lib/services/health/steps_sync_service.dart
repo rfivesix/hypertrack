@@ -225,11 +225,6 @@ class StepsSyncService {
         };
       }).toList();
 
-      await _dbHelper.deleteHealthStepSegmentsInRange(
-        provider: provider,
-        fromUtc: fromUtc,
-        toUtc: nowUtc,
-      );
       await _dbHelper.upsertHealthStepSegments(rows);
       await _setLastSyncAt(nowUtc);
       if (kDebugMode) {

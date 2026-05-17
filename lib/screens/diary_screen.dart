@@ -254,23 +254,13 @@ class DiaryScreenState extends State<DiaryScreen> {
     try {
       final dbHelper = DatabaseHelper.instance;
 
-      // 1. Load primary data (Nutrition, Supplements, Workouts)
+      // -----------------------------------------------------------------------
+      // TIER 1: INSTANT (Core Totals & SQL-only data)
+      // -----------------------------------------------------------------------
       final goals = await dbHelper.getGoalsForDate(diaryDate);
+      if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
-
-      final foodEntries = await DatabaseHelper.instance.getEntriesForDate(
-        diaryDate,
-      );
-      final foodProducts =
-          await ProductDatabaseHelper.instance.getProductsByBarcodes(
-        foodEntries.map((entry) => entry.barcode).toSet().toList(),
-      );
-      final foodProductsByBarcode = {
-        for (final product in foodProducts) product.barcode: product,
-      };
-      final fluidEntries = await DatabaseHelper.instance.getFluidEntriesForDate(
-        diaryDate,
-      );
+      if (!mounted) return;
 
       final targetCalories = goals?.targetCalories ?? 2500;
       final targetProtein = goals?.targetProtein ?? 180;
@@ -291,11 +281,44 @@ class DiaryScreenState extends State<DiaryScreen> {
         targetSugar: targetSugar,
         targetCaffeine: targetCaffeine,
       );
+
+      // Load raw entries to calculate core totals without product database overhead
+      final foodEntries = await dbHelper.getEntriesForDate(diaryDate);
+      if (!mounted) return;
+      final fluidEntries = await dbHelper.getFluidEntriesForDate(diaryDate);
+      if (!mounted) return;
+      final workoutLogs = await WorkoutDatabaseHelper.instance
+          .getWorkoutLogsForDateRange(diaryDate, diaryDate);
+      if (!mounted) return;
+
+      final completedLogs =
+          workoutLogs.where((log) => log.endTime != null).toList();
+      Map<String, dynamic>? workoutSummary;
+
+      if (completedLogs.isNotEmpty) {
+        Duration totalDuration = Duration.zero;
+        double totalVolume = 0.0;
+        int totalSets = 0;
+        for (final log in completedLogs) {
+          totalDuration += log.endTime!.difference(log.startTime);
+          totalSets += log.sets.length;
+          for (final set in log.sets) {
+            totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
+          }
+        }
+        workoutSummary = {
+          'duration': totalDuration,
+          'volume': totalVolume,
+          'sets': totalSets,
+          'count': completedLogs.length,
+        };
+      }
+
+      // Calculate totals for fluids
       summary.water = fluidEntries.fold<int>(
         0,
         (sum, entry) => sum + entry.quantityInMl,
       );
-
       for (final entry
           in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
         summary.calories += entry.kcal ?? 0;
@@ -304,6 +327,34 @@ class DiaryScreenState extends State<DiaryScreen> {
         summary.carbs += ((entry.carbsPer100ml ?? 0) * factor).round();
       }
 
+      // At this point, we have enough to show the Nutrition Card and Workout Card.
+      // Detailed food macros will follow in Tier 2.
+      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
+
+      setState(() {
+        _dailyNutrition = summary;
+        _workoutSummary = workoutSummary;
+        _showSugarInOverview = showSugarInOverview;
+        _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
+        _isLoading = false; // Stop main spinner immediately
+        _entriesByMeal = {}; // Will be filled in Tier 2
+        _fluidEntries = fluidEntries;
+        _trackedSupplements = []; // Will be filled in Tier 2
+      });
+
+      // -----------------------------------------------------------------------
+      // TIER 2: DEFERRED (Product Details & Detailed Macros)
+      // -----------------------------------------------------------------------
+      final foodProducts =
+          await ProductDatabaseHelper.instance.getProductsByBarcodes(
+        foodEntries.map((entry) => entry.barcode).toSet().toList(),
+      );
+      if (!mounted) return;
+
+      final foodProductsByBarcode = {
+        for (final product in foodProducts) product.barcode: product,
+      };
+
       final Map<String, List<TrackedFoodItem>> groupedEntries = {
         'mealtypeBreakfast': [],
         'mealtypeLunch': [],
@@ -311,6 +362,7 @@ class DiaryScreenState extends State<DiaryScreen> {
         'mealtypeSnack': [],
       };
 
+      // Recalculate summary with precise product macros
       for (final entry in foodEntries) {
         final foodItem = foodProductsByBarcode[entry.barcode];
         if (foodItem != null) {
@@ -333,11 +385,13 @@ class DiaryScreenState extends State<DiaryScreen> {
         meal.sort((a, b) => b.entry.timestamp.compareTo(a.entry.timestamp));
       }
 
-      final supplementsForDate =
-          await DatabaseHelper.instance.getSupplementsForDate(diaryDate);
-      final allSupplements = await DatabaseHelper.instance.getAllSupplements();
+      final supplementsForDate = await dbHelper.getSupplementsForDate(diaryDate);
+      if (!mounted) return;
+      final allSupplements = await dbHelper.getAllSupplements();
+      if (!mounted) return;
       final todaysSupplementLogs =
-          await DatabaseHelper.instance.getSupplementLogsForDate(diaryDate);
+          await dbHelper.getSupplementLogsForDate(diaryDate);
+      if (!mounted) return;
 
       final Map<int, double> todaysDoses = {};
       for (final log in todaysSupplementLogs) {
@@ -391,52 +445,24 @@ class DiaryScreenState extends State<DiaryScreen> {
         }
       }
 
-      final workoutLogs = await WorkoutDatabaseHelper.instance
-          .getWorkoutLogsForDateRange(diaryDate, diaryDate);
-      final completedLogs =
-          workoutLogs.where((log) => log.endTime != null).toList();
-      Map<String, dynamic>? workoutSummary;
-
-      if (completedLogs.isNotEmpty) {
-        Duration totalDuration = Duration.zero;
-        double totalVolume = 0.0;
-        int totalSets = 0;
-        for (final log in completedLogs) {
-          totalDuration += log.endTime!.difference(log.startTime);
-          totalSets += log.sets.length;
-          for (final set in log.sets) {
-            totalVolume += (set.weightKg ?? 0) * (set.reps ?? 0);
-          }
-        }
-        workoutSummary = {
-          'duration': totalDuration,
-          'volume': totalVolume,
-          'sets': totalSets,
-          'count': completedLogs.length,
-        };
-      }
-
       if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
 
-      // Update primary UI state and stop main spinner
       setState(() {
         _dailyNutrition = summary;
         _entriesByMeal = groupedEntries;
-        _fluidEntries = fluidEntries;
         _trackedSupplements = trackedSupps;
-        _workoutSummary = workoutSummary;
-        _showSugarInOverview = showSugarInOverview;
-        _targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
-        _isLoading = false;
       });
 
-      // 2. Trigger secondary background loads (Health data)
+      // -----------------------------------------------------------------------
+      // TIER 3: BACKGROUND (Health Platform Syncs)
+      // -----------------------------------------------------------------------
       final providerFilter = await _stepsSyncService.getProviderFilter();
+      if (!mounted) return;
       final providerFilterRaw = StepsSyncService.providerFilterToRaw(
         providerFilter,
       );
 
-      // Start all background tasks concurrently
+      // Start all background tasks concurrently, unawaited
       unawaited(_loadStepsForDate(
         diaryDate,
         providerFilterRaw: providerFilterRaw,
@@ -490,9 +516,10 @@ class DiaryScreenState extends State<DiaryScreen> {
   }) async {
     // 1. Load from cache first for immediate display
     await _loadSleepForDate(date, loadGeneration: loadGeneration);
+    if (!mounted) return;
     // 2. Sync in background
     await _syncSleepIfDue(force: force);
-    if (!_isCurrentLoad(loadGeneration, date)) return;
+    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
     // 3. Refresh if sync completed
     await _loadSleepForDate(date, loadGeneration: loadGeneration);
   }
@@ -504,9 +531,8 @@ class DiaryScreenState extends State<DiaryScreen> {
   }) async {
     try {
       final enabled = await _stepsSyncService.isTrackingEnabled();
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       if (!enabled) {
-        if (!mounted) return;
         setState(() {
           _stepsForSelectedDay = null;
           _stepsTrackingEnabled = false;
@@ -514,16 +540,16 @@ class DiaryScreenState extends State<DiaryScreen> {
         });
         return;
       }
-      if (!mounted) return;
       setState(() => _isStepsWidgetLoading = true);
       final sourcePolicy = await _stepsSyncService.getSourcePolicy();
+      if (!mounted) return;
       final sourcePolicyRaw = StepsSyncService.sourcePolicyToRaw(sourcePolicy);
       final total = await DatabaseHelper.instance.getDailyStepsTotal(
         dayLocal: date,
         providerFilter: providerFilterRaw,
         sourcePolicy: sourcePolicyRaw,
       );
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       setState(() {
         _stepsForSelectedDay = total;
         _stepsTrackingEnabled = true;
@@ -531,7 +557,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       });
     } catch (e) {
       debugPrint('Steps load failed: $e');
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       setState(() => _isStepsWidgetLoading = false);
     }
   }
@@ -539,9 +565,8 @@ class DiaryScreenState extends State<DiaryScreen> {
   Future<void> _loadSleepForDate(DateTime date, {int? loadGeneration}) async {
     try {
       final enabled = await _sleepSyncService.isTrackingEnabled();
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       if (!enabled) {
-        if (!mounted) return;
         setState(() {
           _sleepOverview = null;
           _sleepTrackingEnabled = false;
@@ -549,10 +574,9 @@ class DiaryScreenState extends State<DiaryScreen> {
         });
         return;
       }
-      if (!mounted) return;
       setState(() => _isSleepWidgetLoading = true);
       final overview = await _sleepRepository.fetchOverview(date);
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       setState(() {
         _sleepOverview = overview;
         _sleepTrackingEnabled = true;
@@ -560,16 +584,15 @@ class DiaryScreenState extends State<DiaryScreen> {
       });
     } catch (e) {
       debugPrint('Sleep load failed: $e');
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       setState(() => _isSleepWidgetLoading = false);
     }
   }
 
   Future<void> _loadPulseForDate(DateTime date, {int? loadGeneration}) async {
     final enabled = await _pulseSyncService.isTrackingEnabled();
-    if (!_isCurrentLoad(loadGeneration, date)) return;
+    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
     if (!enabled) {
-      if (!mounted) return;
       setState(() {
         _pulseSummary = null;
         _pulseTrackingEnabled = false;
@@ -577,7 +600,6 @@ class DiaryScreenState extends State<DiaryScreen> {
       });
       return;
     }
-    if (!mounted) return;
     setState(() => _isPulseWidgetLoading = true);
 
     // Diary typically shows a 24h window for the selected date.
@@ -588,7 +610,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       final summary = await _pulseRepository.getAnalysis(
         window: PulseAnalysisWindow(startUtc: start, endUtc: end),
       );
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       setState(() {
         _pulseSummary = summary;
         _pulseTrackingEnabled = true;
@@ -596,7 +618,7 @@ class DiaryScreenState extends State<DiaryScreen> {
       });
     } catch (e) {
       debugPrint('Pulse load failed: $e');
-      if (!_isCurrentLoad(loadGeneration, date)) return;
+      if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
       setState(() => _isPulseWidgetLoading = false);
     }
   }
@@ -607,18 +629,19 @@ class DiaryScreenState extends State<DiaryScreen> {
     int? loadGeneration,
   }) async {
     final enabled = await _stepsSyncService.isTrackingEnabled();
-    if (!_isCurrentLoad(loadGeneration, date)) return;
+    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
     if (!enabled) return;
     final lastSync = await _stepsSyncService.getLastSyncAt();
+    if (!mounted) return;
     final shouldSync = force ||
         lastSync == null ||
         DateTime.now().toUtc().difference(lastSync) > _stepsSyncInterval;
     if (!shouldSync) return;
-    if (!mounted) return;
     setState(() => _isStepsWidgetLoading = true);
     await _stepsRepository.refresh(force: force);
-    if (!_isCurrentLoad(loadGeneration, date)) return;
+    if (!mounted || !_isCurrentLoad(loadGeneration, date)) return;
     final providerFilter = await _stepsSyncService.getProviderFilter();
+    if (!mounted) return;
     final providerFilterRaw = StepsSyncService.providerFilterToRaw(
       providerFilter,
     );

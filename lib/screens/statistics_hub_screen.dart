@@ -393,7 +393,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
 
   Future<void> _syncTrackingEnabledFromSettings() async {
     final enabled = await _stepsSyncService.isTrackingEnabled();
-    if (!mounted || enabled == _stepsTrackingEnabled) return;
+    if (!mounted) return;
+    if (enabled == _stepsTrackingEnabled) return;
     setState(() => _stepsTrackingEnabled = enabled);
   }
 
@@ -476,6 +477,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       label: 'stepsEarliest',
       action: _stepsRepository.getEarliestAvailableDate,
     );
+    // Note: We don't return here if !mounted because this is used to return a context for unawaited loads
     final resolvedRange = _rangePolicy.resolve(
       metricId: StatisticsMetricId.bodyNutritionTrend,
       selectedRangeIndex: selectedRangeIndex,
@@ -496,6 +498,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     var rangeLabel = '';
     try {
       final rangeContext = await rangeContextFuture;
+      if (!mounted) return;
       rangeLabel = '${rangeContext.daysBack}d';
       final endDate = DateTime.now();
       final results = await Future.wait<dynamic>([
@@ -508,7 +511,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             DatabaseHelper.instance.getCurrentTargetStepsOrDefault(),
         widget.stepsProviderNameLoader?.call() ?? _loadStepsProviderName(),
       ]);
-      if (!_isCurrentStepsLoad(generation)) return;
+      if (!mounted || !_isCurrentStepsLoad(generation)) return;
 
       final enabled = StepsSyncService.trackingEnabledListenable.value ??
           (results[1] as bool);
@@ -526,7 +529,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       });
     } catch (error, stackTrace) {
       _logSectionFailure(StatisticsHubSectionId.steps, error, stackTrace);
-      if (!_isCurrentStepsLoad(generation)) return;
+      if (!mounted || !_isCurrentStepsLoad(generation)) return;
       setState(() {
         _stepsState = _stepsState.failure(error, stackTrace, generation);
       });
@@ -550,7 +553,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     try {
       final trackingEnabled = await (widget.isSleepTrackingEnabled?.call() ??
           _sleepSyncService.isTrackingEnabled());
-      if (!_isCurrentSleepLoad(generation)) return;
+      if (!mounted || !_isCurrentSleepLoad(generation)) return;
 
       if (!trackingEnabled) {
         setState(() {
@@ -573,19 +576,20 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
             ),
         rangeContextFuture,
       ]);
+      if (!mounted) return;
       final rangeContext = results[1] as _HubRangeContext;
       rangeLabel = '${rangeContext.daysBack}d';
       final summary = await _sleepSummaryRepository.fetchSummary(
         endDate: DateTime.now(),
         daysBack: rangeContext.daysBack,
       );
-      if (!_isCurrentSleepLoad(generation) || !_sleepTrackingEnabled) return;
+      if (!mounted || !_isCurrentSleepLoad(generation) || !_sleepTrackingEnabled) return;
       setState(() {
         _sleepState = _sleepState.success(summary, generation);
       });
     } catch (error, stackTrace) {
       _logSectionFailure(StatisticsHubSectionId.sleep, error, stackTrace);
-      if (!_isCurrentSleepLoad(generation)) return;
+      if (!mounted || !_isCurrentSleepLoad(generation)) return;
       setState(() {
         _sleepState = _sleepState.failure(error, stackTrace, generation);
       });
@@ -608,8 +612,8 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
     var rangeLabel = '';
     try {
       final trackingEnabled = await _pulseRepository.isTrackingEnabled();
-      if (!trackingEnabled) {
-        if (!_isCurrentPulseLoad(generation)) return;
+      if (!mounted || !trackingEnabled) {
+        if (!mounted || !_isCurrentPulseLoad(generation)) return;
         setState(() {
           _pulseTrackingEnabled = false;
           _pulseState = const SectionLoadState<PulseAnalysisSummary>();
@@ -622,18 +626,19 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       }
 
       final rangeContext = await rangeContextFuture;
+      if (!mounted) return;
       rangeLabel = '${rangeContext.daysBack}d';
       final summary = await _pulseRepository.getAnalysis(
         window: _pulseWindowForDaysBack(rangeContext.daysBack),
       );
-      if (!_isCurrentPulseLoad(generation) || !_pulseTrackingEnabled) return;
+      if (!mounted || !_isCurrentPulseLoad(generation) || !_pulseTrackingEnabled) return;
       setState(() {
         _pulseTrackingEnabled = true;
         _pulseState = _pulseState.success(summary, generation);
       });
     } catch (error, stackTrace) {
       _logSectionFailure(StatisticsHubSectionId.pulse, error, stackTrace);
-      if (!_isCurrentPulseLoad(generation)) return;
+      if (!mounted || !_isCurrentPulseLoad(generation)) return;
       setState(() {
         _pulseState = _pulseState.failure(error, stackTrace, generation);
       });
@@ -658,7 +663,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       final tuple = await _fetchHubAnalytics(
         selectedTimeRangeIndex: selectedRangeIndex,
       );
-      if (!_isCurrentHubAnalyticsLoad(generation)) return;
+      if (!mounted || !_isCurrentHubAnalyticsLoad(generation)) return;
       final hub = tuple.$1;
       final bodyNutrition = tuple.$2;
       setState(() {
@@ -695,7 +700,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         error,
         stackTrace,
       );
-      if (!_isCurrentHubAnalyticsLoad(generation)) return;
+      if (!mounted || !_isCurrentHubAnalyticsLoad(generation)) return;
       setState(() {
         _recoveryState = _recoveryState.failure(error, stackTrace, generation);
         _consistencyState =
@@ -727,14 +732,14 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       final data = await _hubDataAdapter.fetchRecovery(
         selectedTimeRangeIndex: selectedRangeIndex,
       );
-      if (!_isCurrentRecoveryLoad(generation)) return;
+      if (!mounted || !_isCurrentRecoveryLoad(generation)) return;
       setState(() => _recoveryState = _recoveryState.success(
             data,
             generation,
           ));
     } catch (error, stackTrace) {
       _logSectionFailure(StatisticsHubSectionId.recovery, error, stackTrace);
-      if (!_isCurrentRecoveryLoad(generation)) return;
+      if (!mounted || !_isCurrentRecoveryLoad(generation)) return;
       setState(() {
         _recoveryState = _recoveryState.failure(error, stackTrace, generation);
       });
@@ -758,7 +763,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       final data = await _hubDataAdapter.fetchConsistency(
         selectedTimeRangeIndex: selectedRangeIndex,
       );
-      if (!_isCurrentConsistencyLoad(generation)) return;
+      if (!mounted || !_isCurrentConsistencyLoad(generation)) return;
       setState(() {
         _consistencyState = _consistencyState.success(
           _ConsistencySectionData(
@@ -771,7 +776,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       });
     } catch (error, stackTrace) {
       _logSectionFailure(StatisticsHubSectionId.consistency, error, stackTrace);
-      if (!_isCurrentConsistencyLoad(generation)) return;
+      if (!mounted || !_isCurrentConsistencyLoad(generation)) return;
       setState(() {
         _consistencyState =
             _consistencyState.failure(error, stackTrace, generation);
@@ -797,7 +802,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       final data = await _hubDataAdapter.fetchPerformanceRecords(
         selectedTimeRangeIndex: selectedRangeIndex,
       );
-      if (!_isCurrentPerformanceLoad(generation)) return;
+      if (!mounted || !_isCurrentPerformanceLoad(generation)) return;
       setState(() {
         _performanceState = _performanceState.success(
           _PerformanceRecordsSectionData(
@@ -813,7 +818,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         error,
         stackTrace,
       );
-      if (!_isCurrentPerformanceLoad(generation)) return;
+      if (!mounted || !_isCurrentPerformanceLoad(generation)) return;
       setState(() {
         _performanceState =
             _performanceState.failure(error, stackTrace, generation);
@@ -839,7 +844,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       final data = await _hubDataAdapter.fetchVolumeMuscles(
         selectedTimeRangeIndex: selectedRangeIndex,
       );
-      if (!_isCurrentVolumeMusclesLoad(generation)) return;
+      if (!mounted || !_isCurrentVolumeMusclesLoad(generation)) return;
       setState(() {
         _volumeMusclesState = _volumeMusclesState.success(
           _VolumeMusclesSectionData(
@@ -855,7 +860,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         error,
         stackTrace,
       );
-      if (!_isCurrentVolumeMusclesLoad(generation)) return;
+      if (!mounted || !_isCurrentVolumeMusclesLoad(generation)) return;
       setState(() {
         _volumeMusclesState =
             _volumeMusclesState.failure(error, stackTrace, generation);
@@ -884,7 +889,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
       final data = await _hubDataAdapter.fetchBodyNutrition(
         selectedTimeRangeIndex: selectedRangeIndex,
       );
-      if (!_isCurrentBodyNutritionLoad(generation)) return;
+      if (!mounted || !_isCurrentBodyNutritionLoad(generation)) return;
       setState(() {
         _bodyNutritionState = _bodyNutritionState.success(data, generation);
       });
@@ -894,7 +899,7 @@ class _StatisticsHubScreenState extends State<StatisticsHubScreen> {
         error,
         stackTrace,
       );
-      if (!_isCurrentBodyNutritionLoad(generation)) return;
+      if (!mounted || !_isCurrentBodyNutritionLoad(generation)) return;
       setState(() {
         _bodyNutritionState =
             _bodyNutritionState.failure(error, stackTrace, generation);

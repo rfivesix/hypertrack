@@ -1,5 +1,6 @@
 // lib/data/import_manager.dart
 
+import 'dart:convert';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart' as drift;
@@ -11,6 +12,34 @@ import 'workout_database_helper.dart';
 import 'drift_database.dart' as db;
 import '../models/set_log.dart';
 import '../services/unit_service.dart';
+
+class WorkoutImportData {
+  final String title;
+  final String? notes;
+  final DateTime startTime;
+  final DateTime? endTime;
+  final List<SetLog> sets;
+
+  WorkoutImportData({
+    required this.title,
+    this.notes,
+    required this.startTime,
+    this.endTime,
+    required this.sets,
+  });
+}
+
+class ImportBackgroundTaskParams {
+  final Uint8List fileBytes;
+  final String extension;
+  final bool isImperial;
+
+  ImportBackgroundTaskParams({
+    required this.fileBytes,
+    required this.extension,
+    required this.isImperial,
+  });
+}
 
 /// Manager responsible for importing workout data from external sources (CSV/Excel).
 class ImportManager {
@@ -28,124 +57,58 @@ class ImportManager {
       if (result == null || result.files.single.path == null) return 0;
 
       final filePath = result.files.single.path!;
-      final extension = result.files.single.extension?.toLowerCase();
+      final extension = result.files.single.extension?.toLowerCase() ?? '';
+      final fileBytes = await File(filePath).readAsBytes();
 
-      List<List<dynamic>> rows = [];
+      // 2. Offload decoding and grouping to background isolate
+      final workoutGroups = await compute(
+        _decodeAndGroupWorkouts,
+        ImportBackgroundTaskParams(
+          fileBytes: fileBytes,
+          extension: extension,
+          isImperial: isImperial,
+        ),
+      );
 
-      if (extension == 'csv') {
-        final file = File(filePath);
-        final content = await file.readAsString();
-        rows = Csv().decode(content);
-      } else if (extension == 'xlsx') {
-        final bytes = File(filePath).readAsBytesSync();
-        final excel = xl.Excel.decodeBytes(bytes);
-        // Take first sheet
-        final sheetName = excel.tables.keys.first;
-        final sheet = excel.tables[sheetName]!;
-        for (var row in sheet.rows) {
-          rows.add(row.map((cell) => cell?.value?.toString() ?? '').toList());
-        }
-      } else {
-        return -1;
-      }
+      if (workoutGroups.isEmpty) return 0;
 
-      if (rows.length < 2) return 0; // Header only or empty
-
-      // 2. Map header and normalize
-      final rawHeader =
-          rows.first.map((e) => e.toString().trim().toLowerCase()).toList();
-      final headerMap = _mapHeader(rawHeader);
-
-      // 3. Group rows (one workout has multiple sets across multiple rows).
-      // Key: title + start time
-      final workoutGroups = <String, List<Map<String, dynamic>>>{};
-
-      for (var i = 1; i < rows.length; i++) {
-        final row = rows[i];
-        if (row.length < rawHeader.length) continue;
-
-        final rowData = <String, dynamic>{};
-        for (var entry in headerMap.entries) {
-          final index = entry.value;
-          if (index < row.length) {
-            rowData[entry.key] = row[index];
-          }
-        }
-
-        final title = rowData['title']?.toString() ?? 'Importiertes Workout';
-        final startTimeRaw = rowData['start_time']?.toString() ?? '';
-
-        if (startTimeRaw.trim().isEmpty) continue;
-
-        final key = "${title}_$startTimeRaw";
-        workoutGroups.putIfAbsent(key, () => []).add(rowData);
-      }
-
-      // 4. Write to DB
+      // 3. Write to DB in atomic batches
       final workoutHelper = WorkoutDatabaseHelper.instance;
       final database = await workoutHelper.database;
 
       int importedWorkouts = 0;
 
-      for (var group in workoutGroups.values) {
-        final firstRow = group.first;
-        final routineName =
-            firstRow['title']?.toString() ?? 'Importiertes Workout';
-        final notes = firstRow['description']?.toString();
-
-        // A. Create workout
-        final newLog = await workoutHelper.startWorkout(
-          routineName: routineName,
-        );
-
-        if (newLog.id == null) continue;
-
-        // B. Parse timestamp
-        final startTime = _parseDate(firstRow['start_time']);
-        final endTime = _parseDate(firstRow['end_time']);
-
-        // C. Update workout details
-        final updateCompanion = db.WorkoutLogsCompanion(
-          startTime: drift.Value(startTime),
-          endTime: drift.Value(endTime),
-          status: const drift.Value('completed'),
-          notes: drift.Value(notes),
-        );
-
-        await (database.update(database.workoutLogs)
-              ..where((tbl) => tbl.localId.equals(newLog.id!)))
-            .write(updateCompanion);
-
-        // D. Insert sets
-        int setOrder = 0;
-        for (var row in group) {
-          final rawExerciseName =
-              row['exercise']?.toString() ?? 'Unbekannte Übung';
-
-          // Extract metrics
-          double? weight = double.tryParse(row['weight']?.toString() ?? '');
-          if (weight != null && isImperial) {
-            weight = UnitService.lbsToKg(weight);
-          }
-
-          final setLog = SetLog(
-            workoutLogId: newLog.id!,
-            exerciseName: rawExerciseName,
-            setType: _mapSetType(row['set_type']),
-            weightKg: weight,
-            reps: int.tryParse(row['reps']?.toString() ?? ''),
-            distanceKm: double.tryParse(row['distance']?.toString() ?? ''),
-            durationSeconds: int.tryParse(row['duration']?.toString() ?? ''),
-            rpe: int.tryParse(row['rpe']?.toString() ?? ''),
-            logOrder: setOrder++,
-            notes: row['set_notes']?.toString(),
-            isCompleted: true,
+      // Use a single transaction for all imported workouts to ensure integrity and performance
+      await database.transaction(() async {
+        for (var workoutData in workoutGroups) {
+          // A. Create workout
+          final newLog = await workoutHelper.startWorkout(
+            routineName: workoutData.title,
           );
 
-          await workoutHelper.insertSetLog(setLog);
+          if (newLog.id == null) continue;
+
+          // B. Update workout details
+          await (database.update(database.workoutLogs)
+                ..where((tbl) => tbl.localId.equals(newLog.id!)))
+              .write(db.WorkoutLogsCompanion(
+                startTime: drift.Value(workoutData.startTime),
+                endTime: drift.Value(workoutData.endTime),
+                status: const drift.Value('completed'),
+                notes: drift.Value(workoutData.notes),
+              ));
+
+          // C. Insert sets using a batch for this workout
+          // Note: We use the helper's individual insert for now because it handles 
+          // complex exercise mapping and usage counts, but within a transaction 
+          // it is still significantly faster than outside.
+          for (var set in workoutData.sets) {
+            final setWithCorrectId = set.copyWith(workoutLogId: newLog.id!);
+            await workoutHelper.insertSetLog(setWithCorrectId);
+          }
+          importedWorkouts++;
         }
-        importedWorkouts++;
-      }
+      });
 
       return importedWorkouts;
     } catch (e) {
@@ -154,8 +117,115 @@ class ImportManager {
     }
   }
 
+  static List<WorkoutImportData> _decodeAndGroupWorkouts(
+    ImportBackgroundTaskParams params,
+  ) {
+    final extension = params.extension;
+    final isImperial = params.isImperial;
+    final bytes = params.fileBytes;
+
+    List<List<dynamic>> rows = [];
+
+    try {
+      if (extension == 'csv') {
+        final content = utf8.decode(bytes);
+        rows = csv.decode(content);
+      } else if (extension == 'xlsx') {
+        final excel = xl.Excel.decodeBytes(bytes);
+        // Take first sheet
+        final sheetName = excel.tables.keys.first;
+        final sheet = excel.tables[sheetName]!;
+        for (var row in sheet.rows) {
+          rows.add(row.map((cell) => cell?.value?.toString() ?? '').toList());
+        }
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Decoding Error in Isolate: $e");
+      return [];
+    }
+
+    if (rows.length < 2) return [];
+
+    // Map header and normalize
+    final rawHeader =
+        rows.first.map((e) => e.toString().trim().toLowerCase()).toList();
+    final headerMap = _mapHeader(rawHeader);
+
+    // Group rows (one workout has multiple sets across multiple rows).
+    final workoutGroupsMap = <String, List<Map<String, dynamic>>>{};
+
+    for (var i = 1; i < rows.length; i++) {
+      final row = rows[i];
+      if (row.length < rawHeader.length) continue;
+
+      final rowData = <String, dynamic>{};
+      for (var entry in headerMap.entries) {
+        final index = entry.value;
+        if (index < row.length) {
+          rowData[entry.key] = row[index];
+        }
+      }
+
+      final title = rowData['title']?.toString() ?? 'Importiertes Workout';
+      final startTimeRaw = rowData['start_time']?.toString() ?? '';
+
+      if (startTimeRaw.trim().isEmpty) continue;
+
+      final key = "${title}_$startTimeRaw";
+      workoutGroupsMap.putIfAbsent(key, () => []).add(rowData);
+    }
+
+    final List<WorkoutImportData> result = [];
+
+    for (var group in workoutGroupsMap.values) {
+      final firstRow = group.first;
+      final title = firstRow['title']?.toString() ?? 'Importiertes Workout';
+      final notes = firstRow['description']?.toString();
+      final startTime = _parseDate(firstRow['start_time']);
+      final endTime = _parseDate(firstRow['end_time']);
+
+      final List<SetLog> sets = [];
+      int setOrder = 0;
+      for (var row in group) {
+        final rawExerciseName =
+            row['exercise']?.toString() ?? 'Unbekannte Übung';
+
+        double? weight = double.tryParse(row['weight']?.toString() ?? '');
+        if (weight != null && isImperial) {
+          weight = UnitService.lbsToKg(weight);
+        }
+
+        sets.add(SetLog(
+          workoutLogId: 0,
+          exerciseName: rawExerciseName,
+          setType: _mapSetType(row['set_type']),
+          weightKg: weight,
+          reps: int.tryParse(row['reps']?.toString() ?? ''),
+          distanceKm: double.tryParse(row['distance']?.toString() ?? ''),
+          durationSeconds: int.tryParse(row['duration']?.toString() ?? ''),
+          rpe: int.tryParse(row['rpe']?.toString() ?? ''),
+          logOrder: setOrder++,
+          notes: row['set_notes']?.toString(),
+          isCompleted: true,
+        ));
+      }
+
+      result.add(WorkoutImportData(
+        title: title,
+        notes: notes,
+        startTime: startTime,
+        endTime: endTime,
+        sets: sets,
+      ));
+    }
+
+    return result;
+  }
+
   /// Maps generic headers to normalized internal keys.
-  Map<String, int> _mapHeader(List<String> header) {
+  static Map<String, int> _mapHeader(List<String> header) {
     final map = <String, int>{};
 
     for (var i = 0; i < header.length; i++) {
@@ -198,7 +268,7 @@ class ImportManager {
     return map;
   }
 
-  String _mapSetType(dynamic rawType) {
+  static String _mapSetType(dynamic rawType) {
     final t = rawType?.toString().toLowerCase() ?? '';
     if (t.contains('warmup') || t == 'w') return 'warmup';
     if (t.contains('failure') || t == 'f') return 'failure';
@@ -208,7 +278,7 @@ class ImportManager {
     return 'normal';
   }
 
-  DateTime _parseDate(dynamic rawDateString) {
+  static DateTime _parseDate(dynamic rawDateString) {
     final dateString = rawDateString?.toString().trim();
     if (dateString == null || dateString.isEmpty) {
       return DateTime.now();

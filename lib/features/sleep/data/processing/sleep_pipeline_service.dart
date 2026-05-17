@@ -27,6 +27,40 @@ class SleepPipelineRunResult {
   final int analyzedNights;
 }
 
+class SleepPipelineBackgroundTaskParams {
+  final SleepRawIngestionBatch batch;
+  final String normalizationVersion;
+  final String analysisVersion;
+  final DateTime importedAt;
+  final List<SleepCanonicalSessionRecord> lookbackSessions;
+  final List<SleepCanonicalStageSegmentRecord> lookbackSegments;
+
+  SleepPipelineBackgroundTaskParams({
+    required this.batch,
+    required this.normalizationVersion,
+    required this.analysisVersion,
+    required this.importedAt,
+    required this.lookbackSessions,
+    required this.lookbackSegments,
+  });
+}
+
+class SleepPipelineBackgroundTaskResult {
+  final List<SleepRawImportCompanion> rawRows;
+  final List<SleepCanonicalSessionCompanion> sessionRows;
+  final List<SleepCanonicalStageSegmentCompanion> segmentRows;
+  final List<SleepCanonicalHeartRateSampleCompanion> hrRows;
+  final List<SleepNightlyAnalysisCompanion> analysisRows;
+
+  SleepPipelineBackgroundTaskResult({
+    required this.rawRows,
+    required this.sessionRows,
+    required this.segmentRows,
+    required this.hrRows,
+    required this.analysisRows,
+  });
+}
+
 class SleepPipelineService {
   SleepPipelineService({
     required AppDatabase database,
@@ -108,6 +142,59 @@ class SleepPipelineService {
       await _rawDao.deleteByIds(rawImportIds);
     }
 
+    // Pre-fetch lookback data for regularity calculation
+    final targetNights = batch.sessions
+        .map((session) => _normalizeDay(session.endAtUtc))
+        .toSet()
+        .toList(growable: false)
+      ..sort();
+    final earliestNight = targetNights.first;
+    final latestNight = targetNights.last;
+    final lookbackFromInclusive = earliestNight.subtract(const Duration(days: 30));
+    final lookbackToExclusive = latestNight.add(const Duration(days: 1));
+
+    final lookbackSessions = await _sessionsDao.findByDateRange(
+      fromInclusive: lookbackFromInclusive,
+      toExclusive: lookbackToExclusive,
+    );
+    final lookbackSessionIds = lookbackSessions.map((s) => s.id).toList();
+    final lookbackSegments = await _segmentsDao.findBySessionIds(lookbackSessionIds);
+
+    // Offload heavy processing to background isolate
+    final result = await compute(
+      _runSleepPipelineBackground,
+      SleepPipelineBackgroundTaskParams(
+        batch: batch,
+        normalizationVersion: normalizationVersion,
+        analysisVersion: analysisVersion,
+        importedAt: importedAt,
+        lookbackSessions: lookbackSessions,
+        lookbackSegments: lookbackSegments,
+      ),
+    );
+
+    await _database.transaction(() async {
+      await _rawDao.upsertBatch(result.rawRows);
+      await _sessionsDao.upsertBatch(result.sessionRows);
+      await _segmentsDao.upsertBatch(result.segmentRows);
+      await _hrDao.upsertBatch(result.hrRows);
+      await _analysesDao.upsertBatch(result.analysisRows);
+    });
+
+    return SleepPipelineRunResult(
+      importedSessions: result.sessionRows.length,
+      analyzedNights: result.sessionRows.length,
+    );
+  }
+
+  static SleepPipelineBackgroundTaskResult _runSleepPipelineBackground(
+    SleepPipelineBackgroundTaskParams params,
+  ) {
+    final batch = params.batch;
+    final normalizationVersion = params.normalizationVersion;
+    final analysisVersion = params.analysisVersion;
+    final importedAt = params.importedAt;
+
     final mapped = _mapBatch(batch);
     final segmentsBySession = <String, List<SleepStageSegment>>{};
     for (final segment in mapped.stageSegments) {
@@ -122,173 +209,168 @@ class SleepPipelineService {
           .add(sample);
     }
 
-    await _database.transaction(() async {
-      final rawRows = batch.sessions
-          .map(
-            (session) => SleepRawImportCompanion(
-              id: 'raw:${session.recordId}',
-              sourcePlatform: session.sourcePlatform,
-              sourceAppId: session.sourceAppId,
-              sourceConfidence: session.sourceConfidence,
-              sourceRecordHash: session.sourceRecordHash ??
-                  _hashRecord('raw:${session.recordId}'),
-              importStatus: 'success',
-              importedAt: importedAt,
-              payloadJson: jsonEncode(<String, dynamic>{
-                'recordId': session.recordId,
-                'startAtUtc': session.startAtUtc.toIso8601String(),
-                'endAtUtc': session.endAtUtc.toIso8601String(),
-                'platformSessionType': session.platformSessionType,
-              }),
-            ),
-          )
-          .toList(growable: false);
-      await _rawDao.upsertBatch(rawRows);
-
-      await _sessionsDao.upsertBatch(
-        mapped.sessions
-            .map(
-              (session) => SleepCanonicalSessionCompanion(
-                id: session.id,
-                rawImportId: 'raw:${session.id}',
-                sourcePlatform: session.sourcePlatform,
-                sourceAppId: session.sourceAppId,
-                sourceConfidence: session.sourceConfidence,
-                sourceRecordHash: session.sourceRecordHash ??
-                    _hashRecord('session:${session.id}'),
-                normalizationVersion: normalizationVersion,
-                sessionType: session.sessionType.name,
-                startedAt: session.startAtUtc,
-                endedAt: session.endAtUtc,
-                timezone: null,
-                importedAt: importedAt,
-                normalizedAt: importedAt,
-              ),
-            )
-            .toList(growable: false),
-      );
-
-      await _segmentsDao.upsertBatch(
-        mapped.stageSegments
-            .map(
-              (segment) => SleepCanonicalStageSegmentCompanion(
-                id: segment.id,
-                sessionId: segment.sessionId,
-                sourcePlatform: segment.sourcePlatform,
-                sourceAppId: segment.sourceAppId,
-                sourceConfidence: segment.sourceConfidence,
-                sourceRecordHash: segment.sourceRecordHash ??
-                    _hashRecord('segment:${segment.id}'),
-                normalizationVersion: normalizationVersion,
-                stage: segment.stage.name,
-                startedAt: segment.startAtUtc,
-                endedAt: segment.endAtUtc,
-                importedAt: importedAt,
-                normalizedAt: importedAt,
-              ),
-            )
-            .toList(growable: false),
-      );
-
-      await _hrDao.upsertBatch(
-        mapped.heartRateSamples
-            .map(
-              (sample) => SleepCanonicalHeartRateSampleCompanion(
-                id: sample.id,
-                sessionId: sample.sessionId,
-                sourcePlatform: sample.sourcePlatform,
-                sourceAppId: sample.sourceAppId,
-                sourceConfidence: sample.sourceConfidence,
-                sourceRecordHash:
-                    sample.sourceRecordHash ?? _hashRecord('hr:${sample.id}'),
-                normalizationVersion: normalizationVersion,
-                sampledAt: sample.sampledAtUtc,
-                bpm: sample.bpm,
-                importedAt: importedAt,
-                normalizedAt: importedAt,
-              ),
-            )
-            .toList(growable: false),
-      );
-
-      final regularityByNight = await _buildRegularityByNight(
-        targetSessions: mapped.sessions,
-      );
-      final analysisRows = <SleepNightlyAnalysisCompanion>[];
-      for (final session in mapped.sessions) {
-        final repaired = repairSleepTimeline(
-          session: session,
-          segments:
-              segmentsBySession[session.id] ?? const <SleepStageSegment>[],
-        );
-        final metrics = calculateNightlySleepMetrics(
-          session: session,
-          repairedSegments: repaired,
-        );
-        final hr = hrBySession[session.id] ?? const <HeartRateSample>[];
-        final avgHr = hr.isEmpty
-            ? null
-            : hr.fold<double>(0, (sum, item) => sum + item.bpm) / hr.length;
-        final score = calculateSleepScore(
-          SleepScoringInput(
-            durationMinutes: metrics.totalSleepTime.inMinutes,
-            sleepEfficiencyPct: metrics.sleepEfficiencyPct,
-            wasoMinutes: metrics.wakeAfterSleepOnset.inMinutes,
-            regularitySri: regularityByNight[_nightKey(session.endAtUtc)]?.sri,
-            regularityValidDays:
-                regularityByNight[_nightKey(session.endAtUtc)]?.validDays ?? 0,
-            regularityValidComparisonPairs:
-                regularityByNight[_nightKey(session.endAtUtc)]
-                    ?.validComparisonPairs,
-            lightSleepPct: metrics.stagePercentages[CanonicalSleepStage.light],
-            deepSleepPct: metrics.stagePercentages[CanonicalSleepStage.deep],
-            remSleepPct: metrics.stagePercentages[CanonicalSleepStage.rem],
-            asleepUnspecifiedPct:
-                metrics.stagePercentages[CanonicalSleepStage.asleepUnspecified],
-            stageDataConfidence: _timelineConfidence(repaired),
-            sourcePlatform: session.sourcePlatform,
-            sourceAppId: session.sourceAppId,
-          ),
-          config: SleepScoringConfig(analysisVersion: analysisVersion),
-        );
-        final night = _nightKey(session.endAtUtc);
-        debugPrint('SleepPipeline session=${session.id} night=$night');
-        analysisRows.add(
-          SleepNightlyAnalysisCompanion(
-            id: 'analysis:${session.id}',
-            sessionId: session.id,
+    final rawRows = batch.sessions
+        .map(
+          (session) => SleepRawImportCompanion(
+            id: 'raw:${session.recordId}',
             sourcePlatform: session.sourcePlatform,
             sourceAppId: session.sourceAppId,
             sourceConfidence: session.sourceConfidence,
             sourceRecordHash: session.sourceRecordHash ??
-                _hashRecord('analysis:${session.id}'),
-            normalizationVersion: normalizationVersion,
-            analysisVersion: analysisVersion,
-            nightDate: night,
-            score: score.score,
-            totalSleepMinutes: metrics.totalSleepTime.inMinutes,
-            sleepEfficiencyPct: metrics.sleepEfficiencyPct,
-            restingHeartRateBpm: avgHr,
-            interruptionsCount: metrics.interruptionsCount,
-            interruptionsWakeMinutes: metrics.wakeAfterSleepOnset.inMinutes,
-            scoreCompleteness: score.completeness,
-            regularitySri: score.regularityScore,
-            regularityValidDays: score.regularityValidDays,
-            regularityIsStable: score.regularityStable,
-            analyzedAt: importedAt,
+                _hashRecord('raw:${session.recordId}'),
+            importStatus: 'success',
+            importedAt: importedAt,
+            payloadJson: jsonEncode(<String, dynamic>{
+              'recordId': session.recordId,
+              'startAtUtc': session.startAtUtc.toIso8601String(),
+              'endAtUtc': session.endAtUtc.toIso8601String(),
+              'platformSessionType': session.platformSessionType,
+            }),
           ),
-        );
-      }
-      await _analysesDao.upsertBatch(analysisRows);
-    });
+        )
+        .toList(growable: false);
 
-    return SleepPipelineRunResult(
-      importedSessions: mapped.sessions.length,
-      analyzedNights: mapped.sessions.length,
+    final sessionRows = mapped.sessions
+        .map(
+          (session) => SleepCanonicalSessionCompanion(
+            id: session.id,
+            rawImportId: 'raw:${session.id}',
+            sourcePlatform: session.sourcePlatform,
+            sourceAppId: session.sourceAppId,
+            sourceConfidence: session.sourceConfidence,
+            sourceRecordHash: session.sourceRecordHash ??
+                _hashRecord('session:${session.id}'),
+            normalizationVersion: normalizationVersion,
+            sessionType: session.sessionType.name,
+            startedAt: session.startAtUtc,
+            endedAt: session.endAtUtc,
+            timezone: null,
+            importedAt: importedAt,
+            normalizedAt: importedAt,
+          ),
+        )
+        .toList(growable: false);
+
+    final segmentRows = mapped.stageSegments
+        .map(
+          (segment) => SleepCanonicalStageSegmentCompanion(
+            id: segment.id,
+            sessionId: segment.sessionId,
+            sourcePlatform: segment.sourcePlatform,
+            sourceAppId: segment.sourceAppId,
+            sourceConfidence: segment.sourceConfidence,
+            sourceRecordHash: segment.sourceRecordHash ??
+                _hashRecord('segment:${segment.id}'),
+            normalizationVersion: normalizationVersion,
+            stage: segment.stage.name,
+            startedAt: segment.startAtUtc,
+            endedAt: segment.endAtUtc,
+            importedAt: importedAt,
+            normalizedAt: importedAt,
+          ),
+        )
+        .toList(growable: false);
+
+    final hrRows = mapped.heartRateSamples
+        .map(
+          (sample) => SleepCanonicalHeartRateSampleCompanion(
+            id: sample.id,
+            sessionId: sample.sessionId,
+            sourcePlatform: sample.sourcePlatform,
+            sourceAppId: sample.sourceAppId,
+            sourceConfidence: sample.sourceConfidence,
+            sourceRecordHash:
+                sample.sourceRecordHash ?? _hashRecord('hr:${sample.id}'),
+            normalizationVersion: normalizationVersion,
+            sampledAt: sample.sampledAtUtc,
+            bpm: sample.bpm,
+            importedAt: importedAt,
+            normalizedAt: importedAt,
+          ),
+        )
+        .toList(growable: false);
+
+    final regularityByNight = _buildRegularityByNight(
+      targetSessions: mapped.sessions,
+      lookbackSessions: params.lookbackSessions,
+      lookbackSegments: params.lookbackSegments,
+      currentBatchSegments: mapped.stageSegments,
+    );
+
+    final analysisRows = <SleepNightlyAnalysisCompanion>[];
+    for (final session in mapped.sessions) {
+      final repaired = repairSleepTimeline(
+        session: session,
+        segments: segmentsBySession[session.id] ?? const <SleepStageSegment>[],
+      );
+      final metrics = calculateNightlySleepMetrics(
+        session: session,
+        repairedSegments: repaired,
+      );
+      final hr = hrBySession[session.id] ?? const <HeartRateSample>[];
+      final avgHr = hr.isEmpty
+          ? null
+          : hr.fold<double>(0, (sum, item) => sum + item.bpm) / hr.length;
+      final score = calculateSleepScore(
+        SleepScoringInput(
+          durationMinutes: metrics.totalSleepTime.inMinutes,
+          sleepEfficiencyPct: metrics.sleepEfficiencyPct,
+          wasoMinutes: metrics.wakeAfterSleepOnset.inMinutes,
+          regularitySri: regularityByNight[_nightKey(session.endAtUtc)]?.sri,
+          regularityValidDays:
+              regularityByNight[_nightKey(session.endAtUtc)]?.validDays ?? 0,
+          regularityValidComparisonPairs:
+              regularityByNight[_nightKey(session.endAtUtc)]
+                  ?.validComparisonPairs,
+          lightSleepPct: metrics.stagePercentages[CanonicalSleepStage.light],
+          deepSleepPct: metrics.stagePercentages[CanonicalSleepStage.deep],
+          remSleepPct: metrics.stagePercentages[CanonicalSleepStage.rem],
+          asleepUnspecifiedPct:
+              metrics.stagePercentages[CanonicalSleepStage.asleepUnspecified],
+          stageDataConfidence: _timelineConfidence(repaired),
+          sourcePlatform: session.sourcePlatform,
+          sourceAppId: session.sourceAppId,
+        ),
+        config: SleepScoringConfig(analysisVersion: analysisVersion),
+      );
+      final night = _nightKey(session.endAtUtc);
+      analysisRows.add(
+        SleepNightlyAnalysisCompanion(
+          id: 'analysis:${session.id}',
+          sessionId: session.id,
+          sourcePlatform: session.sourcePlatform,
+          sourceAppId: session.sourceAppId,
+          sourceConfidence: session.sourceConfidence,
+          sourceRecordHash: session.sourceRecordHash ??
+              _hashRecord('analysis:${session.id}'),
+          normalizationVersion: normalizationVersion,
+          analysisVersion: analysisVersion,
+          nightDate: night,
+          score: score.score,
+          totalSleepMinutes: metrics.totalSleepTime.inMinutes,
+          sleepEfficiencyPct: metrics.sleepEfficiencyPct,
+          restingHeartRateBpm: avgHr,
+          interruptionsCount: metrics.interruptionsCount,
+          interruptionsWakeMinutes: metrics.wakeAfterSleepOnset.inMinutes,
+          scoreCompleteness: score.completeness,
+          regularitySri: score.regularityScore,
+          regularityValidDays: score.regularityValidDays,
+          regularityIsStable: score.regularityStable,
+          analyzedAt: importedAt,
+        ),
+      );
+    }
+
+    return SleepPipelineBackgroundTaskResult(
+      rawRows: rawRows,
+      sessionRows: sessionRows,
+      segmentRows: segmentRows,
+      hrRows: hrRows,
+      analysisRows: analysisRows,
     );
   }
 
-  _MappedBatch _mapBatch(SleepRawIngestionBatch batch) {
+  static _MappedBatch _mapBatch(SleepRawIngestionBatch batch) {
     final platform = batch.sessions.first.sourcePlatform.toLowerCase();
     if (platform.contains('apple') || platform.contains('healthkit')) {
       final mapped = const HealthKitMapper().map(batch);
@@ -306,44 +388,62 @@ class SleepPipelineService {
     );
   }
 
-  String _nightKey(DateTime date) {
+  static String _nightKey(DateTime date) {
     final normalized = DateTime(date.year, date.month, date.day);
     final month = normalized.month.toString().padLeft(2, '0');
     final day = normalized.day.toString().padLeft(2, '0');
     return '${normalized.year}-$month-$day';
   }
 
-  String _hashRecord(String value) =>
+  static String _hashRecord(String value) =>
       sha1.convert(utf8.encode(value)).toString();
 
-  Future<Map<String, SleepRegularityIndexResult>> _buildRegularityByNight({
+  static Map<String, SleepRegularityIndexResult> _buildRegularityByNight({
     required List<SleepSession> targetSessions,
-  }) async {
+    required List<SleepCanonicalSessionRecord> lookbackSessions,
+    required List<SleepCanonicalStageSegmentRecord> lookbackSegments,
+    required List<SleepStageSegment> currentBatchSegments,
+  }) {
     if (targetSessions.isEmpty) return const {};
     final targetNights = targetSessions
         .map((session) => _normalizeDay(session.endAtUtc))
         .toSet()
         .toList(growable: false)
       ..sort();
-    final earliestNight = targetNights.first;
-    final latestNight = targetNights.last;
 
-    // Conservative lookback window:
-    // We only need 5-7 valid days for SRI availability/stability, but use a
-    // wider range so sparse data can still produce a valid window.
-    final fromInclusive = earliestNight.subtract(const Duration(days: 30));
-    final toExclusive = latestNight.add(const Duration(days: 1));
-    final sessionRows = await _sessionsDao.findByDateRange(
-      fromInclusive: fromInclusive,
-      toExclusive: toExclusive,
-    );
     final dayBuilders = <String, _RegularityDayBuilder>{};
-    for (final sessionRow in sessionRows) {
-      final segmentRows = await _segmentsDao.findBySessionId(sessionRow.id);
-      if (segmentRows.isEmpty) continue;
-      final session = _toDomainSession(sessionRow);
-      final segments =
-          segmentRows.map(_toDomainStageSegment).toList(growable: false);
+
+    // Merge sessions: current batch takes precedence over lookback from DB
+    final allSessions = <String, SleepSession>{};
+    for (final row in lookbackSessions) {
+      allSessions[row.id] = _toDomainSession(row);
+    }
+    for (final session in targetSessions) {
+      allSessions[session.id] = session;
+    }
+
+    // Merge segments: current batch takes precedence
+    final allSegmentsBySessionId = <String, List<SleepStageSegment>>{};
+    for (final row in lookbackSegments) {
+      allSegmentsBySessionId
+          .putIfAbsent(row.sessionId, () => <SleepStageSegment>[])
+          .add(_toDomainStageSegment(row));
+    }
+
+    // Overwrite with current batch segments (grouped efficiently)
+    final currentBatchSegmentsMap = <String, List<SleepStageSegment>>{};
+    for (final segment in currentBatchSegments) {
+      currentBatchSegmentsMap
+          .putIfAbsent(segment.sessionId, () => <SleepStageSegment>[])
+          .add(segment);
+    }
+    for (final entry in currentBatchSegmentsMap.entries) {
+      allSegmentsBySessionId[entry.key] = entry.value;
+    }
+
+    for (final session in allSessions.values) {
+      final segments = allSegmentsBySessionId[session.id] ?? const [];
+      if (segments.isEmpty) continue;
       final repaired = repairSleepTimeline(
         session: session,
         segments: segments,
@@ -368,7 +468,7 @@ class SleepPipelineService {
     return byNight;
   }
 
-  SleepSession _toDomainSession(SleepCanonicalSessionRecord row) {
+  static SleepSession _toDomainSession(SleepCanonicalSessionRecord row) {
     return SleepSession(
       id: row.id,
       startAtUtc: row.startedAt,
@@ -384,7 +484,7 @@ class SleepPipelineService {
     );
   }
 
-  SleepStageSegment _toDomainStageSegment(
+  static SleepStageSegment _toDomainStageSegment(
     SleepCanonicalStageSegmentRecord row,
   ) {
     return SleepStageSegment(
@@ -401,21 +501,21 @@ class SleepPipelineService {
     );
   }
 
-  SleepSessionType _parseSessionType(String value) {
+  static SleepSessionType _parseSessionType(String value) {
     return SleepSessionType.values.firstWhere(
       (candidate) => candidate.name == value,
       orElse: () => SleepSessionType.unknown,
     );
   }
 
-  CanonicalSleepStage _parseStage(String value) {
+  static CanonicalSleepStage _parseStage(String value) {
     return CanonicalSleepStage.values.firstWhere(
       (candidate) => candidate.name == value,
       orElse: () => CanonicalSleepStage.unknown,
     );
   }
 
-  SleepStageConfidence _parseStageConfidence(String? value) {
+  static SleepStageConfidence _parseStageConfidence(String? value) {
     return switch ((value ?? '').toLowerCase()) {
       'high' => SleepStageConfidence.high,
       'medium' => SleepStageConfidence.medium,
@@ -424,7 +524,7 @@ class SleepPipelineService {
     };
   }
 
-  SleepOverallConfidence _parseOverallConfidence(String? value) {
+  static SleepOverallConfidence _parseOverallConfidence(String? value) {
     return switch ((value ?? '').toLowerCase()) {
       'high' => SleepOverallConfidence.high,
       'medium' => SleepOverallConfidence.medium,
@@ -433,7 +533,7 @@ class SleepPipelineService {
     };
   }
 
-  SleepStageConfidence _timelineConfidence(List<SleepStageSegment> segments) {
+  static SleepStageConfidence _timelineConfidence(List<SleepStageSegment> segments) {
     if (segments.isEmpty) return SleepStageConfidence.unknown;
     if (segments.every(
       (segment) => segment.stageConfidence == SleepStageConfidence.unknown,
@@ -458,19 +558,19 @@ class SleepPipelineService {
     return SleepStageConfidence.unknown;
   }
 
-  bool _isSleepStage(CanonicalSleepStage stage) {
+  static bool _isSleepStage(CanonicalSleepStage stage) {
     return stage == CanonicalSleepStage.light ||
         stage == CanonicalSleepStage.deep ||
         stage == CanonicalSleepStage.rem ||
         stage == CanonicalSleepStage.asleepUnspecified;
   }
 
-  DateTime _normalizeDay(DateTime value) =>
+  static DateTime _normalizeDay(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 
-  String _dayKey(DateTime value) => _nightKey(_normalizeDay(value));
+  static String _dayKey(DateTime value) => _nightKey(_normalizeDay(value));
 
-  void _markSleepSegmentAcrossDays(
+  static void _markSleepSegmentAcrossDays(
     SleepStageSegment segment,
     Map<String, _RegularityDayBuilder> dayBuilders,
   ) {
