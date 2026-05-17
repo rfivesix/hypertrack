@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.7-alpha] - 2026-05-17
+### Added
+- **Isolate Offloading**: Performance-intensive tasks like sleep pipeline processing, CSV/Excel decoding, and muscle analytics are now offloaded to background threads (isolates) using `compute()`, ensuring a butter-smooth UI.
+- **Global AI Instructions**: Added a persistent text field in settings for custom AI behavioral instructions, replacing the previous 7-day history transfer for better privacy and performance.
+- **Unified AI Ingredient Cards**: New visual representation for ingredients in AI-generated meals for better clarity.
+- **Legal Information**: Integrated Impressum and Privacy Policy directly into the app.
+
+### Changed
+- **3-Tier Diary Loading**: Optimized the diary screen with a 3-tier loading strategy: Tier 1 (instant macro/workout summary), Tier 2 (deferred exercise/meal lists), and Tier 3 (background health data sync).
+- **AI Prompt Hardening**: Improved strict constraint adherence for AI recommendations, fixing issues with dietary preferences (e.g., Skyr/dairy exclusion).
+- **Workout UI**: Major overhaul of the live workout and workout history screens for better usability and performance.
+- **Design Language**: Updated "Liquid Glass" theme as the standard and improved text visibility across various UI elements.
+
+### Fixed
+- **Navigation Stability**: Hardened navigation lifecycle with strict `if (!mounted)` guards to prevent crashes during rapid screen transitions.
+- **Metric/Imperial System**: Fixed unit system inconsistencies in onboarding and various screens (#337).
+- **Database Hardening**: Fixed multiple SQL issues in the OFF database and improved batch processing stability.
+- **Supplement Tracking**: Fixed default time for supplement entries in the diary (#354).
+- **Scanner Reliability**: Improved barcode scanner logic and permission handling.
+- Numerous bug fixes (Issues #322, #323, #334, #335, #338, #339, #340, #341, #342, #343, #344, #345, #347, #348, #349, #352, #353, #356, #357, #358, #361).
+
 ## [0.9.6] - 2026-05-15
 ### Added
 
