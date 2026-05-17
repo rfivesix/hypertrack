@@ -4328,17 +4328,17 @@ abstract class AppLocalizations {
   /// **'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.'**
   String get aiEnableSubtitle;
 
-  /// No description provided for @aiRecommendationContextTitle.
+  /// No description provided for @aiCustomInstructionsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Send recent meals for recommendations'**
-  String get aiRecommendationContextTitle;
+  /// **'Global AI Instructions'**
+  String get aiCustomInstructionsTitle;
 
-  /// No description provided for @aiRecommendationContextSubtitle.
+  /// No description provided for @aiCustomInstructionsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.'**
-  String get aiRecommendationContextSubtitle;
+  /// **'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every recommendation.'**
+  String get aiCustomInstructionsSubtitle;
 
   /// No description provided for @aiRecommendationTitle.
   ///

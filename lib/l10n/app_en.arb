@@ -914,8 +914,8 @@
 
   "aiEnableTitle": "Enable AI Features",
   "aiEnableSubtitle": "Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.",
-  "aiRecommendationContextTitle": "Send recent meals for recommendations",
-  "aiRecommendationContextSubtitle": "Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.",
+  "aiCustomInstructionsTitle": "Global AI Instructions",
+  "aiCustomInstructionsSubtitle": "Give the AI fixed rules (e.g., allergies, no-go foods like 'no bowls', or intolerances) to be followed with every recommendation.",
 
   "aiRecommendationTitle": "AI Meal Coach",
   "aiRecommendDietary": "Dietary",

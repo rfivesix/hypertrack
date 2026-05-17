@@ -919,8 +919,8 @@
 
   "aiEnableTitle": "KI-Funktionen aktivieren",
   "aiEnableSubtitle": "Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.",
-  "aiRecommendationContextTitle": "Letzte Mahlzeiten für Empfehlungen senden",
-  "aiRecommendationContextSubtitle": "Optional. Kann Vorschläge verbessern, indem eine kurze Zusammenfassung letzter Mahlzeiten an den gewählten KI-Anbieter gesendet wird. Standardmäßig aus.",
+  "aiCustomInstructionsTitle": "Globale KI-Anweisungen",
+  "aiCustomInstructionsSubtitle": "Gib der KI feste Regeln mit (z.B. Allergien, No-Go-Foods wie 'keine Bowls' oder Intoleranzen), die bei jeder Empfehlung beachtet werden sollen.",
 
   "aiRecommendationTitle": "KI-Mahlzeitcoach",
   "aiRecommendDietary": "Ernährungsweise",

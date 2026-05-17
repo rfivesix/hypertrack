@@ -2374,12 +2374,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.';
 
   @override
-  String get aiRecommendationContextTitle =>
-      'Send recent meals for recommendations';
+  String get aiCustomInstructionsTitle => 'Global AI Instructions';
 
   @override
-  String get aiRecommendationContextSubtitle =>
-      'Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.';
+  String get aiCustomInstructionsSubtitle =>
+      'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every recommendation.';
 
   @override
   String get aiRecommendationTitle => 'AI Meal Coach';

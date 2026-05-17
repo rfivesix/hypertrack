@@ -1444,24 +1444,26 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   Future<AiMealRecommendation> generateMealRecommendation({
     required Map<String, int> targetMacros,
     required List<String> preferences,
-    String? recentHistory,
     required String mealTypeLabel,
     String? customRequest,
     String? languageCode,
+    String? aiCustomInstructions,
   }) async {
     final provider = await getSelectedProvider();
     final apiKey = await getApiKey(provider);
     if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
     final model = await resolveAndPersistSelectedModel(provider);
 
-    final systemPrompt = _buildRecommendationPrompt(languageCode: languageCode);
+    final systemPrompt = _buildRecommendationPrompt(
+      languageCode: languageCode,
+      aiCustomInstructions: aiCustomInstructions,
+    );
 
     final refinedPreferences = _refineRecommendationPreferences(preferences);
 
     final userContent = buildMealRecommendationUserPromptForTesting(
       targetMacros: targetMacros,
       preferences: refinedPreferences,
-      recentHistory: recentHistory,
       mealTypeLabel: mealTypeLabel,
       customRequest: customRequest,
     );
@@ -1522,15 +1524,9 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   static String buildMealRecommendationUserPromptForTesting({
     required Map<String, int> targetMacros,
     required List<String> preferences,
-    required String? recentHistory,
     required String mealTypeLabel,
     String? customRequest,
   }) {
-    final contextBlock = recentHistory != null &&
-            recentHistory.trim().isNotEmpty
-        ? '\nRecent meals shared by the user (last 7 days): ${recentHistory.trim()}\n'
-        : '\nNo recent meal history was shared. Do not assume hidden meal history.\n';
-
     return '''
 Target Meal: $mealTypeLabel
 
@@ -1543,7 +1539,7 @@ Target macros for THIS meal:
 User constraints (Dietary/Situation): ${preferences.isEmpty ? 'None' : preferences.join('\n- ')}
 
 Custom user request: ${customRequest != null && customRequest.trim().isNotEmpty ? customRequest.trim() : 'None'}
-$contextBlock
+
 Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the target macros for THIS meal as accurately as possible.''';
   }
 
@@ -1595,10 +1591,10 @@ Repair the candidate. Prefer simple database-matchable food names and realistic 
     required AiValidationResult validation,
     required Map<String, int> targetMacros,
     required List<String> preferences,
-    required String? recentHistory,
     required String mealTypeLabel,
     String? customRequest,
     String? languageCode,
+    String? aiCustomInstructions,
   }) async {
     final previous = {
       'meal_name': candidate.mealName ?? 'Meal',
@@ -1621,7 +1617,6 @@ Original request:
 ${buildMealRecommendationUserPromptForTesting(
       targetMacros: targetMacros,
       preferences: _refineRecommendationPreferences(preferences),
-      recentHistory: recentHistory,
       mealTypeLabel: mealTypeLabel,
       customRequest: customRequest,
     )}
@@ -1757,10 +1752,25 @@ No markdown, no explanations, no extra text.''';
   }
 
   /// System prompt for meal recommendations.
-  static String _buildRecommendationPrompt({String? languageCode}) {
+  static String _buildRecommendationPrompt({
+    String? languageCode,
+    String? aiCustomInstructions,
+  }) {
     final langRule = (languageCode != null && languageCode.isNotEmpty)
         ? '\n- IMPORTANT: All food/ingredient names MUST be in the "$languageCode" language.'
         : '';
+
+    final customInstructionsRule =
+        (aiCustomInstructions != null && aiCustomInstructions.trim().isNotEmpty)
+            ? '''
+### CRITICAL VETO CONSTRAINTS & ALLERGIES
+The user has defined the following absolute restrictions. Treat these as medical-grade constraints. Including any ingredient that violates these rules will cause a critical application failure:
+
+USER CONSTRAINT: "${aiCustomInstructions.trim()}"
+
+Rule: If the constraint says "Keine Milchprodukte" or "No Dairy", you are strictly FORBIDDEN from using milk, yogurt, quark, skyr, whey protein, cheese, butter, or cream. You must substitute them with plant-based alternatives (e.g., soy, almond, pea protein) or structure a different recipe entirely.
+'''
+            : '';
 
     return '''
 You are a personal nutrition coach. The user wants a meal suggestion for a specific meal (Breakfast, Lunch, Dinner, or Snack).
@@ -1769,10 +1779,11 @@ CRITICAL RULES:
 1. PORTION SCALING: The provided macros are exactly what you should aim to fill for THIS SINGLE MEAL. Do NOT leave 'space' or hold back calories/macros for future meals. The user wants a meal recommendation whose nutrition matches the provided targets as optimally as possible.
 2. USER CONSTRAINTS: You must STRICTLY respect the user's constraints (Dietary/Situation). The user might give very strict situational limits (like "NO COOKING" or "ON THE GO"). Adhere to them exactly! Dietary limits (e.g. Vegan) must also be strictly followed.
 3. Suggest ONE highly appropriate meal.
-4. If recent meal history is provided, avoid repeating exact meals from it.
-5. Use SIMPLE, SHORT base food names for ingredients (e.g. "Reis" not "Langkorn-Basmatireis"), to maximize database matching.
-6. Estimate realistic ingredient amounts in grams.$langRule
+4. Use SIMPLE, SHORT base food names for ingredients (e.g. "Reis" not "Langkorn-Basmatireis"), to maximize database matching. Prefer raw, uncompounded kitchen staples (e.g., 'Vollei', 'Eiklar', 'Hähnchenbrust') over processed or ambiguous grocery items (like 'Hühnerfrikassee' or 'Eiercreme'), unless explicitly requested by the user.
+5. Estimate realistic ingredient amounts in grams.
+6. SEMANTIC AUDIT: Before finalizing the JSON output array, perform a semantic audit step: Check every single ingredient against the CRITICAL VETO CONSTRAINTS. If a violation is found, delete the meal plan and regenerate a completely compliant one.$langRule
 
+$customInstructionsRule
 Respond ONLY with a valid JSON object. No markdown, no explanation, no extra text.
 The JSON must have exactly these fields:
 - "meal_name": string (short name of the suggested meal)

@@ -2445,40 +2445,4 @@ class DatabaseHelper {
       'fat': (targetFat - consumedFat).clamp(0, 99999),
     };
   }
-
-  /// Builds a brief, food-name-only summary of the last [days] days.
-  ///
-  /// Example: `"Mon: Oatmeal, Chicken Rice | Tue: Eggs, Salad"`.
-  /// Keeps token count low for the AI prompt.
-  Future<String> getMealHistorySummary({int days = 7}) async {
-    final now = DateTime.now();
-    final start = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: days));
-    final entries = await getEntriesForDateRange(start, now);
-
-    if (entries.isEmpty) return '';
-
-    final productDb = ProductDatabaseHelper.instance;
-
-    // Group by day string
-    final Map<String, Set<String>> dayFoods = {};
-    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-    for (final entry in entries) {
-      final dayKey =
-          weekdays[entry.timestamp.weekday - 1]; // weekday is 1-based
-      final food = await productDb.getProductByBarcode(entry.barcode);
-      if (food != null) {
-        dayFoods.putIfAbsent(dayKey, () => <String>{});
-        dayFoods[dayKey]!.add(food.name);
-      }
-    }
-
-    return dayFoods.entries
-        .map((e) => '${e.key}: ${e.value.join(', ')}')
-        .join(' | ');
-  }
 }

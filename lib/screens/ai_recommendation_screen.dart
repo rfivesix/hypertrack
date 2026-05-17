@@ -12,10 +12,13 @@ import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
 import '../theme/color_constants.dart';
 import '../util/date_util.dart';
+import '../util/design_constants.dart';
 import '../util/ai_validation_localization.dart';
 import '../widgets/glass_bottom_menu.dart';
 import '../widgets/global_app_bar.dart';
+import '../widgets/summary_card.dart';
 import 'ai_settings_screen.dart';
+import 'general_food_selection_screen.dart';
 
 /// AI Meal Recommendation screen — generates a personalised meal suggestion
 /// that fits the user's remaining daily macros and dietary preferences.
@@ -55,7 +58,6 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
   Map<String, int>? _remainingMacros;
   AiMacroTargetContext? _targetContext;
   AiValidationResult? _validation;
-  bool _contextSharingEnabled = false;
 
   // ── Animation ──
   late final AnimationController _shimmerController;
@@ -108,14 +110,11 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
     try {
       final db = DatabaseHelper.instance;
-      final includeRecommendationContext =
-          context.read<ThemeService>().isAiRecommendationContextEnabled;
+      final themeService = context.read<ThemeService>();
+      final customInstructions = themeService.aiCustomInstructions;
 
       // 1. Gather context
       final macros = await db.getRemainingMacrosForDate(widget.date);
-      final history = includeRecommendationContext
-          ? await db.getMealHistorySummary()
-          : null;
       final goals = await db.getGoalsForDate(widget.date);
 
       // App-settings fallback only applies when no goal history exists.
@@ -149,7 +148,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
       final result = await AiService.instance.generateMealRecommendation(
         targetMacros: targetMacros,
         preferences: prefs,
-        recentHistory: history,
+        aiCustomInstructions: customInstructions,
         mealTypeLabel: _getMealLabel(l10n, widget.mealType),
         customRequest: _customRequestController.text,
         languageCode: languageCode,
@@ -169,7 +168,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
             validation: validation,
             targetMacros: targetMacros,
             preferences: prefs,
-            recentHistory: history,
+            aiCustomInstructions: customInstructions,
             mealTypeLabel: _getMealLabel(l10n, widget.mealType),
             customRequest: _customRequestController.text,
             languageCode: languageCode,
@@ -188,7 +187,6 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
         _remainingMacros = macros;
         _targetContext = targetContext;
         _validation = outcome.validation;
-        _contextSharingEnabled = includeRecommendationContext;
         _isGenerating = false;
       });
     } on AiKeyMissingException {
@@ -273,6 +271,154 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
     if (!mounted || !saved) return;
     HapticFeedbackService.instance.confirmationFeedback();
     Navigator.of(context).pop(true); // Signal diary to refresh
+  }
+
+  Future<void> _editQuantity(int index) async {
+    final item = _matchedIngredients[index];
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController(
+      text: item.ingredient.amountInGrams.toString(),
+    );
+
+    final result = await showGlassBottomMenu<int?>(
+      context: context,
+      title: item.matchedFood?.getLocalizedName(context) ?? item.ingredient.name,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.amount_in_grams,
+                suffixText: l10n.unit_grams,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final val = int.tryParse(controller.text);
+                      if (val != null && val > 0) {
+                        close();
+                        Navigator.of(ctx).pop(val);
+                      }
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      _updateIngredientAmount(index, result);
+    }
+  }
+
+  Future<void> _replaceWithFood(int index) async {
+    final selectedItem = await Navigator.of(context).push<FoodItem>(
+      MaterialPageRoute(builder: (_) => const GeneralFoodSelectionScreen()),
+    );
+    if (selectedItem != null && mounted) {
+      _updateIngredientFood(index, selectedItem);
+    }
+  }
+
+  Future<void> _addManualItem() async {
+    final selectedItem = await Navigator.of(context).push<FoodItem>(
+      MaterialPageRoute(builder: (_) => const GeneralFoodSelectionScreen()),
+    );
+    if (selectedItem != null && mounted) {
+      final newIngredient = _MatchedIngredient(
+        ingredient: AiRecommendedIngredient(
+          name: selectedItem.getLocalizedName(context),
+          amountInGrams: 100,
+        ),
+        matchedFood: selectedItem,
+      );
+      setState(() {
+        _matchedIngredients.add(newIngredient);
+      });
+      _validateCurrentItems();
+    }
+  }
+
+  void _removeItem(int index) {
+    setState(() {
+      _matchedIngredients.removeAt(index);
+    });
+    _validateCurrentItems();
+  }
+
+  Future<void> _updateIngredientAmount(int index, int amount) async {
+    final current = _matchedIngredients[index];
+    setState(() {
+      _matchedIngredients[index] = _MatchedIngredient(
+        ingredient: AiRecommendedIngredient(
+          name: current.ingredient.name,
+          amountInGrams: amount,
+        ),
+        matchedFood: current.matchedFood,
+      );
+    });
+    await _validateCurrentItems();
+  }
+
+  Future<void> _updateIngredientFood(int index, FoodItem food) async {
+    setState(() {
+      _matchedIngredients[index] = _MatchedIngredient(
+        ingredient: AiRecommendedIngredient(
+          name: food.getLocalizedName(context),
+          amountInGrams: _matchedIngredients[index].ingredient.amountInGrams,
+        ),
+        matchedFood: food,
+      );
+    });
+    await _validateCurrentItems();
+  }
+
+  Future<void> _validateCurrentItems() async {
+    final candidate = AiMealCandidate(
+      mealName: _recommendation?.mealName,
+      description: _recommendation?.description,
+      items: _matchedIngredients
+          .map((m) => AiMealCandidateItem(
+                name: m.ingredient.name,
+                grams: m.ingredient.amountInGrams,
+                matchedBarcode: m.matchedFood?.barcode,
+              ))
+          .toList(),
+    );
+
+    final result = await AiMealValidationEngine().validateMealCandidate(
+      candidate: candidate,
+      mode: AiValidationMode.recommendation,
+      targetContext: _targetContext,
+    );
+
+    if (mounted) {
+      setState(() {
+        _validation = result;
+        _matchedIngredients = _matchedIngredientsFromValidation(result);
+      });
+    }
   }
 
   Future<bool?> _confirmPartialSave(AiDiarySavePlan savePlan) {
@@ -771,14 +917,6 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            _contextSharingEnabled
-                ? l10n.aiValidationRecentMealContextIncluded
-                : l10n.aiValidationGeneratedWithoutRecentMealHistory,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
           if (fit != null) ...[
             const SizedBox(height: 6),
             Text(
@@ -923,96 +1061,136 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
         // Ingredients list
         ...List.generate(_matchedIngredients.length, (i) {
           final item = _matchedIngredients[i];
           final food = item.matchedFood;
           final ing = item.ingredient;
+          final hasMatch = food != null;
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12),
+          return Dismissible(
+            key: ValueKey(item.hashCode + i),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius:
+                    BorderRadius.circular(DesignConstants.borderRadiusM),
+              ),
+              child: const Icon(Icons.delete, color: Colors.white),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        food != null
-                            ? food.getLocalizedName(context)
-                            : ing.name,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      if (food != null)
-                        Text(
-                          '${ing.amountInGrams}g · '
-                          '${item.nutrition.kcalRounded} kcal · '
-                          '${item.nutrition.proteinRounded}g P',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        )
-                      else
-                        Text(
-                          '${ing.amountInGrams}g — ${l10n.aiRecommendNoMatch}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.error,
-                          ),
-                        ),
-                      if (item.issues
-                          .where(
-                            (issue) =>
-                                issue.severity != AiValidationSeverity.info,
-                          )
-                          .isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        ...item.issues
-                            .where(
-                              (issue) =>
-                                  issue.severity != AiValidationSeverity.info,
-                            )
-                            .take(2)
-                            .map(
-                              (issue) => Text(
-                                aiValidationIssueText(l10n, issue),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: issue.severity ==
-                                          AiValidationSeverity.error
-                                      ? theme.colorScheme.error
-                                      : Colors.orange[800],
+            onDismissed: (_) => _removeItem(i),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SummaryCard(
+                child: InkWell(
+                  onTap: () => _replaceWithFood(i),
+                  borderRadius:
+                      BorderRadius.circular(DesignConstants.borderRadiusM),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                food?.getLocalizedName(context) ?? ing.name,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const SizedBox(height: 4),
+                              if (hasMatch)
+                                Text(
+                                  '${item.nutrition.kcalRounded} kcal · ${item.nutrition.proteinRounded}g P',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  l10n.aiRecommendNoMatch,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              if (item.issues
+                                  .where(
+                                    (issue) =>
+                                        issue.severity !=
+                                        AiValidationSeverity.info,
+                                  )
+                                  .isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                ...item.issues
+                                    .where(
+                                      (issue) =>
+                                          issue.severity !=
+                                          AiValidationSeverity.info,
+                                    )
+                                    .take(2)
+                                    .map(
+                                      (issue) => Text(
+                                        aiValidationIssueText(l10n, issue),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                          color: issue.severity ==
+                                                  AiValidationSeverity.error
+                                              ? theme.colorScheme.error
+                                              : Colors.orange[800],
+                                        ),
+                                      ),
+                                    ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        // Quantity indicator
+                        GestureDetector(
+                          onTap: () => _editQuantity(i),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${ing.amountInGrams}g',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
-                if (food != null)
-                  Icon(
-                    Icons.check_circle_rounded,
-                    size: 18,
-                    color: Colors.green[600],
-                  )
-                else
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 18,
-                    color: theme.colorScheme.error,
-                  ),
-              ],
+              ),
             ),
           );
         }),
+
+        // Add item button
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: OutlinedButton.icon(
+            onPressed: _addManualItem,
+            icon: const Icon(Icons.add),
+            label: Text(l10n.aiReviewAddItem),
+          ),
+        ),
       ],
     );
   }

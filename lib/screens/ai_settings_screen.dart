@@ -26,6 +26,7 @@ class AiSettingsScreen extends StatefulWidget {
 
 class _AiSettingsScreenState extends State<AiSettingsScreen> {
   final _keyController = TextEditingController();
+  final _instructionsController = TextEditingController();
   AiProvider _selectedProvider = AiProvider.openai;
   String _selectedModel = '';
   List<AiModelOption> _modelOptions = const [];
@@ -39,11 +40,14 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    _instructionsController.text =
+        context.read<ThemeService>().aiCustomInstructions;
   }
 
   @override
   void dispose() {
     _keyController.dispose();
+    _instructionsController.dispose();
     super.dispose();
   }
 
@@ -303,26 +307,29 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                               themeService.setAiEnabled(value),
                         ),
                         if (aiEnabled) ...[
-                          const SizedBox(height: 8),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            secondary: Icon(
-                              Icons.history_rounded,
-                              color: theme.colorScheme.primary,
-                            ),
-                            title: Text(
-                              l10n.aiRecommendationContextTitle,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle:
-                                Text(l10n.aiRecommendationContextSubtitle),
-                            value:
-                                themeService.isAiRecommendationContextEnabled,
-                            onChanged: (value) => themeService
-                                .setAiRecommendationContextEnabled(value),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.aiCustomInstructionsTitle,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
+                          Text(
+                            l10n.aiCustomInstructionsSubtitle,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _instructionsController,
+                            maxLines: 5,
+                            minLines: 2,
+                            onChanged: (value) =>
+                                themeService.setAiCustomInstructions(value),
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Z.B. Keine Erdnüsse, Vegan...',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           DropdownButtonFormField<AiProvider>(
                             initialValue: _selectedProvider,
                             decoration: InputDecoration(

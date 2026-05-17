@@ -2387,12 +2387,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.';
 
   @override
-  String get aiRecommendationContextTitle =>
-      'Letzte Mahlzeiten für Empfehlungen senden';
+  String get aiCustomInstructionsTitle => 'Globale KI-Anweisungen';
 
   @override
-  String get aiRecommendationContextSubtitle =>
-      'Optional. Kann Vorschläge verbessern, indem eine kurze Zusammenfassung letzter Mahlzeiten an den gewählten KI-Anbieter gesendet wird. Standardmäßig aus.';
+  String get aiCustomInstructionsSubtitle =>
+      'Gib der KI feste Regeln mit (z.B. Allergien, No-Go-Foods wie \'keine Bowls\' oder Intoleranzen), die bei jeder Empfehlung beachtet werden sollen.';
 
   @override
   String get aiRecommendationTitle => 'KI-Mahlzeitcoach';
