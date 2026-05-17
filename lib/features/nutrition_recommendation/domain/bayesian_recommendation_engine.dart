@@ -49,6 +49,8 @@ class BayesianNutritionRecommendationEngine {
           ),
     );
     final maintenanceEstimate = estimatorRun.estimate;
+    final phaseEffectiveKcalPerKg =
+        maintenanceEstimate.debugInfo['effectiveKcalPerKg'] as double?;
 
     final recommendation =
         AdaptiveNutritionRecommendationEngine.generateFromMaintenanceEstimate(
@@ -60,6 +62,7 @@ class BayesianNutritionRecommendationEngine {
       estimatedMaintenanceCalories:
           maintenanceEstimate.posteriorMaintenanceCalories.round(),
       confidence: maintenanceEstimate.confidence,
+      phaseEffectiveKcalPerKg: phaseEffectiveKcalPerKg,
       dueWeekKey: dueWeekKey,
       previousRecommendation: previousRecommendation,
     );

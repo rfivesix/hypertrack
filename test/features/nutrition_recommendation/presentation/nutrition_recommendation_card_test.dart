@@ -548,6 +548,50 @@ void main() {
           '"$expectedLabel" so screen readers can announce the data-quality tier.',
     );
   });
+
+  testWidgets('renders effective energy density when present', (tester) async {
+    final recommendation = _recommendation().copyWith(
+      inputSummary: RecommendationInputSummary(
+        windowDays: 21,
+        weightLogCount: 15,
+        intakeLoggedDays: 20,
+        smoothedWeightSlopeKgPerWeek: -0.5,
+        avgLoggedCalories: 2500,
+        phaseEffectiveKcalPerKg: 5938.4,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: NutritionRecommendationCard(
+            goal: BodyweightGoal.maintainWeight,
+            targetRateKgPerWeek: 0,
+            recommendation: recommendation,
+            maintenanceEstimate: _estimate(),
+            generatedAt: recommendation.generatedAt,
+            nextAdaptiveRecommendationDueAt: DateTime(2026, 4, 13),
+            isAdaptiveRecommendationDueNow: false,
+            activeTargetCalories: 2400,
+            isRecalculating: false,
+            isApplying: false,
+            onRecalculate: () {},
+            onApply: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Effektive Energiedichte: 5938 kcal/kg'), findsOneWidget);
+    expect(
+      find.text(
+        'Dynamischer Wert basierend auf Gewichts- und Wasserverlust-Ratio',
+      ),
+      findsOneWidget,
+    );
+  });
 }
 
 NutritionRecommendation _recommendation() {

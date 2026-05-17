@@ -308,6 +308,8 @@ class _GeneratedRecommendationContent extends StatelessWidget {
             l10n,
             recommendation,
           ),
+          effectiveEnergyDensity:
+              recommendation.inputSummary.phaseEffectiveKcalPerKg,
           activeCaloriesLine: l10n.adaptiveRecommendationActiveCaloriesLine(
             activeTargetCalories,
           ),
@@ -685,6 +687,7 @@ class _MacroTile extends StatelessWidget {
 class _RecommendationContextPanel extends StatelessWidget {
   final String dataBasisLine;
   final String dataBasisMessage;
+  final double? effectiveEnergyDensity;
   final String activeCaloriesLine;
   final String calculatedAtLine;
   final String nextDueLine;
@@ -692,6 +695,7 @@ class _RecommendationContextPanel extends StatelessWidget {
   const _RecommendationContextPanel({
     required this.dataBasisLine,
     required this.dataBasisMessage,
+    this.effectiveEnergyDensity,
     required this.activeCaloriesLine,
     required this.calculatedAtLine,
     required this.nextDueLine,
@@ -700,6 +704,7 @@ class _RecommendationContextPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return _SoftPanel(
       child: Column(
@@ -707,7 +712,7 @@ class _RecommendationContextPanel extends StatelessWidget {
         children: [
           Text(
             l10n.adaptiveRecommendationDataQualityLabel,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
           ),
@@ -718,6 +723,21 @@ class _RecommendationContextPanel extends StatelessWidget {
             text: dataBasisMessage,
             key: const Key('adaptive_recommendation_data_basis_message'),
           ),
+          if (effectiveEnergyDensity != null) ...[
+            const SizedBox(height: DesignConstants.spacingS),
+            _DetailLine(
+              text: 'Effektive Energiedichte: '
+                  '${effectiveEnergyDensity!.round()} kcal/kg',
+            ),
+            Text(
+              'Dynamischer Wert basierend auf Gewichts- und Wasserverlust-Ratio',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
           const SizedBox(height: DesignConstants.spacingS),
           Wrap(
             spacing: DesignConstants.spacingS,
