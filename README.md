@@ -86,6 +86,8 @@ Train Libre is built with Flutter and supports:
 
 These are early ideas, not commitments. They will only happen if they make sense for users and for the project.
 
+- **muscle visualization**: Implement selected muscles on a model in various screens. A package that may be fits for this is https://github.com/timcreatedit/body_part_selector. But it looks very basic.
+
 - **Optional low‑cost AI add‑on:** If there is enough demand, Train Libre might offer a privacy‑respecting subscription where the app manages the AI API key for you (no manual key setup, no per‑token billing hassle). The core app would stay open source, offline‑first, and fully usable without any subscription.
 
 - **Optional private account & sync (self‑hostable first):** Long‑term, there could be an optional account layer for encrypted backup and multi‑device sync, designed to be self‑hostable (e.g. via a small Docker setup, possibly on top of something like Supabase or a similar backend).

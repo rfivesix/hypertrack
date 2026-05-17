@@ -28,7 +28,6 @@ import 'package:train_libre/services/health/steps_sync_service.dart';
 import 'package:train_libre/services/theme_service.dart';
 import 'package:train_libre/services/unit_service.dart';
 import 'package:train_libre/services/workout_session_manager.dart';
-import 'package:train_libre/widgets/analytics_section_header.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -524,7 +523,7 @@ void main() {
 
   Finder stepsSectionHeader() {
     return find.descendant(
-      of: find.byType(AnalyticsSectionHeader),
+      of: find.byType(StatisticsHubScreen),
       matching: find.text('STEPS'),
     );
   }

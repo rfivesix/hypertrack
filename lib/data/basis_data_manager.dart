@@ -84,6 +84,12 @@ class BasisDataManager {
       activeOffCountry,
     );
 
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentAppVersion = packageInfo.version;
+    final lastDbSyncAppVersion = prefs.getString('last_db_sync_app_version');
+    final bool isEnriched = prefs.getBool(_keyVersionFoodEnrichment) ?? false;
+    final bool forceEnrichment = !isEnriched;
+
     // Helper function to keep the code readable.
     Future<void> process(
       String label,
@@ -95,6 +101,7 @@ class BasisDataManager {
       String? legacyAssetPath,
       String? driftTable,
       bool enableOffReplacementRetention = false,
+      bool? forceImportOverride,
     }) async {
       await _updateDatabaseFromSource(
         assetPath: asset,
@@ -107,7 +114,7 @@ class BasisDataManager {
         mapFunction: mapper,
         taskLabel: label,
         onProgress: onProgress,
-        forceImport: force,
+        forceImport: forceImportOverride ?? force,
         enableOffReplacementRetention: enableOffReplacementRetention,
       );
     }
@@ -169,6 +176,7 @@ class BasisDataManager {
         preferredLanguage: baseFoodLangCode,
       ),
       legacyAssetPath: AppDataSources.legacyBaseFoodsAssetDbPath,
+      forceImportOverride: force || forceEnrichment,
     );
 
     // 2b. Categories
@@ -182,11 +190,7 @@ class BasisDataManager {
       legacyAssetPath: AppDataSources.legacyFoodCategoriesAssetDbPath,
     );
 
-    final packageInfo = await PackageInfo.fromPlatform();
-    final currentAppVersion = packageInfo.version;
-    final lastDbSyncAppVersion = prefs.getString('last_db_sync_app_version');
-
-    final bool shouldSyncOff = force || currentAppVersion != lastDbSyncAppVersion;
+    final bool shouldSyncOff = force || currentAppVersion != lastDbSyncAppVersion || forceEnrichment;
 
     if (!shouldSyncOff) {
       onProgress?.call(
@@ -235,6 +239,7 @@ class BasisDataManager {
         'Kein OFF-Bundle/Remote verfügbar. Vorhandene lokale OFF-Daten bleiben unverändert.',
         1.0,
       );
+      await prefs.setString('last_db_sync_app_version', currentAppVersion);
       return;
     }
 
@@ -248,6 +253,7 @@ class BasisDataManager {
       sourceFilePath: remoteOffDbPath,
       legacyAssetPath: activeOffSource.legacyBundledAssetDbPath,
       enableOffReplacementRetention: true,
+      forceImportOverride: force || forceEnrichment,
     );
 
     await prefs.setString('last_db_sync_app_version', currentAppVersion);
@@ -812,7 +818,7 @@ class BasisDataManager {
       salt: drift.Value(_parseDouble(row['salt'])),
       caffeine: drift.Value(_parseDouble(row['caffeine_mg_per_100ml'] ?? row['caffeine'])),
       caffeineMgPer100g: drift.Value(_parseDouble(row['caffeine_mg_per_100g'])),
-      ingredientsText: drift.Value(row['ingredients_text']?.toString()),
+      ingredientsText: drift.Value(sourceLabel == 'base' ? null : row['ingredients_text']?.toString()),
       ingredientsAnalysisTags: drift.Value(row['ingredients_analysis_tags']?.toString()),
       additivesTags: drift.Value(row['additives_tags']?.toString()),
       productQuantity: drift.Value(_parseDouble(row['product_quantity'])),

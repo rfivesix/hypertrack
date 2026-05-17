@@ -555,8 +555,10 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 16) {
             // Defensive migration: Check if columns exist before adding them.
-            final productsColumns = await customSelect('PRAGMA table_info(products)').get();
-            final names = productsColumns.map((c) => c.read<String>('name')).toSet();
+            final productsColumns =
+                await customSelect('PRAGMA table_info(products)').get();
+            final names =
+                productsColumns.map((c) => c.read<String>('name')).toSet();
 
             if (!names.contains('caffeine_mg_per_100g')) {
               await m.addColumn(products, products.caffeineMgPer100g);
