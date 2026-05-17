@@ -41,6 +41,8 @@ class BasisDataManager {
   static const String _keyVersionTraining = 'installed_training_version';
   static const String _keyVersionFood = 'installed_food_version';
   static const String _keyVersionCats = 'installed_cats_version';
+  /// Version key for the metadata enrichment (Caffeine, Ingredients, etc.)
+  static const String _keyVersionFoodEnrichment = 'installed_food_enrichment_v1';
   static const String _fallbackInstalledVersion = '000000000001';
 
   int _parseInt(dynamic value) => (value as num?)?.toInt() ?? 0;
@@ -400,7 +402,13 @@ class BasisDataManager {
           prefKey,
           storedVersionAfterImport(assetVersion: assetVersion),
         );
-      } else {
+
+        // If we just successfully imported base foods, mark the enrichment version as well.
+        if (prefKey == _keyVersionFood) {
+          await prefs.setBool(_keyVersionFoodEnrichment, true);
+        }
+        } else {
+
         // If current, briefly show 100% so it does not hang.
         if (installedVersion == '0' &&
             assetVersion == '0' &&
@@ -770,6 +778,14 @@ class BasisDataManager {
       sugar: drift.Value(_parseDouble(row['sugar'])),
       fiber: drift.Value(_parseDouble(row['fiber'])),
       salt: drift.Value(_parseDouble(row['salt'])),
+      caffeine: drift.Value(_parseDouble(row['caffeine_mg_per_100ml'] ?? row['caffeine'])),
+      caffeineMgPer100g: drift.Value(_parseDouble(row['caffeine_mg_per_100g'])),
+      ingredientsText: drift.Value(row['ingredients_text']?.toString()),
+      ingredientsAnalysisTags: drift.Value(row['ingredients_analysis_tags']?.toString()),
+      additivesTags: drift.Value(row['additives_tags']?.toString()),
+      productQuantity: drift.Value(_parseDouble(row['product_quantity'])),
+      productQuantityUnit: drift.Value(row['product_quantity_unit']?.toString()),
+      isFluid: drift.Value(_parseInt(row['is_fluid']) == 1),
       source: drift.Value(sourceLabel),
       isLiquid: drift.Value(_parseInt(row['is_liquid']) == 1),
       category: drift.Value(row['category']?.toString()),

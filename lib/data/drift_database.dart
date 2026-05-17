@@ -191,7 +191,8 @@ class Products extends Table with HybridId, MetaColumns {
   RealColumn get salt => real().nullable()();
   RealColumn get caffeine =>
       real().nullable()(); // Important for supplement logic
-  RealColumn get caffeineMgPer100g => real().nullable()();
+  RealColumn get caffeineMgPer100g =>
+      real().named('caffeine_mg_per_100g').nullable()();
   TextColumn get ingredientsText => text().nullable()();
   TextColumn get ingredientsAnalysisTags => text().nullable()();
   TextColumn get additivesTags => text().nullable()();
@@ -553,13 +554,31 @@ class AppDatabase extends _$AppDatabase {
             );
           }
           if (from < 16) {
-            await m.addColumn(products, products.caffeineMgPer100g);
-            await m.addColumn(products, products.ingredientsText);
-            await m.addColumn(products, products.ingredientsAnalysisTags);
-            await m.addColumn(products, products.additivesTags);
-            await m.addColumn(products, products.productQuantity);
-            await m.addColumn(products, products.productQuantityUnit);
-            await m.addColumn(products, products.isFluid);
+            // Defensive migration: Check if columns exist before adding them.
+            final productsColumns = await customSelect('PRAGMA table_info(products)').get();
+            final names = productsColumns.map((c) => c.read<String>('name')).toSet();
+
+            if (!names.contains('caffeine_mg_per_100g')) {
+              await m.addColumn(products, products.caffeineMgPer100g);
+            }
+            if (!names.contains('ingredients_text')) {
+              await m.addColumn(products, products.ingredientsText);
+            }
+            if (!names.contains('ingredients_analysis_tags')) {
+              await m.addColumn(products, products.ingredientsAnalysisTags);
+            }
+            if (!names.contains('additives_tags')) {
+              await m.addColumn(products, products.additivesTags);
+            }
+            if (!names.contains('product_quantity')) {
+              await m.addColumn(products, products.productQuantity);
+            }
+            if (!names.contains('product_quantity_unit')) {
+              await m.addColumn(products, products.productQuantityUnit);
+            }
+            if (!names.contains('is_fluid')) {
+              await m.addColumn(products, products.isFluid);
+            }
           }
         },
       );

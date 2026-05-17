@@ -6077,7 +6077,7 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       const VerificationMeta('caffeineMgPer100g');
   @override
   late final GeneratedColumn<double> caffeineMgPer100g =
-      GeneratedColumn<double>('caffeine_mg_per100g', aliasedName, true,
+      GeneratedColumn<double>('caffeine_mg_per_100g', aliasedName, true,
           type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _ingredientsTextMeta =
       const VerificationMeta('ingredientsText');
@@ -6275,11 +6275,11 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       context.handle(_caffeineMeta,
           caffeine.isAcceptableOrUnknown(data['caffeine']!, _caffeineMeta));
     }
-    if (data.containsKey('caffeine_mg_per100g')) {
+    if (data.containsKey('caffeine_mg_per_100g')) {
       context.handle(
           _caffeineMgPer100gMeta,
           caffeineMgPer100g.isAcceptableOrUnknown(
-              data['caffeine_mg_per100g']!, _caffeineMgPer100gMeta));
+              data['caffeine_mg_per_100g']!, _caffeineMgPer100gMeta));
     }
     if (data.containsKey('ingredients_text')) {
       context.handle(
@@ -6380,7 +6380,7 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       caffeine: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}caffeine']),
       caffeineMgPer100g: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}caffeine_mg_per100g']),
+          DriftSqlType.double, data['${effectivePrefix}caffeine_mg_per_100g']),
       ingredientsText: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}ingredients_text']),
       ingredientsAnalysisTags: attachedDatabase.typeMapping.read(
@@ -6509,7 +6509,7 @@ class Product extends DataClass implements Insertable<Product> {
       map['caffeine'] = Variable<double>(caffeine);
     }
     if (!nullToAbsent || caffeineMgPer100g != null) {
-      map['caffeine_mg_per100g'] = Variable<double>(caffeineMgPer100g);
+      map['caffeine_mg_per_100g'] = Variable<double>(caffeineMgPer100g);
     }
     if (!nullToAbsent || ingredientsText != null) {
       map['ingredients_text'] = Variable<String>(ingredientsText);
@@ -7038,7 +7038,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (fiber != null) 'fiber': fiber,
       if (salt != null) 'salt': salt,
       if (caffeine != null) 'caffeine': caffeine,
-      if (caffeineMgPer100g != null) 'caffeine_mg_per100g': caffeineMgPer100g,
+      if (caffeineMgPer100g != null) 'caffeine_mg_per_100g': caffeineMgPer100g,
       if (ingredientsText != null) 'ingredients_text': ingredientsText,
       if (ingredientsAnalysisTags != null)
         'ingredients_analysis_tags': ingredientsAnalysisTags,
@@ -7176,7 +7176,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       map['caffeine'] = Variable<double>(caffeine.value);
     }
     if (caffeineMgPer100g.present) {
-      map['caffeine_mg_per100g'] = Variable<double>(caffeineMgPer100g.value);
+      map['caffeine_mg_per_100g'] = Variable<double>(caffeineMgPer100g.value);
     }
     if (ingredientsText.present) {
       map['ingredients_text'] = Variable<String>(ingredientsText.value);

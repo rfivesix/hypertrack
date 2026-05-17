@@ -1,4 +1,6 @@
 // lib/models/food_item.dart
+import 'dart:convert';
+
 import 'package:flutter/widgets.dart'; // Added for BuildContext
 
 enum FoodItemSource {
@@ -143,12 +145,12 @@ class FoodItem {
     Map<String, dynamic> map, {
     required FoodItemSource source,
   }) {
-    return FoodItem(
+    final item = FoodItem(
       barcode: map['barcode'] ?? '',
       // FIXED LOGIC: Read all name variants
       name: map['name'] ?? '',
-      nameDe: map['name_de'] ?? '',
-      nameEn: map['name_en'] ?? '',
+      nameDe: map['name_de'] ?? map['name'] ?? '',
+      nameEn: map['name_en'] ?? map['name'] ?? '',
       brand: map['brand'] ?? '',
       calories: (map['calories_100g'] as num?)?.round() ?? 0,
       protein: (map['protein_100g'] as num?)?.toDouble() ?? 0.0,
@@ -165,13 +167,18 @@ class FoodItem {
       isFluid: _readBool(map['is_fluid']) ?? false,
       caffeineMgPer100ml: _toDoubleOrNull(map['caffeine_mg_per_100ml']) ??
           _toDoubleOrNull(map['caffeine']),
-      caffeineMgPer100g: _toDoubleOrNull(map['caffeine_mg_per_100g']),
+      // Robust naming: check both caffeine_mg_per_100g (Python/Asset) and caffeine_mg_per100g (Drift default)
+      caffeineMgPer100g: _toDoubleOrNull(map['caffeine_mg_per_100g']) ??
+          _toDoubleOrNull(map['caffeine_mg_per100g']),
       ingredientsText: map['ingredients_text'],
+
       ingredientsAnalysisTags: _toStringList(map['ingredients_analysis_tags']),
       additivesTags: _toStringList(map['additives_tags']),
       productQuantity: _toDoubleOrNull(map['product_quantity']),
       productQuantityUnit: map['product_quantity_unit'],
     );
+
+    return item;
   }
 
   /// Converts the [FoodItem] instance to a Map for database storage.
@@ -227,13 +234,20 @@ class FoodItem {
     if (v is List) return v.map((e) => e.toString()).toList();
     if (v is String) {
       if (v.startsWith('[') && v.endsWith(']')) {
-        // Simple JSON-ish parsing for tags
-        return v
-            .substring(1, v.length - 1)
-            .split(',')
-            .map((e) => e.trim().replaceAll('"', '').replaceAll("'", ""))
-            .where((e) => e.isNotEmpty)
-            .toList();
+        try {
+          final decoded = jsonDecode(v);
+          if (decoded is List) {
+            return decoded.map((e) => e.toString()).toList();
+          }
+        } catch (_) {
+          // Fallback: manual split for non-standard JSON (e.g. single-quoted)
+          return v
+              .substring(1, v.length - 1)
+              .split(',')
+              .map((e) => e.trim().replaceAll('"', '').replaceAll("'", ""))
+              .where((e) => e.isNotEmpty)
+              .toList();
+        }
       }
       return [v];
     }

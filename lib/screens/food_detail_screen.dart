@@ -302,25 +302,39 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               const SizedBox(height: DesignConstants.spacingS),
               Wrap(
                 spacing: 8,
-                children: _displayItem.ingredientsAnalysisTags!
-                    .where((tag) => tag.contains('vegan') || tag.contains('vegetarian'))
-                    .map((tag) {
-                  final isVegan = tag.contains('vegan');
-                  return Chip(
-                    label: Text(
-                      isVegan ? l10n.vegan : l10n.vegetarian,
-                      style: TextStyle(
-                        color: isVegan ? Colors.green[800] : Colors.green[700],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                children: [
+                  if (_displayItem.ingredientsAnalysisTags!.contains('en:vegan'))
+                    Chip(
+                      label: Text(
+                        l10n.vegan,
+                        style: TextStyle(
+                          color: Colors.green[800],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
+                      backgroundColor: Colors.green[50],
+                      side: BorderSide(color: Colors.green[200]!),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
                     ),
-                    backgroundColor: isVegan ? Colors.green[50] : Colors.green[50],
-                    side: BorderSide(color: isVegan ? Colors.green[200]! : Colors.green[100]!),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                  );
-                }).toList(),
+                  if (_displayItem.ingredientsAnalysisTags!.contains('en:vegetarian') &&
+                      !_displayItem.ingredientsAnalysisTags!.contains('en:vegan'))
+                    Chip(
+                      label: Text(
+                        l10n.vegetarian,
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      backgroundColor: Colors.green[50],
+                      side: BorderSide(color: Colors.green[100]!),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                    ),
+                ],
               ),
             ],
             // Keep vertical rhythm even when brand text is absent.
@@ -385,8 +399,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             if (_displayItem.sugar != null ||
                 _displayItem.fiber != null ||
                 _displayItem.salt != null ||
-                (_displayItem.caffeineMgPer100ml != null &&
-                    _displayItem.caffeineMgPer100ml! > 0)) ...[
+                (_displayItem.caffeineMgPer100g ?? 0) > 0 ||
+                (_displayItem.caffeineMgPer100ml ?? 0) > 0) ...[
               const SizedBox(height: DesignConstants.spacingM),
               SummaryCard(
                 child: Column(

@@ -58,6 +58,7 @@ NUTRIENT_NAME_MAP = {
     "sugars": "sugar",
     "fiber": "fiber",
     "salt": "salt",
+    "caffeine": "caffeine",
 }
 
 
@@ -327,6 +328,125 @@ def _parse_float(raw: Any) -> float:
     return 0.0
 
 
+def extract_ingredients_text(
+    raw: Any, preferred_languages: Sequence[str]
+) -> str:
+    """Extract a clean ingredients string from the raw OFF field.
+
+    The raw value may be:
+    - A plain string (return as-is after stripping).
+    - A list of dicts like [{'lang': 'de', 'text': '...'}] – pick the best
+      language match and return only the text string.
+    - A dict like {'de': '...', 'en': '...'} – pick the best key.
+    """
+    if raw is None:
+        return ""
+
+    if isinstance(raw, str):
+        return raw.strip()
+
+    if isinstance(raw, dict):
+        # {"de": "text", "en": "text"}
+        for lang in preferred_languages:
+            candidate = normalize_text(raw.get(lang))
+            if candidate:
+                return candidate
+        # Fallback: 'main' key or first non-empty value
+        candidate = normalize_text(raw.get("main"))
+        if candidate:
+            return candidate
+        for v in raw.values():
+            candidate = normalize_text(v)
+            if candidate:
+                return candidate
+        return ""
+
+    if isinstance(raw, (list, tuple, np.ndarray)):
+        # [{"lang": "de", "text": "Wasser, Zucker, ..."}, ...]
+        # Pass 1: preferred language match
+        for lang in preferred_languages:
+            for item in raw:
+                if not isinstance(item, dict):
+                    continue
+                item_lang = normalize_text(item.get("lang")).lower()
+                item_text = normalize_text(item.get("text"))
+                if item_lang == lang and item_text:
+                    return item_text
+
+        # Pass 2: 'en' fallback
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            if normalize_text(item.get("lang")).lower() == "en":
+                item_text = normalize_text(item.get("text"))
+                if item_text:
+                    return item_text
+
+        # Pass 3: 'main' fallback
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            if normalize_text(item.get("lang")).lower() == "main":
+                item_text = normalize_text(item.get("text"))
+                if item_text:
+                    return item_text
+
+        # Pass 4: first usable text
+        for item in raw:
+            if isinstance(item, dict):
+                item_text = normalize_text(item.get("text"))
+                if item_text:
+                    return item_text
+            elif isinstance(item, str):
+                candidate = item.strip()
+                if candidate:
+                    return candidate
+
+    return ""
+
+
+def extract_caffeine_from_ingredients(raw_ingredients: Any) -> float:
+    """Try to extract caffeine mg/100 from raw ingredients text via regex.
+
+    Looks for patterns like "Koffein (32 mg/100 ml)" or
+    "caffeine 0,03%" in the raw (unparsed) ingredients field.
+    Returns the caffeine value in mg, or 0.0 if not found.
+    """
+    import re
+
+    text = ""
+    if isinstance(raw_ingredients, str):
+        text = raw_ingredients
+    elif isinstance(raw_ingredients, (list, tuple, np.ndarray)):
+        # Concatenate all text entries for scanning
+        parts = []
+        for item in raw_ingredients:
+            if isinstance(item, dict):
+                t = normalize_text(item.get("text"))
+                if t:
+                    parts.append(t)
+            elif isinstance(item, str):
+                parts.append(item)
+        text = " ".join(parts)
+    elif isinstance(raw_ingredients, dict):
+        parts = [normalize_text(v) for v in raw_ingredients.values() if normalize_text(v)]
+        text = " ".join(parts)
+
+    if not text:
+        return 0.0
+
+    # Pattern: "32 mg/100" or "32mg/100" or "0,032 g/100"
+    match = re.search(r"(?i)(\d+[.,]?\d*)\s*mg\s*/\s*100", text)
+    if match:
+        value_str = match.group(1).replace(",", ".")
+        try:
+            return float(value_str)
+        except ValueError:
+            pass
+
+    return 0.0
+
+
 def extract_nutrients(raw: Any) -> Dict[str, float]:
     result = {
         "calories": 0.0,
@@ -336,6 +456,7 @@ def extract_nutrients(raw: Any) -> Dict[str, float]:
         "sugar": 0.0,
         "fiber": 0.0,
         "salt": 0.0,
+        "caffeine": 0.0,
     }
 
     if raw is None:
@@ -528,11 +649,22 @@ def build_records(
         sugar = float(_parse_float(getattr(row, "sugar", 0)))
         fiber = float(_parse_float(getattr(row, "fiber", 0)))
         salt = float(_parse_float(getattr(row, "salt", 0)))
+
+        # Caffeine: the nutriments dict stores values in grams per 100g.
         caffeine_g = float(_parse_float(getattr(row, "caffeine", 0)))
         caffeine_mg = caffeine_g * 1000.0 if caffeine_g > 0 else None
 
-        # New fields
-        ingredients_text = normalize_text(getattr(row, "ingredients_text", ""))
+        # Caffeine fallback: parse raw ingredients text for mg/100 patterns.
+        raw_ingredients = getattr(row, "ingredients_text", None)
+        if not caffeine_mg or caffeine_mg <= 0:
+            fallback_caffeine = extract_caffeine_from_ingredients(raw_ingredients)
+            if fallback_caffeine > 0:
+                caffeine_mg = fallback_caffeine
+
+        # Clean ingredients text: extract language-specific string, not raw JSON.
+        ingredients_text = extract_ingredients_text(
+            raw_ingredients, preferred_languages
+        )
         analysis_tags = getattr(row, "ingredients_analysis_tags", None)
         ingredients_analysis_tags = (
             json.dumps(list(analysis_tags)) if analysis_tags is not None else None
