@@ -280,10 +280,7 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
       child: Text(
         title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(context).textTheme.labelLarge,
       ),
     );
   }

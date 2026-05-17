@@ -89,12 +89,11 @@ class _CheckmarkCard extends StatelessWidget {
       displayText =
           '${supplement.dailyGoal?.toStringAsFixed(1).replaceAll('.0', '') ?? ''} ${supplement.unit}';
     }
-
-    return SummaryCard(
-      margin: const EdgeInsets.symmetric(vertical: 4.0),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: SizedBox(
-        height: 54,
+return SummaryCard(
+  margin: const EdgeInsets.symmetric(vertical: 4.0),
+  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+  child: SizedBox(
+    height: 54,
         child: Row(
           children: [
             Icon(
@@ -108,17 +107,13 @@ class _CheckmarkCard extends StatelessWidget {
             Expanded(
               child: Text(
                 supplement.getLocalizedName(context),
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: theme.textTheme.titleMedium,
               ),
             ),
             Text(
               displayText,
-              style: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                fontSize: 14,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ],

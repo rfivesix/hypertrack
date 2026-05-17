@@ -204,11 +204,78 @@ class _MyAppState extends State<MyApp> {
             space: 24,
           ),
 
-          textTheme: ThemeData.light().textTheme.apply(
-                fontFamily: 'Inter',
-                bodyColor: Colors.black87,
-                displayColor: Colors.black87,
-              ),
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            headlineLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            headlineMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            headlineSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            titleLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            titleMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            bodyLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+            bodyMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+            bodySmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+            labelLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF757575), // grey[600]
+              letterSpacing: 0.2,
+            ),
+            labelMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+            labelSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+          ),
 
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
@@ -320,11 +387,78 @@ class _MyAppState extends State<MyApp> {
             space: 24,
           ),
 
-          textTheme: ThemeData.dark().textTheme.apply(
-                fontFamily: 'Inter',
-                bodyColor: Colors.white,
-                displayColor: Colors.white,
-              ),
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            headlineLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            headlineMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            headlineSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            titleLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            titleMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            bodyLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              color: Colors.white,
+            ),
+            bodyMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            bodySmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Colors.white,
+            ),
+            labelLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+            labelMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            labelSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: darkScheme.primary,

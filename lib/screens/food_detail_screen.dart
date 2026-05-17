@@ -294,7 +294,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             if (_displayItem.brand.isNotEmpty)
               Text(
                 _displayItem.brand,
-                style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+                style: textTheme.bodySmall,
               ),
             // Dietary Badges
             if (_displayItem.ingredientsAnalysisTags != null &&
@@ -307,10 +307,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     Chip(
                       label: Text(
                         l10n.vegan,
-                        style: TextStyle(
+                        style: textTheme.labelSmall?.copyWith(
                           color: Colors.green[800],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
                         ),
                       ),
                       backgroundColor: Colors.green[50],
@@ -323,10 +321,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     Chip(
                       label: Text(
                         l10n.vegetarian,
-                        style: TextStyle(
+                        style: textTheme.labelSmall?.copyWith(
                           color: Colors.green[700],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
                         ),
                       ),
                       backgroundColor: Colors.green[50],
@@ -463,9 +459,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     children: [
                       Text(
                         'DEV: Eintrag bearbeiten',
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       _row('Name (DE)', _deCtrl),
@@ -523,9 +517,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
                 child: OffAttributionWidget(
-                  textStyle: textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  textStyle: textTheme.bodySmall,
                 ),
               ),
           ],
@@ -565,7 +557,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               color: isSelected
                   ? theme.colorScheme.primary
                   : theme.colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -579,7 +570,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       title: Text(label),
       trailing: Text(
         value,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.labelLarge,
       ),
     );
   }
