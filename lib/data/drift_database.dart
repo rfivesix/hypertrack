@@ -191,6 +191,13 @@ class Products extends Table with HybridId, MetaColumns {
   RealColumn get salt => real().nullable()();
   RealColumn get caffeine =>
       real().nullable()(); // Important for supplement logic
+  RealColumn get caffeineMgPer100g => real().nullable()();
+  TextColumn get ingredientsText => text().nullable()();
+  TextColumn get ingredientsAnalysisTags => text().nullable()();
+  TextColumn get additivesTags => text().nullable()();
+  RealColumn get productQuantity => real().nullable()();
+  TextColumn get productQuantityUnit => text().nullable()();
+  BoolColumn get isFluid => boolean().withDefault(const Constant(false))();
 
   BoolColumn get isLiquid => boolean().withDefault(const Constant(false))();
   TextColumn get source =>
@@ -400,7 +407,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -544,6 +551,15 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'CREATE INDEX IF NOT EXISTS products_usage_count_idx ON products (usage_count);',
             );
+          }
+          if (from < 16) {
+            await m.addColumn(products, products.caffeineMgPer100g);
+            await m.addColumn(products, products.ingredientsText);
+            await m.addColumn(products, products.ingredientsAnalysisTags);
+            await m.addColumn(products, products.additivesTags);
+            await m.addColumn(products, products.productQuantity);
+            await m.addColumn(products, products.productQuantityUnit);
+            await m.addColumn(products, products.isFluid);
           }
         },
       );

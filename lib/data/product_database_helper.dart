@@ -66,8 +66,28 @@ class ProductDatabaseHelper {
       // Calcium is not in the schema:
       calcium: null,
       isLiquid: row.isLiquid,
+      isFluid: row.isFluid,
       caffeineMgPer100ml: row.caffeine,
+      caffeineMgPer100g: row.caffeineMgPer100g,
+      ingredientsText: row.ingredientsText,
+      ingredientsAnalysisTags: _parseJsonList(row.ingredientsAnalysisTags),
+      additivesTags: _parseJsonList(row.additivesTags),
+      productQuantity: row.productQuantity,
+      productQuantityUnit: row.productQuantityUnit,
     );
+  }
+
+  List<String>? _parseJsonList(String? json) {
+    if (json == null || json.isEmpty) return null;
+    if (json.startsWith('[') && json.endsWith(']')) {
+      return json
+          .substring(1, json.length - 1)
+          .split(',')
+          .map((e) => e.trim().replaceAll('"', '').replaceAll("'", ""))
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    return [json];
   }
 
   db.ProductsCompanion _mapModelToCompanion(FoodItem item) {
@@ -83,9 +103,21 @@ class ProductDatabaseHelper {
       fiber: Value(item.fiber),
       salt: Value(item.salt),
       caffeine: Value(item.caffeineMgPer100ml),
+      caffeineMgPer100g: Value(item.caffeineMgPer100g),
+      ingredientsText: Value(item.ingredientsText),
+      ingredientsAnalysisTags: Value(_listToJson(item.ingredientsAnalysisTags)),
+      additivesTags: Value(_listToJson(item.additivesTags)),
+      productQuantity: Value(item.productQuantity),
+      productQuantityUnit: Value(item.productQuantityUnit),
+      isFluid: Value(item.isFluid),
       isLiquid: Value(item.isLiquid ?? false),
       source: Value(_sourceToString(item.source)),
     );
+  }
+
+  String? _listToJson(List<String>? list) {
+    if (list == null) return null;
+    return '[${list.map((e) => '"$e"').join(',')}]';
   }
 
   String _sourceToString(FoodItemSource source) {
@@ -352,6 +384,14 @@ class ProductDatabaseHelper {
       fiber: row.fiber,
       salt: row.salt,
       isLiquid: row.isLiquid,
+      isFluid: row.isFluid,
+      caffeineMgPer100ml: row.caffeine,
+      caffeineMgPer100g: row.caffeineMgPer100g,
+      ingredientsText: row.ingredientsText,
+      ingredientsAnalysisTags: _parseJsonList(row.ingredientsAnalysisTags),
+      additivesTags: _parseJsonList(row.additivesTags),
+      productQuantity: row.productQuantity,
+      productQuantityUnit: row.productQuantityUnit,
       source: _mapSource(row.source),
       category: row.category,
     );

@@ -296,6 +296,33 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 _displayItem.brand,
                 style: textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
               ),
+            // Dietary Badges
+            if (_displayItem.ingredientsAnalysisTags != null &&
+                _displayItem.ingredientsAnalysisTags!.isNotEmpty) ...[
+              const SizedBox(height: DesignConstants.spacingS),
+              Wrap(
+                spacing: 8,
+                children: _displayItem.ingredientsAnalysisTags!
+                    .where((tag) => tag.contains('vegan') || tag.contains('vegetarian'))
+                    .map((tag) {
+                  final isVegan = tag.contains('vegan');
+                  return Chip(
+                    label: Text(
+                      isVegan ? l10n.vegan : l10n.vegetarian,
+                      style: TextStyle(
+                        color: isVegan ? Colors.green[800] : Colors.green[700],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    backgroundColor: isVegan ? Colors.green[50] : Colors.green[50],
+                    side: BorderSide(color: isVegan ? Colors.green[200]! : Colors.green[100]!),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  );
+                }).toList(),
+              ),
+            ],
             // Keep vertical rhythm even when brand text is absent.
             Divider(
               height: 32,
@@ -379,13 +406,34 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                         l10n.salt,
                         "${_getDisplayValue(_displayItem.salt).toStringAsFixed(1)} g",
                       ),
-                    if (_displayItem.caffeineMgPer100ml != null &&
-                        _displayItem.caffeineMgPer100ml! > 0)
+                    if ((_displayItem.caffeineMgPer100g ?? 0) > 0 ||
+                        (_displayItem.caffeineMgPer100ml ?? 0) > 0)
                       _buildNutrientRow(
                         l10n.caffeine,
-                        "${_getDisplayValue(_displayItem.caffeineMgPer100ml).round()} mg",
+                        "${_getDisplayValue(_displayItem.caffeineMgPer100g ?? _displayItem.caffeineMgPer100ml).round()} mg",
                       ),
                   ],
+                ),
+              ),
+            ],
+            if (_displayItem.ingredientsText != null &&
+                _displayItem.ingredientsText!.isNotEmpty) ...[
+              const SizedBox(height: DesignConstants.spacingM),
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: SummaryCard(
+                  child: ExpansionTile(
+                    title: Text(l10n.ingredients),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          _displayItem.ingredientsText!,
+                          style: textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

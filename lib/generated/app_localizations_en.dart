@@ -2254,6 +2254,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genderDiverse => 'Diverse';
 
   @override
+  String get vegan => 'Vegan';
+
+  @override
+  String get vegetarian => 'Vegetarian';
+
+  @override
+  String get ingredients => 'Ingredients';
+
+  @override
   String get aiSettingsTitle => 'AI Meal Capture';
 
   @override

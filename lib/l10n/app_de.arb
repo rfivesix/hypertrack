@@ -876,6 +876,9 @@
   "genderFemale": "Weiblich",
   "genderDiverse": "Divers",
 
+  "vegan": "Vegan",
+  "vegetarian": "Vegetarisch",
+  "ingredients": "Zutaten",
   "aiSettingsTitle": "KI-Mahlzeitenerkennung",
   "aiSettingsDescription": "KI-basierte Mahlzeitenerkennung konfigurieren.",
   "aiProviderSection": "KI-Anbieter",

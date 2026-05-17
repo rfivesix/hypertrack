@@ -2264,6 +2264,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get genderDiverse => 'Divers';
 
   @override
+  String get vegan => 'Vegan';
+
+  @override
+  String get vegetarian => 'Vegetarisch';
+
+  @override
+  String get ingredients => 'Zutaten';
+
+  @override
   String get aiSettingsTitle => 'KI-Mahlzeitenerkennung';
 
   @override

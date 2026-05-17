@@ -871,6 +871,9 @@
   "genderFemale": "Female",
   "genderDiverse": "Diverse",
 
+  "vegan": "Vegan",
+  "vegetarian": "Vegetarian",
+  "ingredients": "Ingredients",
   "aiSettingsTitle": "AI Meal Capture",
   "aiSettingsDescription": "Configure AI-powered meal recognition.",
   "aiProviderSection": "AI Provider",

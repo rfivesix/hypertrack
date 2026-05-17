@@ -65,8 +65,29 @@ class FoodItem {
   /// Whether the food item is a liquid (volume-based) instead of solid (weight-based).
   final bool? isLiquid;
 
+  /// Whether the product is inherently a fluid/beverage.
+  final bool isFluid;
+
   /// Caffeine content in milligrams per 100ml.
   final double? caffeineMgPer100ml;
+
+  /// Caffeine content in milligrams per 100g.
+  final double? caffeineMgPer100g;
+
+  /// Full ingredients text.
+  final String? ingredientsText;
+
+  /// Analysis tags like 'vegan', 'vegetarian'.
+  final List<String>? ingredientsAnalysisTags;
+
+  /// List of additives (tags).
+  final List<String>? additivesTags;
+
+  /// Net quantity of the product.
+  final double? productQuantity;
+
+  /// Unit of the quantity (e.g., 'g', 'ml').
+  final String? productQuantityUnit;
 
   /// Creates a new [FoodItem] instance.
   FoodItem({
@@ -88,7 +109,14 @@ class FoodItem {
     this.sodium,
     this.calcium,
     this.isLiquid,
+    this.isFluid = false,
     this.caffeineMgPer100ml,
+    this.caffeineMgPer100g,
+    this.ingredientsText,
+    this.ingredientsAnalysisTags,
+    this.additivesTags,
+    this.productQuantity,
+    this.productQuantityUnit,
   });
 
   /// Returns the name of the food item localized to the user's language.
@@ -134,8 +162,15 @@ class FoodItem {
       sodium: (map['sodium_100g'] as num?)?.toDouble(),
       calcium: (map['calcium_100g'] as num?)?.toDouble(),
       isLiquid: _readBool(map['is_liquid']),
+      isFluid: _readBool(map['is_fluid']) ?? false,
       caffeineMgPer100ml: _toDoubleOrNull(map['caffeine_mg_per_100ml']) ??
           _toDoubleOrNull(map['caffeine']),
+      caffeineMgPer100g: _toDoubleOrNull(map['caffeine_mg_per_100g']),
+      ingredientsText: map['ingredients_text'],
+      ingredientsAnalysisTags: _toStringList(map['ingredients_analysis_tags']),
+      additivesTags: _toStringList(map['additives_tags']),
+      productQuantity: _toDoubleOrNull(map['product_quantity']),
+      productQuantityUnit: map['product_quantity_unit'],
     );
   }
 
@@ -158,7 +193,14 @@ class FoodItem {
       'sodium_100g': sodium,
       'calcium_100g': calcium,
       'is_liquid': (isLiquid == null) ? null : (isLiquid! ? 1 : 0),
+      'is_fluid': isFluid ? 1 : 0,
       'caffeine_mg_per_100ml': caffeineMgPer100ml,
+      'caffeine_mg_per_100g': caffeineMgPer100g,
+      'ingredients_text': ingredientsText,
+      'ingredients_analysis_tags': _listToJson(ingredientsAnalysisTags),
+      'additives_tags': _listToJson(additivesTags),
+      'product_quantity': productQuantity,
+      'product_quantity_unit': productQuantityUnit,
     };
   }
 
@@ -178,5 +220,28 @@ class FoodItem {
     if (v is num) return v.toDouble();
     if (v is String) return double.tryParse(v.replaceAll(',', '.'));
     return null;
+  }
+
+  static List<String>? _toStringList(dynamic v) {
+    if (v == null) return null;
+    if (v is List) return v.map((e) => e.toString()).toList();
+    if (v is String) {
+      if (v.startsWith('[') && v.endsWith(']')) {
+        // Simple JSON-ish parsing for tags
+        return v
+            .substring(1, v.length - 1)
+            .split(',')
+            .map((e) => e.trim().replaceAll('"', '').replaceAll("'", ""))
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
+      return [v];
+    }
+    return null;
+  }
+
+  static String? _listToJson(List<String>? list) {
+    if (list == null) return null;
+    return '[${list.map((e) => '"$e"').join(',')}]';
   }
 }

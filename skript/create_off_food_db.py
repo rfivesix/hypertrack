@@ -417,7 +417,14 @@ def initialize_output_db(db_path: str) -> sqlite3.Connection:
           salt REAL NOT NULL DEFAULT 0,
           source TEXT NOT NULL DEFAULT 'base',
           is_liquid INTEGER NOT NULL DEFAULT 0,
-          caffeine REAL
+          is_fluid INTEGER NOT NULL DEFAULT 0,
+          caffeine REAL,
+          caffeine_mg_per_100g REAL,
+          ingredients_text TEXT,
+          ingredients_analysis_tags TEXT,
+          additives_tags TEXT,
+          product_quantity REAL,
+          product_quantity_unit TEXT
         )
         """)
     conn.execute("""
@@ -489,7 +496,18 @@ def build_records(
 
     combined = pd.concat(
         [
-            working[["barcode", "brands", "name"]].reset_index(drop=True),
+            working[
+                [
+                    "barcode",
+                    "brands",
+                    "name",
+                    "ingredients_text",
+                    "ingredients_analysis_tags",
+                    "additives_tags",
+                    "quantity",
+                    "categories_tags",
+                ]
+            ].reset_index(drop=True),
             nutrient_df.reset_index(drop=True),
         ],
         axis=1,
@@ -513,6 +531,39 @@ def build_records(
         caffeine_g = float(_parse_float(getattr(row, "caffeine", 0)))
         caffeine_mg = caffeine_g * 1000.0 if caffeine_g > 0 else None
 
+        # New fields
+        ingredients_text = normalize_text(getattr(row, "ingredients_text", ""))
+        analysis_tags = getattr(row, "ingredients_analysis_tags", None)
+        ingredients_analysis_tags = (
+            json.dumps(list(analysis_tags)) if analysis_tags is not None else None
+        )
+        additives_raw = getattr(row, "additives_tags", None)
+        additives_tags = (
+            json.dumps(list(additives_raw)) if additives_raw is not None else None
+        )
+
+        quantity_str = normalize_text(getattr(row, "quantity", ""))
+        product_quantity = None
+        product_quantity_unit = None
+        if quantity_str:
+            import re
+
+            match = re.match(r"^([\d\.,\s]+)\s*(\w+.*)$", quantity_str)
+            if match:
+                product_quantity = _parse_float(match.group(1))
+                product_quantity_unit = match.group(2).strip().lower()
+
+        categories_tags = to_tag_values(getattr(row, "categories_tags", None))
+        is_fluid = 0
+        if product_quantity_unit in ("ml", "l", "cl"):
+            is_fluid = 1
+        else:
+            beverage_keywords = ("beverage", "drink", "getränk", "boisson")
+            for cat in categories_tags:
+                if any(kw in cat.lower() for kw in beverage_keywords):
+                    is_fluid = 1
+                    break
+
         records.append(
             (
                 generate_id(barcode),
@@ -527,8 +578,15 @@ def build_records(
                 fiber,
                 salt,
                 "base",
-                0,
-                caffeine_mg,
+                is_fluid,  # is_liquid column (using is_fluid heuristic as well)
+                is_fluid,  # is_fluid column
+                caffeine_mg,  # caffeine (legacy)
+                caffeine_mg,  # caffeine_mg_per_100g
+                ingredients_text,
+                ingredients_analysis_tags,
+                additives_tags,
+                product_quantity,
+                product_quantity_unit,
             )
         )
 
@@ -572,14 +630,25 @@ def process(ctx: BuildContext) -> int:
     duplicate_rows = 0
     imported_count = 0
 
-    columns = ["code", "brands", "product_name", "nutriments", "countries_tags"]
+    columns = [
+        "code",
+        "brands",
+        "product_name",
+        "nutriments",
+        "countries_tags",
+        "ingredients_text",
+        "ingredients_analysis_tags",
+        "additives_tags",
+        "quantity",
+        "categories_tags",
+    ]
 
     try:
         cursor = conn.cursor()
         insert_sql = """
             INSERT OR IGNORE INTO products (
-              id, barcode, brand, name, calories, protein, carbs, fat, sugar, fiber, salt, source, is_liquid, caffeine
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              id, barcode, brand, name, calories, protein, carbs, fat, sugar, fiber, salt, source, is_liquid, is_fluid, caffeine, caffeine_mg_per_100g, ingredients_text, ingredients_analysis_tags, additives_tags, product_quantity, product_quantity_unit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
         for batch_index, batch in enumerate(

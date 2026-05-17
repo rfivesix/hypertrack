@@ -4106,6 +4106,24 @@ abstract class AppLocalizations {
   /// **'Diverse'**
   String get genderDiverse;
 
+  /// No description provided for @vegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan'**
+  String get vegan;
+
+  /// No description provided for @vegetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get vegetarian;
+
+  /// No description provided for @ingredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients'**
+  String get ingredients;
+
   /// No description provided for @aiSettingsTitle.
   ///
   /// In en, this message translates to:
