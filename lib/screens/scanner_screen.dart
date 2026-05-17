@@ -1,5 +1,6 @@
 // lib/screens/scanner_screen.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../generated/app_localizations.dart';
@@ -23,16 +24,28 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool _isDone = false;
   PermissionStatus _cameraPermissionStatus = PermissionStatus.denied;
   bool _isCheckingPermission = true;
+  bool _tryHarder = false;
+  Timer? _tryHarderTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkPermission(initial: true);
+
+    // Fallback: If no barcode is found quickly, enable tryHarder to handle poor conditions
+    _tryHarderTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _tryHarder = true;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _tryHarderTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -119,15 +132,12 @@ class _ScannerScreenState extends State<ScannerScreen>
             developer.log('Scanner controller error: $error', error: error);
           }
         },
-        codeFormat: Format.ean8 |
-            Format.ean13, // Only EAN-8 / EAN-13 to cut decoder work.
+        codeFormat: Format.ean8 | Format.ean13,
         showFlashlight: false, // Hidden to match app design
         showGallery: false,
         showToggleCamera: false,
         showScannerOverlay: true,
-        // Using false for tryHarder and tryRotate to reduce CPU load and
-        // thermal impact. Standard barcodes scan reliably at medium resolution.
-        tryHarder: false,
+        tryHarder: _tryHarder,
         tryRotate: true,
         tryDownscale: true,
         tryInverted: false, //just for testing with front camera

@@ -53,9 +53,19 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
 
   final Map<String, List<SetLog>> _lastPerformances = {};
   bool _isLoading = true;
+  bool _canPop = false;
 
   late final VoidCallback _onManagerUpdateCallback;
   WorkoutSessionManager? _manager;
+
+  void _handleBack() {
+    setState(() {
+      _canPop = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
 
   // PR Celebration State
   StreamSubscription<PREvent>? _prEventsSubscription;
@@ -1194,34 +1204,44 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
       _syncControllersWithManager(manager);
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        elevation: 0,
+    return PopScope(
+      canPop: _canPop,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        // The system back swipe won't pop the route automatically because canPop is false.
+      },
+      child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        foregroundColor: colorScheme.onSurface,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _finishWorkout,
-            child: Text(
-              l10n.finishWorkoutButton,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          automaticallyImplyLeading: false, // We will provide our own back button
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _handleBack,
+          ),
+          elevation: 0,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          foregroundColor: colorScheme.onSurface,
+          scrolledUnderElevation: 0,
+          centerTitle: false,
+          title: Text(
+            manager.workoutLog?.routineName ?? l10n.freeWorkoutTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          actions: [
+            TextButton(
+              onPressed: _finishWorkout,
+              child: Text(
+                l10n.finishWorkoutButton,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -1463,7 +1483,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             ),
         ],
       ),
-    );
+    ));
   }
 
   Widget? _buildRestBottomBar(

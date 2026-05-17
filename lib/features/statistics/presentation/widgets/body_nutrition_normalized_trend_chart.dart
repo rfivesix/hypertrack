@@ -12,7 +12,7 @@ import '../../domain/analytics_state.dart';
 import '../../domain/body_nutrition_analytics_models.dart';
 import '../../../../services/unit_service.dart';
 
-class BodyNutritionNormalizedTrendChart extends StatelessWidget {
+class BodyNutritionNormalizedTrendChart extends StatefulWidget {
   const BodyNutritionNormalizedTrendChart({
     super.key,
     required this.range,
@@ -27,7 +27,21 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
   final bool compact;
 
   @override
+  State<BodyNutritionNormalizedTrendChart> createState() =>
+      _BodyNutritionNormalizedTrendChartState();
+}
+
+class _BodyNutritionNormalizedTrendChartState
+    extends State<BodyNutritionNormalizedTrendChart> {
+  int? _lastVibratedIndex;
+
+  @override
   Widget build(BuildContext context) {
+    final range = widget.range;
+    final weightSeries = widget.weightSeries;
+    final calorieSeries = widget.calorieSeries;
+    final compact = widget.compact;
+
     final l10n = AppLocalizations.of(context)!;
     if (weightSeries.isEmpty || calorieSeries.isEmpty || range == null) {
       return AnalyticsChartDefaults.stateView(
@@ -39,13 +53,13 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
     }
 
     final firstDay = DateTime.utc(
-      range!.start.year,
-      range!.start.month,
-      range!.start.day,
+      range.start.year,
+      range.start.month,
+      range.start.day,
     );
     final spanDays = math.max(
       1,
-      DateTime.utc(range!.end.year, range!.end.month, range!.end.day)
+      DateTime.utc(range.end.year, range.end.month, range.end.day)
               .difference(firstDay)
               .inDays +
           1,
@@ -100,7 +114,7 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
           final lastCal =
               calorieSeries.isNotEmpty ? calorieSeries.last.day : null;
           debugPrint(
-              '[chart-debug] compact range=${range?.start}..${range?.end} spanDays=$spanDays');
+              '[chart-debug] compact range=${range.start}..${range.end} spanDays=$spanDays');
           debugPrint(
               '[chart-debug] weightSeries count=${weightSeries.length} last=$lastWeight');
           debugPrint(
@@ -157,6 +171,20 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
         enabled: true,
         handleBuiltInTouches: true,
         touchSpotThreshold: 18,
+        touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
+          if (event is FlPanEndEvent || event is FlTapUpEvent) {
+            _lastVibratedIndex = null;
+            return;
+          }
+          final spots = response?.lineBarSpots;
+          if (spots != null && spots.isNotEmpty) {
+            final idx = spots.first.spotIndex;
+            if (idx != _lastVibratedIndex) {
+              _lastVibratedIndex = idx;
+              HapticFeedback.lightImpact();
+            }
+          }
+        },
         touchTooltipData: LineTouchTooltipData(
           fitInsideHorizontally: true,
           fitInsideVertically: true,
@@ -166,9 +194,6 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
           ),
           getTooltipColor: (_) => Theme.of(context).colorScheme.inverseSurface,
           getTooltipItems: (touchedSpots) {
-            if (compact) {
-              HapticFeedback.selectionClick();
-            }
             return touchedSpots.map((touchedSpot) {
               final seriesIndex = touchedSpot.barIndex;
               if (seriesIndex < 0 || seriesIndex >= series.length) {
@@ -216,7 +241,7 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
-                  reservedSize: 42,
+                  reservedSize: 52, // increased reserved size
                   interval: 0.5,
                   getTitlesWidget: (value, meta) {
                     if (!_isPrimaryTick(value)) {
@@ -237,7 +262,7 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
               rightTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
-                  reservedSize: 46,
+                  reservedSize: 56, // increased reserved size
                   interval: 0.5,
                   getTitlesWidget: (value, meta) {
                     if (!_isPrimaryTick(value)) {
@@ -259,7 +284,7 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
-                  reservedSize: 32,
+                  reservedSize: 42, // increased reserved size
                   getTitlesWidget: (value, meta) {
                     final rounded = value.round();
                     if (!xLabelPositions.contains(rounded)) {
@@ -282,7 +307,7 @@ class BodyNutritionNormalizedTrendChart extends StatelessWidget {
                                   : Alignment.center,
                           child: AnalyticsChartDefaults.tickLabel(
                             context,
-                            DateFormat('MMMd').format(day),
+                            DateFormat('dd.MM').format(day), // Changed to a concise format to avoid overlap
                           ),
                         ),
                       ),

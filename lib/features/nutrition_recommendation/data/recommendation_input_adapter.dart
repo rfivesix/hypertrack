@@ -298,6 +298,10 @@ class RecommendationInputAdapter {
     return normalizeDay(last).difference(normalizeDay(first)).inDays + 1;
   }
 
+  // Audit Log Summary: Resolution for Issue #356 - Prevent fluid double-counting
+  // Fluids that are linked to food entries (e.g., juices tracked as food items)
+  // are already aggregated in the food loop above. We filter out any fluid entry
+  // where `linkedFoodEntryId != null` to ensure items are aggregated exactly once.
   Map<DateTime, double> _buildCaloriesByDay({
     required Map<DateTime, double> foodCaloriesByDay,
     required List<FluidEntry> fluidEntries,

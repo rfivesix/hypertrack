@@ -134,6 +134,10 @@ class BodyNutritionAnalyticsDataAdapter {
     return dates.first;
   }
 
+  // Audit Log Summary: Resolution for Issue #356 - Prevent fluid double-counting
+  // Fluids that are linked to food entries (e.g., juices tracked as food items)
+  // are already aggregated in the food loop below. We filter out any fluid entry
+  // where `linkedFoodEntryId != null` to ensure items are aggregated exactly once.
   Future<Map<DateTime, double>> _dailyCaloriesMap({
     required List<FoodEntry> foodEntries,
     required List<FluidEntry> fluidEntries,
@@ -156,7 +160,7 @@ class BodyNutritionAnalyticsDataAdapter {
       map[day] = (map[day] ?? 0.0) + added;
     }
 
-    for (final entry in fluidEntries) {
+    for (final entry in fluidEntries.where((e) => e.linkedFoodEntryId == null)) {
       final day = DateTime.utc(
         entry.timestamp.year,
         entry.timestamp.month,

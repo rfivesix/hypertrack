@@ -202,8 +202,9 @@ class ImportManager {
     final t = rawType?.toString().toLowerCase() ?? '';
     if (t.contains('warmup') || t == 'w') return 'warmup';
     if (t.contains('failure') || t == 'f') return 'failure';
-    if (t.contains('dropset') || t.contains('drop_set') || t == 'd')
+    if (t.contains('dropset') || t.contains('drop_set') || t == 'd') {
       return 'dropset';
+    }
     return 'normal';
   }
 

@@ -1064,8 +1064,11 @@ class _MainScreenState extends State<MainScreen>
     // final runningPad = manager.isActive ? 68.0 : 0.0; // Unused locally
     // final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode; // Unused locally in build, used in GlassNavBar logic internal
 
-    // Radius for liquid animation, if active
-    // const double rLiquid = 99; // Unused here directly
+    // Because we use a completely custom floating Bottom Navigation Bar and Workout Bar,
+    // the system Scaffold does not automatically inset floating Snackbars.
+    // By providing a transparent dummy bottomNavigationBar, ScaffoldMessenger
+    // will natively push up all Snackbars (including those from settings).
+    final double dynamicBottomPadding = isWorkoutRunning ? 120 + 68 : 120;
 
     return Stack(
       children: [
@@ -1073,6 +1076,7 @@ class _MainScreenState extends State<MainScreen>
           extendBodyBehindAppBar: true,
           extendBody: true,
           appBar: _buildAppBar(context, _currentIndex, l10n),
+          bottomNavigationBar: SizedBox(height: dynamicBottomPadding),
           body: PageView(
             controller: _pageController,
             onPageChanged: _onPageChanged,

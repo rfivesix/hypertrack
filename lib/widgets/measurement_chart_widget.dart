@@ -1,12 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../models/chart_data_point.dart';
-import '../services/haptic_feedback_service.dart';
 import '../services/unit_service.dart';
 import '../util/design_constants.dart';
 
@@ -179,7 +179,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
     if (newIndex == _touchedIndex) return;
     _touchedIndex = newIndex;
     if (newIndex != null) {
-      HapticFeedbackService.instance.chartSelectionFeedback();
+      HapticFeedback.lightImpact();
     }
     if (mounted) setState(() {});
   }
@@ -340,7 +340,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                   rightTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
+                      reservedSize: 56,
                       getTitlesWidget: (value, meta) => Text(
                         value.toStringAsFixed(0),
                         style: Theme.of(context).textTheme.bodySmall,
@@ -351,7 +351,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30,
+                      reservedSize: 42,
                       interval: 1,
                       getTitlesWidget: (value, meta) {
                         final int v = value.round();
@@ -469,10 +469,10 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
   int _labelInterval(int spanUnits, MeasurementChartAxisMode mode) {
     if (spanUnits <= 1) return 1;
     if (mode == MeasurementChartAxisMode.day) {
-      const desiredLabels = 6;
+      const desiredLabels = 3; // Force max 3 labels to guarantee they never overlap
       return (spanUnits / desiredLabels).ceil().clamp(1, 100000);
     }
-    final raw = (spanUnits / 6).ceil();
+    final raw = (spanUnits / 3).ceil();
     const candidates = <int>[5, 10, 15, 20, 30, 45, 60, 90, 120];
     for (final candidate in candidates) {
       if (raw <= candidate) return candidate;
@@ -493,8 +493,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       return DateFormat.Hm().format(value);
     }
     if (spanUnits > 365 * 2) return DateFormat('yyyy').format(value);
-    if (spanUnits > 365) return DateFormat('MMM yyyy').format(value);
-    if (spanUnits > 31) return DateFormat('MMM d').format(value);
-    return DateFormat.MMMd().format(value);
+    if (spanUnits > 365) return DateFormat('MM.yyyy').format(value);
+    return DateFormat('dd.MM').format(value);
   }
 }
