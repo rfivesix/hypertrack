@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.7-alpha.1] - 2026-05-17
+### Added
+- **Open Food Facts (OFF) Enrichment**: Significantly expanded food data with Caffeine content, Vegan/Vegetarian/Palm-oil tags, and full Ingredients lists.
+- **Smart Database Sync**: New offline-first strategy where the product database is synced during app updates or manually via settings, reducing background overhead.
+- **Auto-Fluid Detection**: Intelligent classification of products as fluids for easier hydration tracking.
+- **Adaptive Calorie UI**: Improved calorie recommendation UI with new fields for actual calorie density visualization.
+
+### Changed
+- **Dietary Badges**: Added visual indicators for vegan, vegetarian, and palm-oil-free products in the food detail screen.
+- **Database Architecture**: Migrated core product storage to Drift for better performance and type safety.
+- **Settings Overhaul**: Added manual database sync trigger and improved OFF region settings.
+
+### Fixed
+- **App Tour Stability**: Fixed edge cases where the app tour could crash on specific navigation flows.
+- **Health Export**: Resolved minor synchronization issues with third-party health platforms.
+
 ## [0.9.7-alpha] - 2026-05-17
 ### Added
 - **Isolate Offloading**: Performance-intensive tasks like sleep pipeline processing, CSV/Excel decoding, and muscle analytics are now offloaded to background threads (isolates) using `compute()`, ensuring a butter-smooth UI.

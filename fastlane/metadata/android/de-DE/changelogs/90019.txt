@@ -1,0 +1,7 @@
+🚀 Lebensmittel-Upgrade & Performance-Boost!
+
+- Neue Lebensmittel-Details: Jetzt mit Koffein-Angaben, Vegan/Vegetarisch-Badges und vollständigen Zutatenlisten.
+- Intelligente Synchronisierung: Die Datenbank aktualisiert sich jetzt ressourcenschonend bei App-Updates.
+- Automatische Getränke-Erkennung: Erleichtertes Tracking von Flüssigkeiten.
+- Optimierte Performance: Dank moderner Datenbank-Technologie (Drift) läuft die App noch flüssiger.
+- Detail-Verbesserungen in der Kalorien-Vorschau.

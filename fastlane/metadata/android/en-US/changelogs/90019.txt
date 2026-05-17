@@ -1,0 +1,7 @@
+🚀 Food Data Upgrade & Performance Boost!
+
+- New Food Details: Now includes Caffeine content, Vegan/Vegetarian badges, and full Ingredient lists.
+- Smart Synchronization: The product database now syncs efficiently during app updates.
+- Auto-Fluid Detection: Smarter tracking for drinks and hydration.
+- Optimized Performance: Faster app experience powered by a new database engine (Drift).
+- UI Improvements: Refined calorie density visualization and adaptive recommendations.
