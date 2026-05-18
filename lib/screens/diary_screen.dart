@@ -180,10 +180,10 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                       );
 
                       try {
-                        await context.read<DiaryViewModel>().updateFluidEntry(updated);
+                        await viewModel.updateFluidEntry(updated);
 
                         // Update caffeine dose
-                        await context.read<DiaryViewModel>().logCaffeineDose(
+                        await viewModel.logCaffeineDose(
                           (caffeine ?? 0) * (quantity / 100.0),
                           state.selectedDateTime,
                           fluidEntryId: entry.id,
@@ -291,6 +291,7 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
 
     // Continue processing the result data.
     if (result != null) {
+      if (!mounted) return;
       final updatedEntry = FoodEntry(
         id: trackedItem.entry.id,
         barcode: trackedItem.item.barcode,
@@ -298,11 +299,11 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
         timestamp: result.timestamp,
         mealType: result.mealType,
       );
-      await context.read<DiaryViewModel>().updateFoodEntry(updatedEntry);
+      await viewModel.updateFoodEntry(updatedEntry);
 
       // 1. Delete FluidEntry if linked.
       if (trackedItem.entry.id != null) {
-        await context.read<DiaryViewModel>().deleteFluidEntryByLinkedFoodId(
+        await viewModel.deleteFluidEntryByLinkedFoodId(
           trackedItem.entry.id!,
         );
       }
@@ -318,11 +319,11 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
           caffeinePer100ml: result.caffeinePer100ml,
           linkedFoodEntryId: trackedItem.entry.id, // Preserve the link
         );
-        await context.read<DiaryViewModel>().insertFluidEntry(newFluidEntry);
+        await viewModel.insertFluidEntry(newFluidEntry);
       }
 
       // 3. Update/delete caffeine log in every case.
-      await context.read<DiaryViewModel>().logCaffeineDose(
+      await viewModel.logCaffeineDose(
         (result.caffeinePer100ml ?? 0) * (result.quantity / 100.0),
         result.timestamp,
         foodEntryId: trackedItem.entry.id,
@@ -379,6 +380,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
       newFoodEntry,
     );
 
+    if (!mounted) return;
+
     if (isLiquid) {
       final newFluidEntry = FluidEntry(
         timestamp: timestamp,
@@ -390,12 +393,12 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
         caffeinePer100ml: result.caffeinePer100ml,
         linkedFoodEntryId: newFoodEntryId,
       );
-      await context.read<DiaryViewModel>().insertFluidEntry(newFluidEntry);
+      await viewModel.insertFluidEntry(newFluidEntry);
     }
 
     if (isLiquid && caffeinePer100 != null && caffeinePer100 > 0) {
       final totalCaffeine = (caffeinePer100 / 100.0) * quantity;
-      await context.read<DiaryViewModel>().logCaffeineDose(
+      await viewModel.logCaffeineDose(
         totalCaffeine,
         timestamp,
         foodEntryId: newFoodEntryId,
@@ -1058,6 +1061,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                         final newId = await DatabaseHelper.instance
                             .insertFluidEntry(newEntry);
 
+                        if (!mounted) return;
+
                         if (caffeinePer100ml != null && caffeinePer100ml > 0) {
                           final totalCaffeine =
                               (caffeinePer100ml / 100.0) * quantity;
@@ -1336,7 +1341,10 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                         FoodDetailScreen(trackedItem: trackedItem),
                   ),
                 )
-                .then((_) => context.read<DiaryViewModel>().loadDataForDate(context.read<DiaryViewModel>().selectedDate));
+                .then((_) {
+                  if (!mounted) return;
+                  context.read<DiaryViewModel>().loadDataForDate(context.read<DiaryViewModel>().selectedDate);
+                });
           },
         ),
       ),

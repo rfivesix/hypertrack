@@ -25,7 +25,7 @@ import 'pulse_settings_screen.dart';
 import 'sleep_settings_screen.dart';
 import 'steps_settings_screen.dart';
 import '../services/local_app_data_reset_service.dart';
-import '../services/workout_session_manager.dart';
+import '../screens/live_workout_view_model.dart';
 import '../widgets/common/common.dart';
 import 'app_initializer_screen.dart';
 import 'package:provider/provider.dart';
@@ -651,9 +651,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirmed = await _showLocalDataDeletionConfirmation(l10n);
     if (!confirmed || !mounted) return;
 
-    WorkoutSessionManager? sessionManager;
+    LiveWorkoutViewModel? sessionManager;
     try {
-      sessionManager = context.read<WorkoutSessionManager>();
+      sessionManager = context.read<LiveWorkoutViewModel>();
     } catch (_) {
       sessionManager = null;
     }

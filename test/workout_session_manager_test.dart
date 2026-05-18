@@ -9,7 +9,9 @@ import 'package:train_libre/models/routine_exercise.dart';
 import 'package:train_libre/models/set_log.dart';
 import 'package:train_libre/models/set_template.dart';
 import 'package:train_libre/models/exercise.dart' as model;
-import 'package:train_libre/services/workout_session_manager.dart';
+import 'package:train_libre/screens/live_workout_view_model.dart';
+import 'package:train_libre/data/workout_repository.dart';
+
 
 Future<void> _waitFor(
   bool Function() condition, {
@@ -27,17 +29,17 @@ Future<void> _waitFor(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('WorkoutSessionManager high-value behavior', () {
+  group('LiveWorkoutViewModel high-value behavior', () {
     late AppDatabase database;
     late DatabaseHelper dbHelper;
     late WorkoutDatabaseHelper workoutDb;
-    late WorkoutSessionManager manager;
+    late LiveWorkoutViewModel manager;
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
       workoutDb = WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
-      manager = WorkoutSessionManager.forTesting(workoutDb: workoutDb);
+      manager = LiveWorkoutViewModel.forTesting(workoutDb: WorkoutRepository(db: workoutDb));
     });
 
     tearDown(() async {

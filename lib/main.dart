@@ -11,7 +11,7 @@ import 'navigation/app_route_observer.dart';
 import 'screens/app_initializer_screen.dart';
 import 'services/profile_service.dart';
 import 'services/unit_service.dart';
-import 'services/workout_session_manager.dart';
+import 'screens/live_workout_view_model.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
 import 'theme/color_constants.dart';
@@ -36,7 +36,7 @@ void main() async {
 
   // Create the workout session manager before injecting it. Restoration is
   // handled by AppInitializerScreen after the first frame is visible.
-  final workoutSessionManager = WorkoutSessionManager();
+  final workoutSessionManager = LiveWorkoutViewModel();
 
   final themeService = ThemeService(); // Create an instance
   final unitService = UnitService();

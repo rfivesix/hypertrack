@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/features/steps/data/steps_aggregation_repository.dart';
 import 'package:train_libre/features/steps/presentation/steps_module_screen.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/services/workout_session_manager.dart';
+import 'package:train_libre/screens/live_workout_view_model.dart';
 import 'package:train_libre/widgets/statistics_steps_card.dart';
 import 'package:provider/provider.dart';
 
@@ -28,8 +28,8 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      ChangeNotifierProvider<WorkoutSessionManager>.value(
-        value: WorkoutSessionManager(),
+      ChangeNotifierProvider<LiveWorkoutViewModel>.value(
+        value: LiveWorkoutViewModel(),
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

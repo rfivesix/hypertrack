@@ -27,7 +27,7 @@ import 'package:train_libre/screens/statistics_hub_screen.dart';
 import 'package:train_libre/services/health/steps_sync_service.dart';
 import 'package:train_libre/services/theme_service.dart';
 import 'package:train_libre/services/unit_service.dart';
-import 'package:train_libre/services/workout_session_manager.dart';
+import 'package:train_libre/screens/live_workout_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -511,8 +511,8 @@ void main() {
   Widget wrapWithSessionManager(Widget child) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<WorkoutSessionManager>.value(
-          value: WorkoutSessionManager(),
+        ChangeNotifierProvider<LiveWorkoutViewModel>.value(
+          value: LiveWorkoutViewModel(),
         ),
         ChangeNotifierProvider<ThemeService>(create: (_) => ThemeService()),
         ChangeNotifierProvider<UnitService>(create: (_) => UnitService()),

@@ -17,7 +17,8 @@ import '../models/set_log.dart';
 import '../models/workout_log.dart';
 import '../models/set_template.dart';
 import '../services/haptic_feedback_service.dart';
-import '../services/workout_session_manager.dart';
+import '../screens/live_workout_view_model.dart';
+import '../domain/use_cases/detect_personal_record_use_case.dart';
 import '../services/unit_service.dart';
 import '../widgets/wger_attribution_widget.dart';
 import '../widgets/workout_summary_bar.dart';
@@ -31,7 +32,7 @@ import '../widgets/workout_card.dart';
 /// The active workout tracking screen, managing the real-time session state.
 ///
 /// Handles input for sets, reps, weight, RPE/RIR, and cardio metrics. Coordinates
-/// with [WorkoutSessionManager] to persist progress and provide rest timers.
+/// with [LiveWorkoutViewModel] to persist progress and provide rest timers.
 class LiveWorkoutScreen extends StatefulWidget {
   /// Optional [Routine] used to initialize the workout exercises.
   final Routine? routine;
@@ -47,16 +48,9 @@ class LiveWorkoutScreen extends StatefulWidget {
 
 class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     with TickerProviderStateMixin {
-  final Map<int, TextEditingController> _weightControllers = {};
-  final Map<int, TextEditingController> _repsControllers = {};
-  final Map<int, TextEditingController> _rirControllers = {};
-
-  final Map<String, List<SetLog>> _lastPerformances = {};
-  bool _isLoading = true;
-  bool _canPop = false;
-
   late final VoidCallback _onManagerUpdateCallback;
-  WorkoutSessionManager? _manager;
+  LiveWorkoutViewModel? _manager;
+  bool _canPop = false;
 
   void _handleBack() {
     setState(() {
@@ -68,10 +62,10 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   }
 
   // PR Celebration State
-  StreamSubscription<PREvent>? _prEventsSubscription;
-  final List<PREvent> _prQueue = [];
+  StreamSubscription<PRAlert>? _prEventsSubscription;
+  final List<PRAlert> _prQueue = [];
   bool _isShowingPR = false;
-  PREvent? _currentPR;
+  PRAlert? _currentPR;
   late final AnimationController _prAnimationController;
   late final Animation<Offset> _prSlideAnimation;
 
@@ -94,24 +88,19 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
 
     _onManagerUpdateCallback = () {
       if (mounted) {
-        final manager = Provider.of<WorkoutSessionManager>(
-          context,
-          listen: false,
-        );
-        _syncControllersWithManager(manager);
         setState(() {});
       }
     };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _initializeScreen();
-      final manager = Provider.of<WorkoutSessionManager>(
+      final manager = Provider.of<LiveWorkoutViewModel>(
         context,
         listen: false,
       );
       _manager = manager;
       manager.addListener(_onManagerUpdateCallback);
+      manager.loadInitialData(widget.workoutLog, widget.routine?.exercises);
 
       _prEventsSubscription = manager.prEvents.listen((event) {
         _prQueue.add(event);
@@ -143,218 +132,18 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     _manager?.removeListener(_onManagerUpdateCallback);
     _prEventsSubscription?.cancel();
     _prAnimationController.dispose();
-    _clearControllers();
     super.dispose();
   }
 
-  Future<void> _initializeScreen() async {
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
-    List<RoutineExercise> exercisesToInit = [];
-
-    if (!manager.isActive) {
-      exercisesToInit = widget.routine?.exercises ?? [];
-      await manager.startWorkout(widget.workoutLog, exercisesToInit);
-    } else {
-      exercisesToInit = manager.exercises;
-    }
-
-    for (var re in exercisesToInit) {
-      final lastSets = await WorkoutDatabaseHelper.instance
-          .getLastSetsForExercise(re.exercise.nameEn);
-      if (mounted) {
-        _lastPerformances[re.exercise.nameEn] = lastSets;
-      }
-    }
-
-    _syncControllersWithManager(manager);
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
 
   // --- Cardio check helper ---
   bool _isCardio(RoutineExercise re) {
     return re.exercise.categoryName.toLowerCase() == 'cardio';
   }
 
-  void _syncControllersWithManager(WorkoutSessionManager manager) {
-    final unitService = context.read<UnitService>();
-    manager.setLogs.forEach((templateId, setLog) {
-      // Find the associated exercise
-      final exercise = manager.exercises.firstWhere(
-        (re) => re.setTemplates.any((t) => t.id == templateId),
-        // Fallback if template is not found (should not happen)
-        orElse: () => manager.exercises.first,
-      );
-      final isCardio = _isCardio(exercise);
-
-      // --- WEIGHT / DISTANCE CONTROLLER ---
-      if (!_weightControllers.containsKey(templateId)) {
-        String initText;
-        if (isCardio) {
-          // Cardio: Distance
-          initText =
-              setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
-        } else {
-          // Strength: weight
-          initText = setLog.weightKg == null
-              ? ''
-              : unitService
-                  .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
-                  .toStringAsFixed(1)
-                  .replaceAll('.0', '');
-        }
-
-        _weightControllers[templateId] = TextEditingController(text: initText);
-
-        _weightControllers[templateId]!.addListener(() {
-          final text = _weightControllers[templateId]!.text;
-          final val = double.tryParse(text.replaceAll(',', '.'));
-          final clearValue = val == null && text.isEmpty;
-
-          if (isCardio) {
-            // Update Distance
-            if (val != manager.setLogs[templateId]?.distanceKm || clearValue) {
-              manager.updateSet(
-                templateId,
-                distance: val,
-                clearDistance: clearValue,
-              );
-            }
-          } else {
-            // Update Weight
-            final metricValue = val == null
-                ? null
-                : unitService.convertToMetric(val, UnitDimension.weight);
-            if (metricValue != manager.setLogs[templateId]?.weightKg ||
-                clearValue) {
-              manager.updateSet(
-                templateId,
-                weight: metricValue,
-                clearWeight: clearValue,
-              );
-            }
-          }
-        });
-      }
-
-      // --- REPS / DURATION CONTROLLER ---
-      if (!_repsControllers.containsKey(templateId)) {
-        String initText;
-        if (isCardio) {
-          // Cardio: duration in minutes from seconds
-          final seconds = setLog.durationSeconds ?? 0;
-          initText = seconds > 0 ? (seconds / 60).toStringAsFixed(0) : '';
-        } else {
-          // Strength: reps
-          initText = setLog.reps?.toString() ?? '';
-        }
-
-        _repsControllers[templateId] = TextEditingController(text: initText);
-
-        _repsControllers[templateId]!.addListener(() {
-          final text = _repsControllers[templateId]!.text;
-          if (isCardio) {
-            // Input minutes -> save seconds
-            final minutes = double.tryParse(text.replaceAll(',', '.'));
-            final seconds = (minutes != null) ? (minutes * 60).round() : null;
-            final clearDuration = seconds == null && text.isEmpty;
-            if (seconds != manager.setLogs[templateId]?.durationSeconds ||
-                clearDuration) {
-              manager.updateSet(
-                templateId,
-                duration: seconds,
-                clearDuration: clearDuration,
-              );
-            }
-          } else {
-            final val = int.tryParse(text);
-            final clearReps = val == null && text.isEmpty;
-            if (val != manager.setLogs[templateId]?.reps || clearReps) {
-              manager.updateSet(templateId, reps: val, clearReps: clearReps);
-            }
-          }
-        });
-      }
-
-      // --- RIR CONTROLLER ---
-      if (!_rirControllers.containsKey(templateId)) {
-        _rirControllers[templateId] = TextEditingController(
-          text: setLog.rir?.toString() ?? '',
-        );
-
-        _rirControllers[templateId]!.addListener(() {
-          final text = _rirControllers[templateId]!.text;
-          final val = int.tryParse(text);
-          final clearRir = val == null && text.isEmpty;
-          if (val != manager.setLogs[templateId]?.rir || clearRir) {
-            manager.updateSet(templateId, rir: val, clearRir: clearRir);
-          }
-        });
-      }
-
-      // --- SYNC FALLBACK VALUES TO UI ---
-      // If a set was completed and the manager filled in a fallback value,
-      // update the UI text fields to show the accepted fallback number.
-      if (setLog.weightKg != null &&
-          _weightControllers[templateId]?.text.isEmpty == true) {
-        _weightControllers[templateId]!.text = unitService
-            .convertDisplayValue(setLog.weightKg!, UnitDimension.weight)
-            .toStringAsFixed(1)
-            .replaceAll('.0', '');
-      }
-      if (setLog.distanceKm != null &&
-          _weightControllers[templateId]?.text.isEmpty == true &&
-          isCardio) {
-        _weightControllers[templateId]!.text =
-            setLog.distanceKm!.toStringAsFixed(1).replaceAll('.0', '');
-      }
-      if (setLog.reps != null &&
-          _repsControllers[templateId]?.text.isEmpty == true &&
-          !isCardio) {
-        _repsControllers[templateId]!.text = setLog.reps!.toString();
-      }
-      if (setLog.durationSeconds != null &&
-          _repsControllers[templateId]?.text.isEmpty == true &&
-          isCardio) {
-        _repsControllers[templateId]!.text =
-            (setLog.durationSeconds! / 60).toStringAsFixed(0);
-      }
-      if (setLog.rir != null &&
-          _rirControllers[templateId]?.text.isEmpty == true) {
-        _rirControllers[templateId]!.text = setLog.rir!.toString();
-      }
-    });
-
-    // Cleanup
-    final toRemove = _weightControllers.keys
-        .where((id) => !manager.setLogs.containsKey(id))
-        .toList();
-    for (final id in toRemove) {
-      _weightControllers.remove(id)?.dispose();
-      _repsControllers.remove(id)?.dispose();
-      _rirControllers.remove(id)?.dispose();
-    }
-  }
-
-  void _clearControllers() {
-    for (var c in _weightControllers.values) {
-      c.dispose();
-    }
-    for (var c in _repsControllers.values) {
-      c.dispose();
-    }
-    for (var c in _rirControllers.values) {
-      c.dispose();
-    }
-    _weightControllers.clear();
-    _repsControllers.clear();
-    _rirControllers.clear();
-  }
-
   Future<void> _finishWorkout() async {
     final l10n = AppLocalizations.of(context)!;
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
+    final manager = Provider.of<LiveWorkoutViewModel>(context, listen: false);
 
     // Pre-fill the title with the routine name or "Free Workout"
     final defaultTitle =
@@ -449,21 +238,21 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   }
 
   void _onReorder(int oldIndex, int newIndex) {
-    Provider.of<WorkoutSessionManager>(
+    Provider.of<LiveWorkoutViewModel>(
       context,
       listen: false,
     ).reorderExercise(oldIndex, newIndex);
   }
 
   void _removeExercise(RoutineExercise exerciseToRemove) {
-    Provider.of<WorkoutSessionManager>(
+    Provider.of<LiveWorkoutViewModel>(
       context,
       listen: false,
     ).removeExercise(exerciseToRemove.id!);
   }
 
   void _addExercise() async {
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
+    final manager = Provider.of<LiveWorkoutViewModel>(context, listen: false);
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
         builder: (context) => const GeneralExerciseSelectionScreen(),
@@ -475,7 +264,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
           .getLastSetsForExercise(selectedExercise.nameEn);
       if (mounted) {
         setState(() {
-          _lastPerformances[selectedExercise.nameEn] = lastSets;
+          manager.lastPerformances[selectedExercise.nameEn] = lastSets;
         });
       }
       await manager.addExercise(selectedExercise);
@@ -483,21 +272,21 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   }
 
   void _addSet(RoutineExercise re) {
-    Provider.of<WorkoutSessionManager>(
+    Provider.of<LiveWorkoutViewModel>(
       context,
       listen: false,
     ).addSetToExercise(re.id!);
   }
 
   void _removeSet(int templateId) {
-    Provider.of<WorkoutSessionManager>(
+    Provider.of<LiveWorkoutViewModel>(
       context,
       listen: false,
     ).removeSet(templateId);
   }
 
   void _changeSetType(int templateId, String newType) {
-    Provider.of<WorkoutSessionManager>(
+    Provider.of<LiveWorkoutViewModel>(
       context,
       listen: false,
     ).updateSet(templateId, setType: newType);
@@ -792,7 +581,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     SetTemplate template,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final manager = Provider.of<WorkoutSessionManager>(context, listen: false);
+    final manager = Provider.of<LiveWorkoutViewModel>(context, listen: false);
     final bool isCompleted = setLog.isCompleted ?? false;
     final unitService = context.read<UnitService>();
 
@@ -868,12 +657,12 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                                     lastSet.weightKg!, UnitDimension.weight)
                                 .toStringAsFixed(1)
                                 .replaceAll('.0', '');
-                            _weightControllers[templateId]?.text =
+                            manager.weightControllers[templateId]?.text =
                                 displayWeight;
                           }
                           // Apply reps
                           if (lastSet.reps != null) {
-                            _repsControllers[templateId]?.text =
+                            manager.repsControllers[templateId]?.text =
                                 lastSet.reps.toString();
                           }
                           HapticFeedbackService.instance.selectionFeedback();
@@ -899,7 +688,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
         Expanded(
           flex: isCardio ? 4 : 2, // More space for inputs
           child: TextFormField(
-            controller: _weightControllers[templateId],
+            controller: manager.weightControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -914,6 +703,21 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               ),
             ),
             enabled: !isCompleted,
+            onChanged: (text) {
+              final val = double.tryParse(text.replaceAll(',', '.'));
+              final clearValue = val == null && text.isEmpty;
+
+              if (isCardio) {
+                if (val != manager.setLogs[templateId]?.distanceKm || clearValue) {
+                  manager.updateSet(templateId, distance: val, clearDistance: clearValue);
+                }
+              } else {
+                final metricValue = val == null ? null : unitService.convertToMetric(val, UnitDimension.weight);
+                if (metricValue != manager.setLogs[templateId]?.weightKg || clearValue) {
+                  manager.updateSet(templateId, weight: metricValue, clearWeight: clearValue);
+                }
+              }
+            },
           ),
         ),
 
@@ -921,7 +725,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
         Expanded(
           flex: isCardio ? 4 : 2, // More space for inputs
           child: TextFormField(
-            controller: _repsControllers[templateId],
+            controller: manager.repsControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -936,6 +740,22 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               ),
             ),
             enabled: !isCompleted,
+            onChanged: (text) {
+              if (isCardio) {
+                final minutes = double.tryParse(text.replaceAll(',', '.'));
+                final seconds = (minutes != null) ? (minutes * 60).round() : null;
+                final clearDuration = seconds == null && text.isEmpty;
+                if (seconds != manager.setLogs[templateId]?.durationSeconds || clearDuration) {
+                  manager.updateSet(templateId, duration: seconds, clearDuration: clearDuration);
+                }
+              } else {
+                final val = int.tryParse(text);
+                final clearValue = val == null && text.isEmpty;
+                if (val != manager.setLogs[templateId]?.reps || clearValue) {
+                  manager.updateSet(templateId, reps: val, clearReps: clearValue);
+                }
+              }
+            },
           ),
         ),
 
@@ -943,7 +763,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
         Expanded(
           flex: isCardio ? 2 : 1,
           child: TextFormField(
-            controller: _rirControllers[templateId],
+            controller: manager.rirControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -959,6 +779,13 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               ),
             ),
             enabled: !isCompleted,
+            onChanged: (text) {
+              final val = int.tryParse(text);
+              final clearValue = val == null && text.isEmpty;
+              if (val != manager.setLogs[templateId]?.rir || clearValue) {
+                manager.updateSet(templateId, rir: val, clearRir: clearValue);
+              }
+            },
           ),
         ),
 
@@ -1055,7 +882,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   Widget _buildExerciseE1rmSummary(
     AppLocalizations l10n,
     RoutineExercise routineExercise,
-    WorkoutSessionManager manager,
+    LiveWorkoutViewModel manager,
   ) {
     final unitService = context.read<UnitService>();
     final sessionBest = _getSessionBestE1rm(routineExercise, manager);
@@ -1146,11 +973,11 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     context.watch<UnitService>();
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final manager = Provider.of<WorkoutSessionManager>(context);
+    final manager = Provider.of<LiveWorkoutViewModel>(context);
 
     // If the workout was just finished, the manager state is cleared.
     // We return a blank scaffold to avoid any errors during the Navigator transition.
-    if (!manager.isActive && !_isLoading) {
+    if (!manager.isActive && !manager.isLoading) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       );
@@ -1221,8 +1048,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
         mgr.setLogs.values.where((s) => s.isCompleted == true).length;
     final double progress = planned == 0 ? 0.0 : completed / planned;
 
-    if (!_isLoading) {
-      _syncControllersWithManager(manager);
+    if (!manager.isLoading) {
+      manager.syncControllers();
     }
 
     return PopScope(
@@ -1264,7 +1091,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               ),
             ],
           ),
-          body: _isLoading
+          body: manager.isLoading
               ? const Center(child: CircularProgressIndicator())
               : Stack(
                   children: [
@@ -1455,7 +1282,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                                                     setEntry.key,
                                                     templateId,
                                                     setLog,
-                                                    _lastPerformances[
+                                                    manager.lastPerformances[
                                                             routineExercise
                                                                 .exercise
                                                                 .nameEn] ??
@@ -1530,7 +1357,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   Widget? _buildRestBottomBar(
     AppLocalizations l10n,
     ColorScheme colorScheme,
-    WorkoutSessionManager manager,
+    LiveWorkoutViewModel manager,
   ) {
     final isRunning = manager.remainingRestSeconds > 0;
     final isDoneBanner = !isRunning && manager.showRestDone;
@@ -1659,7 +1486,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
 
   double? _getSessionBestE1rm(
     RoutineExercise routineExercise,
-    WorkoutSessionManager manager,
+    LiveWorkoutViewModel manager,
   ) {
     double? best;
 
@@ -1679,7 +1506,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   }
 
   double? _getLastSessionBestE1rm(String exerciseName) {
-    final lastSets = _lastPerformances[exerciseName] ?? const <SetLog>[];
+    final lastSets = _manager!.lastPerformances[exerciseName] ?? const <SetLog>[];
     double? best;
 
     for (final setLog in lastSets) {

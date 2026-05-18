@@ -29,7 +29,7 @@ import '../services/profile_service.dart';
 import '../features/steps/data/steps_aggregation_repository.dart';
 import '../services/haptic_feedback_service.dart';
 import '../services/theme_service.dart';
-import '../services/workout_session_manager.dart';
+import '../screens/live_workout_view_model.dart';
 import '../theme/color_constants.dart';
 import '../util/date_util.dart';
 import '../util/design_constants.dart';
@@ -1054,7 +1054,7 @@ class _MainScreenState extends State<MainScreen>
         ? appTourSteps[_tourStepIndex]
         : null;
 
-    final manager = context.watch<WorkoutSessionManager>();
+    final manager = context.watch<LiveWorkoutViewModel>();
     final bool isWorkoutRunning = manager.isActive;
     final String elapsed = _formatDuration(manager.elapsedDuration);
 
@@ -1109,7 +1109,7 @@ class _MainScreenState extends State<MainScreen>
               child: _RunningWorkoutRow(
                 timeText: elapsed,
                 onContinue: () {
-                  final log = context.read<WorkoutSessionManager>().workoutLog;
+                  final log = context.read<LiveWorkoutViewModel>().workoutLog;
                   if (log != null) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -1121,7 +1121,7 @@ class _MainScreenState extends State<MainScreen>
                 },
                 onDiscard: () async {
                   final l10n = AppLocalizations.of(context)!;
-                  final wsm = context.read<WorkoutSessionManager>();
+                  final wsm = context.read<LiveWorkoutViewModel>();
                   final logId = wsm.workoutLog?.id;
 
                   // FIX: showDeleteConfirmation instead of showDialog.

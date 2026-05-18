@@ -6,7 +6,7 @@ import '../data/basis_data_manager.dart';
 import '../data/database_helper.dart';
 import '../generated/app_localizations.dart';
 import '../services/local_notification_service.dart';
-import '../services/workout_session_manager.dart';
+import '../screens/live_workout_view_model.dart';
 import 'main_screen.dart';
 import 'onboarding_screen.dart';
 import 'package:provider/provider.dart';
@@ -127,9 +127,9 @@ class _AppInitializerScreenState extends State<AppInitializerScreen> {
   }
 
   Future<void> _prepareCoreServices() async {
-    WorkoutSessionManager? workoutSessionManager;
+    LiveWorkoutViewModel? workoutSessionManager;
     try {
-      workoutSessionManager = context.read<WorkoutSessionManager>();
+      workoutSessionManager = context.read<LiveWorkoutViewModel>();
     } catch (_) {
       workoutSessionManager = null;
     }

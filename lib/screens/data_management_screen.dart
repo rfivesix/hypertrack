@@ -11,7 +11,7 @@ import '../generated/app_localizations.dart';
 import '../screens/app_initializer_screen.dart';
 import 'exercise_mapping_screen.dart';
 import '../services/local_app_data_reset_service.dart';
-import '../services/workout_session_manager.dart';
+import '../screens/live_workout_view_model.dart';
 import '../util/design_constants.dart';
 import '../widgets/global_app_bar.dart';
 import '../widgets/summary_card.dart';
@@ -567,9 +567,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     final confirmed = await _showLocalDataDeletionConfirmation(l10n);
     if (!confirmed || !mounted) return;
 
-    WorkoutSessionManager? sessionManager;
+    LiveWorkoutViewModel? sessionManager;
     try {
-      sessionManager = context.read<WorkoutSessionManager>();
+      sessionManager = context.read<LiveWorkoutViewModel>();
     } catch (_) {
       sessionManager = null;
     }
