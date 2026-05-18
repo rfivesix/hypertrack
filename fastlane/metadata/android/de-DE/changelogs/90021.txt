@@ -1,0 +1,6 @@
+- Unterstützung für Reps-in-Reserve (RIR) mit verbesserter Datenweitergabe hinzugefügt.
+- Neuer Fallback für Wiederholungsbereiche (z. B. "8-12") berechnet mathematische Durchschnitte.
+- Verbesserte Lesbarkeit von Fortschrittsbalken und Textkontrast.
+- Verfeinerte Tagebuch-Zusammenfassungskarten (Schlaf, Puls, Workouts) für eine sauberere Benutzeroberfläche.
+- Globaler TimeRangeFilter für konsistente Analysen-Filterung extrahiert.
+- Fehlerbehebungen bei Legendensymbolen und Randbeschnitt in Analyse-Dashboards.

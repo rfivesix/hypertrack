@@ -1,0 +1,6 @@
+- Added Reps-in-Reserve (RIR) support with improved data propagation.
+- New fallback for rep ranges (e.g., "8-12") calculates mathematical averages.
+- Improved progress bar readability and text contrast.
+- Refined diary summary cards (Sleep, Pulse, Workouts) for a cleaner UI.
+- Extracted global TimeRangeFilter for consistent analytics filtering.
+- Fixed legend shapes and edge clipping in analytics dashboards.

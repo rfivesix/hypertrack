@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.7] (90021) - 2026-05-18
+### Added
+- **Reps-in-Reserve (RIR) Enhancement**: Improved RIR data propagation and null-safety during workout logging.
+- **Rep Range Fallback**: Implemented mathematical average calculation for rep ranges (e.g., "8-12" defaults to 10 reps) in workout templates and live logging.
+- **Global TimeRangeFilter**: Extracted a reusable horizontal ChoiceChip-based filter for consistent timeframe selection across Analytics and Steps modules.
+
+### Changed
+- **Diary Summary Harmonization**: Refined summary cards for Sleep, Pulse, and Workouts to use a consistent, emoji-free design with improved typography and spacing.
+- **Progress Bar Readability**: Implemented dual-layer clipping and contrast-aware text rendering in `GlassProgressBar` to ensure legibility across all progress levels.
+
+### Fixed
+- **Analytics Layout**: Fixed various UI issues in analytics dashboards, including legend shape consistency, edge clipping in horizontal scrolls, and proper current-day filtering in body/nutrition trends.
+- **Navigation**: Resolved inconsistencies in exercise selection routing within routine and live workout editors.
+
 ## [0.9.7-alpha.2] (90020) - 2026-05-18
 ### Added
 - **Localized feature-bound DataSources**: DiaryLocalDataSource, WorkoutLocalDataSource, SupplementLocalDataSource, ProfileLocalDataSource, StepsLocalDataSource communicating directly with the core Drift database client.
