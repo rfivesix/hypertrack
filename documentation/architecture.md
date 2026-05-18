@@ -2,6 +2,11 @@
 
 This document reflects architecture as currently implemented.
 
+
+
+## Domain Layer Purity
+The Domain Layer is a 100% pure Dart capsule. Concrete repository implementations (e.g., `NutritionRepository` or `DiaryRepository`) act as a strict data mapping tier. They consume raw Drift database row classes (like `DailyGoalsHistoryData`) from local DataSources and map them into pure, framework-agnostic models (like `DailyGoal`) before passing them upward to ViewModels or UseCases. Repository contracts never return Drift or third-party entity classes.
+
 ## High-level layering
 
 ```
@@ -80,6 +85,71 @@ Sub-areas:
 - `domain/`: canonical entities, metrics, scoring, aggregations
 - `presentation/`: navigation, day/week/month scope UI, detail pages
 
+
+## Architectural Flow
+
+```mermaid
+graph TD
+    subgraph Presentation Layer
+        UI[Flutter Widgets] --> VM[View Models / Feature Controllers]
+    end
+
+    subgraph Pure Domain Layer
+        VM --> UC[Use Cases]
+        UC --> Repos[Repository Contracts]
+        Repos --> Models[Domain Models e.g. DailyGoal]
+    end
+
+    subgraph Infrastructure Grid
+        Repos -.-> Impl[Data Source Implementations]
+        Impl --> DB[Drift AppDatabase]
+        Impl --> Platform[Platform Channels / Adapters]
+    end
+
+    classDef domain fill:#f9f,stroke:#333,stroke-width:2px;
+    class Repos,Models domain;
+```
+
+## Decentralized Data Access Layer
+
+```mermaid
+graph LR
+    FeatureA[Diary LocalDataSource] --> DB[database_helper.dart - Proxy]
+    FeatureB[Workout LocalDataSource] --> DB
+    FeatureC[Settings LocalDataSource] --> DB
+
+    DB --> SQLite[(Drift SQLite Instance)]
+
+    note[DatabaseHelper handles low-level initialization and schema hooks only.<br/>It contains ZERO application CRUD orchestrations.]
+```
+
+## Asynchronous Coordination Sequence Flow
+
+```mermaid
+sequenceDiagram
+    participant UI as Flutter UI Frame
+    participant Coordinator as DiaryHealthSyncCoordinator
+    participant Platform as Platform Bridge (HealthKit/Health Connect)
+    participant DB as Local Database
+
+    UI->>Coordinator: Request Sync
+    activate Coordinator
+    Coordinator->>Platform: Async Fetch Hardware Data
+    Platform-->>Coordinator: Raw Health Samples
+    Coordinator->>DB: Batch Upsert (Background Isolate)
+    DB-->>Coordinator: Success
+    Coordinator-->>UI: Sync Complete (State Update)
+    deactivate Coordinator
+```
+
+## How to Extend This Context
+
+To spawn a new feature block adhering to this pure layer isolation pattern:
+1. **Define the Domain:** Create a pure Dart model and a repository contract in `lib/features/<name>/domain/`.
+2. **Implement Data Access:** Create a local data source in `lib/features/<name>/data/sources/` that implements the contract, querying the central Drift client via generic methods.
+3. **Build Presentation:** Create ViewModels and UI screens in `lib/features/<name>/presentation/` that depend solely on the domain contracts.
+
+
 ## Navigation model
 
 Navigation is currently mixed:
@@ -102,8 +172,8 @@ Primary persistence is Drift-based via `AppDatabase` (`lib/data/drift_database.d
 
 Notable current areas:
 
-- workout analytics queries in `lib/data/workout_database_helper.dart`
-- nutrition/settings/steps queries in `lib/data/database_helper.dart`
+- workout analytics queries are managed via `WorkoutLocalDataSource` querying the central client.
+- nutrition/settings/steps queries are managed via feature-specific LocalDataSources which consume `lib/data/database_helper.dart`.
 - Sleep raw/canonical/derived schema and DAOs in `lib/features/sleep/data/persistence/**`
 
 ## Known implementation notes
