@@ -8,17 +8,17 @@ import 'features/sleep/presentation/sleep_navigation.dart';
 import 'generated/app_localizations.dart';
 import 'navigation/app_route_observer.dart';
 // App startup routing is delegated to the dedicated initializer screen.
-import 'screens/app_initializer_screen.dart';
+import 'features/app/presentation/app_initializer_screen.dart';
 import 'services/profile_service.dart';
 import 'services/unit_service.dart';
-import 'screens/live_workout_view_model.dart';
+import 'features/workout/presentation/live_workout_view_model.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
 import 'theme/color_constants.dart';
 import 'package:intl/date_symbol_data_local.dart'; // FIX: Initialize intl formatting
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/initial_consent_screen.dart';
+import 'features/onboarding/presentation/initial_consent_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

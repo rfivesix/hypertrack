@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../util/design_constants.dart';
-import '../summary_card.dart';
+import 'summary_card.dart';
 
 /// A thin wrapper around [SummaryCard] that applies the app's standard card
 /// layout tokens: padding, margin, and optional tap handling.

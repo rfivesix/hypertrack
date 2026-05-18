@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../widgets/summary_card.dart';
+import '../../../../widgets/common/summary_card.dart';
 
 class SleepDataUnavailableCard extends StatelessWidget {
   const SleepDataUnavailableCard({

@@ -10,7 +10,7 @@ import '../../generated/app_localizations.dart';
 import '../../models/exercise.dart';
 import '../../models/routine.dart';
 import '../../models/workout_log.dart';
-import '../../widgets/glass_bottom_menu.dart';
+import '../app/presentation/widgets/glass_bottom_menu.dart';
 import 'routine_share_formatter.dart';
 import 'share_card_renderer.dart';
 import 'share_labels.dart';

@@ -5,10 +5,10 @@ import '../../../data/database_helper.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../services/health/steps_sync_service.dart';
 import '../../../util/design_constants.dart';
-import '../../../widgets/bottom_content_spacer.dart';
-import '../../../widgets/global_app_bar.dart';
-import '../../../widgets/statistics_steps_card.dart';
-import '../../../widgets/summary_card.dart';
+import '../../../widgets/common/bottom_content_spacer.dart';
+import '../../../widgets/common/global_app_bar.dart';
+import 'statistics_steps_card.dart';
+import '../../../widgets/common/summary_card.dart';
 import '../data/steps_aggregation_repository.dart';
 import '../domain/steps_models.dart';
 

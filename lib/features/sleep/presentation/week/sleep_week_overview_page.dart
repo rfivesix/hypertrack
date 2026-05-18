@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../util/design_constants.dart';
-import '../../../../widgets/summary_card.dart';
+import '../../../../widgets/common/summary_card.dart';
 import '../../domain/aggregation/sleep_period_aggregations.dart';
 import '../../data/repository/sleep_query_repository.dart';
 import '../../domain/sleep_enums.dart';

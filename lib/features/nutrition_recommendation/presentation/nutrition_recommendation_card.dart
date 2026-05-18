@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
-import '../../../widgets/summary_card.dart';
+import '../../../widgets/common/summary_card.dart';
 import '../domain/bayesian_tdee_estimator.dart';
 import '../domain/confidence_models.dart';
 import '../domain/goal_models.dart';

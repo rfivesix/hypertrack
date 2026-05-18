@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../util/design_constants.dart';
-import '../../../../widgets/global_app_bar.dart';
+import '../../../../widgets/common/global_app_bar.dart';
 
 enum SleepPeriodScope { day, week, month }
 

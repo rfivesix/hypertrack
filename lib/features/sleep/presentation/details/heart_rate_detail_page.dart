@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../models/chart_data_point.dart';
-import '../../../../widgets/measurement_chart_widget.dart';
-import '../../../../widgets/summary_card.dart';
+import '../../../profile/presentation/widgets/measurement_chart_widget.dart';
+import '../../../../widgets/common/summary_card.dart';
 import '../../data/sleep_day_repository.dart';
 import 'sleep_data_unavailable_card.dart';
 import 'sleep_detail_page_shell.dart';

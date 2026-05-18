@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../generated/app_localizations.dart';
-import '../../../../widgets/summary_card.dart';
+import '../../../../widgets/common/summary_card.dart';
 import '../../data/sleep_day_repository.dart';
 import 'sleep_detail_page_shell.dart';
 import 'sleep_metric_formatters.dart';

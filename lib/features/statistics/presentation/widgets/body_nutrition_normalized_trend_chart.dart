@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../generated/app_localizations.dart';
-import '../../../../widgets/analytics_chart_defaults.dart';
+import '../../../analytics/presentation/widgets/analytics_chart_defaults.dart';
 import '../../domain/analytics_state.dart';
 import '../../domain/body_nutrition_analytics_models.dart';
 import '../../../../services/unit_service.dart';
