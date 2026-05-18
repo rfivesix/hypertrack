@@ -1,8 +1,8 @@
 import 'package:intl/intl.dart';
 
-import '../../models/exercise.dart';
-import '../../models/set_log.dart';
-import '../../models/workout_log.dart';
+import '../exercise_catalog/domain/models/exercise.dart';
+import '../workout/domain/models/set_log.dart';
+import '../workout/domain/models/workout_log.dart';
 import 'share_labels.dart';
 import 'share_set_type.dart';
 

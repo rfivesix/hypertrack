@@ -2,17 +2,17 @@ import 'dart:convert';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/backup_manager.dart';
+import 'package:train_libre/core/infrastructure/backup_manager.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion, ExercisesCompanion;
-import 'package:train_libre/data/product_database_helper.dart';
-import 'package:train_libre/data/workout_database_helper.dart';
-import 'package:train_libre/models/food_entry.dart';
-import 'package:train_libre/models/measurement.dart';
-import 'package:train_libre/models/measurement_session.dart';
-import 'package:train_libre/models/set_log.dart';
-import 'package:train_libre/models/workout_log.dart';
+import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
+import 'package:train_libre/features/diary/domain/models/food_entry.dart';
+import 'package:train_libre/features/profile/domain/models/measurement.dart';
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart';
+import 'package:train_libre/features/workout/domain/models/workout_log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -22,16 +22,17 @@ void main() {
   group('Backup/restore integrity', () {
     late AppDatabase db;
     late DatabaseHelper dbHelper;
-    late WorkoutDatabaseHelper workoutDb;
-    late ProductDatabaseHelper productDb;
+    late WorkoutLocalDataSource workoutDb;
+    late ProductLocalDataSource productDb;
     late BackupManager backupManager;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       db = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(db);
-      workoutDb = WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
-      productDb = ProductDatabaseHelper.forTesting(databaseHelper: dbHelper);
+      DatabaseHelper.setDriftDb(db);
+      workoutDb = WorkoutLocalDataSource.forTesting(db);
+      productDb = ProductLocalDataSource.forTesting(db);
       backupManager = BackupManager(
         userDb: dbHelper,
         workoutDb: workoutDb,
@@ -69,9 +70,9 @@ void main() {
         notes: 'High-carb pre-workout',
       );
       await dbHelper.addMealItem(
-        mealId,
+        mealId: mealId,
         barcode: 'base-apple',
-        grams: 180,
+        amount: 180.0,
       );
 
       final payload = await backupManager.generateBackupPayloadForTesting();

@@ -1239,6 +1239,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get settingsUpdateFoodDatabase => 'Update Food Database';
+
+  @override
+  String get settingsUpdateFoodDatabaseSubtitle =>
+      'Check for updates to the Open Food Facts database manually.';
+
+  @override
+  String get settingsUpdateFoodDatabaseSuccess =>
+      'Food database successfully updated.';
+
+  @override
+  String settingsUpdateFoodDatabaseError(String error) {
+    return 'Error updating database: $error';
+  }
+
+  @override
   String get settingsGuidedTourSectionTitle => 'Guided tour';
 
   @override
@@ -1427,7 +1443,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onbFinishCta => 'Let’s go!';
 
   @override
-  String get onbShowTutorialAgain => 'Show tutorial again';
+  String get onbShowTutorialAgain => 'Show onboarding again';
 
   @override
   String get appTourOfferTitle => 'Take a quick app tour?';
@@ -2254,6 +2270,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genderDiverse => 'Diverse';
 
   @override
+  String get vegan => 'Vegan';
+
+  @override
+  String get vegetarian => 'Vegetarian';
+
+  @override
+  String get ingredients => 'Ingredients';
+
+  @override
   String get aiSettingsTitle => 'AI Meal Capture';
 
   @override
@@ -2374,12 +2399,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.';
 
   @override
-  String get aiRecommendationContextTitle =>
-      'Send recent meals for recommendations';
+  String get aiCustomInstructionsTitle => 'Global AI Instructions';
 
   @override
-  String get aiRecommendationContextSubtitle =>
-      'Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.';
+  String get aiCustomInstructionsSubtitle =>
+      'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every recommendation.';
 
   @override
   String get aiRecommendationTitle => 'AI Meal Coach';

@@ -8,17 +8,35 @@ import 'features/sleep/presentation/sleep_navigation.dart';
 import 'generated/app_localizations.dart';
 import 'navigation/app_route_observer.dart';
 // App startup routing is delegated to the dedicated initializer screen.
-import 'screens/app_initializer_screen.dart';
+import 'features/app/presentation/app_initializer_screen.dart';
 import 'services/profile_service.dart';
 import 'services/unit_service.dart';
-import 'services/workout_session_manager.dart';
+import 'features/workout/presentation/live_workout_view_model.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
 import 'theme/color_constants.dart';
 import 'package:intl/date_symbol_data_local.dart'; // FIX: Initialize intl formatting
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/initial_consent_screen.dart';
+import 'features/onboarding/presentation/initial_consent_screen.dart';
+
+import 'features/diary/domain/repositories/diary_repository.dart';
+import 'features/diary/data/nutrition_repository.dart';
+import 'features/workout/domain/repositories/workout_repository.dart';
+import 'features/workout/data/workout_repository.dart';
+import 'features/exercise_catalog/domain/repositories/exercise_catalog_repository.dart';
+import 'features/exercise_catalog/data/exercise_catalog_repository.dart';
+import 'features/profile/domain/repositories/profile_repository.dart';
+import 'data/drift_database.dart' as db;
+import 'data/database_helper.dart';
+import 'features/profile/data/profile_repository.dart';
+import 'features/diary/data/sources/diary_local_data_source.dart';
+import 'features/workout/data/sources/workout_local_data_source.dart';
+import 'features/exercise_catalog/data/sources/exercise_catalog_local_data_source.dart';
+import 'features/profile/data/sources/profile_local_data_source.dart';
+import 'features/supplements/domain/repositories/supplement_repository.dart';
+import 'features/supplements/data/supplement_repository_impl.dart';
+import 'features/supplements/data/sources/supplement_local_data_source.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,9 +52,22 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final hasAcceptedConsent = prefs.getBool('hasAcceptedConsent') ?? false;
 
+  final database = db.AppDatabase();
+  DatabaseHelper.setDriftDb(database);
+  final diaryLocalDataSource = DiaryLocalDataSource(database);
+  final workoutLocalDataSource = WorkoutLocalDataSource(database);
+  final exerciseCatalogLocalDataSource =
+      ExerciseCatalogLocalDataSource(database);
+  final profileLocalDataSource = ProfileLocalDataSource(database);
+  final supplementLocalDataSource = SupplementLocalDataSource(database);
+
+  final workoutRepository =
+      WorkoutRepository(localDataSource: workoutLocalDataSource);
+
   // Create the workout session manager before injecting it. Restoration is
   // handled by AppInitializerScreen after the first frame is visible.
-  final workoutSessionManager = WorkoutSessionManager();
+  final workoutSessionManager =
+      LiveWorkoutViewModel(repository: workoutRepository);
 
   final themeService = ThemeService(); // Create an instance
   final unitService = UnitService();
@@ -45,6 +76,27 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<IDiaryRepository>(
+          create: (_) => NutritionRepository(
+            localDataSource: diaryLocalDataSource,
+          ),
+        ),
+        Provider<IWorkoutRepository>.value(value: workoutRepository),
+        Provider<SupplementRepository>(
+          create: (_) => SupplementRepositoryImpl(
+            localDataSource: supplementLocalDataSource,
+          ),
+        ),
+        Provider<IExerciseCatalogRepository>(
+          create: (_) => ExerciseCatalogRepository(
+            localDataSource: exerciseCatalogLocalDataSource,
+          ),
+        ),
+        Provider<IProfileRepository>(
+          create: (_) => ProfileRepository(
+            localDataSource: profileLocalDataSource,
+          ),
+        ),
         ChangeNotifierProvider.value(value: workoutSessionManager),
         ChangeNotifierProvider(
           create: (context) {
@@ -204,11 +256,78 @@ class _MyAppState extends State<MyApp> {
             space: 24,
           ),
 
-          textTheme: ThemeData.light().textTheme.apply(
-                fontFamily: 'Inter',
-                bodyColor: Colors.black87,
-                displayColor: Colors.black87,
-              ),
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            headlineLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            headlineMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            headlineSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            titleLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            titleMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            bodyLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+            bodyMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+            bodySmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+            labelLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF757575), // grey[600]
+              letterSpacing: 0.2,
+            ),
+            labelMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+            labelSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+          ),
 
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
@@ -320,11 +439,78 @@ class _MyAppState extends State<MyApp> {
             space: 24,
           ),
 
-          textTheme: ThemeData.dark().textTheme.apply(
-                fontFamily: 'Inter',
-                bodyColor: Colors.white,
-                displayColor: Colors.white,
-              ),
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            headlineLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            headlineMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            headlineSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            titleLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            titleMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            bodyLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              color: Colors.white,
+            ),
+            bodyMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            bodySmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Colors.white,
+            ),
+            labelLarge: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+            labelMedium: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            labelSmall: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               backgroundColor: darkScheme.primary,

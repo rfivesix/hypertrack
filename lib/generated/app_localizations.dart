@@ -2210,6 +2210,30 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @settingsUpdateFoodDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Food Database'**
+  String get settingsUpdateFoodDatabase;
+
+  /// No description provided for @settingsUpdateFoodDatabaseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates to the Open Food Facts database manually.'**
+  String get settingsUpdateFoodDatabaseSubtitle;
+
+  /// No description provided for @settingsUpdateFoodDatabaseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Food database successfully updated.'**
+  String get settingsUpdateFoodDatabaseSuccess;
+
+  /// No description provided for @settingsUpdateFoodDatabaseError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating database: {error}'**
+  String settingsUpdateFoodDatabaseError(String error);
+
   /// No description provided for @settingsGuidedTourSectionTitle.
   ///
   /// In en, this message translates to:
@@ -2561,7 +2585,7 @@ abstract class AppLocalizations {
   /// Settings item to reopen onboarding
   ///
   /// In en, this message translates to:
-  /// **'Show tutorial again'**
+  /// **'Show onboarding again'**
   String get onbShowTutorialAgain;
 
   /// No description provided for @appTourOfferTitle.
@@ -4106,6 +4130,24 @@ abstract class AppLocalizations {
   /// **'Diverse'**
   String get genderDiverse;
 
+  /// No description provided for @vegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan'**
+  String get vegan;
+
+  /// No description provided for @vegetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get vegetarian;
+
+  /// No description provided for @ingredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients'**
+  String get ingredients;
+
   /// No description provided for @aiSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -4328,17 +4370,17 @@ abstract class AppLocalizations {
   /// **'Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.'**
   String get aiEnableSubtitle;
 
-  /// No description provided for @aiRecommendationContextTitle.
+  /// No description provided for @aiCustomInstructionsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Send recent meals for recommendations'**
-  String get aiRecommendationContextTitle;
+  /// **'Global AI Instructions'**
+  String get aiCustomInstructionsTitle;
 
-  /// No description provided for @aiRecommendationContextSubtitle.
+  /// No description provided for @aiCustomInstructionsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.'**
-  String get aiRecommendationContextSubtitle;
+  /// **'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every recommendation.'**
+  String get aiCustomInstructionsSubtitle;
 
   /// No description provided for @aiRecommendationTitle.
   ///

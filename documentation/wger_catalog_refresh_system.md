@@ -178,8 +178,8 @@ WAL-mode header after SHA-256 verification and before schema validation/import.
 
 Startup integration:
 
-- `lib/screens/app_initializer_screen.dart` -> `BasisDataManager.checkForBasisDataUpdate(...)`
-- `lib/data/basis_data_manager.dart` attempts remote exercise candidate first
+- `lib/features/app/presentation/app_initializer_screen.dart` -> `lib/core/infrastructure/basis_data_manager.dart.checkForBasisDataUpdate(...)`
+- `lib/core/infrastructure/basis_data_manager.dart` attempts remote exercise candidate first
 - on any remote failure/invalid payload, import falls back to bundled asset DB safely
 
 ## Data safety behavior

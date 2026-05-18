@@ -36,12 +36,12 @@ main.dart
 Implementation paths:
 
 - App entry and route registration: `lib/main.dart`
-- Main tab shell and `PageView`: `lib/screens/main_screen.dart`
+- Main tab shell and `PageView`: `lib/features/app/presentation/main_screen.dart`
 - Sleep named-route generation is handled by `SleepNavigation.onGenerateRoute` in `lib/features/sleep/presentation/sleep_navigation.dart`.
 
 ## Statistics module (implemented)
 
-Main hub: `lib/screens/statistics_hub_screen.dart`
+Main hub: `lib/features/analytics/presentation/statistics_hub_screen.dart`
 
 Hub sections currently rendered (in order):
 
@@ -55,7 +55,7 @@ Hub sections currently rendered (in order):
 8. Volume/muscles
 9. Body/nutrition
 
-Drill-down screens (all under `lib/screens/analytics/`):
+Drill-down screens (all under `lib/features/analytics/presentation/`):
 
 - `consistency_tracker_screen.dart`
 - `pr_dashboard_screen.dart`
@@ -126,7 +126,7 @@ Current behavior:
 
 Sleep and Steps settings are both in:
 
-- `lib/screens/settings_screen.dart`
+- `lib/features/settings/presentation/settings_screen.dart`
 
 Implemented controls include:
 

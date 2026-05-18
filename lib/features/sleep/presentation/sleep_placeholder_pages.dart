@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../widgets/global_app_bar.dart';
-import '../../../widgets/summary_card.dart';
+import '../../../widgets/common/global_app_bar.dart';
+import '../../../widgets/common/summary_card.dart';
 
 class SleepPlaceholderPage extends StatelessWidget {
   const SleepPlaceholderPage({

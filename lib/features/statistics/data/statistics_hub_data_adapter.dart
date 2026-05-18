@@ -1,4 +1,4 @@
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../../util/body_nutrition_analytics_utils.dart';
 import '../../../util/perf_debug_timer.dart';
 import '../domain/consistency_payload_models.dart';
@@ -8,11 +8,11 @@ import '../domain/recovery_payload_models.dart';
 import '../domain/statistics_range_policy.dart';
 
 class StatisticsHubDataAdapter {
-  final WorkoutDatabaseHelper _workoutDatabaseHelper;
+  final WorkoutLocalDataSource _workoutDatabaseHelper;
   final StatisticsRangePolicyService _rangePolicy;
 
   const StatisticsHubDataAdapter({
-    required WorkoutDatabaseHelper workoutDatabaseHelper,
+    required WorkoutLocalDataSource workoutDatabaseHelper,
     StatisticsRangePolicyService rangePolicy =
         StatisticsRangePolicyService.instance,
   })  : _workoutDatabaseHelper = workoutDatabaseHelper,

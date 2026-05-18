@@ -5,10 +5,11 @@ import '../../../data/database_helper.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../services/health/steps_sync_service.dart';
 import '../../../util/design_constants.dart';
-import '../../../widgets/bottom_content_spacer.dart';
-import '../../../widgets/global_app_bar.dart';
-import '../../../widgets/statistics_steps_card.dart';
-import '../../../widgets/summary_card.dart';
+import '../../../widgets/common/bottom_content_spacer.dart';
+import '../../../widgets/common/common.dart';
+import '../../../widgets/common/global_app_bar.dart';
+import 'statistics_steps_card.dart';
+import '../../../widgets/common/summary_card.dart';
 import '../data/steps_aggregation_repository.dart';
 import '../domain/steps_models.dart';
 
@@ -224,17 +225,27 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
       body: Padding(
         padding: DesignConstants.screenPadding.copyWith(
           top: DesignConstants.screenPadding.top + topPadding,
+          left: 0,
+          right: 0,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _ScopeSwitcher(scope: _scope, onChanged: _onScopeChanged),
-            _buildPeriodNavigator(context),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DesignConstants.cardPaddingInternal,
+              ),
+              child: _buildPeriodNavigator(context),
+            ),
             const SizedBox(height: DesignConstants.spacingS),
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DesignConstants.cardPaddingInternal,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -305,7 +316,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         );
         return StatisticsStepsCard(
           title: title,
-          subtitle: subtitle,
+          chipText: subtitle,
           currentSteps: data?.totalSteps ?? 0,
           currentStepsSubtitle: todayLabel,
           dailyTotals: [dayBucket],
@@ -317,7 +328,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         final subtitle = '${l10n.stepsModuleThisWeek} • $providerName';
         return StatisticsStepsCard(
           title: title,
-          subtitle: subtitle,
+          chipText: subtitle,
           currentSteps: data?.totalSteps ?? 0,
           currentStepsSubtitle: totalLabel,
           dailyTotals: data?.dailyTotals ?? const [],
@@ -329,7 +340,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
         final subtitle = '${l10n.stepsModuleThisMonth} • $providerName';
         return StatisticsStepsCard(
           title: title,
-          subtitle: subtitle,
+          chipText: subtitle,
           currentSteps: data?.totalSteps ?? 0,
           currentStepsSubtitle: totalLabel,
           dailyTotals: data?.dailyTotals ?? const [],
@@ -375,24 +386,14 @@ class _ScopeSwitcher extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Semantics(
       label: l10n.stepsModuleScopeSwitcherSemantics,
-      child: SegmentedButton<StepsScope>(
-        showSelectedIcon: false,
-        segments: [
-          ButtonSegment(
-            value: StepsScope.day,
-            label: Text(l10n.stepsModuleDay),
-          ),
-          ButtonSegment(
-            value: StepsScope.week,
-            label: Text(l10n.stepsModuleWeek),
-          ),
-          ButtonSegment(
-            value: StepsScope.month,
-            label: Text(l10n.stepsModuleMonth),
-          ),
+      child: TimeRangeFilter(
+        ranges: [
+          l10n.stepsModuleDay,
+          l10n.stepsModuleWeek,
+          l10n.stepsModuleMonth,
         ],
-        selected: {scope},
-        onSelectionChanged: (selected) => onChanged(selected.first),
+        selectedIndex: scope.index,
+        onSelected: (index) => onChanged(StepsScope.values[index]),
       ),
     );
   }

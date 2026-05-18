@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/models/food_item.dart';
+import 'package:train_libre/features/diary/domain/models/food_item.dart';
 import 'package:train_libre/services/ai_meal_validation.dart';
 import 'package:train_libre/services/ai_service.dart';
 
@@ -373,15 +373,13 @@ void main() {
           'fat': 15,
         },
         preferences: const [],
-        recentHistory: null,
         mealTypeLabel: 'Lunch',
       );
 
-      expect(prompt, contains('No recent meal history was shared'));
       expect(prompt, isNot(contains('Mon: Oatmeal')));
     });
 
-    test('includes recent meal history only when explicitly provided', () {
+    test('builds prompt with preferences', () {
       final prompt = AiService.buildMealRecommendationUserPromptForTesting(
         targetMacros: const {
           'kcal': 500,
@@ -390,12 +388,11 @@ void main() {
           'fat': 15,
         },
         preferences: const ['Vegetarian'],
-        recentHistory: 'Mon: Oatmeal',
         mealTypeLabel: 'Lunch',
       );
 
-      expect(prompt, contains('Recent meals shared by the user'));
-      expect(prompt, contains('Mon: Oatmeal'));
+      expect(
+          prompt, contains('User constraints (Dietary/Situation): Vegetarian'));
     });
   });
 }

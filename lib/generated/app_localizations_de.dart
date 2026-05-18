@@ -1245,6 +1245,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTitle => 'Einstellungen';
 
   @override
+  String get settingsUpdateFoodDatabase =>
+      'Lebensmittel-Datenbank aktualisieren';
+
+  @override
+  String get settingsUpdateFoodDatabaseSubtitle =>
+      'Manuell nach Updates für die Open Food Facts Datenbank suchen.';
+
+  @override
+  String get settingsUpdateFoodDatabaseSuccess =>
+      'Lebensmittel-Datenbank erfolgreich aktualisiert.';
+
+  @override
+  String settingsUpdateFoodDatabaseError(String error) {
+    return 'Fehler beim Aktualisieren: $error';
+  }
+
+  @override
   String get settingsGuidedTourSectionTitle => 'Geführte Tour';
 
   @override
@@ -1432,7 +1449,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onbFinishCta => 'Los geht’s!';
 
   @override
-  String get onbShowTutorialAgain => 'Tutorial erneut anzeigen';
+  String get onbShowTutorialAgain => 'Onboarding wiederholen';
 
   @override
   String get appTourOfferTitle => 'Kurze App-Tour starten?';
@@ -2264,6 +2281,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get genderDiverse => 'Divers';
 
   @override
+  String get vegan => 'Vegan';
+
+  @override
+  String get vegetarian => 'Vegetarisch';
+
+  @override
+  String get ingredients => 'Zutaten';
+
+  @override
   String get aiSettingsTitle => 'KI-Mahlzeitenerkennung';
 
   @override
@@ -2387,12 +2413,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ermöglicht die Nutzung von KI zur Mahlzeitenerkennung. Bei Deaktivierung werden alle KI-Buttons in der App ausgeblendet.';
 
   @override
-  String get aiRecommendationContextTitle =>
-      'Letzte Mahlzeiten für Empfehlungen senden';
+  String get aiCustomInstructionsTitle => 'Globale KI-Anweisungen';
 
   @override
-  String get aiRecommendationContextSubtitle =>
-      'Optional. Kann Vorschläge verbessern, indem eine kurze Zusammenfassung letzter Mahlzeiten an den gewählten KI-Anbieter gesendet wird. Standardmäßig aus.';
+  String get aiCustomInstructionsSubtitle =>
+      'Gib der KI feste Regeln mit (z.B. Allergien, No-Go-Foods wie \'keine Bowls\' oder Intoleranzen), die bei jeder Empfehlung beachtet werden sollen.';
 
   @override
   String get aiRecommendationTitle => 'KI-Mahlzeitcoach';

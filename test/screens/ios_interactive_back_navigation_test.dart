@@ -8,10 +8,10 @@ import 'package:train_libre/features/sleep/platform/permissions/sleep_permission
 import 'package:train_libre/features/sleep/platform/permissions/sleep_permissions_service.dart';
 import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/screens/health_export_settings_screen.dart';
-import 'package:train_libre/screens/pulse_settings_screen.dart';
-import 'package:train_libre/screens/sleep_settings_screen.dart';
-import 'package:train_libre/screens/steps_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/health_export_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/pulse_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/sleep_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/steps_settings_screen.dart';
 import 'package:train_libre/services/theme_service.dart';
 
 class _StubPermissionService implements SleepPermissionsService {

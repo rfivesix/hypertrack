@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/basis_data_manager.dart';
+import 'package:train_libre/core/infrastructure/basis_data_manager.dart';
 
 void main() {
   group('BasisDataManager.shouldImportAsset', () {

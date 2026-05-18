@@ -8,10 +8,24 @@ Persistence is Drift-backed through `AppDatabase` in `lib/data/drift_database.da
 
 Main access paths currently in use:
 
-- `lib/data/database_helper.dart`
-- `lib/data/workout_database_helper.dart`
-- `lib/data/product_database_helper.dart`
+- `lib/data/database_helper.dart` (low-level connection initialization and SQL migration-hook boundary)
+- `DiaryLocalDataSource` (feature-local diary persistence access)
+- `WorkoutLocalDataSource` (feature-local workout persistence access)
+- `ProductLocalDataSource` (feature-local nutrition/product persistence access)
 - Sleep DAOs in `lib/features/sleep/data/persistence/dao/*`
+
+
+## Single-Instance Database Lifecycle
+
+The application enforces a strict single-instance database rule to prevent runtime connection deadlocks or concurrent transaction corruption. The `AppDatabase` is opened exactly once inside `lib/main.dart` during application startup. This centralized client is then strictly propagated via constructor dependency injection across all local DataSources. No feature module or repository is permitted to instantiate its own isolated database client.
+
+## Exact Database Schema Terminology
+
+To ensure strict clarity across feature boundaries, the following persistence terminology is used:
+- **Canonical Data Tables**: The normalized, structured tables representing core application entities (e.g., workouts, routines, measurements) directly queried by local data sources.
+- **Raw Imported Health Samples**: Unprocessed, transient records ingested directly from platform channels (Apple Health, Health Connect) before undergoing transformation or timeline repair (e.g., `sleep_raw_imports`).
+- **Health Step Segments**: Aggregated, discrete time-windowed step blocks representing physical activity, indexed by source provider.
+- **Open Food Facts Differential Updates**: Delta payloads representing version-controlled insertions and modifications to the offline food catalog, preserving historically referenced custom items (`off_retained`).
 
 ## Exercise catalog source and refresh
 
@@ -26,7 +40,7 @@ verifies the copied size, and removes the old file only after that check.
 
 Startup import path:
 
-- `lib/screens/app_initializer_screen.dart` -> `BasisDataManager.checkForBasisDataUpdate(...)`
+- `lib/features/app/presentation/app_initializer_screen.dart` -> `lib/core/infrastructure/basis_data_manager.dart.checkForBasisDataUpdate(...)`
 
 Remote refresh service:
 
@@ -120,7 +134,7 @@ Read/write code paths:
 
 - Sync/write: `lib/services/health/steps_sync_service.dart`
 - Aggregation/read: `lib/features/steps/data/steps_aggregation_repository.dart`
-- SQL aggregations: `lib/data/database_helper.dart`
+- SQL aggregations: executed through feature data access components backed by the shared `AppDatabase` instance.
 
 ## Sleep storage
 
@@ -175,7 +189,11 @@ Sleep canonical/derived rows persist version tags used by recompute logic:
 
 ## Portability and backup
 
-Backup/export tooling remains under `lib/data/backup_manager.dart` and related import/export helpers.
+Backup/export/import tooling remains under:
+
+- `lib/core/infrastructure/backup_manager.dart`
+- `lib/core/infrastructure/export_manager.dart`
+- `lib/core/infrastructure/import_manager.dart`
 
 Current backup behavior relevant to adaptive nutrition:
 - SharedPreferences are exported as a full `userPreferences` map (all keys).

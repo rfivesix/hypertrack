@@ -28,13 +28,13 @@ Export domains:
 
 ### Shared orchestrator
 
-- `lib/health_export/export_service.dart`
+- `lib/features/health_export/export_service.dart`
 - Handles per-platform enable/disable, permissions, export orchestration, retry-safe status updates.
 - Keeps platform logic in adapters.
 
 ### Domain extraction and mapping
 
-- `lib/health_export/data/health_export_data_source.dart`
+- `lib/features/health_export/data/health_export_data_source.dart`
 - Reads Train Libre data from existing DB helpers and maps to explicit export models.
 - Normalizes units:
   - weight → kg
@@ -43,9 +43,9 @@ Export domains:
 
 ### Platform adapters
 
-- Apple Health adapter: `lib/health_export/adapters/apple_health/apple_health_export_adapter.dart`
-- Health Connect adapter: `lib/health_export/adapters/health_connect/health_connect_export_adapter.dart`
-- Both implement shared contract: `lib/health_export/contracts/health_export_adapter.dart`
+- Apple Health adapter: `lib/features/health_export/adapters/apple_health/apple_health_export_adapter.dart`
+- Health Connect adapter: `lib/features/health_export/adapters/health_connect/health_connect_export_adapter.dart`
+- Both implement shared contract: `lib/features/health_export/contracts/health_export_adapter.dart`
 
 ### Native bridges
 
@@ -99,7 +99,7 @@ Stored in shared preferences (status payload) and shown in Settings.
 
 ## Settings UX
 
-`lib/screens/settings_screen.dart` includes:
+`lib/features/settings/presentation/settings_screen.dart` includes:
 
 - per-platform enable/disable switches
 - permission request on enable

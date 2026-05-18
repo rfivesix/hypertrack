@@ -8,6 +8,7 @@ class RecommendationInputSummary {
   final double? smoothedWeightSlopeKgPerWeek;
   final double avgLoggedCalories;
   final List<String> qualityFlags;
+  final double? phaseEffectiveKcalPerKg;
 
   const RecommendationInputSummary({
     required this.windowDays,
@@ -16,6 +17,7 @@ class RecommendationInputSummary {
     required this.smoothedWeightSlopeKgPerWeek,
     required this.avgLoggedCalories,
     this.qualityFlags = const [],
+    this.phaseEffectiveKcalPerKg,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,6 +28,7 @@ class RecommendationInputSummary {
       'smoothedWeightSlopeKgPerWeek': smoothedWeightSlopeKgPerWeek,
       'avgLoggedCalories': avgLoggedCalories,
       'qualityFlags': qualityFlags,
+      'phaseEffectiveKcalPerKg': phaseEffectiveKcalPerKg,
     };
   }
 
@@ -40,6 +43,8 @@ class RecommendationInputSummary {
       qualityFlags: ((json['qualityFlags'] as List?) ?? const [])
           .map((item) => item.toString())
           .toList(growable: false),
+      phaseEffectiveKcalPerKg:
+          (json['phaseEffectiveKcalPerKg'] as num?)?.toDouble(),
     );
   }
 }

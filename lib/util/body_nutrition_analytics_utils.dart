@@ -1,5 +1,5 @@
 import '../data/database_helper.dart';
-import '../data/product_database_helper.dart';
+import '../features/diary/data/sources/product_local_data_source.dart';
 import '../features/statistics/data/body_nutrition_analytics_data_adapter.dart';
 import '../features/statistics/domain/body_nutrition_analytics_engine.dart';
 import '../features/statistics/domain/body_nutrition_analytics_models.dart';
@@ -26,7 +26,7 @@ class BodyNutritionAnalyticsUtils {
       action: () async {
         final adapter = BodyNutritionAnalyticsDataAdapter(
           databaseHelper: DatabaseHelper.instance,
-          productDatabaseHelper: ProductDatabaseHelper.instance,
+          productDatabaseHelper: ProductLocalDataSource.instance,
         );
         final raw = await adapter.fetch(rangeIndex: rangeIndex);
         return BodyNutritionAnalyticsEngine.build(

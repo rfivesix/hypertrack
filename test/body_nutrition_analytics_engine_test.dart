@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/features/statistics/domain/body_nutrition_analytics_engine.dart';
 import 'package:train_libre/features/statistics/domain/body_nutrition_analytics_models.dart';
-import 'package:train_libre/models/chart_data_point.dart';
+import 'package:train_libre/features/analytics/domain/models/chart_data_point.dart';
 
 void main() {
   group('BodyNutritionAnalyticsEngine trend summary', () {

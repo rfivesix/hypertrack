@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.7] (90021) - 2026-05-18
+### Added
+- **Reps-in-Reserve (RIR) Enhancement**: Improved RIR data propagation and null-safety during workout logging.
+- **Rep Range Fallback**: Implemented mathematical average calculation for rep ranges (e.g., "8-12" defaults to 10 reps) in workout templates and live logging.
+- **Global TimeRangeFilter**: Extracted a reusable horizontal ChoiceChip-based filter for consistent timeframe selection across Analytics and Steps modules.
+
+### Changed
+- **Diary Summary Harmonization**: Refined summary cards for Sleep, Pulse, and Workouts to use a consistent, emoji-free design with improved typography and spacing.
+- **Progress Bar Readability**: Implemented dual-layer clipping and contrast-aware text rendering in `GlassProgressBar` to ensure legibility across all progress levels.
+
+### Fixed
+- **Analytics Layout**: Fixed various UI issues in analytics dashboards, including legend shape consistency, edge clipping in horizontal scrolls, and proper current-day filtering in body/nutrition trends.
+- **Navigation**: Resolved inconsistencies in exercise selection routing within routine and live workout editors.
+
+## [0.9.7-alpha.2] (90020) - 2026-05-18
+### Added
+- **Localized feature-bound DataSources**: DiaryLocalDataSource, WorkoutLocalDataSource, SupplementLocalDataSource, ProfileLocalDataSource, StepsLocalDataSource communicating directly with the core Drift database client.
+
+### Refactored
+- **The Great Migration**: Complete dissolution of the monolithic product_database_helper.dart and workout_database_helper.dart files. Moved architectural infrastructure utilities (backup, seeding, import/export managers) into a unified lib/core/infrastructure/ grid.
+- **Pure Domain Models**: Established total Domain Purity by removing Drift database model leaks (e.g., db.DailyGoalsHistoryData) from repository contracts and use cases, mapping them cleanly to pure Dart entities (like DailyGoal) within the Data layer.
+
+### Fixed
+- **Runtime & Testing**: Eliminated the critical Drift multiple-instances database runtime warning by enforcing a strict single-instance initialization with constructor dependency injection via Provider. Adjusted timestamp delays to 1.1s to accommodate SQLite's CURRENT_TIMESTAMP clock resolution. Fixed day-inclusive range selections for diary queries.
+
+### Removed
+- **Dead Code Pruning**: Permanently deleted 3 obsolete legacy screens (home.dart, nutrition_screen.dart, measurement_session_detail_screen.dart) with zero remaining active layout compiler links. Relocated health_export to the local feature scope folder.
+
+## [0.9.7-alpha.1] - 2026-05-17
+### Added
+- **Open Food Facts (OFF) Enrichment**: Significantly expanded food data with Caffeine content, Vegan/Vegetarian/Palm-oil tags, and full Ingredients lists.
+- **Smart Database Sync**: New offline-first strategy where the product database is synced during app updates or manually via settings, reducing background overhead.
+- **Auto-Fluid Detection**: Intelligent classification of products as fluids for easier hydration tracking.
+- **Adaptive Calorie UI**: Improved calorie recommendation UI with new fields for actual calorie density visualization.
+
+### Changed
+- **Dietary Badges**: Added visual indicators for vegan, vegetarian, and palm-oil-free products in the food detail screen.
+- **Database Architecture**: Migrated core product storage to Drift for better performance and type safety.
+- **Settings Overhaul**: Added manual database sync trigger and improved OFF region settings.
+
+### Fixed
+- **App Tour Stability**: Fixed edge cases where the app tour could crash on specific navigation flows.
+- **Health Export**: Resolved minor synchronization issues with third-party health platforms.
+
+## [0.9.7-alpha] - 2026-05-17
+### Added
+- **Isolate Offloading**: Performance-intensive tasks like sleep pipeline processing, CSV/Excel decoding, and muscle analytics are now offloaded to background threads (isolates) using `compute()`, ensuring a butter-smooth UI.
+- **Global AI Instructions**: Added a persistent text field in settings for custom AI behavioral instructions, replacing the previous 7-day history transfer for better privacy and performance.
+- **Unified AI Ingredient Cards**: New visual representation for ingredients in AI-generated meals for better clarity.
+- **Legal Information**: Integrated Impressum and Privacy Policy directly into the app.
+
+### Changed
+- **3-Tier Diary Loading**: Optimized the diary screen with a 3-tier loading strategy: Tier 1 (instant macro/workout summary), Tier 2 (deferred exercise/meal lists), and Tier 3 (background health data sync).
+- **AI Prompt Hardening**: Improved strict constraint adherence for AI recommendations, fixing issues with dietary preferences (e.g., Skyr/dairy exclusion).
+- **Workout UI**: Major overhaul of the live workout and workout history screens for better usability and performance.
+- **Design Language**: Updated "Liquid Glass" theme as the standard and improved text visibility across various UI elements.
+
+### Fixed
+- **Navigation Stability**: Hardened navigation lifecycle with strict `if (!mounted)` guards to prevent crashes during rapid screen transitions.
+- **Metric/Imperial System**: Fixed unit system inconsistencies in onboarding and various screens (#337).
+- **Database Hardening**: Fixed multiple SQL issues in the OFF database and improved batch processing stability.
+- **Supplement Tracking**: Fixed default time for supplement entries in the diary (#354).
+- **Scanner Reliability**: Improved barcode scanner logic and permission handling.
+- Numerous bug fixes (Issues #322, #323, #334, #335, #338, #339, #340, #341, #342, #343, #344, #345, #347, #348, #349, #352, #353, #356, #357, #358, #361).
+
 ## [0.9.6] - 2026-05-15
 ### Added
 

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../generated/app_localizations.dart';
-import '../models/food_item.dart';
+import '../features/diary/domain/models/food_item.dart';
 import '../util/design_constants.dart';
 
 /// A dialog content widget for logging food and liquid quantities.
@@ -60,7 +60,9 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
   void initState() {
     super.initState();
     _quantityController = TextEditingController(
-      text: widget.initialQuantity?.toString() ?? '100',
+      text: widget.initialQuantity?.toString() ??
+          widget.item.productQuantity?.round().toString() ??
+          '100',
     );
     _sugarController = TextEditingController(
       text: widget.initialSugar?.toStringAsFixed(1).replaceAll('.0', '') ??
@@ -69,14 +71,15 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
     );
     _caffeineController = TextEditingController(
       text: widget.initialCaffeine?.toStringAsFixed(1).replaceAll('.0', '') ??
-          widget.item.caffeineMgPer100ml
+          (widget.item.caffeineMgPer100g ?? widget.item.caffeineMgPer100ml)
               ?.toStringAsFixed(1)
               .replaceAll('.0', '') ??
           '',
     );
     _selectedDateTime = widget.initialTimestamp ?? DateTime.now();
     _selectedMealType = widget.initialMealType ?? "mealtypeSnack";
-    _isLiquid = widget.initialIsLiquid ?? widget.item.isLiquid ?? false;
+    _isLiquid = widget.initialIsLiquid ??
+        (widget.item.isFluid || (widget.item.isLiquid ?? false));
   }
 
   @override

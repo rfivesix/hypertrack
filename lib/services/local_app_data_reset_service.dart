@@ -2,7 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/database_helper.dart';
-import '../data/workout_database_helper.dart';
+import '../features/workout/data/sources/workout_local_data_source.dart';
 import 'ai_service.dart';
 
 typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
@@ -24,17 +24,17 @@ class LocalAppDataResetReport {
 class LocalAppDataResetService implements LocalAppDataResetter {
   LocalAppDataResetService({
     DatabaseHelper? databaseHelper,
-    WorkoutDatabaseHelper? workoutDatabaseHelper,
+    WorkoutLocalDataSource? workoutDatabaseHelper,
     SharedPreferencesLoader? prefsLoader,
     FlutterSecureStorage? secureStorage,
   })  : _databaseHelper = databaseHelper ?? DatabaseHelper.instance,
         _workoutDatabaseHelper =
-            workoutDatabaseHelper ?? WorkoutDatabaseHelper.instance,
+            workoutDatabaseHelper ?? WorkoutLocalDataSource.instance,
         _prefsLoader = prefsLoader ?? SharedPreferences.getInstance,
         _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   final DatabaseHelper _databaseHelper;
-  final WorkoutDatabaseHelper _workoutDatabaseHelper;
+  final WorkoutLocalDataSource _workoutDatabaseHelper;
   final SharedPreferencesLoader _prefsLoader;
   final FlutterSecureStorage _secureStorage;
 

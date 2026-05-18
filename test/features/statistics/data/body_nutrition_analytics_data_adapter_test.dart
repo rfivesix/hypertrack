@@ -2,13 +2,14 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart';
-import 'package:train_libre/data/product_database_helper.dart';
+import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
 import 'package:train_libre/features/statistics/data/body_nutrition_analytics_data_adapter.dart';
-import 'package:train_libre/models/fluid_entry.dart';
-import 'package:train_libre/models/food_entry.dart';
-import 'package:train_libre/models/food_item.dart';
-import 'package:train_libre/models/measurement.dart' as model;
-import 'package:train_libre/models/measurement_session.dart';
+import 'package:train_libre/features/diary/domain/models/fluid_entry.dart';
+import 'package:train_libre/features/diary/domain/models/food_entry.dart';
+import 'package:train_libre/features/diary/domain/models/food_item.dart';
+import 'package:train_libre/features/profile/domain/models/measurement.dart'
+    as model;
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,14 +17,13 @@ void main() {
   group('BodyNutritionAnalyticsDataAdapter.fetch', () {
     late AppDatabase database;
     late DatabaseHelper dbHelper;
-    late ProductDatabaseHelper productHelper;
+    late ProductLocalDataSource productHelper;
     late BodyNutritionAnalyticsDataAdapter adapter;
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
-      productHelper =
-          ProductDatabaseHelper.forTesting(databaseHelper: dbHelper);
+      productHelper = ProductLocalDataSource.forTesting(database);
       adapter = BodyNutritionAnalyticsDataAdapter(
         databaseHelper: dbHelper,
         productDatabaseHelper: productHelper,

@@ -1,7 +1,7 @@
 // lib/util/permission_dialogs.dart
 
 import 'package:flutter/material.dart';
-import '../widgets/glass_bottom_menu.dart';
+import '../features/app/presentation/widgets/glass_bottom_menu.dart';
 
 /// Shows a glass-styled explanation dialog before the system permission popup.
 ///

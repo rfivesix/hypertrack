@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart';
 import '../data/processing/sleep_pipeline_service.dart';
+import '../data/persistence/dao/sleep_canonical_dao.dart';
 import '../data/persistence/dao/sleep_raw_imports_dao.dart';
 import '../data/persistence/sleep_persistence_models.dart';
 import 'health_connect/health_connect_sleep_adapter.dart';
@@ -92,6 +93,7 @@ class SleepSyncService implements SleepSettingsService {
   final bool _ownsDatabase;
   AppDatabase? _database;
   SleepRawImportsDao? _rawDao;
+  SleepCanonicalSessionsDao? _sessionsDao;
   final SleepPermissionsService? _iosPermissionsService;
   final SleepPermissionsService? _androidPermissionsService;
   final HealthKitDataSource? _iosDataSource;
@@ -161,7 +163,15 @@ class SleepSyncService implements SleepSettingsService {
     await _ensureDaos();
 
     final nowUtc = DateTime.now().toUtc();
-    final fromUtc = nowUtc.subtract(Duration(days: lookbackDays));
+    final latestEndedAt = await _sessionsDao!.findLatestEndedAt();
+
+    // Delta-Sync: Use latest endedAt if available, otherwise fallback to lookback window.
+    // We add a small overlap (1 minute) to ensure we don't miss anything near the boundary,
+    // though the pipeline handles deduplication by hash.
+    final fromUtc = latestEndedAt != null
+        ? latestEndedAt.subtract(const Duration(minutes: 5))
+        : nowUtc.subtract(Duration(days: lookbackDays));
+
     final result = Platform.isIOS
         ? await _importWithHealthKit(fromUtc: fromUtc, toUtc: nowUtc)
         : await _importWithHealthConnect(fromUtc: fromUtc, toUtc: nowUtc);
@@ -304,9 +314,9 @@ class SleepSyncService implements SleepSettingsService {
   }
 
   Future<void> _ensureDaos() async {
-    if (_rawDao != null) return;
     final db = _database ??= await _databaseFuture;
-    _rawDao = SleepRawImportsDao(db);
+    _rawDao ??= SleepRawImportsDao(db);
+    _sessionsDao ??= SleepCanonicalSessionsDao(db);
   }
 
   Future<DateTime?> _getLastAutoImportAttemptAt() async {

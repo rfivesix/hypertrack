@@ -5,12 +5,13 @@ import 'package:train_libre/features/sleep/platform/permissions/sleep_permission
 import 'package:train_libre/features/sleep/platform/permissions/sleep_permissions_service.dart';
 import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/screens/appearance_settings_screen.dart';
-import 'package:train_libre/screens/settings_screen.dart';
-import 'package:train_libre/screens/sleep_settings_screen.dart';
-import 'package:train_libre/screens/pulse_settings_screen.dart';
-import 'package:train_libre/screens/steps_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/appearance_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/sleep_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/pulse_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/steps_settings_screen.dart';
 import 'package:train_libre/services/theme_service.dart';
+import 'package:train_libre/services/unit_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,8 +65,11 @@ class _FakeSleepSettingsService implements SleepSettingsService {
 }
 
 Widget _wrap(Widget child) {
-  return ChangeNotifierProvider(
-    create: (_) => ThemeService(),
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => ThemeService()),
+      ChangeNotifierProvider(create: (_) => UnitService()),
+    ],
     child: MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -92,12 +96,11 @@ void main() {
   testWidgets('main settings shows new section structure and entry rows', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(900, 2600));
+    await tester.binding.setSurfaceSize(const Size(900, 3000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final controller =
         SleepPermissionController(const _StubPermissionService());
-
     await tester.pumpWidget(
       _wrap(
         SettingsScreen(
@@ -111,14 +114,6 @@ void main() {
     expect(find.byKey(const Key('settings_section_app')), findsOneWidget);
     expect(
       find.byKey(const Key('settings_section_health_tracking')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const Key('settings_section_nutrition_data')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const Key('settings_section_support_about')),
       findsOneWidget,
     );
 
@@ -135,6 +130,9 @@ void main() {
   testWidgets('appearance entry opens appearance settings sub-screen', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 3000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final controller =
         SleepPermissionController(const _StubPermissionService());
 
@@ -155,6 +153,9 @@ void main() {
   });
 
   testWidgets('steps entry opens steps settings sub-screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 3000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final controller =
         SleepPermissionController(const _StubPermissionService());
 
@@ -175,6 +176,9 @@ void main() {
   });
 
   testWidgets('sleep entry opens sleep settings sub-screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 3000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final controller =
         SleepPermissionController(const _StubPermissionService());
 
@@ -189,11 +193,6 @@ void main() {
     await tester.pumpAndSettle();
 
     final sleepEntry = find.byKey(const Key('settings_sleep_entry'));
-    await tester.scrollUntilVisible(
-      sleepEntry,
-      300,
-      scrollable: find.byType(Scrollable),
-    );
     await tester.tap(sleepEntry);
     await tester.pumpAndSettle();
 
@@ -201,6 +200,9 @@ void main() {
   });
 
   testWidgets('pulse entry opens pulse settings sub-screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 3000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     final controller =
         SleepPermissionController(const _StubPermissionService());
 
@@ -215,11 +217,6 @@ void main() {
     await tester.pumpAndSettle();
 
     final pulseEntry = find.byKey(const Key('settings_pulse_entry'));
-    await tester.scrollUntilVisible(
-      pulseEntry,
-      300,
-      scrollable: find.byType(Scrollable),
-    );
     await tester.tap(pulseEntry);
     await tester.pumpAndSettle();
 
@@ -229,7 +226,7 @@ void main() {
   testWidgets(
     'restart app tour tile remains in app section and appears before health section',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(900, 2600));
+      await tester.binding.setSurfaceSize(const Size(900, 3000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       final controller =

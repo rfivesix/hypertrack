@@ -1,0 +1,581 @@
+// lib/screens/ai_meal_capture_screen.dart
+
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../generated/app_localizations.dart';
+import '../../../services/ai_meal_validation.dart';
+import '../../../services/ai_service.dart';
+import '../../../services/haptic_feedback_service.dart';
+import '../../app/presentation/widgets/glass_bottom_menu.dart';
+import '../../../widgets/common/global_app_bar.dart';
+import 'ai_meal_review_screen.dart';
+import '../../settings/presentation/ai_settings_screen.dart';
+import '../../../util/design_constants.dart';
+
+/// Screen for capturing meal input via photo(s) or text before AI analysis.
+///
+/// Minimalist design — AI gradient is concentrated only on the primary
+/// "Analyze" CTA button. All other UI elements use standard theme colours.
+class AiMealCaptureScreen extends StatefulWidget {
+  final DateTime? initialDate;
+  final String? initialMealType;
+
+  const AiMealCaptureScreen({
+    super.key,
+    this.initialDate,
+    this.initialMealType,
+  });
+
+  @override
+  State<AiMealCaptureScreen> createState() => _AiMealCaptureScreenState();
+}
+
+class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
+    with SingleTickerProviderStateMixin {
+  final _textController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+
+  // Photo state
+  final List<File> _images = [];
+  static const int _maxImages = 4;
+
+  // Analysis state
+  bool _isAnalyzing = false;
+  bool _aiWaitingHapticActive = false;
+
+  late AnimationController _analyzeButtonAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _analyzeButtonAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _stopAiWaitingHaptics();
+    _textController.dispose();
+    _analyzeButtonAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _startAiWaitingHaptics() {
+    if (_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = true;
+    HapticFeedbackService.instance.startAiWaiting();
+  }
+
+  void _stopAiWaitingHaptics() {
+    if (!_aiWaitingHapticActive) return;
+    _aiWaitingHapticActive = false;
+    HapticFeedbackService.instance.stopAiWaiting();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Photo actions
+  // ---------------------------------------------------------------------------
+
+  Future<void> _takePhoto() async {
+    if (_images.length >= _maxImages) return;
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+      maxWidth: 1024,
+    );
+    if (photo != null && mounted) {
+      setState(() => _images.add(File(photo.path)));
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    final remaining = _maxImages - _images.length;
+    if (remaining <= 0) return;
+
+    final List<XFile> picked = await _picker.pickMultiImage(
+      imageQuality: 80,
+      maxWidth: 1024,
+    );
+    if (picked.isNotEmpty && mounted) {
+      setState(() {
+        _images.addAll(picked.take(remaining).map((x) => File(x.path)));
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() => _images.removeAt(index));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Analysis
+  // ---------------------------------------------------------------------------
+
+  bool get _hasInput =>
+      _images.isNotEmpty || _textController.text.trim().isNotEmpty;
+
+  Future<void> _analyze() async {
+    if (!_hasInput) return;
+    setState(() => _isAnalyzing = true);
+    _startAiWaitingHaptics();
+
+    // Pass the current app language so the AI returns localised food names
+    final languageCode = Localizations.localeOf(context).languageCode;
+
+    try {
+      List<AiSuggestedItem> results;
+      final text = _textController.text.trim();
+
+      if (_images.isNotEmpty) {
+        results = await AiService.instance.analyzeImages(
+          _images,
+          textHint: text.isNotEmpty ? text : null,
+          languageCode: languageCode,
+        );
+      } else {
+        results = await AiService.instance.analyzeText(
+          text,
+          languageCode: languageCode,
+        );
+      }
+
+      final validationOutcome = await _validateAndRepair(results, languageCode);
+
+      if (!mounted) return;
+
+      _stopAiWaitingHaptics();
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+      }
+
+      final saved = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => AiMealReviewScreen(
+            suggestions: validationOutcome.validation.candidate.items
+                .map(
+                  (item) => AiSuggestedItem(
+                    name: item.name,
+                    estimatedGrams: item.grams,
+                    confidence: item.confidence ?? 1.0,
+                    matchedBarcode: item.matchedBarcode,
+                  ),
+                )
+                .toList(growable: false),
+            initialValidation: validationOutcome.validation,
+            originalImages: _images,
+            initialDate: widget.initialDate,
+            initialMealType: widget.initialMealType,
+          ),
+        ),
+      );
+      if (saved == true && mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } on AiKeyMissingException {
+      if (!mounted) return;
+      _showKeyMissingDialog();
+    } on AiServiceException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      _stopAiWaitingHaptics();
+      if (mounted) setState(() => _isAnalyzing = false);
+    }
+  }
+
+  Future<AiRepairOutcome> _validateAndRepair(
+    List<AiSuggestedItem> results,
+    String languageCode,
+  ) {
+    final candidate = AiMealCandidate(
+      items: results
+          .map(
+            (item) => AiMealCandidateItem(
+              name: item.name,
+              grams: item.estimatedGrams,
+              confidence: item.confidence,
+              matchedBarcode: item.matchedBarcode,
+            ),
+          )
+          .toList(growable: false),
+    );
+    final engine = AiMealValidationEngine();
+    final orchestrator = AiRepairOrchestrator(validationEngine: engine);
+    return orchestrator.run(
+      initialCandidate: candidate,
+      mode: AiValidationMode.capture,
+      repairer: (candidate, validation, attempt) {
+        return AiService.instance.repairMealCaptureCandidate(
+          candidate: candidate,
+          validation: validation,
+          images: _images.isNotEmpty ? _images : null,
+          languageCode: languageCode,
+        );
+      },
+    );
+  }
+
+  void _showKeyMissingDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showGlassBottomMenu<void>(
+      context: context,
+      title: l10n.aiValidationApiKeyRequiredTitle,
+      contentBuilder: (ctx, close) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.aiErrorNoKey,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const AiSettingsScreen()),
+                    );
+                  },
+                  child: Text(l10n.aiSettingsTitle),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: GlobalAppBar(title: l10n.aiCaptureTitle),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_images.isNotEmpty) ...[
+                    _buildUnifiedPhotoList(theme),
+                    const SizedBox(height: 20),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
+          // Unified Input Area
+          _buildUnifiedInputArea(l10n, theme),
+
+          // Analyze button — AI gradient CTA with inline loading
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+            child: _AiAnalyzeButton(
+              onPressed: (_hasInput && !_isAnalyzing) ? _analyze : null,
+              isAnalyzing: _isAnalyzing,
+              l10n: l10n,
+              pulseController: _analyzeButtonAnimationController,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Content: Unified View Widgets
+  // ---------------------------------------------------------------------------
+
+  Widget _buildUnifiedPhotoList(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _images.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (ctx, i) => _buildPhotoThumbnail(i, theme),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '${_images.length} / $_maxImages',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotoThumbnail(int index, ThemeData theme) {
+    return Stack(
+      children: [
+        Container(
+          width: 140,
+          height: 140,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant,
+              width: 1.5,
+            ),
+            image: DecorationImage(
+              image: FileImage(_images[index]),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: GestureDetector(
+            onTap: () => _removeImage(index),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white24, width: 1),
+              ),
+              child: const Icon(Icons.close, size: 14, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnifiedInputArea(
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          TextField(
+            controller: _textController,
+            maxLines: 4,
+            minLines: 1,
+            onChanged: (_) => setState(() {}),
+            style: theme.textTheme.bodyLarge,
+            decoration: InputDecoration(
+              hintText: l10n.aiCaptureTextHint,
+              hintStyle: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerLow,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius:
+                    BorderRadius.circular(DesignConstants.borderRadiusL),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.outlineVariant,
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius:
+                    BorderRadius.circular(DesignConstants.borderRadiusL),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 1.5,
+                ),
+              ),
+              suffixIconConstraints: const BoxConstraints(
+                minWidth: 96,
+                maxWidth: 96,
+                minHeight: 40,
+              ),
+              suffixIcon: SizedBox(
+                width: 96,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed:
+                          _images.length < _maxImages ? _takePhoto : null,
+                      icon: const Icon(Icons.camera_alt_rounded),
+                      color: theme.colorScheme.primary,
+                      tooltip: l10n.aiCaptureTabPhoto,
+                    ),
+                    IconButton(
+                      onPressed:
+                          _images.length < _maxImages ? _pickFromGallery : null,
+                      icon: const Icon(Icons.photo_library_rounded),
+                      color: theme.colorScheme.primary,
+                      tooltip: l10n.tabFavorites,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// AI Analyze button — gradient CTA with inline animated shimmer loading
+// =============================================================================
+
+/// The AI gradient colours used for the analyze button and entry-point accents.
+const _aiGradientColors = [
+  Color(0xFFE88DCC),
+  Color(0xFFF4A77A),
+  Color(0xFFF7D06B),
+  Color(0xFF7DDEAE),
+  Color(0xFF6DC8D9),
+];
+
+class _AiAnalyzeButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final bool isAnalyzing;
+  final AppLocalizations l10n;
+  final AnimationController pulseController;
+
+  const _AiAnalyzeButton({
+    required this.onPressed,
+    required this.isAnalyzing,
+    required this.l10n,
+    required this.pulseController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null || isAnalyzing;
+    final theme = Theme.of(context);
+
+    // Base button content (icon + text)
+    final buttonContent = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (isAnalyzing)
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: Colors.white,
+            ),
+          )
+        else
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 24,
+            color: enabled ? Colors.white : theme.colorScheme.onSurfaceVariant,
+          ),
+        const SizedBox(width: 10),
+        Text(
+          isAnalyzing ? l10n.aiAnalyzing : l10n.aiAnalyzeButton,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: enabled ? Colors.white : theme.colorScheme.onSurfaceVariant,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+
+    if (!enabled) {
+      // Disabled state — flat, no gradient
+      return GestureDetector(
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusL),
+            color: theme.colorScheme.surfaceContainerHighest,
+          ),
+          child: buttonContent,
+        ),
+      );
+    }
+
+    // Enabled / analysing — gradient background with text on top via Stack
+    return GestureDetector(
+      onTap: onPressed,
+      child: AnimatedBuilder(
+        animation: pulseController,
+        builder: (context, _) {
+          final t = pulseController.value;
+
+          return Container(
+            height: 60,
+            decoration: BoxDecoration(
+              borderRadius:
+                  BorderRadius.circular(DesignConstants.borderRadiusL),
+              gradient: isAnalyzing
+                  ? LinearGradient(
+                      begin: Alignment(-1.0 + (t * 4.0), 0),
+                      end: Alignment(1.0 + (t * 4.0), 0),
+                      colors: const [
+                        Color(0xFFE88DCC),
+                        Color(0xFFF4A77A),
+                        Color(0xFFF7D06B),
+                        Color(0xFF7DDEAE),
+                        Color(0xFF6DC8D9),
+                        Color(0xFFE88DCC),
+                      ],
+                      tileMode: TileMode.repeated,
+                    )
+                  : const LinearGradient(
+                      colors: _aiGradientColors,
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFE88DCC).withValues(alpha: 0.30),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: buttonContent,
+          );
+        },
+      ),
+    );
+  }
+}

@@ -1,0 +1,6 @@
+- Performance-Schub: Rechenintensive Aufgaben (Schlaf-Analyse, Importe, Muskel-Statistiken) laufen jetzt flüssig im Hintergrund.
+- 3-Stufen-Tagebuch: Sofortiges Laden der wichtigsten Daten, während Details und Synchronisierungen im Hintergrund nachrücken.
+- Globale KI-Anweisungen: Hinterlegen Sie feste Anweisungen für die KI in den Einstellungen – für bessere Ergebnisse und mehr Datenschutz.
+- KI-Verbesserungen: Präzisere Einhaltung von Ernährungsvorgaben und neue, übersichtliche Zutaten-Karten.
+- Stabilitäts-Update: Fehlerbehebungen bei der Navigation, dem Einheiten-System (Metrisch/Imperial) und zahlreiche Fixes für eine zuverlässigere App.
+- Design-Feinschliff: Verbessertes "Liquid Glass" Design und optimierte Workout-Ansichten.

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../util/design_constants.dart';
-import '../../../../widgets/global_app_bar.dart';
-import '../../../../widgets/summary_card.dart';
+import '../../../../widgets/common/global_app_bar.dart';
+import '../../../../widgets/common/summary_card.dart';
 import 'sleep_data_unavailable_card.dart';
 
 class SleepDetailPageShell extends StatelessWidget {

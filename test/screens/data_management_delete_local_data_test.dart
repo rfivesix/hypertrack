@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/screens/data_management_screen.dart';
+import 'package:train_libre/features/settings/presentation/data_management_screen.dart';
 import 'package:train_libre/services/local_app_data_reset_service.dart';
 import 'package:train_libre/services/theme_service.dart';
 

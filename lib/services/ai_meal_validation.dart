@@ -1,5 +1,5 @@
-import '../data/product_database_helper.dart';
-import '../models/food_item.dart';
+import '../features/diary/data/sources/product_local_data_source.dart';
+import '../features/diary/domain/models/food_item.dart';
 
 const int maxRepairPasses = 3;
 
@@ -510,7 +510,7 @@ class AiMealValidationEngine {
   static Future<List<FoodItem>> defaultMatchLoader(
     AiMealCandidateItem item,
   ) async {
-    final helper = ProductDatabaseHelper.instance;
+    final helper = ProductLocalDataSource.instance;
     final matches = <FoodItem>[];
     final barcode = item.matchedBarcode?.trim();
     if (barcode != null && barcode.isNotEmpty) {

@@ -487,6 +487,17 @@
   "profile_capslock":"PROFILE",
   "settings_capslock":"SETTINGS",
   "settingsTitle":"Settings",
+  "settingsUpdateFoodDatabase": "Update Food Database",
+  "settingsUpdateFoodDatabaseSubtitle": "Check for updates to the Open Food Facts database manually.",
+  "settingsUpdateFoodDatabaseSuccess": "Food database successfully updated.",
+  "settingsUpdateFoodDatabaseError": "Error updating database: {error}",
+  "@settingsUpdateFoodDatabaseError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGuidedTourSectionTitle": "Guided tour",
   "settingsRestartAppTourTitle": "Restart app tour",
   "settingsRestartAppTourSubtitle": "Run the short in-app walkthrough again.",
@@ -554,7 +565,7 @@
   "@onbFinishBody": { "description": "Onboarding final slide description" },
   "onbFinishCta": "Let’s go!",
   "@onbFinishCta": { "description": "Final button label to finish onboarding" },
-  "onbShowTutorialAgain": "Show tutorial again",
+  "onbShowTutorialAgain": "Show onboarding again",
   "@onbShowTutorialAgain": { "description": "Settings item to reopen onboarding" },
   "appTourOfferTitle": "Take a quick app tour?",
   "appTourOfferBody": "Get a short walkthrough of the main app areas. You can skip now and restart later in Settings.",
@@ -871,6 +882,9 @@
   "genderFemale": "Female",
   "genderDiverse": "Diverse",
 
+  "vegan": "Vegan",
+  "vegetarian": "Vegetarian",
+  "ingredients": "Ingredients",
   "aiSettingsTitle": "AI Meal Capture",
   "aiSettingsDescription": "Configure AI-powered meal recognition.",
   "aiProviderSection": "AI Provider",
@@ -914,8 +928,8 @@
 
   "aiEnableTitle": "Enable AI Features",
   "aiEnableSubtitle": "Allows the use of AI for meal recognition. Disabling this hides all AI buttons in the app.",
-  "aiRecommendationContextTitle": "Send recent meals for recommendations",
-  "aiRecommendationContextSubtitle": "Optional. May improve meal suggestions by sharing a short recent-meal summary with the selected AI provider. Off by default.",
+  "aiCustomInstructionsTitle": "Global AI Instructions",
+  "aiCustomInstructionsSubtitle": "Give the AI fixed rules (e.g., allergies, no-go foods like 'no bowls', or intolerances) to be followed with every recommendation.",
 
   "aiRecommendationTitle": "AI Meal Coach",
   "aiRecommendDietary": "Dietary",

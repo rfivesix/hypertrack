@@ -3,11 +3,11 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart';
-import 'package:train_libre/health_export/contracts/health_export_adapter.dart';
-import 'package:train_libre/health_export/data/health_export_data_source.dart';
-import 'package:train_libre/health_export/data/health_export_status_store.dart';
-import 'package:train_libre/health_export/export_service.dart';
-import 'package:train_libre/health_export/models/export_models.dart';
+import 'package:train_libre/features/health_export/contracts/health_export_adapter.dart';
+import 'package:train_libre/features/health_export/data/health_export_data_source.dart';
+import 'package:train_libre/features/health_export/data/health_export_status_store.dart';
+import 'package:train_libre/features/health_export/export_service.dart';
+import 'package:train_libre/features/health_export/models/export_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeAdapter implements HealthExportAdapter {
@@ -122,6 +122,7 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       db = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(db);
+      DatabaseHelper.setDriftDb(db);
       await db.customStatement('''
         CREATE TABLE IF NOT EXISTS health_export_records (
           local_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -254,13 +255,17 @@ void main() {
         expect(first.success, isTrue);
         final firstMeasurementWrites = adapter.measurementWrites;
 
+        // Ensure strictly later updatedAt by waiting at least 1.1s because SQLite CURRENT_TIMESTAMP
+        // resolution is 1 second.
+        await Future.delayed(const Duration(milliseconds: 1100));
+
         await db.into(db.measurements).insert(
               MeasurementsCompanion(
                 date: drift.Value(DateTime.now().toUtc()),
                 type: const drift.Value('weight'),
                 value: const drift.Value(81),
                 unit: const drift.Value('kg'),
-                legacySessionId: const drift.Value(3001),
+                legacySessionId: const drift.Value(1002),
               ),
             );
 

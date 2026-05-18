@@ -20,6 +20,21 @@ class DesignConstants {
   static const double spacingXXL = 32.0; // Extra-large spacing
   static const double bottomContentSpacer = 80.0; // Space for FAB, etc.
 
+  // === TYPOGRAPHY ===
+  /// Letter spacing used for uppercase section headers throughout the app.
+  static const double sectionHeaderLetterSpacing = 1.0;
+
+  /// Standard font weight for section headers.
+  static const FontWeight sectionHeaderFontWeight = FontWeight.bold;
+
+  // === METADATA ===
+  /// Bullet separator used in metadata rows (e.g. "120 kcal • 30g P • 20g C").
+  static const String metadataSeparator = ' \u2022 ';
+
+  // === ANIMATION ===
+  /// Duration for expand/collapse animations in card sections.
+  static const Duration expandCollapseDuration = Duration(milliseconds: 180);
+
   // Screen Padding
   static const double screenPaddingHorizontal = 16.0;
   static const double screenPaddingVertical = 8.0;
@@ -56,5 +71,15 @@ class DesignConstants {
   static const EdgeInsets buttonContentPadding = EdgeInsets.symmetric(
     horizontal: buttonPadding,
     vertical: spacingM,
+  );
+
+  /// Compact card content padding used in expandable meal/fluid cards.
+  static const EdgeInsets cardContentPadding = EdgeInsets.all(12.0);
+
+  /// Standard padding for section headers (bottom + left inset).
+  static const EdgeInsets sectionHeaderPadding = EdgeInsets.only(
+    bottom: 8.0,
+    left: 4.0,
+    top: 4.0,
   );
 }

@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../../../data/database_helper.dart';
 import '../../../../generated/app_localizations.dart';
-import '../../../../screens/settings_screen.dart';
+import '../../../settings/presentation/settings_screen.dart';
 import '../../../../util/design_constants.dart';
-import '../../../../widgets/summary_card.dart';
+import '../../../../widgets/common/summary_card.dart';
 import '../../data/repository/sleep_query_repository.dart';
 import '../../data/sleep_day_repository.dart';
 import '../../domain/aggregation/sleep_period_aggregations.dart';

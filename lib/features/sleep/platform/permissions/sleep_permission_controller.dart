@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../generated/app_localizations.dart';
-import '../../../../widgets/glass_bottom_menu.dart';
+import '../../../app/presentation/widgets/glass_bottom_menu.dart';
 import 'sleep_permission_models.dart';
 import 'sleep_permissions_service.dart';
 

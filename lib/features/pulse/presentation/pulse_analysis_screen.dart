@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../generated/app_localizations.dart';
-import '../../../models/chart_data_point.dart';
+import '../../analytics/domain/models/chart_data_point.dart';
 import '../../../util/design_constants.dart';
-import '../../../widgets/measurement_chart_widget.dart';
-import '../../../widgets/summary_card.dart';
+import '../../profile/presentation/widgets/measurement_chart_widget.dart';
+import '../../../widgets/common/summary_card.dart';
 import '../../sleep/presentation/widgets/sleep_period_scope_layout.dart';
 import '../data/pulse_repository.dart';
 import '../domain/pulse_models.dart';

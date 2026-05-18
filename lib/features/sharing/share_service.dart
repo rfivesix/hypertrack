@@ -5,12 +5,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../data/workout_database_helper.dart';
+import '../workout/data/sources/workout_local_data_source.dart';
 import '../../generated/app_localizations.dart';
-import '../../models/exercise.dart';
-import '../../models/routine.dart';
-import '../../models/workout_log.dart';
-import '../../widgets/glass_bottom_menu.dart';
+import '../exercise_catalog/domain/models/exercise.dart';
+import '../workout/domain/models/routine.dart';
+import '../workout/domain/models/workout_log.dart';
+import '../app/presentation/widgets/glass_bottom_menu.dart';
 import 'routine_share_formatter.dart';
 import 'share_card_renderer.dart';
 import 'share_labels.dart';
@@ -270,7 +270,7 @@ class ShareService {
     for (final set in workout.sets) {
       if (details.containsKey(set.exerciseName)) continue;
       final exercise =
-          await WorkoutDatabaseHelper.instance.resolveExerciseForSetLog(set);
+          await WorkoutLocalDataSource.instance.resolveExerciseForSetLog(set);
       if (exercise != null) {
         details[set.exerciseName] = exercise;
       }

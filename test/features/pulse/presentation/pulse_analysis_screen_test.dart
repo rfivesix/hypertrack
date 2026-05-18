@@ -4,7 +4,7 @@ import 'package:train_libre/features/pulse/data/pulse_repository.dart';
 import 'package:train_libre/features/pulse/domain/pulse_models.dart';
 import 'package:train_libre/features/pulse/presentation/pulse_analysis_screen.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/widgets/measurement_chart_widget.dart';
+import 'package:train_libre/features/profile/presentation/widgets/measurement_chart_widget.dart';
 
 class _FakePulseRepository implements PulseAnalysisRepository {
   _FakePulseRepository(this.summaryBuilder);

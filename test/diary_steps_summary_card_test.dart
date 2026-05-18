@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:train_libre/features/steps/domain/steps_models.dart';
-import 'package:train_libre/widgets/statistics_steps_card.dart';
+import 'package:train_libre/features/steps/presentation/statistics_steps_card.dart';
 
 void main() {
   final buckets = List<StepsBucket>.generate(
@@ -22,7 +22,7 @@ void main() {
           body: StatisticsStepsCard(
             onTap: () {},
             title: 'Schritte',
-            subtitle: 'Letzte 7 Tage • Withings',
+            chipText: 'Letzte 7 Tage • Withings',
             currentSteps: 3388,
             currentStepsSubtitle: 'Heute',
             dailyTotals: buckets,
@@ -47,7 +47,7 @@ void main() {
           body: StatisticsStepsCard(
             onTap: () => tapped = true,
             title: 'Schritte',
-            subtitle: 'Letzte 7 Tage • Local',
+            chipText: 'Letzte 7 Tage • Local',
             currentSteps: 1200,
             currentStepsSubtitle: 'Heute',
             dailyTotals: buckets,

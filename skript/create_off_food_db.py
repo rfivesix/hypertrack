@@ -58,6 +58,7 @@ NUTRIENT_NAME_MAP = {
     "sugars": "sugar",
     "fiber": "fiber",
     "salt": "salt",
+    "caffeine": "caffeine",
 }
 
 
@@ -327,6 +328,125 @@ def _parse_float(raw: Any) -> float:
     return 0.0
 
 
+def extract_ingredients_text(
+    raw: Any, preferred_languages: Sequence[str]
+) -> str:
+    """Extract a clean ingredients string from the raw OFF field.
+
+    The raw value may be:
+    - A plain string (return as-is after stripping).
+    - A list of dicts like [{'lang': 'de', 'text': '...'}] – pick the best
+      language match and return only the text string.
+    - A dict like {'de': '...', 'en': '...'} – pick the best key.
+    """
+    if raw is None:
+        return ""
+
+    if isinstance(raw, str):
+        return raw.strip()
+
+    if isinstance(raw, dict):
+        # {"de": "text", "en": "text"}
+        for lang in preferred_languages:
+            candidate = normalize_text(raw.get(lang))
+            if candidate:
+                return candidate
+        # Fallback: 'main' key or first non-empty value
+        candidate = normalize_text(raw.get("main"))
+        if candidate:
+            return candidate
+        for v in raw.values():
+            candidate = normalize_text(v)
+            if candidate:
+                return candidate
+        return ""
+
+    if isinstance(raw, (list, tuple, np.ndarray)):
+        # [{"lang": "de", "text": "Wasser, Zucker, ..."}, ...]
+        # Pass 1: preferred language match
+        for lang in preferred_languages:
+            for item in raw:
+                if not isinstance(item, dict):
+                    continue
+                item_lang = normalize_text(item.get("lang")).lower()
+                item_text = normalize_text(item.get("text"))
+                if item_lang == lang and item_text:
+                    return item_text
+
+        # Pass 2: 'en' fallback
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            if normalize_text(item.get("lang")).lower() == "en":
+                item_text = normalize_text(item.get("text"))
+                if item_text:
+                    return item_text
+
+        # Pass 3: 'main' fallback
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            if normalize_text(item.get("lang")).lower() == "main":
+                item_text = normalize_text(item.get("text"))
+                if item_text:
+                    return item_text
+
+        # Pass 4: first usable text
+        for item in raw:
+            if isinstance(item, dict):
+                item_text = normalize_text(item.get("text"))
+                if item_text:
+                    return item_text
+            elif isinstance(item, str):
+                candidate = item.strip()
+                if candidate:
+                    return candidate
+
+    return ""
+
+
+def extract_caffeine_from_ingredients(raw_ingredients: Any) -> float:
+    """Try to extract caffeine mg/100 from raw ingredients text via regex.
+
+    Looks for patterns like "Koffein (32 mg/100 ml)" or
+    "caffeine 0,03%" in the raw (unparsed) ingredients field.
+    Returns the caffeine value in mg, or 0.0 if not found.
+    """
+    import re
+
+    text = ""
+    if isinstance(raw_ingredients, str):
+        text = raw_ingredients
+    elif isinstance(raw_ingredients, (list, tuple, np.ndarray)):
+        # Concatenate all text entries for scanning
+        parts = []
+        for item in raw_ingredients:
+            if isinstance(item, dict):
+                t = normalize_text(item.get("text"))
+                if t:
+                    parts.append(t)
+            elif isinstance(item, str):
+                parts.append(item)
+        text = " ".join(parts)
+    elif isinstance(raw_ingredients, dict):
+        parts = [normalize_text(v) for v in raw_ingredients.values() if normalize_text(v)]
+        text = " ".join(parts)
+
+    if not text:
+        return 0.0
+
+    # Pattern: "32 mg/100" or "32mg/100" or "0,032 g/100"
+    match = re.search(r"(?i)(\d+[.,]?\d*)\s*mg\s*/\s*100", text)
+    if match:
+        value_str = match.group(1).replace(",", ".")
+        try:
+            return float(value_str)
+        except ValueError:
+            pass
+
+    return 0.0
+
+
 def extract_nutrients(raw: Any) -> Dict[str, float]:
     result = {
         "calories": 0.0,
@@ -336,6 +456,7 @@ def extract_nutrients(raw: Any) -> Dict[str, float]:
         "sugar": 0.0,
         "fiber": 0.0,
         "salt": 0.0,
+        "caffeine": 0.0,
     }
 
     if raw is None:
@@ -417,7 +538,14 @@ def initialize_output_db(db_path: str) -> sqlite3.Connection:
           salt REAL NOT NULL DEFAULT 0,
           source TEXT NOT NULL DEFAULT 'base',
           is_liquid INTEGER NOT NULL DEFAULT 0,
-          caffeine REAL
+          is_fluid INTEGER NOT NULL DEFAULT 0,
+          caffeine REAL,
+          caffeine_mg_per_100g REAL,
+          ingredients_text TEXT,
+          ingredients_analysis_tags TEXT,
+          additives_tags TEXT,
+          product_quantity REAL,
+          product_quantity_unit TEXT
         )
         """)
     conn.execute("""
@@ -489,7 +617,18 @@ def build_records(
 
     combined = pd.concat(
         [
-            working[["barcode", "brands", "name"]].reset_index(drop=True),
+            working[
+                [
+                    "barcode",
+                    "brands",
+                    "name",
+                    "ingredients_text",
+                    "ingredients_analysis_tags",
+                    "additives_tags",
+                    "quantity",
+                    "categories_tags",
+                ]
+            ].reset_index(drop=True),
             nutrient_df.reset_index(drop=True),
         ],
         axis=1,
@@ -510,8 +649,52 @@ def build_records(
         sugar = float(_parse_float(getattr(row, "sugar", 0)))
         fiber = float(_parse_float(getattr(row, "fiber", 0)))
         salt = float(_parse_float(getattr(row, "salt", 0)))
+
+        # Caffeine: the nutriments dict stores values in grams per 100g.
         caffeine_g = float(_parse_float(getattr(row, "caffeine", 0)))
         caffeine_mg = caffeine_g * 1000.0 if caffeine_g > 0 else None
+
+        # Caffeine fallback: parse raw ingredients text for mg/100 patterns.
+        raw_ingredients = getattr(row, "ingredients_text", None)
+        if not caffeine_mg or caffeine_mg <= 0:
+            fallback_caffeine = extract_caffeine_from_ingredients(raw_ingredients)
+            if fallback_caffeine > 0:
+                caffeine_mg = fallback_caffeine
+
+        # Clean ingredients text: extract language-specific string, not raw JSON.
+        ingredients_text = extract_ingredients_text(
+            raw_ingredients, preferred_languages
+        )
+        analysis_tags = getattr(row, "ingredients_analysis_tags", None)
+        ingredients_analysis_tags = (
+            json.dumps(list(analysis_tags)) if analysis_tags is not None else None
+        )
+        additives_raw = getattr(row, "additives_tags", None)
+        additives_tags = (
+            json.dumps(list(additives_raw)) if additives_raw is not None else None
+        )
+
+        quantity_str = normalize_text(getattr(row, "quantity", ""))
+        product_quantity = None
+        product_quantity_unit = None
+        if quantity_str:
+            import re
+
+            match = re.match(r"^([\d\.,\s]+)\s*(\w+.*)$", quantity_str)
+            if match:
+                product_quantity = _parse_float(match.group(1))
+                product_quantity_unit = match.group(2).strip().lower()
+
+        categories_tags = to_tag_values(getattr(row, "categories_tags", None))
+        is_fluid = 0
+        if product_quantity_unit in ("ml", "l", "cl"):
+            is_fluid = 1
+        else:
+            beverage_keywords = ("beverage", "drink", "getränk", "boisson")
+            for cat in categories_tags:
+                if any(kw in cat.lower() for kw in beverage_keywords):
+                    is_fluid = 1
+                    break
 
         records.append(
             (
@@ -527,8 +710,15 @@ def build_records(
                 fiber,
                 salt,
                 "base",
-                0,
-                caffeine_mg,
+                is_fluid,  # is_liquid column (using is_fluid heuristic as well)
+                is_fluid,  # is_fluid column
+                caffeine_mg,  # caffeine (legacy)
+                caffeine_mg,  # caffeine_mg_per_100g
+                ingredients_text,
+                ingredients_analysis_tags,
+                additives_tags,
+                product_quantity,
+                product_quantity_unit,
             )
         )
 
@@ -572,14 +762,25 @@ def process(ctx: BuildContext) -> int:
     duplicate_rows = 0
     imported_count = 0
 
-    columns = ["code", "brands", "product_name", "nutriments", "countries_tags"]
+    columns = [
+        "code",
+        "brands",
+        "product_name",
+        "nutriments",
+        "countries_tags",
+        "ingredients_text",
+        "ingredients_analysis_tags",
+        "additives_tags",
+        "quantity",
+        "categories_tags",
+    ]
 
     try:
         cursor = conn.cursor()
         insert_sql = """
             INSERT OR IGNORE INTO products (
-              id, barcode, brand, name, calories, protein, carbs, fat, sugar, fiber, salt, source, is_liquid, caffeine
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              id, barcode, brand, name, calories, protein, carbs, fat, sugar, fiber, salt, source, is_liquid, is_fluid, caffeine, caffeine_mg_per_100g, ingredients_text, ingredients_analysis_tags, additives_tags, product_quantity, product_quantity_unit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
         for batch_index, batch in enumerate(

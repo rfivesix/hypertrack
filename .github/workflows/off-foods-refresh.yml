@@ -16,7 +16,8 @@ name: OFF Foods Refresh
       parquet_source_url:
         description: "Open Food Facts parquet source URL"
         required: false
-        default: "https://huggingface.co/datasets/openfoodfacts/product-database/resolv\
+        default:
+          "https://huggingface.co/datasets/openfoodfacts/product-database/resolv\
           e/main/food.parquet?download=true"
         type: string
   schedule:
@@ -233,7 +234,8 @@ jobs:
 
       - name: Publish release assets (OFF country channel)
         id: publish_release
-        if: steps.generate.outcome == 'success' && env.PUBLISH_RELEASE_ASSETS == 'true'
+        if:
+          steps.generate.outcome == 'success' && env.PUBLISH_RELEASE_ASSETS == 'true'
           && (steps.diff.outputs.reference_db_found != 'true' ||
           steps.diff.outcome == 'success' || env.FAIL_ON_BREAKING != 'true')
         uses: ncipollo/release-action@v1

@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/health_export/adapters/apple_health/apple_health_export_adapter.dart';
-import 'package:train_libre/health_export/adapters/health_connect/health_connect_export_adapter.dart';
-import 'package:train_libre/health_export/contracts/health_export_adapter.dart';
-import 'package:train_libre/health_export/models/export_models.dart';
+import 'package:train_libre/features/health_export/adapters/apple_health/apple_health_export_adapter.dart';
+import 'package:train_libre/features/health_export/adapters/health_connect/health_connect_export_adapter.dart';
+import 'package:train_libre/features/health_export/contracts/health_export_adapter.dart';
+import 'package:train_libre/features/health_export/models/export_models.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

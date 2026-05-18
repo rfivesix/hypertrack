@@ -101,6 +101,18 @@ class SleepCanonicalSessionsDao {
     return result.map(_mapSession).toList(growable: false);
   }
 
+  Future<DateTime?> findLatestEndedAt() async {
+    final row = await _db
+        .customSelect(
+          'SELECT MAX(ended_at) as max_ended_at FROM sleep_canonical_sessions',
+        )
+        .getSingleOrNull();
+    if (row == null) return null;
+    final maxMillis = row.readNullable<int>('max_ended_at');
+    if (maxMillis == null) return null;
+    return _fromEpochMillis(maxMillis);
+  }
+
   /// Deletes canonical sessions where the session overlaps [fromInclusive, toExclusive).
   ///
   /// Because stage segments and HR samples are ON DELETE CASCADE, this is the
@@ -202,6 +214,22 @@ class SleepCanonicalStageSegmentsDao {
       ORDER BY started_at ASC
       ''',
       variables: [Variable<String>(sessionId)],
+    ).get();
+    return result.map(_mapRow).toList(growable: false);
+  }
+
+  Future<List<SleepCanonicalStageSegmentRecord>> findBySessionIds(
+    List<String> sessionIds,
+  ) async {
+    if (sessionIds.isEmpty) return const [];
+    final placeholders = List.filled(sessionIds.length, '?').join(', ');
+    final result = await _db.customSelect(
+      '''
+      SELECT * FROM sleep_canonical_stage_segments
+      WHERE session_id IN ($placeholders)
+      ORDER BY started_at ASC
+      ''',
+      variables: sessionIds.map((id) => Variable<String>(id)).toList(),
     ).get();
     return result.map(_mapRow).toList(growable: false);
   }

@@ -1,25 +1,23 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart';
 import 'package:train_libre/features/statistics/domain/recovery_domain_service.dart';
-import 'package:train_libre/data/workout_database_helper.dart';
-import 'package:train_libre/models/exercise.dart' as model;
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
+import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart'
+    as model;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('WorkoutDatabaseHelper query semantics', () {
+  group('WorkoutLocalDataSource query semantics', () {
     late AppDatabase database;
-    late DatabaseHelper dbHelper;
-    late WorkoutDatabaseHelper helper;
+    late WorkoutLocalDataSource helper;
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
-      dbHelper = DatabaseHelper.forTesting(database);
-      helper = WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
+      helper = WorkoutLocalDataSource.forTesting(database);
     });
 
     tearDown(() async {

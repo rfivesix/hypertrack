@@ -2,111 +2,127 @@
 
 This document reflects architecture as currently implemented.
 
+## Domain layer purity
+
+The Domain layer is pure Dart and framework-agnostic.
+
+- Domain contracts such as `IDiaryRepository` (`lib/features/diary/domain/repositories/diary_repository.dart`) return pure domain models (`DailyGoal`, `FoodEntry`, `FluidEntry`, `FoodItem`), never Drift row classes.
+- `NutritionRepository` (`lib/features/diary/data/nutrition_repository.dart`) is the mapping boundary: it reads row data through local data sources and maps to domain entities before returning to presentation/use-case callers.
+- Drift-generated classes remain confined to data source and data implementation boundaries.
+
 ## High-level layering
 
 ```
 Presentation
-- lib/screens/**
+- lib/features/*/presentation/**
 - lib/widgets/**
 - lib/dialogs/**
-- lib/features/*/presentation/**
 
-Feature modules
-- lib/features/statistics/**
-- lib/features/steps/**
-- lib/features/sleep/**
+Domain
+- lib/features/*/domain/**
 
-Services and utilities
+Data + Infrastructure
+- lib/features/*/data/**
+- lib/data/** (AppDatabase + schema/migrations)
+- lib/core/infrastructure/**
 - lib/services/**
-- lib/util/**
-
-Persistence
-- lib/data/**
-- Drift DB schema + custom SQL migration in lib/data/drift_database.dart
 ```
 
 ## Main app shell
 
-Entry and shell:
+- App entry: `lib/main.dart`
+- Initializer: `lib/features/app/presentation/app_initializer_screen.dart`
+- Main tab shell: `lib/features/app/presentation/main_screen.dart`
+- Sleep route wiring: `SleepNavigation.onGenerateRoute` in `lib/features/sleep/presentation/sleep_navigation.dart`
 
-- `lib/main.dart`
-- `lib/screens/app_initializer_screen.dart`
-- `lib/screens/main_screen.dart`
-
-Main tabs currently implemented:
+Main tabs:
 
 1. Diary
 2. Workout
 3. Statistics
 4. Nutrition
 
-`main.dart` also wires Sleep named routes via:
+## Single database instance lifecycle
 
-- `onGenerateRoute: SleepNavigation.onGenerateRoute`
+- `AppDatabase` is opened once in `lib/main.dart`.
+- That instance is propagated through constructor dependency injection to local data sources (for example `DiaryLocalDataSource`, `WorkoutLocalDataSource`, `ProfileLocalDataSource`, `SupplementLocalDataSource`, `ExerciseCatalogLocalDataSource`).
+- This single-instance runtime rule prevents multiple concurrent database allocations and reduces risk of deadlocks or transaction corruption.
+- `DatabaseHelper` is the low-level initialization manager for database connection setup and migration-hook lifecycle only; feature CRUD is documented via feature-local data sources.
 
-## Feature modules
+## Feature-local data sources (decentralized)
 
-### Statistics
+- `DiaryLocalDataSource` (`lib/features/diary/data/sources/diary_local_data_source.dart`)
+- `ProductLocalDataSource` (`lib/features/diary/data/sources/product_local_data_source.dart`)
+- `WorkoutLocalDataSource` (`lib/features/workout/data/sources/workout_local_data_source.dart`)
+- `Sleep` DAOs under `lib/features/sleep/data/persistence/dao/**`
 
-Path: `lib/features/statistics/`
+## Layer and dependency flow
 
-- `domain/`: range policy, data-quality policy, payload models, domain services
-- `data/`: hub/body-nutrition data adapters
-- `presentation/`: shared formatter utilities
+```mermaid
+graph LR
+    UI[Presentation: Widgets/ViewModels] --> UC[Use Cases / Feature Orchestration]
+    UC --> RC[Repository Contracts]
+    RC --> E[Pure Domain Entities]
 
-Hub and drill-down screens live in `lib/screens/statistics_hub_screen.dart` and `lib/screens/analytics/*`.
+    RI[Repository Implementations] --> RC
+    RI --> DS[Feature Local DataSources]
+    DS --> DB[(Drift AppDatabase)]
+    DS --> PC[Platform Adapters / Channels]
 
-### Steps
+    DB -. framework dependency .-> RI
+    PC -. framework dependency .-> RI
+```
 
-Path: `lib/features/steps/`
+## Data tier architecture
 
-- `data/steps_aggregation_repository.dart` (aggregation contracts + health-backed implementation)
-- `domain/steps_models.dart`
-- `presentation/steps_module_screen.dart`
+```mermaid
+graph TD
+    APP[main.dart: create AppDatabase once] --> DB[(AppDatabase)]
 
-Platform sync and settings integration are in `lib/services/health/*`.
+    DB --> DIARY[DiaryLocalDataSource]
+    DB --> PRODUCT[ProductLocalDataSource]
+    DB --> WORKOUT[WorkoutLocalDataSource]
+    DB --> SLEEPDAO[Sleep DAOs]
 
-### Sleep
+    DIARY --> NUTRI[NutritionRepository mapping tier]
+    PRODUCT --> NUTRI
+    WORKOUT --> WREP[WorkoutRepository]
+    SLEEPDAO --> SREPO[Sleep repositories]
+```
 
-Path: `lib/features/sleep/`
+## Async sync-orchestration sequence
 
-Sub-areas:
+```mermaid
+sequenceDiagram
+    participant UI as Diary UI
+    participant C as DiaryHealthSyncCoordinator
+    participant S as Steps/Sleep Services
+    participant P as Platform Channels (HealthKit/Health Connect)
+    participant D as Drift-backed storage
 
-- `platform/`: permissions, adapters, method-channel bridge, sync service
-- `data/persistence/`: DAOs + persistence models
-- `data/mapping/`: HealthKit/Health Connect canonical mappers
-- `data/processing/`: timeline repair + pipeline service
-- `data/repository/`: read/query repository contracts
-- `domain/`: canonical entities, metrics, scoring, aggregations
-- `presentation/`: navigation, day/week/month scope UI, detail pages
+    UI->>C: loadAndSyncHealthData(date,...)
+    C-->>UI: returns immediately (non-blocking)
+    C->>S: start async sync/load tasks (unawaited)
+    S->>P: fetch provider data asynchronously
+    P-->>S: samples/sessions
+    S->>D: persist and query data asynchronously
+    D-->>S: results
+    S-->>C: updated values
+    C->>UI: notifyListeners() state refresh
+```
 
 ## Navigation model
 
-Navigation is currently mixed:
-
-- Most app screens use `MaterialPageRoute` pushes.
-- Sleep routes are centralized through named routes in `SleepNavigation` (`lib/features/sleep/presentation/sleep_navigation.dart`).
+- Most flows use `MaterialPageRoute`.
+- Sleep routes are centralized in `SleepNavigation` (`lib/features/sleep/presentation/sleep_navigation.dart`).
 
 ## State model
 
-Current patterns in use:
-
-- `Provider`/`ChangeNotifier` for app-level services (`ThemeService`, `WorkoutSessionManager`, etc.)
-- local `StatefulWidget` state for most screen-level state
-- feature-local `ChangeNotifier` for Sleep day VM (`SleepDayViewModel`)
-- `SharedPreferences` for feature toggles/sync metadata (Steps/Sleep), AI feature/context toggles (`ai_enabled`, `ai_recommendation_context_enabled`), and adaptive nutrition recommendation state/settings (`adaptive_nutrition_recommendation.*`)
-
-## Persistence model
-
-Primary persistence is Drift-based via `AppDatabase` (`lib/data/drift_database.dart`) with helper/DAO access layers.
-
-Notable current areas:
-
-- workout analytics queries in `lib/data/workout_database_helper.dart`
-- nutrition/settings/steps queries in `lib/data/database_helper.dart`
-- Sleep raw/canonical/derived schema and DAOs in `lib/features/sleep/data/persistence/**`
+- `Provider` / `ChangeNotifier` for app-level and feature-level state.
+- Local `StatefulWidget` state for screen-local concerns.
+- `SharedPreferences` for feature toggles and sync metadata.
 
 ## Known implementation notes
 
-- `lib/features/statistics/statistics_state_container.dart` exists as a structural container but is not currently wired as shared runtime state.
-- Sleep week/month route names currently resolve to `SleepDayOverviewPage` with scope switching, while standalone week/month page classes also exist.
+- `lib/features/statistics/statistics_state_container.dart` exists but is not wired as shared runtime state.
+- Sleep week/month route names currently resolve to `SleepDayOverviewPage` scope switching; standalone week/month page classes also exist.

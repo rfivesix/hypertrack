@@ -1,6 +1,6 @@
-import '../../models/routine.dart';
-import '../../models/routine_exercise.dart';
-import '../../models/set_template.dart';
+import '../workout/domain/models/routine.dart';
+import '../workout/domain/models/routine_exercise.dart';
+import '../workout/domain/models/set_template.dart';
 import 'share_labels.dart';
 import 'share_set_type.dart';
 

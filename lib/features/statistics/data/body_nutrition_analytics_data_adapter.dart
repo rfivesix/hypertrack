@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/database_helper.dart';
-import '../../../data/product_database_helper.dart';
-import '../../../models/chart_data_point.dart';
-import '../../../models/food_entry.dart';
-import '../../../models/fluid_entry.dart';
+import '../../diary/data/sources/product_local_data_source.dart';
+import '../../analytics/domain/models/chart_data_point.dart';
+import '../../diary/domain/models/food_entry.dart';
+import '../../diary/domain/models/fluid_entry.dart';
 import '../../../util/perf_debug_timer.dart';
 import '../domain/statistics_range_policy.dart';
 
@@ -22,12 +22,12 @@ class BodyNutritionAnalyticsRawData {
 
 class BodyNutritionAnalyticsDataAdapter {
   final DatabaseHelper _databaseHelper;
-  final ProductDatabaseHelper _productDatabaseHelper;
+  final ProductLocalDataSource _productDatabaseHelper;
   final StatisticsRangePolicyService _rangePolicy;
 
   const BodyNutritionAnalyticsDataAdapter({
     required DatabaseHelper databaseHelper,
-    required ProductDatabaseHelper productDatabaseHelper,
+    required ProductLocalDataSource productDatabaseHelper,
     StatisticsRangePolicyService rangePolicy =
         StatisticsRangePolicyService.instance,
   })  : _databaseHelper = databaseHelper,
@@ -134,6 +134,10 @@ class BodyNutritionAnalyticsDataAdapter {
     return dates.first;
   }
 
+  // Audit Log Summary: Resolution for Issue #356 - Prevent fluid double-counting
+  // Fluids that are linked to food entries (e.g., juices tracked as food items)
+  // are already aggregated in the food loop below. We filter out any fluid entry
+  // where `linkedFoodEntryId != null` to ensure items are aggregated exactly once.
   Future<Map<DateTime, double>> _dailyCaloriesMap({
     required List<FoodEntry> foodEntries,
     required List<FluidEntry> fluidEntries,
@@ -156,7 +160,8 @@ class BodyNutritionAnalyticsDataAdapter {
       map[day] = (map[day] ?? 0.0) + added;
     }
 
-    for (final entry in fluidEntries) {
+    for (final entry
+        in fluidEntries.where((e) => e.linkedFoodEntryId == null)) {
       final day = DateTime.utc(
         entry.timestamp.year,
         entry.timestamp.month,

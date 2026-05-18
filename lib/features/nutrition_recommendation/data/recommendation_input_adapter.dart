@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../data/database_helper.dart';
-import '../../../models/chart_data_point.dart';
-import '../../../models/fluid_entry.dart';
+import '../../analytics/domain/models/chart_data_point.dart';
+import '../../diary/domain/models/fluid_entry.dart';
 import '../../../services/health/steps_sync_service.dart';
 import '../../../data/drift_database.dart' as db;
 import '../domain/goal_models.dart';
@@ -298,6 +298,10 @@ class RecommendationInputAdapter {
     return normalizeDay(last).difference(normalizeDay(first)).inDays + 1;
   }
 
+  // Audit Log Summary: Resolution for Issue #356 - Prevent fluid double-counting
+  // Fluids that are linked to food entries (e.g., juices tracked as food items)
+  // are already aggregated in the food loop above. We filter out any fluid entry
+  // where `linkedFoodEntryId != null` to ensure items are aggregated exactly once.
   Map<DateTime, double> _buildCaloriesByDay({
     required Map<DateTime, double> foodCaloriesByDay,
     required List<FluidEntry> fluidEntries,
@@ -399,7 +403,7 @@ class RecommendationInputAdapter {
     final startDay = normalizedEndDay.subtract(
       Duration(days: safeLookback - 1),
     );
-    final stepsSyncService = StepsSyncService(dbHelper: databaseHelper);
+    final stepsSyncService = StepsSyncService();
     final providerFilter = StepsSyncService.providerFilterToRaw(
       await stepsSyncService.getProviderFilter(),
     );

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/models/food_item.dart';
-import 'package:train_libre/screens/add_food_screen.dart';
+import 'package:train_libre/features/diary/domain/models/food_item.dart';
+import 'package:train_libre/features/diary/presentation/add_food_screen.dart';
 
 void main() {
   test('calculateMealCardNutritionTotals batches product data by barcode', () {

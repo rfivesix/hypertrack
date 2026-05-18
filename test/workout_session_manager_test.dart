@@ -1,15 +1,16 @@
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart' show AppDatabase;
-import 'package:train_libre/data/workout_database_helper.dart';
-import 'package:train_libre/models/routine_exercise.dart';
-import 'package:train_libre/models/set_log.dart';
-import 'package:train_libre/models/set_template.dart';
-import 'package:train_libre/models/exercise.dart' as model;
-import 'package:train_libre/services/workout_session_manager.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
+import 'package:train_libre/features/workout/domain/models/routine_exercise.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart';
+import 'package:train_libre/features/workout/domain/models/set_template.dart';
+import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart'
+    as model;
+import 'package:train_libre/features/workout/presentation/live_workout_view_model.dart';
+import 'package:train_libre/features/workout/data/workout_repository.dart';
 
 Future<void> _waitFor(
   bool Function() condition, {
@@ -27,17 +28,19 @@ Future<void> _waitFor(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('WorkoutSessionManager high-value behavior', () {
+  group('LiveWorkoutViewModel high-value behavior', () {
     late AppDatabase database;
-    late DatabaseHelper dbHelper;
-    late WorkoutDatabaseHelper workoutDb;
-    late WorkoutSessionManager manager;
+    late WorkoutLocalDataSource workoutDb;
+    late LiveWorkoutViewModel manager;
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
-      dbHelper = DatabaseHelper.forTesting(database);
-      workoutDb = WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
-      manager = WorkoutSessionManager.forTesting(workoutDb: workoutDb);
+      workoutDb = WorkoutLocalDataSource.forTesting(database);
+      manager = LiveWorkoutViewModel.forTesting(
+        workoutDb: WorkoutRepository(
+          localDataSource: WorkoutLocalDataSource(database),
+        ),
+      );
     });
 
     tearDown(() async {

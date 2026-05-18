@@ -4,12 +4,12 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/backup_manager.dart';
+import 'package:train_libre/core/infrastructure/backup_manager.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
-    show AppDatabase, ProductsCompanion;
-import 'package:train_libre/data/product_database_helper.dart';
-import 'package:train_libre/data/workout_database_helper.dart';
+    show AppDatabase, ProductsCompanion, HealthStepSegmentsCompanion;
+import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_scheduler.dart';
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_service.dart';
@@ -19,9 +19,9 @@ import 'package:train_libre/features/nutrition_recommendation/domain/bayesian_td
 import 'package:train_libre/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
 import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_models.dart';
-import 'package:train_libre/models/food_entry.dart';
-import 'package:train_libre/models/measurement.dart';
-import 'package:train_libre/models/measurement_session.dart';
+import 'package:train_libre/features/diary/domain/models/food_entry.dart';
+import 'package:train_libre/features/profile/domain/models/measurement.dart';
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ScenarioProfile {
@@ -110,8 +110,8 @@ class AdaptiveScenarioHarness {
   final ScenarioProfile profile;
   final AppDatabase database;
   final DatabaseHelper dbHelper;
-  final ProductDatabaseHelper productDb;
-  final WorkoutDatabaseHelper workoutDb;
+  final ProductLocalDataSource productDb;
+  final WorkoutLocalDataSource workoutDb;
   final BackupManager backupManager;
 
   late RecommendationRepository repository;
@@ -135,10 +135,8 @@ class AdaptiveScenarioHarness {
 
     final database = AppDatabase(NativeDatabase.memory());
     final dbHelper = DatabaseHelper.forTesting(database);
-    final productDb =
-        ProductDatabaseHelper.forTesting(databaseHelper: dbHelper);
-    final workoutDb =
-        WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
+    final productDb = ProductLocalDataSource.forTesting(database);
+    final workoutDb = WorkoutLocalDataSource.forTesting(database);
     final backupManager = BackupManager(
       userDb: dbHelper,
       productDb: productDb,
@@ -312,7 +310,7 @@ class AdaptiveScenarioHarness {
     String provider = 'apple_healthkit',
     String sourceId = 'scenario_source',
   }) {
-    final rows = <Map<String, dynamic>>[];
+    final companions = <HealthStepSegmentsCompanion>[];
     for (var i = 0; i < dayCount; i++) {
       final localDay = normalizeDay(startDay.add(Duration(days: i)));
       final startAt = DateTime(
@@ -322,16 +320,17 @@ class AdaptiveScenarioHarness {
         12,
       ).toUtc();
       final endAt = startAt.add(const Duration(hours: 1));
-      rows.add(<String, dynamic>{
-        'provider': provider,
-        'sourceId': sourceId,
-        'startAt': startAt.toIso8601String(),
-        'endAt': endAt.toIso8601String(),
-        'stepCount': dailySteps,
-        'externalKey': 'scenario_steps_${localDay.toIso8601String()}_$i',
-      });
+      companions.add(HealthStepSegmentsCompanion.insert(
+        provider: provider,
+        sourceId: drift.Value(sourceId),
+        startAt: startAt,
+        endAt: endAt,
+        stepCount: dailySteps,
+        externalKey: 'scenario_steps_${localDay.toIso8601String()}_$i',
+        updatedAt: drift.Value(DateTime.now()),
+      ));
     }
-    return dbHelper.upsertHealthStepSegments(rows);
+    return dbHelper.upsertHealthStepSegments(companions);
   }
 
   Future<WeekScenarioOutput> generateForDueWeek({

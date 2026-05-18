@@ -6073,6 +6073,52 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   late final GeneratedColumn<double> caffeine = GeneratedColumn<double>(
       'caffeine', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _caffeineMgPer100gMeta =
+      const VerificationMeta('caffeineMgPer100g');
+  @override
+  late final GeneratedColumn<double> caffeineMgPer100g =
+      GeneratedColumn<double>('caffeine_mg_per_100g', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _ingredientsTextMeta =
+      const VerificationMeta('ingredientsText');
+  @override
+  late final GeneratedColumn<String> ingredientsText = GeneratedColumn<String>(
+      'ingredients_text', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _ingredientsAnalysisTagsMeta =
+      const VerificationMeta('ingredientsAnalysisTags');
+  @override
+  late final GeneratedColumn<String> ingredientsAnalysisTags =
+      GeneratedColumn<String>('ingredients_analysis_tags', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _additivesTagsMeta =
+      const VerificationMeta('additivesTags');
+  @override
+  late final GeneratedColumn<String> additivesTags = GeneratedColumn<String>(
+      'additives_tags', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _productQuantityMeta =
+      const VerificationMeta('productQuantity');
+  @override
+  late final GeneratedColumn<double> productQuantity = GeneratedColumn<double>(
+      'product_quantity', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _productQuantityUnitMeta =
+      const VerificationMeta('productQuantityUnit');
+  @override
+  late final GeneratedColumn<String> productQuantityUnit =
+      GeneratedColumn<String>('product_quantity_unit', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isFluidMeta =
+      const VerificationMeta('isFluid');
+  @override
+  late final GeneratedColumn<bool> isFluid = GeneratedColumn<bool>(
+      'is_fluid', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_fluid" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _isLiquidMeta =
       const VerificationMeta('isLiquid');
   @override
@@ -6124,6 +6170,13 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         fiber,
         salt,
         caffeine,
+        caffeineMgPer100g,
+        ingredientsText,
+        ingredientsAnalysisTags,
+        additivesTags,
+        productQuantity,
+        productQuantityUnit,
+        isFluid,
         isLiquid,
         source,
         category,
@@ -6222,6 +6275,47 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       context.handle(_caffeineMeta,
           caffeine.isAcceptableOrUnknown(data['caffeine']!, _caffeineMeta));
     }
+    if (data.containsKey('caffeine_mg_per_100g')) {
+      context.handle(
+          _caffeineMgPer100gMeta,
+          caffeineMgPer100g.isAcceptableOrUnknown(
+              data['caffeine_mg_per_100g']!, _caffeineMgPer100gMeta));
+    }
+    if (data.containsKey('ingredients_text')) {
+      context.handle(
+          _ingredientsTextMeta,
+          ingredientsText.isAcceptableOrUnknown(
+              data['ingredients_text']!, _ingredientsTextMeta));
+    }
+    if (data.containsKey('ingredients_analysis_tags')) {
+      context.handle(
+          _ingredientsAnalysisTagsMeta,
+          ingredientsAnalysisTags.isAcceptableOrUnknown(
+              data['ingredients_analysis_tags']!,
+              _ingredientsAnalysisTagsMeta));
+    }
+    if (data.containsKey('additives_tags')) {
+      context.handle(
+          _additivesTagsMeta,
+          additivesTags.isAcceptableOrUnknown(
+              data['additives_tags']!, _additivesTagsMeta));
+    }
+    if (data.containsKey('product_quantity')) {
+      context.handle(
+          _productQuantityMeta,
+          productQuantity.isAcceptableOrUnknown(
+              data['product_quantity']!, _productQuantityMeta));
+    }
+    if (data.containsKey('product_quantity_unit')) {
+      context.handle(
+          _productQuantityUnitMeta,
+          productQuantityUnit.isAcceptableOrUnknown(
+              data['product_quantity_unit']!, _productQuantityUnitMeta));
+    }
+    if (data.containsKey('is_fluid')) {
+      context.handle(_isFluidMeta,
+          isFluid.isAcceptableOrUnknown(data['is_fluid']!, _isFluidMeta));
+    }
     if (data.containsKey('is_liquid')) {
       context.handle(_isLiquidMeta,
           isLiquid.isAcceptableOrUnknown(data['is_liquid']!, _isLiquidMeta));
@@ -6285,6 +6379,21 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
           .read(DriftSqlType.double, data['${effectivePrefix}salt']),
       caffeine: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}caffeine']),
+      caffeineMgPer100g: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}caffeine_mg_per_100g']),
+      ingredientsText: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}ingredients_text']),
+      ingredientsAnalysisTags: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}ingredients_analysis_tags']),
+      additivesTags: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}additives_tags']),
+      productQuantity: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}product_quantity']),
+      productQuantityUnit: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}product_quantity_unit']),
+      isFluid: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_fluid'])!,
       isLiquid: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_liquid'])!,
       source: attachedDatabase.typeMapping
@@ -6321,6 +6430,13 @@ class Product extends DataClass implements Insertable<Product> {
   final double? fiber;
   final double? salt;
   final double? caffeine;
+  final double? caffeineMgPer100g;
+  final String? ingredientsText;
+  final String? ingredientsAnalysisTags;
+  final String? additivesTags;
+  final double? productQuantity;
+  final String? productQuantityUnit;
+  final bool isFluid;
   final bool isLiquid;
   final String source;
   final String? category;
@@ -6344,6 +6460,13 @@ class Product extends DataClass implements Insertable<Product> {
       this.fiber,
       this.salt,
       this.caffeine,
+      this.caffeineMgPer100g,
+      this.ingredientsText,
+      this.ingredientsAnalysisTags,
+      this.additivesTags,
+      this.productQuantity,
+      this.productQuantityUnit,
+      required this.isFluid,
       required this.isLiquid,
       required this.source,
       this.category,
@@ -6385,6 +6508,26 @@ class Product extends DataClass implements Insertable<Product> {
     if (!nullToAbsent || caffeine != null) {
       map['caffeine'] = Variable<double>(caffeine);
     }
+    if (!nullToAbsent || caffeineMgPer100g != null) {
+      map['caffeine_mg_per_100g'] = Variable<double>(caffeineMgPer100g);
+    }
+    if (!nullToAbsent || ingredientsText != null) {
+      map['ingredients_text'] = Variable<String>(ingredientsText);
+    }
+    if (!nullToAbsent || ingredientsAnalysisTags != null) {
+      map['ingredients_analysis_tags'] =
+          Variable<String>(ingredientsAnalysisTags);
+    }
+    if (!nullToAbsent || additivesTags != null) {
+      map['additives_tags'] = Variable<String>(additivesTags);
+    }
+    if (!nullToAbsent || productQuantity != null) {
+      map['product_quantity'] = Variable<double>(productQuantity);
+    }
+    if (!nullToAbsent || productQuantityUnit != null) {
+      map['product_quantity_unit'] = Variable<String>(productQuantityUnit);
+    }
+    map['is_fluid'] = Variable<bool>(isFluid);
     map['is_liquid'] = Variable<bool>(isLiquid);
     map['source'] = Variable<String>(source);
     if (!nullToAbsent || category != null) {
@@ -6423,6 +6566,25 @@ class Product extends DataClass implements Insertable<Product> {
       caffeine: caffeine == null && nullToAbsent
           ? const Value.absent()
           : Value(caffeine),
+      caffeineMgPer100g: caffeineMgPer100g == null && nullToAbsent
+          ? const Value.absent()
+          : Value(caffeineMgPer100g),
+      ingredientsText: ingredientsText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ingredientsText),
+      ingredientsAnalysisTags: ingredientsAnalysisTags == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ingredientsAnalysisTags),
+      additivesTags: additivesTags == null && nullToAbsent
+          ? const Value.absent()
+          : Value(additivesTags),
+      productQuantity: productQuantity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productQuantity),
+      productQuantityUnit: productQuantityUnit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productQuantityUnit),
+      isFluid: Value(isFluid),
       isLiquid: Value(isLiquid),
       source: Value(source),
       category: category == null && nullToAbsent
@@ -6454,6 +6616,16 @@ class Product extends DataClass implements Insertable<Product> {
       fiber: serializer.fromJson<double?>(json['fiber']),
       salt: serializer.fromJson<double?>(json['salt']),
       caffeine: serializer.fromJson<double?>(json['caffeine']),
+      caffeineMgPer100g:
+          serializer.fromJson<double?>(json['caffeineMgPer100g']),
+      ingredientsText: serializer.fromJson<String?>(json['ingredientsText']),
+      ingredientsAnalysisTags:
+          serializer.fromJson<String?>(json['ingredientsAnalysisTags']),
+      additivesTags: serializer.fromJson<String?>(json['additivesTags']),
+      productQuantity: serializer.fromJson<double?>(json['productQuantity']),
+      productQuantityUnit:
+          serializer.fromJson<String?>(json['productQuantityUnit']),
+      isFluid: serializer.fromJson<bool>(json['isFluid']),
       isLiquid: serializer.fromJson<bool>(json['isLiquid']),
       source: serializer.fromJson<String>(json['source']),
       category: serializer.fromJson<String?>(json['category']),
@@ -6482,6 +6654,14 @@ class Product extends DataClass implements Insertable<Product> {
       'fiber': serializer.toJson<double?>(fiber),
       'salt': serializer.toJson<double?>(salt),
       'caffeine': serializer.toJson<double?>(caffeine),
+      'caffeineMgPer100g': serializer.toJson<double?>(caffeineMgPer100g),
+      'ingredientsText': serializer.toJson<String?>(ingredientsText),
+      'ingredientsAnalysisTags':
+          serializer.toJson<String?>(ingredientsAnalysisTags),
+      'additivesTags': serializer.toJson<String?>(additivesTags),
+      'productQuantity': serializer.toJson<double?>(productQuantity),
+      'productQuantityUnit': serializer.toJson<String?>(productQuantityUnit),
+      'isFluid': serializer.toJson<bool>(isFluid),
       'isLiquid': serializer.toJson<bool>(isLiquid),
       'source': serializer.toJson<String>(source),
       'category': serializer.toJson<String?>(category),
@@ -6508,6 +6688,13 @@ class Product extends DataClass implements Insertable<Product> {
           Value<double?> fiber = const Value.absent(),
           Value<double?> salt = const Value.absent(),
           Value<double?> caffeine = const Value.absent(),
+          Value<double?> caffeineMgPer100g = const Value.absent(),
+          Value<String?> ingredientsText = const Value.absent(),
+          Value<String?> ingredientsAnalysisTags = const Value.absent(),
+          Value<String?> additivesTags = const Value.absent(),
+          Value<double?> productQuantity = const Value.absent(),
+          Value<String?> productQuantityUnit = const Value.absent(),
+          bool? isFluid,
           bool? isLiquid,
           String? source,
           Value<String?> category = const Value.absent(),
@@ -6531,6 +6718,24 @@ class Product extends DataClass implements Insertable<Product> {
         fiber: fiber.present ? fiber.value : this.fiber,
         salt: salt.present ? salt.value : this.salt,
         caffeine: caffeine.present ? caffeine.value : this.caffeine,
+        caffeineMgPer100g: caffeineMgPer100g.present
+            ? caffeineMgPer100g.value
+            : this.caffeineMgPer100g,
+        ingredientsText: ingredientsText.present
+            ? ingredientsText.value
+            : this.ingredientsText,
+        ingredientsAnalysisTags: ingredientsAnalysisTags.present
+            ? ingredientsAnalysisTags.value
+            : this.ingredientsAnalysisTags,
+        additivesTags:
+            additivesTags.present ? additivesTags.value : this.additivesTags,
+        productQuantity: productQuantity.present
+            ? productQuantity.value
+            : this.productQuantity,
+        productQuantityUnit: productQuantityUnit.present
+            ? productQuantityUnit.value
+            : this.productQuantityUnit,
+        isFluid: isFluid ?? this.isFluid,
         isLiquid: isLiquid ?? this.isLiquid,
         source: source ?? this.source,
         category: category.present ? category.value : this.category,
@@ -6556,6 +6761,25 @@ class Product extends DataClass implements Insertable<Product> {
       fiber: data.fiber.present ? data.fiber.value : this.fiber,
       salt: data.salt.present ? data.salt.value : this.salt,
       caffeine: data.caffeine.present ? data.caffeine.value : this.caffeine,
+      caffeineMgPer100g: data.caffeineMgPer100g.present
+          ? data.caffeineMgPer100g.value
+          : this.caffeineMgPer100g,
+      ingredientsText: data.ingredientsText.present
+          ? data.ingredientsText.value
+          : this.ingredientsText,
+      ingredientsAnalysisTags: data.ingredientsAnalysisTags.present
+          ? data.ingredientsAnalysisTags.value
+          : this.ingredientsAnalysisTags,
+      additivesTags: data.additivesTags.present
+          ? data.additivesTags.value
+          : this.additivesTags,
+      productQuantity: data.productQuantity.present
+          ? data.productQuantity.value
+          : this.productQuantity,
+      productQuantityUnit: data.productQuantityUnit.present
+          ? data.productQuantityUnit.value
+          : this.productQuantityUnit,
+      isFluid: data.isFluid.present ? data.isFluid.value : this.isFluid,
       isLiquid: data.isLiquid.present ? data.isLiquid.value : this.isLiquid,
       source: data.source.present ? data.source.value : this.source,
       category: data.category.present ? data.category.value : this.category,
@@ -6585,6 +6809,13 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('fiber: $fiber, ')
           ..write('salt: $salt, ')
           ..write('caffeine: $caffeine, ')
+          ..write('caffeineMgPer100g: $caffeineMgPer100g, ')
+          ..write('ingredientsText: $ingredientsText, ')
+          ..write('ingredientsAnalysisTags: $ingredientsAnalysisTags, ')
+          ..write('additivesTags: $additivesTags, ')
+          ..write('productQuantity: $productQuantity, ')
+          ..write('productQuantityUnit: $productQuantityUnit, ')
+          ..write('isFluid: $isFluid, ')
           ..write('isLiquid: $isLiquid, ')
           ..write('source: $source, ')
           ..write('category: $category, ')
@@ -6613,6 +6844,13 @@ class Product extends DataClass implements Insertable<Product> {
         fiber,
         salt,
         caffeine,
+        caffeineMgPer100g,
+        ingredientsText,
+        ingredientsAnalysisTags,
+        additivesTags,
+        productQuantity,
+        productQuantityUnit,
+        isFluid,
         isLiquid,
         source,
         category,
@@ -6640,6 +6878,13 @@ class Product extends DataClass implements Insertable<Product> {
           other.fiber == this.fiber &&
           other.salt == this.salt &&
           other.caffeine == this.caffeine &&
+          other.caffeineMgPer100g == this.caffeineMgPer100g &&
+          other.ingredientsText == this.ingredientsText &&
+          other.ingredientsAnalysisTags == this.ingredientsAnalysisTags &&
+          other.additivesTags == this.additivesTags &&
+          other.productQuantity == this.productQuantity &&
+          other.productQuantityUnit == this.productQuantityUnit &&
+          other.isFluid == this.isFluid &&
           other.isLiquid == this.isLiquid &&
           other.source == this.source &&
           other.category == this.category &&
@@ -6665,6 +6910,13 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<double?> fiber;
   final Value<double?> salt;
   final Value<double?> caffeine;
+  final Value<double?> caffeineMgPer100g;
+  final Value<String?> ingredientsText;
+  final Value<String?> ingredientsAnalysisTags;
+  final Value<String?> additivesTags;
+  final Value<double?> productQuantity;
+  final Value<String?> productQuantityUnit;
+  final Value<bool> isFluid;
   final Value<bool> isLiquid;
   final Value<String> source;
   final Value<String?> category;
@@ -6688,6 +6940,13 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.fiber = const Value.absent(),
     this.salt = const Value.absent(),
     this.caffeine = const Value.absent(),
+    this.caffeineMgPer100g = const Value.absent(),
+    this.ingredientsText = const Value.absent(),
+    this.ingredientsAnalysisTags = const Value.absent(),
+    this.additivesTags = const Value.absent(),
+    this.productQuantity = const Value.absent(),
+    this.productQuantityUnit = const Value.absent(),
+    this.isFluid = const Value.absent(),
     this.isLiquid = const Value.absent(),
     this.source = const Value.absent(),
     this.category = const Value.absent(),
@@ -6712,6 +6971,13 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.fiber = const Value.absent(),
     this.salt = const Value.absent(),
     this.caffeine = const Value.absent(),
+    this.caffeineMgPer100g = const Value.absent(),
+    this.ingredientsText = const Value.absent(),
+    this.ingredientsAnalysisTags = const Value.absent(),
+    this.additivesTags = const Value.absent(),
+    this.productQuantity = const Value.absent(),
+    this.productQuantityUnit = const Value.absent(),
+    this.isFluid = const Value.absent(),
     this.isLiquid = const Value.absent(),
     this.source = const Value.absent(),
     this.category = const Value.absent(),
@@ -6741,6 +7007,13 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<double>? fiber,
     Expression<double>? salt,
     Expression<double>? caffeine,
+    Expression<double>? caffeineMgPer100g,
+    Expression<String>? ingredientsText,
+    Expression<String>? ingredientsAnalysisTags,
+    Expression<String>? additivesTags,
+    Expression<double>? productQuantity,
+    Expression<String>? productQuantityUnit,
+    Expression<bool>? isFluid,
     Expression<bool>? isLiquid,
     Expression<String>? source,
     Expression<String>? category,
@@ -6765,6 +7038,15 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (fiber != null) 'fiber': fiber,
       if (salt != null) 'salt': salt,
       if (caffeine != null) 'caffeine': caffeine,
+      if (caffeineMgPer100g != null) 'caffeine_mg_per_100g': caffeineMgPer100g,
+      if (ingredientsText != null) 'ingredients_text': ingredientsText,
+      if (ingredientsAnalysisTags != null)
+        'ingredients_analysis_tags': ingredientsAnalysisTags,
+      if (additivesTags != null) 'additives_tags': additivesTags,
+      if (productQuantity != null) 'product_quantity': productQuantity,
+      if (productQuantityUnit != null)
+        'product_quantity_unit': productQuantityUnit,
+      if (isFluid != null) 'is_fluid': isFluid,
       if (isLiquid != null) 'is_liquid': isLiquid,
       if (source != null) 'source': source,
       if (category != null) 'category': category,
@@ -6791,6 +7073,13 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       Value<double?>? fiber,
       Value<double?>? salt,
       Value<double?>? caffeine,
+      Value<double?>? caffeineMgPer100g,
+      Value<String?>? ingredientsText,
+      Value<String?>? ingredientsAnalysisTags,
+      Value<String?>? additivesTags,
+      Value<double?>? productQuantity,
+      Value<String?>? productQuantityUnit,
+      Value<bool>? isFluid,
       Value<bool>? isLiquid,
       Value<String>? source,
       Value<String?>? category,
@@ -6814,6 +7103,14 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       fiber: fiber ?? this.fiber,
       salt: salt ?? this.salt,
       caffeine: caffeine ?? this.caffeine,
+      caffeineMgPer100g: caffeineMgPer100g ?? this.caffeineMgPer100g,
+      ingredientsText: ingredientsText ?? this.ingredientsText,
+      ingredientsAnalysisTags:
+          ingredientsAnalysisTags ?? this.ingredientsAnalysisTags,
+      additivesTags: additivesTags ?? this.additivesTags,
+      productQuantity: productQuantity ?? this.productQuantity,
+      productQuantityUnit: productQuantityUnit ?? this.productQuantityUnit,
+      isFluid: isFluid ?? this.isFluid,
       isLiquid: isLiquid ?? this.isLiquid,
       source: source ?? this.source,
       category: category ?? this.category,
@@ -6878,6 +7175,29 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     if (caffeine.present) {
       map['caffeine'] = Variable<double>(caffeine.value);
     }
+    if (caffeineMgPer100g.present) {
+      map['caffeine_mg_per_100g'] = Variable<double>(caffeineMgPer100g.value);
+    }
+    if (ingredientsText.present) {
+      map['ingredients_text'] = Variable<String>(ingredientsText.value);
+    }
+    if (ingredientsAnalysisTags.present) {
+      map['ingredients_analysis_tags'] =
+          Variable<String>(ingredientsAnalysisTags.value);
+    }
+    if (additivesTags.present) {
+      map['additives_tags'] = Variable<String>(additivesTags.value);
+    }
+    if (productQuantity.present) {
+      map['product_quantity'] = Variable<double>(productQuantity.value);
+    }
+    if (productQuantityUnit.present) {
+      map['product_quantity_unit'] =
+          Variable<String>(productQuantityUnit.value);
+    }
+    if (isFluid.present) {
+      map['is_fluid'] = Variable<bool>(isFluid.value);
+    }
     if (isLiquid.present) {
       map['is_liquid'] = Variable<bool>(isLiquid.value);
     }
@@ -6914,6 +7234,13 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('fiber: $fiber, ')
           ..write('salt: $salt, ')
           ..write('caffeine: $caffeine, ')
+          ..write('caffeineMgPer100g: $caffeineMgPer100g, ')
+          ..write('ingredientsText: $ingredientsText, ')
+          ..write('ingredientsAnalysisTags: $ingredientsAnalysisTags, ')
+          ..write('additivesTags: $additivesTags, ')
+          ..write('productQuantity: $productQuantity, ')
+          ..write('productQuantityUnit: $productQuantityUnit, ')
+          ..write('isFluid: $isFluid, ')
           ..write('isLiquid: $isLiquid, ')
           ..write('source: $source, ')
           ..write('category: $category, ')
@@ -8678,6 +9005,12 @@ class $FluidLogsTable extends FluidLogs
   late final GeneratedColumn<double> sugarPer100ml = GeneratedColumn<double>(
       'sugar_per100ml', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _carbsPer100mlMeta =
+      const VerificationMeta('carbsPer100ml');
+  @override
+  late final GeneratedColumn<double> carbsPer100ml = GeneratedColumn<double>(
+      'carbs_per100ml', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _caffeinePer100mlMeta =
       const VerificationMeta('caffeinePer100ml');
   @override
@@ -8706,6 +9039,7 @@ class $FluidLogsTable extends FluidLogs
         name,
         kcal,
         sugarPer100ml,
+        carbsPer100ml,
         caffeinePer100ml,
         linkedNutritionLogId
       ];
@@ -8768,6 +9102,12 @@ class $FluidLogsTable extends FluidLogs
           sugarPer100ml.isAcceptableOrUnknown(
               data['sugar_per100ml']!, _sugarPer100mlMeta));
     }
+    if (data.containsKey('carbs_per100ml')) {
+      context.handle(
+          _carbsPer100mlMeta,
+          carbsPer100ml.isAcceptableOrUnknown(
+              data['carbs_per100ml']!, _carbsPer100mlMeta));
+    }
     if (data.containsKey('caffeine_per100ml')) {
       context.handle(
           _caffeinePer100mlMeta,
@@ -8809,6 +9149,8 @@ class $FluidLogsTable extends FluidLogs
           .read(DriftSqlType.int, data['${effectivePrefix}kcal']),
       sugarPer100ml: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}sugar_per100ml']),
+      carbsPer100ml: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}carbs_per100ml']),
       caffeinePer100ml: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}caffeine_per100ml']),
       linkedNutritionLogId: attachedDatabase.typeMapping.read(
@@ -8834,6 +9176,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
   final String name;
   final int? kcal;
   final double? sugarPer100ml;
+  final double? carbsPer100ml;
   final double? caffeinePer100ml;
   final String? linkedNutritionLogId;
   const FluidLog(
@@ -8847,6 +9190,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       required this.name,
       this.kcal,
       this.sugarPer100ml,
+      this.carbsPer100ml,
       this.caffeinePer100ml,
       this.linkedNutritionLogId});
   @override
@@ -8867,6 +9211,9 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
     }
     if (!nullToAbsent || sugarPer100ml != null) {
       map['sugar_per100ml'] = Variable<double>(sugarPer100ml);
+    }
+    if (!nullToAbsent || carbsPer100ml != null) {
+      map['carbs_per100ml'] = Variable<double>(carbsPer100ml);
     }
     if (!nullToAbsent || caffeinePer100ml != null) {
       map['caffeine_per100ml'] = Variable<double>(caffeinePer100ml);
@@ -8893,6 +9240,9 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       sugarPer100ml: sugarPer100ml == null && nullToAbsent
           ? const Value.absent()
           : Value(sugarPer100ml),
+      carbsPer100ml: carbsPer100ml == null && nullToAbsent
+          ? const Value.absent()
+          : Value(carbsPer100ml),
       caffeinePer100ml: caffeinePer100ml == null && nullToAbsent
           ? const Value.absent()
           : Value(caffeinePer100ml),
@@ -8916,6 +9266,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       name: serializer.fromJson<String>(json['name']),
       kcal: serializer.fromJson<int?>(json['kcal']),
       sugarPer100ml: serializer.fromJson<double?>(json['sugarPer100ml']),
+      carbsPer100ml: serializer.fromJson<double?>(json['carbsPer100ml']),
       caffeinePer100ml: serializer.fromJson<double?>(json['caffeinePer100ml']),
       linkedNutritionLogId:
           serializer.fromJson<String?>(json['linkedNutritionLogId']),
@@ -8935,6 +9286,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       'name': serializer.toJson<String>(name),
       'kcal': serializer.toJson<int?>(kcal),
       'sugarPer100ml': serializer.toJson<double?>(sugarPer100ml),
+      'carbsPer100ml': serializer.toJson<double?>(carbsPer100ml),
       'caffeinePer100ml': serializer.toJson<double?>(caffeinePer100ml),
       'linkedNutritionLogId': serializer.toJson<String?>(linkedNutritionLogId),
     };
@@ -8951,6 +9303,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
           String? name,
           Value<int?> kcal = const Value.absent(),
           Value<double?> sugarPer100ml = const Value.absent(),
+          Value<double?> carbsPer100ml = const Value.absent(),
           Value<double?> caffeinePer100ml = const Value.absent(),
           Value<String?> linkedNutritionLogId = const Value.absent()}) =>
       FluidLog(
@@ -8965,6 +9318,8 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
         kcal: kcal.present ? kcal.value : this.kcal,
         sugarPer100ml:
             sugarPer100ml.present ? sugarPer100ml.value : this.sugarPer100ml,
+        carbsPer100ml:
+            carbsPer100ml.present ? carbsPer100ml.value : this.carbsPer100ml,
         caffeinePer100ml: caffeinePer100ml.present
             ? caffeinePer100ml.value
             : this.caffeinePer100ml,
@@ -8987,6 +9342,9 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       sugarPer100ml: data.sugarPer100ml.present
           ? data.sugarPer100ml.value
           : this.sugarPer100ml,
+      carbsPer100ml: data.carbsPer100ml.present
+          ? data.carbsPer100ml.value
+          : this.carbsPer100ml,
       caffeinePer100ml: data.caffeinePer100ml.present
           ? data.caffeinePer100ml.value
           : this.caffeinePer100ml,
@@ -9009,6 +9367,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
           ..write('name: $name, ')
           ..write('kcal: $kcal, ')
           ..write('sugarPer100ml: $sugarPer100ml, ')
+          ..write('carbsPer100ml: $carbsPer100ml, ')
           ..write('caffeinePer100ml: $caffeinePer100ml, ')
           ..write('linkedNutritionLogId: $linkedNutritionLogId')
           ..write(')'))
@@ -9027,6 +9386,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       name,
       kcal,
       sugarPer100ml,
+      carbsPer100ml,
       caffeinePer100ml,
       linkedNutritionLogId);
   @override
@@ -9043,6 +9403,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
           other.name == this.name &&
           other.kcal == this.kcal &&
           other.sugarPer100ml == this.sugarPer100ml &&
+          other.carbsPer100ml == this.carbsPer100ml &&
           other.caffeinePer100ml == this.caffeinePer100ml &&
           other.linkedNutritionLogId == this.linkedNutritionLogId);
 }
@@ -9058,6 +9419,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
   final Value<String> name;
   final Value<int?> kcal;
   final Value<double?> sugarPer100ml;
+  final Value<double?> carbsPer100ml;
   final Value<double?> caffeinePer100ml;
   final Value<String?> linkedNutritionLogId;
   const FluidLogsCompanion({
@@ -9071,6 +9433,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     this.name = const Value.absent(),
     this.kcal = const Value.absent(),
     this.sugarPer100ml = const Value.absent(),
+    this.carbsPer100ml = const Value.absent(),
     this.caffeinePer100ml = const Value.absent(),
     this.linkedNutritionLogId = const Value.absent(),
   });
@@ -9085,6 +9448,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     required String name,
     this.kcal = const Value.absent(),
     this.sugarPer100ml = const Value.absent(),
+    this.carbsPer100ml = const Value.absent(),
     this.caffeinePer100ml = const Value.absent(),
     this.linkedNutritionLogId = const Value.absent(),
   })  : consumedAt = Value(consumedAt),
@@ -9101,6 +9465,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     Expression<String>? name,
     Expression<int>? kcal,
     Expression<double>? sugarPer100ml,
+    Expression<double>? carbsPer100ml,
     Expression<double>? caffeinePer100ml,
     Expression<String>? linkedNutritionLogId,
   }) {
@@ -9115,6 +9480,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
       if (name != null) 'name': name,
       if (kcal != null) 'kcal': kcal,
       if (sugarPer100ml != null) 'sugar_per100ml': sugarPer100ml,
+      if (carbsPer100ml != null) 'carbs_per100ml': carbsPer100ml,
       if (caffeinePer100ml != null) 'caffeine_per100ml': caffeinePer100ml,
       if (linkedNutritionLogId != null)
         'linked_nutrition_log_id': linkedNutritionLogId,
@@ -9132,6 +9498,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
       Value<String>? name,
       Value<int?>? kcal,
       Value<double?>? sugarPer100ml,
+      Value<double?>? carbsPer100ml,
       Value<double?>? caffeinePer100ml,
       Value<String?>? linkedNutritionLogId}) {
     return FluidLogsCompanion(
@@ -9145,6 +9512,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
       name: name ?? this.name,
       kcal: kcal ?? this.kcal,
       sugarPer100ml: sugarPer100ml ?? this.sugarPer100ml,
+      carbsPer100ml: carbsPer100ml ?? this.carbsPer100ml,
       caffeinePer100ml: caffeinePer100ml ?? this.caffeinePer100ml,
       linkedNutritionLogId: linkedNutritionLogId ?? this.linkedNutritionLogId,
     );
@@ -9183,6 +9551,9 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     if (sugarPer100ml.present) {
       map['sugar_per100ml'] = Variable<double>(sugarPer100ml.value);
     }
+    if (carbsPer100ml.present) {
+      map['carbs_per100ml'] = Variable<double>(carbsPer100ml.value);
+    }
     if (caffeinePer100ml.present) {
       map['caffeine_per100ml'] = Variable<double>(caffeinePer100ml.value);
     }
@@ -9206,6 +9577,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
           ..write('name: $name, ')
           ..write('kcal: $kcal, ')
           ..write('sugarPer100ml: $sugarPer100ml, ')
+          ..write('carbsPer100ml: $carbsPer100ml, ')
           ..write('caffeinePer100ml: $caffeinePer100ml, ')
           ..write('linkedNutritionLogId: $linkedNutritionLogId')
           ..write(')'))
@@ -18234,6 +18606,13 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   Value<double?> fiber,
   Value<double?> salt,
   Value<double?> caffeine,
+  Value<double?> caffeineMgPer100g,
+  Value<String?> ingredientsText,
+  Value<String?> ingredientsAnalysisTags,
+  Value<String?> additivesTags,
+  Value<double?> productQuantity,
+  Value<String?> productQuantityUnit,
+  Value<bool> isFluid,
   Value<bool> isLiquid,
   Value<String> source,
   Value<String?> category,
@@ -18258,6 +18637,13 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<double?> fiber,
   Value<double?> salt,
   Value<double?> caffeine,
+  Value<double?> caffeineMgPer100g,
+  Value<String?> ingredientsText,
+  Value<String?> ingredientsAnalysisTags,
+  Value<String?> additivesTags,
+  Value<double?> productQuantity,
+  Value<String?> productQuantityUnit,
+  Value<bool> isFluid,
   Value<bool> isLiquid,
   Value<String> source,
   Value<String?> category,
@@ -18361,6 +18747,32 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<double> get caffeine => $composableBuilder(
       column: $table.caffeine, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get caffeineMgPer100g => $composableBuilder(
+      column: $table.caffeineMgPer100g,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ingredientsText => $composableBuilder(
+      column: $table.ingredientsText,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ingredientsAnalysisTags => $composableBuilder(
+      column: $table.ingredientsAnalysisTags,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get additivesTags => $composableBuilder(
+      column: $table.additivesTags, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get productQuantity => $composableBuilder(
+      column: $table.productQuantity,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productQuantityUnit => $composableBuilder(
+      column: $table.productQuantityUnit,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isFluid => $composableBuilder(
+      column: $table.isFluid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isLiquid => $composableBuilder(
       column: $table.isLiquid, builder: (column) => ColumnFilters(column));
@@ -18480,6 +18892,33 @@ class $$ProductsTableOrderingComposer
   ColumnOrderings<double> get caffeine => $composableBuilder(
       column: $table.caffeine, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get caffeineMgPer100g => $composableBuilder(
+      column: $table.caffeineMgPer100g,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ingredientsText => $composableBuilder(
+      column: $table.ingredientsText,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ingredientsAnalysisTags => $composableBuilder(
+      column: $table.ingredientsAnalysisTags,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get additivesTags => $composableBuilder(
+      column: $table.additivesTags,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get productQuantity => $composableBuilder(
+      column: $table.productQuantity,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productQuantityUnit => $composableBuilder(
+      column: $table.productQuantityUnit,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isFluid => $composableBuilder(
+      column: $table.isFluid, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isLiquid => $composableBuilder(
       column: $table.isLiquid, builder: (column) => ColumnOrderings(column));
 
@@ -18555,6 +18994,27 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<double> get caffeine =>
       $composableBuilder(column: $table.caffeine, builder: (column) => column);
+
+  GeneratedColumn<double> get caffeineMgPer100g => $composableBuilder(
+      column: $table.caffeineMgPer100g, builder: (column) => column);
+
+  GeneratedColumn<String> get ingredientsText => $composableBuilder(
+      column: $table.ingredientsText, builder: (column) => column);
+
+  GeneratedColumn<String> get ingredientsAnalysisTags => $composableBuilder(
+      column: $table.ingredientsAnalysisTags, builder: (column) => column);
+
+  GeneratedColumn<String> get additivesTags => $composableBuilder(
+      column: $table.additivesTags, builder: (column) => column);
+
+  GeneratedColumn<double> get productQuantity => $composableBuilder(
+      column: $table.productQuantity, builder: (column) => column);
+
+  GeneratedColumn<String> get productQuantityUnit => $composableBuilder(
+      column: $table.productQuantityUnit, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFluid =>
+      $composableBuilder(column: $table.isFluid, builder: (column) => column);
 
   GeneratedColumn<bool> get isLiquid =>
       $composableBuilder(column: $table.isLiquid, builder: (column) => column);
@@ -18652,6 +19112,13 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<double?> fiber = const Value.absent(),
             Value<double?> salt = const Value.absent(),
             Value<double?> caffeine = const Value.absent(),
+            Value<double?> caffeineMgPer100g = const Value.absent(),
+            Value<String?> ingredientsText = const Value.absent(),
+            Value<String?> ingredientsAnalysisTags = const Value.absent(),
+            Value<String?> additivesTags = const Value.absent(),
+            Value<double?> productQuantity = const Value.absent(),
+            Value<String?> productQuantityUnit = const Value.absent(),
+            Value<bool> isFluid = const Value.absent(),
             Value<bool> isLiquid = const Value.absent(),
             Value<String> source = const Value.absent(),
             Value<String?> category = const Value.absent(),
@@ -18676,6 +19143,13 @@ class $$ProductsTableTableManager extends RootTableManager<
             fiber: fiber,
             salt: salt,
             caffeine: caffeine,
+            caffeineMgPer100g: caffeineMgPer100g,
+            ingredientsText: ingredientsText,
+            ingredientsAnalysisTags: ingredientsAnalysisTags,
+            additivesTags: additivesTags,
+            productQuantity: productQuantity,
+            productQuantityUnit: productQuantityUnit,
+            isFluid: isFluid,
             isLiquid: isLiquid,
             source: source,
             category: category,
@@ -18700,6 +19174,13 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<double?> fiber = const Value.absent(),
             Value<double?> salt = const Value.absent(),
             Value<double?> caffeine = const Value.absent(),
+            Value<double?> caffeineMgPer100g = const Value.absent(),
+            Value<String?> ingredientsText = const Value.absent(),
+            Value<String?> ingredientsAnalysisTags = const Value.absent(),
+            Value<String?> additivesTags = const Value.absent(),
+            Value<double?> productQuantity = const Value.absent(),
+            Value<String?> productQuantityUnit = const Value.absent(),
+            Value<bool> isFluid = const Value.absent(),
             Value<bool> isLiquid = const Value.absent(),
             Value<String> source = const Value.absent(),
             Value<String?> category = const Value.absent(),
@@ -18724,6 +19205,13 @@ class $$ProductsTableTableManager extends RootTableManager<
             fiber: fiber,
             salt: salt,
             caffeine: caffeine,
+            caffeineMgPer100g: caffeineMgPer100g,
+            ingredientsText: ingredientsText,
+            ingredientsAnalysisTags: ingredientsAnalysisTags,
+            additivesTags: additivesTags,
+            productQuantity: productQuantity,
+            productQuantityUnit: productQuantityUnit,
+            isFluid: isFluid,
             isLiquid: isLiquid,
             source: source,
             category: category,
@@ -20196,6 +20684,7 @@ typedef $$FluidLogsTableCreateCompanionBuilder = FluidLogsCompanion Function({
   required String name,
   Value<int?> kcal,
   Value<double?> sugarPer100ml,
+  Value<double?> carbsPer100ml,
   Value<double?> caffeinePer100ml,
   Value<String?> linkedNutritionLogId,
 });
@@ -20210,6 +20699,7 @@ typedef $$FluidLogsTableUpdateCompanionBuilder = FluidLogsCompanion Function({
   Value<String> name,
   Value<int?> kcal,
   Value<double?> sugarPer100ml,
+  Value<double?> carbsPer100ml,
   Value<double?> caffeinePer100ml,
   Value<String?> linkedNutritionLogId,
 });
@@ -20273,6 +20763,9 @@ class $$FluidLogsTableFilterComposer
 
   ColumnFilters<double> get sugarPer100ml => $composableBuilder(
       column: $table.sugarPer100ml, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get carbsPer100ml => $composableBuilder(
+      column: $table.carbsPer100ml, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get caffeinePer100ml => $composableBuilder(
       column: $table.caffeinePer100ml,
@@ -20339,6 +20832,10 @@ class $$FluidLogsTableOrderingComposer
       column: $table.sugarPer100ml,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get carbsPer100ml => $composableBuilder(
+      column: $table.carbsPer100ml,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<double> get caffeinePer100ml => $composableBuilder(
       column: $table.caffeinePer100ml,
       builder: (column) => ColumnOrderings(column));
@@ -20403,6 +20900,9 @@ class $$FluidLogsTableAnnotationComposer
   GeneratedColumn<double> get sugarPer100ml => $composableBuilder(
       column: $table.sugarPer100ml, builder: (column) => column);
 
+  GeneratedColumn<double> get carbsPer100ml => $composableBuilder(
+      column: $table.carbsPer100ml, builder: (column) => column);
+
   GeneratedColumn<double> get caffeinePer100ml => $composableBuilder(
       column: $table.caffeinePer100ml, builder: (column) => column);
 
@@ -20460,6 +20960,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<int?> kcal = const Value.absent(),
             Value<double?> sugarPer100ml = const Value.absent(),
+            Value<double?> carbsPer100ml = const Value.absent(),
             Value<double?> caffeinePer100ml = const Value.absent(),
             Value<String?> linkedNutritionLogId = const Value.absent(),
           }) =>
@@ -20474,6 +20975,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             name: name,
             kcal: kcal,
             sugarPer100ml: sugarPer100ml,
+            carbsPer100ml: carbsPer100ml,
             caffeinePer100ml: caffeinePer100ml,
             linkedNutritionLogId: linkedNutritionLogId,
           ),
@@ -20488,6 +20990,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             required String name,
             Value<int?> kcal = const Value.absent(),
             Value<double?> sugarPer100ml = const Value.absent(),
+            Value<double?> carbsPer100ml = const Value.absent(),
             Value<double?> caffeinePer100ml = const Value.absent(),
             Value<String?> linkedNutritionLogId = const Value.absent(),
           }) =>
@@ -20502,6 +21005,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             name: name,
             kcal: kcal,
             sugarPer100ml: sugarPer100ml,
+            carbsPer100ml: carbsPer100ml,
             caffeinePer100ml: caffeinePer100ml,
             linkedNutritionLogId: linkedNutritionLogId,
           ),

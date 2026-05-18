@@ -3,12 +3,12 @@ import 'package:train_libre/features/sharing/routine_share_formatter.dart';
 import 'package:train_libre/features/sharing/share_labels.dart';
 import 'package:train_libre/features/sharing/share_set_type.dart';
 import 'package:train_libre/features/sharing/workout_share_formatter.dart';
-import 'package:train_libre/models/exercise.dart';
-import 'package:train_libre/models/routine.dart';
-import 'package:train_libre/models/routine_exercise.dart';
-import 'package:train_libre/models/set_log.dart';
-import 'package:train_libre/models/set_template.dart';
-import 'package:train_libre/models/workout_log.dart';
+import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart';
+import 'package:train_libre/features/workout/domain/models/routine.dart';
+import 'package:train_libre/features/workout/domain/models/routine_exercise.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart';
+import 'package:train_libre/features/workout/domain/models/set_template.dart';
+import 'package:train_libre/features/workout/domain/models/workout_log.dart';
 
 void main() {
   final english = _labels();
