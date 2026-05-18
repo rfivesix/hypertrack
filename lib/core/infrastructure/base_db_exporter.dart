@@ -1,9 +1,9 @@
-// lib/data/base_db_exporter.dart
+// lib/core/infrastructure/base_db_exporter.dart
 import 'package:share_plus/share_plus.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
-import '../config/app_data_sources.dart';
-import '../features/diary/data/sources/product_local_data_source.dart';
+import '../../config/app_data_sources.dart';
+import '../../features/diary/data/sources/product_local_data_source.dart';
 
 /// Utility class for exporting and sharing the base database file.
 class BaseDbExporter {

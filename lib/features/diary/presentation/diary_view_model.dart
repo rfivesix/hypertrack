@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../domain/repositories/diary_repository.dart';
 import '../../supplements/domain/repositories/supplement_repository.dart';
 import '../../workout/domain/repositories/workout_repository.dart';
-import '../../../data/user_preferences_repository.dart';
+import '../../../core/infrastructure/user_preferences_repository.dart';
 import '../domain/calculate_daily_nutrition_use_case.dart';
 import '../domain/models/daily_nutrition.dart';
 import '../domain/models/fluid_entry.dart';
