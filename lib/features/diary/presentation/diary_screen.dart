@@ -42,7 +42,6 @@ import 'ai_recommendation_screen.dart';
 import '../../workout/presentation/workout_history_screen.dart';
 import '../../workout/presentation/widgets/todays_workout_summary_card.dart';
 
-
 /// The central hub for tracking and viewing daily nutritional and activity data.
 ///
 /// Displays a comprehensive overview of calories, macros, supplements, and workouts
@@ -75,10 +74,13 @@ class _DiaryScreenContent extends StatefulWidget {
 
 class DiaryScreenState extends State<_DiaryScreenContent> {
   DiaryViewModel get viewModel => context.read<DiaryViewModel>();
-  ValueNotifier<DateTime> get selectedDateNotifier => viewModel.selectedDateNotifier;
+  ValueNotifier<DateTime> get selectedDateNotifier =>
+      viewModel.selectedDateNotifier;
 
-  Future<void> loadDataForDate(DateTime date, {bool queueIfInFlight = false, bool forceStepsRefresh = false}) async {
-    return context.read<DiaryViewModel>().loadDataForDate(date, queueIfInFlight: queueIfInFlight, forceStepsRefresh: forceStepsRefresh);
+  Future<void> loadDataForDate(DateTime date,
+      {bool queueIfInFlight = false, bool forceStepsRefresh = false}) async {
+    return context.read<DiaryViewModel>().loadDataForDate(date,
+        queueIfInFlight: queueIfInFlight, forceStepsRefresh: forceStepsRefresh);
   }
 
   String _selectedChartRangeKey = '30D';
@@ -89,8 +91,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     "mealtypeSnack": false,
     "fluids": false,
   };
-
-
 
   Future<void> _deleteFoodEntry(int id) async {
     final viewModel = context.read<DiaryViewModel>();
@@ -445,7 +445,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
               key: dialogStateKey,
               item: item,
               initialMealType: mealType,
-              initialTimestamp: (initialDate ?? viewModel.selectedDate).withCurrentTime,
+              initialTimestamp:
+                  (initialDate ?? viewModel.selectedDate).withCurrentTime,
             ),
             // ... (rest of the method: buttons, etc. stays the same) ...
             const SizedBox(height: 12),
@@ -634,8 +635,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     return viewModel.isLoading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
-            onRefresh: () =>
-                loadDataForDate(viewModel.selectedDate, forceStepsRefresh: true),
+            onRefresh: () => loadDataForDate(viewModel.selectedDate,
+                forceStepsRefresh: true),
             child: ListView(
               padding: finalPadding,
               children: [
@@ -655,15 +656,22 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                       .push(
                         MaterialPageRoute(
                           // FIX #65: Pass date along
-                          builder: (context) =>
-                              SupplementTrackScreen(initialDate: viewModel.selectedDate),
+                          builder: (context) => SupplementTrackScreen(
+                              initialDate: viewModel.selectedDate),
                         ),
                       )
-                      .then((_) => viewModel.loadDataForDate(viewModel.selectedDate)),
+                      .then((_) =>
+                          viewModel.loadDataForDate(viewModel.selectedDate)),
                 ),
-                if (viewModel.stepsTrackingEnabled) ...[_buildStepsSummaryCard()],
-                if (viewModel.sleepTrackingEnabled) ...[_buildSleepSummaryCard()],
-                if (viewModel.pulseTrackingEnabled) ...[_buildPulseSummaryCard()],
+                if (viewModel.stepsTrackingEnabled) ...[
+                  _buildStepsSummaryCard()
+                ],
+                if (viewModel.sleepTrackingEnabled) ...[
+                  _buildSleepSummaryCard()
+                ],
+                if (viewModel.pulseTrackingEnabled) ...[
+                  _buildPulseSummaryCard()
+                ],
                 // New section: insert workout summary here.
                 if (viewModel.workoutSummary != null) ...[
                   TodaysWorkoutSummaryCard(
@@ -783,7 +791,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     final scoreText = score == null ? '--' : score.round().toString();
     return SummaryCard(
       margin: const EdgeInsets.symmetric(vertical: 4.0),
-      onTap: () => SleepNavigation.openDayForDate(context, viewModel.selectedDate),
+      onTap: () =>
+          SleepNavigation.openDayForDate(context, viewModel.selectedDate),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
@@ -962,7 +971,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                           ),
                         ),
                       );
-                      if (result == true) viewModel.loadDataForDate(viewModel.selectedDate);
+                      if (result == true)
+                        viewModel.loadDataForDate(viewModel.selectedDate);
                     },
                     tooltip: 'AI Recommend',
                   ),
@@ -1210,7 +1220,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
             duration: DesignConstants.expandCollapseDuration,
             firstChild: Column(
               children: [
-                if (viewModel.fluidEntries.isNotEmpty) const Divider(height: 16),
+                if (viewModel.fluidEntries.isNotEmpty)
+                  const Divider(height: 16),
                 ...viewModel.fluidEntries.map(
                   (entry) => _buildFluidEntryTile(l10n, entry),
                 ),
@@ -1344,15 +1355,17 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
           onTap: () {
             Navigator.of(context)
                 .push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        FoodDetailScreen(trackedItem: trackedItem),
-                  ),
-                )
+              MaterialPageRoute(
+                builder: (context) =>
+                    FoodDetailScreen(trackedItem: trackedItem),
+              ),
+            )
                 .then((_) {
-                  if (!mounted) return;
-                  context.read<DiaryViewModel>().loadDataForDate(context.read<DiaryViewModel>().selectedDate);
-                });
+              if (!mounted) return;
+              context
+                  .read<DiaryViewModel>()
+                  .loadDataForDate(context.read<DiaryViewModel>().selectedDate);
+            });
           },
         ),
       ),

@@ -7,7 +7,7 @@ import 'package:excel_community/excel_community.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
-import 'workout_database_helper.dart';
+import '../features/workout/data/sources/workout_local_data_source.dart';
 import 'database_helper.dart';
 
 class ExportManager {
@@ -31,7 +31,7 @@ class ExportManager {
       TextCellValue('Notizen'),
     ]);
 
-    final workoutHelper = WorkoutDatabaseHelper.instance;
+    final workoutHelper = WorkoutLocalDataSource.instance;
     final allWorkoutLogs = await workoutHelper.getWorkoutLogs();
 
     for (var log in allWorkoutLogs) {

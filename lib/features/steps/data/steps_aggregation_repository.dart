@@ -356,7 +356,8 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
   Future<bool> isTrackingEnabled() => stepsSyncService.isTrackingEnabled();
 
   @override
-  Future<int> getCurrentTargetStepsOrDefault() => dbHelper.getCurrentTargetStepsOrDefault();
+  Future<int> getCurrentTargetStepsOrDefault() =>
+      dbHelper.getCurrentTargetStepsOrDefault();
 
   DateTime _atStartOfDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);

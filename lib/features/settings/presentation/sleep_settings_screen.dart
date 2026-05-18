@@ -352,6 +352,4 @@ class _SleepSettingsScreenState extends State<SleepSettingsScreen> {
       ),
     );
   }
-
-
 }

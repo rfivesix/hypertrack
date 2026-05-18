@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../statistics/data/statistics_hub_data_adapter.dart';
 import '../../statistics/domain/body_nutrition_analytics_models.dart';
 import '../../statistics/domain/consistency_payload_models.dart';
@@ -210,7 +210,8 @@ class StatisticsHubViewModel extends ChangeNotifier {
 
   SectionLoadState<RecoveryAnalyticsPayload> _recoveryState =
       const SectionLoadState<RecoveryAnalyticsPayload>();
-  SectionLoadState<RecoveryAnalyticsPayload> get recoveryState => _recoveryState;
+  SectionLoadState<RecoveryAnalyticsPayload> get recoveryState =>
+      _recoveryState;
 
   SectionLoadState<SleepHubSummary> _sleepState =
       const SectionLoadState<SleepHubSummary>();
@@ -222,19 +223,23 @@ class StatisticsHubViewModel extends ChangeNotifier {
 
   SectionLoadState<ConsistencySectionData> _consistencyState =
       const SectionLoadState<ConsistencySectionData>();
-  SectionLoadState<ConsistencySectionData> get consistencyState => _consistencyState;
+  SectionLoadState<ConsistencySectionData> get consistencyState =>
+      _consistencyState;
 
   SectionLoadState<PerformanceRecordsSectionData> _performanceState =
       const SectionLoadState<PerformanceRecordsSectionData>();
-  SectionLoadState<PerformanceRecordsSectionData> get performanceState => _performanceState;
+  SectionLoadState<PerformanceRecordsSectionData> get performanceState =>
+      _performanceState;
 
   SectionLoadState<VolumeMusclesSectionData> _volumeMusclesState =
       const SectionLoadState<VolumeMusclesSectionData>();
-  SectionLoadState<VolumeMusclesSectionData> get volumeMusclesState => _volumeMusclesState;
+  SectionLoadState<VolumeMusclesSectionData> get volumeMusclesState =>
+      _volumeMusclesState;
 
   SectionLoadState<BodyNutritionAnalyticsResult> _bodyNutritionState =
       const SectionLoadState<BodyNutritionAnalyticsResult>();
-  SectionLoadState<BodyNutritionAnalyticsResult> get bodyNutritionState => _bodyNutritionState;
+  SectionLoadState<BodyNutritionAnalyticsResult> get bodyNutritionState =>
+      _bodyNutritionState;
 
   bool _stepsTrackingEnabled = false;
   bool get stepsTrackingEnabled => _stepsTrackingEnabled;
@@ -293,14 +298,13 @@ class StatisticsHubViewModel extends ChangeNotifier {
     Future<String> Function()? stepsProviderNameLoader,
   })  : _hubDataAdapter = hubDataAdapter ??
             StatisticsHubDataAdapter(
-              workoutDatabaseHelper: WorkoutDatabaseHelper.instance,
+              workoutDatabaseHelper: WorkoutLocalDataSource.instance,
             ),
         _stepsRepository =
             stepsRepository ?? HealthStepsAggregationRepository(),
         _sleepSummaryRepository =
             sleepSummaryRepository ?? SleepHubSummaryRepository(),
-        _pulseRepository =
-            pulseRepository ?? HealthPulseAnalysisRepository(),
+        _pulseRepository = pulseRepository ?? HealthPulseAnalysisRepository(),
         _stepsSyncService = stepsSyncService ?? StepsSyncService(),
         _sleepSyncService = sleepSyncService ?? SleepSyncService(),
         _fetchHubAnalyticsOverride = fetchHubAnalytics,
@@ -502,7 +506,8 @@ class StatisticsHubViewModel extends ChangeNotifier {
         _stepsRepository.isTrackingEnabled(),
         _targetStepsLoaderOverride?.call() ??
             _stepsRepository.getCurrentTargetStepsOrDefault(),
-        _stepsProviderNameLoaderOverride?.call() ?? _loadStepsProviderNameDefault(),
+        _stepsProviderNameLoaderOverride?.call() ??
+            _loadStepsProviderNameDefault(),
       ]);
       if (!_isCurrentStepsLoad(generation)) return;
 

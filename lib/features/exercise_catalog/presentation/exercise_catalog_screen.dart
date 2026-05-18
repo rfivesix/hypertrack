@@ -35,7 +35,8 @@ class ExerciseCatalogScreen extends StatefulWidget {
 }
 
 class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
-  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
+  late final IExerciseCatalogRepository _repository =
+      widget.repository ?? context.read<IExerciseCatalogRepository>();
   List<Exercise> _foundExercises = [];
   bool _isLoading = true;
   final _searchController = TextEditingController();
@@ -267,7 +268,8 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           ExerciseDetailScreen(
-                                              exercise: exercise, repository: _repository),
+                                              exercise: exercise,
+                                              repository: _repository),
                                     ),
                                   );
                                 }
@@ -291,7 +293,8 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           Navigator.of(context)
               .push(
             MaterialPageRoute(
-              builder: (context) => CreateExerciseScreen(repository: _repository),
+              builder: (context) =>
+                  CreateExerciseScreen(repository: _repository),
             ),
           )
               .then((wasCreated) {

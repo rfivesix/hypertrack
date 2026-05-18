@@ -18,7 +18,8 @@ class CreateExerciseScreen extends StatefulWidget {
 }
 
 class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
-  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
+  late final IExerciseCatalogRepository _repository =
+      widget.repository ?? context.read<IExerciseCatalogRepository>();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -79,8 +80,8 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     setState(() => _isLoading = true);
     try {
       final categories = await _repository.getAllCategories();
-      // Muscle groups are not in catalog repository yet, but let's see how they are implemented in WorkoutDatabaseHelper.
-      // WorkoutDatabaseHelper has `getAllMuscleGroups`. Let's use `WorkoutDatabaseHelper.instance.getAllMuscleGroups()` for muscle groups
+      // Muscle groups are not in catalog repository yet, but let's see how they are implemented in WorkoutLocalDataSource.
+      // WorkoutLocalDataSource has `getAllMuscleGroups`. Let's use `WorkoutLocalDataSource.instance.getAllMuscleGroups()` for muscle groups
       // as muscles are shared. Or let's proxy muscle groups in ExerciseCatalogRepository too.
       // Wait, is there any other place? Let's check. Yes, let's keep it robust.
       final muscles = await _repository.getAllMuscleGroups();
@@ -203,7 +204,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
-
                     DropdownButtonFormField<String>(
                       initialValue: _selectedCategory,
                       items: _allCategories.map((cat) {
@@ -225,7 +225,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                       },
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
-
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
@@ -235,7 +234,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                       maxLines: 3,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-
                     AppSectionHeader(title: l10n.primary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(
@@ -243,14 +241,12 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                       selectedMuscles: _selectedPrimaryMuscles,
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
-
                     AppSectionHeader(title: l10n.secondary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(
                       availableMuscles: _allMuscleGroups,
                       selectedMuscles: _selectedSecondaryMuscles,
                     ),
-
                     const SizedBox(height: DesignConstants.spacingXXL),
                   ],
                 ),

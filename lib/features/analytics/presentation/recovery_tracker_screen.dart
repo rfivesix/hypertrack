@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../statistics/domain/analytics_state.dart';
 import '../../statistics/domain/recovery_domain_service.dart';
 import '../../statistics/domain/recovery_payload_models.dart';
@@ -44,7 +44,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
 
   Future<void> _loadRecovery() async {
     setState(() => _isLoading = true);
-    final data = await WorkoutDatabaseHelper.instance.getRecoveryAnalytics();
+    final data = await WorkoutLocalDataSource.instance.getRecoveryAnalytics();
     if (!mounted) return;
     setState(() {
       _recovery = RecoveryAnalyticsPayload.fromMap(data);

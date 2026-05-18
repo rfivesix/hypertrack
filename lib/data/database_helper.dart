@@ -16,7 +16,7 @@ import '../features/supplements/domain/models/supplement.dart';
 import '../features/supplements/domain/models/supplement_log.dart';
 import '../services/health/steps_sync_service.dart';
 import '../util/perf_debug_timer.dart';
-import 'product_database_helper.dart';
+import '../features/diary/data/sources/product_local_data_source.dart';
 
 /// Main helper for general application data persistence using the Drift database.
 ///
@@ -2425,16 +2425,16 @@ class DatabaseHelper {
     int consumedFat = 0;
 
     final entries = await getEntriesForDate(date);
-    final productDb = ProductDatabaseHelper.instance;
+    final productDb = ProductLocalDataSource.instance;
 
     for (final entry in entries) {
       final food = await productDb.getProductByBarcode(entry.barcode);
       if (food != null) {
         final factor = entry.quantityInGrams / 100.0;
-        consumedKcal += (food.calories * factor).round();
-        consumedProtein += (food.protein * factor).round();
-        consumedCarbs += (food.carbs * factor).round();
-        consumedFat += (food.fat * factor).round();
+        consumedKcal += (food.calories.toDouble() * factor).round();
+        consumedProtein += (food.protein.toDouble() * factor).round();
+        consumedCarbs += (food.carbs.toDouble() * factor).round();
+        consumedFat += (food.fat.toDouble() * factor).round();
       }
     }
 

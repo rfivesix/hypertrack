@@ -419,6 +419,4 @@ class _FeedbackReportScreenState extends State<FeedbackReportScreen> {
       ),
     );
   }
-
-
 }

@@ -482,6 +482,4 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
             ),
     );
   }
-
-
 }

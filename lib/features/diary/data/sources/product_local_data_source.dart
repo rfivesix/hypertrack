@@ -2,30 +2,37 @@
 
 import 'package:path_provider/path_provider.dart';
 import 'package:drift/drift.dart';
-import 'database_helper.dart';
-import 'drift_database.dart' as db;
-import '../config/app_data_sources.dart';
-import '../features/diary/domain/models/food_item.dart';
-import '../services/catalog_file_migration.dart';
-import '../util/perf_debug_timer.dart';
-import '../domain/use_cases/evaluate_food_source_use_case.dart';
+import '../../../../data/database_helper.dart';
+import '../../../../data/drift_database.dart' as db;
+import '../../../../config/app_data_sources.dart';
+import '../../domain/models/food_item.dart';
+import '../../../../services/catalog_file_migration.dart';
+import '../../../../util/perf_debug_timer.dart';
+import '../../domain/use_cases/evaluate_food_source_use_case.dart';
 
 /// Helper class for managing food product data in the Drift database.
 ///
 /// Provides methods for searching products, managing favorites, and retrieving
 /// base foods from the katalog.
-class ProductDatabaseHelper {
-  /// Singleton instance of [ProductDatabaseHelper].
-  static final ProductDatabaseHelper instance = ProductDatabaseHelper._init();
+class ProductLocalDataSource {
+  final db.AppDatabase? _dbInstance;
+  final DatabaseHelper? _dbHelper;
 
-  final DatabaseHelper _databaseHelper;
+  static final ProductLocalDataSource instance = ProductLocalDataSource._init();
 
-  ProductDatabaseHelper._init() : _databaseHelper = DatabaseHelper.instance;
-  ProductDatabaseHelper.forTesting({required DatabaseHelper databaseHelper})
-      : _databaseHelper = databaseHelper;
+  ProductLocalDataSource._init()
+      : _dbInstance = null,
+        _dbHelper = DatabaseHelper.instance;
+  ProductLocalDataSource(this._dbInstance) : _dbHelper = null;
+  ProductLocalDataSource.forTesting({required DatabaseHelper databaseHelper})
+      : _dbInstance = null,
+        _dbHelper = databaseHelper;
 
   // Access to the central Drift instance
-  Future<db.AppDatabase> get database async => _databaseHelper.database;
+  Future<db.AppDatabase> get database async {
+    if (_dbInstance != null) return _dbInstance!;
+    return _dbHelper!.database;
+  }
 
   // --- MAPPING HELPERS ---
 

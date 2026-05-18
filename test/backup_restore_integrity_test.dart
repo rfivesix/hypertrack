@@ -6,8 +6,8 @@ import 'package:train_libre/data/backup_manager.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion, ExercisesCompanion;
-import 'package:train_libre/data/product_database_helper.dart';
-import 'package:train_libre/data/workout_database_helper.dart';
+import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
 import 'package:train_libre/features/diary/domain/models/food_entry.dart';
 import 'package:train_libre/features/profile/domain/models/measurement.dart';
 import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
@@ -22,16 +22,16 @@ void main() {
   group('Backup/restore integrity', () {
     late AppDatabase db;
     late DatabaseHelper dbHelper;
-    late WorkoutDatabaseHelper workoutDb;
-    late ProductDatabaseHelper productDb;
+    late WorkoutLocalDataSource workoutDb;
+    late ProductLocalDataSource productDb;
     late BackupManager backupManager;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       db = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(db);
-      workoutDb = WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
-      productDb = ProductDatabaseHelper.forTesting(databaseHelper: dbHelper);
+      workoutDb = WorkoutLocalDataSource.forTesting(databaseHelper: dbHelper);
+      productDb = ProductLocalDataSource.forTesting(databaseHelper: dbHelper);
       backupManager = BackupManager(
         userDb: dbHelper,
         workoutDb: workoutDb,

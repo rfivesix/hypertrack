@@ -30,7 +30,8 @@ class NutritionRepository implements IDiaryRepository {
       _localDataSource.getFluidEntriesForDate(date);
 
   @override
-  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(DateTime start, DateTime end) =>
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+          DateTime start, DateTime end) =>
       _localDataSource.getWorkoutLogsForDateRange(start, end);
 
   @override
@@ -50,8 +51,7 @@ class NutritionRepository implements IDiaryRepository {
       _localDataSource.getSupplementLogsForDate(date);
 
   @override
-  Future<void> deleteFoodEntry(int id) =>
-      _localDataSource.deleteFoodEntry(id);
+  Future<void> deleteFoodEntry(int id) => _localDataSource.deleteFoodEntry(id);
 
   @override
   Future<void> deleteFluidEntry(int id) =>

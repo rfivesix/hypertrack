@@ -529,7 +529,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               if (result == true && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.settingsUpdateFoodDatabaseSuccess)),
+                  SnackBar(
+                      content: Text(l10n.settingsUpdateFoodDatabaseSuccess)),
                 );
               }
             },
@@ -643,8 +644,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
-
 
   Future<void> _confirmAndDeleteLocalData() async {
     final l10n = AppLocalizations.of(context)!;

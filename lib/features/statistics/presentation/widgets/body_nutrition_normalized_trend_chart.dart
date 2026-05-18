@@ -202,10 +202,8 @@ class _BodyNutritionNormalizedTrendChartState
                 : Theme.of(context).colorScheme.surface.withValues(alpha: 0.95);
           },
           tooltipBorder: BorderSide(
-            color: Theme.of(context)
-                .colorScheme
-                .onSurface
-                .withValues(alpha: 0.08),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
           ),
           getTooltipItems: (touchedSpots) {
             return touchedSpots.map((touchedSpot) {
@@ -228,13 +226,13 @@ class _BodyNutritionNormalizedTrendChartState
               return LineTooltipItem(
                 '$date\n',
                 baseStyle.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.7),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                    ),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                ),
                 children: [
                   TextSpan(
                     text: '${selectedSeries.label}: $valueText',
@@ -325,7 +323,8 @@ class _BodyNutritionNormalizedTrendChartState
                                   : Alignment.center,
                           child: AnalyticsChartDefaults.tickLabel(
                             context,
-                            DateFormat('dd.MM').format(day), // Changed to a concise format to avoid overlap
+                            DateFormat('dd.MM').format(
+                                day), // Changed to a concise format to avoid overlap
                           ),
                         ),
                       ),

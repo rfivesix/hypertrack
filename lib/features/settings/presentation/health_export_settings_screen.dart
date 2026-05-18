@@ -337,6 +337,4 @@ class _HealthExportSettingsScreenState
       ),
     );
   }
-
-
 }

@@ -153,7 +153,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       } finally {
         await db.close();
       }
-      // await ProductDatabaseHelper.instance.reloadBaseDb();
+      // await ProductLocalDataSource.instance.reloadBaseDb();
 
       // Reload the updated entry from the base DB so changes are visible immediately.
       final baseDb = await _openBaseDb(readOnly: true);
@@ -303,7 +303,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               Wrap(
                 spacing: 8,
                 children: [
-                  if (_displayItem.ingredientsAnalysisTags!.contains('en:vegan'))
+                  if (_displayItem.ingredientsAnalysisTags!
+                      .contains('en:vegan'))
                     Chip(
                       label: Text(
                         l10n.vegan,
@@ -316,8 +317,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
                     ),
-                  if (_displayItem.ingredientsAnalysisTags!.contains('en:vegetarian') &&
-                      !_displayItem.ingredientsAnalysisTags!.contains('en:vegan'))
+                  if (_displayItem.ingredientsAnalysisTags!
+                          .contains('en:vegetarian') &&
+                      !_displayItem.ingredientsAnalysisTags!
+                          .contains('en:vegan'))
                     Chip(
                       label: Text(
                         l10n.vegetarian,
@@ -430,7 +433,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 _displayItem.ingredientsText!.isNotEmpty) ...[
               const SizedBox(height: DesignConstants.spacingM),
               Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
                 child: SummaryCard(
                   child: ExpansionTile(
                     title: Text(l10n.ingredients),

@@ -28,7 +28,8 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
-  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
+  late final IProfileRepository _repository =
+      widget.repository ?? context.read<IProfileRepository>();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
   late final AdaptiveNutritionRecommendationService _recommendationService;
@@ -55,7 +56,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
   void initState() {
     super.initState();
     _recommendationService = widget.recommendationService ??
-        AdaptiveNutritionRecommendationService(databaseHelper: DatabaseHelper.instance);
+        AdaptiveNutritionRecommendationService(
+            databaseHelper: DatabaseHelper.instance);
     _loadSettings();
   }
 
@@ -86,8 +88,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           await _recommendationService.getExtraCardioHoursOption();
 
       final settings = await _repository.getAppSettings();
-      final targetSteps =
-          await _repository.getCurrentTargetStepsOrDefault();
+      final targetSteps = await _repository.getCurrentTargetStepsOrDefault();
 
       if (!mounted) return;
       setState(() {
@@ -247,7 +248,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       runSpacing: 8,
                       children: WeeklyTargetRateCatalog.optionsForGoal(
                         _selectedGoal,
-                       ).map((option) {
+                      ).map((option) {
                         final selected =
                             option.kgPerWeek == _selectedTargetRateKgPerWeek;
                         return ChoiceChip(

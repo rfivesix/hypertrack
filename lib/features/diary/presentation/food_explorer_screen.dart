@@ -1,7 +1,7 @@
 // lib/screens/food_explorer_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
-import '../../../data/product_database_helper.dart';
+import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_item.dart';
 import 'create_food_screen.dart';
@@ -61,7 +61,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     setState(() {
       _isLoadingSearch = true;
     });
-    final results = await ProductDatabaseHelper.instance.searchProducts(
+    final results = await ProductLocalDataSource.instance.searchProducts(
       enteredKeyword,
     );
     if (mounted) {
@@ -88,7 +88,7 @@ class _FoodExplorerScreenState extends State<FoodExplorerScreen>
     setState(() {
       _isLoadingFavorites = true;
     });
-    final results = await ProductDatabaseHelper.instance.getFavoriteProducts();
+    final results = await ProductLocalDataSource.instance.getFavoriteProducts();
     if (mounted) {
       setState(() {
         _favoriteFoodItems = results;

@@ -51,14 +51,17 @@ void main() async {
   final database = db.AppDatabase();
   final diaryLocalDataSource = DiaryLocalDataSource(database);
   final workoutLocalDataSource = WorkoutLocalDataSource(database);
-  final exerciseCatalogLocalDataSource = ExerciseCatalogLocalDataSource(database);
+  final exerciseCatalogLocalDataSource =
+      ExerciseCatalogLocalDataSource(database);
   final profileLocalDataSource = ProfileLocalDataSource(database);
 
-  final workoutRepository = WorkoutRepository(localDataSource: workoutLocalDataSource);
+  final workoutRepository =
+      WorkoutRepository(localDataSource: workoutLocalDataSource);
 
   // Create the workout session manager before injecting it. Restoration is
   // handled by AppInitializerScreen after the first frame is visible.
-  final workoutSessionManager = LiveWorkoutViewModel(repository: workoutRepository);
+  final workoutSessionManager =
+      LiveWorkoutViewModel(repository: workoutRepository);
 
   final themeService = ThemeService(); // Create an instance
   final unitService = UnitService();

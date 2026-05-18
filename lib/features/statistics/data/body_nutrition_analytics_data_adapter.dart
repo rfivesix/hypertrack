@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/database_helper.dart';
-import '../../../data/product_database_helper.dart';
+import '../../diary/data/sources/product_local_data_source.dart';
 import '../../analytics/domain/models/chart_data_point.dart';
 import '../../diary/domain/models/food_entry.dart';
 import '../../diary/domain/models/fluid_entry.dart';
@@ -22,12 +22,12 @@ class BodyNutritionAnalyticsRawData {
 
 class BodyNutritionAnalyticsDataAdapter {
   final DatabaseHelper _databaseHelper;
-  final ProductDatabaseHelper _productDatabaseHelper;
+  final ProductLocalDataSource _productDatabaseHelper;
   final StatisticsRangePolicyService _rangePolicy;
 
   const BodyNutritionAnalyticsDataAdapter({
     required DatabaseHelper databaseHelper,
-    required ProductDatabaseHelper productDatabaseHelper,
+    required ProductLocalDataSource productDatabaseHelper,
     StatisticsRangePolicyService rangePolicy =
         StatisticsRangePolicyService.instance,
   })  : _databaseHelper = databaseHelper,
@@ -160,7 +160,8 @@ class BodyNutritionAnalyticsDataAdapter {
       map[day] = (map[day] ?? 0.0) + added;
     }
 
-    for (final entry in fluidEntries.where((e) => e.linkedFoodEntryId == null)) {
+    for (final entry
+        in fluidEntries.where((e) => e.linkedFoodEntryId == null)) {
       final day = DateTime.utc(
         entry.timestamp.year,
         entry.timestamp.month,

@@ -12,7 +12,8 @@ abstract class IDiaryRepository {
   Future<db.DailyGoalsHistoryData?> getGoalsForDate(DateTime date);
   Future<List<FoodEntry>> getEntriesForDate(DateTime date);
   Future<List<FluidEntry>> getFluidEntriesForDate(DateTime date);
-  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(DateTime start, DateTime end);
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+      DateTime start, DateTime end);
   Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes);
   Future<List<Supplement>> getSupplementsForDate(DateTime date);
   Future<List<Supplement>> getAllSupplements();

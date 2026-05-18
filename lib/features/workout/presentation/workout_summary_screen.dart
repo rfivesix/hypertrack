@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/set_log.dart';
@@ -50,7 +50,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   }
 
   Future<void> _loadWorkoutDetails() async {
-    final db = WorkoutDatabaseHelper.instance;
+    final db = WorkoutLocalDataSource.instance;
     final data = await db.getWorkoutLogById(widget.logId);
 
     if (!mounted) return;

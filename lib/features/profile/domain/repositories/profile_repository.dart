@@ -17,7 +17,8 @@ abstract class IProfileRepository {
   Future<DateTime?> getEarliestMeasurementDate();
   Future<void> deleteMeasurementSession(int sessionId);
   Future<void> insertMeasurementSession(MeasurementSession session);
-  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(String type, DateTimeRange range);
+  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
+      String type, DateTimeRange range);
   Future<db.AppSetting?> getAppSettings();
   Future<int> getCurrentTargetStepsOrDefault();
   Future<void> saveUserGoals({

@@ -132,8 +132,6 @@ class _PulseSettingsScreenState extends State<PulseSettingsScreen> {
       ),
     );
   }
-
-
 }
 
 class _PulseSettingsCopy {

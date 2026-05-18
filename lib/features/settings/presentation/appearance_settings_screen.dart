@@ -132,6 +132,4 @@ class AppearanceSettingsScreen extends StatelessWidget {
       ),
     );
   }
-
-
 }

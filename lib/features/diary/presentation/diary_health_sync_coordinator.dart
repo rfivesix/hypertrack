@@ -19,7 +19,8 @@ class DiaryHealthSyncCoordinator extends ChangeNotifier {
   final SleepSyncService _sleepSyncService = SleepSyncService();
   final SleepDayDataRepository _sleepRepository = SleepDayRepository();
   final PulseTrackingSettingsService _pulseSyncService = PulseTrackingService();
-  final PulseAnalysisRepository _pulseRepository = HealthPulseAnalysisRepository();
+  final PulseAnalysisRepository _pulseRepository =
+      HealthPulseAnalysisRepository();
 
   int? stepsForSelectedDay;
   bool isStepsWidgetLoading = false;
@@ -39,7 +40,8 @@ class DiaryHealthSyncCoordinator extends ChangeNotifier {
     required bool Function(DateTime date) isCurrentLoad,
   }) async {
     final providerFilter = await _stepsSyncService.getProviderFilter();
-    final providerFilterRaw = StepsSyncService.providerFilterToRaw(providerFilter);
+    final providerFilterRaw =
+        StepsSyncService.providerFilterToRaw(providerFilter);
 
     unawaited(_loadStepsForDate(
       date,
@@ -153,7 +155,7 @@ class DiaryHealthSyncCoordinator extends ChangeNotifier {
 
       final overview = await _sleepRepository.fetchOverview(date);
       if (!isCurrentLoad(date)) return;
-      
+
       sleepOverview = overview;
       sleepTrackingEnabled = true;
       isSleepWidgetLoading = false;
@@ -188,7 +190,7 @@ class DiaryHealthSyncCoordinator extends ChangeNotifier {
         window: PulseAnalysisWindow(startUtc: start, endUtc: end),
       );
       if (!isCurrentLoad(date)) return;
-      
+
       pulseSummary = summary;
       pulseTrackingEnabled = true;
       isPulseWidgetLoading = false;
@@ -209,16 +211,20 @@ class DiaryHealthSyncCoordinator extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastSyncStr = prefs.getString('last_steps_sync');
-      final lastSync = lastSyncStr != null ? DateTime.tryParse(lastSyncStr) : null;
+      final lastSync =
+          lastSyncStr != null ? DateTime.tryParse(lastSyncStr) : null;
 
-      if (force || lastSync == null || DateTime.now().difference(lastSync) > _stepsSyncInterval) {
+      if (force ||
+          lastSync == null ||
+          DateTime.now().difference(lastSync) > _stepsSyncInterval) {
         isStepsWidgetLoading = true;
         notifyListeners();
         await _stepsSyncService.sync(forceRefresh: force);
         if (!isCurrentLoad(diaryDate)) return;
 
         final providerFilter = await _stepsSyncService.getProviderFilter();
-        final providerFilterRaw = StepsSyncService.providerFilterToRaw(providerFilter);
+        final providerFilterRaw =
+            StepsSyncService.providerFilterToRaw(providerFilter);
         await _loadStepsForDate(
           diaryDate,
           providerFilterRaw: providerFilterRaw,
@@ -235,9 +241,12 @@ class DiaryHealthSyncCoordinator extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastSyncStr = prefs.getString('last_sleep_sync');
-      final lastSync = lastSyncStr != null ? DateTime.tryParse(lastSyncStr) : null;
+      final lastSync =
+          lastSyncStr != null ? DateTime.tryParse(lastSyncStr) : null;
 
-      if (force || lastSync == null || DateTime.now().difference(lastSync) > _sleepSyncInterval) {
+      if (force ||
+          lastSync == null ||
+          DateTime.now().difference(lastSync) > _sleepSyncInterval) {
         await _sleepSyncService.importRecentIfDue(force: force);
       }
     } catch (e) {

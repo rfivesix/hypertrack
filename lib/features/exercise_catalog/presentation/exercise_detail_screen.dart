@@ -21,14 +21,16 @@ class ExerciseDetailScreen extends StatefulWidget {
   final Exercise exercise;
   final IExerciseCatalogRepository? repository;
 
-  const ExerciseDetailScreen({super.key, required this.exercise, this.repository});
+  const ExerciseDetailScreen(
+      {super.key, required this.exercise, this.repository});
 
   @override
   State<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
 }
 
 class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
-  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
+  late final IExerciseCatalogRepository _repository =
+      widget.repository ?? context.read<IExerciseCatalogRepository>();
   bool _isLoading = true;
   ExerciseMetric _selectedMetric = ExerciseMetric.maxWeight;
   String _selectedRange = '30D';
@@ -74,18 +76,18 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     // Let's check! In ExerciseCatalogRepository:
     // Future<List<Map<String, dynamic>>> getExercisePRs(String exerciseUuid) => _dbHelper.getExercisePRs(exerciseUuid);
     // Wait! In the original _loadData:
-    // WorkoutDatabaseHelper.instance.getExercisePRs(widget.exercise.nameDe, altName: altName, exerciseUuid: exerciseUuid);
+    // WorkoutLocalDataSource.instance.getExercisePRs(widget.exercise.nameDe, altName: altName, exerciseUuid: exerciseUuid);
     // So the signature of getExercisePRs is `getExercisePRs(String nameDe, {String? altName, String? exerciseUuid})`.
     // Let's update `ExerciseCatalogRepository`'s methods to match exactly the signature!
     // Wait! We can call `_repository._dbHelper.getExercisePRs(...)` and `_repository._dbHelper.getExerciseTimeSeriesData(...)` directly!
     // Or we can just use `_repository.getExercisePRs(...)` and `_repository.getExerciseTimeSeriesData(...)` if we adapt their signatures.
     // Let's check: our `ExerciseCatalogRepository` was written with:
     // `Future<List<Map<String, dynamic>>> getExercisePRs(String exerciseUuid)` and `Future<List<Map<String, dynamic>>> getExerciseTimeSeriesData(String exerciseUuid)`.
-    // But `WorkoutDatabaseHelper` has:
+    // But `WorkoutLocalDataSource` has:
     // `Future<Map<String, SetLog?>> getExercisePRs(String nameDe, {String? altName, String? exerciseUuid})`
     // and `Future<List<Map<String, dynamic>>> getExerciseTimeSeriesData(String nameDe, {String? altName, String? exerciseUuid})`.
     // Let's modify `ExerciseCatalogRepository` to match exactly, or call them directly from repository._dbHelper.
-    // Since `repository` is an instance of `ExerciseCatalogRepository` which wraps `WorkoutDatabaseHelper`,
+    // Since `repository` is an instance of `ExerciseCatalogRepository` which wraps `WorkoutLocalDataSource`,
     // let's update `ExerciseCatalogRepository` to have the exact correct signatures, so it's a 100% clean proxy!
     // Let's do that in a single file replacement. But first, let's complete `ExerciseDetailScreen` using `_repository._dbHelper`
     // which is perfectly clean since it still delegates through the injected repository interface, OR update the repository file.
@@ -166,10 +168,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   ),
                 ),
               ),
-
             if ((widget.exercise.imagePath ?? '').isNotEmpty)
               const SizedBox(height: DesignConstants.spacingXL),
-
             AppSectionHeader(title: l10n.descriptionLabel),
             SummaryCard(
               child: Padding(
@@ -182,9 +182,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: DesignConstants.spacingXL),
-
             AppSectionHeader(title: l10n.involvedMuscles),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,9 +204,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: DesignConstants.spacingXL),
-
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else if (_timeSeriesData.isEmpty &&
@@ -230,9 +226,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               const SizedBox(height: DesignConstants.spacingXL),
               _buildPRSummarySection(l10n),
             ],
-
             const SizedBox(height: DesignConstants.spacingXL),
-
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(

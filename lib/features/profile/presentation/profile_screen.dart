@@ -31,7 +31,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
+  late final IProfileRepository _repository =
+      widget.repository ?? context.read<IProfileRepository>();
   db.Profile? _userProfile;
   bool _isLoading = true;
 
@@ -422,7 +423,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => GoalsScreen(repository: _repository),
+                        builder: (context) =>
+                            GoalsScreen(repository: _repository),
                       ),
                     );
                   },

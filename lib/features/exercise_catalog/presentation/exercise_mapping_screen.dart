@@ -16,14 +16,16 @@ class ExerciseMappingScreen extends StatefulWidget {
   final List<String> unknownNames;
   final IExerciseCatalogRepository? repository;
 
-  const ExerciseMappingScreen({super.key, required this.unknownNames, this.repository});
+  const ExerciseMappingScreen(
+      {super.key, required this.unknownNames, this.repository});
 
   @override
   State<ExerciseMappingScreen> createState() => _ExerciseMappingScreenState();
 }
 
 class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
-  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
+  late final IExerciseCatalogRepository _repository =
+      widget.repository ?? context.read<IExerciseCatalogRepository>();
   final Map<String, Exercise> _selection = {};
   final Map<String, List<Exercise>> _suggestions = {};
   bool _applying = false;

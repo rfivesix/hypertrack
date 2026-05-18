@@ -3,7 +3,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
 import '../config/app_data_sources.dart';
-import 'product_database_helper.dart';
+import '../features/diary/data/sources/product_local_data_source.dart';
 
 /// Utility class for exporting and sharing the base database file.
 class BaseDbExporter {
@@ -11,7 +11,7 @@ class BaseDbExporter {
   ///
   /// The [subject] parameter allows overriding the default share subject.
   static Future<void> shareBaseDb({String? subject}) async {
-    final path = await ProductDatabaseHelper.instance.getBaseDbPath();
+    final path = await ProductLocalDataSource.instance.getBaseDbPath();
     final file = XFile(
       path,
       mimeType: lookupMimeType(path) ?? 'application/octet-stream',

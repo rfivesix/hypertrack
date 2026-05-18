@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../data/database_helper.dart';
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../diary/presentation/dialogs/fluid_dialog_content.dart';
 import '../../supplements/presentation/dialogs/log_supplement_menu.dart';
 import '../../diary/presentation/dialogs/quantity_dialog_content.dart';
@@ -282,7 +282,7 @@ class _MainScreenState extends State<MainScreen>
 
   Future<void> _showStartWorkoutMenu() async {
     final l10n = AppLocalizations.of(context)!;
-    final routines = await WorkoutDatabaseHelper.instance.getAllRoutines();
+    final routines = await WorkoutLocalDataSource.instance.getAllRoutines();
     if (!mounted) return;
 
     // Wait for the menu result.
@@ -310,7 +310,7 @@ class _MainScreenState extends State<MainScreen>
             borderRadius: BorderRadius.circular(16),
             onTap: () async {
               // 1. Create workout
-              final newWorkoutLog = await WorkoutDatabaseHelper.instance
+              final newWorkoutLog = await WorkoutLocalDataSource.instance
                   .startWorkout(routineName: l10n.freeWorkoutTitle);
 
               if (!ctx.mounted) return;
@@ -357,9 +357,10 @@ class _MainScreenState extends State<MainScreen>
                               const Center(child: CircularProgressIndicator()),
                         );
 
-                        final fullRoutine = await WorkoutDatabaseHelper.instance
+                        final fullRoutine = await WorkoutLocalDataSource
+                            .instance
                             .getRoutineById(r.id!);
-                        final newWorkoutLog = await WorkoutDatabaseHelper
+                        final newWorkoutLog = await WorkoutLocalDataSource
                             .instance
                             .startWorkout(routineName: r.name);
 
@@ -1135,7 +1136,7 @@ class _MainScreenState extends State<MainScreen>
 
                   if (confirmed) {
                     if (logId != null) {
-                      await WorkoutDatabaseHelper.instance.deleteWorkoutLog(
+                      await WorkoutLocalDataSource.instance.deleteWorkoutLog(
                         logId,
                       );
                     }

@@ -29,7 +29,8 @@ class MeasurementsScreen extends StatefulWidget {
 }
 
 class _MeasurementsScreenState extends State<MeasurementsScreen> {
-  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
+  late final IProfileRepository _repository =
+      widget.repository ?? context.read<IProfileRepository>();
   bool _isLoading = true;
   List<MeasurementSession> _sessions = [];
   String? _selectedChartType;
@@ -97,8 +98,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         start = now.subtract(const Duration(days: 179));
         break;
       case 'All':
-        final earliest =
-            await _repository.getEarliestMeasurementDate();
+        final earliest = await _repository.getEarliestMeasurementDate();
         start = earliest ?? now;
         break;
       case '30D':
@@ -115,8 +115,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            builder: (context) =>
-                AddMeasurementScreen(initialDate: DateTime.now(), repository: _repository),
+            builder: (context) => AddMeasurementScreen(
+                initialDate: DateTime.now(), repository: _repository),
           ),
         )
         .then((_) => _loadMeasurements());

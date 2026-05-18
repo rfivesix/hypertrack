@@ -273,8 +273,6 @@ class _NutritionHubScreenState extends State<NutritionHubScreen> {
     );
   }
 
-
-
   Widget _buildCreateMealCard(BuildContext context, AppLocalizations l10n) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth - 32 - 12) / 2.5;

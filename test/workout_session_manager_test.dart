@@ -4,15 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart' show AppDatabase;
-import 'package:train_libre/data/workout_database_helper.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
 import 'package:train_libre/features/workout/domain/models/routine_exercise.dart';
 import 'package:train_libre/features/workout/domain/models/set_log.dart';
 import 'package:train_libre/features/workout/domain/models/set_template.dart';
-import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart' as model;
+import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart'
+    as model;
 import 'package:train_libre/features/workout/presentation/live_workout_view_model.dart';
 import 'package:train_libre/features/workout/data/workout_repository.dart';
-import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
-
 
 Future<void> _waitFor(
   bool Function() condition, {
@@ -33,19 +32,16 @@ void main() {
   group('LiveWorkoutViewModel high-value behavior', () {
     late AppDatabase database;
     late DatabaseHelper dbHelper;
-    late WorkoutDatabaseHelper workoutDb;
+    late WorkoutLocalDataSource workoutDb;
     late LiveWorkoutViewModel manager;
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
-      workoutDb = WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
+      workoutDb = WorkoutLocalDataSource.forTesting(databaseHelper: dbHelper);
       manager = LiveWorkoutViewModel.forTesting(
         workoutDb: WorkoutRepository(
-          localDataSource: WorkoutLocalDataSource(
-            database,
-            workoutDbHelper: workoutDb,
-          ),
+          localDataSource: WorkoutLocalDataSource(database),
         ),
       );
     });

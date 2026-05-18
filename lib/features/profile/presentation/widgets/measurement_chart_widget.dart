@@ -474,7 +474,8 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
   int _labelInterval(int spanUnits, MeasurementChartAxisMode mode) {
     if (spanUnits <= 1) return 1;
     if (mode == MeasurementChartAxisMode.day) {
-      const desiredLabels = 3; // Force max 3 labels to guarantee they never overlap
+      const desiredLabels =
+          3; // Force max 3 labels to guarantee they never overlap
       return (spanUnits / desiredLabels).ceil().clamp(1, 100000);
     }
     final raw = (spanUnits / 3).ceil();

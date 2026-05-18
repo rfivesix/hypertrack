@@ -53,7 +53,8 @@ class CalculateDailyNutritionUseCase {
     );
 
     // Workout Summary
-    final completedLogs = workoutLogs.where((log) => log.endTime != null).toList();
+    final completedLogs =
+        workoutLogs.where((log) => log.endTime != null).toList();
     Map<String, dynamic>? workoutSummary;
     if (completedLogs.isNotEmpty) {
       Duration totalDuration = Duration.zero;
@@ -75,8 +76,10 @@ class CalculateDailyNutritionUseCase {
     }
 
     // Fluids
-    summary.water = fluidEntries.fold<int>(0, (sum, entry) => sum + entry.quantityInMl);
-    for (final entry in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
+    summary.water =
+        fluidEntries.fold<int>(0, (sum, entry) => sum + entry.quantityInMl);
+    for (final entry
+        in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
       summary.calories += entry.kcal ?? 0;
       final factor = entry.quantityInMl / 100.0;
       summary.sugar += (entry.sugarPer100ml ?? 0) * factor;
@@ -98,11 +101,14 @@ class CalculateDailyNutritionUseCase {
     for (final entry in foodEntries) {
       final foodItem = foodProductsByBarcode[entry.barcode];
       if (foodItem != null) {
-        summary.calories += (foodItem.calories / 100 * entry.quantityInGrams).round();
-        summary.protein += (foodItem.protein / 100 * entry.quantityInGrams).round();
+        summary.calories +=
+            (foodItem.calories / 100 * entry.quantityInGrams).round();
+        summary.protein +=
+            (foodItem.protein / 100 * entry.quantityInGrams).round();
         summary.carbs += (foodItem.carbs / 100 * entry.quantityInGrams).round();
         summary.fat += (foodItem.fat / 100 * entry.quantityInGrams).round();
-        summary.sugar += (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
+        summary.sugar +=
+            (foodItem.sugar ?? 0) * (entry.quantityInGrams / 100.0);
 
         final trackedItem = TrackedFoodItem(entry: entry, item: foodItem);
         groupedEntries[entry.mealType]?.add(trackedItem);
@@ -125,7 +131,8 @@ class CalculateDailyNutritionUseCase {
 
     Supplement? caffeineSupplement;
     try {
-      caffeineSupplement = allSupplements.firstWhere((s) => s.code == 'caffeine');
+      caffeineSupplement =
+          allSupplements.firstWhere((s) => s.code == 'caffeine');
     } catch (e) {
       caffeineSupplement = null;
     }

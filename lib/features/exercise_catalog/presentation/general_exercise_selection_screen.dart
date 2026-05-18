@@ -22,7 +22,8 @@ class GeneralExerciseSelectionScreen extends StatefulWidget {
 
 class _GeneralExerciseSelectionScreenState
     extends State<GeneralExerciseSelectionScreen> {
-  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
+  late final IExerciseCatalogRepository _repository =
+      widget.repository ?? context.read<IExerciseCatalogRepository>();
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   List<Exercise> _results = [];

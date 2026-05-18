@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
 import '../../analytics/domain/models/chart_data_point.dart';
@@ -114,7 +114,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       setState(() => _isLoading = true);
     }
 
-    final data = await WorkoutDatabaseHelper.instance.getWorkoutLogById(
+    final data = await WorkoutLocalDataSource.instance.getWorkoutLogById(
       widget.logId,
     );
     if (data == null) {
@@ -145,7 +145,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     final Map<String, Exercise> details = {};
     for (final set in data.sets) {
       if (details.containsKey(set.exerciseName)) continue;
-      final ex = await WorkoutDatabaseHelper.instance.resolveExerciseForSetLog(
+      final ex = await WorkoutLocalDataSource.instance.resolveExerciseForSetLog(
         set,
       );
       if (ex != null) {
@@ -232,7 +232,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     List<SetLog> sets, {
     DateTime? beforeTimestamp,
   }) async {
-    final db = WorkoutDatabaseHelper.instance;
+    final db = WorkoutLocalDataSource.instance;
     final Map<String, Map<String, double>> historicalBests = {};
 
     for (var i = 0; i < sets.length; i++) {
@@ -413,7 +413,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final l10n = AppLocalizations.of(context)!;
-    final dbHelper = WorkoutDatabaseHelper.instance;
+    final dbHelper = WorkoutLocalDataSource.instance;
     final unitService = context.read<UnitService>();
 
     final initialSetIds = _log!.sets.map((s) => s.id!).toSet();

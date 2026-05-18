@@ -61,7 +61,8 @@ void main() {
             home: GoalsScreen(
               recommendationService: recommendationService,
               repository: ProfileRepository(
-                localDataSource: ProfileLocalDataSource(database, dbHelper: dbHelper),
+                localDataSource:
+                    ProfileLocalDataSource(database, dbHelper: dbHelper),
               ),
             ),
           ),
@@ -272,7 +273,8 @@ void main() {
             home: GoalsScreen(
               recommendationService: recommendationService,
               repository: ProfileRepository(
-                localDataSource: ProfileLocalDataSource(database, dbHelper: dbHelper),
+                localDataSource:
+                    ProfileLocalDataSource(database, dbHelper: dbHelper),
               ),
             ),
           ),

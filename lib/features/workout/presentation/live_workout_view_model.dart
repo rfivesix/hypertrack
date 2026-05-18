@@ -61,16 +61,17 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
   int _totalSets = 0;
 
   final Map<String, Map<String, double>> _exerciseBests = {};
-  
+
   // UI State moved from view
   final Map<int, TextEditingController> weightControllers = {};
   final Map<int, TextEditingController> repsControllers = {};
   final Map<int, TextEditingController> rirControllers = {};
   final Map<String, List<SetLog>> lastPerformances = {};
-  
+
   bool isLoading = true;
 
-  final StreamController<PRAlert> _prEventsController = StreamController<PRAlert>.broadcast();
+  final StreamController<PRAlert> _prEventsController =
+      StreamController<PRAlert>.broadcast();
   Stream<PRAlert> get prEvents => _prEventsController.stream;
 
   double get totalVolume => _totalVolume;
@@ -83,7 +84,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
   Map<int, SetLog> get setLogs => _setLogs;
   bool get isActive => _workoutLog != null && _workoutLog!.endTime == null;
 
-  bool get _isAppInForeground => _appLifecycleState == AppLifecycleState.resumed;
+  bool get _isAppInForeground =>
+      _appLifecycleState == AppLifecycleState.resumed;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -105,7 +107,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> startWorkout(WorkoutLog log, List<RoutineExercise> routineExercises) async {
+  Future<void> startWorkout(
+      WorkoutLog log, List<RoutineExercise> routineExercises) async {
     _workoutLog = log;
     _exercises = List.from(routineExercises);
     _setLogs.clear();
@@ -215,7 +218,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
       final List<SetTemplate> templates = [];
       for (int j = 0; j < block.length; j++) {
         final s = block[j];
-        final templateId = DateTime.now().millisecondsSinceEpoch + j * 1000 + i * 10000;
+        final templateId =
+            DateTime.now().millisecondsSinceEpoch + j * 1000 + i * 10000;
 
         templates.add(
           SetTemplate(
@@ -247,10 +251,11 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> loadInitialData(WorkoutLog initialLog, List<RoutineExercise>? initialExercises) async {
+  Future<void> loadInitialData(
+      WorkoutLog initialLog, List<RoutineExercise>? initialExercises) async {
     isLoading = true;
     notifyListeners();
-    
+
     List<RoutineExercise> exercisesToInit = [];
     if (!isActive) {
       exercisesToInit = initialExercises ?? [];
@@ -260,7 +265,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     for (var re in exercisesToInit) {
-      final lastSets = await _repository.getLastSetsForExercise(re.exercise.nameEn);
+      final lastSets =
+          await _repository.getLastSetsForExercise(re.exercise.nameEn);
       lastPerformances[re.exercise.nameEn] = lastSets;
     }
 
@@ -280,11 +286,15 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
       if (!weightControllers.containsKey(templateId)) {
         String initText;
         if (isCardio) {
-          initText = setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
+          initText =
+              setLog.distanceKm?.toStringAsFixed(1).replaceAll('.0', '') ?? '';
         } else {
           initText = setLog.weightKg == null
               ? ''
-              : setLog.weightKg!.toStringAsFixed(2).replaceAll(RegExp(r'0*$'), '').replaceAll(RegExp(r'\.$'), '');
+              : setLog.weightKg!
+                  .toStringAsFixed(2)
+                  .replaceAll(RegExp(r'0*$'), '')
+                  .replaceAll(RegExp(r'\.$'), '');
         }
         weightControllers[templateId] = TextEditingController(text: initText);
       }
@@ -292,7 +302,9 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
       if (!repsControllers.containsKey(templateId)) {
         String initText;
         if (isCardio) {
-          initText = setLog.durationSeconds != null ? (setLog.durationSeconds! ~/ 60).toString() : '';
+          initText = setLog.durationSeconds != null
+              ? (setLog.durationSeconds! ~/ 60).toString()
+              : '';
         } else {
           initText = setLog.reps?.toString() ?? '';
         }
@@ -300,15 +312,22 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
       }
 
       if (!rirControllers.containsKey(templateId)) {
-        rirControllers[templateId] = TextEditingController(text: setLog.rir?.toString() ?? '');
+        rirControllers[templateId] =
+            TextEditingController(text: setLog.rir?.toString() ?? '');
       }
     });
   }
 
   void disposeControllers() {
-    for (var c in weightControllers.values) { c.dispose(); }
-    for (var c in repsControllers.values) { c.dispose(); }
-    for (var c in rirControllers.values) { c.dispose(); }
+    for (var c in weightControllers.values) {
+      c.dispose();
+    }
+    for (var c in repsControllers.values) {
+      c.dispose();
+    }
+    for (var c in rirControllers.values) {
+      c.dispose();
+    }
     weightControllers.clear();
     repsControllers.clear();
     rirControllers.clear();
@@ -363,7 +382,9 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     _setLogs[templateId] = result.updatedSet;
     _totalVolume += result.volumeDelta;
 
-    if (isCompleted == true && oldLog.isCompleted != true && result.updatedSet.setType != 'warmup') {
+    if (isCompleted == true &&
+        oldLog.isCompleted != true &&
+        result.updatedSet.setType != 'warmup') {
       await _checkAndApplyPRs(result.updatedSet, templateId);
     }
 
@@ -478,7 +499,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
       final re = _exercises[i];
       final tIndex = re.setTemplates.indexWhere((t) => t.id == templateId);
       if (tIndex != -1) {
-        final newTemplates = List<SetTemplate>.from(re.setTemplates)..removeAt(tIndex);
+        final newTemplates = List<SetTemplate>.from(re.setTemplates)
+          ..removeAt(tIndex);
         _exercises[i] = RoutineExercise(
           id: re.id,
           exercise: re.exercise,
@@ -490,7 +512,7 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     }
     _totalVolume -= (log.weightKg ?? 0) * (log.reps ?? 0);
     _totalSets--;
-    
+
     weightControllers[templateId]?.dispose();
     repsControllers[templateId]?.dispose();
     rirControllers[templateId]?.dispose();
@@ -510,12 +532,21 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     final existingTemplateIds = _allTemplateIds()..addAll(_setLogs.keys);
     final templates = <SetTemplate>[];
     for (var index = 0; index < initialSetCount; index++) {
-      final templateId = _nextSyntheticId(existingTemplateIds, seed: tempReId + index + 1);
+      final templateId =
+          _nextSyntheticId(existingTemplateIds, seed: tempReId + index + 1);
       existingTemplateIds.add(templateId);
-      templates.add(SetTemplate(id: templateId, setType: 'normal', targetReps: initialReps, targetWeight: null));
+      templates.add(SetTemplate(
+          id: templateId,
+          setType: 'normal',
+          targetReps: initialReps,
+          targetWeight: null));
     }
 
-    final re = RoutineExercise(id: tempReId, exercise: exercise, setTemplates: templates, pauseSeconds: 90);
+    final re = RoutineExercise(
+        id: tempReId,
+        exercise: exercise,
+        setTemplates: templates,
+        pauseSeconds: 90);
     _exercises.add(re);
     pauseTimes[tempReId] = 90;
 
@@ -552,7 +583,7 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
         _totalVolume -= (log.weightKg ?? 0) * (log.reps ?? 0);
         _totalSets--;
         _setLogs.remove(t.id);
-        
+
         weightControllers[t.id]?.dispose();
         repsControllers[t.id]?.dispose();
         rirControllers[t.id]?.dispose();
@@ -619,7 +650,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     _remainingRestSeconds = seconds;
 
     if (!_isAppInForeground) {
-      LocalNotificationService.instance.scheduleRestTimerDoneNotification(secondsFromNow: seconds);
+      LocalNotificationService.instance
+          .scheduleRestTimerDoneNotification(secondsFromNow: seconds);
     }
 
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -659,7 +691,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
   void _startWorkoutTimer() {
     _workoutDurationTimer?.cancel();
     _elapsedDuration = Duration.zero;
-    if (_workoutLog != null) _elapsedDuration = DateTime.now().difference(_workoutLog!.startTime);
+    if (_workoutLog != null)
+      _elapsedDuration = DateTime.now().difference(_workoutLog!.startTime);
     _workoutDurationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_workoutLog != null) {
         _elapsedDuration = DateTime.now().difference(_workoutLog!.startTime);
@@ -682,7 +715,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
           .map((s) => s.id!)
           .toList();
 
-      if (incompleteSetIds.isNotEmpty) await _repository.deleteSetLogs(incompleteSetIds);
+      if (incompleteSetIds.isNotEmpty)
+        await _repository.deleteSetLogs(incompleteSetIds);
 
       int globalOrderCounter = 0;
       final List<SetLog> setsToUpdate = [];
@@ -695,7 +729,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
           }
         }
       }
-      if (setsToUpdate.isNotEmpty) await _repository.updateSetLogs(setsToUpdate);
+      if (setsToUpdate.isNotEmpty)
+        await _repository.updateSetLogs(setsToUpdate);
 
       await _repository.finishWorkout(logId, title: title, notes: notes);
 
@@ -762,7 +797,8 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     _workoutDurationTimer?.cancel();
     _prEventsController.close();
     disposeControllers();
-    if (_registerLifecycleObserver) WidgetsBinding.instance.removeObserver(this);
+    if (_registerLifecycleObserver)
+      WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 }

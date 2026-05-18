@@ -1,18 +1,18 @@
 // lib/features/exercise_catalog/data/sources/exercise_catalog_local_data_source.dart
 import '../../../../data/drift_database.dart' show AppDatabase;
-import '../../../../data/workout_database_helper.dart';
+import '../../../workout/data/sources/workout_local_data_source.dart';
 import '../../../workout/domain/models/set_log.dart';
 import '../../domain/models/exercise.dart';
 
 /// Isolated local data source for the Exercise Catalog feature.
 class ExerciseCatalogLocalDataSource {
   final AppDatabase db;
-  final WorkoutDatabaseHelper _workoutDbHelper;
+  final WorkoutLocalDataSource _workoutDbHelper;
 
   ExerciseCatalogLocalDataSource(
     this.db, {
-    WorkoutDatabaseHelper? workoutDbHelper,
-  }) : _workoutDbHelper = workoutDbHelper ?? WorkoutDatabaseHelper.instance;
+    WorkoutLocalDataSource? workoutDbHelper,
+  }) : _workoutDbHelper = workoutDbHelper ?? WorkoutLocalDataSource.instance;
 
   Future<List<Exercise>> searchExercises({
     String query = '',

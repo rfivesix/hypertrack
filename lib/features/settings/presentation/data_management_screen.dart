@@ -15,7 +15,7 @@ import '../../workout/presentation/live_workout_view_model.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/summary_card.dart';
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // New
 import 'package:flutter/services.dart'; // New (Clipboard)
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
@@ -132,7 +132,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       if (success) {
         // New: detect unknown exercise names and offer mapping if needed.
         final unknown =
-            await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+            await WorkoutLocalDataSource.instance.findUnknownExerciseNames();
         if (!mounted) return;
         if (mounted && unknown.isNotEmpty) {
           /*final bool? changed = await Navigator.of(context).push<bool>(
@@ -222,7 +222,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     if (count > 0) {
       final unknown =
-          await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+          await WorkoutLocalDataSource.instance.findUnknownExerciseNames();
       if (mounted && unknown.isNotEmpty) {
         await Navigator.of(context).push(
           MaterialPageRoute(
@@ -343,7 +343,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           children: [
             Text(
               l10n.dataManagementBackupTitle,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: DesignConstants.spacingS),
             Text(
@@ -427,7 +428,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.csvExportTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(l10n.csvExportTitle,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.csvExportDescription, style: theme.textTheme.bodyMedium),
             const SizedBox(height: DesignConstants.spacingS),
@@ -492,7 +495,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.workoutImportTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(l10n.workoutImportTitle,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.workoutImportDescription,
                 style: theme.textTheme.bodyMedium),
@@ -529,7 +534,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           children: [
             Text(
               l10n.localDataDeletionCardTitle,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: DesignConstants.spacingS),
             Text(
@@ -723,7 +729,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.mapExercisesTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(l10n.mapExercisesTitle,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(
               l10n.mapExercisesDescription,
@@ -756,7 +764,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.autoBackupTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(l10n.autoBackupTitle,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: DesignConstants.spacingS),
             Text(l10n.autoBackupDescription, style: theme.textTheme.bodyMedium),
             const SizedBox(height: DesignConstants.spacingS),
@@ -851,7 +861,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
   Future<void> _openExerciseMapping() async {
     final unknown =
-        await WorkoutDatabaseHelper.instance.findUnknownExerciseNames();
+        await WorkoutLocalDataSource.instance.findUnknownExerciseNames();
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     if (unknown.isEmpty) {

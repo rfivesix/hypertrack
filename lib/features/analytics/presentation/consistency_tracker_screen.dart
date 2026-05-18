@@ -5,7 +5,7 @@ import '../../statistics/domain/analytics_state.dart';
 import '../../statistics/domain/consistency_domain_service.dart';
 import '../../statistics/domain/consistency_payload_models.dart';
 import '../../statistics/domain/statistics_range_policy.dart';
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
 import 'widgets/analytics_chart_defaults.dart';
@@ -56,11 +56,11 @@ class _ConsistencyTrackerScreenState extends State<ConsistencyTrackerScreen> {
       metricId: StatisticsMetricId.consistencyCalendar,
     );
 
-    final stats = WorkoutDatabaseHelper.instance.getTrainingStats();
-    final weekly = WorkoutDatabaseHelper.instance.getWeeklyConsistencyMetrics(
+    final stats = WorkoutLocalDataSource.instance.getTrainingStats();
+    final weekly = WorkoutLocalDataSource.instance.getWeeklyConsistencyMetrics(
       weeksBack: weeklyRange.effectiveWeeks ?? _weeklyWindowWeeks,
     );
-    final dayCounts = WorkoutDatabaseHelper.instance.getWorkoutDayCounts(
+    final dayCounts = WorkoutLocalDataSource.instance.getWorkoutDayCounts(
       daysBack: calendarRange.effectiveDays ?? 120,
     );
 

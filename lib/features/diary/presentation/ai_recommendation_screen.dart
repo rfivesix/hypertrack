@@ -282,7 +282,8 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
 
     final result = await showGlassBottomMenu<int?>(
       context: context,
-      title: item.matchedFood?.getLocalizedName(context) ?? item.ingredient.name,
+      title:
+          item.matchedFood?.getLocalizedName(context) ?? item.ingredient.name,
       contentBuilder: (ctx, close) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -1140,8 +1141,8 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen>
                                     .map(
                                       (issue) => Text(
                                         aiValidationIssueText(l10n, issue),
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
                                           color: issue.severity ==
                                                   AiValidationSeverity.error
                                               ? theme.colorScheme.error

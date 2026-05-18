@@ -24,7 +24,8 @@ class AddMeasurementScreen extends StatefulWidget {
 }
 
 class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
-  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
+  late final IProfileRepository _repository =
+      widget.repository ?? context.read<IProfileRepository>();
   final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _controllers = {};
   late DateTime _selectedDateTime;

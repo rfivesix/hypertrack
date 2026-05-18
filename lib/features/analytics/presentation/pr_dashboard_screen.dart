@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../statistics/domain/statistics_range_policy.dart';
 import '../../statistics/presentation/statistics_formatter.dart';
 import '../../../generated/app_localizations.dart';
@@ -37,13 +37,14 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    final recent = WorkoutDatabaseHelper.instance.getRecentGlobalPRs(limit: 8);
-    final allTime = WorkoutDatabaseHelper.instance.getAllTimeGlobalPRs(
+    final recent = WorkoutLocalDataSource.instance.getRecentGlobalPRs(limit: 8);
+    final allTime = WorkoutLocalDataSource.instance.getAllTimeGlobalPRs(
       limit: 10,
     );
-    final repRange = WorkoutDatabaseHelper.instance.getAllTimePRsByRepBracket();
+    final repRange =
+        WorkoutLocalDataSource.instance.getAllTimePRsByRepBracket();
     final improvements =
-        WorkoutDatabaseHelper.instance.getNotablePrImprovements(
+        WorkoutLocalDataSource.instance.getNotablePrImprovements(
       daysWindow: _rangePolicy
               .resolve(
                 metricId: StatisticsMetricId.prNotableImprovements,
@@ -166,10 +167,13 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                                   children: [
                                     Text(
                                       '+${improvement.toStringAsFixed(1)}%',
-                                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     Text(
                                       'Δ ${StatisticsPresentationFormatter.formatWeight(delta)}',

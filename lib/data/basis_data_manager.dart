@@ -18,7 +18,7 @@ import '../services/exercise_catalog_refresh_service.dart';
 import '../services/off_catalog_country_service.dart';
 import '../services/off_catalog_refresh_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../domain/use_cases/retain_historical_off_products_use_case.dart';
+import '../features/diary/domain/use_cases/retain_historical_off_products_use_case.dart';
 
 // Type definition for the callback
 typedef ProgressCallback = void Function(
@@ -43,8 +43,10 @@ class BasisDataManager {
   static const String _keyVersionTraining = 'installed_training_version';
   static const String _keyVersionFood = 'installed_food_version';
   static const String _keyVersionCats = 'installed_cats_version';
+
   /// Version key for the metadata enrichment (Caffeine, Ingredients, etc.)
-  static const String _keyVersionFoodEnrichment = 'installed_food_enrichment_v1';
+  static const String _keyVersionFoodEnrichment =
+      'installed_food_enrichment_v1';
   static const String _fallbackInstalledVersion = '000000000001';
 
   int _parseInt(dynamic value) => (value as num?)?.toInt() ?? 0;
@@ -191,7 +193,8 @@ class BasisDataManager {
       legacyAssetPath: AppDataSources.legacyFoodCategoriesAssetDbPath,
     );
 
-    final bool shouldSyncOff = force || currentAppVersion != lastDbSyncAppVersion || forceEnrichment;
+    final bool shouldSyncOff =
+        force || currentAppVersion != lastDbSyncAppVersion || forceEnrichment;
 
     if (!shouldSyncOff) {
       onProgress?.call(
@@ -446,8 +449,7 @@ class BasisDataManager {
         if (prefKey == _keyVersionFood) {
           await prefs.setBool(_keyVersionFoodEnrichment, true);
         }
-        } else {
-
+      } else {
         // If current, briefly show 100% so it does not hang.
         if (installedVersion == '0' &&
             assetVersion == '0' &&
@@ -693,13 +695,17 @@ class BasisDataManager {
       sugar: drift.Value(_parseDouble(row['sugar'])),
       fiber: drift.Value(_parseDouble(row['fiber'])),
       salt: drift.Value(_parseDouble(row['salt'])),
-      caffeine: drift.Value(_parseDouble(row['caffeine_mg_per_100ml'] ?? row['caffeine'])),
+      caffeine: drift.Value(
+          _parseDouble(row['caffeine_mg_per_100ml'] ?? row['caffeine'])),
       caffeineMgPer100g: drift.Value(_parseDouble(row['caffeine_mg_per_100g'])),
-      ingredientsText: drift.Value(sourceLabel == 'base' ? null : row['ingredients_text']?.toString()),
-      ingredientsAnalysisTags: drift.Value(row['ingredients_analysis_tags']?.toString()),
+      ingredientsText: drift.Value(
+          sourceLabel == 'base' ? null : row['ingredients_text']?.toString()),
+      ingredientsAnalysisTags:
+          drift.Value(row['ingredients_analysis_tags']?.toString()),
       additivesTags: drift.Value(row['additives_tags']?.toString()),
       productQuantity: drift.Value(_parseDouble(row['product_quantity'])),
-      productQuantityUnit: drift.Value(row['product_quantity_unit']?.toString()),
+      productQuantityUnit:
+          drift.Value(row['product_quantity_unit']?.toString()),
       isFluid: drift.Value(_parseInt(row['is_fluid']) == 1),
       source: drift.Value(sourceLabel),
       isLiquid: drift.Value(_parseInt(row['is_liquid']) == 1),

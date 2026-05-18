@@ -1,8 +1,9 @@
 // lib/features/diary/data/sources/diary_local_data_source.dart
-import '../../../../data/drift_database.dart' show AppDatabase, DailyGoalsHistoryData;
+import '../../../../data/drift_database.dart'
+    show AppDatabase, DailyGoalsHistoryData;
 import '../../../../data/database_helper.dart';
-import '../../../../data/workout_database_helper.dart';
-import '../../../../data/product_database_helper.dart';
+import '../../../workout/data/sources/workout_local_data_source.dart';
+import 'product_local_data_source.dart';
 import '../../domain/models/fluid_entry.dart';
 import '../../domain/models/food_entry.dart';
 import '../../domain/models/food_item.dart';
@@ -14,17 +15,17 @@ import '../../../workout/domain/models/workout_log.dart';
 class DiaryLocalDataSource {
   final AppDatabase db;
   final DatabaseHelper _dbHelper;
-  final ProductDatabaseHelper _productDbHelper;
-  final WorkoutDatabaseHelper _workoutDbHelper;
+  final ProductLocalDataSource _productDbHelper;
+  final WorkoutLocalDataSource _workoutDbHelper;
 
   DiaryLocalDataSource(
     this.db, {
     DatabaseHelper? dbHelper,
-    ProductDatabaseHelper? productDbHelper,
-    WorkoutDatabaseHelper? workoutDbHelper,
+    ProductLocalDataSource? productDbHelper,
+    WorkoutLocalDataSource? workoutDbHelper,
   })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
-        _productDbHelper = productDbHelper ?? ProductDatabaseHelper.instance,
-        _workoutDbHelper = workoutDbHelper ?? WorkoutDatabaseHelper.instance;
+        _productDbHelper = productDbHelper ?? ProductLocalDataSource(db),
+        _workoutDbHelper = workoutDbHelper ?? WorkoutLocalDataSource(db);
 
   Future<DailyGoalsHistoryData?> getGoalsForDate(DateTime date) {
     return _dbHelper.getGoalsForDate(date);
@@ -38,7 +39,8 @@ class DiaryLocalDataSource {
     return _dbHelper.getFluidEntriesForDate(date);
   }
 
-  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(DateTime start, DateTime end) async {
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+      DateTime start, DateTime end) async {
     final list = await _workoutDbHelper.getWorkoutLogsForDateRange(start, end);
     return list.cast<WorkoutLog>();
   }

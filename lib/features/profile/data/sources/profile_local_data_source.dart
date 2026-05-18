@@ -1,6 +1,7 @@
 // lib/features/profile/data/sources/profile_local_data_source.dart
 import 'package:flutter/material.dart';
-import '../../../../data/drift_database.dart' show AppDatabase, Profile, AppSetting;
+import '../../../../data/drift_database.dart'
+    show AppDatabase, Profile, AppSetting;
 import '../../../../data/database_helper.dart';
 import '../../domain/models/measurement_session.dart';
 import '../../../analytics/domain/models/chart_data_point.dart';
@@ -49,7 +50,8 @@ class ProfileLocalDataSource {
     return _dbHelper.insertMeasurementSession(session);
   }
 
-  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(String type, DateTimeRange range) {
+  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
+      String type, DateTimeRange range) {
     return _dbHelper.getChartDataForTypeAndRange(type, range);
   }
 

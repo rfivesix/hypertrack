@@ -5,18 +5,18 @@ import 'package:train_libre/data/basis_data_manager.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart';
-import 'package:train_libre/data/product_database_helper.dart';
+import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('BasisDataManager OFF retention semantics', () {
     late AppDatabase database;
-    late ProductDatabaseHelper productDb;
+    late ProductLocalDataSource productDb;
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
-      productDb = ProductDatabaseHelper.forTesting(
+      productDb = ProductLocalDataSource.forTesting(
         databaseHelper: DatabaseHelper.forTesting(database),
       );
     });

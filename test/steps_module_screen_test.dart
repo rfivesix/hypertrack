@@ -28,7 +28,9 @@ class FakeWorkoutRepository implements IWorkoutRepository {
   @override
   Future<String?> getExerciseUuidByLocalId(int localId) async => null;
   @override
-  Future<Map<String, double>> getExerciseBests(String exerciseName, {String? altName, String? exerciseUuid}) async => {};
+  Future<Map<String, double>> getExerciseBests(String exerciseName,
+          {String? altName, String? exerciseUuid}) async =>
+      {};
   @override
   Future<void> updateSetLogs(List<SetLog> logs) async {}
   @override

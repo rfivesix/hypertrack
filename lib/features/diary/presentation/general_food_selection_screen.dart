@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../data/product_database_helper.dart';
+import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_item.dart';
 import 'food_detail_screen.dart';
@@ -72,7 +72,7 @@ class _GeneralFoodSelectionScreenState
     }
 
     setState(() => _isLoading = true);
-    final results = await ProductDatabaseHelper.instance.searchProducts(
+    final results = await ProductLocalDataSource.instance.searchProducts(
       enteredKeyword,
     );
     if (!mounted) return;
@@ -87,7 +87,7 @@ class _GeneralFoodSelectionScreenState
   }
 
   Future<void> _loadBaseCategories() async {
-    _baseCategories = await ProductDatabaseHelper.instance.getBaseCategories();
+    _baseCategories = await ProductLocalDataSource.instance.getBaseCategories();
     if (!mounted) return;
     setState(() {});
   }
@@ -96,7 +96,7 @@ class _GeneralFoodSelectionScreenState
     if (_catItems.containsKey(key) || _loadingCats.contains(key)) return;
     _loadingCats.add(key);
     if (mounted) setState(() {});
-    final items = await ProductDatabaseHelper.instance.getBaseFoods(
+    final items = await ProductLocalDataSource.instance.getBaseFoods(
       categoryKey: key,
       limit: 500,
     );

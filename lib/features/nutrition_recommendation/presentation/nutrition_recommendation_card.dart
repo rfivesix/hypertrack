@@ -713,8 +713,8 @@ class _RecommendationContextPanel extends StatelessWidget {
           Text(
             l10n.adaptiveRecommendationDataQualityLabel,
             style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: DesignConstants.spacingS),
           _DetailLine(text: dataBasisLine),

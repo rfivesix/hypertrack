@@ -102,9 +102,11 @@ class SleepCanonicalSessionsDao {
   }
 
   Future<DateTime?> findLatestEndedAt() async {
-    final row = await _db.customSelect(
-      'SELECT MAX(ended_at) as max_ended_at FROM sleep_canonical_sessions',
-    ).getSingleOrNull();
+    final row = await _db
+        .customSelect(
+          'SELECT MAX(ended_at) as max_ended_at FROM sleep_canonical_sessions',
+        )
+        .getSingleOrNull();
     if (row == null) return null;
     final maxMillis = row.readNullable<int>('max_ended_at');
     if (maxMillis == null) return null;

@@ -8,7 +8,7 @@ import 'package:excel_community/excel_community.dart' as xl;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'workout_database_helper.dart';
+import '../features/workout/data/sources/workout_local_data_source.dart';
 import 'drift_database.dart' as db;
 import '../features/workout/domain/models/set_log.dart';
 import '../services/unit_service.dart';
@@ -73,7 +73,7 @@ class ImportManager {
       if (workoutGroups.isEmpty) return 0;
 
       // 3. Write to DB in atomic batches
-      final workoutHelper = WorkoutDatabaseHelper.instance;
+      final workoutHelper = WorkoutLocalDataSource.instance;
       final database = await workoutHelper.database;
 
       int importedWorkouts = 0;
@@ -92,15 +92,15 @@ class ImportManager {
           await (database.update(database.workoutLogs)
                 ..where((tbl) => tbl.localId.equals(newLog.id!)))
               .write(db.WorkoutLogsCompanion(
-                startTime: drift.Value(workoutData.startTime),
-                endTime: drift.Value(workoutData.endTime),
-                status: const drift.Value('completed'),
-                notes: drift.Value(workoutData.notes),
-              ));
+            startTime: drift.Value(workoutData.startTime),
+            endTime: drift.Value(workoutData.endTime),
+            status: const drift.Value('completed'),
+            notes: drift.Value(workoutData.notes),
+          ));
 
           // C. Insert sets using a batch for this workout
-          // Note: We use the helper's individual insert for now because it handles 
-          // complex exercise mapping and usage counts, but within a transaction 
+          // Note: We use the helper's individual insert for now because it handles
+          // complex exercise mapping and usage counts, but within a transaction
           // it is still significantly faster than outside.
           for (var set in workoutData.sets) {
             final setWithCorrectId = set.copyWith(workoutLogId: newLog.id!);

@@ -166,7 +166,7 @@ class SleepSyncService implements SleepSettingsService {
     final latestEndedAt = await _sessionsDao!.findLatestEndedAt();
 
     // Delta-Sync: Use latest endedAt if available, otherwise fallback to lookback window.
-    // We add a small overlap (1 minute) to ensure we don't miss anything near the boundary, 
+    // We add a small overlap (1 minute) to ensure we don't miss anything near the boundary,
     // though the pipeline handles deduplication by hash.
     final fromUtc = latestEndedAt != null
         ? latestEndedAt.subtract(const Duration(minutes: 5))

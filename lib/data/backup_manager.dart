@@ -16,8 +16,8 @@ import 'package:path/path.dart' as p;
 // Internal imports
 import 'database_helper.dart';
 import 'drift_database.dart'; // Access to Drift tables and companions.
-import 'product_database_helper.dart';
-import 'workout_database_helper.dart';
+import '../features/diary/data/sources/product_local_data_source.dart';
+import '../features/workout/data/sources/workout_local_data_source.dart';
 import '../features/diary/domain/models/food_item.dart';
 import '../features/app/domain/models/train_libre_backup.dart';
 import '../services/health/steps_sync_service.dart';
@@ -80,20 +80,20 @@ class BackupManager {
   static const List<String> legacyApplicationIds = ['com.rfivesix.hypertrack'];
 
   final DatabaseHelper _userDb;
-  final ProductDatabaseHelper _productDb;
-  final WorkoutDatabaseHelper _workoutDb;
+  final ProductLocalDataSource _productDb;
+  final WorkoutLocalDataSource _workoutDb;
   final SharedPreferencesLoader _prefsLoader;
 
   static const int currentSchemaVersion = 4;
 
   BackupManager({
     DatabaseHelper? userDb,
-    ProductDatabaseHelper? productDb,
-    WorkoutDatabaseHelper? workoutDb,
+    ProductLocalDataSource? productDb,
+    WorkoutLocalDataSource? workoutDb,
     SharedPreferencesLoader? prefsLoader,
   })  : _userDb = userDb ?? DatabaseHelper.instance,
-        _productDb = productDb ?? ProductDatabaseHelper.instance,
-        _workoutDb = workoutDb ?? WorkoutDatabaseHelper.instance,
+        _productDb = productDb ?? ProductLocalDataSource.instance,
+        _workoutDb = workoutDb ?? WorkoutLocalDataSource.instance,
         _prefsLoader = prefsLoader ?? SharedPreferences.getInstance;
 
   ui.Rect _sharePositionOrigin() {

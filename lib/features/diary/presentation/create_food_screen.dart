@@ -1,7 +1,7 @@
 // lib/screens/create_food_screen.dart (Final & De-Materialisiert)
 
 import 'package:flutter/material.dart';
-import '../../../data/product_database_helper.dart';
+import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_item.dart';
 import '../../../services/haptic_feedback_service.dart';
@@ -89,9 +89,9 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
       );
 
       if (_isEditing) {
-        await ProductDatabaseHelper.instance.updateProduct(foodData);
+        await ProductLocalDataSource.instance.updateProduct(foodData);
       } else {
-        await ProductDatabaseHelper.instance.insertProduct(foodData);
+        await ProductLocalDataSource.instance.insertProduct(foodData);
       }
 
       if (mounted) {
@@ -205,8 +205,6 @@ class _CreateFoodScreenState extends State<CreateFoodScreen> {
       ),
     );
   }
-
-
 
   Widget _buildFoodInputField({
     required TextEditingController controller,

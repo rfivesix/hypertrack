@@ -25,7 +25,8 @@ class ManageSupplementsScreen extends StatefulWidget {
 }
 
 class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
-  late final SupplementRepository _repository = widget.repository ?? SupplementRepositoryImpl();
+  late final SupplementRepository _repository =
+      widget.repository ?? SupplementRepositoryImpl();
   bool _isLoading = true;
   List<Supplement> _supplements = const [];
 
@@ -48,7 +49,8 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
   Future<void> _navigateToEdit(Supplement s) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => CreateSupplementScreen(supplementToEdit: s, repository: _repository),
+        builder: (_) => CreateSupplementScreen(
+            supplementToEdit: s, repository: _repository),
       ),
     );
     if (changed == true) _load();
@@ -206,7 +208,8 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
         onPressed: () async {
           final created = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-              builder: (context) => CreateSupplementScreen(repository: _repository),
+              builder: (context) =>
+                  CreateSupplementScreen(repository: _repository),
             ),
           );
           if (created == true) _load();

@@ -391,7 +391,8 @@ void main() {
         mealTypeLabel: 'Lunch',
       );
 
-      expect(prompt, contains('User constraints (Dietary/Situation): Vegetarian'));
+      expect(
+          prompt, contains('User constraints (Dietary/Situation): Vegetarian'));
     });
   });
 }

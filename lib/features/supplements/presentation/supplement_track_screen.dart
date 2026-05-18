@@ -62,11 +62,14 @@ class _SupplementTrackScreenContent extends StatefulWidget {
   const _SupplementTrackScreenContent();
 
   @override
-  State<_SupplementTrackScreenContent> createState() => _SupplementTrackScreenContentState();
+  State<_SupplementTrackScreenContent> createState() =>
+      _SupplementTrackScreenContentState();
 }
 
-class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenContent> {
-  Future<void> _logSupplement(BuildContext context, SupplementsViewModel model, Supplement supplement) async {
+class _SupplementTrackScreenContentState
+    extends State<_SupplementTrackScreenContent> {
+  Future<void> _logSupplement(BuildContext context, SupplementsViewModel model,
+      Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
 
     final result = await showGlassBottomMenu<(double, DateTime)?>(
@@ -93,7 +96,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
     await model.logSupplementDose(supplement, result.$1, result.$2);
   }
 
-  Future<void> _editLogEntry(BuildContext context, SupplementsViewModel model, SupplementLog log) async {
+  Future<void> _editLogEntry(BuildContext context, SupplementsViewModel model,
+      SupplementLog log) async {
     final l10n = AppLocalizations.of(context)!;
     final supplement = model.supplementsById[log.supplementId]!;
 
@@ -127,7 +131,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
     await model.updateSupplementLog(updated);
   }
 
-  Future<void> _deleteLogEntry(SupplementsViewModel model, SupplementLog log) async {
+  Future<void> _deleteLogEntry(
+      SupplementsViewModel model, SupplementLog log) async {
     await model.deleteSupplementLog(log.id!);
 
     if (!mounted) return;
@@ -160,9 +165,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    final color = overTarget
-        ? theme.colorScheme.error
-        : theme.colorScheme.primary;
+    final color =
+        overTarget ? theme.colorScheme.error : theme.colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -176,7 +180,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
     );
   }
 
-  Widget _logActionTile(BuildContext context, SupplementsViewModel model, Supplement s) {
+  Widget _logActionTile(
+      BuildContext context, SupplementsViewModel model, Supplement s) {
     final l10n = AppLocalizations.of(context)!;
     return SummaryCard(
       child: ListTile(
@@ -187,7 +192,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
     );
   }
 
-  Widget _logEntryTile(BuildContext context, SupplementsViewModel model, SupplementLog log, AppLocalizations l10n) {
+  Widget _logEntryTile(BuildContext context, SupplementsViewModel model,
+      SupplementLog log, AppLocalizations l10n) {
     final s = model.supplementsById[log.supplementId];
     final titleText = (s == null) ? 'Unknown' : localizeSupplementName(s, l10n);
 
@@ -212,7 +218,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
         return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart) _deleteLogEntry(model, log);
+        if (direction == DismissDirection.endToStart)
+          _deleteLogEntry(model, log);
       },
       child: SummaryCard(
         child: ListTile(
@@ -245,7 +252,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
             onPressed: () async {
               final changed = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
-                  builder: (_) => ManageSupplementsScreen(repository: model.repository),
+                  builder: (_) =>
+                      ManageSupplementsScreen(repository: model.repository),
                 ),
               );
               if (changed == true) model.loadData();
@@ -289,7 +297,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
                               }
                             },
                             child: Text(
-                              DateFormat.yMMMMd(locale).format(model.selectedDate),
+                              DateFormat.yMMMMd(locale)
+                                  .format(model.selectedDate),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context)
@@ -301,9 +310,10 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
                         ),
                         IconButton(
                           icon: const Icon(Icons.chevron_right),
-                          onPressed: model.selectedDate.isSameDate(DateTime.now())
-                              ? null
-                              : () => model.navigateDay(true),
+                          onPressed:
+                              model.selectedDate.isSameDate(DateTime.now())
+                                  ? null
+                                  : () => model.navigateDay(true),
                         ),
                       ],
                     ),
@@ -345,7 +355,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
 
                   // Log intake
                   AppSectionHeader(title: l10n.logIntakeTitle),
-                  ...model.tracked.map((t) => _logActionTile(context, model, t.supplement)),
+                  ...model.tracked
+                      .map((t) => _logActionTile(context, model, t.supplement)),
 
                   const SizedBox(height: DesignConstants.spacingXL),
 
@@ -360,7 +371,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
                       ),
                     )
                   else
-                    ...model.todaysLogs.map((log) => _logEntryTile(context, model, log, l10n)),
+                    ...model.todaysLogs
+                        .map((log) => _logEntryTile(context, model, log, l10n)),
                 ],
               ),
             ),
@@ -369,7 +381,8 @@ class _SupplementTrackScreenContentState extends State<_SupplementTrackScreenCon
         onPressed: () async {
           final created = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-               builder: (context) => CreateSupplementScreen(repository: model.repository),
+              builder: (context) =>
+                  CreateSupplementScreen(repository: model.repository),
             ),
           );
           if (created == true) {

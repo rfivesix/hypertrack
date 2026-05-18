@@ -14,14 +14,16 @@ class CreateSupplementScreen extends StatefulWidget {
   final Supplement? supplementToEdit;
   final SupplementRepository? repository;
 
-  const CreateSupplementScreen({super.key, this.supplementToEdit, this.repository});
+  const CreateSupplementScreen(
+      {super.key, this.supplementToEdit, this.repository});
 
   @override
   State<CreateSupplementScreen> createState() => _CreateSupplementScreenState();
 }
 
 class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
-  late final SupplementRepository _repository = widget.repository ?? SupplementRepositoryImpl();
+  late final SupplementRepository _repository =
+      widget.repository ?? SupplementRepositoryImpl();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _doseController = TextEditingController();

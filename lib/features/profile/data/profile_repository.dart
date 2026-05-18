@@ -54,7 +54,8 @@ class ProfileRepository implements IProfileRepository {
   }
 
   @override
-  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(String type, DateTimeRange range) {
+  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
+      String type, DateTimeRange range) {
     return _localDataSource.getChartDataForTypeAndRange(type, range);
   }
 

@@ -1,7 +1,7 @@
 // lib/screens/routines_screen.dart (final, de-materialized, corrected)
 
 import 'package:flutter/material.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/routine.dart';
@@ -50,7 +50,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   Future<void> _loadRoutines(AppLocalizations l10n) async {
     // l10n added as a parameter
     setState(() => _isLoading = true);
-    final data = await WorkoutDatabaseHelper.instance.getAllRoutines();
+    final data = await WorkoutLocalDataSource.instance.getAllRoutines();
     if (mounted) {
       setState(() {
         _routines = data;
@@ -82,10 +82,10 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-    final fullRoutine = await WorkoutDatabaseHelper.instance.getRoutineById(
+    final fullRoutine = await WorkoutLocalDataSource.instance.getRoutineById(
       routine.id!,
     );
-    final newWorkoutLog = await WorkoutDatabaseHelper.instance.startWorkout(
+    final newWorkoutLog = await WorkoutLocalDataSource.instance.startWorkout(
       routineName: routine.name,
     );
     if (!mounted) return;
@@ -109,7 +109,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
   void _startEmptyWorkout() async {
     final l10n = AppLocalizations.of(context)!;
-    final newWorkoutLog = await WorkoutDatabaseHelper.instance.startWorkout(
+    final newWorkoutLog = await WorkoutLocalDataSource.instance.startWorkout(
       routineName: l10n.freeWorkoutTitle,
     );
     if (!mounted) return;
@@ -137,14 +137,14 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   void _duplicateRoutine(int routineId) async {
     final l10n =
         AppLocalizations.of(context)!; // Get l10n from the build context
-    await WorkoutDatabaseHelper.instance.duplicateRoutine(routineId);
+    await WorkoutLocalDataSource.instance.duplicateRoutine(routineId);
     HapticFeedbackService.instance.confirmationFeedback();
     _loadRoutines(l10n); // Pass l10n here
   }
 
   Future<void> _shareRoutine(Routine routine) async {
     final fullRoutine =
-        await WorkoutDatabaseHelper.instance.getRoutineById(routine.id!);
+        await WorkoutLocalDataSource.instance.getRoutineById(routine.id!);
     if (!mounted || fullRoutine == null) return;
     await _shareService.showRoutineShareSheet(
       context: context,
@@ -162,7 +162,7 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     );
 
     if (confirmed) {
-      await WorkoutDatabaseHelper.instance.deleteRoutine(routine.id!);
+      await WorkoutLocalDataSource.instance.deleteRoutine(routine.id!);
       _loadRoutines(l10n);
     }
   }

@@ -73,7 +73,8 @@ class DetectPersonalRecordUseCase {
         alerts.add(PRAlert(
           exerciseName: currentSet.exerciseName,
           recordType: "Best Max Weight",
-          achievementValue: "${currentWeight.toStringAsFixed(1).replaceAll('.0', '')} kg",
+          achievementValue:
+              "${currentWeight.toStringAsFixed(1).replaceAll('.0', '')} kg",
           diff: weightDiff,
         ));
       }
@@ -89,7 +90,8 @@ class DetectPersonalRecordUseCase {
         alerts.add(PRAlert(
           exerciseName: currentSet.exerciseName,
           recordType: "Best 1-Rep Max",
-          achievementValue: "${currentEst1rm.toStringAsFixed(1).replaceAll('.0', '')} kg",
+          achievementValue:
+              "${currentEst1rm.toStringAsFixed(1).replaceAll('.0', '')} kg",
           diff: est1rmDiff,
         ));
       }

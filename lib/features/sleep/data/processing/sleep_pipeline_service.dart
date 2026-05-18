@@ -150,7 +150,8 @@ class SleepPipelineService {
       ..sort();
     final earliestNight = targetNights.first;
     final latestNight = targetNights.last;
-    final lookbackFromInclusive = earliestNight.subtract(const Duration(days: 30));
+    final lookbackFromInclusive =
+        earliestNight.subtract(const Duration(days: 30));
     final lookbackToExclusive = latestNight.add(const Duration(days: 1));
 
     final lookbackSessions = await _sessionsDao.findByDateRange(
@@ -158,7 +159,8 @@ class SleepPipelineService {
       toExclusive: lookbackToExclusive,
     );
     final lookbackSessionIds = lookbackSessions.map((s) => s.id).toList();
-    final lookbackSegments = await _segmentsDao.findBySessionIds(lookbackSessionIds);
+    final lookbackSegments =
+        await _segmentsDao.findBySessionIds(lookbackSessionIds);
 
     // Offload heavy processing to background isolate
     final result = await compute(
@@ -341,8 +343,8 @@ class SleepPipelineService {
           sourcePlatform: session.sourcePlatform,
           sourceAppId: session.sourceAppId,
           sourceConfidence: session.sourceConfidence,
-          sourceRecordHash: session.sourceRecordHash ??
-              _hashRecord('analysis:${session.id}'),
+          sourceRecordHash:
+              session.sourceRecordHash ?? _hashRecord('analysis:${session.id}'),
           normalizationVersion: normalizationVersion,
           analysisVersion: analysisVersion,
           nightDate: night,
@@ -533,7 +535,8 @@ class SleepPipelineService {
     };
   }
 
-  static SleepStageConfidence _timelineConfidence(List<SleepStageSegment> segments) {
+  static SleepStageConfidence _timelineConfidence(
+      List<SleepStageSegment> segments) {
     if (segments.isEmpty) return SleepStageConfidence.unknown;
     if (segments.every(
       (segment) => segment.stageConfidence == SleepStageConfidence.unknown,

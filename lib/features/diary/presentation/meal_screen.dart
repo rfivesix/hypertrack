@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../../data/database_helper.dart';
-import '../../../data/product_database_helper.dart';
+import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_entry.dart';
 import '../domain/models/food_item.dart';
@@ -84,11 +84,11 @@ class _MealScreenState extends State<MealScreen> {
     for (final it in _items) {
       final bc = it['barcode'] as String;
       final qty = (it['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
-      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+      final fi = await ProductLocalDataSource.instance.getProductByBarcode(bc);
       if (fi == null) continue;
 
       final factor = qty / 100.0;
-      final itemKcal = (fi.calories) * factor;
+      final itemKcal = (fi.calories.toDouble()) * factor;
       final itemC = (fi.carbs) * factor;
       final itemF = (fi.fat) * factor;
       final itemP = (fi.protein) * factor;
@@ -104,8 +104,6 @@ class _MealScreenState extends State<MealScreen> {
     _totalF = f;
     _totalP = p;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -407,7 +405,7 @@ class _MealScreenState extends State<MealScreen> {
                 return;
               }
               setStateSB(() => loading = true);
-              final res = await ProductDatabaseHelper.instance.searchProducts(
+              final res = await ProductLocalDataSource.instance.searchProducts(
                 q.trim(),
               );
               setStateSB(() {
@@ -502,7 +500,7 @@ class _MealScreenState extends State<MealScreen> {
     // If amount is not set yet (-1), ask now.
     if (quantity == -1) {
       // Load product name for the title
-      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(
+      final fi = await ProductLocalDataSource.instance.getProductByBarcode(
         barcode,
       );
       final displayName = fi?.name ?? barcode;
@@ -586,7 +584,7 @@ class _MealScreenState extends State<MealScreen> {
     final Map<String, FoodItem?> products = {};
     for (final it in _items) {
       final bc = it['barcode'] as String;
-      products[bc] = await ProductDatabaseHelper.instance.getProductByBarcode(
+      products[bc] = await ProductLocalDataSource.instance.getProductByBarcode(
         bc,
       );
     }
@@ -747,7 +745,7 @@ class _MealScreenState extends State<MealScreen> {
         ),
       );
 
-      final fi = await ProductDatabaseHelper.instance.getProductByBarcode(bc);
+      final fi = await ProductLocalDataSource.instance.getProductByBarcode(bc);
       if (fi != null) {
         if (fi.isLiquid == true) {
           // water logging if desired
@@ -941,7 +939,7 @@ class _IngredientCard extends StatelessWidget {
     }
 
     final card = FutureBuilder<FoodItem?>(
-      future: ProductDatabaseHelper.instance.getProductByBarcode(bc),
+      future: ProductLocalDataSource.instance.getProductByBarcode(bc),
       builder: (_, snap) => buildCard(snap.data),
     );
 

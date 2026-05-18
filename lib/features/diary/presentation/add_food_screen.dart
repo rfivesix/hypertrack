@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../data/database_helper.dart';
-import '../../../data/product_database_helper.dart';
+import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_entry.dart';
 import '../domain/models/food_item.dart';
@@ -170,7 +170,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         .toSet()
         .toList();
     final products =
-        await ProductDatabaseHelper.instance.getProductsByBarcodes(barcodes);
+        await ProductLocalDataSource.instance.getProductsByBarcodes(barcodes);
     return {for (final product in products) product.barcode: product};
   }
 
@@ -186,7 +186,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Future<void> _loadBaseCategories() async {
-    _baseCategories = await ProductDatabaseHelper.instance.getBaseCategories();
+    _baseCategories = await ProductLocalDataSource.instance.getBaseCategories();
     if (mounted) setState(() {});
   }
 
@@ -194,7 +194,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     if (_catItems.containsKey(key) || _loadingCats.contains(key)) return;
     _loadingCats.add(key);
     if (mounted) setState(() {});
-    final items = await ProductDatabaseHelper.instance.getBaseFoods(
+    final items = await ProductLocalDataSource.instance.getBaseFoods(
       categoryKey: key,
       limit: 500, // generous because the DB is local
     );
@@ -276,7 +276,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       _isLoadingSearch = true;
     });
 
-    final results = await ProductDatabaseHelper.instance.searchProducts(
+    final results = await ProductLocalDataSource.instance.searchProducts(
       enteredKeyword,
     );
 
@@ -306,7 +306,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     setState(() {
       _isLoadingFavorites = true;
     });
-    final results = await ProductDatabaseHelper.instance.getFavoriteProducts();
+    final results = await ProductLocalDataSource.instance.getFavoriteProducts();
     if (mounted) {
       setState(() {
         _favoriteFoodItems = results;
@@ -319,7 +319,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     setState(() {
       _isLoadingRecent = true;
     });
-    final results = await ProductDatabaseHelper.instance.getRecentProducts();
+    final results = await ProductLocalDataSource.instance.getRecentProducts();
     if (mounted) {
       setState(() {
         _recentFoodItems = results;
@@ -637,7 +637,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     // If a barcode was returned and the screen still exists...
     if (barcode != null && mounted) {
       // ...search for the product in the database.
-      final foodItem = await ProductDatabaseHelper.instance.getProductByBarcode(
+      final foodItem =
+          await ProductLocalDataSource.instance.getProductByBarcode(
         barcode,
       );
       if (!mounted) return;

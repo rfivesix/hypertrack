@@ -75,10 +75,13 @@ class DiaryLoadCoordinator {
 
 class DiaryViewModel extends ChangeNotifier {
   final IDiaryRepository _nutritionRepo;
-  final UserPreferencesRepository _prefsRepo = UserPreferencesRepository.instance;
-  final CalculateDailyNutritionUseCase _calculateUseCase = CalculateDailyNutritionUseCase();
+  final UserPreferencesRepository _prefsRepo =
+      UserPreferencesRepository.instance;
+  final CalculateDailyNutritionUseCase _calculateUseCase =
+      CalculateDailyNutritionUseCase();
 
-  final DiaryHealthSyncCoordinator healthSyncCoordinator = DiaryHealthSyncCoordinator();
+  final DiaryHealthSyncCoordinator healthSyncCoordinator =
+      DiaryHealthSyncCoordinator();
   final DiaryLoadCoordinator _loadCoordinator = DiaryLoadCoordinator();
   Future<void>? _activeDiaryLoadFuture;
 
@@ -97,7 +100,8 @@ class DiaryViewModel extends ChangeNotifier {
   bool get isStepsWidgetLoading => healthSyncCoordinator.isStepsWidgetLoading;
   bool get stepsTrackingEnabled => healthSyncCoordinator.stepsTrackingEnabled;
 
-  SleepDayOverviewData? get sleepOverview => healthSyncCoordinator.sleepOverview;
+  SleepDayOverviewData? get sleepOverview =>
+      healthSyncCoordinator.sleepOverview;
   bool get isSleepWidgetLoading => healthSyncCoordinator.isSleepWidgetLoading;
   bool get sleepTrackingEnabled => healthSyncCoordinator.sleepTrackingEnabled;
 
@@ -112,7 +116,8 @@ class DiaryViewModel extends ChangeNotifier {
     required IDiaryRepository nutritionRepo,
     DateTime? initialDate,
   })  : _nutritionRepo = nutritionRepo,
-        selectedDateNotifier = ValueNotifier((initialDate ?? DateTime.now()).dateOnly) {
+        selectedDateNotifier =
+            ValueNotifier((initialDate ?? DateTime.now()).dateOnly) {
     healthSyncCoordinator.addListener(notifyListeners);
     loadDataForDate(selectedDate);
   }
@@ -172,7 +177,8 @@ class DiaryViewModel extends ChangeNotifier {
         forceStepsRefresh: shouldForceStepsRefresh,
       );
       shouldForceStepsRefresh = _loadCoordinator.pendingForceStepsRefresh;
-    } while (_loadCoordinator.hasPendingReload && selectedDate.isSameDate(diaryDate));
+    } while (_loadCoordinator.hasPendingReload &&
+        selectedDate.isSameDate(diaryDate));
   }
 
   Future<void> _loadDataForDateOnce(
@@ -180,7 +186,7 @@ class DiaryViewModel extends ChangeNotifier {
     required bool forceStepsRefresh,
   }) async {
     final loadGeneration = _loadCoordinator.begin(diaryDate);
-    
+
     selectedDateNotifier.value = diaryDate;
     isLoading = true;
     notifyListeners();
@@ -192,17 +198,23 @@ class DiaryViewModel extends ChangeNotifier {
       showSugarInOverview = await _prefsRepo.getShowSugarInDiaryOverview();
 
       final entries = await _nutritionRepo.getEntriesForDate(diaryDate);
-      final rawFluidEntries = await _nutritionRepo.getFluidEntriesForDate(diaryDate);
-      final startOfDay = DateTime(diaryDate.year, diaryDate.month, diaryDate.day);
-      final endOfDay = DateTime(diaryDate.year, diaryDate.month, diaryDate.day, 23, 59, 59, 999);
-      final workoutLogs = await _nutritionRepo.getWorkoutLogsForDateRange(startOfDay, endOfDay);
+      final rawFluidEntries =
+          await _nutritionRepo.getFluidEntriesForDate(diaryDate);
+      final startOfDay =
+          DateTime(diaryDate.year, diaryDate.month, diaryDate.day);
+      final endOfDay = DateTime(
+          diaryDate.year, diaryDate.month, diaryDate.day, 23, 59, 59, 999);
+      final workoutLogs =
+          await _nutritionRepo.getWorkoutLogsForDateRange(startOfDay, endOfDay);
 
       final barcodes = entries.map((e) => e.barcode).toSet().toList();
       final products = await _nutritionRepo.getProductsByBarcodes(barcodes);
 
-      final supplementsForDate = await _nutritionRepo.getSupplementsForDate(diaryDate);
+      final supplementsForDate =
+          await _nutritionRepo.getSupplementsForDate(diaryDate);
       final allSupplements = await _nutritionRepo.getAllSupplements();
-      final todaysLogs = await _nutritionRepo.getSupplementLogsForDate(diaryDate);
+      final todaysLogs =
+          await _nutritionRepo.getSupplementLogsForDate(diaryDate);
 
       if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
 
@@ -235,7 +247,6 @@ class DiaryViewModel extends ChangeNotifier {
         forceStepsRefresh: forceStepsRefresh,
         isCurrentLoad: (date) => _isCurrentLoad(loadGeneration, date),
       ));
-
     } catch (e, st) {
       debugPrint('Error loading diary data: $e\n$st');
       if (_isCurrentLoad(loadGeneration, diaryDate)) {

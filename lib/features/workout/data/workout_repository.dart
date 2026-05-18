@@ -14,7 +14,8 @@ class WorkoutRepository implements IWorkoutRepository {
       : _localDataSource = localDataSource;
 
   @override
-  Future<WorkoutLog?> getOngoingWorkout() => _localDataSource.getOngoingWorkout();
+  Future<WorkoutLog?> getOngoingWorkout() =>
+      _localDataSource.getOngoingWorkout();
 
   @override
   Future<int> insertSetLog(SetLog log) => _localDataSource.insertSetLog(log);
@@ -24,7 +25,8 @@ class WorkoutRepository implements IWorkoutRepository {
       _localDataSource.getSetLogsForWorkout(workoutLogId);
 
   @override
-  Future<Routine?> getRoutineByName(String name) => _localDataSource.getRoutineByName(name);
+  Future<Routine?> getRoutineByName(String name) =>
+      _localDataSource.getRoutineByName(name);
 
   @override
   Future<Exercise?> resolveExerciseForSetLog(SetLog log) =>
@@ -51,10 +53,12 @@ class WorkoutRepository implements IWorkoutRepository {
       );
 
   @override
-  Future<void> updateSetLogs(List<SetLog> logs) => _localDataSource.updateSetLogs(logs);
+  Future<void> updateSetLogs(List<SetLog> logs) =>
+      _localDataSource.updateSetLogs(logs);
 
   @override
-  Future<void> deleteSetLogs(List<int> ids) => _localDataSource.deleteSetLogs(ids);
+  Future<void> deleteSetLogs(List<int> ids) =>
+      _localDataSource.deleteSetLogs(ids);
 
   @override
   Future<void> finishWorkout(int logId, {String? title, String? notes}) =>

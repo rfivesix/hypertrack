@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/data/workout_database_helper.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
 import 'package:train_libre/features/statistics/data/statistics_hub_data_adapter.dart';
 import 'package:train_libre/features/statistics/domain/body_nutrition_analytics_models.dart';
 import 'package:train_libre/features/statistics/domain/consistency_payload_models.dart';
@@ -147,7 +147,9 @@ class _FakeWorkoutRepository implements IWorkoutRepository {
   @override
   Future<String?> getExerciseUuidByLocalId(int localId) async => null;
   @override
-  Future<Map<String, double>> getExerciseBests(String exerciseName, {String? altName, String? exerciseUuid}) async => {};
+  Future<Map<String, double>> getExerciseBests(String exerciseName,
+          {String? altName, String? exerciseUuid}) async =>
+      {};
   @override
   Future<void> updateSetLogs(List<SetLog> logs) async {}
   @override
@@ -233,7 +235,7 @@ class _FakeSectionHubDataAdapter extends StatisticsHubDataAdapter {
         _performanceLoader = performanceLoader,
         _volumeMusclesLoader = volumeMusclesLoader,
         _bodyNutritionLoader = bodyNutritionLoader,
-        super(workoutDatabaseHelper: WorkoutDatabaseHelper.instance);
+        super(workoutDatabaseHelper: WorkoutLocalDataSource.instance);
 
   final Future<RecoveryAnalyticsPayload> Function(int selectedRangeIndex)?
       _recoveryLoader;

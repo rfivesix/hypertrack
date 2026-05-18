@@ -89,11 +89,11 @@ class _CheckmarkCard extends StatelessWidget {
       displayText =
           '${supplement.dailyGoal?.toStringAsFixed(1).replaceAll('.0', '') ?? ''} ${supplement.unit}';
     }
-return SummaryCard(
-  margin: const EdgeInsets.symmetric(vertical: 4.0),
-  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-  child: SizedBox(
-    height: 54,
+    return SummaryCard(
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: SizedBox(
+        height: 54,
         child: Row(
           children: [
             Icon(

@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import '../../../util/design_constants.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../../widgets/common/glass_fab.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/sources/workout_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../../exercise_catalog/domain/models/exercise.dart';
 import '../domain/models/routine.dart';
@@ -135,7 +135,6 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     super.dispose();
   }
 
-
   // --- Cardio check helper ---
   bool _isCardio(RoutineExercise re) {
     return re.exercise.categoryName.toLowerCase() == 'cardio';
@@ -260,7 +259,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     );
 
     if (selectedExercise != null) {
-      final lastSets = await WorkoutDatabaseHelper.instance
+      final lastSets = await WorkoutLocalDataSource.instance
           .getLastSetsForExercise(selectedExercise.nameEn);
       if (mounted) {
         setState(() {
@@ -708,13 +707,19 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
               final clearValue = val == null && text.isEmpty;
 
               if (isCardio) {
-                if (val != manager.setLogs[templateId]?.distanceKm || clearValue) {
-                  manager.updateSet(templateId, distance: val, clearDistance: clearValue);
+                if (val != manager.setLogs[templateId]?.distanceKm ||
+                    clearValue) {
+                  manager.updateSet(templateId,
+                      distance: val, clearDistance: clearValue);
                 }
               } else {
-                final metricValue = val == null ? null : unitService.convertToMetric(val, UnitDimension.weight);
-                if (metricValue != manager.setLogs[templateId]?.weightKg || clearValue) {
-                  manager.updateSet(templateId, weight: metricValue, clearWeight: clearValue);
+                final metricValue = val == null
+                    ? null
+                    : unitService.convertToMetric(val, UnitDimension.weight);
+                if (metricValue != manager.setLogs[templateId]?.weightKg ||
+                    clearValue) {
+                  manager.updateSet(templateId,
+                      weight: metricValue, clearWeight: clearValue);
                 }
               }
             },
@@ -743,16 +748,20 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             onChanged: (text) {
               if (isCardio) {
                 final minutes = double.tryParse(text.replaceAll(',', '.'));
-                final seconds = (minutes != null) ? (minutes * 60).round() : null;
+                final seconds =
+                    (minutes != null) ? (minutes * 60).round() : null;
                 final clearDuration = seconds == null && text.isEmpty;
-                if (seconds != manager.setLogs[templateId]?.durationSeconds || clearDuration) {
-                  manager.updateSet(templateId, duration: seconds, clearDuration: clearDuration);
+                if (seconds != manager.setLogs[templateId]?.durationSeconds ||
+                    clearDuration) {
+                  manager.updateSet(templateId,
+                      duration: seconds, clearDuration: clearDuration);
                 }
               } else {
                 final val = int.tryParse(text);
                 final clearValue = val == null && text.isEmpty;
                 if (val != manager.setLogs[templateId]?.reps || clearValue) {
-                  manager.updateSet(templateId, reps: val, clearReps: clearValue);
+                  manager.updateSet(templateId,
+                      reps: val, clearReps: clearValue);
                 }
               }
             },
@@ -1506,7 +1515,8 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
   }
 
   double? _getLastSessionBestE1rm(String exerciseName) {
-    final lastSets = _manager!.lastPerformances[exerciseName] ?? const <SetLog>[];
+    final lastSets =
+        _manager!.lastPerformances[exerciseName] ?? const <SetLog>[];
     double? best;
 
     for (final setLog in lastSets) {

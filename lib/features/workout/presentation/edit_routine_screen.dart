@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
 import '../../exercise_catalog/domain/models/exercise.dart';
@@ -84,7 +84,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (_routineId == null) return;
     setState(() => _isLoading = true);
     final routineWithExercises =
-        await WorkoutDatabaseHelper.instance.getRoutineById(_routineId!);
+        await WorkoutLocalDataSource.instance.getRoutineById(_routineId!);
     if (mounted && routineWithExercises != null) {
       for (var c in _repsControllers.values) {
         c.dispose();
@@ -144,7 +144,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       final initialSetCount = isCardio ? 1 : 3;
 
       final newRoutineExercise =
-          await WorkoutDatabaseHelper.instance.addExerciseToRoutine(
+          await WorkoutLocalDataSource.instance.addExerciseToRoutine(
         _routineId!,
         selectedExercise.id!,
         initialSetCount: initialSetCount,
@@ -187,7 +187,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     int? currentRoutineId = _routineId;
 
     if (_isNewRoutine) {
-      final newRoutine = await WorkoutDatabaseHelper.instance.createRoutine(
+      final newRoutine = await WorkoutLocalDataSource.instance.createRoutine(
         _nameController.text.trim(),
       );
       currentRoutineId = newRoutine.id;
@@ -205,14 +205,14 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       }
     } else {
       if (_nameController.text.trim() != _originalName) {
-        await WorkoutDatabaseHelper.instance.updateRoutineName(
+        await WorkoutLocalDataSource.instance.updateRoutineName(
           currentRoutineId!,
           _nameController.text.trim(),
         );
       }
     }
 
-    final db = WorkoutDatabaseHelper.instance;
+    final db = WorkoutLocalDataSource.instance;
     for (var re in _routineExercises) {
       final List<SetTemplate> currentTemplates = [];
       for (var set in re.setTemplates) {
@@ -427,7 +427,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
 
     if (result != null) {
-      await WorkoutDatabaseHelper.instance.updatePauseTime(re.id!, result);
+      await WorkoutLocalDataSource.instance.updatePauseTime(re.id!, result);
       _loadExercisesForRoutine();
     }
   }
@@ -444,7 +444,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     );
 
     if (confirmed && _routineId != null) {
-      await WorkoutDatabaseHelper.instance.removeExerciseFromRoutine(ex.id!);
+      await WorkoutLocalDataSource.instance.removeExerciseFromRoutine(ex.id!);
       _loadExercisesForRoutine();
     }
   }
@@ -458,7 +458,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       _routineExercises.insert(newIndex, item);
     });
     if (_routineId != null) {
-      WorkoutDatabaseHelper.instance.updateExerciseOrder(
+      WorkoutLocalDataSource.instance.updateExerciseOrder(
         _routineId!,
         _routineExercises,
       );

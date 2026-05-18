@@ -29,7 +29,8 @@ class SupplementHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => SupplementsViewModel(repository: repository)..setSelectedDate(DateTime.now()),
+      create: (_) => SupplementsViewModel(repository: repository)
+        ..setSelectedDate(DateTime.now()),
       child: const _SupplementHubScreenContent(),
     );
   }
@@ -39,10 +40,12 @@ class _SupplementHubScreenContent extends StatefulWidget {
   const _SupplementHubScreenContent();
 
   @override
-  State<_SupplementHubScreenContent> createState() => _SupplementHubScreenContentState();
+  State<_SupplementHubScreenContent> createState() =>
+      _SupplementHubScreenContentState();
 }
 
-class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent> {
+class _SupplementHubScreenContentState
+    extends State<_SupplementHubScreenContent> {
   String localizeSupplementName(Supplement s, AppLocalizations l10n) {
     switch (s.code) {
       case 'caffeine':
@@ -54,7 +57,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     }
   }
 
-  Future<void> _logSupplement(BuildContext context, SupplementsViewModel model, Supplement supplement) async {
+  Future<void> _logSupplement(BuildContext context, SupplementsViewModel model,
+      Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
 
     final result = await showGlassBottomMenu<bool>(
@@ -81,7 +85,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     }
   }
 
-  Future<void> _editLogEntry(BuildContext context, SupplementsViewModel model, SupplementLog log) async {
+  Future<void> _editLogEntry(BuildContext context, SupplementsViewModel model,
+      SupplementLog log) async {
     final l10n = AppLocalizations.of(context)!;
     final supplement = model.supplementsById[log.supplementId]!;
 
@@ -115,7 +120,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     }
   }
 
-  Future<void> _deleteLogEntry(BuildContext context, SupplementsViewModel model, int logId) async {
+  Future<void> _deleteLogEntry(
+      BuildContext context, SupplementsViewModel model, int logId) async {
     final confirmed = await showDeleteConfirmation(context);
 
     if (confirmed) {
@@ -123,7 +129,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     }
   }
 
-  Future<void> _deleteSupplement(BuildContext context, SupplementsViewModel model, Supplement supplement) async {
+  Future<void> _deleteSupplement(BuildContext context,
+      SupplementsViewModel model, Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
 
     final confirmed = await showDeleteConfirmation(
@@ -144,9 +151,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    final progressColor = overTarget
-        ? theme.colorScheme.error
-        : theme.colorScheme.primary;
+    final progressColor =
+        overTarget ? theme.colorScheme.error : theme.colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -160,7 +166,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     );
   }
 
-  Widget _buildLogEntry(BuildContext context, SupplementsViewModel model, SupplementLog log, AppLocalizations l10n) {
+  Widget _buildLogEntry(BuildContext context, SupplementsViewModel model,
+      SupplementLog log, AppLocalizations l10n) {
     final s = model.supplementsById[log.supplementId];
     final titleText = (s != null) ? localizeSupplementName(s, l10n) : 'Unknown';
 
@@ -231,11 +238,12 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     );
   }
 
-  Future<void> _navigateToEditSupplement(BuildContext context, SupplementsViewModel model, Supplement supplement) async {
+  Future<void> _navigateToEditSupplement(BuildContext context,
+      SupplementsViewModel model, Supplement supplement) async {
     final reloaded = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) =>
-            CreateSupplementScreen(supplementToEdit: supplement, repository: model.repository),
+        builder: (context) => CreateSupplementScreen(
+            supplementToEdit: supplement, repository: model.repository),
       ),
     );
     if (reloaded == true) {
@@ -243,7 +251,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
     }
   }
 
-  Widget _buildLogActionCard(BuildContext context, SupplementsViewModel model, Supplement supplement) {
+  Widget _buildLogActionCard(
+      BuildContext context, SupplementsViewModel model, Supplement supplement) {
     final l10n = AppLocalizations.of(context)!;
     final isBuiltin = supplement.isBuiltin || supplement.code == 'caffeine';
 
@@ -387,7 +396,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
                         const SizedBox(height: DesignConstants.spacingXL),
                         AppSectionHeader(title: l10n.logIntakeTitle),
                         ...model.tracked.map(
-                          (ts) => _buildLogActionCard(context, model, ts.supplement),
+                          (ts) => _buildLogActionCard(
+                              context, model, ts.supplement),
                         ),
                         const SizedBox(height: DesignConstants.spacingXL),
                         AppSectionHeader(title: l10n.todaysLogTitle),
@@ -414,7 +424,8 @@ class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent
         onPressed: () async {
           final created = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-              builder: (context) => CreateSupplementScreen(repository: model.repository),
+              builder: (context) =>
+                  CreateSupplementScreen(repository: model.repository),
             ),
           );
           if (created == true) {

@@ -1,7 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserPreferencesRepository {
-  static final UserPreferencesRepository instance = UserPreferencesRepository._init();
+  static final UserPreferencesRepository instance =
+      UserPreferencesRepository._init();
   UserPreferencesRepository._init();
 
   Future<int?> getTargetSugar() async {

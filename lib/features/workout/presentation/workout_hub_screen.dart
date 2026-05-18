@@ -1,7 +1,7 @@
 // lib/screens/workout_hub_screen.dart (final, with unified design)
 
 import 'package:flutter/material.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/sources/workout_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/routine.dart';
 import '../../../services/haptic_feedback_service.dart';
@@ -39,7 +39,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final routines = await WorkoutDatabaseHelper.instance.getAllRoutines();
+    final routines = await WorkoutLocalDataSource.instance.getAllRoutines();
     if (mounted) {
       setState(() {
         _routines = routines;
@@ -49,7 +49,7 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
   }
 
   void _startEmptyWorkout() async {
-    final newLog = await WorkoutDatabaseHelper.instance.startWorkout(
+    final newLog = await WorkoutLocalDataSource.instance.startWorkout(
       routineName: l10n.free_training,
     );
     if (mounted) {
@@ -66,12 +66,13 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
 
   void _startRoutine(Routine routine) async {
     // Need the full routine details to start.
-    final detailedRoutine = await WorkoutDatabaseHelper.instance.getRoutineById(
+    final detailedRoutine =
+        await WorkoutLocalDataSource.instance.getRoutineById(
       routine.id!,
     );
     if (detailedRoutine == null) return;
 
-    final newLog = await WorkoutDatabaseHelper.instance.startWorkout(
+    final newLog = await WorkoutLocalDataSource.instance.startWorkout(
       routineName: routine.name,
     );
     if (mounted) {
@@ -237,8 +238,6 @@ class _WorkoutHubScreenState extends State<WorkoutHubScreen> {
       ),
     );
   }
-
-
 
   Widget _buildRoutineCard(BuildContext context, Routine routine) {
     final screenWidth = MediaQuery.of(context).size.width;

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
-import '../../data/drift_database.dart';
+import '../../../../data/drift_database.dart' as db;
+import '../../../../data/drift_database.dart';
 
 /// Use Case to manage Open Food Facts (OFF) barcode lifecycle and retention:
 /// - Retains historically referenced OFF barcodes by demoting them to `off_retained`
@@ -9,7 +10,7 @@ class RetainHistoricalOffProductsUseCase {
   const RetainHistoricalOffProductsUseCase();
 
   Future<void> execute({
-    required AppDatabase database,
+    required db.AppDatabase database,
     required Set<String> importedOffBarcodes,
     void Function(String message, String detail, double progress)? onProgress,
   }) async {
@@ -112,7 +113,7 @@ class RetainHistoricalOffProductsUseCase {
   }
 
   Future<void> applyOffRetentionUpdates({
-    required AppDatabase database,
+    required db.AppDatabase database,
     required List<String> barcodesToRetain,
     required List<String> barcodesToDelete,
   }) async {
@@ -127,7 +128,7 @@ class RetainHistoricalOffProductsUseCase {
       );
       await (database.update(database.products)
             ..where((t) => t.source.equals('off') & t.barcode.isIn(chunk)))
-          .write(const ProductsCompanion(source: Value('off_retained')));
+          .write(const db.ProductsCompanion(source: Value('off_retained')));
     }
 
     for (var i = 0; i < barcodesToDelete.length; i += chunkSize) {

@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../../../data/workout_database_helper.dart';
+import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../statistics/domain/analytics_state.dart';
 import '../../statistics/domain/statistics_range_policy.dart';
 import '../../statistics/presentation/statistics_formatter.dart';
@@ -46,7 +46,7 @@ class _MuscleGroupAnalyticsScreenState
       effectiveDays: daysBack,
     );
 
-    final data = await WorkoutDatabaseHelper.instance.getMuscleGroupAnalytics(
+    final data = await WorkoutLocalDataSource.instance.getMuscleGroupAnalytics(
       daysBack: daysBack,
       weeksBack: weeksBack,
     );
@@ -454,14 +454,12 @@ class _MuscleGroupAnalyticsScreenState
                         return BarTooltipItem(
                           '$label\n${_formatCompact(value)} $unit',
                           Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                     fontWeight: FontWeight.w600,
                                   ) ??
                               TextStyle(
-                                color:
-                                    Theme.of(context).colorScheme.onSurface,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
                         );
@@ -557,9 +555,8 @@ class _MuscleGroupAnalyticsScreenState
   Widget _sectionLabel(String text, {bool isPrimary = false}) {
     return AppSectionHeader(
       title: text,
-      padding: isPrimary
-          ? const EdgeInsets.only(left: 4, bottom: 8, top: 4)
-          : null,
+      padding:
+          isPrimary ? const EdgeInsets.only(left: 4, bottom: 8, top: 4) : null,
     );
   }
 }

@@ -132,7 +132,11 @@ class AboutScreen extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
           size: 28,
         ),
-        title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text(title,
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         trailing: const Icon(Icons.chevron_right),
       ),
     );
@@ -190,7 +194,10 @@ class _UsedPackagesScreen extends StatelessWidget {
                     child: ListTile(
                       title: Text(
                         package.name,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
                         '${package.entries.length} ${title.toLowerCase()}',

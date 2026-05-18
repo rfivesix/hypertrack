@@ -205,6 +205,4 @@ class _StepsSettingsScreenState extends State<StepsSettingsScreen> {
       ),
     );
   }
-
-
 }

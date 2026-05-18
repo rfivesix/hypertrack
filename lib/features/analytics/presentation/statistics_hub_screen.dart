@@ -80,18 +80,23 @@ class StatisticsHubScreen extends StatelessWidget {
         importSleepIfDue: importSleepIfDue,
         isSleepTrackingEnabled: isSleepTrackingEnabled,
         targetStepsLoader: targetStepsLoader,
-        stepsProviderNameLoader: stepsProviderNameLoader ?? () async {
-          final l10n = AppLocalizations.of(context)!;
-          final stepsSyncService = StepsSyncService();
-          final providerFilter = await stepsSyncService.getProviderFilter();
-          final providerRaw = StepsSyncService.providerFilterToRaw(providerFilter);
-          if (providerRaw == 'appleHealth') return l10n.statisticsProviderAppleHealth;
-          if (providerRaw == 'healthConnect') return l10n.statisticsProviderHealthConnect;
-          if (providerRaw == 'withings') return l10n.statisticsProviderWithings;
-          if (providerRaw == 'garmin') return l10n.statisticsProviderGarmin;
-          if (providerRaw == 'fitbit') return l10n.statisticsProviderFitbit;
-          return l10n.statisticsProviderLocal;
-        },
+        stepsProviderNameLoader: stepsProviderNameLoader ??
+            () async {
+              final l10n = AppLocalizations.of(context)!;
+              final stepsSyncService = StepsSyncService();
+              final providerFilter = await stepsSyncService.getProviderFilter();
+              final providerRaw =
+                  StepsSyncService.providerFilterToRaw(providerFilter);
+              if (providerRaw == 'appleHealth')
+                return l10n.statisticsProviderAppleHealth;
+              if (providerRaw == 'healthConnect')
+                return l10n.statisticsProviderHealthConnect;
+              if (providerRaw == 'withings')
+                return l10n.statisticsProviderWithings;
+              if (providerRaw == 'garmin') return l10n.statisticsProviderGarmin;
+              if (providerRaw == 'fitbit') return l10n.statisticsProviderFitbit;
+              return l10n.statisticsProviderLocal;
+            },
       ),
       child: const _StatisticsHubScreenView(),
     );
@@ -337,10 +342,12 @@ class _StatisticsHubScreenView extends StatelessWidget {
   ) {
     final section = viewModel.stepsState;
     if (section.isLoading && !section.hasData) {
-      return _buildSectionLoadingCard(context, l10n, StatisticsHubSectionId.steps, l10n.steps);
+      return _buildSectionLoadingCard(
+          context, l10n, StatisticsHubSectionId.steps, l10n.steps);
     }
     if (section.hasError && !section.hasData) {
-      return _buildSectionErrorCard(context, l10n, viewModel, StatisticsHubSectionId.steps, l10n.steps);
+      return _buildSectionErrorCard(
+          context, l10n, viewModel, StatisticsHubSectionId.steps, l10n.steps);
     }
     final range = viewModel.stepsRange;
     final hasData =
@@ -435,7 +442,8 @@ class _StatisticsHubScreenView extends StatelessWidget {
     if (range == null) {
       return '$selectedDays ${l10n.analyticsDayUnitLabel}';
     }
-    if (viewModel.rangePolicy.isAllTimeRangeIndex(viewModel.selectedTimeRangeIndex)) {
+    if (viewModel.rangePolicy
+        .isAllTimeRangeIndex(viewModel.selectedTimeRangeIndex)) {
       return '${DateFormat.yMMMd().format(range.start)} – ${DateFormat.yMMMd().format(range.end)}';
     }
     if (selectedDays == _days7) {
@@ -562,14 +570,15 @@ class _StatisticsHubScreenView extends StatelessWidget {
         l10n.analyticsMuscleTopFrequency,
       );
     }
-    final muscles = (viewModel.muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
-        .cast<Map<String, dynamic>>()
-        .where(
-          (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
-            m['muscleGroup'] as String?,
-          ),
-        )
-        .toList(growable: false);
+    final muscles =
+        (viewModel.muscleAnalytics['muscles'] as List<dynamic>? ?? const [])
+            .cast<Map<String, dynamic>>()
+            .where(
+              (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
+                m['muscleGroup'] as String?,
+              ),
+            )
+            .toList(growable: false);
     final topMuscle = muscles.isNotEmpty ? muscles.first : null;
     final topMuscleShare =
         (topMuscle?['distributionShare'] as num?)?.toDouble() ?? 0.0;
@@ -636,7 +645,8 @@ class _StatisticsHubScreenView extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 6),
-              _buildMicroCaption(context, _timeRanges(l10n)[viewModel.selectedTimeRangeIndex]),
+              _buildMicroCaption(
+                  context, _timeRanges(l10n)[viewModel.selectedTimeRangeIndex]),
             ],
           ),
         ),
@@ -667,8 +677,9 @@ class _StatisticsHubScreenView extends StatelessWidget {
         l10n.exerciseAnalyticsTitle,
       );
     }
-    final topImprovement =
-        viewModel.notableImprovements.isNotEmpty ? viewModel.notableImprovements.first : null;
+    final topImprovement = viewModel.notableImprovements.isNotEmpty
+        ? viewModel.notableImprovements.first
+        : null;
     final momentumValue = topImprovement == null
         ? '-'
         : '+${((topImprovement['improvementPct'] as num).toDouble()).toStringAsFixed(1)}%';
@@ -982,9 +993,11 @@ class _StatisticsHubScreenView extends StatelessWidget {
     final selectedDays = viewModel.rangePolicy.selectedDaysFromIndex(
       viewModel.selectedTimeRangeIndex,
     );
-    final rangeLabel = _rangeSubtitle(viewModel, l10n, selectedDays, viewModel.stepsRange);
+    final rangeLabel =
+        _rangeSubtitle(viewModel, l10n, selectedDays, viewModel.stepsRange);
     final summary = viewModel.pulseSummary;
-    final chipLabel = summary == null ? rangeLabel : _pulseRangeLabel(context, summary);
+    final chipLabel =
+        summary == null ? rangeLabel : _pulseRangeLabel(context, summary);
     final hasMetrics = summary?.hasCoreMetrics ?? false;
     final rangeValue = !hasMetrics
         ? '--'
@@ -1025,9 +1038,12 @@ class _StatisticsHubScreenView extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildPulseMetricTile(context, l10n.pulseRangeLabel, rangeValue),
-                  _buildPulseMetricTile(context, l10n.pulseAverageLabel, averageValue),
-                  _buildPulseMetricTile(context, l10n.pulseRestingLabel, restingValue),
+                  _buildPulseMetricTile(
+                      context, l10n.pulseRangeLabel, rangeValue),
+                  _buildPulseMetricTile(
+                      context, l10n.pulseAverageLabel, averageValue),
+                  _buildPulseMetricTile(
+                      context, l10n.pulseRestingLabel, restingValue),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1060,7 +1076,8 @@ class _StatisticsHubScreenView extends StatelessWidget {
     return '${formatter.format(startDay)} - ${formatter.format(end)}';
   }
 
-  Widget _buildPulseMetricTile(BuildContext context, String label, String value) {
+  Widget _buildPulseMetricTile(
+      BuildContext context, String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -1339,7 +1356,8 @@ class _StatisticsHubScreenView extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildBodyTrendPill(context, l10n.metricsCurrentWeight, weightValue),
+                  _buildBodyTrendPill(
+                      context, l10n.metricsCurrentWeight, weightValue),
                   _buildBodyTrendPill(
                     context,
                     l10n.metricsWeightChange,
@@ -1428,7 +1446,8 @@ class _StatisticsHubScreenView extends StatelessWidget {
     );
   }
 
-  Widget _buildMeasurementsShortcutCard(BuildContext context, AppLocalizations l10n) {
+  Widget _buildMeasurementsShortcutCard(
+      BuildContext context, AppLocalizations l10n) {
     return SummaryCard(
       key: const Key('statistics_measurements_link_card'),
       onTap: () {
@@ -1482,8 +1501,10 @@ class _StatisticsHubScreenView extends StatelessWidget {
       earliestAvailableDay: viewModel.bodyNutrition?.range.start,
     );
     final days = resolved.effectiveDays;
-    if (days == null || days <= 0) return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
-    if (viewModel.rangePolicy.isAllTimeRangeIndex(viewModel.selectedTimeRangeIndex)) {
+    if (days == null || days <= 0)
+      return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
+    if (viewModel.rangePolicy
+        .isAllTimeRangeIndex(viewModel.selectedTimeRangeIndex)) {
       return _dayCountLabel(l10n, days);
     }
     return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
@@ -1514,7 +1535,8 @@ class _StatisticsHubScreenView extends StatelessWidget {
     );
   }
 
-  Widget _legendDot(BuildContext context, {required Color color, required String label}) {
+  Widget _legendDot(BuildContext context,
+      {required Color color, required String label}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1568,8 +1590,11 @@ class _StatisticsHubScreenView extends StatelessWidget {
       selectedRangeIndex: viewModel.selectedTimeRangeIndex,
     );
     final days = resolved.effectiveDays;
-    if (days == null) return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
-    if (days == viewModel.rangePolicy.selectedDaysFromIndex(viewModel.selectedTimeRangeIndex)) {
+    if (days == null)
+      return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
+    if (days ==
+        viewModel.rangePolicy
+            .selectedDaysFromIndex(viewModel.selectedTimeRangeIndex)) {
       return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
     }
     return _dayCountLabel(l10n, days);
@@ -1579,7 +1604,8 @@ class _StatisticsHubScreenView extends StatelessWidget {
     return '$days ${l10n.analyticsDayUnitLabel}';
   }
 
-  Widget _buildCardHeading(BuildContext context, {required String label, String? chipText}) {
+  Widget _buildCardHeading(BuildContext context,
+      {required String label, String? chipText}) {
     final chipColor = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
@@ -1624,7 +1650,10 @@ class _StatisticsHubScreenView extends StatelessWidget {
         Expanded(
           child: _buildCardHeading(context, label: label, chipText: chipText),
         ),
-        if (trailingIcon) ...[const SizedBox(width: 8), _buildDrillDownHint(context)],
+        if (trailingIcon) ...[
+          const SizedBox(width: 8),
+          _buildDrillDownHint(context)
+        ],
       ],
     );
   }

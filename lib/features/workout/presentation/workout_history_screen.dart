@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../services/unit_service.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/sources/workout_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/workout_log.dart';
 import 'workout_log_detail_screen.dart';
@@ -38,7 +38,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
     // FIX: Use getFullWorkoutLogs() to load sets directly.
-    final data = await WorkoutDatabaseHelper.instance.getFullWorkoutLogs();
+    final data = await WorkoutLocalDataSource.instance.getFullWorkoutLogs();
     if (mounted) {
       setState(() {
         _logs = data;
@@ -48,7 +48,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   }
 
   Future<void> _deleteLog(int logId) async {
-    await WorkoutDatabaseHelper.instance.deleteWorkoutLog(logId);
+    await WorkoutLocalDataSource.instance.deleteWorkoutLog(logId);
     _loadHistory();
   }
 
@@ -176,7 +176,8 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: DesignConstants.spacingM),
+                                  const SizedBox(
+                                      width: DesignConstants.spacingM),
                                   Icon(
                                     Icons.replay_circle_filled_outlined,
                                     size: 14,

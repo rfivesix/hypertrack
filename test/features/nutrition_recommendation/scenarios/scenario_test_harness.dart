@@ -8,8 +8,8 @@ import 'package:train_libre/data/backup_manager.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion;
-import 'package:train_libre/data/product_database_helper.dart';
-import 'package:train_libre/data/workout_database_helper.dart';
+import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_scheduler.dart';
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_service.dart';
@@ -110,8 +110,8 @@ class AdaptiveScenarioHarness {
   final ScenarioProfile profile;
   final AppDatabase database;
   final DatabaseHelper dbHelper;
-  final ProductDatabaseHelper productDb;
-  final WorkoutDatabaseHelper workoutDb;
+  final ProductLocalDataSource productDb;
+  final WorkoutLocalDataSource workoutDb;
   final BackupManager backupManager;
 
   late RecommendationRepository repository;
@@ -136,9 +136,9 @@ class AdaptiveScenarioHarness {
     final database = AppDatabase(NativeDatabase.memory());
     final dbHelper = DatabaseHelper.forTesting(database);
     final productDb =
-        ProductDatabaseHelper.forTesting(databaseHelper: dbHelper);
+        ProductLocalDataSource.forTesting(databaseHelper: dbHelper);
     final workoutDb =
-        WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
+        WorkoutLocalDataSource.forTesting(databaseHelper: dbHelper);
     final backupManager = BackupManager(
       userDb: dbHelper,
       productDb: productDb,
