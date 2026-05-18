@@ -18,7 +18,7 @@ Primary files:
 
 - `lib/services/health/steps_sync_service.dart`
 - `lib/features/steps/data/steps_aggregation_repository.dart`
-- `lib/screens/diary_screen.dart`
+- `lib/features/diary/presentation/diary_screen.dart`
 
 ## Settings keys used
 

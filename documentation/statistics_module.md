@@ -20,19 +20,19 @@ Boundaries in code:
 
 Primary entry point:
 
-- Main tab index 2 in `lib/screens/main_screen.dart` -> `StatisticsHubScreen`
+- Main tab index 2 in `lib/features/app/presentation/main_screen.dart` -> `StatisticsHubScreen`
 
 Hub screen:
 
-- `lib/screens/statistics_hub_screen.dart`
+- `lib/features/analytics/presentation/statistics_hub_screen.dart`
 
 Drill-down routes pushed from hub:
 
-- Consistency -> `lib/screens/analytics/consistency_tracker_screen.dart`
-- PR dashboard -> `lib/screens/analytics/pr_dashboard_screen.dart`
-- Muscle analytics -> `lib/screens/analytics/muscle_group_analytics_screen.dart`
-- Recovery tracker -> `lib/screens/analytics/recovery_tracker_screen.dart`
-- Body/nutrition correlation -> `lib/screens/analytics/body_nutrition_correlation_screen.dart`
+- Consistency -> `lib/features/analytics/presentation/consistency_tracker_screen.dart`
+- PR dashboard -> `lib/features/analytics/presentation/pr_dashboard_screen.dart`
+- Muscle analytics -> `lib/features/analytics/presentation/muscle_group_analytics_screen.dart`
+- Recovery tracker -> `lib/features/analytics/presentation/recovery_tracker_screen.dart`
+- Body/nutrition correlation -> `lib/features/analytics/presentation/body_nutrition_correlation_screen.dart`
 
 Cross-feature links from hub:
 
@@ -66,7 +66,7 @@ Cross-feature links from hub:
 
 - Repo: `lib/features/steps/data/steps_aggregation_repository.dart`
 - Tracking/provider settings: `lib/services/health/steps_sync_service.dart`
-- Daily goal source: `DatabaseHelper.getCurrentTargetStepsOrDefault()` in `lib/data/database_helper.dart`
+- Daily goal source: `getCurrentTargetStepsOrDefault()` on `StepsAggregationRepository` (`lib/features/steps/data/steps_aggregation_repository.dart`)
 
 ### Sleep card integration
 
@@ -199,7 +199,7 @@ Current Steps support in Statistics includes:
 - Provider label rendering (`All/Apple/Health Connect` mapped to display names)
 - Tap-through into dedicated Steps module screen
 
-No Steps drill-down is implemented inside `lib/screens/analytics/*`; it is delegated to `StepsModuleScreen`.
+No Steps drill-down is implemented inside `lib/features/analytics/presentation/*`; it is delegated to `StepsModuleScreen`.
 
 ## Sleep coverage inside Statistics
 
@@ -254,7 +254,7 @@ Those are owned by feature modules/services under:
 
 - Hub and drill-down analytics screens fetch separately; no shared runtime cache is wired.
 - `StatisticsStateContainer` exists but is currently a structural stub (`lib/features/statistics/statistics_state_container.dart`).
-- Sleep integration in Statistics is hub-card-only; no dedicated Sleep analytics drill-down inside `lib/screens/analytics/*`.
+- Sleep integration in Statistics is hub-card-only; no dedicated Sleep analytics drill-down inside `lib/features/analytics/presentation/*`.
 
 ### Currently ambiguous from code
 
@@ -262,8 +262,8 @@ Those are owned by feature modules/services under:
 
 ## File map
 
-- Hub: `lib/screens/statistics_hub_screen.dart`
-- Drill-down analytics: `lib/screens/analytics/*`
+- Hub: `lib/features/analytics/presentation/statistics_hub_screen.dart`
+- Drill-down analytics: `lib/features/analytics/presentation/*`
 - Range policy: `lib/features/statistics/domain/statistics_range_policy.dart`
 - Hub adapter: `lib/features/statistics/data/statistics_hub_data_adapter.dart`
 - Steps integration repo: `lib/features/steps/data/steps_aggregation_repository.dart`
