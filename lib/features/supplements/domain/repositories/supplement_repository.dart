@@ -10,7 +10,7 @@ abstract class SupplementRepository {
   Future<List<Supplement>> getAllSupplements();
   Future<List<Supplement>> getSupplementsForDate(DateTime date);
   Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date);
-  Future<void> insertSupplement(Supplement supplement);
+  Future<int> insertSupplement(Supplement supplement);
   Future<void> updateSupplement(Supplement supplement);
   Future<void> deleteSupplement(int id);
   Future<void> insertSupplementLog(SupplementLog log);

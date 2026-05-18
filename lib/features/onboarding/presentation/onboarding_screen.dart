@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import '../../../data/backup_manager.dart';
+import '../../../core/infrastructure/backup_manager.dart';
 import '../../../data/database_helper.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../services/health/steps_sync_service.dart';

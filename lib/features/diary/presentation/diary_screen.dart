@@ -9,6 +9,8 @@ import 'dialogs/fluid_dialog_content.dart';
 import 'dialogs/quantity_dialog_content.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/repositories/diary_repository.dart';
+import '../../supplements/domain/repositories/supplement_repository.dart';
+import '../../workout/domain/repositories/workout_repository.dart';
 import '../domain/models/fluid_entry.dart';
 import '../domain/models/food_entry.dart';
 import '../domain/models/food_item.dart';
@@ -58,6 +60,8 @@ class DiaryScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => DiaryViewModel(
         nutritionRepo: context.read<IDiaryRepository>(),
+        supplementRepo: context.read<SupplementRepository>(),
+        workoutRepo: context.read<IWorkoutRepository>(),
         initialDate: initialDate,
       ),
       child: _DiaryScreenContent(key: contentKey ?? key),
@@ -971,8 +975,9 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                           ),
                         ),
                       );
-                      if (result == true)
+                      if (result == true) {
                         viewModel.loadDataForDate(viewModel.selectedDate);
+                      }
                     },
                     tooltip: 'AI Recommend',
                   ),

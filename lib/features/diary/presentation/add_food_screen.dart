@@ -1340,7 +1340,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     );
 
     final caffeineId = caffeine.id ??
-        (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
+        (await DatabaseHelper.instance.insertSupplement(caffeine));
 
     await DatabaseHelper.instance.insertSupplementLog(
       SupplementLog(

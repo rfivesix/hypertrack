@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/repositories/supplement_repository.dart';
 import '../../data/supplement_repository_impl.dart';
+import '../../data/sources/supplement_local_data_source.dart';
 import 'log_supplement_dialog_content.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../domain/models/supplement.dart';
@@ -33,7 +34,10 @@ class _LogSupplementMenuState extends State<LogSupplementMenu> {
   @override
   void initState() {
     super.initState();
-    _repo = widget.repository ?? SupplementRepositoryImpl();
+    _repo = widget.repository ??
+        SupplementRepositoryImpl(
+          localDataSource: SupplementLocalDataSource.instance,
+        );
     _loadSupplements();
   }
 

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../domain/repositories/supplement_repository.dart';
 import '../data/supplement_repository_impl.dart';
+import '../data/sources/supplement_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/supplement.dart';
 import 'create_supplement_screen.dart';
@@ -25,8 +26,10 @@ class ManageSupplementsScreen extends StatefulWidget {
 }
 
 class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
-  late final SupplementRepository _repository =
-      widget.repository ?? SupplementRepositoryImpl();
+  late final SupplementRepository _repository = widget.repository ??
+      SupplementRepositoryImpl(
+        localDataSource: SupplementLocalDataSource.instance,
+      );
   bool _isLoading = true;
   List<Supplement> _supplements = const [];
 

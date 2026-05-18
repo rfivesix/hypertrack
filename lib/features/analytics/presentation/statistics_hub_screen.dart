@@ -87,12 +87,15 @@ class StatisticsHubScreen extends StatelessWidget {
               final providerFilter = await stepsSyncService.getProviderFilter();
               final providerRaw =
                   StepsSyncService.providerFilterToRaw(providerFilter);
-              if (providerRaw == 'appleHealth')
+              if (providerRaw == 'appleHealth') {
                 return l10n.statisticsProviderAppleHealth;
-              if (providerRaw == 'healthConnect')
+              }
+              if (providerRaw == 'healthConnect') {
                 return l10n.statisticsProviderHealthConnect;
-              if (providerRaw == 'withings')
+              }
+              if (providerRaw == 'withings') {
                 return l10n.statisticsProviderWithings;
+              }
               if (providerRaw == 'garmin') return l10n.statisticsProviderGarmin;
               if (providerRaw == 'fitbit') return l10n.statisticsProviderFitbit;
               return l10n.statisticsProviderLocal;
@@ -1501,8 +1504,9 @@ class _StatisticsHubScreenView extends StatelessWidget {
       earliestAvailableDay: viewModel.bodyNutrition?.range.start,
     );
     final days = resolved.effectiveDays;
-    if (days == null || days <= 0)
+    if (days == null || days <= 0) {
       return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
+    }
     if (viewModel.rangePolicy
         .isAllTimeRangeIndex(viewModel.selectedTimeRangeIndex)) {
       return _dayCountLabel(l10n, days);
@@ -1590,8 +1594,9 @@ class _StatisticsHubScreenView extends StatelessWidget {
       selectedRangeIndex: viewModel.selectedTimeRangeIndex,
     );
     final days = resolved.effectiveDays;
-    if (days == null)
+    if (days == null) {
       return _timeRanges(l10n)[viewModel.selectedTimeRangeIndex];
+    }
     if (days ==
         viewModel.rangePolicy
             .selectedDaysFromIndex(viewModel.selectedTimeRangeIndex)) {

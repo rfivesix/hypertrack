@@ -23,8 +23,7 @@ void main() {
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
-      productHelper =
-          ProductLocalDataSource.forTesting(databaseHelper: dbHelper);
+      productHelper = ProductLocalDataSource.forTesting(database);
       adapter = BodyNutritionAnalyticsDataAdapter(
         databaseHelper: dbHelper,
         productDatabaseHelper: productHelper,

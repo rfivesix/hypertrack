@@ -9005,6 +9005,12 @@ class $FluidLogsTable extends FluidLogs
   late final GeneratedColumn<double> sugarPer100ml = GeneratedColumn<double>(
       'sugar_per100ml', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _carbsPer100mlMeta =
+      const VerificationMeta('carbsPer100ml');
+  @override
+  late final GeneratedColumn<double> carbsPer100ml = GeneratedColumn<double>(
+      'carbs_per100ml', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _caffeinePer100mlMeta =
       const VerificationMeta('caffeinePer100ml');
   @override
@@ -9033,6 +9039,7 @@ class $FluidLogsTable extends FluidLogs
         name,
         kcal,
         sugarPer100ml,
+        carbsPer100ml,
         caffeinePer100ml,
         linkedNutritionLogId
       ];
@@ -9095,6 +9102,12 @@ class $FluidLogsTable extends FluidLogs
           sugarPer100ml.isAcceptableOrUnknown(
               data['sugar_per100ml']!, _sugarPer100mlMeta));
     }
+    if (data.containsKey('carbs_per100ml')) {
+      context.handle(
+          _carbsPer100mlMeta,
+          carbsPer100ml.isAcceptableOrUnknown(
+              data['carbs_per100ml']!, _carbsPer100mlMeta));
+    }
     if (data.containsKey('caffeine_per100ml')) {
       context.handle(
           _caffeinePer100mlMeta,
@@ -9136,6 +9149,8 @@ class $FluidLogsTable extends FluidLogs
           .read(DriftSqlType.int, data['${effectivePrefix}kcal']),
       sugarPer100ml: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}sugar_per100ml']),
+      carbsPer100ml: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}carbs_per100ml']),
       caffeinePer100ml: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}caffeine_per100ml']),
       linkedNutritionLogId: attachedDatabase.typeMapping.read(
@@ -9161,6 +9176,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
   final String name;
   final int? kcal;
   final double? sugarPer100ml;
+  final double? carbsPer100ml;
   final double? caffeinePer100ml;
   final String? linkedNutritionLogId;
   const FluidLog(
@@ -9174,6 +9190,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       required this.name,
       this.kcal,
       this.sugarPer100ml,
+      this.carbsPer100ml,
       this.caffeinePer100ml,
       this.linkedNutritionLogId});
   @override
@@ -9194,6 +9211,9 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
     }
     if (!nullToAbsent || sugarPer100ml != null) {
       map['sugar_per100ml'] = Variable<double>(sugarPer100ml);
+    }
+    if (!nullToAbsent || carbsPer100ml != null) {
+      map['carbs_per100ml'] = Variable<double>(carbsPer100ml);
     }
     if (!nullToAbsent || caffeinePer100ml != null) {
       map['caffeine_per100ml'] = Variable<double>(caffeinePer100ml);
@@ -9220,6 +9240,9 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       sugarPer100ml: sugarPer100ml == null && nullToAbsent
           ? const Value.absent()
           : Value(sugarPer100ml),
+      carbsPer100ml: carbsPer100ml == null && nullToAbsent
+          ? const Value.absent()
+          : Value(carbsPer100ml),
       caffeinePer100ml: caffeinePer100ml == null && nullToAbsent
           ? const Value.absent()
           : Value(caffeinePer100ml),
@@ -9243,6 +9266,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       name: serializer.fromJson<String>(json['name']),
       kcal: serializer.fromJson<int?>(json['kcal']),
       sugarPer100ml: serializer.fromJson<double?>(json['sugarPer100ml']),
+      carbsPer100ml: serializer.fromJson<double?>(json['carbsPer100ml']),
       caffeinePer100ml: serializer.fromJson<double?>(json['caffeinePer100ml']),
       linkedNutritionLogId:
           serializer.fromJson<String?>(json['linkedNutritionLogId']),
@@ -9262,6 +9286,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       'name': serializer.toJson<String>(name),
       'kcal': serializer.toJson<int?>(kcal),
       'sugarPer100ml': serializer.toJson<double?>(sugarPer100ml),
+      'carbsPer100ml': serializer.toJson<double?>(carbsPer100ml),
       'caffeinePer100ml': serializer.toJson<double?>(caffeinePer100ml),
       'linkedNutritionLogId': serializer.toJson<String?>(linkedNutritionLogId),
     };
@@ -9278,6 +9303,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
           String? name,
           Value<int?> kcal = const Value.absent(),
           Value<double?> sugarPer100ml = const Value.absent(),
+          Value<double?> carbsPer100ml = const Value.absent(),
           Value<double?> caffeinePer100ml = const Value.absent(),
           Value<String?> linkedNutritionLogId = const Value.absent()}) =>
       FluidLog(
@@ -9292,6 +9318,8 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
         kcal: kcal.present ? kcal.value : this.kcal,
         sugarPer100ml:
             sugarPer100ml.present ? sugarPer100ml.value : this.sugarPer100ml,
+        carbsPer100ml:
+            carbsPer100ml.present ? carbsPer100ml.value : this.carbsPer100ml,
         caffeinePer100ml: caffeinePer100ml.present
             ? caffeinePer100ml.value
             : this.caffeinePer100ml,
@@ -9314,6 +9342,9 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       sugarPer100ml: data.sugarPer100ml.present
           ? data.sugarPer100ml.value
           : this.sugarPer100ml,
+      carbsPer100ml: data.carbsPer100ml.present
+          ? data.carbsPer100ml.value
+          : this.carbsPer100ml,
       caffeinePer100ml: data.caffeinePer100ml.present
           ? data.caffeinePer100ml.value
           : this.caffeinePer100ml,
@@ -9336,6 +9367,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
           ..write('name: $name, ')
           ..write('kcal: $kcal, ')
           ..write('sugarPer100ml: $sugarPer100ml, ')
+          ..write('carbsPer100ml: $carbsPer100ml, ')
           ..write('caffeinePer100ml: $caffeinePer100ml, ')
           ..write('linkedNutritionLogId: $linkedNutritionLogId')
           ..write(')'))
@@ -9354,6 +9386,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
       name,
       kcal,
       sugarPer100ml,
+      carbsPer100ml,
       caffeinePer100ml,
       linkedNutritionLogId);
   @override
@@ -9370,6 +9403,7 @@ class FluidLog extends DataClass implements Insertable<FluidLog> {
           other.name == this.name &&
           other.kcal == this.kcal &&
           other.sugarPer100ml == this.sugarPer100ml &&
+          other.carbsPer100ml == this.carbsPer100ml &&
           other.caffeinePer100ml == this.caffeinePer100ml &&
           other.linkedNutritionLogId == this.linkedNutritionLogId);
 }
@@ -9385,6 +9419,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
   final Value<String> name;
   final Value<int?> kcal;
   final Value<double?> sugarPer100ml;
+  final Value<double?> carbsPer100ml;
   final Value<double?> caffeinePer100ml;
   final Value<String?> linkedNutritionLogId;
   const FluidLogsCompanion({
@@ -9398,6 +9433,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     this.name = const Value.absent(),
     this.kcal = const Value.absent(),
     this.sugarPer100ml = const Value.absent(),
+    this.carbsPer100ml = const Value.absent(),
     this.caffeinePer100ml = const Value.absent(),
     this.linkedNutritionLogId = const Value.absent(),
   });
@@ -9412,6 +9448,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     required String name,
     this.kcal = const Value.absent(),
     this.sugarPer100ml = const Value.absent(),
+    this.carbsPer100ml = const Value.absent(),
     this.caffeinePer100ml = const Value.absent(),
     this.linkedNutritionLogId = const Value.absent(),
   })  : consumedAt = Value(consumedAt),
@@ -9428,6 +9465,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     Expression<String>? name,
     Expression<int>? kcal,
     Expression<double>? sugarPer100ml,
+    Expression<double>? carbsPer100ml,
     Expression<double>? caffeinePer100ml,
     Expression<String>? linkedNutritionLogId,
   }) {
@@ -9442,6 +9480,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
       if (name != null) 'name': name,
       if (kcal != null) 'kcal': kcal,
       if (sugarPer100ml != null) 'sugar_per100ml': sugarPer100ml,
+      if (carbsPer100ml != null) 'carbs_per100ml': carbsPer100ml,
       if (caffeinePer100ml != null) 'caffeine_per100ml': caffeinePer100ml,
       if (linkedNutritionLogId != null)
         'linked_nutrition_log_id': linkedNutritionLogId,
@@ -9459,6 +9498,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
       Value<String>? name,
       Value<int?>? kcal,
       Value<double?>? sugarPer100ml,
+      Value<double?>? carbsPer100ml,
       Value<double?>? caffeinePer100ml,
       Value<String?>? linkedNutritionLogId}) {
     return FluidLogsCompanion(
@@ -9472,6 +9512,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
       name: name ?? this.name,
       kcal: kcal ?? this.kcal,
       sugarPer100ml: sugarPer100ml ?? this.sugarPer100ml,
+      carbsPer100ml: carbsPer100ml ?? this.carbsPer100ml,
       caffeinePer100ml: caffeinePer100ml ?? this.caffeinePer100ml,
       linkedNutritionLogId: linkedNutritionLogId ?? this.linkedNutritionLogId,
     );
@@ -9510,6 +9551,9 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
     if (sugarPer100ml.present) {
       map['sugar_per100ml'] = Variable<double>(sugarPer100ml.value);
     }
+    if (carbsPer100ml.present) {
+      map['carbs_per100ml'] = Variable<double>(carbsPer100ml.value);
+    }
     if (caffeinePer100ml.present) {
       map['caffeine_per100ml'] = Variable<double>(caffeinePer100ml.value);
     }
@@ -9533,6 +9577,7 @@ class FluidLogsCompanion extends UpdateCompanion<FluidLog> {
           ..write('name: $name, ')
           ..write('kcal: $kcal, ')
           ..write('sugarPer100ml: $sugarPer100ml, ')
+          ..write('carbsPer100ml: $carbsPer100ml, ')
           ..write('caffeinePer100ml: $caffeinePer100ml, ')
           ..write('linkedNutritionLogId: $linkedNutritionLogId')
           ..write(')'))
@@ -20639,6 +20684,7 @@ typedef $$FluidLogsTableCreateCompanionBuilder = FluidLogsCompanion Function({
   required String name,
   Value<int?> kcal,
   Value<double?> sugarPer100ml,
+  Value<double?> carbsPer100ml,
   Value<double?> caffeinePer100ml,
   Value<String?> linkedNutritionLogId,
 });
@@ -20653,6 +20699,7 @@ typedef $$FluidLogsTableUpdateCompanionBuilder = FluidLogsCompanion Function({
   Value<String> name,
   Value<int?> kcal,
   Value<double?> sugarPer100ml,
+  Value<double?> carbsPer100ml,
   Value<double?> caffeinePer100ml,
   Value<String?> linkedNutritionLogId,
 });
@@ -20716,6 +20763,9 @@ class $$FluidLogsTableFilterComposer
 
   ColumnFilters<double> get sugarPer100ml => $composableBuilder(
       column: $table.sugarPer100ml, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get carbsPer100ml => $composableBuilder(
+      column: $table.carbsPer100ml, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get caffeinePer100ml => $composableBuilder(
       column: $table.caffeinePer100ml,
@@ -20782,6 +20832,10 @@ class $$FluidLogsTableOrderingComposer
       column: $table.sugarPer100ml,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get carbsPer100ml => $composableBuilder(
+      column: $table.carbsPer100ml,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<double> get caffeinePer100ml => $composableBuilder(
       column: $table.caffeinePer100ml,
       builder: (column) => ColumnOrderings(column));
@@ -20846,6 +20900,9 @@ class $$FluidLogsTableAnnotationComposer
   GeneratedColumn<double> get sugarPer100ml => $composableBuilder(
       column: $table.sugarPer100ml, builder: (column) => column);
 
+  GeneratedColumn<double> get carbsPer100ml => $composableBuilder(
+      column: $table.carbsPer100ml, builder: (column) => column);
+
   GeneratedColumn<double> get caffeinePer100ml => $composableBuilder(
       column: $table.caffeinePer100ml, builder: (column) => column);
 
@@ -20903,6 +20960,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<int?> kcal = const Value.absent(),
             Value<double?> sugarPer100ml = const Value.absent(),
+            Value<double?> carbsPer100ml = const Value.absent(),
             Value<double?> caffeinePer100ml = const Value.absent(),
             Value<String?> linkedNutritionLogId = const Value.absent(),
           }) =>
@@ -20917,6 +20975,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             name: name,
             kcal: kcal,
             sugarPer100ml: sugarPer100ml,
+            carbsPer100ml: carbsPer100ml,
             caffeinePer100ml: caffeinePer100ml,
             linkedNutritionLogId: linkedNutritionLogId,
           ),
@@ -20931,6 +20990,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             required String name,
             Value<int?> kcal = const Value.absent(),
             Value<double?> sugarPer100ml = const Value.absent(),
+            Value<double?> carbsPer100ml = const Value.absent(),
             Value<double?> caffeinePer100ml = const Value.absent(),
             Value<String?> linkedNutritionLogId = const Value.absent(),
           }) =>
@@ -20945,6 +21005,7 @@ class $$FluidLogsTableTableManager extends RootTableManager<
             name: name,
             kcal: kcal,
             sugarPer100ml: sugarPer100ml,
+            carbsPer100ml: carbsPer100ml,
             caffeinePer100ml: caffeinePer100ml,
             linkedNutritionLogId: linkedNutritionLogId,
           ),

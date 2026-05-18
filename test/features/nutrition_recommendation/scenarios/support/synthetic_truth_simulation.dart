@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:drift/drift.dart' as drift;
+import 'package:train_libre/data/drift_database.dart'
+    show HealthStepSegmentsCompanion;
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_scheduler.dart';
 import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
 
@@ -134,7 +137,7 @@ Future<List<SyntheticWeekResult>> runSyntheticTruthScenario(
   final harness =
       await AdaptiveScenarioHarness.create(profile: scenario.profile);
   final truthByDay = <String, TruthTrajectoryPoint>{};
-  final stepRows = <Map<String, dynamic>>[];
+  final stepCompanions = <HealthStepSegmentsCompanion>[];
   final generatedWeeks = <WeekScenarioOutput>[];
 
   try {
@@ -225,14 +228,15 @@ Future<List<SyntheticWeekResult>> runSyntheticTruthScenario(
       final steps = scenario.stepsForDay?.call(context);
       if (steps != null && steps > 0) {
         final startAt = DateTime(day.year, day.month, day.day, 12).toUtc();
-        stepRows.add(<String, dynamic>{
-          'provider': 'apple_healthkit',
-          'sourceId': 'synthetic_steps',
-          'startAt': startAt.toIso8601String(),
-          'endAt': startAt.add(const Duration(hours: 1)).toIso8601String(),
-          'stepCount': steps,
-          'externalKey': 'synthetic_steps_${day.toIso8601String()}_$dayIndex',
-        });
+        stepCompanions.add(HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('synthetic_steps'),
+          startAt: startAt,
+          endAt: startAt.add(const Duration(hours: 1)),
+          stepCount: steps,
+          externalKey: 'synthetic_steps_${day.toIso8601String()}_$dayIndex',
+          updatedAt: drift.Value(DateTime.now()),
+        ));
       }
 
       truthByDay[day.toIso8601String()] = TruthTrajectoryPoint(
@@ -254,8 +258,8 @@ Future<List<SyntheticWeekResult>> runSyntheticTruthScenario(
       }
     }
 
-    if (stepRows.isNotEmpty) {
-      await harness.dbHelper.upsertHealthStepSegments(stepRows);
+    if (stepCompanions.isNotEmpty) {
+      await harness.dbHelper.upsertHealthStepSegments(stepCompanions);
     }
 
     if (generatedWeeks.length != scenario.weekCount) {

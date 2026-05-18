@@ -1,3 +1,4 @@
+import 'models/daily_goal.dart';
 import 'models/daily_nutrition.dart';
 import 'models/fluid_entry.dart';
 import 'models/food_entry.dart';
@@ -7,7 +8,6 @@ import '../../supplements/domain/models/supplement.dart';
 import '../../supplements/domain/models/supplement_log.dart';
 import '../../supplements/domain/models/tracked_supplement.dart';
 import '../../workout/domain/models/workout_log.dart';
-import '../../../data/drift_database.dart' as db;
 
 class DailyNutritionState {
   final DailyNutrition summary;
@@ -25,7 +25,7 @@ class DailyNutritionState {
 
 class CalculateDailyNutritionUseCase {
   DailyNutritionState execute({
-    required db.DailyGoalsHistoryData? goals,
+    required DailyGoal? goals,
     required int targetSugar,
     required int targetCaffeine,
     required List<FoodEntry> foodEntries,

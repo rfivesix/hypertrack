@@ -1,58 +1,58 @@
 // lib/features/supplements/data/supplement_repository_impl.dart
-import '../../../data/database_helper.dart';
+import 'sources/supplement_local_data_source.dart';
 import '../domain/models/supplement.dart';
 import '../domain/models/supplement_log.dart';
 import '../domain/repositories/supplement_repository.dart';
 
-/// Concrete implementation of [SupplementRepository] utilizing the [DatabaseHelper] singleton.
+/// Concrete implementation of [SupplementRepository] utilizing the isolated [SupplementLocalDataSource].
 class SupplementRepositoryImpl implements SupplementRepository {
-  final DatabaseHelper _dbHelper;
+  final SupplementLocalDataSource _localDataSource;
 
-  SupplementRepositoryImpl({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
+  SupplementRepositoryImpl({required SupplementLocalDataSource localDataSource})
+      : _localDataSource = localDataSource;
 
   @override
   Future<List<Supplement>> getAllSupplements() {
-    return _dbHelper.getAllSupplements();
+    return _localDataSource.getAllSupplements();
   }
 
   @override
   Future<List<Supplement>> getSupplementsForDate(DateTime date) {
-    return _dbHelper.getSupplementsForDate(date);
+    return _localDataSource.getSupplementsForDate(date);
   }
 
   @override
   Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date) {
-    return _dbHelper.getSupplementLogsForDate(date);
+    return _localDataSource.getSupplementLogsForDate(date);
   }
 
   @override
-  Future<void> insertSupplement(Supplement supplement) {
-    return _dbHelper.insertSupplement(supplement);
+  Future<int> insertSupplement(Supplement supplement) {
+    return _localDataSource.insertSupplement(supplement);
   }
 
   @override
   Future<void> updateSupplement(Supplement supplement) {
-    return _dbHelper.updateSupplement(supplement);
+    return _localDataSource.updateSupplement(supplement);
   }
 
   @override
   Future<void> deleteSupplement(int id) {
-    return _dbHelper.deleteSupplement(id);
+    return _localDataSource.deleteSupplement(id);
   }
 
   @override
   Future<void> insertSupplementLog(SupplementLog log) {
-    return _dbHelper.insertSupplementLog(log);
+    return _localDataSource.insertSupplementLog(log);
   }
 
   @override
   Future<void> updateSupplementLog(SupplementLog log) {
-    return _dbHelper.updateSupplementLog(log);
+    return _localDataSource.updateSupplementLog(log);
   }
 
   @override
   Future<void> deleteSupplementLog(int id) {
-    return _dbHelper.deleteSupplementLog(id);
+    return _localDataSource.deleteSupplementLog(id);
   }
 }

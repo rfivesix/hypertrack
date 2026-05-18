@@ -1,7 +1,9 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart';
+import 'package:train_libre/features/steps/data/sources/steps_local_data_source.dart';
 import 'package:train_libre/services/health/health_models.dart';
 import 'package:train_libre/services/health/health_platform_steps.dart';
 import 'package:train_libre/services/health/steps_sync_service.dart';
@@ -43,6 +45,7 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
+      DatabaseHelper.setDriftDb(database);
     });
 
     tearDown(() async {
@@ -92,7 +95,7 @@ void main() {
         final platform = _FakeHealthPlatformSteps([firstRead, secondRead]);
         final service = StepsSyncService(
           platform: platform,
-          dbHelper: dbHelper,
+          stepsDb: StepsLocalDataSource(database),
         );
 
         await service.setTrackingEnabled(true);
@@ -114,39 +117,43 @@ void main() {
     );
 
     test('aggregation auto policy uses dominant source per day', () async {
-      await dbHelper.upsertHealthStepSegments(<Map<String, dynamic>>[
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'watch',
-          'startAt': DateTime.utc(2026, 3, 26, 10).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'stepCount': 1000,
-          'externalKey': 'k1',
-        },
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'phone',
-          'startAt': DateTime.utc(2026, 3, 26, 10).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'stepCount': 1200,
-          'externalKey': 'k2',
-        },
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'watch',
-          'startAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 12).toIso8601String(),
-          'stepCount': 500,
-          'externalKey': 'k3',
-        },
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'phone',
-          'startAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 12).toIso8601String(),
-          'stepCount': 200,
-          'externalKey': 'k4',
-        },
+      await dbHelper.upsertHealthStepSegments(<HealthStepSegmentsCompanion>[
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('watch'),
+          startAt: DateTime.utc(2026, 3, 26, 10),
+          endAt: DateTime.utc(2026, 3, 26, 11),
+          stepCount: 1000,
+          externalKey: 'k1',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('phone'),
+          startAt: DateTime.utc(2026, 3, 26, 10),
+          endAt: DateTime.utc(2026, 3, 26, 11),
+          stepCount: 1200,
+          externalKey: 'k2',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('watch'),
+          startAt: DateTime.utc(2026, 3, 26, 11),
+          endAt: DateTime.utc(2026, 3, 26, 12),
+          stepCount: 500,
+          externalKey: 'k3',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('phone'),
+          startAt: DateTime.utc(2026, 3, 26, 11),
+          endAt: DateTime.utc(2026, 3, 26, 12),
+          stepCount: 200,
+          externalKey: 'k4',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
       ]);
 
       final dayLocal = DateTime(2026, 3, 26);
@@ -171,39 +178,43 @@ void main() {
     });
 
     test('aggregation max-per-hour policy remains available', () async {
-      await dbHelper.upsertHealthStepSegments(<Map<String, dynamic>>[
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'watch',
-          'startAt': DateTime.utc(2026, 3, 26, 10).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'stepCount': 1000,
-          'externalKey': 'm1',
-        },
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'phone',
-          'startAt': DateTime.utc(2026, 3, 26, 10).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'stepCount': 1200,
-          'externalKey': 'm2',
-        },
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'watch',
-          'startAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 12).toIso8601String(),
-          'stepCount': 500,
-          'externalKey': 'm3',
-        },
-        {
-          'provider': 'apple_healthkit',
-          'sourceId': 'phone',
-          'startAt': DateTime.utc(2026, 3, 26, 11).toIso8601String(),
-          'endAt': DateTime.utc(2026, 3, 26, 12).toIso8601String(),
-          'stepCount': 200,
-          'externalKey': 'm4',
-        },
+      await dbHelper.upsertHealthStepSegments(<HealthStepSegmentsCompanion>[
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('watch'),
+          startAt: DateTime.utc(2026, 3, 26, 10),
+          endAt: DateTime.utc(2026, 3, 26, 11),
+          stepCount: 1000,
+          externalKey: 'm1',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('phone'),
+          startAt: DateTime.utc(2026, 3, 26, 10),
+          endAt: DateTime.utc(2026, 3, 26, 11),
+          stepCount: 1200,
+          externalKey: 'm2',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('watch'),
+          startAt: DateTime.utc(2026, 3, 26, 11),
+          endAt: DateTime.utc(2026, 3, 26, 12),
+          stepCount: 500,
+          externalKey: 'm3',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
+        HealthStepSegmentsCompanion.insert(
+          provider: 'apple_healthkit',
+          sourceId: const drift.Value('phone'),
+          startAt: DateTime.utc(2026, 3, 26, 11),
+          endAt: DateTime.utc(2026, 3, 26, 12),
+          stepCount: 200,
+          externalKey: 'm4',
+          updatedAt: drift.Value(DateTime.now()),
+        ),
       ]);
 
       final dayLocal = DateTime(2026, 3, 26);

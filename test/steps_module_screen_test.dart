@@ -41,6 +41,10 @@ class FakeWorkoutRepository implements IWorkoutRepository {
   Future<void> updatePauseTime(int routineExerciseId, int? seconds) async {}
   @override
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async => [];
+  @override
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+          DateTime start, DateTime end) async =>
+      [];
 }
 
 Future<void> _pumpUntilScopeLoaded(WidgetTester tester) async {

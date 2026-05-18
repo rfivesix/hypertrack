@@ -71,4 +71,9 @@ class WorkoutRepository implements IWorkoutRepository {
   @override
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) =>
       _localDataSource.getLastSetsForExercise(exerciseName);
+
+  @override
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+          DateTime start, DateTime end) =>
+      _localDataSource.getWorkoutLogsForDateRange(start, end);
 }

@@ -265,6 +265,7 @@ class FluidLogs extends Table with HybridId, MetaColumns {
   // Macros for fluids (carried over from old code)
   IntColumn get kcal => integer().nullable()();
   RealColumn get sugarPer100ml => real().nullable()();
+  RealColumn get carbsPer100ml => real().nullable()();
   RealColumn get caffeinePer100ml => real().nullable()();
   // Link to NutritionLogs if it was a logged drink
   TextColumn get linkedNutritionLogId => text().nullable().references(
@@ -408,7 +409,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -581,6 +582,9 @@ class AppDatabase extends _$AppDatabase {
             if (!names.contains('is_fluid')) {
               await m.addColumn(products, products.isFluid);
             }
+          }
+          if (from < 17) {
+            await m.addColumn(fluidLogs, fluidLogs.carbsPer100ml);
           }
         },
       );

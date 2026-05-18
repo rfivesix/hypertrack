@@ -27,12 +27,16 @@ import 'features/workout/data/workout_repository.dart';
 import 'features/exercise_catalog/domain/repositories/exercise_catalog_repository.dart';
 import 'features/exercise_catalog/data/exercise_catalog_repository.dart';
 import 'features/profile/domain/repositories/profile_repository.dart';
-import 'features/profile/data/profile_repository.dart';
 import 'data/drift_database.dart' as db;
+import 'data/database_helper.dart';
+import 'features/profile/data/profile_repository.dart';
 import 'features/diary/data/sources/diary_local_data_source.dart';
 import 'features/workout/data/sources/workout_local_data_source.dart';
 import 'features/exercise_catalog/data/sources/exercise_catalog_local_data_source.dart';
 import 'features/profile/data/sources/profile_local_data_source.dart';
+import 'features/supplements/domain/repositories/supplement_repository.dart';
+import 'features/supplements/data/supplement_repository_impl.dart';
+import 'features/supplements/data/sources/supplement_local_data_source.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,11 +53,13 @@ void main() async {
   final hasAcceptedConsent = prefs.getBool('hasAcceptedConsent') ?? false;
 
   final database = db.AppDatabase();
+  DatabaseHelper.setDriftDb(database);
   final diaryLocalDataSource = DiaryLocalDataSource(database);
   final workoutLocalDataSource = WorkoutLocalDataSource(database);
   final exerciseCatalogLocalDataSource =
       ExerciseCatalogLocalDataSource(database);
   final profileLocalDataSource = ProfileLocalDataSource(database);
+  final supplementLocalDataSource = SupplementLocalDataSource(database);
 
   final workoutRepository =
       WorkoutRepository(localDataSource: workoutLocalDataSource);
@@ -76,6 +82,11 @@ void main() async {
           ),
         ),
         Provider<IWorkoutRepository>.value(value: workoutRepository),
+        Provider<SupplementRepository>(
+          create: (_) => SupplementRepositoryImpl(
+            localDataSource: supplementLocalDataSource,
+          ),
+        ),
         Provider<IExerciseCatalogRepository>(
           create: (_) => ExerciseCatalogRepository(
             localDataSource: exerciseCatalogLocalDataSource,

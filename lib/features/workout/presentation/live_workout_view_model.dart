@@ -691,8 +691,9 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
   void _startWorkoutTimer() {
     _workoutDurationTimer?.cancel();
     _elapsedDuration = Duration.zero;
-    if (_workoutLog != null)
+    if (_workoutLog != null) {
       _elapsedDuration = DateTime.now().difference(_workoutLog!.startTime);
+    }
     _workoutDurationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_workoutLog != null) {
         _elapsedDuration = DateTime.now().difference(_workoutLog!.startTime);
@@ -715,8 +716,9 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
           .map((s) => s.id!)
           .toList();
 
-      if (incompleteSetIds.isNotEmpty)
+      if (incompleteSetIds.isNotEmpty) {
         await _repository.deleteSetLogs(incompleteSetIds);
+      }
 
       int globalOrderCounter = 0;
       final List<SetLog> setsToUpdate = [];
@@ -729,8 +731,9 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
           }
         }
       }
-      if (setsToUpdate.isNotEmpty)
+      if (setsToUpdate.isNotEmpty) {
         await _repository.updateSetLogs(setsToUpdate);
+      }
 
       await _repository.finishWorkout(logId, title: title, notes: notes);
 
@@ -797,8 +800,9 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     _workoutDurationTimer?.cancel();
     _prEventsController.close();
     disposeControllers();
-    if (_registerLifecycleObserver)
+    if (_registerLifecycleObserver) {
       WidgetsBinding.instance.removeObserver(this);
+    }
     super.dispose();
   }
 }

@@ -3,7 +3,12 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
-    show AppDatabase, NutritionLogsCompanion, ProductsCompanion, Profile;
+    show
+        AppDatabase,
+        NutritionLogsCompanion,
+        ProductsCompanion,
+        Profile,
+        HealthStepSegmentsCompanion;
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_input_adapter.dart';
 import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
 import 'package:train_libre/features/diary/domain/models/fluid_entry.dart';
@@ -445,22 +450,24 @@ Future<void> _insertStepTotalForDay(
   final endB = DateTime(day.year, day.month, day.day, 19, 0).toUtc();
 
   await dbHelper.upsertHealthStepSegments([
-    {
-      'provider': 'apple_healthkit',
-      'sourceId': 'test-source',
-      'startAt': startA.toIso8601String(),
-      'endAt': endA.toIso8601String(),
-      'stepCount': firstHalf,
-      'externalKey': 'steps-${day.toIso8601String()}-a',
-    },
-    {
-      'provider': 'apple_healthkit',
-      'sourceId': 'test-source',
-      'startAt': startB.toIso8601String(),
-      'endAt': endB.toIso8601String(),
-      'stepCount': secondHalf,
-      'externalKey': 'steps-${day.toIso8601String()}-b',
-    },
+    HealthStepSegmentsCompanion.insert(
+      provider: 'apple_healthkit',
+      sourceId: const drift.Value('test-source'),
+      startAt: startA,
+      endAt: endA,
+      stepCount: firstHalf,
+      externalKey: 'steps-${day.toIso8601String()}-a',
+      updatedAt: drift.Value(DateTime.now()),
+    ),
+    HealthStepSegmentsCompanion.insert(
+      provider: 'apple_healthkit',
+      sourceId: const drift.Value('test-source'),
+      startAt: startB,
+      endAt: endB,
+      stepCount: secondHalf,
+      externalKey: 'steps-${day.toIso8601String()}-b',
+      updatedAt: drift.Value(DateTime.now()),
+    ),
   ]);
 }
 

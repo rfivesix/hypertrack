@@ -4,21 +4,21 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show ByteData, rootBundle;
-import 'database_helper.dart';
-import 'drift_database.dart';
+import '../../data/database_helper.dart';
+import '../../data/drift_database.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:drift/drift.dart' as drift;
 
-import '../config/app_data_sources.dart';
-import '../services/base_food_language_service.dart';
-import '../services/exercise_catalog_refresh_service.dart';
-import '../services/off_catalog_country_service.dart';
-import '../services/off_catalog_refresh_service.dart';
+import '../../config/app_data_sources.dart';
+import '../../services/base_food_language_service.dart';
+import '../../services/exercise_catalog_refresh_service.dart';
+import '../../services/off_catalog_country_service.dart';
+import '../../services/off_catalog_refresh_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../features/diary/domain/use_cases/retain_historical_off_products_use_case.dart';
+import '../../features/diary/domain/use_cases/retain_historical_off_products_use_case.dart';
 
 // Type definition for the callback
 typedef ProgressCallback = void Function(

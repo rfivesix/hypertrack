@@ -18,6 +18,7 @@ void main() {
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
+      DatabaseHelper.setDriftDb(database);
     });
 
     tearDown(() async {
@@ -130,6 +131,7 @@ void main() {
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
+      DatabaseHelper.setDriftDb(database);
     });
 
     tearDown(() async {

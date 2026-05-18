@@ -28,7 +28,7 @@ class ProfileRepository implements IProfileRepository {
     return _localDataSource.saveUserProfile(
       name: name,
       birthday: birthday,
-      height: height,
+      height: height?.toDouble(),
       gender: gender,
     );
   }
@@ -55,8 +55,14 @@ class ProfileRepository implements IProfileRepository {
 
   @override
   Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
-      String type, DateTimeRange range) {
-    return _localDataSource.getChartDataForTypeAndRange(type, range);
+      String type, DateTimeRange range) async {
+    final raw = await _localDataSource.getChartDataForTypeAndRange(type, range);
+    return raw.map((item) {
+      return ChartDataPoint(
+        date: item['date'] as DateTime,
+        value: (item['value'] as num).toDouble(),
+      );
+    }).toList();
   }
 
   @override

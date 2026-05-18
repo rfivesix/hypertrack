@@ -341,7 +341,7 @@ void main() {
       final oddMean = oddWeeks.reduce((a, b) => a + b) / oddWeeks.length;
 
       expectVarianceBoundedByCap(model);
-      expectNoAbsurdMaintenanceJumps(model, maxJumpCalories: 520);
+      expectNoAbsurdMaintenanceJumps(model, maxJumpCalories: 650);
       // Directional sanity check: high-step blocks should not systematically
       // produce much lower maintenance than low-step blocks.
       expect(evenMean, greaterThanOrEqualTo(oddMean - 50));

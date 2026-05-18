@@ -218,8 +218,9 @@ class _SupplementTrackScreenContentState
         return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart)
+        if (direction == DismissDirection.endToStart) {
           _deleteLogEntry(model, log);
+        }
       },
       child: SummaryCard(
         child: ListTile(

@@ -403,7 +403,7 @@ class RecommendationInputAdapter {
     final startDay = normalizedEndDay.subtract(
       Duration(days: safeLookback - 1),
     );
-    final stepsSyncService = StepsSyncService(dbHelper: databaseHelper);
+    final stepsSyncService = StepsSyncService();
     final providerFilter = StepsSyncService.providerFilterToRaw(
       await stepsSyncService.getProviderFilter(),
     );

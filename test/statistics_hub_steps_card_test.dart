@@ -33,6 +33,10 @@ import 'package:train_libre/features/workout/domain/models/workout_log.dart';
 import 'package:train_libre/features/workout/domain/models/set_log.dart';
 import 'package:train_libre/features/workout/domain/models/routine.dart';
 import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart';
+import 'package:train_libre/features/profile/domain/repositories/profile_repository.dart';
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
+import 'package:train_libre/features/analytics/domain/models/chart_data_point.dart';
+import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -160,6 +164,10 @@ class _FakeWorkoutRepository implements IWorkoutRepository {
   Future<void> updatePauseTime(int routineExerciseId, int? seconds) async {}
   @override
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async => [];
+  @override
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+          DateTime start, DateTime end) async =>
+      [];
 }
 
 class _FakePulseRepository implements PulseAnalysisRepository {
@@ -380,6 +388,41 @@ BodyNutritionAnalyticsResult _emptyBodyNutritionResult() {
   );
 }
 
+class _FakeProfileRepository implements IProfileRepository {
+  @override
+  Future<db.Profile?> getUserProfile() async => null;
+  @override
+  Future<void> saveUserProfile(
+      {required String name,
+      DateTime? birthday,
+      int? height,
+      String? gender}) async {}
+  @override
+  Future<List<MeasurementSession>> getMeasurementSessions() async => [];
+  @override
+  Future<DateTime?> getEarliestMeasurementDate() async => null;
+  @override
+  Future<void> deleteMeasurementSession(int sessionId) async {}
+  @override
+  Future<void> insertMeasurementSession(MeasurementSession session) async {}
+  @override
+  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
+          String type, DateTimeRange range) async =>
+      [];
+  @override
+  Future<db.AppSetting?> getAppSettings() async => null;
+  @override
+  Future<int> getCurrentTargetStepsOrDefault() async => 10000;
+  @override
+  Future<void> saveUserGoals(
+      {required int calories,
+      required int protein,
+      required int carbs,
+      required int fat,
+      required int water,
+      required int steps}) async {}
+}
+
 const _sleepConnectChannel =
     MethodChannel('trainlibre.health/sleep_health_connect');
 
@@ -550,6 +593,7 @@ void main() {
   Widget wrapWithSessionManager(Widget child) {
     return MultiProvider(
       providers: [
+        Provider<IProfileRepository>.value(value: _FakeProfileRepository()),
         ChangeNotifierProvider<LiveWorkoutViewModel>.value(
           value: LiveWorkoutViewModel(repository: _FakeWorkoutRepository()),
         ),

@@ -15,6 +15,7 @@ void main() {
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
+      DatabaseHelper.setDriftDb(database);
     });
 
     tearDown(() async {
@@ -43,6 +44,10 @@ void main() {
               mealType: const drift.Value('Snack'),
             ),
           );
+
+      await (database.select(database.products)
+            ..where((tbl) => tbl.id.equals(product.id)))
+          .getSingleOrNull();
 
       final rows = await dbHelper.getAllFoodEntriesForBackup();
 

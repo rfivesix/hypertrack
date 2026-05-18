@@ -356,9 +356,9 @@ class _MealScreenState extends State<MealScreen> {
       for (final it in _items) {
         final grams = (it['quantity_in_grams'] as int?) ?? 0;
         await DatabaseHelper.instance.addMealItem(
-          mealId,
+          mealId: mealId,
           barcode: it['barcode'] as String,
-          grams: grams,
+          amount: grams.toDouble(),
         );
       }
       if (mounted) {
@@ -782,7 +782,7 @@ class _MealScreenState extends State<MealScreen> {
     );
 
     final caffeineId = caffeine.id ??
-        (await DatabaseHelper.instance.insertSupplement(caffeine)).id!;
+        (await DatabaseHelper.instance.insertSupplement(caffeine));
 
     await DatabaseHelper.instance.insertSupplementLog(
       SupplementLog(

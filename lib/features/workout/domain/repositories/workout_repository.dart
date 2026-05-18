@@ -23,4 +23,6 @@ abstract class IWorkoutRepository {
   Future<void> finishWorkout(int logId, {String? title, String? notes});
   Future<void> updatePauseTime(int routineExerciseId, int? seconds);
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName);
+  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
+      DateTime start, DateTime end);
 }

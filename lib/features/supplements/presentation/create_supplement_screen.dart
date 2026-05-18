@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../domain/repositories/supplement_repository.dart';
 import '../data/supplement_repository_impl.dart';
+import '../data/sources/supplement_local_data_source.dart';
 import '../domain/models/supplement.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
@@ -22,8 +23,10 @@ class CreateSupplementScreen extends StatefulWidget {
 }
 
 class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
-  late final SupplementRepository _repository =
-      widget.repository ?? SupplementRepositoryImpl();
+  late final SupplementRepository _repository = widget.repository ??
+      SupplementRepositoryImpl(
+        localDataSource: SupplementLocalDataSource.instance,
+      );
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _doseController = TextEditingController();

@@ -1,7 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../data/backup_manager.dart';
+import '../../../core/infrastructure/backup_manager.dart';
 import '../domain/feedback_report_builder.dart';
 
 typedef SharedPreferencesLoader = Future<SharedPreferences> Function();

@@ -1,7 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart' show AppDatabase;
 import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
@@ -31,14 +30,12 @@ void main() {
 
   group('LiveWorkoutViewModel high-value behavior', () {
     late AppDatabase database;
-    late DatabaseHelper dbHelper;
     late WorkoutLocalDataSource workoutDb;
     late LiveWorkoutViewModel manager;
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
-      dbHelper = DatabaseHelper.forTesting(database);
-      workoutDb = WorkoutLocalDataSource.forTesting(databaseHelper: dbHelper);
+      workoutDb = WorkoutLocalDataSource.forTesting(database);
       manager = LiveWorkoutViewModel.forTesting(
         workoutDb: WorkoutRepository(
           localDataSource: WorkoutLocalDataSource(database),

@@ -1,13 +1,11 @@
 // lib/features/diary/data/nutrition_repository.dart
+import '../domain/models/daily_goal.dart';
 import 'sources/diary_local_data_source.dart';
+import 'sources/product_local_data_source.dart';
 import '../domain/models/fluid_entry.dart';
 import '../domain/models/food_entry.dart';
 import '../domain/models/food_item.dart';
 import '../domain/repositories/diary_repository.dart';
-import '../../supplements/domain/models/supplement.dart';
-import '../../supplements/domain/models/supplement_log.dart';
-import '../../workout/domain/models/workout_log.dart';
-import '../../../data/drift_database.dart' as db;
 
 /// Concrete implementation of [IDiaryRepository] implementing database transaction logic.
 class NutritionRepository implements IDiaryRepository {
@@ -18,8 +16,19 @@ class NutritionRepository implements IDiaryRepository {
   }) : _localDataSource = localDataSource;
 
   @override
-  Future<db.DailyGoalsHistoryData?> getGoalsForDate(DateTime date) =>
-      _localDataSource.getGoalsForDate(date);
+  Future<DailyGoal?> getGoalsForDate(DateTime date) async {
+    final data = await _localDataSource.getGoalsForDate(date);
+    if (data == null) return null;
+    return DailyGoal(
+      targetCalories: data.targetCalories,
+      targetProtein: data.targetProtein,
+      targetCarbs: data.targetCarbs,
+      targetFat: data.targetFat,
+      targetWater: data.targetWater,
+      targetSteps: data.targetSteps,
+      createdAt: data.createdAt,
+    );
+  }
 
   @override
   Future<List<FoodEntry>> getEntriesForDate(DateTime date) =>
@@ -30,25 +39,10 @@ class NutritionRepository implements IDiaryRepository {
       _localDataSource.getFluidEntriesForDate(date);
 
   @override
-  Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
-          DateTime start, DateTime end) =>
-      _localDataSource.getWorkoutLogsForDateRange(start, end);
-
-  @override
-  Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) =>
-      _localDataSource.getProductsByBarcodes(barcodes);
-
-  @override
-  Future<List<Supplement>> getSupplementsForDate(DateTime date) =>
-      _localDataSource.getSupplementsForDate(date);
-
-  @override
-  Future<List<Supplement>> getAllSupplements() =>
-      _localDataSource.getAllSupplements();
-
-  @override
-  Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date) =>
-      _localDataSource.getSupplementLogsForDate(date);
+  Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes) {
+    return ProductLocalDataSource(_localDataSource.db)
+        .getProductsByBarcodes(barcodes);
+  }
 
   @override
   Future<void> deleteFoodEntry(int id) => _localDataSource.deleteFoodEntry(id);
@@ -76,9 +70,4 @@ class NutritionRepository implements IDiaryRepository {
   @override
   Future<int> insertFoodEntry(FoodEntry entry) =>
       _localDataSource.insertFoodEntry(entry);
-
-  @override
-  Future<SupplementLog> insertSupplementLog(SupplementLog log) async {
-    return _localDataSource.insertSupplementLog(log);
-  }
 }

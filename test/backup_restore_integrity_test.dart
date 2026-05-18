@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/backup_manager.dart';
+import 'package:train_libre/core/infrastructure/backup_manager.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion, ExercisesCompanion;
@@ -30,8 +30,9 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       db = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(db);
-      workoutDb = WorkoutLocalDataSource.forTesting(databaseHelper: dbHelper);
-      productDb = ProductLocalDataSource.forTesting(databaseHelper: dbHelper);
+      DatabaseHelper.setDriftDb(db);
+      workoutDb = WorkoutLocalDataSource.forTesting(db);
+      productDb = ProductLocalDataSource.forTesting(db);
       backupManager = BackupManager(
         userDb: dbHelper,
         workoutDb: workoutDb,
@@ -69,9 +70,9 @@ void main() {
         notes: 'High-carb pre-workout',
       );
       await dbHelper.addMealItem(
-        mealId,
+        mealId: mealId,
         barcode: 'base-apple',
-        grams: 180,
+        amount: 180.0,
       );
 
       final payload = await backupManager.generateBackupPayloadForTesting();

@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:drift/drift.dart' as drift;
 
-import '../../data/database_helper.dart';
+import '../../data/drift_database.dart' as db;
+import '../../features/steps/data/sources/steps_local_data_source.dart';
 import 'health_models.dart';
 import 'health_platform_steps.dart';
 
@@ -23,12 +25,13 @@ class StepsSyncService {
   static const Duration _initialLookback = Duration(days: 30);
 
   final HealthPlatformSteps _platform;
-  final DatabaseHelper _dbHelper;
+  final StepsLocalDataSource _stepsDb;
   bool _isSyncing = false;
 
-  StepsSyncService({HealthPlatformSteps? platform, DatabaseHelper? dbHelper})
+  StepsSyncService(
+      {HealthPlatformSteps? platform, StepsLocalDataSource? stepsDb})
       : _platform = platform ?? const HealthPlatformSteps(),
-        _dbHelper = dbHelper ?? DatabaseHelper.instance;
+        _stepsDb = stepsDb ?? StepsLocalDataSource.instance;
 
   Future<bool> isTrackingEnabled() async {
     final prefs = await SharedPreferences.getInstance();
@@ -197,7 +200,7 @@ class StepsSyncService {
         rethrow;
       }
 
-      final rows = segments.map((segment) {
+      final companions = segments.map((segment) {
         final source = segment.sourceId ?? '';
         final fallback = sha1
             .convert(
@@ -215,34 +218,35 @@ class StepsSyncService {
             segment.nativeId != null && segment.nativeId!.isNotEmpty
                 ? '$provider:${segment.nativeId}'
                 : '$provider:$fallback';
-        return <String, dynamic>{
-          'provider': provider,
-          'sourceId': segment.sourceId,
-          'startAt': segment.startAtUtc.toIso8601String(),
-          'endAt': segment.endAtUtc.toIso8601String(),
-          'stepCount': segment.stepCount,
-          'externalKey': externalKey,
-        };
+        return db.HealthStepSegmentsCompanion.insert(
+          provider: provider,
+          sourceId: drift.Value(segment.sourceId),
+          startAt: segment.startAtUtc,
+          endAt: segment.endAtUtc,
+          stepCount: segment.stepCount,
+          externalKey: externalKey,
+          updatedAt: drift.Value(DateTime.now()),
+        );
       }).toList();
 
-      await _dbHelper.upsertHealthStepSegments(rows);
+      await _stepsDb.upsertHealthStepSegments(companions);
       await _setLastSyncAt(nowUtc);
       if (kDebugMode) {
-        final sourceTotals = await _dbHelper.getDailyStepsTotalsBySource(
+        final sourceTotals = await _stepsDb.getDailyStepsTotalsBySource(
           dayLocal: nowUtc.toLocal(),
         );
         final sourceDebug = sourceTotals
             .map((row) => '${row['sourceId']}:${row['totalSteps']}')
             .join(', ');
         debugPrint(
-          '[StepsSync] sync done fetched=${segments.length} upserted=${rows.length} todaySources=[$sourceDebug]',
+          '[StepsSync] sync done fetched=${segments.length} upserted=${companions.length} todaySources=[$sourceDebug]',
         );
       }
 
       return StepsSyncResult(
         skipped: false,
         fetchedCount: segments.length,
-        upsertedCount: rows.length,
+        upsertedCount: companions.length,
       );
     } finally {
       _isSyncing = false;

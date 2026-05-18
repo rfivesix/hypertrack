@@ -15,23 +15,20 @@ import '../../domain/use_cases/evaluate_food_source_use_case.dart';
 /// Provides methods for searching products, managing favorites, and retrieving
 /// base foods from the katalog.
 class ProductLocalDataSource {
-  final db.AppDatabase? _dbInstance;
-  final DatabaseHelper? _dbHelper;
+  final db.AppDatabase _dbInstance;
 
-  static final ProductLocalDataSource instance = ProductLocalDataSource._init();
+  ProductLocalDataSource(this._dbInstance);
 
-  ProductLocalDataSource._init()
-      : _dbInstance = null,
-        _dbHelper = DatabaseHelper.instance;
-  ProductLocalDataSource(this._dbInstance) : _dbHelper = null;
-  ProductLocalDataSource.forTesting({required DatabaseHelper databaseHelper})
-      : _dbInstance = null,
-        _dbHelper = databaseHelper;
+  static ProductLocalDataSource get instance =>
+      DatabaseHelper.instance.productLocalDataSource;
+
+  db.AppDatabase get dbInstance => _dbInstance;
+
+  ProductLocalDataSource.forTesting(this._dbInstance);
 
   // Access to the central Drift instance
   Future<db.AppDatabase> get database async {
-    if (_dbInstance != null) return _dbInstance!;
-    return _dbHelper!.database;
+    return _dbInstance;
   }
 
   // --- MAPPING HELPERS ---
@@ -180,8 +177,25 @@ class ProductLocalDataSource {
 
   /// Retrieves recently used products based on the user's consumption history.
   Future<List<FoodItem>> getRecentProducts() async {
-    final recentBarcodes =
-        await DatabaseHelper.instance.getRecentlyUsedBarcodes();
+    final dbInstance = await database;
+
+    final maxDate = dbInstance.nutritionLogs.consumedAt.max();
+    final query = dbInstance.selectOnly(dbInstance.nutritionLogs)
+      ..addColumns([dbInstance.nutritionLogs.legacyBarcode, maxDate])
+      ..groupBy([dbInstance.nutritionLogs.legacyBarcode])
+      ..orderBy([
+        OrderingTerm(expression: maxDate, mode: OrderingMode.desc),
+      ])
+      ..limit(100);
+
+    final result = await query.get();
+
+    final recentBarcodes = result
+        .map((row) => row.read(dbInstance.nutritionLogs.legacyBarcode))
+        .where((bc) => bc != null)
+        .cast<String>()
+        .toList();
+
     return await getProductsByBarcodes(recentBarcodes);
   }
 
@@ -448,5 +462,36 @@ class ProductLocalDataSource {
       canonicalFileName: AppDataSources.baseFoodsDbFileName,
       legacyFileName: AppDataSources.legacyBaseFoodsDbFileName,
     );
+  }
+
+  Future<bool> isFavorite(String barcode) async {
+    final dbInstance = await database;
+    final count = await (dbInstance.select(
+      dbInstance.favorites,
+    )..where((t) => t.barcode.equals(barcode)))
+        .get();
+    return count.isNotEmpty;
+  }
+
+  Future<List<String>> getFavoriteBarcodes() async {
+    final dbInstance = await database;
+    final rows = await dbInstance.select(dbInstance.favorites).get();
+    return rows.map((r) => r.barcode).toList();
+  }
+
+  Future<void> addFavorite(String barcode) async {
+    final dbInstance = await database;
+    await dbInstance.into(dbInstance.favorites).insert(
+          db.FavoritesCompanion(barcode: Value(barcode)),
+          mode: InsertMode.insertOrReplace,
+        );
+  }
+
+  Future<void> removeFavorite(String barcode) async {
+    final dbInstance = await database;
+    await (dbInstance.delete(
+      dbInstance.favorites,
+    )..where((t) => t.barcode.equals(barcode)))
+        .go();
   }
 }

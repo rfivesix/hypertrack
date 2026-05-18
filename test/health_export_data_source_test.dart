@@ -15,6 +15,7 @@ void main() {
     setUp(() async {
       db = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(db);
+      DatabaseHelper.setDriftDb(db);
       await _seed(db);
     });
 

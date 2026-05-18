@@ -44,23 +44,16 @@ class MuscleContributionRawData {
 
 /// Helper class for managing workout-specific data in the Drift database.
 class WorkoutLocalDataSource {
-  final db.AppDatabase? _dbInstance;
-  final DatabaseHelper? _dbHelper;
+  final db.AppDatabase _dbInstance;
 
-  static final WorkoutLocalDataSource instance = WorkoutLocalDataSource._init();
+  WorkoutLocalDataSource(this._dbInstance);
+  WorkoutLocalDataSource.forTesting(this._dbInstance);
+  static WorkoutLocalDataSource get instance =>
+      DatabaseHelper.instance.workoutLocalDataSource;
 
-  WorkoutLocalDataSource._init()
-      : _dbInstance = null,
-        _dbHelper = DatabaseHelper.instance;
-  WorkoutLocalDataSource(this._dbInstance) : _dbHelper = null;
-  WorkoutLocalDataSource.forTesting({required DatabaseHelper databaseHelper})
-      : _dbInstance = null,
-        _dbHelper = databaseHelper;
-
-  // Access the central Drift instance from DatabaseHelper.
+  // Access the central Drift instance.
   Future<db.AppDatabase> get database async {
-    if (_dbInstance != null) return _dbInstance!;
-    return _dbHelper!.database;
+    return _dbInstance;
   }
 
   // ===========================================================================
@@ -2890,5 +2883,28 @@ class WorkoutLocalDataSource {
       },
     );
     return limited;
+  }
+
+  Future<double> getAverageCompletedWorkoutsPerWeek({
+    int weeksBack = 4,
+    DateTime? now,
+  }) async {
+    final dbInstance = await database;
+    final referenceTime = now ?? DateTime.now();
+    final lookbackDays = weeksBack * 7;
+    final start = referenceTime.subtract(Duration(days: lookbackDays));
+
+    final countExpr = dbInstance.workoutLogs.id.count();
+    final query = dbInstance.selectOnly(dbInstance.workoutLogs)
+      ..addColumns([countExpr])
+      ..where(dbInstance.workoutLogs.status.equals('completed'))
+      ..where(dbInstance.workoutLogs.startTime.isBiggerOrEqualValue(start))
+      ..where(dbInstance.workoutLogs.startTime
+          .isSmallerOrEqualValue(referenceTime));
+
+    final row = await query.getSingleOrNull();
+    final completedCount = row?.read(countExpr) ?? 0;
+    if (weeksBack <= 0) return 0;
+    return completedCount / weeksBack;
   }
 }

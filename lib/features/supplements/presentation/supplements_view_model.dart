@@ -5,6 +5,7 @@ import '../data/supplement_repository_impl.dart';
 import '../domain/models/supplement.dart';
 import '../domain/models/supplement_log.dart';
 import '../domain/models/tracked_supplement.dart';
+import '../data/sources/supplement_local_data_source.dart';
 
 class SupplementsViewModel extends ChangeNotifier {
   final SupplementRepository _repository;
@@ -27,7 +28,10 @@ class SupplementsViewModel extends ChangeNotifier {
   List<SupplementLog> get todaysLogs => _todaysLogs;
 
   SupplementsViewModel({SupplementRepository? repository})
-      : _repository = repository ?? SupplementRepositoryImpl();
+      : _repository = repository ??
+            SupplementRepositoryImpl(
+              localDataSource: SupplementLocalDataSource.instance,
+            );
 
   void setSelectedDate(DateTime date) {
     _selectedDate = date;

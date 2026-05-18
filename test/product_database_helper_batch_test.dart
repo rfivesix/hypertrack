@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion;
 import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
@@ -37,9 +36,7 @@ void main() {
           ),
         );
 
-    final helper = ProductLocalDataSource.forTesting(
-      databaseHelper: DatabaseHelper.forTesting(database),
-    );
+    final helper = ProductLocalDataSource.forTesting(database);
 
     final products = await helper.getProductsByBarcodes([
       'a',

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../domain/repositories/diary_repository.dart';
+import '../../supplements/domain/repositories/supplement_repository.dart';
+import '../../workout/domain/repositories/workout_repository.dart';
 import '../../../data/user_preferences_repository.dart';
 import '../domain/calculate_daily_nutrition_use_case.dart';
 import '../domain/models/daily_nutrition.dart';
@@ -75,6 +77,8 @@ class DiaryLoadCoordinator {
 
 class DiaryViewModel extends ChangeNotifier {
   final IDiaryRepository _nutritionRepo;
+  final SupplementRepository _supplementRepo;
+  final IWorkoutRepository _workoutRepo;
   final UserPreferencesRepository _prefsRepo =
       UserPreferencesRepository.instance;
   final CalculateDailyNutritionUseCase _calculateUseCase =
@@ -114,8 +118,12 @@ class DiaryViewModel extends ChangeNotifier {
 
   DiaryViewModel({
     required IDiaryRepository nutritionRepo,
+    required SupplementRepository supplementRepo,
+    required IWorkoutRepository workoutRepo,
     DateTime? initialDate,
   })  : _nutritionRepo = nutritionRepo,
+        _supplementRepo = supplementRepo,
+        _workoutRepo = workoutRepo,
         selectedDateNotifier =
             ValueNotifier((initialDate ?? DateTime.now()).dateOnly) {
     healthSyncCoordinator.addListener(notifyListeners);
@@ -205,16 +213,16 @@ class DiaryViewModel extends ChangeNotifier {
       final endOfDay = DateTime(
           diaryDate.year, diaryDate.month, diaryDate.day, 23, 59, 59, 999);
       final workoutLogs =
-          await _nutritionRepo.getWorkoutLogsForDateRange(startOfDay, endOfDay);
+          await _workoutRepo.getWorkoutLogsForDateRange(startOfDay, endOfDay);
 
       final barcodes = entries.map((e) => e.barcode).toSet().toList();
       final products = await _nutritionRepo.getProductsByBarcodes(barcodes);
 
       final supplementsForDate =
-          await _nutritionRepo.getSupplementsForDate(diaryDate);
-      final allSupplements = await _nutritionRepo.getAllSupplements();
+          await _supplementRepo.getSupplementsForDate(diaryDate);
+      final allSupplements = await _supplementRepo.getAllSupplements();
       final todaysLogs =
-          await _nutritionRepo.getSupplementLogsForDate(diaryDate);
+          await _supplementRepo.getSupplementLogsForDate(diaryDate);
 
       if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
 
@@ -295,7 +303,7 @@ class DiaryViewModel extends ChangeNotifier {
   }) async {
     if (doseMg <= 0) return;
 
-    final supplements = await _nutritionRepo.getAllSupplements();
+    final supplements = await _supplementRepo.getAllSupplements();
     Supplement? caffeineSupplement;
     try {
       caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
@@ -305,14 +313,12 @@ class DiaryViewModel extends ChangeNotifier {
 
     if (caffeineSupplement.id == null) return;
 
-    await _nutritionRepo.insertSupplementLog(
+    await _supplementRepo.insertSupplementLog(
       SupplementLog(
         supplementId: caffeineSupplement.id!,
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        sourceFoodEntryId: foodEntryId,
-        sourceFluidEntryId: fluidEntryId,
       ),
     );
   }

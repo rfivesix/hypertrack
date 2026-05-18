@@ -1,8 +1,8 @@
 // lib/screens/app_initializer_screen.dart
 
 import 'package:flutter/material.dart';
-import '../../../data/backup_manager.dart';
-import '../../../data/basis_data_manager.dart';
+import '../../../core/infrastructure/backup_manager.dart';
+import '../../../core/infrastructure/basis_data_manager.dart';
 import '../../../data/database_helper.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../services/local_notification_service.dart';

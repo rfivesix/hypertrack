@@ -1,8 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/data/basis_data_manager.dart';
-import 'package:train_libre/data/database_helper.dart';
+import 'package:train_libre/core/infrastructure/basis_data_manager.dart';
 import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart';
 import 'package:train_libre/features/diary/data/sources/product_local_data_source.dart';
@@ -16,9 +15,7 @@ void main() {
 
     setUp(() async {
       database = AppDatabase(NativeDatabase.memory());
-      productDb = ProductLocalDataSource.forTesting(
-        databaseHelper: DatabaseHelper.forTesting(database),
-      );
+      productDb = ProductLocalDataSource.forTesting(database);
     });
 
     tearDown(() async {

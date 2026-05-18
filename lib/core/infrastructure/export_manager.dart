@@ -7,8 +7,8 @@ import 'package:excel_community/excel_community.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
-import '../features/workout/data/sources/workout_local_data_source.dart';
-import 'database_helper.dart';
+import '../../features/workout/data/sources/workout_local_data_source.dart';
+import '../../data/database_helper.dart';
 
 class ExportManager {
   static Future<void> exportToExcel() async {

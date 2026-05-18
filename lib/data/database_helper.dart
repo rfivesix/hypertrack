@@ -1,27 +1,22 @@
 // lib/data/database_helper.dart
 
 import 'package:drift/drift.dart' as drift;
-import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
-// Import with prefix
 import 'drift_database.dart' as db;
-import 'drift_database.dart' show FavoritesCompanion;
-
-import '../features/analytics/domain/models/chart_data_point.dart';
 import '../features/diary/domain/models/fluid_entry.dart';
 import '../features/diary/domain/models/food_entry.dart';
-import '../features/profile/domain/models/measurement.dart';
 import '../features/profile/domain/models/measurement_session.dart';
 import '../features/supplements/domain/models/supplement.dart';
 import '../features/supplements/domain/models/supplement_log.dart';
-import '../services/health/steps_sync_service.dart';
-import '../util/perf_debug_timer.dart';
-import '../features/diary/data/sources/product_local_data_source.dart';
+import '../features/analytics/domain/models/chart_data_point.dart';
 
-/// Main helper for general application data persistence using the Drift database.
-///
-/// Manages user favorites, nutrition logs, fluid intake, body measurements,
-/// supplements, and meal templates.
+import '../features/diary/data/sources/diary_local_data_source.dart';
+import '../features/diary/data/sources/meal_local_data_source.dart';
+import '../features/profile/data/sources/profile_local_data_source.dart';
+import '../features/supplements/data/sources/supplement_local_data_source.dart';
+import '../features/steps/data/sources/steps_local_data_source.dart';
+import '../features/diary/data/sources/product_local_data_source.dart';
+import '../features/workout/data/sources/workout_local_data_source.dart';
+
 class FoodCaloriesByDayResult {
   final Map<DateTime, double> caloriesByDay;
   final int unresolvedEntryCount;
@@ -33,2416 +28,398 @@ class FoodCaloriesByDayResult {
 }
 
 class DatabaseHelper {
-  /// Singleton instance of [DatabaseHelper].
   static final DatabaseHelper instance = DatabaseHelper._init();
-
   static db.AppDatabase? _driftDb;
   final db.AppDatabase? _injectedDb;
-  static const int _msPerSecond = 1000;
-
   DatabaseHelper._init() : _injectedDb = null;
   DatabaseHelper.forTesting(db.AppDatabase database) : _injectedDb = database;
 
-  /// Returns the underlying [db.AppDatabase] instance.
-  Future<db.AppDatabase> get database async {
-    if (_injectedDb != null) return _injectedDb!;
-    if (_driftDb != null) return _driftDb!;
-    _driftDb = db.AppDatabase();
-    return _driftDb!;
+  static void setDriftDb(db.AppDatabase database) {
+    _driftDb = database;
   }
 
-  // --- Init: standard supplements ---
-  Future<void> ensureStandardSupplements() async {
-    final dbInstance = await database;
+  db.AppDatabase get dbInstance =>
+      _injectedDb ?? (_driftDb ??= db.AppDatabase());
 
-    // Check whether caffeine (code 'caffeine') already exists.
-    final exists = await (dbInstance.select(
-      dbInstance.supplements,
-    )..where((t) => t.code.equals('caffeine')))
-        .getSingleOrNull();
+  Future<db.AppDatabase> get database async => dbInstance;
 
-    if (exists == null) {
-      // Create caffeine
-      await insertSupplement(
-        Supplement(
-          code: 'caffeine', // Important: code must match exactly for the logic.
-          name: 'Koffein',
-          defaultDose: 0, // Depends on the drink
-          unit: 'mg',
-          dailyGoal: null,
-          dailyLimit: 400,
-          isBuiltin: true,
-        ),
-      );
-    }
-  }
-
-  // ===========================================================================
-  // 1. DATA MAINTENANCE
-  // ===========================================================================
-
-  /// Deletes all user-specific data from the database, excluding base products.
   Future<void> clearAllUserData() async {
-    final dbInstance = await database;
-
-    // Temporarily disable foreign keys so everything can be deleted safely.
-    await dbInstance.customStatement('PRAGMA foreign_keys = OFF');
-
+    final dbInst = dbInstance;
+    await dbInst.customStatement('PRAGMA foreign_keys = OFF');
     try {
-      // 1. History tables
-      await dbInstance.delete(dbInstance.dailyGoalsHistory).go();
-      await dbInstance.delete(dbInstance.supplementSettingsHistory).go();
-      await dbInstance.customStatement('DELETE FROM health_step_segments');
-      await dbInstance.customStatement('DELETE FROM health_export_records');
-      await dbInstance.customStatement('DELETE FROM sleep_nightly_analyses');
-      await dbInstance.customStatement(
-        'DELETE FROM sleep_canonical_heart_rate_samples',
-      );
-      await dbInstance.customStatement(
-        'DELETE FROM sleep_canonical_stage_segments',
-      );
-      await dbInstance.customStatement('DELETE FROM sleep_canonical_sessions');
-      await dbInstance.customStatement('DELETE FROM sleep_raw_imports');
-      await dbInstance.customStatement('DELETE FROM pulse_hourly_aggregates');
-      await dbInstance.customStatement('DELETE FROM pulse_aggregate_metadata');
-
-      // 2. Child tables (Logs) first
-      await dbInstance.delete(dbInstance.supplementLogs).go();
-      await dbInstance.delete(dbInstance.fluidLogs).go();
-      await dbInstance.delete(dbInstance.nutritionLogs).go();
-      await dbInstance.delete(dbInstance.measurements).go();
-      await dbInstance.delete(dbInstance.mealItems).go();
-
-      // 3. Parent tables (Definitions)
-      await dbInstance.delete(dbInstance.favorites).go();
-      await dbInstance.delete(dbInstance.supplements).go();
-      await dbInstance.delete(dbInstance.meals).go();
-
-      // 4. Settings & Profile
-      await dbInstance.delete(dbInstance.appSettings).go();
-      await dbInstance.delete(dbInstance.profiles).go();
-
-      // 5. User products
-      await (dbInstance.delete(
-        dbInstance.products,
-      )..where((t) => t.source.equals('user')))
-          .go();
+      await dbInst.transaction(() async {
+        await dbInst.delete(dbInst.dailyGoalsHistory).go();
+        await dbInst.delete(dbInst.supplementSettingsHistory).go();
+        await dbInst.customStatement('DELETE FROM health_step_segments');
+        await dbInst.customStatement('DELETE FROM health_export_records');
+        await dbInst.delete(dbInst.supplementLogs).go();
+        await dbInst.delete(dbInst.fluidLogs).go();
+        await dbInst.delete(dbInst.nutritionLogs).go();
+        await dbInst.delete(dbInst.measurements).go();
+        await dbInst.delete(dbInst.mealItems).go();
+        await dbInst.delete(dbInst.favorites).go();
+        await dbInst.delete(dbInst.supplements).go();
+        await dbInst.delete(dbInst.meals).go();
+        await dbInst.delete(dbInst.appSettings).go();
+        await dbInst.delete(dbInst.profiles).go();
+        await (dbInst.delete(dbInst.products)
+              ..where((t) => t.source.equals('user')))
+            .go();
+      });
     } finally {
-      // Re-enable foreign keys.
-      await dbInstance.customStatement('PRAGMA foreign_keys = ON');
+      await dbInst.customStatement('PRAGMA foreign_keys = ON');
     }
   }
 
-  Future<void> importUserData({
-    required List<FoodEntry> foodEntries,
-    required List<FluidEntry> fluidEntries,
-    required List<String> favoriteBarcodes,
-    required List<MeasurementSession> measurementSessions,
-    required List<Supplement> supplements,
-    required List<SupplementLog> supplementLogs,
-  }) async {
-    final dbInstance = await database;
-
-    await dbInstance.batch((batch) {
-      // A. Favorites
-      for (final barcode in favoriteBarcodes) {
+  Future<void> importUserData(
+      {required List<FoodEntry> foodEntries,
+      required List<FluidEntry> fluidEntries,
+      required List<String> favoriteBarcodes,
+      required List<MeasurementSession> measurementSessions,
+      required List<Supplement> supplements,
+      required List<SupplementLog> supplementLogs}) async {
+    final dbInst = dbInstance;
+    await dbInst.batch((batch) {
+      for (final b in favoriteBarcodes) {
         batch.insert(
-          dbInstance.favorites,
-          FavoritesCompanion(
-            barcode: drift.Value(barcode),
-            createdAt: drift.Value(DateTime.now()),
-          ),
-          mode: drift.InsertMode.insertOrReplace,
-        );
+            dbInst.favorites,
+            db.FavoritesCompanion.insert(
+                barcode: b, createdAt: drift.Value(DateTime.now())),
+            mode: drift.InsertMode.insertOrReplace);
       }
-
-      // B. Nutrition logs (food)
-      for (final entry in foodEntries) {
-        batch.insert(
-          dbInstance.nutritionLogs,
-          db.NutritionLogsCompanion(
-            legacyBarcode: drift.Value(entry.barcode),
-            consumedAt: drift.Value(entry.timestamp),
-            amount: drift.Value(entry.quantityInGrams.toDouble()),
-            mealType: drift.Value(entry.mealType),
-          ),
-          mode: drift.InsertMode.insertOrReplace,
-        );
-      }
-
-      // C. Fluid logs (drinks)
-      for (final entry in fluidEntries) {
-        batch.insert(
-          dbInstance.fluidLogs,
-          db.FluidLogsCompanion(
-            consumedAt: drift.Value(entry.timestamp),
-            amountMl: drift.Value(entry.quantityInMl),
-            name: drift.Value(entry.name),
-            kcal: drift.Value(entry.kcal),
-            sugarPer100ml: drift.Value(entry.sugarPer100ml),
-            caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
-          ),
-          mode: drift.InsertMode.insertOrReplace,
-        );
-      }
-
-      // D. MEASUREMENTS
-      for (final session in measurementSessions) {
-        final legacyId = session.timestamp.millisecondsSinceEpoch;
-        for (final m in session.measurements) {
-          batch.insert(
-            dbInstance.measurements,
-            db.MeasurementsCompanion(
-              date: drift.Value(session.timestamp),
-              type: drift.Value(m.type),
-              value: drift.Value(m.value),
-              unit: drift.Value(m.unit),
-              legacySessionId: drift.Value(legacyId),
-            ),
-            mode: drift.InsertMode.insertOrReplace,
-          );
-        }
-      }
-
-      // E. Supplements (with ID fix)
       for (final s in supplements) {
-        // Convert int ID to String if needed, or create a new UUID.
-        final String fixedId =
-            s.id != null ? s.id.toString() : const Uuid().v4();
-
         batch.insert(
-          dbInstance.supplements,
+          dbInst.supplements,
           db.SupplementsCompanion(
-            id: drift.Value(fixedId), // Set explicit ID.
-            code: drift.Value(s.code),
             name: drift.Value(s.name),
             dose: drift.Value(s.defaultDose),
             unit: drift.Value(s.unit),
             dailyGoal: drift.Value(s.dailyGoal),
             dailyLimit: drift.Value(s.dailyLimit),
-            notes: drift.Value(s.notes),
-            isBuiltin: drift.Value(s.isBuiltin),
-            isTracked: drift.Value(s.isTracked),
+            createdAt: drift.Value(DateTime.now()),
+            updatedAt: drift.Value(DateTime.now()),
+            id: s.id != null
+                ? drift.Value(s.id.toString())
+                : const drift.Value.absent(),
+            localId:
+                s.id != null ? drift.Value(s.id!) : const drift.Value.absent(),
           ),
           mode: drift.InsertMode.insertOrReplace,
         );
       }
-    });
-
-    // F. Supplement logs (separate to avoid reference errors)
-    await dbInstance.batch((batch) {
-      for (final log in supplementLogs) {
-        // Reference the ID forced above (String).
-        final String refId = log.supplementId.toString();
-
+      for (final e in foodEntries) {
         batch.insert(
-          dbInstance.supplementLogs,
-          db.SupplementLogsCompanion(
-            supplementId: drift.Value(refId),
-            amount: drift.Value(log.dose),
-            takenAt: drift.Value(log.timestamp),
-          ),
-          mode: drift.InsertMode.insertOrReplace,
-        );
+            dbInst.nutritionLogs,
+            db.NutritionLogsCompanion.insert(
+                legacyBarcode: drift.Value(e.barcode),
+                consumedAt: e.timestamp,
+                amount: e.quantityInGrams.toDouble(),
+                mealType: drift.Value(e.mealType)),
+            mode: drift.InsertMode.insertOrReplace);
       }
-    });
-  }
-  // ===========================================================================
-  // NUTRITION LOGS
-  // ===========================================================================
-
-  /// Records a new [FoodEntry] in the nutrition logs.
-  Future<int> insertFoodEntry(FoodEntry entry) async {
-    final dbInstance = await database;
-
-    final companion = db.NutritionLogsCompanion(
-      legacyBarcode: drift.Value(entry.barcode),
-      consumedAt: drift.Value(entry.timestamp),
-      amount: drift.Value(entry.quantityInGrams.toDouble()),
-      mealType: drift.Value(entry.mealType),
-    );
-
-    final row = await dbInstance
-        .into(dbInstance.nutritionLogs)
-        .insertReturning(companion);
-
-    // Increment usageCount for the product
-    if (entry.barcode.isNotEmpty) {
-      try {
-        await dbInstance.customUpdate(
-          'UPDATE products SET usage_count = usage_count + 1 WHERE barcode = ?',
-          variables: [drift.Variable.withString(entry.barcode)],
-          updates: {dbInstance.products},
-        );
-      } catch (e) {
-        // Non-critical
+      for (final e in fluidEntries) {
+        batch.insert(
+            dbInst.fluidLogs,
+            db.FluidLogsCompanion.insert(
+                consumedAt: e.timestamp,
+                amountMl: e.quantityInMl,
+                name: e.name,
+                kcal: drift.Value(e.kcal),
+                sugarPer100ml: drift.Value(e.sugarPer100ml),
+                caffeinePer100ml: drift.Value(e.caffeinePer100ml)),
+            mode: drift.InsertMode.insertOrReplace);
       }
-    }
-
-    return row.localId;
-  }
-
-  Future<void> updateFoodEntry(FoodEntry entry) async {
-    if (entry.id == null) return;
-    final dbInstance = await database;
-
-    final oldRow = await (dbInstance.select(dbInstance.nutritionLogs)
-          ..where((tbl) => tbl.localId.equals(entry.id!)))
-        .getSingleOrNull();
-    if (oldRow != null) {
-      await deleteCaffeineLogsByTimestamp(oldRow.consumedAt);
-    }
-
-    final companion = db.NutritionLogsCompanion(
-      legacyBarcode: drift.Value(entry.barcode),
-      consumedAt: drift.Value(entry.timestamp),
-      amount: drift.Value(entry.quantityInGrams.toDouble()),
-      mealType: drift.Value(entry.mealType),
-    );
-
-    await (dbInstance.update(
-      dbInstance.nutritionLogs,
-    )..where((tbl) => tbl.localId.equals(entry.id!)))
-        .write(companion);
-  }
-
-  Future<List<FoodEntry>> getEntriesForDate(DateTime date) async {
-    final dbInstance = await database;
-
-    final start = DateTime(date.year, date.month, date.day);
-    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
-    final query = dbInstance.select(dbInstance.nutritionLogs)
-      ..where((tbl) => tbl.consumedAt.isBetweenValues(start, end));
-
-    final rows = await query.get();
-
-    return rows.map((row) {
-      return FoodEntry(
-        id: row.localId,
-        barcode: row.legacyBarcode ?? 'UNKNOWN',
-        timestamp: row.consumedAt,
-        quantityInGrams: row.amount.toInt(),
-        mealType: row.mealType,
-        updatedAt: row.updatedAt,
-      );
-    }).toList();
-  }
-
-  Future<List<FoodEntry>> getEntriesForDateRange(
-    DateTime start,
-    DateTime end, {
-    DateTime? updatedSince,
-  }) async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-
-    final effectiveStart = DateTime(start.year, start.month, start.day);
-    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    final query = dbInstance.select(dbInstance.nutritionLogs)
-      ..where(
-        (tbl) => tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
-      );
-    if (updatedSince != null) {
-      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
-    }
-
-    final rows = await query.get();
-
-    final result = rows.map((row) {
-      return FoodEntry(
-        id: row.localId,
-        barcode: row.legacyBarcode ?? 'UNKNOWN',
-        timestamp: row.consumedAt,
-        quantityInGrams: row.amount.toInt(),
-        mealType: row.mealType,
-        updatedAt: row.updatedAt,
-      );
-    }).toList();
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getEntriesForDateRange',
-      elapsed: stopwatch.elapsed,
-      fields: {'rows': rows.length},
-    );
-    return result;
-  }
-
-  /// Aggregates logged food calories per local day for a date range.
-  ///
-  /// Resolution order for calories-per-100g:
-  /// 1) `nutrition_logs.product_id -> products.id`
-  /// 2) `nutrition_logs.legacy_barcode -> products.barcode`
-  ///
-  /// Returns unresolved row count when neither relation can resolve.
-  Future<FoodCaloriesByDayResult> getFoodCaloriesByDayForDateRange(
-    DateTime start,
-    DateTime end,
-  ) async {
-    final dbInstance = await database;
-    final effectiveStart = DateTime(start.year, start.month, start.day);
-    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    final productsByBarcode = dbInstance.products.createAlias(
-      'products_by_barcode',
-    );
-
-    final query = dbInstance.select(dbInstance.nutritionLogs).join([
-      drift.leftOuterJoin(
-        dbInstance.products,
-        dbInstance.products.id.equalsExp(dbInstance.nutritionLogs.productId),
-      ),
-      drift.leftOuterJoin(
-        productsByBarcode,
-        productsByBarcode.barcode.equalsExp(
-          dbInstance.nutritionLogs.legacyBarcode,
-        ),
-      ),
-    ])
-      ..where(
-        dbInstance.nutritionLogs.consumedAt.isBetweenValues(
-          effectiveStart,
-          effectiveEnd,
-        ),
-      );
-
-    final rows = await query.get();
-    final caloriesByDay = <DateTime, double>{};
-    var unresolvedEntryCount = 0;
-
-    for (final row in rows) {
-      final log = row.readTable(dbInstance.nutritionLogs);
-      final productById = row.readTableOrNull(dbInstance.products);
-      final productByBarcode = row.readTableOrNull(productsByBarcode);
-      final resolvedProduct = productById ?? productByBarcode;
-
-      if (resolvedProduct == null) {
-        unresolvedEntryCount += 1;
-        continue;
-      }
-
-      final day = DateTime(
-        log.consumedAt.year,
-        log.consumedAt.month,
-        log.consumedAt.day,
-      );
-      final caloriesPer100 = resolvedProduct.calories.toDouble();
-      final addedCalories = caloriesPer100 * (log.amount / 100.0);
-      caloriesByDay[day] = (caloriesByDay[day] ?? 0.0) + addedCalories;
-    }
-
-    return FoodCaloriesByDayResult(
-      caloriesByDay: caloriesByDay,
-      unresolvedEntryCount: unresolvedEntryCount,
-    );
-  }
-
-  Future<void> deleteFoodEntry(int id) async {
-    final dbInstance = await database;
-    final row = await (dbInstance.select(dbInstance.nutritionLogs)
-          ..where((tbl) => tbl.localId.equals(id)))
-        .getSingleOrNull();
-    if (row != null) {
-      await deleteCaffeineLogsByTimestamp(row.consumedAt);
-    }
-
-    await (dbInstance.delete(
-      dbInstance.nutritionLogs,
-    )..where((tbl) => tbl.localId.equals(id)))
-        .go();
-  }
-
-  Future<List<FoodEntry>> getAllFoodEntries() async {
-    final dbInstance = await database;
-    final rows = await dbInstance.select(dbInstance.nutritionLogs).get();
-    return rows
-        .map(
-          (row) => FoodEntry(
-            id: row.localId,
-            barcode: row.legacyBarcode ?? 'UNKNOWN',
-            timestamp: row.consumedAt,
-            quantityInGrams: row.amount.toInt(),
-            mealType: row.mealType,
-            updatedAt: row.updatedAt,
-          ),
-        )
-        .toList();
-  }
-
-  /// Returns all food entries with a robust barcode fallback for backup export.
-  ///
-  /// Prefers `legacyBarcode`, and falls back to the linked product barcode
-  /// when available (for newer records that may only store `productId`).
-  Future<List<FoodEntry>> getAllFoodEntriesForBackup() async {
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.nutritionLogs).join([
-      drift.leftOuterJoin(
-        dbInstance.products,
-        dbInstance.products.id.equalsExp(dbInstance.nutritionLogs.productId),
-      ),
-    ]);
-
-    final rows = await query.get();
-    return rows.map((row) {
-      final log = row.readTable(dbInstance.nutritionLogs);
-      final product = row.readTableOrNull(dbInstance.products);
-      final barcode =
-          (log.legacyBarcode != null && log.legacyBarcode!.isNotEmpty)
-              ? log.legacyBarcode!
-              : (product?.barcode ?? 'UNKNOWN');
-
-      return FoodEntry(
-        id: log.localId,
-        barcode: barcode,
-        timestamp: log.consumedAt,
-        quantityInGrams: log.amount.toInt(),
-        mealType: log.mealType,
-        updatedAt: log.updatedAt,
-      );
-    }).toList();
-  }
-
-  // ===========================================================================
-  // FLUID LOGS
-  // ===========================================================================
-
-  /// Records a new [FluidEntry].
-  Future<int> insertFluidEntry(FluidEntry entry) async {
-    try {
-      final dbInstance = await database;
-
-      String? linkedUuid;
-      if (entry.linkedFoodEntryId != null) {
-        final nutritionLog = await (dbInstance.select(dbInstance.nutritionLogs)
-              ..where((tbl) => tbl.localId.equals(entry.linkedFoodEntryId!)))
-            .getSingleOrNull();
-        linkedUuid = nutritionLog?.id;
-      }
-
-      // 1. Save drink
-      final companion = db.FluidLogsCompanion(
-        consumedAt: drift.Value(entry.timestamp),
-        amountMl: drift.Value(entry.quantityInMl),
-        name: drift.Value(entry.name),
-        kcal: drift.Value(entry.kcal),
-        sugarPer100ml: drift.Value(entry.sugarPer100ml),
-        caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
-        linkedNutritionLogId: drift.Value(linkedUuid),
-      );
-
-      final row = await dbInstance
-          .into(dbInstance.fluidLogs)
-          .insertReturning(companion);
-
-      return row.localId;
-    } catch (e, stack) {
-      debugPrint('Error inserting fluid entry: $e\n$stack');
-      rethrow;
-    }
-  }
-
-  Future<List<FluidEntry>> getFluidEntriesForDate(DateTime date) async {
-    final dbInstance = await database;
-    final start = DateTime(date.year, date.month, date.day);
-    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
-    final rows = await (dbInstance.select(
-      dbInstance.fluidLogs,
-    )..where((tbl) => tbl.consumedAt.isBetweenValues(start, end)))
-        .get();
-
-    // Build a UUID -> localId lookup for all referenced NutritionLogs.
-    final linkedUuids = rows
-        .map((r) => r.linkedNutritionLogId)
-        .whereType<String>()
-        .toSet()
-        .toList();
-    final Map<String, int> uuidToLocalId = {};
-    if (linkedUuids.isNotEmpty) {
-      final nutritionRows = await (dbInstance.select(dbInstance.nutritionLogs)
-            ..where((tbl) => tbl.id.isIn(linkedUuids)))
-          .get();
-      for (final nr in nutritionRows) {
-        uuidToLocalId[nr.id] = nr.localId;
-      }
-    }
-
-    return rows
-        .map(
-          (row) => FluidEntry(
-            id: row.localId,
-            timestamp: row.consumedAt,
-            quantityInMl: row.amountMl,
-            name: row.name,
-            kcal: row.kcal,
-            sugarPer100ml: row.sugarPer100ml,
-            caffeinePer100ml: row.caffeinePer100ml,
-            carbsPer100ml: row.sugarPer100ml,
-            linkedFoodEntryId: row.linkedNutritionLogId != null
-                ? uuidToLocalId[row.linkedNutritionLogId]
-                : null,
-            updatedAt: row.updatedAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<FluidEntry>> getFluidEntriesForDateRange(
-    DateTime start,
-    DateTime end, {
-    DateTime? updatedSince,
-  }) async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    final effectiveStart = DateTime(start.year, start.month, start.day);
-    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    final query = dbInstance.select(dbInstance.fluidLogs)
-      ..where(
-        (tbl) => tbl.consumedAt.isBetweenValues(effectiveStart, effectiveEnd),
-      );
-    if (updatedSince != null) {
-      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
-    }
-
-    final rows = await query.get();
-
-    final linkedUuids = rows
-        .map((r) => r.linkedNutritionLogId)
-        .whereType<String>()
-        .toSet()
-        .toList();
-    final Map<String, int> uuidToLocalId = {};
-    if (linkedUuids.isNotEmpty) {
-      final nutritionRows = await (dbInstance.select(dbInstance.nutritionLogs)
-            ..where((tbl) => tbl.id.isIn(linkedUuids)))
-          .get();
-      for (final nr in nutritionRows) {
-        uuidToLocalId[nr.id] = nr.localId;
-      }
-    }
-
-    final result = rows
-        .map(
-          (row) => FluidEntry(
-            id: row.localId,
-            timestamp: row.consumedAt,
-            quantityInMl: row.amountMl,
-            name: row.name,
-            kcal: row.kcal,
-            sugarPer100ml: row.sugarPer100ml,
-            caffeinePer100ml: row.caffeinePer100ml,
-            carbsPer100ml: row.sugarPer100ml,
-            linkedFoodEntryId: row.linkedNutritionLogId != null
-                ? uuidToLocalId[row.linkedNutritionLogId]
-                : null,
-            updatedAt: row.updatedAt,
-          ),
-        )
-        .toList();
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getFluidEntriesForDateRange',
-      elapsed: stopwatch.elapsed,
-      fields: {'rows': rows.length},
-    );
-    return result;
-  }
-
-  Future<void> updateFluidEntry(FluidEntry entry) async {
-    if (entry.id == null) return;
-    final dbInstance = await database;
-
-    final oldRow = await (dbInstance.select(dbInstance.fluidLogs)
-          ..where((tbl) => tbl.localId.equals(entry.id!)))
-        .getSingleOrNull();
-    if (oldRow != null) {
-      await deleteCaffeineLogsByTimestamp(oldRow.consumedAt);
-    }
-
-    await (dbInstance.update(
-      dbInstance.fluidLogs,
-    )..where((tbl) => tbl.localId.equals(entry.id!)))
-        .write(
-      db.FluidLogsCompanion(
-        consumedAt: drift.Value(entry.timestamp),
-        amountMl: drift.Value(entry.quantityInMl),
-        name: drift.Value(entry.name),
-        kcal: drift.Value(entry.kcal),
-        sugarPer100ml: drift.Value(entry.sugarPer100ml),
-        caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
-      ),
-    );
-  }
-
-  Future<void> deleteFluidEntry(int id) async {
-    try {
-      final dbInstance = await database;
-      final row = await (dbInstance.select(dbInstance.fluidLogs)
-            ..where((tbl) => tbl.localId.equals(id)))
-          .getSingleOrNull();
-      if (row == null) return;
-
-      if (row.linkedNutritionLogId != null) {
-        // If linked to a food entry, we delete the food entry instead.
-        // The foreign key constraint with KeyAction.cascade will automatically
-        // delete this fluid entry as well.
-        final nutritionLog = await (dbInstance.select(dbInstance.nutritionLogs)
-              ..where((tbl) => tbl.id.equals(row.linkedNutritionLogId!)))
-            .getSingleOrNull();
-
-        if (nutritionLog != null) {
-          await deleteFoodEntry(nutritionLog.localId);
-          return;
-        }
-      }
-
-      // If no link or nutrition log not found, proceed with standalone deletion.
-      await deleteCaffeineLogsByTimestamp(row.consumedAt);
-
-      await (dbInstance.delete(
-        dbInstance.fluidLogs,
-      )..where((tbl) => tbl.localId.equals(id)))
-          .go();
-    } catch (e, stack) {
-      debugPrint('Error deleting fluid entry: $e\n$stack');
-      rethrow;
-    }
-  }
-
-  Future<void> deleteFluidEntryByLinkedFoodId(int foodEntryId) async {
-    final dbInstance = await database;
-    final nutritionLog = await (dbInstance.select(
-      dbInstance.nutritionLogs,
-    )..where((tbl) => tbl.localId.equals(foodEntryId)))
-        .getSingleOrNull();
-
-    if (nutritionLog != null) {
-      final oldFluidRow = await (dbInstance.select(dbInstance.fluidLogs)
-            ..where((tbl) => tbl.linkedNutritionLogId.equals(nutritionLog.id)))
-          .getSingleOrNull();
-      if (oldFluidRow != null) {
-        await deleteCaffeineLogsByTimestamp(oldFluidRow.consumedAt);
-      }
-
-      await (dbInstance.delete(
-        dbInstance.fluidLogs,
-      )..where((tbl) => tbl.linkedNutritionLogId.equals(nutritionLog.id)))
-          .go();
-    }
-  }
-
-  Future<List<FluidEntry>> getAllFluidEntries() async {
-    final dbInstance = await database;
-    final rows = await dbInstance.select(dbInstance.fluidLogs).get();
-    return rows
-        .map(
-          (row) => FluidEntry(
-            id: row.localId,
-            timestamp: row.consumedAt,
-            quantityInMl: row.amountMl,
-            name: row.name,
-            kcal: row.kcal,
-            sugarPer100ml: row.sugarPer100ml,
-            caffeinePer100ml: row.caffeinePer100ml,
-            carbsPer100ml: row.sugarPer100ml,
-            linkedFoodEntryId: null,
-            updatedAt: row.updatedAt,
-          ),
-        )
-        .toList();
-  }
-
-  // ===========================================================================
-  // MEASUREMENTS
-  // ===========================================================================
-
-  Future<void> insertMeasurementSession(MeasurementSession session) async {
-    try {
-      final dbInstance = await database;
-      final legacySessionId = session.timestamp.millisecondsSinceEpoch;
-
-      await dbInstance.batch((batch) {
-        for (final m in session.measurements) {
+      for (final s in measurementSessions) {
+        for (final m in s.measurements) {
           batch.insert(
-            dbInstance.measurements,
-            db.MeasurementsCompanion(
-              date: drift.Value(session.timestamp),
-              type: drift.Value(m.type),
-              value: drift.Value(m.value),
-              unit: drift.Value(m.unit),
-              legacySessionId: drift.Value(legacySessionId),
-            ),
-          );
+              dbInst.measurements,
+              db.MeasurementsCompanion.insert(
+                  type: m.type,
+                  value: m.value,
+                  unit: m.unit,
+                  date: s.timestamp),
+              mode: drift.InsertMode.insertOrReplace);
         }
-      });
-    } catch (e, stack) {
-      debugPrint('Error inserting measurement session: $e\n$stack');
-      rethrow;
-    }
-  }
-
-  Future<List<MeasurementSession>> getMeasurementSessions({
-    DateTime? updatedSince,
-  }) async {
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.measurements)
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.date,
-              mode: drift.OrderingMode.desc,
-            ),
-      ]);
-    if (updatedSince != null) {
-      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
-    }
-
-    final rows = await query.get();
-
-    final Map<String, List<Measurement>> grouped = {};
-    final Map<String, DateTime> timestamps = {};
-    final Map<String, int> ids = {};
-    final Map<String, DateTime> lastUpdatedAt = {};
-
-    for (final row in rows) {
-      final key = row.legacySessionId?.toString() ?? row.date.toIso8601String();
-
-      if (!grouped.containsKey(key)) {
-        grouped[key] = [];
-        timestamps[key] = row.date;
-        ids[key] = row.legacySessionId ?? row.localId;
-        lastUpdatedAt[key] = row.updatedAt;
       }
-      if (row.updatedAt.isAfter(lastUpdatedAt[key]!)) {
-        lastUpdatedAt[key] = row.updatedAt;
-      }
-
-      grouped[key]!.add(
-        Measurement(
-          id: row.localId,
-          sessionId: ids[key]!,
-          type: row.type,
-          value: row.value,
-          unit: row.unit,
-          updatedAt: row.updatedAt,
-        ),
-      );
-    }
-
-    return grouped.entries.map((entry) {
-      return MeasurementSession(
-        id: ids[entry.key],
-        timestamp: timestamps[entry.key]!,
-        measurements: entry.value,
-        updatedAt: lastUpdatedAt[entry.key],
-      );
-    }).toList();
-  }
-
-  Future<void> deleteMeasurementSession(
-    int id, {
-    DateTime? fallbackTimestamp,
-  }) async {
-    try {
-      final dbInstance = await database;
-      final deletedByLegacyId = await (dbInstance.delete(
-        dbInstance.measurements,
-      )..where((tbl) => tbl.legacySessionId.equals(id)))
-          .go();
-
-      if (deletedByLegacyId == 0 && fallbackTimestamp != null) {
-        await (dbInstance.delete(
-          dbInstance.measurements,
-        )..where(
-                (tbl) =>
-                    tbl.legacySessionId.isNull() &
-                    tbl.date.equals(fallbackTimestamp),
-              ))
-            .go();
-      }
-    } catch (e, stack) {
-      debugPrint('Error deleting measurement session: $e\n$stack');
-      rethrow;
-    }
-  }
-
-  Future<DateTime?> getEarliestMeasurementDate() async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.measurements)
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.date,
-              mode: drift.OrderingMode.asc,
-            ),
-      ])
-      ..limit(1);
-    final row = await query.getSingleOrNull();
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getEarliestMeasurementDate',
-      elapsed: stopwatch.elapsed,
-      fields: {'rows': row == null ? 0 : 1},
-    );
-    return row?.date;
-  }
-
-  Future<List<ChartDataPoint>> getChartDataForType(String type) async {
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.measurements)
-      ..where((tbl) => tbl.type.equals(type))
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.date,
-              mode: drift.OrderingMode.asc,
-            ),
-      ]);
-
-    final rows = await query.get();
-    return rows
-        .map((r) => ChartDataPoint(date: r.date, value: r.value))
-        .toList();
-  }
-
-  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(
-    String type,
-    DateTimeRange range,
-  ) async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.measurements)
-      ..where((tbl) => tbl.type.equals(type))
-      ..where((tbl) => tbl.date.isBetweenValues(range.start, range.end))
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.date,
-              mode: drift.OrderingMode.asc,
-            ),
-      ]);
-
-    final rows = await query.get();
-    final result =
-        rows.map((r) => ChartDataPoint(date: r.date, value: r.value)).toList();
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getChartDataForTypeAndRange',
-      elapsed: stopwatch.elapsed,
-      fields: {'type': type, 'rows': rows.length},
-    );
-    return result;
-  }
-
-  // ===========================================================================
-  // SUPPLEMENTS
-  // ===========================================================================
-
-  Future<Supplement> insertSupplement(Supplement s) async {
-    final dbInstance = await database;
-    final companion = db.SupplementsCompanion(
-      code: drift.Value(s.code),
-      name: drift.Value(s.name),
-      dose: drift.Value(s.defaultDose),
-      unit: drift.Value(s.unit),
-      dailyGoal: drift.Value(s.dailyGoal),
-      dailyLimit: drift.Value(s.dailyLimit),
-      notes: drift.Value(s.notes),
-      isBuiltin: drift.Value(s.isBuiltin),
-      isTracked: drift.Value(s.isTracked),
-    );
-
-    final row = await dbInstance
-        .into(dbInstance.supplements)
-        .insertReturning(companion);
-
-    await insertSupplementSettingsHistory(row.id, s);
-
-    return Supplement(
-      id: row.localId,
-      code: row.code,
-      name: row.name,
-      defaultDose: row.dose,
-      unit: row.unit,
-      dailyGoal: row.dailyGoal,
-      dailyLimit: row.dailyLimit,
-      notes: row.notes,
-      isBuiltin: row.isBuiltin,
-      isTracked: row.isTracked,
-    );
-  }
-
-  Future<List<Supplement>> getAllSupplements() async {
-    final dbInstance = await database;
-    final rows = await (dbInstance.select(
-      dbInstance.supplements,
-    )..orderBy([(t) => drift.OrderingTerm(expression: t.name)]))
-        .get();
-
-    return rows
-        .map(
-          (row) => Supplement(
-            id: row.localId,
-            code: row.code,
-            name: row.name,
-            defaultDose: row.dose,
-            unit: row.unit,
-            dailyGoal: row.dailyGoal,
-            dailyLimit: row.dailyLimit,
-            notes: row.notes,
-            isBuiltin: row.isBuiltin,
-            isTracked: row.isTracked,
-          ),
-        )
-        .toList();
-  }
-
-  Future<void> updateSupplement(Supplement s) async {
-    if (s.id == null) return;
-    final dbInstance = await database;
-
-    final original = await (dbInstance.select(
-      dbInstance.supplements,
-    )..where((tbl) => tbl.localId.equals(s.id!)))
-        .getSingleOrNull();
-
-    final companion = db.SupplementsCompanion(
-      code: drift.Value(s.code),
-      name: drift.Value(s.name),
-      dose: drift.Value(s.defaultDose),
-      unit: drift.Value(s.unit),
-      dailyGoal: drift.Value(s.dailyGoal),
-      dailyLimit: drift.Value(s.dailyLimit),
-      notes: drift.Value(s.notes),
-      isBuiltin: drift.Value(s.isBuiltin),
-      isTracked: drift.Value(s.isTracked),
-    );
-
-    await (dbInstance.update(
-      dbInstance.supplements,
-    )..where((tbl) => tbl.localId.equals(s.id!)))
-        .write(companion);
-
-    if (original != null &&
-        (original.isTracked != s.isTracked ||
-            original.dose != s.defaultDose ||
-            original.dailyGoal != s.dailyGoal ||
-            original.dailyLimit != s.dailyLimit)) {
-      await insertSupplementSettingsHistory(original.id, s);
-    }
-  }
-
-  Future<void> insertSupplementSettingsHistory(
-    String supplementUuid,
-    Supplement s,
-  ) async {
-    final dbInstance = await database;
-    await dbInstance.into(dbInstance.supplementSettingsHistory).insert(
-          db.SupplementSettingsHistoryCompanion(
-            supplementId: drift.Value(supplementUuid),
-            isTracked: drift.Value(s.isTracked),
-            dose: drift.Value(s.defaultDose),
-            dailyGoal: drift.Value(s.dailyGoal),
-            dailyLimit: drift.Value(s.dailyLimit),
-          ),
-        );
-  }
-
-  Future<List<Supplement>> getSupplementsForDate(DateTime date) async {
-    final dbInstance = await database;
-    final allSupplements = await (dbInstance.select(
-      dbInstance.supplements,
-    )..orderBy([(t) => drift.OrderingTerm(expression: t.name)]))
-        .get();
-
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-    final List<Supplement> result = [];
-
-    for (final row in allSupplements) {
-      final historyRow =
-          await (dbInstance.select(dbInstance.supplementSettingsHistory)
-                ..where((tbl) => tbl.supplementId.equals(row.id))
-                ..where((tbl) => tbl.createdAt.isSmallerOrEqualValue(endOfDay))
-                ..orderBy([
-                  (t) => drift.OrderingTerm(
-                        expression: t.createdAt,
-                        mode: drift.OrderingMode.desc,
-                      ),
-                ])
-                ..limit(1))
-              .getSingleOrNull();
-
-      if (historyRow != null) {
-        result.add(
-          Supplement(
-            id: row.localId,
-            code: row.code,
-            name: row.name,
-            defaultDose: historyRow.dose,
-            unit: row.unit,
-            dailyGoal: historyRow.dailyGoal,
-            dailyLimit: historyRow.dailyLimit,
-            notes: row.notes,
-            isBuiltin: row.isBuiltin,
-            isTracked: historyRow.isTracked,
-          ),
-        );
-      } else if (row.createdAt.isBefore(endOfDay) ||
-          row.createdAt.isAtSameMomentAs(endOfDay)) {
-        result.add(
-          Supplement(
-            id: row.localId,
-            code: row.code,
-            name: row.name,
-            defaultDose: row.dose,
-            unit: row.unit,
-            dailyGoal: row.dailyGoal,
-            dailyLimit: row.dailyLimit,
-            notes: row.notes,
-            isBuiltin: row.isBuiltin,
-            isTracked: row.isTracked,
-          ),
-        );
-      }
-    }
-
-    return result;
-  }
-
-  Future<void> deleteSupplement(int id) async {
-    final dbInstance = await database;
-    await (dbInstance.delete(
-      dbInstance.supplements,
-    )..where((tbl) => tbl.localId.equals(id)))
-        .go();
-  }
-
-  // ===========================================================================
-  // SUPPLEMENT LOGS
-  // ===========================================================================
-
-  Future<SupplementLog> insertSupplementLog(SupplementLog log) async {
-    try {
-      final dbInstance = await database;
-
-      final supplementRow = await (dbInstance.select(
-        dbInstance.supplements,
-      )..where((tbl) => tbl.localId.equals(log.supplementId)))
-          .getSingle();
-
-      final companion = db.SupplementLogsCompanion(
-        supplementId: drift.Value(supplementRow.id),
-        amount: drift.Value(log.dose),
-        takenAt: drift.Value(log.timestamp),
-      );
-
-      final row = await dbInstance
-          .into(dbInstance.supplementLogs)
-          .insertReturning(companion);
-
-      return SupplementLog(
-        id: row.localId,
-        supplementId: log.supplementId,
-        dose: row.amount,
-        unit: 'mg',
-        timestamp: row.takenAt,
-      );
-    } catch (e, stack) {
-      debugPrint('Error inserting supplement log: $e\n$stack');
-      rethrow;
-    }
-  }
-
-  Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date) async {
-    final dbInstance = await database;
-    final start = DateTime(date.year, date.month, date.day);
-    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
-    final query = dbInstance.select(dbInstance.supplementLogs).join([
-      drift.innerJoin(
-        dbInstance.supplements,
-        dbInstance.supplements.id.equalsExp(
-          dbInstance.supplementLogs.supplementId,
-        ),
-      ),
-    ])
-      ..where(dbInstance.supplementLogs.takenAt.isBetweenValues(start, end))
-      ..orderBy([
-        drift.OrderingTerm(
-          expression: dbInstance.supplementLogs.takenAt,
-          mode: drift.OrderingMode.desc,
-        ),
-      ]);
-
-    final rows = await query.get();
-
-    return rows.map((row) {
-      final log = row.readTable(dbInstance.supplementLogs);
-      final supp = row.readTable(dbInstance.supplements);
-      return SupplementLog(
-        id: log.localId,
-        supplementId: supp.localId,
-        dose: log.amount,
-        unit: supp.unit,
-        timestamp: log.takenAt,
-      );
-    }).toList();
-  }
-
-  Future<void> updateSupplementLog(SupplementLog log) async {
-    if (log.id == null) return;
-    final dbInstance = await database;
-
-    await (dbInstance.update(
-      dbInstance.supplementLogs,
-    )..where((tbl) => tbl.localId.equals(log.id!)))
-        .write(
-      db.SupplementLogsCompanion(
-        amount: drift.Value(log.dose),
-        takenAt: drift.Value(log.timestamp),
-      ),
-    );
-  }
-
-  Future<void> deleteSupplementLog(int id) async {
-    try {
-      final dbInstance = await database;
-      await (dbInstance.delete(
-        dbInstance.supplementLogs,
-      )..where((tbl) => tbl.localId.equals(id)))
-          .go();
-    } catch (e, stack) {
-      debugPrint('Error deleting supplement log: $e\n$stack');
-      rethrow;
-    }
-  }
-
-  Future<void> deleteCaffeineLogsByTimestamp(DateTime timestamp) async {
-    final dbInstance = await database;
-    final supplementRow = await (dbInstance.select(dbInstance.supplements)
-          ..where((tbl) => tbl.code.equals('caffeine')))
-        .getSingleOrNull();
-
-    if (supplementRow != null) {
-      await (dbInstance.delete(dbInstance.supplementLogs)
-            ..where((tbl) =>
-                tbl.supplementId.equals(supplementRow.id) &
-                tbl.takenAt.equals(timestamp)))
-          .go();
-    }
-  }
-
-  Future<List<SupplementLog>> getAllSupplementLogs() async {
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.supplementLogs).join([
-      drift.innerJoin(
-        dbInstance.supplements,
-        dbInstance.supplements.id.equalsExp(
-          dbInstance.supplementLogs.supplementId,
-        ),
-      ),
-    ]);
-    final rows = await query.get();
-
-    return rows.map((row) {
-      final log = row.readTable(dbInstance.supplementLogs);
-      final supp = row.readTable(dbInstance.supplements);
-      return SupplementLog(
-        id: log.localId,
-        supplementId: supp.localId,
-        dose: log.amount,
-        unit: supp.unit,
-        timestamp: log.takenAt,
-      );
-    }).toList();
-  }
-
-  // ===========================================================================
-  // MEALS
-  // ===========================================================================
-
-  Future<int> insertMeal({required String name, String? notes}) async {
-    final dbInstance = await database;
-    final row = await dbInstance.into(dbInstance.meals).insertReturning(
-          db.MealsCompanion(name: drift.Value(name), notes: drift.Value(notes)),
-        );
-    return row.localId;
-  }
-
-  Future<void> updateMeal(int id, {required String name, String? notes}) async {
-    final dbInstance = await database;
-    await (dbInstance.update(
-      dbInstance.meals,
-    )..where((t) => t.localId.equals(id)))
-        .write(
-      db.MealsCompanion(name: drift.Value(name), notes: drift.Value(notes)),
-    );
-  }
-
-  Future<void> deleteMeal(int id) async {
-    final dbInstance = await database;
-    await (dbInstance.delete(
-      dbInstance.meals,
-    )..where((t) => t.localId.equals(id)))
-        .go();
-  }
-
-  Future<List<Map<String, dynamic>>> getMeals() async {
-    final dbInstance = await database;
-    final rows = await dbInstance.select(dbInstance.meals).get();
-
-    return rows
-        .map((r) => {'id': r.localId, 'name': r.name, 'notes': r.notes})
-        .toList();
-  }
-
-  Future<int> addMealItem(
-    int mealLocalId, {
-    required String barcode,
-    required int grams,
-  }) async {
-    final dbInstance = await database;
-
-    final mealRow = await (dbInstance.select(
-      dbInstance.meals,
-    )..where((t) => t.localId.equals(mealLocalId)))
-        .getSingle();
-
-    final row = await dbInstance.into(dbInstance.mealItems).insertReturning(
-          db.MealItemsCompanion(
-            mealId: drift.Value(mealRow.id),
-            productBarcode: drift.Value(barcode),
-            quantityInGrams: drift.Value(grams),
-          ),
-        );
-    return row.localId;
-  }
-
-  Future<List<Map<String, dynamic>>> getMealItems(int mealLocalId) async {
-    final dbInstance = await database;
-
-    final mealRow = await (dbInstance.select(
-      dbInstance.meals,
-    )..where((t) => t.localId.equals(mealLocalId)))
-        .getSingleOrNull();
-    if (mealRow == null) return [];
-
-    final rows = await (dbInstance.select(
-      dbInstance.mealItems,
-    )..where((t) => t.mealId.equals(mealRow.id)))
-        .get();
-
-    return rows
-        .map(
-          (r) => {
-            'id': r.localId,
-            'meal_id': mealLocalId,
-            'barcode': r.productBarcode,
-            'quantity_in_grams': r.quantityInGrams,
-          },
-        )
-        .toList();
-  }
-
-  /// Collects meal templates with items for backup export.
-  Future<List<Map<String, dynamic>>> getMealTemplatesForBackup() async {
-    final dbInstance = await database;
-    final mealRows = await (dbInstance.select(dbInstance.meals)
-          ..orderBy([(t) => drift.OrderingTerm(expression: t.localId)]))
-        .get();
-
-    final result = <Map<String, dynamic>>[];
-    for (final meal in mealRows) {
-      final itemQuery = dbInstance.select(dbInstance.mealItems).join([
-        drift.leftOuterJoin(
-          dbInstance.products,
-          dbInstance.products.id.equalsExp(dbInstance.mealItems.productId),
-        ),
-      ])
-        ..where(dbInstance.mealItems.mealId.equals(meal.id))
-        ..orderBy(
-            [drift.OrderingTerm(expression: dbInstance.mealItems.localId)]);
-      final itemRows = await itemQuery.get();
-
-      final items = itemRows
-          .map((row) {
-            final item = row.readTable(dbInstance.mealItems);
-            final product = row.readTableOrNull(dbInstance.products);
-            final barcode =
-                (item.productBarcode != null && item.productBarcode!.isNotEmpty)
-                    ? item.productBarcode!
-                    : product?.barcode;
-            return <String, dynamic>{
-              'barcode': barcode,
-              'quantityInGrams': item.quantityInGrams,
-            };
-          })
-          .where((row) => row['barcode'] != null)
-          .toList();
-
-      result.add(<String, dynamic>{
-        'name': meal.name,
-        'notes': meal.notes,
-        'items': items,
-      });
-    }
-    return result;
-  }
-
-  /// Restores meal templates with all items from backup payload maps.
-  Future<void> importMealTemplates(
-    List<Map<String, dynamic>> mealTemplates,
-  ) async {
-    if (mealTemplates.isEmpty) return;
-    final dbInstance = await database;
-
-    await dbInstance.transaction(() async {
-      for (final template in mealTemplates) {
-        final name = (template['name'] as String?)?.trim();
-        if (name == null || name.isEmpty) continue;
-        final notes = template['notes'] as String?;
-
-        final mealRow = await dbInstance.into(dbInstance.meals).insertReturning(
-              db.MealsCompanion(
-                name: drift.Value(name),
-                notes: drift.Value(notes),
-              ),
-            );
-
-        final itemsRaw = template['items'];
-        if (itemsRaw is! List) continue;
-        for (final raw in itemsRaw) {
-          if (raw is! Map) continue;
-          final item = Map<String, dynamic>.from(raw);
-          final barcode = (item['barcode'] as String?)?.trim();
-          final gramsRaw = item['quantityInGrams'] ?? item['quantity_in_grams'];
-          final grams = (gramsRaw is num) ? gramsRaw.toInt() : null;
-          if (barcode == null ||
-              barcode.isEmpty ||
-              grams == null ||
-              grams <= 0) {
-            continue;
-          }
-
-          await dbInstance.into(dbInstance.mealItems).insert(
-                db.MealItemsCompanion(
-                  mealId: drift.Value(mealRow.id),
-                  productBarcode: drift.Value(barcode),
-                  quantityInGrams: drift.Value(grams),
-                ),
-                mode: drift.InsertMode.insertOrReplace,
-              );
-        }
+      for (final l in supplementLogs) {
+        batch.insert(
+            dbInst.supplementLogs,
+            db.SupplementLogsCompanion.insert(
+                supplementId: l.supplementId.toString(),
+                amount: l.dose,
+                takenAt: l.timestamp),
+            mode: drift.InsertMode.insertOrReplace);
       }
     });
   }
 
-  Future<void> removeMealItem(int itemLocalId) async {
-    final dbInstance = await database;
-    await (dbInstance.delete(
-      dbInstance.mealItems,
-    )..where((t) => t.localId.equals(itemLocalId)))
-        .go();
-  }
+  // --- Dynamic Local Data Source Getters ---
+  DiaryLocalDataSource get diaryLocalDataSource =>
+      DiaryLocalDataSource(dbInstance);
 
-  Future<void> clearMealItems(int mealLocalId) async {
-    final dbInstance = await database;
-    final mealRow = await (dbInstance.select(
-      dbInstance.meals,
-    )..where((t) => t.localId.equals(mealLocalId)))
-        .getSingleOrNull();
-    if (mealRow != null) {
-      await (dbInstance.delete(
-        dbInstance.mealItems,
-      )..where((t) => t.mealId.equals(mealRow.id)))
-          .go();
-    }
-  }
+  ProductLocalDataSource get productLocalDataSource =>
+      ProductLocalDataSource(dbInstance);
 
-  // ===========================================================================
-  // MISC
-  // ===========================================================================
+  WorkoutLocalDataSource get workoutLocalDataSource =>
+      WorkoutLocalDataSource(dbInstance);
 
+  ProfileLocalDataSource get profileLocalDataSource =>
+      ProfileLocalDataSource(dbInstance);
+
+  SupplementLocalDataSource get supplementLocalDataSource =>
+      SupplementLocalDataSource(dbInstance);
+
+  MealLocalDataSource get mealLocalDataSource =>
+      MealLocalDataSource(dbInstance);
+
+  StepsLocalDataSource get stepsLocalDataSource =>
+      StepsLocalDataSource(dbInstance);
+
+  // Proxies
+  Future<int> insertFoodEntry(FoodEntry entry) =>
+      diaryLocalDataSource.insertFoodEntry(entry);
+  Future<int> insertFluidEntry(FluidEntry entry) =>
+      diaryLocalDataSource.insertFluidEntry(entry);
+  Future<void> deleteFluidEntryByLinkedFoodId(int id) =>
+      diaryLocalDataSource.deleteFluidEntryByLinkedFoodId(id);
+  Future<db.DailyGoalsHistoryData?> getGoalsForDate(DateTime date) =>
+      diaryLocalDataSource.getGoalsForDate(date);
+  Future<Map<String, int>> getRemainingMacrosForDate(DateTime date) =>
+      diaryLocalDataSource.getRemainingMacrosForDate(date);
+  Future<List<FoodEntry>> getAllFoodEntries() =>
+      diaryLocalDataSource.getAllFoodEntries();
+  Future<List<FluidEntry>> getAllFluidEntries() =>
+      diaryLocalDataSource.getAllFluidEntries();
+  Future<List<FoodEntry>> getEntriesForDateRange(DateTime start, DateTime end,
+          {DateTime? updatedSince}) =>
+      diaryLocalDataSource.getEntriesForDateRange(start, end,
+          updatedSince: updatedSince);
+  Future<List<FluidEntry>> getFluidEntriesForDateRange(
+          DateTime start, DateTime end, {DateTime? updatedSince}) =>
+      diaryLocalDataSource.getFluidEntriesForDateRange(start, end,
+          updatedSince: updatedSince);
+  Future<FoodCaloriesByDayResult> getFoodCaloriesByDayForDateRange(
+          DateTime start, DateTime end) =>
+      diaryLocalDataSource.getFoodCaloriesByDayForDateRange(start, end);
   Future<DateTime?> getEarliestFoodEntryDate() async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.nutritionLogs)
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.consumedAt,
-              mode: drift.OrderingMode.asc,
-            ),
-      ])
-      ..limit(1);
-    final row = await query.getSingleOrNull();
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getEarliestFoodEntryDate',
-      elapsed: stopwatch.elapsed,
-      fields: {'rows': row == null ? 0 : 1},
-    );
-    return row?.consumedAt;
+    final logs = await getAllFoodEntries();
+    if (logs.isEmpty) return null;
+    logs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return logs.first.timestamp;
   }
 
   Future<DateTime?> getEarliestFluidEntryDate() async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.fluidLogs)
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.consumedAt,
-              mode: drift.OrderingMode.asc,
-            ),
-      ])
-      ..limit(1);
-    final row = await query.getSingleOrNull();
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getEarliestFluidEntryDate',
-      elapsed: stopwatch.elapsed,
-      fields: {'rows': row == null ? 0 : 1},
-    );
-    return row?.consumedAt;
+    final logs = await getAllFluidEntries();
+    if (logs.isEmpty) return null;
+    logs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return logs.first.timestamp;
   }
 
-  Future<Set<int>> getNutritionLogDaysInMonth(DateTime month) async {
-    final dbInstance = await database;
-    final start = DateTime(month.year, month.month, 1);
-    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+  // Restored proxy methods for test backward compatibility
+  Future<List<FoodEntry>> getEntriesForDate(DateTime date) =>
+      diaryLocalDataSource.getEntriesForDate(date);
+  Future<List<FoodEntry>> getAllFoodEntriesForBackup() =>
+      diaryLocalDataSource.getAllFoodEntriesForBackup();
+  Future<List<Supplement>> getSupplementsForDate(DateTime date) =>
+      diaryLocalDataSource.getSupplementsForDate(date);
+  Future<void> deleteFluidEntry(int id) =>
+      diaryLocalDataSource.deleteFluidEntry(id);
+  Future<void> updateFluidEntry(FluidEntry entry) =>
+      diaryLocalDataSource.updateFluidEntry(entry);
+  Future<void> deleteFoodEntry(int id) =>
+      diaryLocalDataSource.deleteFoodEntry(id);
+  Future<void> updateFoodEntry(FoodEntry entry) =>
+      diaryLocalDataSource.updateFoodEntry(entry);
 
-    final rows = await (dbInstance.selectOnly(dbInstance.nutritionLogs)
-          ..addColumns([dbInstance.nutritionLogs.consumedAt])
-          ..where(
-            dbInstance.nutritionLogs.consumedAt.isBetweenValues(start, end),
-          ))
-        .get();
+  Future<void> ensureStandardSupplements() =>
+      supplementLocalDataSource.ensureStandardSupplements();
+  Future<void> logSupplement(dynamic id, [double? d, DateTime? t]) =>
+      (id is int && d != null)
+          ? supplementLocalDataSource.logSupplement(
+              supplementId: id, dose: d, takenAt: t)
+          : supplementLocalDataSource.insertSupplementLog(id as dynamic);
+  Future<void> insertSupplementLog(dynamic id, [double? d, DateTime? t]) =>
+      (id is SupplementLog)
+          ? supplementLocalDataSource.insertSupplementLog(id)
+          : supplementLocalDataSource.logSupplement(
+              supplementId: id as int, dose: d!, takenAt: t);
+  Future<List<Supplement>> getAllSupplements() =>
+      supplementLocalDataSource.getAllSupplements();
+  Future<int> insertSupplement(dynamic n, [double? d, String? u, double? l]) =>
+      (n is Supplement)
+          ? supplementLocalDataSource.insertSupplement(n)
+          : supplementLocalDataSource.insertSupplement(Supplement(
+              name: n as String,
+              defaultDose: d!,
+              unit: u!,
+              dailyLimit: l,
+            ));
 
-    return rows
-        .map((r) => r.read(dbInstance.nutritionLogs.consumedAt)!.day)
-        .toSet();
-  }
+  Future<bool> isFavorite(String b) => productLocalDataSource.isFavorite(b);
+  Future<void> addFavorite(String b) => productLocalDataSource.addFavorite(b);
+  Future<void> removeFavorite(String b) =>
+      productLocalDataSource.removeFavorite(b);
+  Future<List<String>> getFavoriteBarcodes() =>
+      productLocalDataSource.getFavoriteBarcodes();
 
-  Future<Set<int>> getSupplementLogDaysInMonth(DateTime month) async {
-    final dbInstance = await database;
-    final start = DateTime(month.year, month.month, 1);
-    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+  Future<List<Map<String, dynamic>>> getMeals() =>
+      mealLocalDataSource.getMeals();
+  Future<List<Map<String, dynamic>>> getMealItems(int id) =>
+      mealLocalDataSource.getMealItems(id);
+  Future<int> insertMeal({dynamic name, String? notes}) => (name is String)
+      ? mealLocalDataSource.insertMeal(name: name, notes: notes)
+      : mealLocalDataSource.insertMeal(
+          name: (name as dynamic).name, notes: (name as dynamic).notes);
+  Future<void> updateMeal(dynamic id, {String? name, String? notes}) =>
+      (id is int && name != null)
+          ? mealLocalDataSource.updateMeal(id, name: name, notes: notes)
+          : mealLocalDataSource.updateMeal((id as dynamic).id,
+              name: (id as dynamic).name, notes: (id as dynamic).notes);
+  Future<void> deleteMeal(int id) => mealLocalDataSource.deleteMeal(id);
+  Future<void> clearMealItems(int id) => mealLocalDataSource.clearMealItems(id);
+  Future<int> addMealItem(
+          {required int mealId,
+          required String barcode,
+          required double amount}) =>
+      mealLocalDataSource.addMealItem(
+          mealId: mealId, barcode: barcode, amount: amount);
+  Future<List<Map<String, dynamic>>> getMealTemplatesForBackup() =>
+      mealLocalDataSource.getMealTemplatesForBackup();
 
-    final rows = await (dbInstance.selectOnly(dbInstance.supplementLogs)
-          ..addColumns([dbInstance.supplementLogs.takenAt])
-          ..where(
-            dbInstance.supplementLogs.takenAt.isBetweenValues(start, end),
-          ))
-        .get();
+  Future<int?> getDailyStepsTotal(
+          {dynamic dayLocal,
+          String providerFilter = 'all',
+          String sourcePolicy = 'all'}) =>
+      (dayLocal is DateTime)
+          ? stepsLocalDataSource.getDailyStepsTotal(
+              dayLocal: dayLocal,
+              providerFilter: providerFilter,
+              sourcePolicy: sourcePolicy)
+          : stepsLocalDataSource.getDailyStepsTotal(
+              dayLocal: (dayLocal as dynamic).dayLocal,
+              providerFilter:
+                  (dayLocal as dynamic).providerFilter ?? providerFilter,
+              sourcePolicy: (dayLocal as dynamic).sourcePolicy ?? sourcePolicy);
+  Future<void> upsertHealthStepSegments(
+          List<db.HealthStepSegmentsCompanion> s) =>
+      stepsLocalDataSource.upsertHealthStepSegments(s);
+  Future<void> markHealthExported(
+          {String? key,
+          String? type,
+          String? platform,
+          String? domain,
+          List<String>? idempotencyKeys}) =>
+      stepsLocalDataSource.markHealthExported(
+          platform: platform ?? 'ios',
+          domain: domain ?? type ?? '',
+          idempotencyKeys: idempotencyKeys ?? (key != null ? [key] : []));
+  Future<List<String>> getExportedHealthKeys(
+          {String? type,
+          String? platform,
+          String? domain,
+          List<String>? idempotencyKeys}) =>
+      stepsLocalDataSource.getExportedHealthKeys(
+          platform: platform ?? 'ios',
+          domain: domain ?? type ?? '',
+          idempotencyKeys: idempotencyKeys ?? []);
+  Future<List<Map<String, dynamic>>> getDailyStepsTotalsForRange(
+          {required DateTime startLocal,
+          required DateTime endLocal,
+          String providerFilter = 'all',
+          String sourcePolicy = 'all'}) =>
+      stepsLocalDataSource.getDailyStepsTotalsForRange(
+          startLocal: startLocal,
+          endLocal: endLocal,
+          providerFilter: providerFilter,
+          sourcePolicy: sourcePolicy);
+  Future<List<Map<String, dynamic>>> getHourlyStepsTotalsForDay(
+          {required DateTime dayLocal,
+          String providerFilter = 'all',
+          String sourcePolicy = 'all'}) =>
+      stepsLocalDataSource.getHourlyStepsTotalsForDay(
+          dayLocal: dayLocal,
+          providerFilter: providerFilter,
+          sourcePolicy: sourcePolicy);
+  Future<DateTime?> getEarliestHealthStepsDateLocal(
+          {String providerFilter = 'all'}) =>
+      stepsLocalDataSource.getEarliestHealthStepsDateLocal(
+          providerFilter: providerFilter);
 
-    return rows
-        .map((r) => r.read(dbInstance.supplementLogs.takenAt)!.day)
-        .toSet();
-  }
-
-  // BackupManager may call this method, but it can stay empty
-  // because the logic can be handled directly in fluid insert or skipped entirely.
-  Future<void> upsertCaffeineForFoodEntry({
-    required int foodEntryId,
-    required DateTime timestamp,
-    required double? caffeinePer100ml,
-    required double quantityInMl,
-  }) async {
-    // Optional implementation if automatic caffeine logs are needed.
-  }
-
-  // ===========================================================================
-  // FAVORITES (missing methods for BackupManager)
-  // ===========================================================================
-
-  Future<void> addFavorite(String barcode) async {
-    final dbInstance = await database;
-    await dbInstance.into(dbInstance.favorites).insert(
-          FavoritesCompanion(barcode: drift.Value(barcode)),
-          mode: drift.InsertMode.insertOrReplace,
-        );
-  }
-
-  Future<void> removeFavorite(String barcode) async {
-    final dbInstance = await database;
-    await (dbInstance.delete(
-      dbInstance.favorites,
-    )..where((t) => t.barcode.equals(barcode)))
-        .go();
-  }
-
-  Future<bool> isFavorite(String barcode) async {
-    final dbInstance = await database;
-    final count = await (dbInstance.select(
-      dbInstance.favorites,
-    )..where((t) => t.barcode.equals(barcode)))
-        .get();
-    return count.isNotEmpty;
-  }
-
-  Future<List<String>> getFavoriteBarcodes() async {
-    final dbInstance = await database;
-    final rows = await dbInstance.select(dbInstance.favorites).get();
-    return rows.map((r) => r.barcode).toList();
-  }
-
-  Future<List<String>> getRecentlyUsedBarcodes() async {
-    final dbInstance = await database;
-
-    final maxDate = dbInstance.nutritionLogs.consumedAt.max();
-    final query = dbInstance.selectOnly(dbInstance.nutritionLogs)
-      ..addColumns([dbInstance.nutritionLogs.legacyBarcode, maxDate])
-      ..groupBy([dbInstance.nutritionLogs.legacyBarcode])
-      ..orderBy([
-        drift.OrderingTerm(expression: maxDate, mode: drift.OrderingMode.desc),
-      ])
-      ..limit(100);
-
-    final result = await query.get();
-
-    return result
-        .map((row) => row.read(dbInstance.nutritionLogs.legacyBarcode))
-        .where((bc) => bc != null)
-        .cast<String>()
+  Future<List<MeasurementSession>> getMeasurementSessions(
+          {DateTime? updatedSince}) =>
+      profileLocalDataSource.getMeasurementSessions(updatedSince: updatedSince);
+  Future<List<ChartDataPoint>> getChartDataForTypeAndRange(String t, dynamic r,
+      [DateTime? e]) async {
+    final raw =
+        await profileLocalDataSource.getChartDataForTypeAndRange(t, r, e);
+    return raw
+        .map((item) => ChartDataPoint(
+              date: item['date'] as DateTime,
+              value: (item['value'] as num).toDouble(),
+            ))
         .toList();
   }
-  // ===========================================================================
-  // ONBOARDING & PROFILE HELPER (FIXED)
-  // ===========================================================================
 
-  Future<db.Profile?> getUserProfile() async {
-    final dbInstance = await database;
-    return await dbInstance.select(dbInstance.profiles).getSingleOrNull();
-  }
+  Future<db.Profile?> getUserProfile() =>
+      profileLocalDataSource.getUserProfile();
+  Future<db.AppSetting?> getAppSettings() =>
+      profileLocalDataSource.getAppSettings();
+  Future<int> getCurrentTargetStepsOrDefault() =>
+      profileLocalDataSource.getCurrentTargetStepsOrDefault();
+  Future<void> saveUserGoals(
+          {int? calorieGoal,
+          int? proteinGoal,
+          int? carbGoal,
+          int? fatGoal,
+          int? waterGoal,
+          int? stepsGoal,
+          int? calories,
+          int? protein,
+          int? carbs,
+          int? fat,
+          int? water,
+          int? steps}) =>
+      profileLocalDataSource.saveUserGoals(
+          calories: calorieGoal ?? calories ?? 2000,
+          protein: proteinGoal ?? protein ?? 150,
+          carbs: carbGoal ?? carbs ?? 250,
+          fat: fatGoal ?? fat ?? 70,
+          water: waterGoal ?? water ?? 2000,
+          steps: stepsGoal ?? steps ?? 8000);
+  Future<double?> getLatestBodyFatPercentageBefore(DateTime b) =>
+      profileLocalDataSource.getLatestBodyFatPercentageBefore(b);
+  Future<void> saveUserProfile(
+          {String? name,
+          double? weight,
+          int? height,
+          int? age,
+          String? gender,
+          String? activityLevel,
+          String? goal,
+          DateTime? birthday,
+          String? username}) =>
+      profileLocalDataSource.saveUserProfile(
+          name: name ?? username ?? 'User',
+          weight: weight ?? 70.0,
+          height: (height ?? 175).toDouble(),
+          age: age ?? 30,
+          gender: gender ?? 'other',
+          activityLevel: activityLevel ?? 'sedentary',
+          goal: goal ?? 'maintenance',
+          birthday: birthday);
+  Future<void> saveInitialWeight(double w) =>
+      profileLocalDataSource.saveInitialWeight(w);
+  Future<void> saveInitialBodyFatPercentage(double b) =>
+      profileLocalDataSource.saveInitialBodyFatPercentage(b);
+  Future<DateTime?> getEarliestMeasurementDate() =>
+      profileLocalDataSource.getEarliestMeasurementDate();
+  Future<void> deleteMeasurementSession(int id) =>
+      profileLocalDataSource.deleteMeasurementSession(id);
+  Future<int> insertMeasurementSession(MeasurementSession s) =>
+      profileLocalDataSource.insertMeasurementSession(s);
 
-  Future<db.AppSetting?> getAppSettings() async {
-    final dbInstance = await database;
-    return await dbInstance.select(dbInstance.appSettings).getSingleOrNull();
-  }
-
-  /// Creates or updates the base profile.
-  Future<void> saveUserProfile({
-    required String name,
-    required DateTime? birthday,
-    required int? height,
-    required String? gender,
-  }) async {
-    final dbInstance = await database;
-
-    final existing =
-        await dbInstance.select(dbInstance.profiles).getSingleOrNull();
-
-    if (existing == null) {
-      // Create new
-      await dbInstance.into(dbInstance.profiles).insert(
-            db.ProfilesCompanion(
-              username: drift.Value(name),
-              birthday: drift.Value(birthday),
-              height: drift.Value(height),
-              gender: drift.Value(gender),
-              isCoach: const drift.Value(false),
-              visibility: const drift.Value('private'),
-            ),
-          );
-    } else {
-      // UPDATE
-      await (dbInstance.update(
-        dbInstance.profiles,
-      )..where((t) => t.id.equals(existing.id)))
-          .write(
-        db.ProfilesCompanion(
-          username: drift.Value(name),
-          birthday: drift.Value(birthday),
-          height: drift.Value(height),
-          gender: drift.Value(gender),
-        ),
-      );
-    }
-  }
-
-  /// Saves the user goals (AppSettings) and records a historical snapshot
-  Future<void> saveUserGoals({
-    required int calories,
-    required int protein,
-    required int carbs,
-    required int fat,
-    required int water,
-    required int steps,
-  }) async {
-    final dbInstance = await database;
-
-    // 1. Check if settings already exist
-    final existingSettings =
-        await dbInstance.select(dbInstance.appSettings).getSingleOrNull();
-
-    // IMPORTANT: Ensure a historical baseline exists before the old goals are overwritten.
-    if (existingSettings != null) {
-      final baseline = await (dbInstance.select(dbInstance.dailyGoalsHistory)
-            ..where(
-              (t) => t.createdAt.isSmallerOrEqualValue(DateTime(2010, 1, 1)),
-            )
-            ..limit(1))
-          .getSingleOrNull();
-
-      if (baseline == null) {
-        final existingSteps = existingSettings.targetSteps;
-        await dbInstance.into(dbInstance.dailyGoalsHistory).insertReturning(
-              db.DailyGoalsHistoryCompanion(
-                targetCalories: drift.Value(existingSettings.targetCalories),
-                targetProtein: drift.Value(existingSettings.targetProtein),
-                targetCarbs: drift.Value(existingSettings.targetCarbs),
-                targetFat: drift.Value(existingSettings.targetFat),
-                targetWater: drift.Value(existingSettings.targetWater),
-                targetSteps: drift.Value(existingSteps),
-                createdAt: drift.Value(
-                  DateTime(2000, 1, 1),
-                ), // Covers all older data
-              ),
-            );
-      }
-    }
-
-    if (existingSettings != null) {
-      // UPDATE
-      await (dbInstance.update(
-        dbInstance.appSettings,
-      )..where((t) => t.id.equals(existingSettings.id)))
-          .write(
-        db.AppSettingsCompanion(
-          targetCalories: drift.Value(calories),
-          targetProtein: drift.Value(protein),
-          targetCarbs: drift.Value(carbs),
-          targetFat: drift.Value(fat),
-          targetWater: drift.Value(water),
-          targetSteps: drift.Value(steps),
-        ),
-      );
-    } else {
-      // INSERT (In case saveUserProfile hasn't created settings yet)
-      // We need the user ID
-      final profile =
-          await dbInstance.select(dbInstance.profiles).getSingleOrNull();
-      if (profile == null) return;
-
-      await dbInstance.into(dbInstance.appSettings).insert(
-            db.AppSettingsCompanion(
-              userId: drift.Value(profile.id),
-              targetCalories: drift.Value(calories),
-              targetProtein: drift.Value(protein),
-              targetCarbs: drift.Value(carbs),
-              targetFat: drift.Value(fat),
-              targetWater: drift.Value(water),
-              targetSteps: drift.Value(steps),
-              themeMode: const drift.Value('system'), // Defaults
-              unitSystem: const drift.Value('metric'),
-            ),
-          );
-    }
-
-    // 2. Add historical entry
-    await dbInstance.into(dbInstance.dailyGoalsHistory).insertReturning(
-          db.DailyGoalsHistoryCompanion(
-            targetCalories: drift.Value(calories),
-            targetProtein: drift.Value(protein),
-            targetCarbs: drift.Value(carbs),
-            targetFat: drift.Value(fat),
-            targetWater: drift.Value(water),
-            targetSteps: drift.Value(steps),
-            createdAt: drift.Value(DateTime.now()), // as valid-from timestamp
-          ),
-        );
-  }
-
-  /// Returns the active goals for a given date.
-  /// Searches the history for the newest entry created before or at the end of the day.
-  /// If nothing is found, it falls back to AppSettings.
-  Future<db.DailyGoalsHistoryData?> getGoalsForDate(DateTime date) async {
-    final dbInstance = await database;
-
-    // End of the requested day
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
-    final query = dbInstance.select(dbInstance.dailyGoalsHistory)
-      ..where((t) => t.createdAt.isSmallerOrEqualValue(endOfDay))
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.createdAt,
-              mode: drift.OrderingMode.desc,
-            ),
-      ])
-      ..limit(1);
-
-    final historyGoal = await query.getSingleOrNull();
-    if (historyGoal != null) return historyGoal;
-
-    // If no history entry exists *before* or *on* this date,
-    // meaning the date is BEFORE the first record, we take the oldest known history entry.
-    final oldestHistory = await (dbInstance.select(dbInstance.dailyGoalsHistory)
-          ..orderBy([
-            (t) => drift.OrderingTerm(
-                  expression: t.createdAt,
-                  mode: drift.OrderingMode.asc,
-                ),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
-
-    if (oldestHistory != null) return oldestHistory;
-
-    // Absolute fallback: Current AppSettings (if history is completely empty)
-    final settings = await getAppSettings();
-    if (settings != null) {
-      return db.DailyGoalsHistoryData(
-        id: 'fallback', // dummy id
-        localId: 0,
-        createdAt: settings.createdAt,
-        updatedAt: settings.updatedAt,
-        deletedAt: settings.deletedAt,
-        targetCalories: settings.targetCalories,
-        targetProtein: settings.targetProtein,
-        targetCarbs: settings.targetCarbs,
-        targetFat: settings.targetFat,
-        targetWater: settings.targetWater,
-        targetSteps: settings.targetSteps,
-      );
-    }
-    return null;
-  }
-
-  Future<void> upsertHealthStepSegments(
-    List<Map<String, dynamic>> segments,
-  ) async {
-    if (segments.isEmpty) {
-      return;
-    }
-    final dbInstance = await database;
-    await dbInstance.batch((batch) {
-      for (final segment in segments) {
-        final startSeconds = DateTime.parse(
-              segment['startAt'] as String,
-            ).toUtc().millisecondsSinceEpoch ~/
-            _msPerSecond;
-        final endSeconds = DateTime.parse(
-              segment['endAt'] as String,
-            ).toUtc().millisecondsSinceEpoch ~/
-            _msPerSecond;
-        final externalKey = segment['externalKey'] as String;
-        batch.customStatement(
-          '''
-          INSERT INTO health_step_segments
-          (id, provider, source_id, start_at, end_at, step_count, external_key)
-          VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(external_key) DO UPDATE SET
-            provider = excluded.provider,
-            source_id = excluded.source_id,
-            start_at = excluded.start_at,
-            end_at = excluded.end_at,
-            step_count = excluded.step_count
-          ''',
-          [
-            segment['provider'],
-            segment['sourceId'],
-            startSeconds,
-            endSeconds,
-            segment['stepCount'],
-            externalKey,
-          ],
-        );
-      }
-    });
-  }
-
-  Future<void> deleteHealthStepSegmentsInRange({
-    required String provider,
-    required DateTime fromUtc,
-    required DateTime toUtc,
-  }) async {
-    final dbInstance = await database;
-    final fromSeconds = fromUtc.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-    final toSeconds = toUtc.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-    await dbInstance.customStatement(
-      '''
-      DELETE FROM health_step_segments
-      WHERE provider = ? AND start_at < ? AND end_at >= ?
-      ''',
-      [provider, toSeconds, fromSeconds],
-    );
-  }
-
-  Future<int?> getDailyStepsTotal({
-    required DateTime dayLocal,
-    String providerFilter = 'all',
-    String sourcePolicy = 'auto_dominant',
-  }) async {
-    final dbInstance = await database;
-    final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
-    final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
-    final dayStartUtcMs =
-        dayStartLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-    final dayEndUtcMs =
-        dayEndLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-    var sql = sourcePolicy == 'max_per_hour'
-        ? '''
-      WITH source_hour AS (
-        SELECT
-          CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
-          COALESCE(source_id, '') AS source_key,
-          SUM(step_count) AS source_steps
-        FROM health_step_segments
-        WHERE start_at < ? AND end_at >= ?
-    '''
-        : '''
-      WITH source_totals AS (
-        SELECT
-          COALESCE(source_id, '') AS source_key,
-          SUM(step_count) AS source_total
-        FROM health_step_segments
-        WHERE start_at < ? AND end_at >= ?
-    ''';
-    final vars = <int>[dayEndUtcMs, dayStartUtcMs];
-    if (providerFilter == 'apple') {
-      sql += " AND provider = 'apple_healthkit'";
-    } else if (providerFilter == 'google') {
-      sql += " AND provider = 'google_health_connect'";
-    }
-    sql += sourcePolicy == 'max_per_hour'
-        ? '''
-        GROUP BY hour_local, source_key
-      ),
-      dedup_hour AS (
-        SELECT hour_local, MAX(source_steps) AS hour_steps
-        FROM source_hour
-        GROUP BY hour_local
-      )
-      SELECT COALESCE(SUM(hour_steps), 0) AS total_steps
-      FROM dedup_hour
-    '''
-        : '''
-        GROUP BY source_key
-      ),
-      dominant_source AS (
-        SELECT source_key
-        FROM source_totals
-        ORDER BY source_total DESC, source_key ASC
-        LIMIT 1
-      )
-      SELECT COALESCE(SUM(step_count), 0) AS total_steps
-      FROM health_step_segments
-      WHERE start_at < ? AND end_at >= ?
-        AND COALESCE(source_id, '') = (SELECT source_key FROM dominant_source)
-    ''';
-
-    final allVars = sourcePolicy == 'max_per_hour'
-        ? vars
-        : <int>[...vars, dayEndUtcMs, dayStartUtcMs];
-
-    final rows = await dbInstance.customSelect(
-      sql,
-      variables: [
-        for (final variable in allVars) drift.Variable.withInt(variable),
-      ],
-    ).get();
-    if (rows.isEmpty) return null;
-    return rows.first.read<int?>('total_steps');
-  }
-
-  Future<List<Map<String, dynamic>>> getHourlyStepsTotalsForDay({
-    required DateTime dayLocal,
-    String providerFilter = 'all',
-    String sourcePolicy = 'auto_dominant',
-  }) async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    final startLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
-    final endLocal = startLocal.add(const Duration(days: 1));
-    final startUtc = startLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-    final endUtc = endLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-
-    var sql = sourcePolicy == 'max_per_hour'
-        ? '''
-      WITH source_hour AS (
-        SELECT
-          CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
-          COALESCE(source_id, '') AS source_key,
-          SUM(step_count) AS source_steps
-        FROM health_step_segments
-        WHERE start_at < ? AND end_at >= ?
-    '''
-        : '''
-      WITH source_totals AS (
-        SELECT
-          COALESCE(source_id, '') AS source_key,
-          SUM(step_count) AS source_total
-        FROM health_step_segments
-        WHERE start_at < ? AND end_at >= ?
-    ''';
-    final vars = <int>[endUtc, startUtc];
-    if (providerFilter == 'apple') {
-      sql += " AND provider = 'apple_healthkit'";
-    } else if (providerFilter == 'google') {
-      sql += " AND provider = 'google_health_connect'";
-    }
-    sql += sourcePolicy == 'max_per_hour'
-        ? '''
-        GROUP BY hour_local, source_key
-      )
-      SELECT hour_local, MAX(source_steps) AS total_steps
-      FROM source_hour
-      GROUP BY hour_local
-      ORDER BY hour_local ASC
-    '''
-        : '''
-        GROUP BY source_key
-      ),
-      dominant_source AS (
-        SELECT source_key
-        FROM source_totals
-        ORDER BY source_total DESC, source_key ASC
-        LIMIT 1
-      )
-      SELECT
-        CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
-        SUM(step_count) AS total_steps
-      FROM health_step_segments
-      WHERE start_at < ? AND end_at >= ?
-        AND COALESCE(source_id, '') = (SELECT source_key FROM dominant_source)
-      GROUP BY hour_local
-      ORDER BY hour_local ASC
-    ''';
-
-    final allVars = sourcePolicy == 'max_per_hour'
-        ? vars
-        : <int>[...vars, endUtc, startUtc];
-
-    final rows = await dbInstance.customSelect(
-      sql,
-      variables: [
-        for (final variable in allVars) drift.Variable.withInt(variable),
-      ],
-    ).get();
-    final result = rows
-        .map(
-          (row) => <String, dynamic>{
-            'hour': row.read<int>('hour_local'),
-            'totalSteps': row.read<int?>('total_steps') ?? 0,
-          },
-        )
-        .toList(growable: false);
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getHourlyStepsTotalsForDay',
-      elapsed: stopwatch.elapsed,
-      fields: {
-        'rows': rows.length,
-        'provider': providerFilter,
-        'policy': sourcePolicy,
-      },
-    );
-    return result;
-  }
-
-  Future<List<Map<String, dynamic>>> getDailyStepsTotalsForRange({
-    required DateTime startLocal,
-    required DateTime endLocal,
-    String providerFilter = 'all',
-    String sourcePolicy = 'auto_dominant',
-  }) async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    final normalizedStart = DateTime(
-      startLocal.year,
-      startLocal.month,
-      startLocal.day,
-    );
-    final normalizedEnd = DateTime(endLocal.year, endLocal.month, endLocal.day);
-    if (normalizedEnd.isBefore(normalizedStart)) {
-      PerfDebugTimer.logDuration(
-        area: 'db',
-        label: 'getDailyStepsTotalsForRange',
-        elapsed: stopwatch.elapsed,
-        fields: {'rows': 0},
-      );
-      return const [];
-    }
-
-    var sql = sourcePolicy == 'max_per_hour'
-        ? '''
-      WITH source_hour AS (
-        SELECT
-          date(datetime(start_at, 'unixepoch', 'localtime')) AS day_local,
-          CAST(strftime('%H', datetime(start_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour_local,
-          COALESCE(source_id, '') AS source_key,
-          SUM(step_count) AS source_steps
-        FROM health_step_segments
-        WHERE start_at < ? AND end_at >= ?
-    '''
-        : '''
-      WITH source_day AS (
-        SELECT
-          date(datetime(start_at, 'unixepoch', 'localtime')) AS day_local,
-          COALESCE(source_id, '') AS source_key,
-          SUM(step_count) AS source_steps
-        FROM health_step_segments
-        WHERE start_at < ? AND end_at >= ?
-    ''';
-    final endExclusiveUtc = normalizedEnd
-            .add(const Duration(days: 1))
-            .toUtc()
-            .millisecondsSinceEpoch ~/
-        _msPerSecond;
-    final startUtc =
-        normalizedStart.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-    final vars = <int>[endExclusiveUtc, startUtc];
-
-    if (providerFilter == 'apple') {
-      sql += " AND provider = 'apple_healthkit'";
-    } else if (providerFilter == 'google') {
-      sql += " AND provider = 'google_health_connect'";
-    }
-
-    sql += sourcePolicy == 'max_per_hour'
-        ? '''
-        GROUP BY day_local, hour_local, source_key
-      ),
-      dedup_hour AS (
-        SELECT day_local, hour_local, MAX(source_steps) AS hour_steps
-        FROM source_hour
-        GROUP BY day_local, hour_local
-      )
-      SELECT day_local, SUM(hour_steps) AS total_steps
-      FROM dedup_hour
-      GROUP BY day_local
-      ORDER BY day_local ASC
-    '''
-        : '''
-        GROUP BY day_local, source_key
-      ),
-      dominant_source_per_day AS (
-        SELECT
-          day_local,
-          source_key
-        FROM source_day s
-        WHERE source_steps = (
-          SELECT MAX(source_steps)
-          FROM source_day s2
-          WHERE s2.day_local = s.day_local
-        )
-      ),
-      chosen_source_per_day AS (
-        SELECT day_local, MIN(source_key) AS source_key
-        FROM dominant_source_per_day
-        GROUP BY day_local
-      )
-      SELECT s.day_local, s.source_steps AS total_steps
-      FROM source_day s
-      INNER JOIN chosen_source_per_day c
-        ON c.day_local = s.day_local
-       AND c.source_key = s.source_key
-      ORDER BY s.day_local ASC
-    ''';
-
-    final rows = await dbInstance.customSelect(
-      sql,
-      variables: [
-        for (final variable in vars) drift.Variable.withInt(variable),
-      ],
-    ).get();
-
-    final result = rows
-        .map(
-          (row) => <String, dynamic>{
-            'dayLocal': row.read<String>('day_local'),
-            'totalSteps': row.read<int?>('total_steps') ?? 0,
-          },
-        )
-        .toList(growable: false);
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getDailyStepsTotalsForRange',
-      elapsed: stopwatch.elapsed,
-      fields: {
-        'rows': rows.length,
-        'provider': providerFilter,
-        'policy': sourcePolicy,
-      },
-    );
-    return result;
-  }
-
-  Future<List<Map<String, dynamic>>> getDailyStepsTotalsBySource({
-    required DateTime dayLocal,
-    String providerFilter = 'all',
-  }) async {
-    final dbInstance = await database;
-    final dayStartLocal = DateTime(dayLocal.year, dayLocal.month, dayLocal.day);
-    final dayEndLocal = dayStartLocal.add(const Duration(days: 1));
-    final dayStartUtc =
-        dayStartLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-    final dayEndUtc =
-        dayEndLocal.toUtc().millisecondsSinceEpoch ~/ _msPerSecond;
-
-    var sql = '''
-      SELECT
-        COALESCE(source_id, '') AS source_key,
-        SUM(step_count) AS total_steps
-      FROM health_step_segments
-      WHERE start_at < ? AND end_at >= ?
-    ''';
-    final vars = <int>[dayEndUtc, dayStartUtc];
-    if (providerFilter == 'apple') {
-      sql += " AND provider = 'apple_healthkit'";
-    } else if (providerFilter == 'google') {
-      sql += " AND provider = 'google_health_connect'";
-    }
-    sql += '''
-      GROUP BY source_key
-      ORDER BY total_steps DESC, source_key ASC
-    ''';
-
-    final rows = await dbInstance.customSelect(
-      sql,
-      variables: [
-        for (final variable in vars) drift.Variable.withInt(variable),
-      ],
-    ).get();
-
-    return rows
-        .map(
-          (row) => <String, dynamic>{
-            'sourceId': row.read<String>('source_key'),
-            'totalSteps': row.read<int?>('total_steps') ?? 0,
-          },
-        )
-        .toList(growable: false);
-  }
-
-  Future<void> markHealthExported({
-    required String platform,
-    required String domain,
-    required List<String> idempotencyKeys,
-  }) async {
-    if (idempotencyKeys.isEmpty) return;
-    final dbInstance = await database;
-    await dbInstance.batch((batch) {
-      for (final key in idempotencyKeys) {
-        batch.customStatement(
-          '''
-          INSERT INTO health_export_records
-          (id, platform, domain, idempotency_key, exported_at)
-          VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)
-          ON CONFLICT(platform, domain, idempotency_key) DO UPDATE SET
-            exported_at = excluded.exported_at
-          ''',
-          [
-            platform,
-            domain,
-            key,
-            DateTime.now().toUtc().millisecondsSinceEpoch ~/ _msPerSecond,
-          ],
-        );
-      }
-    });
-  }
-
-  Future<List<String>> getExportedHealthKeys({
-    required String platform,
-    required String domain,
-    required List<String> idempotencyKeys,
-  }) async {
-    if (idempotencyKeys.isEmpty) return const <String>[];
-    final dbInstance = await database;
-    final placeholders = List.filled(idempotencyKeys.length, '?').join(',');
-    final rows = await dbInstance.customSelect(
-      '''
-      SELECT idempotency_key
-      FROM health_export_records
-      WHERE platform = ?
-        AND domain = ?
-        AND idempotency_key IN ($placeholders)
-      ''',
-      variables: [
-        drift.Variable.withString(platform),
-        drift.Variable.withString(domain),
-        for (final key in idempotencyKeys) drift.Variable.withString(key),
-      ],
-    ).get();
-    return rows
-        .map((row) => row.read<String>('idempotency_key'))
-        .toList(growable: false);
-  }
-
-  Future<int> getCurrentTargetStepsOrDefault() async {
-    final dbInstance = await database;
-    final rows = await (dbInstance.select(
-      dbInstance.appSettings,
-    )..limit(1))
-        .get();
-    if (rows.isEmpty) return StepsSyncService.defaultStepsGoal;
-    return rows.first.targetSteps;
-  }
-
-  Future<DateTime?> getEarliestHealthStepsDateLocal({
-    String providerFilter = 'all',
-  }) async {
-    final stopwatch = Stopwatch()..start();
-    final dbInstance = await database;
-    var sql = '''
-      SELECT MIN(start_at) AS min_start_at
-      FROM health_step_segments
-    ''';
-    if (providerFilter == 'apple') {
-      sql += " WHERE provider = 'apple_healthkit'";
-    } else if (providerFilter == 'google') {
-      sql += " WHERE provider = 'google_health_connect'";
-    }
-    final rows = await dbInstance.customSelect(sql).get();
-    if (rows.isEmpty) {
-      PerfDebugTimer.logDuration(
-        area: 'db',
-        label: 'getEarliestHealthStepsDateLocal',
-        elapsed: stopwatch.elapsed,
-        fields: {'rows': 0, 'provider': providerFilter},
-      );
-      return null;
-    }
-    final minEpoch = rows.first.read<int?>('min_start_at');
-    if (minEpoch == null) {
-      PerfDebugTimer.logDuration(
-        area: 'db',
-        label: 'getEarliestHealthStepsDateLocal',
-        elapsed: stopwatch.elapsed,
-        fields: {'rows': 1, 'provider': providerFilter},
-      );
-      return null;
-    }
-    final result = DateTime.fromMillisecondsSinceEpoch(
-      minEpoch * _msPerSecond,
-      isUtc: true,
-    ).toLocal();
-    PerfDebugTimer.logDuration(
-      area: 'db',
-      label: 'getEarliestHealthStepsDateLocal',
-      elapsed: stopwatch.elapsed,
-      fields: {'rows': 1, 'provider': providerFilter},
-    );
-    return result;
-  }
-
-  /// Saves the starting weight as a measurement.
-  Future<void> saveInitialWeight(double weightKg) async {
-    final dbInstance = await database;
-    final now = DateTime.now();
-
-    await dbInstance.into(dbInstance.measurements).insert(
-          db.MeasurementsCompanion(
-            date: drift.Value(now),
-            type: const drift.Value('weight'),
-            value: drift.Value(weightKg),
-            unit: const drift.Value('kg'),
-            legacySessionId: drift.Value(now.millisecondsSinceEpoch),
-          ),
-        );
-  }
-
-  /// Stores an initial body-fat percentage measurement.
-  Future<void> saveInitialBodyFatPercentage(double bodyFatPercent) async {
-    final dbInstance = await database;
-    final now = DateTime.now();
-
-    await dbInstance.into(dbInstance.measurements).insert(
-          db.MeasurementsCompanion(
-            date: drift.Value(now),
-            type: const drift.Value('fat_percent'),
-            value: drift.Value(bodyFatPercent),
-            unit: const drift.Value('%'),
-            legacySessionId: drift.Value(now.millisecondsSinceEpoch),
-          ),
-        );
-  }
-
-  /// Returns the latest body-fat percentage before or at [before] if present.
-  Future<double?> getLatestBodyFatPercentageBefore(DateTime before) async {
-    final dbInstance = await database;
-    final query = dbInstance.select(dbInstance.measurements)
-      ..where((tbl) => tbl.date.isSmallerOrEqualValue(before))
-      ..where(
-        (tbl) => tbl.type.equals('fat_percent') | tbl.type.equals('body_fat'),
-      )
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.date,
-              mode: drift.OrderingMode.desc,
-            ),
-      ])
-      ..limit(1);
-
-    final latest = await query.getSingleOrNull();
-    final value = latest?.value;
-    if (value == null || value <= 0 || value > 100) {
-      return null;
-    }
-    return value;
-  }
-
-  /// Computes completed workouts per week over a trailing lookback window.
-  Future<double> getAverageCompletedWorkoutsPerWeek({
-    required DateTime now,
-    int lookbackDays = 28,
-  }) async {
-    final dbInstance = await database;
-    final windowDays = lookbackDays <= 0 ? 28 : lookbackDays;
-    final start = now.subtract(Duration(days: windowDays));
-
-    final countExpr = dbInstance.workoutLogs.id.count();
-    final query = dbInstance.selectOnly(dbInstance.workoutLogs)
-      ..addColumns([countExpr])
-      ..where(dbInstance.workoutLogs.status.equals('completed'))
-      ..where(dbInstance.workoutLogs.startTime.isBiggerOrEqualValue(start))
-      ..where(dbInstance.workoutLogs.startTime.isSmallerOrEqualValue(now));
-
-    final row = await query.getSingleOrNull();
-    final completedCount = row?.read(countExpr) ?? 0;
-    final weeks = windowDays / 7.0;
-    if (weeks <= 0) return 0;
-    return completedCount / weeks;
-  }
-
-  // ===========================================================================
-  // AI RECOMMENDATION HELPERS
-  // ===========================================================================
-
-  /// Calculates remaining macros for [date] (target − consumed), clamped to 0.
-  ///
-  /// Returns `{kcal, protein, carbs, fat}`.
-  Future<Map<String, int>> getRemainingMacrosForDate(DateTime date) async {
-    final goals = await getGoalsForDate(date);
-    final targetKcal = goals?.targetCalories ?? 2500;
-    final targetProtein = goals?.targetProtein ?? 180;
-    final targetCarbs = goals?.targetCarbs ?? 250;
-    final targetFat = goals?.targetFat ?? 80;
-
-    int consumedKcal = 0;
-    int consumedProtein = 0;
-    int consumedCarbs = 0;
-    int consumedFat = 0;
-
-    final entries = await getEntriesForDate(date);
-    final productDb = ProductLocalDataSource.instance;
-
-    for (final entry in entries) {
-      final food = await productDb.getProductByBarcode(entry.barcode);
-      if (food != null) {
-        final factor = entry.quantityInGrams / 100.0;
-        consumedKcal += (food.calories.toDouble() * factor).round();
-        consumedProtein += (food.protein.toDouble() * factor).round();
-        consumedCarbs += (food.carbs.toDouble() * factor).round();
-        consumedFat += (food.fat.toDouble() * factor).round();
-      }
-    }
-
-    return {
-      'kcal': (targetKcal - consumedKcal).clamp(0, 99999),
-      'protein': (targetProtein - consumedProtein).clamp(0, 99999),
-      'carbs': (targetCarbs - consumedCarbs).clamp(0, 99999),
-      'fat': (targetFat - consumedFat).clamp(0, 99999),
-    };
-  }
+  Future<double> getAverageCompletedWorkoutsPerWeek(
+          {int weeksBack = 4, DateTime? now}) =>
+      workoutLocalDataSource.getAverageCompletedWorkoutsPerWeek(
+          weeksBack: weeksBack, now: now);
 }
