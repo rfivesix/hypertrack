@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../util/design_constants.dart';
+import '../../../../widgets/common/common.dart';
 import '../../../../widgets/common/global_app_bar.dart';
 
 enum SleepPeriodScope { day, week, month }
@@ -36,29 +37,25 @@ class SleepPeriodScopeLayout extends StatelessWidget {
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top + topPadding + 16,
+          left: 0,
+          right: 0,
         ),
         children: [
-          SegmentedButton<SleepPeriodScope>(
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: SleepPeriodScope.day,
-                label: Text(l10n.sleepScopeDay),
-              ),
-              ButtonSegment(
-                value: SleepPeriodScope.week,
-                label: Text(l10n.sleepScopeWeek),
-              ),
-              ButtonSegment(
-                value: SleepPeriodScope.month,
-                label: Text(l10n.sleepScopeMonth),
-              ),
+          TimeRangeFilter(
+            ranges: [
+              l10n.sleepScopeDay,
+              l10n.sleepScopeWeek,
+              l10n.sleepScopeMonth,
             ],
-            selected: {selectedScope},
-            onSelectionChanged: (selection) => onScopeChanged(selection.first),
+            selectedIndex: selectedScope.index,
+            onSelected: (index) =>
+                onScopeChanged(SleepPeriodScope.values[index]),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignConstants.cardPaddingInternal,
+              vertical: 8,
+            ),
             child: Row(
               children: [
                 IconButton(
@@ -85,7 +82,12 @@ class SleepPeriodScopeLayout extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          child,
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignConstants.cardPaddingInternal,
+            ),
+            child: child,
+          ),
         ],
       ),
     );

@@ -42,11 +42,11 @@ class LogWorkoutSetUseCase {
           if (template.targetReps != null && template.targetReps!.isNotEmpty) {
             if (template.targetReps!.contains('-')) {
               final parts = template.targetReps!.split('-');
-              final min = int.tryParse(parts[0]) ?? 0;
-              final max = int.tryParse(parts[1]) ?? 0;
+              final min = int.tryParse(parts[0].trim()) ?? 0;
+              final max = int.tryParse(parts[1].trim()) ?? 0;
               finalReps = ((min + max) / 2).round();
             } else {
-              finalReps = int.tryParse(template.targetReps!) ?? 0;
+              finalReps = int.tryParse(template.targetReps!.trim()) ?? 0;
             }
           } else {
             finalReps = 0;

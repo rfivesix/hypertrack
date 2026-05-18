@@ -57,11 +57,6 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
           vertical: 8.0,
           horizontal: 16.0,
         ),
-        leading: Icon(
-          Icons.fitness_center,
-          color: theme.colorScheme.primary,
-          size: 32,
-        ),
         title: Text(
           workoutCount > 1
               ? l10n.workoutsLabel // "Workouts"
@@ -71,7 +66,8 @@ class TodaysWorkoutSummaryCard extends StatelessWidget {
         subtitle: Text(
           subtitleText,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.textTheme.bodySmall?.color,
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
           ),
         ),
         trailing: Icon(

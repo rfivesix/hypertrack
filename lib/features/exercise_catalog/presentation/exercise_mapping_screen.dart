@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../domain/repositories/exercise_catalog_repository.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/exercise.dart';
-import 'general_exercise_selection_screen.dart';
+import 'exercise_catalog_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/summary_card.dart';
@@ -50,7 +50,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
   Future<void> _pickTarget(String sourceName) async {
     final Exercise? picked = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => GeneralExerciseSelectionScreen(repository: _repository),
+        builder: (_) => ExerciseCatalogScreen(isSelectionMode: true, repository: _repository),
       ),
     );
     if (picked != null && mounted) {

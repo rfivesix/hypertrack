@@ -11,7 +11,7 @@ import '../domain/models/routine.dart';
 import '../domain/models/routine_exercise.dart';
 import '../domain/models/set_template.dart';
 import '../../../services/haptic_feedback_service.dart';
-import '../../exercise_catalog/presentation/general_exercise_selection_screen.dart';
+import '../../exercise_catalog/presentation/exercise_catalog_screen.dart';
 import '../../exercise_catalog/presentation/exercise_detail_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
@@ -134,7 +134,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (!mounted) return;
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
-        builder: (context) => const GeneralExerciseSelectionScreen(),
+        builder: (context) => const ExerciseCatalogScreen(isSelectionMode: true),
       ),
     );
 

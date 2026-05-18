@@ -95,71 +95,115 @@ class GlassProgressBar extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FractionallySizedBox(
-                  widthFactor: progress,
-                  heightFactor: 1.0,
-                  child: ColoredBox(color: color),
-                ),
-              ),
-              // Readability Scrim: Subtle dark fade from the left to ensure
-              // text legibility against any progress color.
-              if ((isLowContrast || isDark) && value > 0)
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.1),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.6],
-                      ),
-                    ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              Widget buildTextContent({required bool withShadow}) {
+                final colorScheme = theme.colorScheme;
+                final Color filledTextColor = theme.brightness == Brightness.dark ? Colors.white : Colors.black;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 4.0,
                   ),
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 4.0,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          shadows: textShadows,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: withShadow ? filledTextColor : colorScheme.onSurface,
+                            shadows: withShadow ? textShadows : null,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasTarget
+                            ? '${value.toStringAsFixed(1)} / ${target.toStringAsFixed(0)} $unit'
+                            : '${value.toStringAsFixed(1)} $unit',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: withShadow
+                              ? filledTextColor.withValues(alpha: 0.9)
+                              : colorScheme.onSurface,
+                          shadows: withShadow ? textShadows : null,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Layer 1: Unfilled background text content (no shadow, track color)
+                  Positioned.fill(
+                    child: buildTextContent(withShadow: false),
+                  ),
+
+                  // Layer 2: Clipped progress bar + filled text content (with shadow)
+                  if (progress > 0)
+                    Positioned.fill(
+                      child: ClipRect(
+                        clipper: _HorizontalProgressClipper(progress),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ColoredBox(color: color),
+                            if ((isLowContrast || isDark) && value > 0)
+                              Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                      colors: [
+                                        Colors.black.withValues(
+                                          alpha: isDark ? 0.2 : 0.1,
+                                        ),
+                                        Colors.transparent,
+                                      ],
+                                      stops: const [0.0, 0.6],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Positioned.fill(
+                              child: buildTextContent(withShadow: true),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      hasTarget
-                          ? '${value.toStringAsFixed(1)} / ${target.toStringAsFixed(0)} $unit'
-                          : '${value.toStringAsFixed(1)} $unit',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: cs.onSurface,
-                        shadows: textShadows,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
     );
+  }
+}
+
+class _HorizontalProgressClipper extends CustomClipper<Rect> {
+  final double progress;
+
+  _HorizontalProgressClipper(this.progress);
+
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTWH(0, 0, size.width * progress, size.height);
+  }
+
+  @override
+  bool shouldReclip(_HorizontalProgressClipper oldClipper) {
+    return oldClipper.progress != progress;
   }
 }

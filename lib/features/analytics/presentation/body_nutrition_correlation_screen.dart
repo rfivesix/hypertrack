@@ -82,7 +82,7 @@ class _BodyNutritionCorrelationScreenState
           : _analytics == null
               ? _buildUnavailableState(l10n)
               : SingleChildScrollView(
-                  padding: DesignConstants.screenPadding.copyWith(
+                  padding: EdgeInsets.only(
                     top: DesignConstants.screenPadding.top + topPadding,
                     bottom: DesignConstants.bottomContentSpacer,
                   ),
@@ -91,17 +91,27 @@ class _BodyNutritionCorrelationScreenState
                     children: [
                       _buildRangeChips(l10n),
                       const SizedBox(height: DesignConstants.spacingM),
-                      _buildSummaryCard(l10n, _analytics!),
-                      const SizedBox(height: DesignConstants.spacingM),
-                      AppSectionHeader(
-                        title: l10n.analyticsBodyNutritionTrendContext,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DesignConstants.screenPaddingHorizontal,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSummaryCard(l10n, _analytics!),
+                            const SizedBox(height: DesignConstants.spacingM),
+                            AppSectionHeader(
+                              title: l10n.analyticsBodyNutritionTrendContext,
+                            ),
+                            _buildTrendComparisonCard(l10n, _analytics!),
+                            const SizedBox(height: DesignConstants.spacingM),
+                            AppSectionHeader(
+                              title: l10n.analyticsInterpretationTitle,
+                            ),
+                            _buildInterpretationCard(l10n, _analytics!),
+                          ],
+                        ),
                       ),
-                      _buildTrendComparisonCard(l10n, _analytics!),
-                      const SizedBox(height: DesignConstants.spacingM),
-                      AppSectionHeader(
-                        title: l10n.analyticsInterpretationTitle,
-                      ),
-                      _buildInterpretationCard(l10n, _analytics!),
                     ],
                   ),
                 ),
@@ -144,6 +154,10 @@ class _BodyNutritionCorrelationScreenState
     final labels = _ranges(l10n);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignConstants.screenPaddingHorizontal,
+      ),
+      clipBehavior: Clip.none,
       child: Row(
         children: List.generate(labels.length, (index) {
           return Padding(

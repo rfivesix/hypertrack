@@ -75,11 +75,37 @@ class CalculateDailyNutritionUseCase {
       };
     }
 
+    final foodProductsByBarcode = {
+      for (final product in foodProducts) product.barcode: product,
+    };
+
     // Fluids
     summary.water =
         fluidEntries.fold<int>(0, (sum, entry) => sum + entry.quantityInMl);
-    for (final entry
-        in fluidEntries.where((item) => item.linkedFoodEntryId == null)) {
+    for (final entry in fluidEntries) {
+      final isLinked = entry.linkedFoodEntryId != null;
+      final isDuplicateOfFood = foodEntries.any((food) {
+        final foodItem = foodProductsByBarcode[food.barcode];
+        final isFluidFood = foodItem != null &&
+            (foodItem.isFluid || (foodItem.isLiquid ?? false));
+        if (!isFluidFood) return false;
+
+        // Match by linked ID
+        if (entry.linkedFoodEntryId == food.id) return true;
+
+        // Defensive match: same day/time and similar quantity
+        final timeDiff =
+            entry.timestamp.difference(food.timestamp).inSeconds.abs();
+        if (timeDiff < 2 && entry.quantityInMl == food.quantityInGrams) {
+          return true;
+        }
+        return false;
+      });
+
+      if (isLinked || isDuplicateOfFood) {
+        continue;
+      }
+
       summary.calories += entry.kcal ?? 0;
       final factor = entry.quantityInMl / 100.0;
       summary.sugar += (entry.sugarPer100ml ?? 0) * factor;
@@ -87,9 +113,6 @@ class CalculateDailyNutritionUseCase {
     }
 
     // Food
-    final foodProductsByBarcode = {
-      for (final product in foodProducts) product.barcode: product,
-    };
 
     final Map<String, List<TrackedFoodItem>> groupedEntries = {
       'mealtypeBreakfast': [],

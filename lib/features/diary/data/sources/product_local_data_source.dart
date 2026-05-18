@@ -196,7 +196,19 @@ class ProductLocalDataSource {
         .cast<String>()
         .toList();
 
-    return await getProductsByBarcodes(recentBarcodes);
+    final products = await getProductsByBarcodes(recentBarcodes);
+    
+    // Sort products to match the exact descending order of recentBarcodes
+    final barcodeToIndex = {
+      for (var i = 0; i < recentBarcodes.length; i++) recentBarcodes[i]: i
+    };
+    products.sort((a, b) {
+      final indexA = barcodeToIndex[a.barcode] ?? 9999;
+      final indexB = barcodeToIndex[b.barcode] ?? 9999;
+      return indexA.compareTo(indexB);
+    });
+
+    return products;
   }
 
   /// Retrieves all food categories from the database.

@@ -22,7 +22,7 @@ import '../domain/detect_personal_record_use_case.dart';
 import '../../../services/unit_service.dart';
 import '../../exercise_catalog/presentation/widgets/wger_attribution_widget.dart';
 import 'widgets/workout_summary_bar.dart';
-import '../../exercise_catalog/presentation/general_exercise_selection_screen.dart';
+import '../../exercise_catalog/presentation/exercise_catalog_screen.dart';
 import '../../exercise_catalog/presentation/exercise_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'workout_summary_screen.dart';
@@ -254,7 +254,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     final manager = Provider.of<LiveWorkoutViewModel>(context, listen: false);
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
-        builder: (context) => const GeneralExerciseSelectionScreen(),
+        builder: (context) => const ExerciseCatalogScreen(isSelectionMode: true),
       ),
     );
 
@@ -601,8 +601,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     // Hint Logic
     String weightHint = '0';
     String repHint = '0';
-    String rirHint =
-        template.targetRir != null ? template.targetRir.toString() : '-';
+    final String rirHint = isCompleted
+        ? '-'
+        : (template.targetRir != null ? template.targetRir.toString() : '-');
 
     if (isCardio) {
       weightHint = "-"; // Distance Hint
@@ -649,6 +650,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                   onTap: (!isCompleted && rowIndex < lastPerfSets.length)
                       ? () {
                           final lastSet = lastPerfSets[rowIndex];
+                          double? metricWeight;
+                          int? reps;
+
                           // Apply weight
                           if (lastSet.weightKg != null) {
                             final displayWeight = unitService
@@ -658,12 +662,22 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                                 .replaceAll('.0', '');
                             manager.weightControllers[templateId]?.text =
                                 displayWeight;
+                            metricWeight = lastSet.weightKg;
                           }
                           // Apply reps
                           if (lastSet.reps != null) {
                             manager.repsControllers[templateId]?.text =
                                 lastSet.reps.toString();
+                            reps = lastSet.reps;
                           }
+
+                          // Explicitly propagate and bind to the underlying state model
+                          manager.updateSet(
+                            templateId,
+                            weight: metricWeight,
+                            reps: reps,
+                          );
+
                           HapticFeedbackService.instance.selectionFeedback();
                         }
                       : null,
@@ -703,7 +717,24 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             ),
             enabled: !isCompleted,
             onChanged: (text) {
-              final val = double.tryParse(text.replaceAll(',', '.'));
+              final String sanitized = text.replaceAll(',', '.');
+              final double? val;
+              if (sanitized.contains('-')) {
+                final parts = sanitized.split('-');
+                if (parts.length == 2) {
+                  final min = double.tryParse(parts[0].trim());
+                  final max = double.tryParse(parts[1].trim());
+                  if (min != null && max != null) {
+                    val = (min + max) / 2;
+                  } else {
+                    val = null;
+                  }
+                } else {
+                  val = null;
+                }
+              } else {
+                val = double.tryParse(sanitized);
+              }
               final clearValue = val == null && text.isEmpty;
 
               if (isCardio) {
@@ -747,9 +778,26 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
             enabled: !isCompleted,
             onChanged: (text) {
               if (isCardio) {
-                final minutes = double.tryParse(text.replaceAll(',', '.'));
+                final String sanitized = text.replaceAll(',', '.');
+                final double? val;
+                if (sanitized.contains('-')) {
+                  final parts = sanitized.split('-');
+                  if (parts.length == 2) {
+                    final min = double.tryParse(parts[0].trim());
+                    final max = double.tryParse(parts[1].trim());
+                    if (min != null && max != null) {
+                      val = (min + max) / 2;
+                    } else {
+                      val = null;
+                    }
+                  } else {
+                    val = null;
+                  }
+                } else {
+                  val = double.tryParse(sanitized);
+                }
                 final seconds =
-                    (minutes != null) ? (minutes * 60).round() : null;
+                    (val != null) ? (val * 60).round() : null;
                 final clearDuration = seconds == null && text.isEmpty;
                 if (seconds != manager.setLogs[templateId]?.durationSeconds ||
                     clearDuration) {
@@ -757,7 +805,23 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                       duration: seconds, clearDuration: clearDuration);
                 }
               } else {
-                final val = int.tryParse(text);
+                final int? val;
+                if (text.contains('-')) {
+                  final parts = text.split('-');
+                  if (parts.length == 2) {
+                    final min = int.tryParse(parts[0].trim());
+                    final max = int.tryParse(parts[1].trim());
+                    if (min != null && max != null) {
+                      val = ((min + max) / 2).round();
+                    } else {
+                      val = null;
+                    }
+                  } else {
+                    val = null;
+                  }
+                } else {
+                  val = int.tryParse(text);
+                }
                 final clearValue = val == null && text.isEmpty;
                 if (val != manager.setLogs[templateId]?.reps || clearValue) {
                   manager.updateSet(templateId,
@@ -813,8 +877,42 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                         : Icons.check_circle_outline,
                     color: isCompleted ? Colors.green : Colors.grey,
                   ),
-                  onPressed: () {
-                    manager.updateSet(templateId, isCompleted: !isCompleted);
+                  onPressed: () async {
+                    await manager.updateSet(templateId, isCompleted: !isCompleted);
+                    if (!isCompleted) {
+                      final updatedSet = manager.setLogs[templateId];
+                      if (updatedSet != null) {
+                        if (isCardio) {
+                          if (updatedSet.distanceKm != null) {
+                            manager.weightControllers[templateId]?.text =
+                                updatedSet.distanceKm!.toStringAsFixed(1).replaceAll('.0', '');
+                          }
+                          if (updatedSet.durationSeconds != null) {
+                            manager.repsControllers[templateId]?.text =
+                                (updatedSet.durationSeconds! ~/ 60).toString();
+                          }
+                        } else {
+                          if (updatedSet.weightKg != null) {
+                            final displayWeight = unitService.convertDisplayValue(
+                                updatedSet.weightKg!, UnitDimension.weight);
+                            manager.weightControllers[templateId]?.text = displayWeight
+                                .toStringAsFixed(2)
+                                .replaceAll(RegExp(r'0*$'), '')
+                                .replaceAll(RegExp(r'\.$'), '');
+                          }
+                          if (updatedSet.reps != null) {
+                            manager.repsControllers[templateId]?.text =
+                                updatedSet.reps!.toString();
+                          }
+                        }
+                        if (updatedSet.rir != null) {
+                          manager.rirControllers[templateId]?.text =
+                              updatedSet.rir!.toString();
+                        } else {
+                          manager.rirControllers[templateId]?.text = '';
+                        }
+                      }
+                    }
                   },
                 ),
               ),

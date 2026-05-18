@@ -26,12 +26,21 @@ class BodyNutritionAnalyticsEngine {
     final caloriesDaily = <DailyValuePoint>[];
     final weightDaily = <DailyValuePoint>[];
 
+    final today = DateTime.now();
+    final todayUtc = DateTime.utc(today.year, today.month, today.day);
+
     for (final day in allDays) {
-      final calories = caloriesByDay[day] ?? 0.0;
-      if (calories > 0) {
-        loggedCaloriesByDay[day] = calories;
+      final isToday = day.year == todayUtc.year &&
+          day.month == todayUtc.month &&
+          day.day == todayUtc.day;
+
+      if (!isToday) {
+        final calories = caloriesByDay[day] ?? 0.0;
+        if (calories > 0) {
+          loggedCaloriesByDay[day] = calories;
+        }
+        caloriesDaily.add(DailyValuePoint(day: day, value: calories));
       }
-      caloriesDaily.add(DailyValuePoint(day: day, value: calories));
 
       final weight = weightByDay[day];
       if (weight != null) {

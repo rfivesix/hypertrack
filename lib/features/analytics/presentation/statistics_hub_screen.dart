@@ -145,7 +145,13 @@ class _StatisticsHubScreenView extends StatelessWidget {
             padding: finalPadding,
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _buildTimeRangeFilter(context, viewModel, l10n),
+                TimeRangeFilter(
+                  ranges: _timeRanges(l10n),
+                  selectedIndex: viewModel.selectedTimeRangeIndex,
+                  onSelected: (index) {
+                    viewModel.selectedTimeRangeIndex = index;
+                  },
+                ),
                 const SizedBox(height: DesignConstants.spacingL),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -189,41 +195,6 @@ class _StatisticsHubScreenView extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTimeRangeFilter(
-    BuildContext context,
-    StatisticsHubViewModel viewModel,
-    AppLocalizations l10n,
-  ) {
-    final ranges = _timeRanges(l10n);
-    return SizedBox(
-      width: double.infinity,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: DesignConstants.cardPaddingInternal,
-        ),
-        child: Row(
-          children: List.generate(ranges.length, (index) {
-            final range = ranges[index];
-            final isSelected = viewModel.selectedTimeRangeIndex == index;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: ChoiceChip(
-                label: Text(range),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    viewModel.selectedTimeRangeIndex = index;
-                  }
-                },
-              ),
-            );
-          }),
-        ),
       ),
     );
   }
@@ -641,9 +612,7 @@ class _StatisticsHubScreenView extends StatelessWidget {
                     value: topMuscleShare.clamp(0.0, 1.0),
                     backgroundColor:
                         Theme.of(context).colorScheme.surfaceContainerHighest,
-                    valueColor: AlwaysStoppedAnimation(
-                      Theme.of(context).colorScheme.tertiary,
-                    ),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
@@ -1414,12 +1383,14 @@ class _StatisticsHubScreenView extends StatelessWidget {
                     context,
                     color: Theme.of(context).colorScheme.primary,
                     label: l10n.analyticsBodyNutritionTotalWeightLabel,
+                    shape: BoxShape.circle,
                   ),
                   const SizedBox(width: 12),
                   _legendDot(
                     context,
                     color: const Color(0xFFF97316),
                     label: l10n.analyticsBodyNutritionTotalCaloriesLabel,
+                    shape: BoxShape.rectangle,
                   ),
                 ],
               ),
@@ -1539,15 +1510,24 @@ class _StatisticsHubScreenView extends StatelessWidget {
     );
   }
 
-  Widget _legendDot(BuildContext context,
-      {required Color color, required String label}) {
+  Widget _legendDot(
+    BuildContext context, {
+    required Color color,
+    required String label,
+    BoxShape shape = BoxShape.circle,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 7,
           height: 7,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color,
+            shape: shape,
+            borderRadius:
+                shape == BoxShape.rectangle ? BorderRadius.circular(2) : null,
+          ),
         ),
         const SizedBox(width: 6),
         Text(

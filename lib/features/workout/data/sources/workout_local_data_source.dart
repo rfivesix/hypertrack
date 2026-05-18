@@ -875,6 +875,7 @@ class WorkoutLocalDataSource {
               isCompleted: drift.Value(s.isCompleted ?? false),
               notes: drift.Value(s.notes),
               rir: drift.Value(s.rir),
+              setType: drift.Value(s.setType),
               // FIX: logOrder must also be updated so reordering is saved.
               logOrder: drift.Value(s.logOrder ?? 0),
             ),

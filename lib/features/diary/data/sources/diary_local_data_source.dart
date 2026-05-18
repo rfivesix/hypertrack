@@ -95,24 +95,29 @@ class DiaryLocalDataSource {
     final start = DateTime(date.year, date.month, date.day);
     final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
-    final query = _db.select(_db.fluidLogs)
-      ..where((tbl) => tbl.consumedAt.isBetweenValues(start, end));
+    final query = _db.select(_db.fluidLogs).join([
+      drift.leftOuterJoin(
+        _db.nutritionLogs,
+        _db.nutritionLogs.id.equalsExp(_db.fluidLogs.linkedNutritionLogId),
+      ),
+    ])..where(_db.fluidLogs.consumedAt.isBetweenValues(start, end));
 
     final rows = await query.get();
-    return rows
-        .map(
-          (row) => FluidEntry(
-            id: row.localId,
-            name: row.name,
-            quantityInMl: row.amountMl,
-            timestamp: row.consumedAt,
-            kcal: row.kcal,
-            sugarPer100ml: row.sugarPer100ml,
-            carbsPer100ml: row.carbsPer100ml,
-            caffeinePer100ml: row.caffeinePer100ml,
-          ),
-        )
-        .toList();
+    return rows.map((row) {
+      final fluidRow = row.readTable(_db.fluidLogs);
+      final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+      return FluidEntry(
+        id: fluidRow.localId,
+        name: fluidRow.name,
+        quantityInMl: fluidRow.amountMl,
+        timestamp: fluidRow.consumedAt,
+        kcal: fluidRow.kcal,
+        sugarPer100ml: fluidRow.sugarPer100ml,
+        carbsPer100ml: fluidRow.carbsPer100ml,
+        caffeinePer100ml: fluidRow.caffeinePer100ml,
+        linkedFoodEntryId: nutritionRow?.localId,
+      );
+    }).toList();
   }
 
   Future<void> updateFluidEntry(FluidEntry entry) async {
@@ -247,21 +252,28 @@ class DiaryLocalDataSource {
   }
 
   Future<List<FluidEntry>> getAllFluidEntries() async {
-    final rows = await _db.select(_db.fluidLogs).get();
-    return rows
-        .map(
-          (row) => FluidEntry(
-            id: row.localId,
-            name: row.name,
-            quantityInMl: row.amountMl,
-            timestamp: row.consumedAt,
-            kcal: row.kcal,
-            sugarPer100ml: row.sugarPer100ml,
-            carbsPer100ml: row.carbsPer100ml,
-            caffeinePer100ml: row.caffeinePer100ml,
-          ),
-        )
-        .toList();
+    final query = _db.select(_db.fluidLogs).join([
+      drift.leftOuterJoin(
+        _db.nutritionLogs,
+        _db.nutritionLogs.id.equalsExp(_db.fluidLogs.linkedNutritionLogId),
+      ),
+    ]);
+    final rows = await query.get();
+    return rows.map((row) {
+      final fluidRow = row.readTable(_db.fluidLogs);
+      final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+      return FluidEntry(
+        id: fluidRow.localId,
+        name: fluidRow.name,
+        quantityInMl: fluidRow.amountMl,
+        timestamp: fluidRow.consumedAt,
+        kcal: fluidRow.kcal,
+        sugarPer100ml: fluidRow.sugarPer100ml,
+        carbsPer100ml: fluidRow.carbsPer100ml,
+        caffeinePer100ml: fluidRow.caffeinePer100ml,
+        linkedFoodEntryId: nutritionRow?.localId,
+      );
+    }).toList();
   }
 
   Future<List<FoodEntry>> getAllFoodEntries() async {
@@ -350,28 +362,33 @@ class DiaryLocalDataSource {
     final startOfDay = DateTime(start.year, start.month, start.day);
     final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-    final query = _db.select(_db.fluidLogs)
-      ..where((tbl) => tbl.consumedAt.isBetweenValues(startOfDay, endOfDay));
+    final query = _db.select(_db.fluidLogs).join([
+      drift.leftOuterJoin(
+        _db.nutritionLogs,
+        _db.nutritionLogs.id.equalsExp(_db.fluidLogs.linkedNutritionLogId),
+      ),
+    ])..where(_db.fluidLogs.consumedAt.isBetweenValues(startOfDay, endOfDay));
 
     if (updatedSince != null) {
-      query.where((tbl) => tbl.updatedAt.isBiggerOrEqualValue(updatedSince));
+      query.where(_db.fluidLogs.updatedAt.isBiggerOrEqualValue(updatedSince));
     }
 
     final rows = await query.get();
-    return rows
-        .map(
-          (row) => FluidEntry(
-            id: row.localId,
-            name: row.name,
-            quantityInMl: row.amountMl,
-            timestamp: row.consumedAt,
-            kcal: row.kcal,
-            sugarPer100ml: row.sugarPer100ml,
-            carbsPer100ml: row.carbsPer100ml,
-            caffeinePer100ml: row.caffeinePer100ml,
-          ),
-        )
-        .toList();
+    return rows.map((row) {
+      final fluidRow = row.readTable(_db.fluidLogs);
+      final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+      return FluidEntry(
+        id: fluidRow.localId,
+        name: fluidRow.name,
+        quantityInMl: fluidRow.amountMl,
+        timestamp: fluidRow.consumedAt,
+        kcal: fluidRow.kcal,
+        sugarPer100ml: fluidRow.sugarPer100ml,
+        carbsPer100ml: fluidRow.carbsPer100ml,
+        caffeinePer100ml: fluidRow.caffeinePer100ml,
+        linkedFoodEntryId: nutritionRow?.localId,
+      );
+    }).toList();
   }
 
   Future<domain.Supplement?> getSupplementById(int id) async {

@@ -110,6 +110,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                         title: Text(category),
                         value: isSelected,
                         activeColor: Theme.of(context).colorScheme.primary,
+                        checkColor: Theme.of(context).colorScheme.onPrimary,
                         onChanged: (bool? value) {
                           setStateSB(() {
                             if (value == true) {
@@ -192,28 +193,34 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: DesignConstants.spacingS),
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchHintText,
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: colorScheme.onSurfaceVariant,
-                      size: 20,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: l10n.searchHintText,
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: colorScheme.onSurfaceVariant,
+                            size: 20,
+                          ),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.clear,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  onPressed: () => _searchController.clear(),
+                                )
+                              : null,
+                        ),
+                      ),
                     ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            onPressed: () => _searchController.clear(),
-                          )
-                        : null,
-                  ),
+                    const SizedBox(width: 12),
+                    _buildFilterButton(context, l10n),
+                  ],
                 ),
-                const SizedBox(height: DesignConstants.spacingL),
-                _buildFilterButton(context, l10n),
               ],
             ),
           ),
@@ -311,43 +318,37 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
   Widget _buildFilterButton(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
+    final hasFilter = _selectedCategories.isNotEmpty;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: GestureDetector(
-        onTap: () => _showFilterDialog(context, l10n),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: _selectedCategories.isNotEmpty
-                ? colorScheme.primary
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.filter_list,
-                size: 20,
-                color: _selectedCategories.isNotEmpty
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.filterByCategory,
-                style: textTheme.labelLarge?.copyWith(
-                  color: _selectedCategories.isNotEmpty
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+    final fillColor = hasFilter
+        ? colorScheme.primary
+        : (theme.inputDecorationTheme.fillColor ??
+            (theme.brightness == Brightness.dark
+                ? const Color(0xFF1C1C1C)
+                : const Color(0xFFF3F3F3)));
+
+    final iconColor = hasFilter
+        ? colorScheme.onPrimary
+        : colorScheme.onSurfaceVariant;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: 48,
+      width: 48,
+      decoration: BoxDecoration(
+        color: fillColor,
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: IconButton(
+        icon: Icon(
+          Icons.filter_list,
+          color: iconColor,
+          size: 22,
         ),
+        onPressed: () => _showFilterDialog(context, l10n),
+        tooltip: l10n.filterByCategory,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
       ),
     );
   }

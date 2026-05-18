@@ -16,7 +16,7 @@ import '../../../services/health/workout_heart_rate_service.dart';
 import '../../../services/haptic_feedback_service.dart';
 import '../../pulse/application/pulse_tracking_service.dart';
 import '../../../services/unit_service.dart';
-import '../../exercise_catalog/presentation/general_exercise_selection_screen.dart';
+import '../../exercise_catalog/presentation/exercise_catalog_screen.dart';
 import '../../exercise_catalog/presentation/exercise_detail_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
@@ -25,6 +25,7 @@ import '../../../widgets/common/summary_card.dart';
 import '../../exercise_catalog/presentation/widgets/wger_attribution_widget.dart';
 import 'widgets/workout_summary_bar.dart';
 import 'widgets/workout_card.dart';
+import '../../app/presentation/widgets/glass_bottom_menu.dart';
 
 /// A detailed view for a single completed [WorkoutLog].
 ///
@@ -451,6 +452,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
           distanceKm: val1,
           durationSeconds: (val2 * 60).round(),
           rir: rir,
+          clearRir: rir == null,
           // Set weight/reps to 0/null for cardio to avoid bad data?
           weightKg: 0,
           reps: 0,
@@ -461,6 +463,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
           weightKg: val1,
           reps: val2.toInt(),
           rir: rir,
+          clearRir: rir == null,
           // Cardio Felder nullen
           distanceKm: null,
           durationSeconds: null,
@@ -672,7 +675,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                           .push<Exercise>(
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const GeneralExerciseSelectionScreen(),
+                                          const ExerciseCatalogScreen(isSelectionMode: true),
                                     ),
                                   );
                                   if (selectedExercise != null) {
@@ -1351,34 +1354,55 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         }
       }
     });
-    Navigator.pop(context);
   }
 
   void _showSetTypePicker(int setLogId) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              title: Text(AppLocalizations.of(context)!.set_type_normal),
-              onTap: () => _changeSetType(setLogId, 'normal'),
-            ),
-            ListTile(
-              title: Text(AppLocalizations.of(context)!.set_type_warmup),
-              onTap: () => _changeSetType(setLogId, 'warmup'),
-            ),
-            ListTile(
-              title: Text(AppLocalizations.of(context)!.set_type_failure),
-              onTap: () => _changeSetType(setLogId, 'failure'),
-            ),
-            ListTile(
-              title: Text(AppLocalizations.of(context)!.set_type_dropset),
-              onTap: () => _changeSetType(setLogId, 'dropset'),
-            ),
-          ],
-        );
+    final l10n = AppLocalizations.of(context)!;
+
+    Widget buildSymbol(String char, Color color) {
+      return Text(
+        char,
+        style: TextStyle(
+          color: color,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    final options = [
+      {
+        'type': 'normal',
+        'label': l10n.set_type_normal,
+        'symbol': buildSymbol('N', Colors.grey),
       },
+      {
+        'type': 'warmup',
+        'label': l10n.set_type_warmup,
+        'symbol': buildSymbol('W', Colors.orange),
+      },
+      {
+        'type': 'failure',
+        'label': l10n.set_type_failure,
+        'symbol': buildSymbol('F', Colors.red),
+      },
+      {
+        'type': 'dropset',
+        'label': l10n.set_type_dropset,
+        'symbol': buildSymbol('D', Colors.blue),
+      },
+    ];
+
+    showGlassBottomMenu(
+      context: context,
+      title: l10n.changeSetTypTitle,
+      actions: options.map((opt) {
+        return GlassMenuAction(
+          customIcon: opt['symbol'] as Widget,
+          label: opt['label'] as String,
+          onTap: () => _changeSetType(setLogId, opt['type'] as String),
+        );
+      }).toList(),
     );
   }
 

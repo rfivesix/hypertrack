@@ -748,7 +748,7 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
           );
         },
         child: GlassProgressBar(
-          label: 'Steps',
+          label: AppLocalizations.of(context)!.steps,
           unit: 'steps',
           value: (viewModel.stepsForSelectedDay ?? 0).toDouble(),
           target: (viewModel.targetSteps > 0
@@ -764,23 +764,25 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
   }
 
   Widget _buildSleepSummaryCard() {
+    final theme = Theme.of(context);
     if (viewModel.isSleepWidgetLoading) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: SummaryCard(
-          margin: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              children: [
-                const SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 12),
-                Text(AppLocalizations.of(context)!.diaryLoadingSleep),
-              ],
+      return SummaryCard(
+        padding: EdgeInsets.zero,
+        margin: const EdgeInsets.symmetric(vertical: 4.0),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 8.0,
+            horizontal: 16.0,
+          ),
+          title: Text(
+            AppLocalizations.of(context)!.sleepSectionTitle,
+            style: theme.textTheme.titleMedium,
+          ),
+          subtitle: Text(
+            AppLocalizations.of(context)!.diaryLoadingSleep,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              //color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -794,42 +796,55 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     final score = overview.analysis.score;
     final scoreText = score == null ? '--' : score.round().toString();
     return SummaryCard(
+      padding: EdgeInsets.zero,
       margin: const EdgeInsets.symmetric(vertical: 4.0),
-      onTap: () =>
-          SleepNavigation.openDayForDate(context, viewModel.selectedDate),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
+      child: ListTile(
+        onTap: () =>
+            SleepNavigation.openDayForDate(context, viewModel.selectedDate),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 16.0,
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.sleepSectionTitle,
+          style: theme.textTheme.titleMedium,
+        ),
+        subtitle: Text(
+          '${AppLocalizations.of(context)!.durationLabel}: $durationText',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.sleepSectionTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${AppLocalizations.of(context)!.durationLabel}: $durationText',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   AppLocalizations.of(context)!.sleepHubScoreLabel,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   scoreText,
-                  style: Theme.of(context).textTheme.headlineLarge,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ],
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.onSurface,
             ),
           ],
         ),
@@ -838,23 +853,26 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
   }
 
   Widget _buildPulseSummaryCard() {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     if (viewModel.isPulseWidgetLoading) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: SummaryCard(
-          margin: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              children: [
-                const SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 12),
-                Text(AppLocalizations.of(context)!.load_dots),
-              ],
+      return SummaryCard(
+        padding: EdgeInsets.zero,
+        margin: const EdgeInsets.symmetric(vertical: 4.0),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 8.0,
+            horizontal: 16.0,
+          ),
+          title: Text(
+            l10n.pulseTitle,
+            style: theme.textTheme.titleMedium,
+          ),
+          subtitle: Text(
+            l10n.load_dots,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -864,7 +882,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     if (summary == null || !summary.hasData) {
       return const SizedBox.shrink();
     }
-    final l10n = AppLocalizations.of(context)!;
     final rangeText = summary.hasCoreMetrics
         ? '${summary.minBpm!.round()}-${summary.maxBpm!.round()} ${l10n.sleepBpmUnit}'
         : '--';
@@ -873,50 +890,63 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
         : '--';
 
     return SummaryCard(
+      padding: EdgeInsets.zero,
       margin: const EdgeInsets.symmetric(vertical: 4.0),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => PulseAnalysisScreen(
-              initialDate: viewModel.selectedDate,
-              initialScope: SleepPeriodScope.day,
-            ),
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.pulseTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${l10n.pulseRangeLabel}: $rangeText',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+      child: ListTile(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PulseAnalysisScreen(
+                initialDate: viewModel.selectedDate,
+                initialScope: SleepPeriodScope.day,
               ),
             ),
+          );
+        },
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 16.0,
+        ),
+        title: Text(
+          l10n.pulseTitle,
+          style: theme.textTheme.titleMedium,
+        ),
+        subtitle: Text(
+          '${l10n.pulseRangeLabel}: $rangeText',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   l10n.pulseRestingLabel,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   restingText,
-                  style: Theme.of(context).textTheme.headlineLarge,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ],
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.onSurface,
             ),
           ],
         ),
@@ -994,12 +1024,18 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
           // <<< New: macro row below the title (own line, left aligned)
           if (items.isNotEmpty) ...[
             const SizedBox(height: 4),
-            AppMetadataRow(items: [
-              '${macros.calories.round()} kcal',
-              '${macros.protein.round()}g P',
-              '${macros.carbs.round()}g C',
-              '${macros.fat.round()}g F',
-            ]),
+            AppMetadataRow(
+              items: [
+                '${macros.calories.round()} kcal',
+                '${macros.protein.round()}g P',
+                '${macros.carbs.round()}g C',
+                '${macros.fat.round()}g F',
+              ],
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
 
           // Content (animated expand/collapse)
@@ -1210,12 +1246,18 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                   }
                 }
                 final l10n = AppLocalizations.of(ctx)!;
-                return AppMetadataRow(items: [
-                  '$totalKcal kcal',
-                  '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar}',
-                  '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine}',
-                  '${totalMl}ml',
-                ]);
+                return AppMetadataRow(
+                  items: [
+                    '$totalKcal kcal',
+                    '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar}',
+                    '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine}',
+                    '${totalMl}ml',
+                  ],
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                );
               },
             ),
           ],
