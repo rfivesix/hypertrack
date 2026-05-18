@@ -8,9 +8,10 @@ Persistence is Drift-backed through `AppDatabase` in `lib/data/drift_database.da
 
 Main access paths currently in use:
 
-- `lib/data/database_helper.dart` (Centralized instance for schema and proxying)
-- `WorkoutLocalDataSource` (Decentralized workout CRUD)
-- `ProductLocalDataSource` (Decentralized nutrition/food CRUD)
+- `lib/data/database_helper.dart` (low-level connection initialization and SQL migration-hook boundary)
+- `DiaryLocalDataSource` (feature-local diary persistence access)
+- `WorkoutLocalDataSource` (feature-local workout persistence access)
+- `ProductLocalDataSource` (feature-local nutrition/product persistence access)
 - Sleep DAOs in `lib/features/sleep/data/persistence/dao/*`
 
 
@@ -39,7 +40,7 @@ verifies the copied size, and removes the old file only after that check.
 
 Startup import path:
 
-- `lib/screens/app_initializer_screen.dart` -> `lib/core/infrastructure/basis_data_manager.dart.checkForBasisDataUpdate(...)`
+- `lib/features/app/presentation/app_initializer_screen.dart` -> `lib/core/infrastructure/basis_data_manager.dart.checkForBasisDataUpdate(...)`
 
 Remote refresh service:
 
@@ -133,7 +134,7 @@ Read/write code paths:
 
 - Sync/write: `lib/services/health/steps_sync_service.dart`
 - Aggregation/read: `lib/features/steps/data/steps_aggregation_repository.dart`
-- SQL aggregations: executed via isolated DataSources using `lib/data/database_helper.dart` as the client proxy.
+- SQL aggregations: executed through feature data access components backed by the shared `AppDatabase` instance.
 
 ## Sleep storage
 
@@ -188,7 +189,11 @@ Sleep canonical/derived rows persist version tags used by recompute logic:
 
 ## Portability and backup
 
-Backup/export tooling remains under `lib/core/infrastructure/backup_manager.dart` and related import/export helpers.
+Backup/export/import tooling remains under:
+
+- `lib/core/infrastructure/backup_manager.dart`
+- `lib/core/infrastructure/export_manager.dart`
+- `lib/core/infrastructure/import_manager.dart`
 
 Current backup behavior relevant to adaptive nutrition:
 - SharedPreferences are exported as a full `userPreferences` map (all keys).

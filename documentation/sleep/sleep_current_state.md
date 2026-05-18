@@ -4,7 +4,7 @@ This is the canonical technical reference for Sleep as currently implemented.
 
 ## Scope and guardrails
 
-- Current implementation: code under `lib/features/sleep/**` plus integration callers in `lib/screens/*`.
+- Current implementation: code under `lib/features/sleep/**` plus integration callers in `lib/features/**/presentation/*`.
 - This document describes implemented behavior only.
 - Ambiguities are labeled explicitly when code signals multiple possible interpretations.
 
@@ -44,8 +44,8 @@ Route registration:
 
 ### User-facing entry points
 
-- Statistics hub sleep card -> `SleepNavigation.openDay(context)` in `lib/screens/statistics_hub_screen.dart`
-- Diary sleep summary card -> `SleepNavigation.openDayForDate(context, selectedDate)` in `lib/screens/diary_screen.dart`
+- Statistics hub sleep card -> `SleepNavigation.openDay(context)` in `lib/features/analytics/presentation/statistics_hub_screen.dart`
+- Diary sleep summary card -> `SleepNavigation.openDayForDate(context, selectedDate)` in `lib/features/diary/presentation/diary_screen.dart`
 
 ### Route implementation detail
 
@@ -372,7 +372,7 @@ Important implementation detail:
 
 Statistics uses Sleep through `SleepHubSummaryRepository` only:
 
-- file: `lib/screens/statistics_hub_screen.dart`
+- file: `lib/features/analytics/presentation/statistics_hub_screen.dart`
 - card metrics: mean score, mean duration, mean bedtime, interruptions summary
 - card tap opens Sleep day route
 
@@ -380,7 +380,7 @@ Statistics does not compute Sleep score/metrics itself.
 
 ## Settings integration
 
-File: `lib/screens/settings_screen.dart`
+File: `lib/features/settings/presentation/settings_screen.dart`
 
 Sleep section currently implements:
 
@@ -392,7 +392,7 @@ Sleep section currently implements:
 
 ## Known gaps and limitations visible from code
 
-- No dedicated Sleep drill-down screen inside `lib/screens/analytics/*`; Sleep drill-down is inside Sleep feature routes.
+- No dedicated Sleep drill-down screen inside `lib/features/analytics/presentation/*`; Sleep drill-down is inside Sleep feature routes.
 - `SleepPipelineService.forceRecompute` path exists but is not used by `SleepSyncService.importRecent()`.
 - `/sleep/state/*` placeholder routes are implemented but not currently linked from main user flow.
 - `SleepDerivedProvider` (`lib/features/sleep/presentation/providers/sleep_derived_providers.dart`) exists but is not wired into active UI flow.

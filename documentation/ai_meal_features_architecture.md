@@ -19,13 +19,13 @@ The model is used to propose food names and gram amounts. Deterministic app code
   Provider calls, prompts, JSON parsing, capture repair calls, recommendation generation and repair calls.
 - `lib/services/ai_meal_validation.dart`
   Shared deterministic validation domain, match quality, nutrition totals, target-fit checks, save planning, target planning, and bounded repair orchestration.
-- `lib/screens/ai_meal_capture_screen.dart`
+- `lib/features/diary/presentation/ai_meal_capture_screen.dart`
   Image/text capture entry point. Runs recognition, validation, and bounded auto-repair before review.
-- `lib/screens/ai_meal_review_screen.dart`
+- `lib/features/diary/presentation/ai_meal_review_screen.dart`
   Review-first capture UI. Shows validation quality, item warnings, unmatched items, and partial-save confirmation.
-- `lib/screens/ai_recommendation_screen.dart`
+- `lib/features/diary/presentation/ai_recommendation_screen.dart`
   Recommendation UI. Computes remaining meal target, branches on context opt-in, validates target fit, repairs, and shows warnings.
-- `lib/screens/ai_settings_screen.dart`
+- `lib/features/settings/presentation/ai_settings_screen.dart`
   Global AI enablement, provider/model/API key setup, and the separate recommendation context-sharing switch.
 
 ## Shared Validation Domain
@@ -46,7 +46,7 @@ The shared validation layer is centered on these types:
 - `AiMealValidationEngine`
 - `AiRepairOrchestrator`
 
-The engine is asynchronous because DB matching is asynchronous. It accepts an injectable match loader, which keeps tests deterministic and lets production use `ProductDatabaseHelper.instance`.
+The engine is asynchronous because DB matching is asynchronous. It accepts an injectable match loader, which keeps tests deterministic and lets production use `ProductLocalDataSource.instance`.
 
 ## Deterministic vs Model-Generated
 
