@@ -2,6 +2,11 @@
 
 This document reflects architecture as currently implemented.
 
+
+
+## Domain Layer Purity
+The Domain Layer is a 100% pure Dart capsule. Concrete repository implementations (e.g., `NutritionRepository` or `DiaryRepository`) act as a strict data mapping tier. They consume raw Drift database row classes (like `DailyGoalsHistoryData`) from local DataSources and map them into pure, framework-agnostic models (like `DailyGoal`) before passing them upward to ViewModels or UseCases. Repository contracts never return Drift or third-party entity classes.
+
 ## High-level layering
 
 ```
@@ -109,13 +114,13 @@ graph TD
 
 ```mermaid
 graph LR
-    FeatureA[Diary LocalDataSource] --> DB[database_helper.dart]
+    FeatureA[Diary LocalDataSource] --> DB[database_helper.dart - Proxy]
     FeatureB[Workout LocalDataSource] --> DB
     FeatureC[Settings LocalDataSource] --> DB
 
-    DB --> SQLite[(Drift SQLite)]
+    DB --> SQLite[(Drift SQLite Instance)]
 
-    note[database_helper.dart contains ZERO business logic.<br/>It only handles low-level initialization<br/>and transaction proxying.]
+    note[DatabaseHelper handles low-level initialization and schema hooks only.<br/>It contains ZERO application CRUD orchestrations.]
 ```
 
 ## Asynchronous Coordination Sequence Flow
@@ -167,8 +172,8 @@ Primary persistence is Drift-based via `AppDatabase` (`lib/data/drift_database.d
 
 Notable current areas:
 
-- workout analytics queries in `lib/data/database_helper.dart (legacy ref removed)`
-- nutrition/settings/steps queries in `lib/data/database_helper.dart`
+- workout analytics queries are managed via `WorkoutLocalDataSource` querying the central client.
+- nutrition/settings/steps queries are managed via feature-specific LocalDataSources which consume `lib/data/database_helper.dart`.
 - Sleep raw/canonical/derived schema and DAOs in `lib/features/sleep/data/persistence/**`
 
 ## Known implementation notes

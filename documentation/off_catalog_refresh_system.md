@@ -193,7 +193,7 @@ Runtime OFF adoption flow at startup:
 7. normalize legacy WAL-mode single-file SQLite artifacts after checksum verification
 8. validate DB schema + metadata/version + minimum row floor
 9. cache validated DB as update candidate
-10. `BasisDataManager` imports the candidate DB through the existing OFF import path and retention semantics
+10. `lib/core/infrastructure/basis_data_manager.dart` imports the candidate DB through the existing OFF import path and retention semantics
 
 If any step fails, the app safely falls back without destructive changes.
 Failed remote refreshes bypass the normal minimum-check interval on the next
@@ -211,7 +211,7 @@ Supported OFF countries are centralized as:
 - `US`
 - `UK`
 
-`BasisDataManager` now resolves OFF import source via the active country config and uses country-scoped OFF version keys for import state.
+`lib/core/infrastructure/basis_data_manager.dart` now resolves OFF import source via the active country config and uses country-scoped OFF version keys for import state.
 
 ### User-selectable region setting
 
@@ -230,7 +230,7 @@ Switch behavior is intentionally safe:
 
 ### Missing bundled fallback behavior (US/UK safe handling)
 
-`BasisDataManager` now checks whether a bundled OFF asset exists for the active country.
+`lib/core/infrastructure/basis_data_manager.dart` now checks whether a bundled OFF asset exists for the active country.
 
 - if remote candidate exists: use remote candidate
 - if remote candidate is unavailable and bundled asset exists: use bundled asset
@@ -252,7 +252,7 @@ Current APK-size rollout note:
 
 Existing historical continuity behavior is preserved.
 
-`BasisDataManager.retainHistoricallyNeededOffProducts(...)` still enforces:
+`lib/core/infrastructure/basis_data_manager.dart.retainHistoricallyNeededOffProducts(...)` still enforces:
 
 - imported current rows remain active with `source='off'`
 - historically referenced, no-longer-imported rows become `source='off_retained'`

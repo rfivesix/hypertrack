@@ -234,7 +234,7 @@ Diet-phase tracking payload (`AdaptiveDietPhaseTrackingState`) includes:
 
 ## Backup / Restore Coverage (Current Implementation)
 
-Backup/restore is handled by `BackupManager` and currently serializes SharedPreferences wholesale:
+Backup/restore is handled by `lib/core/infrastructure/backup_manager.dart` and currently serializes SharedPreferences wholesale:
 - export: `_generateBackupJson()` copies every key from `prefs.getKeys()` into backup `userPreferences`
 - import: `_importBackupPayload()` clears prefs, then restores all supported scalar/list types from `userPreferences`
 
