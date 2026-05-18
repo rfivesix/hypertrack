@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../data/profile_repository.dart';
+import '../domain/repositories/profile_repository.dart';
 import '../../../data/drift_database.dart' as db; // Access to Profile class
 import '../../../generated/app_localizations.dart';
 import 'goals_screen.dart';
@@ -22,7 +22,7 @@ import '../../../widgets/common/global_app_bar.dart';
 
 /// A screen for managing user-specific identity and data.
 class ProfileScreen extends StatefulWidget {
-  final ProfileRepository? repository;
+  final IProfileRepository? repository;
 
   const ProfileScreen({super.key, this.repository});
 
@@ -31,7 +31,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late final ProfileRepository _repository = widget.repository ?? ProfileRepository();
+  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
   db.Profile? _userProfile;
   bool _isLoading = true;
 

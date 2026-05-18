@@ -3,9 +3,43 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/features/steps/data/steps_aggregation_repository.dart';
 import 'package:train_libre/features/steps/presentation/steps_module_screen.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/screens/live_workout_view_model.dart';
-import 'package:train_libre/widgets/statistics_steps_card.dart';
+import 'package:train_libre/features/workout/presentation/live_workout_view_model.dart';
+import 'package:train_libre/features/workout/domain/repositories/workout_repository.dart';
+import 'package:train_libre/features/workout/domain/models/workout_log.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart';
+import 'package:train_libre/features/workout/domain/models/routine.dart';
+import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart';
+import 'package:train_libre/features/steps/presentation/statistics_steps_card.dart';
 import 'package:provider/provider.dart';
+
+class FakeWorkoutRepository implements IWorkoutRepository {
+  @override
+  Future<WorkoutLog?> getOngoingWorkout() async => null;
+  @override
+  Future<int> insertSetLog(SetLog log) async => 0;
+  @override
+  Future<List<SetLog>> getSetLogsForWorkout(int workoutLogId) async => [];
+  @override
+  Future<Routine?> getRoutineByName(String name) async => null;
+  @override
+  Future<Exercise?> resolveExerciseForSetLog(SetLog log) async => null;
+  @override
+  Future<Exercise?> getExerciseByName(String name) async => null;
+  @override
+  Future<String?> getExerciseUuidByLocalId(int localId) async => null;
+  @override
+  Future<Map<String, double>> getExerciseBests(String exerciseName, {String? altName, String? exerciseUuid}) async => {};
+  @override
+  Future<void> updateSetLogs(List<SetLog> logs) async {}
+  @override
+  Future<void> deleteSetLogs(List<int> ids) async {}
+  @override
+  Future<void> finishWorkout(int logId, {String? title, String? notes}) async {}
+  @override
+  Future<void> updatePauseTime(int routineExerciseId, int? seconds) async {}
+  @override
+  Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async => [];
+}
 
 Future<void> _pumpUntilScopeLoaded(WidgetTester tester) async {
   for (var i = 0; i < 40; i++) {
@@ -29,7 +63,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ChangeNotifierProvider<LiveWorkoutViewModel>.value(
-        value: LiveWorkoutViewModel(),
+        value: LiveWorkoutViewModel(repository: FakeWorkoutRepository()),
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

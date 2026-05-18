@@ -5,8 +5,8 @@ import 'package:train_libre/features/sleep/platform/permissions/sleep_permission
 import 'package:train_libre/features/sleep/platform/permissions/sleep_permissions_service.dart';
 import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/screens/health_export_settings_screen.dart';
-import 'package:train_libre/screens/settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/health_export_settings_screen.dart';
+import 'package:train_libre/features/settings/presentation/settings_screen.dart';
 import 'package:train_libre/services/theme_service.dart';
 import 'package:train_libre/services/unit_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';

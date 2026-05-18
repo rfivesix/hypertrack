@@ -1,6 +1,7 @@
 // lib/features/supplements/presentation/create_supplement_screen.dart
 import 'package:flutter/material.dart';
-import '../data/supplement_repository.dart';
+import '../domain/repositories/supplement_repository.dart';
+import '../data/supplement_repository_impl.dart';
 import '../domain/models/supplement.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
@@ -20,7 +21,7 @@ class CreateSupplementScreen extends StatefulWidget {
 }
 
 class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
-  late final SupplementRepository _repository = widget.repository ?? SupplementRepository();
+  late final SupplementRepository _repository = widget.repository ?? SupplementRepositoryImpl();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _doseController = TextEditingController();

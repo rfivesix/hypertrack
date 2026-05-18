@@ -5,9 +5,10 @@ import 'package:provider/provider.dart';
 import '../../../services/unit_service.dart';
 import 'package:intl/intl.dart';
 import '../../../data/database_helper.dart';
-import '../../../dialogs/fluid_dialog_content.dart';
-import '../../../dialogs/quantity_dialog_content.dart';
+import 'dialogs/fluid_dialog_content.dart';
+import 'dialogs/quantity_dialog_content.dart';
 import '../../../generated/app_localizations.dart';
+import '../domain/repositories/diary_repository.dart';
 import '../domain/models/fluid_entry.dart';
 import '../domain/models/food_entry.dart';
 import '../domain/models/food_item.dart';
@@ -56,7 +57,10 @@ class DiaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => DiaryViewModel(initialDate: initialDate),
+      create: (context) => DiaryViewModel(
+        nutritionRepo: context.read<IDiaryRepository>(),
+        initialDate: initialDate,
+      ),
       child: _DiaryScreenContent(key: contentKey ?? key),
     );
   }

@@ -5,12 +5,13 @@ import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart' show AppDatabase;
 import 'package:train_libre/data/workout_database_helper.dart';
-import 'package:train_libre/models/routine_exercise.dart';
-import 'package:train_libre/models/set_log.dart';
-import 'package:train_libre/models/set_template.dart';
-import 'package:train_libre/models/exercise.dart' as model;
-import 'package:train_libre/screens/live_workout_view_model.dart';
-import 'package:train_libre/data/workout_repository.dart';
+import 'package:train_libre/features/workout/domain/models/routine_exercise.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart';
+import 'package:train_libre/features/workout/domain/models/set_template.dart';
+import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart' as model;
+import 'package:train_libre/features/workout/presentation/live_workout_view_model.dart';
+import 'package:train_libre/features/workout/data/workout_repository.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
 
 
 Future<void> _waitFor(
@@ -39,7 +40,14 @@ void main() {
       database = AppDatabase(NativeDatabase.memory());
       dbHelper = DatabaseHelper.forTesting(database);
       workoutDb = WorkoutDatabaseHelper.forTesting(databaseHelper: dbHelper);
-      manager = LiveWorkoutViewModel.forTesting(workoutDb: WorkoutRepository(db: workoutDb));
+      manager = LiveWorkoutViewModel.forTesting(
+        workoutDb: WorkoutRepository(
+          localDataSource: WorkoutLocalDataSource(
+            database,
+            workoutDbHelper: workoutDb,
+          ),
+        ),
+      );
     });
 
     tearDown(() async {

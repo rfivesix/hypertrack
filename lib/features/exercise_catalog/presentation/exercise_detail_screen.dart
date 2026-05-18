@@ -4,7 +4,7 @@ import '../../../generated/app_localizations.dart';
 import '../domain/models/exercise.dart';
 import '../../workout/domain/models/set_log.dart';
 import '../../analytics/domain/models/chart_data_point.dart';
-import '../data/exercise_catalog_repository.dart';
+import '../domain/repositories/exercise_catalog_repository.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/common.dart';
 import '../../../widgets/common/summary_card.dart';
@@ -19,7 +19,7 @@ enum ExerciseMetric { maxWeight, volume, est1rm }
 /// A screen displaying detailed information about a specific [Exercise].
 class ExerciseDetailScreen extends StatefulWidget {
   final Exercise exercise;
-  final ExerciseCatalogRepository? repository;
+  final IExerciseCatalogRepository? repository;
 
   const ExerciseDetailScreen({super.key, required this.exercise, this.repository});
 
@@ -28,7 +28,7 @@ class ExerciseDetailScreen extends StatefulWidget {
 }
 
 class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
-  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
+  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
   bool _isLoading = true;
   ExerciseMetric _selectedMetric = ExerciseMetric.maxWeight;
   String _selectedRange = '30D';

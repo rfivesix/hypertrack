@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../data/supplement_repository.dart';
+import '../domain/repositories/supplement_repository.dart';
 import 'supplements_view_model.dart';
-import '../../../dialogs/log_supplement_menu.dart';
+import 'dialogs/log_supplement_menu.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/supplement.dart';
 import '../domain/models/supplement_log.dart';

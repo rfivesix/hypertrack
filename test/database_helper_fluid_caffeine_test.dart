@@ -2,8 +2,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart' hide SupplementLog;
-import 'package:train_libre/models/fluid_entry.dart';
-import 'package:train_libre/models/supplement_log.dart';
+import 'package:train_libre/features/diary/domain/models/fluid_entry.dart';
+import 'package:train_libre/features/supplements/domain/models/supplement_log.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

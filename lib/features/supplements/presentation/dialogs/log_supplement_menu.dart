@@ -1,37 +1,45 @@
-// lib/dialogs/log_supplement_menu.dart
+// lib/features/supplements/presentation/dialogs/log_supplement_menu.dart
 import 'package:flutter/material.dart';
-import '../data/database_helper.dart';
+import '../../domain/repositories/supplement_repository.dart';
+import '../../data/supplement_repository_impl.dart';
 import 'log_supplement_dialog_content.dart';
-import '../generated/app_localizations.dart';
-import '../features/supplements/domain/models/supplement.dart';
-import '../util/supplement_l10n.dart';
+import '../../../../generated/app_localizations.dart';
+import '../../domain/models/supplement.dart';
+import '../../../../util/supplement_l10n.dart';
 
 /// A menu that shows a list of supplements to choose from.
 /// A selection menu for choosing a supplement to log.
 ///
-/// Displays a list of all available supplements from the database.
+/// Displays a list of all available supplements from the repository.
 class LogSupplementMenu extends StatefulWidget {
-  const LogSupplementMenu({super.key, required this.close});
-
+  final SupplementRepository? repository;
   final VoidCallback close;
+
+  const LogSupplementMenu({
+    super.key,
+    required this.close,
+    this.repository,
+  });
 
   @override
   State<LogSupplementMenu> createState() => _LogSupplementMenuState();
 }
 
 class _LogSupplementMenuState extends State<LogSupplementMenu> {
+  late final SupplementRepository _repo;
   List<Supplement> _supplements = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _repo = widget.repository ?? SupplementRepositoryImpl();
     _loadSupplements();
   }
 
   Future<void> _loadSupplements() async {
     try {
-      final supplements = await DatabaseHelper.instance.getAllSupplements();
+      final supplements = await _repo.getAllSupplements();
       if (mounted) {
         setState(() {
           _supplements = supplements;

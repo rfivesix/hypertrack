@@ -7,13 +7,13 @@ import '../domain/models/routine_exercise.dart';
 import '../domain/models/set_log.dart';
 import '../domain/models/set_template.dart';
 import '../domain/models/workout_log.dart';
-import '../data/workout_repository.dart';
+import '../domain/repositories/workout_repository.dart';
 import '../domain/detect_personal_record_use_case.dart';
 import '../domain/log_workout_set_use_case.dart';
 import '../../../services/local_notification_service.dart';
 
 class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
-  final WorkoutRepository _repository;
+  final IWorkoutRepository _repository;
   final DetectPersonalRecordUseCase _detectPRUseCase;
   final LogWorkoutSetUseCase _logSetUseCase;
   final bool _registerLifecycleObserver;
@@ -21,11 +21,11 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
   AppLifecycleState _appLifecycleState = AppLifecycleState.resumed;
 
   LiveWorkoutViewModel({
-    WorkoutRepository? repository,
+    required IWorkoutRepository repository,
     DetectPersonalRecordUseCase? detectPRUseCase,
     LogWorkoutSetUseCase? logSetUseCase,
     bool registerLifecycleObserver = true,
-  })  : _repository = repository ?? WorkoutRepository(),
+  })  : _repository = repository,
         _detectPRUseCase = detectPRUseCase ?? DetectPersonalRecordUseCase(),
         _logSetUseCase = logSetUseCase ?? LogWorkoutSetUseCase(),
         _registerLifecycleObserver = registerLifecycleObserver {
@@ -36,7 +36,7 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   @visibleForTesting
   factory LiveWorkoutViewModel.forTesting({
-    required WorkoutRepository workoutDb,
+    required IWorkoutRepository workoutDb,
   }) {
     return LiveWorkoutViewModel(
       repository: workoutDb,

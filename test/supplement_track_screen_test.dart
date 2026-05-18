@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/screens/supplement_track_screen.dart';
+import 'package:train_libre/features/supplements/presentation/supplement_track_screen.dart';
 
 void main() {
   group('resolveSupplementTrackLogTimestamp', () {

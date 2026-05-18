@@ -1,6 +1,7 @@
 // lib/features/supplements/presentation/manage_supplements_screen.dart
 import 'package:flutter/material.dart';
-import '../data/supplement_repository.dart';
+import '../domain/repositories/supplement_repository.dart';
+import '../data/supplement_repository_impl.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/supplement.dart';
 import 'create_supplement_screen.dart';
@@ -24,7 +25,7 @@ class ManageSupplementsScreen extends StatefulWidget {
 }
 
 class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
-  late final SupplementRepository _repository = widget.repository ?? SupplementRepository();
+  late final SupplementRepository _repository = widget.repository ?? SupplementRepositoryImpl();
   bool _isLoading = true;
   List<Supplement> _supplements = const [];
 

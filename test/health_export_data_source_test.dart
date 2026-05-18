@@ -3,7 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart';
-import 'package:train_libre/health_export/data/health_export_data_source.dart';
+import 'package:train_libre/features/health_export/data/health_export_data_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

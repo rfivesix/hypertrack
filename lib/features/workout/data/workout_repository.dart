@@ -1,54 +1,70 @@
+// lib/features/workout/data/workout_repository.dart
 import '../../exercise_catalog/domain/models/exercise.dart';
 import '../domain/models/routine.dart';
 import '../domain/models/set_log.dart';
 import '../domain/models/workout_log.dart';
-import '../../../data/workout_database_helper.dart';
+import 'sources/workout_local_data_source.dart';
+import '../domain/repositories/workout_repository.dart';
 
-class WorkoutRepository {
-  final WorkoutDatabaseHelper _db;
+/// Concrete implementation of [IWorkoutRepository] implementing workout database transactions.
+class WorkoutRepository implements IWorkoutRepository {
+  final WorkoutLocalDataSource _localDataSource;
 
-  WorkoutRepository({WorkoutDatabaseHelper? db})
-      : _db = db ?? WorkoutDatabaseHelper.instance;
+  WorkoutRepository({required WorkoutLocalDataSource localDataSource})
+      : _localDataSource = localDataSource;
 
-  Future<WorkoutLog?> getOngoingWorkout() => _db.getOngoingWorkout();
+  @override
+  Future<WorkoutLog?> getOngoingWorkout() => _localDataSource.getOngoingWorkout();
 
-  Future<int> insertSetLog(SetLog log) => _db.insertSetLog(log);
+  @override
+  Future<int> insertSetLog(SetLog log) => _localDataSource.insertSetLog(log);
 
+  @override
   Future<List<SetLog>> getSetLogsForWorkout(int workoutLogId) =>
-      _db.getSetLogsForWorkout(workoutLogId);
+      _localDataSource.getSetLogsForWorkout(workoutLogId);
 
-  Future<Routine?> getRoutineByName(String name) => _db.getRoutineByName(name);
+  @override
+  Future<Routine?> getRoutineByName(String name) => _localDataSource.getRoutineByName(name);
 
+  @override
   Future<Exercise?> resolveExerciseForSetLog(SetLog log) =>
-      _db.resolveExerciseForSetLog(log);
+      _localDataSource.resolveExerciseForSetLog(log);
 
+  @override
   Future<Exercise?> getExerciseByName(String name) =>
-      _db.getExerciseByName(name);
+      _localDataSource.getExerciseByName(name);
 
+  @override
   Future<String?> getExerciseUuidByLocalId(int localId) =>
-      _db.getExerciseUuidByLocalId(localId);
+      _localDataSource.getExerciseUuidByLocalId(localId);
 
+  @override
   Future<Map<String, double>> getExerciseBests(
     String exerciseName, {
     String? altName,
     String? exerciseUuid,
   }) =>
-      _db.getExerciseBests(
+      _localDataSource.getExerciseBests(
         exerciseName,
         altName: altName,
         exerciseUuid: exerciseUuid,
       );
 
-  Future<void> updateSetLogs(List<SetLog> logs) => _db.updateSetLogs(logs);
+  @override
+  Future<void> updateSetLogs(List<SetLog> logs) => _localDataSource.updateSetLogs(logs);
 
-  Future<void> deleteSetLogs(List<int> ids) => _db.deleteSetLogs(ids);
+  @override
+  Future<void> deleteSetLogs(List<int> ids) => _localDataSource.deleteSetLogs(ids);
 
+  @override
   Future<void> finishWorkout(int logId, {String? title, String? notes}) =>
-      _db.finishWorkout(logId, title: title, notes: notes);
+      _localDataSource.finishWorkout(logId, title: title, notes: notes);
 
+  @override
   Future<void> updatePauseTime(int routineExerciseId, int? seconds) =>
-      _db.updatePauseTime(routineExerciseId, seconds);
+      _localDataSource.updatePauseTime(routineExerciseId, seconds);
 
+  @override
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) =>
-      _db.getLastSetsForExercise(exerciseName);
+      _localDataSource.getLastSetsForExercise(exerciseName);
 }

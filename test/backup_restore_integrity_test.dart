@@ -8,11 +8,11 @@ import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, ProductsCompanion, ExercisesCompanion;
 import 'package:train_libre/data/product_database_helper.dart';
 import 'package:train_libre/data/workout_database_helper.dart';
-import 'package:train_libre/models/food_entry.dart';
-import 'package:train_libre/models/measurement.dart';
-import 'package:train_libre/models/measurement_session.dart';
-import 'package:train_libre/models/set_log.dart';
-import 'package:train_libre/models/workout_log.dart';
+import 'package:train_libre/features/diary/domain/models/food_entry.dart';
+import 'package:train_libre/features/profile/domain/models/measurement.dart';
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart';
+import 'package:train_libre/features/workout/domain/models/workout_log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:drift/drift.dart' as drift;
 

@@ -22,12 +22,17 @@ import 'package:train_libre/features/sleep/presentation/day/sleep_day_overview_p
 import 'package:train_libre/features/sleep/platform/sleep_sync_service.dart';
 import 'package:train_libre/features/sleep/presentation/sleep_navigation.dart';
 import 'package:train_libre/features/sleep/data/sleep_hub_summary_repository.dart';
-import 'package:train_libre/screens/measurements_screen.dart';
-import 'package:train_libre/screens/statistics_hub_screen.dart';
+import 'package:train_libre/features/profile/presentation/measurements_screen.dart';
+import 'package:train_libre/features/analytics/presentation/statistics_hub_screen.dart';
 import 'package:train_libre/services/health/steps_sync_service.dart';
 import 'package:train_libre/services/theme_service.dart';
 import 'package:train_libre/services/unit_service.dart';
-import 'package:train_libre/screens/live_workout_view_model.dart';
+import 'package:train_libre/features/workout/presentation/live_workout_view_model.dart';
+import 'package:train_libre/features/workout/domain/repositories/workout_repository.dart';
+import 'package:train_libre/features/workout/domain/models/workout_log.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart';
+import 'package:train_libre/features/workout/domain/models/routine.dart';
+import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -124,6 +129,35 @@ class _FakeSleepSummaryRepository extends SleepHubSummaryRepository {
 
   @override
   Future<void> dispose() async {}
+}
+
+class _FakeWorkoutRepository implements IWorkoutRepository {
+  @override
+  Future<WorkoutLog?> getOngoingWorkout() async => null;
+  @override
+  Future<int> insertSetLog(SetLog log) async => 0;
+  @override
+  Future<List<SetLog>> getSetLogsForWorkout(int workoutLogId) async => [];
+  @override
+  Future<Routine?> getRoutineByName(String name) async => null;
+  @override
+  Future<Exercise?> resolveExerciseForSetLog(SetLog log) async => null;
+  @override
+  Future<Exercise?> getExerciseByName(String name) async => null;
+  @override
+  Future<String?> getExerciseUuidByLocalId(int localId) async => null;
+  @override
+  Future<Map<String, double>> getExerciseBests(String exerciseName, {String? altName, String? exerciseUuid}) async => {};
+  @override
+  Future<void> updateSetLogs(List<SetLog> logs) async {}
+  @override
+  Future<void> deleteSetLogs(List<int> ids) async {}
+  @override
+  Future<void> finishWorkout(int logId, {String? title, String? notes}) async {}
+  @override
+  Future<void> updatePauseTime(int routineExerciseId, int? seconds) async {}
+  @override
+  Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async => [];
 }
 
 class _FakePulseRepository implements PulseAnalysisRepository {
@@ -515,7 +549,7 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<LiveWorkoutViewModel>.value(
-          value: LiveWorkoutViewModel(),
+          value: LiveWorkoutViewModel(repository: _FakeWorkoutRepository()),
         ),
         ChangeNotifierProvider<ThemeService>(create: (_) => ThemeService()),
         ChangeNotifierProvider<UnitService>(create: (_) => UnitService()),

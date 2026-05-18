@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../data/profile_repository.dart';
+import '../domain/repositories/profile_repository.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/measurement_session.dart';
 import 'add_measurement_screen.dart';
@@ -20,7 +20,7 @@ import '../../../services/unit_service.dart';
 
 /// A screen for viewing and analyzing body measurement history.
 class MeasurementsScreen extends StatefulWidget {
-  final ProfileRepository? repository;
+  final IProfileRepository? repository;
 
   const MeasurementsScreen({super.key, this.repository});
 
@@ -29,7 +29,7 @@ class MeasurementsScreen extends StatefulWidget {
 }
 
 class _MeasurementsScreenState extends State<MeasurementsScreen> {
-  late final ProfileRepository _repository = widget.repository ?? ProfileRepository();
+  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
   bool _isLoading = true;
   List<MeasurementSession> _sessions = [];
   String? _selectedChartType;

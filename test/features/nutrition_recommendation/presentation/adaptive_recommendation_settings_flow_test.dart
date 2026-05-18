@@ -6,8 +6,10 @@ import 'package:train_libre/data/drift_database.dart' show AppDatabase;
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_repository.dart';
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_service.dart';
 import 'package:train_libre/generated/app_localizations.dart';
-import 'package:train_libre/screens/goals_screen.dart';
-import 'package:train_libre/screens/onboarding_screen.dart';
+import 'package:train_libre/features/profile/data/profile_repository.dart';
+import 'package:train_libre/features/profile/data/sources/profile_local_data_source.dart';
+import 'package:train_libre/features/profile/presentation/goals_screen.dart';
+import 'package:train_libre/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:train_libre/services/unit_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,7 +60,9 @@ void main() {
             supportedLocales: AppLocalizations.supportedLocales,
             home: GoalsScreen(
               recommendationService: recommendationService,
-              databaseHelper: dbHelper,
+              repository: ProfileRepository(
+                localDataSource: ProfileLocalDataSource(database, dbHelper: dbHelper),
+              ),
             ),
           ),
         ),
@@ -267,7 +271,9 @@ void main() {
             supportedLocales: AppLocalizations.supportedLocales,
             home: GoalsScreen(
               recommendationService: recommendationService,
-              databaseHelper: dbHelper,
+              repository: ProfileRepository(
+                localDataSource: ProfileLocalDataSource(database, dbHelper: dbHelper),
+              ),
             ),
           ),
         ),

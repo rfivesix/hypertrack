@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:train_libre/screens/onboarding_screen.dart';
+import 'package:train_libre/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:train_libre/services/unit_service.dart';
 
 // Because we're not running full app, we need the actual generated file or mock it.

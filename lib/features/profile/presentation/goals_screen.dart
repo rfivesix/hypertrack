@@ -2,18 +2,20 @@
 import 'package:flutter/material.dart';
 import '../../../util/design_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../data/profile_repository.dart';
+import 'package:provider/provider.dart';
+import '../domain/repositories/profile_repository.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../widgets/common/common.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../nutrition_recommendation/data/recommendation_service.dart';
 import '../../nutrition_recommendation/domain/goal_models.dart';
 import '../../nutrition_recommendation/presentation/prior_activity_help_block.dart';
+import '../../../data/database_helper.dart';
 
 /// A screen for defining daily health and nutrition targets.
 class GoalsScreen extends StatefulWidget {
   final AdaptiveNutritionRecommendationService? recommendationService;
-  final ProfileRepository? repository;
+  final IProfileRepository? repository;
 
   const GoalsScreen({
     super.key,
@@ -26,7 +28,7 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
-  late final ProfileRepository _repository = widget.repository ?? ProfileRepository();
+  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
   late final AdaptiveNutritionRecommendationService _recommendationService;
@@ -53,7 +55,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   void initState() {
     super.initState();
     _recommendationService = widget.recommendationService ??
-        AdaptiveNutritionRecommendationService(databaseHelper: _repository.dbHelper);
+        AdaptiveNutritionRecommendationService(databaseHelper: DatabaseHelper.instance);
     _loadSettings();
   }
 

@@ -1,81 +1,97 @@
 // lib/features/exercise_catalog/data/exercise_catalog_repository.dart
-import '../../../data/workout_database_helper.dart';
 import '../../workout/domain/models/set_log.dart';
 import '../domain/models/exercise.dart';
+import 'sources/exercise_catalog_local_data_source.dart';
+import '../domain/repositories/exercise_catalog_repository.dart';
 
-class ExerciseCatalogRepository {
-  final WorkoutDatabaseHelper _dbHelper;
+/// Concrete implementation of [IExerciseCatalogRepository] for managing exercises in database.
+class ExerciseCatalogRepository implements IExerciseCatalogRepository {
+  final ExerciseCatalogLocalDataSource _localDataSource;
 
-  WorkoutDatabaseHelper get dbHelper => _dbHelper;
+  ExerciseCatalogRepository({required ExerciseCatalogLocalDataSource localDataSource})
+      : _localDataSource = localDataSource;
 
-  ExerciseCatalogRepository({WorkoutDatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? WorkoutDatabaseHelper.instance;
-
+  @override
   Future<List<Exercise>> searchExercises({
     String query = '',
     List<String> categories = const [],
     List<String> forceLevels = const [],
     String sortOrder = 'alphabetical',
   }) {
-    return _dbHelper.searchExercises(
+    return _localDataSource.searchExercises(
       query: query,
       selectedCategories: categories,
     );
   }
 
+  @override
   Future<Exercise?> getExerciseByName(String name) {
-    return _dbHelper.getExerciseByName(name);
+    return _localDataSource.getExerciseByName(name);
   }
 
+  @override
   Future<Exercise?> getExerciseByUuid(String exerciseUuid) {
-    return _dbHelper.getExerciseByUuid(exerciseUuid);
+    return _localDataSource.getExerciseByUuid(exerciseUuid);
   }
 
+  @override
   Future<Exercise> insertExercise(Exercise exercise) {
-    return _dbHelper.insertExercise(exercise);
+    return _localDataSource.insertExercise(exercise);
   }
 
+  @override
   Future<List<Exercise>> getCustomExercises() {
-    return _dbHelper.getCustomExercises();
+    return _localDataSource.getCustomExercises();
   }
 
+  @override
   Future<void> importCustomExercises(List<Exercise> exercises) {
-    return _dbHelper.importCustomExercises(exercises);
+    return _localDataSource.importCustomExercises(exercises);
   }
 
+  @override
   Future<void> applyExerciseNameMapping(Map<String, String> mapping) {
-    return _dbHelper.applyExerciseNameMapping(mapping);
+    return _localDataSource.applyExerciseNameMapping(mapping);
   }
 
+  @override
   Future<String?> getExerciseUuidByLocalId(int id) {
-    return _dbHelper.getExerciseUuidByLocalId(id);
+    return _localDataSource.getExerciseUuidByLocalId(id);
   }
 
+  @override
   Future<Map<String, SetLog?>> getExercisePRs(
     String exerciseName, {
     String? altName,
     String? exerciseUuid,
   }) {
-    return _dbHelper.getExercisePRs(
+    return _localDataSource.getExercisePRs(
       exerciseName,
       altName: altName,
       exerciseUuid: exerciseUuid,
     );
   }
 
+  @override
   Future<List<Map<String, dynamic>>> getExerciseTimeSeriesData(
     String exerciseName, {
     String? altName,
     String? exerciseUuid,
   }) {
-    return _dbHelper.getExerciseTimeSeriesData(
+    return _localDataSource.getExerciseTimeSeriesData(
       exerciseName,
       altName: altName,
       exerciseUuid: exerciseUuid,
     );
   }
 
+  @override
   Future<List<String>> getAllCategories() {
-    return _dbHelper.getAllCategories();
+    return _localDataSource.getAllCategories();
+  }
+
+  @override
+  Future<List<String>> getAllMuscleGroups() {
+    return _localDataSource.getAllMuscleGroups();
   }
 }

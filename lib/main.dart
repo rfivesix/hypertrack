@@ -20,6 +20,20 @@ import 'package:intl/date_symbol_data_local.dart'; // FIX: Initialize intl forma
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/onboarding/presentation/initial_consent_screen.dart';
 
+import 'features/diary/domain/repositories/diary_repository.dart';
+import 'features/diary/data/nutrition_repository.dart';
+import 'features/workout/domain/repositories/workout_repository.dart';
+import 'features/workout/data/workout_repository.dart';
+import 'features/exercise_catalog/domain/repositories/exercise_catalog_repository.dart';
+import 'features/exercise_catalog/data/exercise_catalog_repository.dart';
+import 'features/profile/domain/repositories/profile_repository.dart';
+import 'features/profile/data/profile_repository.dart';
+import 'data/drift_database.dart' as db;
+import 'features/diary/data/sources/diary_local_data_source.dart';
+import 'features/workout/data/sources/workout_local_data_source.dart';
+import 'features/exercise_catalog/data/sources/exercise_catalog_local_data_source.dart';
+import 'features/profile/data/sources/profile_local_data_source.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -34,9 +48,17 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final hasAcceptedConsent = prefs.getBool('hasAcceptedConsent') ?? false;
 
+  final database = db.AppDatabase();
+  final diaryLocalDataSource = DiaryLocalDataSource(database);
+  final workoutLocalDataSource = WorkoutLocalDataSource(database);
+  final exerciseCatalogLocalDataSource = ExerciseCatalogLocalDataSource(database);
+  final profileLocalDataSource = ProfileLocalDataSource(database);
+
+  final workoutRepository = WorkoutRepository(localDataSource: workoutLocalDataSource);
+
   // Create the workout session manager before injecting it. Restoration is
   // handled by AppInitializerScreen after the first frame is visible.
-  final workoutSessionManager = LiveWorkoutViewModel();
+  final workoutSessionManager = LiveWorkoutViewModel(repository: workoutRepository);
 
   final themeService = ThemeService(); // Create an instance
   final unitService = UnitService();
@@ -45,6 +67,22 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<IDiaryRepository>(
+          create: (_) => NutritionRepository(
+            localDataSource: diaryLocalDataSource,
+          ),
+        ),
+        Provider<IWorkoutRepository>.value(value: workoutRepository),
+        Provider<IExerciseCatalogRepository>(
+          create: (_) => ExerciseCatalogRepository(
+            localDataSource: exerciseCatalogLocalDataSource,
+          ),
+        ),
+        Provider<IProfileRepository>(
+          create: (_) => ProfileRepository(
+            localDataSource: profileLocalDataSource,
+          ),
+        ),
         ChangeNotifierProvider.value(value: workoutSessionManager),
         ChangeNotifierProvider(
           create: (context) {

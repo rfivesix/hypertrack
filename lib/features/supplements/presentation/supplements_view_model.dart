@@ -1,6 +1,7 @@
 // lib/features/supplements/presentation/supplements_view_model.dart
 import 'package:flutter/material.dart';
-import '../data/supplement_repository.dart';
+import '../domain/repositories/supplement_repository.dart';
+import '../data/supplement_repository_impl.dart';
 import '../domain/models/supplement.dart';
 import '../domain/models/supplement_log.dart';
 import '../domain/models/tracked_supplement.dart';
@@ -26,7 +27,7 @@ class SupplementsViewModel extends ChangeNotifier {
   List<SupplementLog> get todaysLogs => _todaysLogs;
   
   SupplementsViewModel({SupplementRepository? repository})
-      : _repository = repository ?? SupplementRepository();
+      : _repository = repository ?? SupplementRepositoryImpl();
       
   void setSelectedDate(DateTime date) {
     _selectedDate = date;

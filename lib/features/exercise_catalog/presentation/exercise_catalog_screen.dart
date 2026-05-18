@@ -1,7 +1,8 @@
 // lib/features/exercise_catalog/presentation/exercise_catalog_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../data/exercise_catalog_repository.dart';
+import 'package:provider/provider.dart';
+import '../domain/repositories/exercise_catalog_repository.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/exercise.dart';
 import 'exercise_detail_screen.dart';
@@ -20,7 +21,7 @@ class ExerciseCatalogScreen extends StatefulWidget {
 
   /// Optional callback for handling the selection manually instead of popping.
   final void Function(Exercise)? onExerciseSelected;
-  final ExerciseCatalogRepository? repository;
+  final IExerciseCatalogRepository? repository;
 
   const ExerciseCatalogScreen({
     super.key,
@@ -34,7 +35,7 @@ class ExerciseCatalogScreen extends StatefulWidget {
 }
 
 class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
-  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
+  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
   List<Exercise> _foundExercises = [];
   bool _isLoading = true;
   final _searchController = TextEditingController();

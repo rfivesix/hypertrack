@@ -4,11 +4,11 @@ import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart';
 import 'package:train_libre/data/product_database_helper.dart';
 import 'package:train_libre/features/statistics/data/body_nutrition_analytics_data_adapter.dart';
-import 'package:train_libre/models/fluid_entry.dart';
-import 'package:train_libre/models/food_entry.dart';
-import 'package:train_libre/models/food_item.dart';
-import 'package:train_libre/models/measurement.dart' as model;
-import 'package:train_libre/models/measurement_session.dart';
+import 'package:train_libre/features/diary/domain/models/fluid_entry.dart';
+import 'package:train_libre/features/diary/domain/models/food_entry.dart';
+import 'package:train_libre/features/diary/domain/models/food_item.dart';
+import 'package:train_libre/features/profile/domain/models/measurement.dart' as model;
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

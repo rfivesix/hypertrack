@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/models/food_item.dart';
-import 'package:train_libre/screens/add_food_navigation_result.dart';
+import 'package:train_libre/features/diary/domain/models/food_item.dart';
+import 'package:train_libre/features/diary/presentation/add_food_navigation_result.dart';
 
 void main() {
   group('AddFoodNavigationResult.fromRouteResult', () {

@@ -1,6 +1,7 @@
 // lib/features/exercise_catalog/presentation/exercise_mapping_screen.dart
 import 'package:flutter/material.dart';
-import '../data/exercise_catalog_repository.dart';
+import 'package:provider/provider.dart';
+import '../domain/repositories/exercise_catalog_repository.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/exercise.dart';
 import 'general_exercise_selection_screen.dart';
@@ -13,7 +14,7 @@ import '../../../widgets/common/glass_pill_button.dart';
 class ExerciseMappingScreen extends StatefulWidget {
   /// A list of exercise names that could not be matched automatically.
   final List<String> unknownNames;
-  final ExerciseCatalogRepository? repository;
+  final IExerciseCatalogRepository? repository;
 
   const ExerciseMappingScreen({super.key, required this.unknownNames, this.repository});
 
@@ -22,7 +23,7 @@ class ExerciseMappingScreen extends StatefulWidget {
 }
 
 class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
-  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
+  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
   final Map<String, Exercise> _selection = {};
   final Map<String, List<Exercise>> _suggestions = {};
   bool _applying = false;

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../data/profile_repository.dart';
+import '../domain/repositories/profile_repository.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/measurement.dart';
 import '../domain/models/measurement_session.dart';
@@ -15,7 +15,7 @@ import '../../../widgets/common/summary_card.dart';
 /// A screen for recording new body measurements.
 class AddMeasurementScreen extends StatefulWidget {
   final DateTime? initialDate;
-  final ProfileRepository? repository;
+  final IProfileRepository? repository;
 
   const AddMeasurementScreen({super.key, this.initialDate, this.repository});
 
@@ -24,7 +24,7 @@ class AddMeasurementScreen extends StatefulWidget {
 }
 
 class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
-  late final ProfileRepository _repository = widget.repository ?? ProfileRepository();
+  late final IProfileRepository _repository = widget.repository ?? context.read<IProfileRepository>();
   final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _controllers = {};
   late DateTime _selectedDateTime;

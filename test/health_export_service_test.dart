@@ -3,11 +3,11 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart';
-import 'package:train_libre/health_export/contracts/health_export_adapter.dart';
-import 'package:train_libre/health_export/data/health_export_data_source.dart';
-import 'package:train_libre/health_export/data/health_export_status_store.dart';
-import 'package:train_libre/health_export/export_service.dart';
-import 'package:train_libre/health_export/models/export_models.dart';
+import 'package:train_libre/features/health_export/contracts/health_export_adapter.dart';
+import 'package:train_libre/features/health_export/data/health_export_data_source.dart';
+import 'package:train_libre/features/health_export/data/health_export_status_store.dart';
+import 'package:train_libre/features/health_export/export_service.dart';
+import 'package:train_libre/features/health_export/models/export_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeAdapter implements HealthExportAdapter {

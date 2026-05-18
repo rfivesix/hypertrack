@@ -8,7 +8,7 @@ import '../../../../generated/app_localizations.dart';
 import '../../../analytics/domain/models/chart_data_point.dart';
 import '../../../../services/unit_service.dart';
 import '../../../../util/design_constants.dart';
-import '../../data/profile_repository.dart';
+import '../../domain/repositories/profile_repository.dart';
 
 enum MeasurementChartAxisMode { day, time }
 
@@ -16,7 +16,7 @@ enum MeasurementChartAxisMode { day, time }
 ///
 /// Fetches and displays historical data for a specific [chartType] and [dateRange].
 class MeasurementChartWidget extends StatefulWidget {
-  final ProfileRepository? repository;
+  final IProfileRepository? repository;
 
   const MeasurementChartWidget({
     super.key,
@@ -165,7 +165,7 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       _isLoadingChart = true;
       _touchedIndex = null;
     });
-    final repo = widget.repository ?? ProfileRepository();
+    final repo = widget.repository ?? context.read<IProfileRepository>();
     final data = await repo.getChartDataForTypeAndRange(
       chartType,
       dateRange,

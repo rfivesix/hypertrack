@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../data/nutrition_repository.dart';
+import '../domain/repositories/diary_repository.dart';
 import '../../../data/user_preferences_repository.dart';
 import '../domain/calculate_daily_nutrition_use_case.dart';
 import '../domain/models/daily_nutrition.dart';
@@ -12,15 +11,10 @@ import '../domain/models/food_entry.dart';
 import '../../supplements/domain/models/supplement.dart';
 import '../../supplements/domain/models/supplement_log.dart';
 import '../../../util/date_util.dart';
-
 import '../../../services/health/steps_sync_service.dart';
-import '../../../data/database_helper.dart'; // For getDailyStepsTotal
 import '../../sleep/data/sleep_day_repository.dart';
-import '../../sleep/platform/sleep_sync_service.dart';
-
-import '../../pulse/data/pulse_repository.dart';
 import '../../pulse/domain/pulse_models.dart';
-import '../../pulse/application/pulse_tracking_service.dart';
+import 'diary_health_sync_coordinator.dart';
 
 DateTime normalizeDiaryDate(DateTime date) => date.dateOnly;
 DateTime resolveDiaryInitialDate({DateTime? initialDate, DateTime? now}) {
@@ -80,19 +74,11 @@ class DiaryLoadCoordinator {
 }
 
 class DiaryViewModel extends ChangeNotifier {
-  final NutritionRepository _nutritionRepo = NutritionRepository.instance;
+  final IDiaryRepository _nutritionRepo;
   final UserPreferencesRepository _prefsRepo = UserPreferencesRepository.instance;
   final CalculateDailyNutritionUseCase _calculateUseCase = CalculateDailyNutritionUseCase();
 
-  static const Duration _stepsSyncInterval = Duration(hours: 6);
-  static const Duration _sleepSyncInterval = Duration(hours: 6);
-
-  final StepsSyncService _stepsSyncService = StepsSyncService();
-  final SleepSyncService _sleepSyncService = SleepSyncService();
-  final SleepDayDataRepository _sleepRepository = SleepDayRepository();
-  final PulseTrackingSettingsService _pulseSyncService = PulseTrackingService();
-  final PulseAnalysisRepository _pulseRepository = HealthPulseAnalysisRepository();
-
+  final DiaryHealthSyncCoordinator healthSyncCoordinator = DiaryHealthSyncCoordinator();
   final DiaryLoadCoordinator _loadCoordinator = DiaryLoadCoordinator();
   Future<void>? _activeDiaryLoadFuture;
 
@@ -104,29 +90,37 @@ class DiaryViewModel extends ChangeNotifier {
   Map<String, dynamic>? workoutSummary;
   bool showSugarInOverview = false;
 
-  int? stepsForSelectedDay;
-  bool isStepsWidgetLoading = false;
-  bool stepsTrackingEnabled = true;
   int targetSteps = StepsSyncService.defaultStepsGoal;
 
-  SleepDayOverviewData? sleepOverview;
-  bool isSleepWidgetLoading = false;
-  bool sleepTrackingEnabled = false;
+  // Delegated Health Sync Properties
+  int? get stepsForSelectedDay => healthSyncCoordinator.stepsForSelectedDay;
+  bool get isStepsWidgetLoading => healthSyncCoordinator.isStepsWidgetLoading;
+  bool get stepsTrackingEnabled => healthSyncCoordinator.stepsTrackingEnabled;
 
-  PulseAnalysisSummary? pulseSummary;
-  bool isPulseWidgetLoading = false;
-  bool pulseTrackingEnabled = false;
+  SleepDayOverviewData? get sleepOverview => healthSyncCoordinator.sleepOverview;
+  bool get isSleepWidgetLoading => healthSyncCoordinator.isSleepWidgetLoading;
+  bool get sleepTrackingEnabled => healthSyncCoordinator.sleepTrackingEnabled;
+
+  PulseAnalysisSummary? get pulseSummary => healthSyncCoordinator.pulseSummary;
+  bool get isPulseWidgetLoading => healthSyncCoordinator.isPulseWidgetLoading;
+  bool get pulseTrackingEnabled => healthSyncCoordinator.pulseTrackingEnabled;
 
   final ValueNotifier<DateTime> selectedDateNotifier;
   DateTime get selectedDate => selectedDateNotifier.value;
 
-  DiaryViewModel({DateTime? initialDate})
-      : selectedDateNotifier = ValueNotifier((initialDate ?? DateTime.now()).dateOnly) {
+  DiaryViewModel({
+    required IDiaryRepository nutritionRepo,
+    DateTime? initialDate,
+  })  : _nutritionRepo = nutritionRepo,
+        selectedDateNotifier = ValueNotifier((initialDate ?? DateTime.now()).dateOnly) {
+    healthSyncCoordinator.addListener(notifyListeners);
     loadDataForDate(selectedDate);
   }
 
   @override
   void dispose() {
+    healthSyncCoordinator.removeListener(notifyListeners);
+    healthSyncCoordinator.dispose();
     selectedDateNotifier.dispose();
     super.dispose();
   }
@@ -189,9 +183,6 @@ class DiaryViewModel extends ChangeNotifier {
     
     selectedDateNotifier.value = diaryDate;
     isLoading = true;
-    isStepsWidgetLoading = false;
-    isSleepWidgetLoading = false;
-    isPulseWidgetLoading = false;
     notifyListeners();
 
     try {
@@ -238,52 +229,12 @@ class DiaryViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
 
-      // Background Syncs
-      final providerFilter = await _stepsSyncService.getProviderFilter();
-      final providerFilterRaw = StepsSyncService.providerFilterToRaw(providerFilter);
-
-      unawaited(_loadStepsForDate(
-        diaryDate,
-        providerFilterRaw: providerFilterRaw,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 10), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          isStepsWidgetLoading = false;
-          notifyListeners();
-        }
-      }));
-
-      unawaited(_loadSleepAndSyncIfDue(
-        diaryDate,
-        force: forceStepsRefresh,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 15), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          isSleepWidgetLoading = false;
-          notifyListeners();
-        }
-      }));
-
-      unawaited(_loadPulseForDate(
-        diaryDate,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 10), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          isPulseWidgetLoading = false;
-          notifyListeners();
-        }
-      }));
-
-      unawaited(_syncStepsIfDue(
-        diaryDate,
-        force: forceStepsRefresh,
-        loadGeneration: loadGeneration,
-      ).timeout(const Duration(seconds: 15), onTimeout: () {
-        if (_isCurrentLoad(loadGeneration, diaryDate)) {
-          isStepsWidgetLoading = false;
-          notifyListeners();
-        }
-      }));
+      // Delegate all health data loading and background sync
+      unawaited(healthSyncCoordinator.loadAndSyncHealthData(
+        date: diaryDate,
+        forceStepsRefresh: forceStepsRefresh,
+        isCurrentLoad: (date) => _isCurrentLoad(loadGeneration, date),
+      ));
 
     } catch (e, st) {
       debugPrint('Error loading diary data: $e\n$st');
@@ -291,160 +242,6 @@ class DiaryViewModel extends ChangeNotifier {
         isLoading = false;
         notifyListeners();
       }
-    }
-  }
-
-  Future<void> _loadSleepAndSyncIfDue(
-    DateTime date, {
-    required bool force,
-    required int loadGeneration,
-  }) async {
-    await _loadSleepForDate(date, loadGeneration: loadGeneration);
-    await _syncSleepIfDue(force: force);
-    if (!_isCurrentLoad(loadGeneration, date)) return;
-    await _loadSleepForDate(date, loadGeneration: loadGeneration);
-  }
-
-  Future<void> _loadStepsForDate(
-    DateTime date, {
-    required String providerFilterRaw,
-    int? loadGeneration,
-  }) async {
-    try {
-      final enabled = await _stepsSyncService.isTrackingEnabled();
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      if (!enabled) {
-        stepsForSelectedDay = null;
-        stepsTrackingEnabled = false;
-        isStepsWidgetLoading = false;
-        notifyListeners();
-        return;
-      }
-      isStepsWidgetLoading = true;
-      notifyListeners();
-
-      final sourcePolicy = await _stepsSyncService.getSourcePolicy();
-      final sourcePolicyRaw = StepsSyncService.sourcePolicyToRaw(sourcePolicy);
-      final total = await DatabaseHelper.instance.getDailyStepsTotal(
-        dayLocal: date,
-        providerFilter: providerFilterRaw,
-        sourcePolicy: sourcePolicyRaw,
-      );
-
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      stepsForSelectedDay = total;
-      stepsTrackingEnabled = true;
-      isStepsWidgetLoading = false;
-      notifyListeners();
-    } catch (e) {
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      isStepsWidgetLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _loadSleepForDate(DateTime date, {int? loadGeneration}) async {
-    try {
-      final enabled = await _sleepSyncService.isTrackingEnabled();
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      if (!enabled) {
-        sleepOverview = null;
-        sleepTrackingEnabled = false;
-        isSleepWidgetLoading = false;
-        notifyListeners();
-        return;
-      }
-      isSleepWidgetLoading = true;
-      notifyListeners();
-
-      final overview = await _sleepRepository.fetchOverview(date);
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      
-      sleepOverview = overview;
-      sleepTrackingEnabled = true;
-      isSleepWidgetLoading = false;
-      notifyListeners();
-    } catch (e) {
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      isSleepWidgetLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _loadPulseForDate(DateTime date, {int? loadGeneration}) async {
-    try {
-      final enabled = await _pulseSyncService.isTrackingEnabled();
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      if (!enabled) {
-        pulseSummary = null;
-        pulseTrackingEnabled = false;
-        isPulseWidgetLoading = false;
-        notifyListeners();
-        return;
-      }
-      isPulseWidgetLoading = true;
-      notifyListeners();
-
-      final start = DateTime(date.year, date.month, date.day).toUtc();
-      final end = start.add(const Duration(days: 1));
-      final summary = await _pulseRepository.getAnalysis(
-        window: PulseAnalysisWindow(startUtc: start, endUtc: end),
-      );
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      
-      pulseSummary = summary;
-      pulseTrackingEnabled = true;
-      isPulseWidgetLoading = false;
-      notifyListeners();
-    } catch (e) {
-      if (!_isCurrentLoad(loadGeneration ?? 0, date)) return;
-      isPulseWidgetLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _syncStepsIfDue(
-    DateTime diaryDate, {
-    required bool force,
-    required int loadGeneration,
-  }) async {
-    if (!stepsTrackingEnabled) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastSyncStr = prefs.getString('last_steps_sync');
-      final lastSync = lastSyncStr != null ? DateTime.tryParse(lastSyncStr) : null;
-
-      if (force || lastSync == null || DateTime.now().difference(lastSync) > _stepsSyncInterval) {
-        isStepsWidgetLoading = true;
-        notifyListeners();
-        await _stepsSyncService.sync(forceRefresh: force);
-        if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
-
-        final providerFilter = await _stepsSyncService.getProviderFilter();
-        final providerFilterRaw = StepsSyncService.providerFilterToRaw(providerFilter);
-        await _loadStepsForDate(
-          diaryDate,
-          providerFilterRaw: providerFilterRaw,
-          loadGeneration: loadGeneration,
-        );
-      }
-    } catch (e) {
-      debugPrint('Background steps sync failed: $e');
-    }
-  }
-
-  Future<void> _syncSleepIfDue({required bool force}) async {
-    if (!sleepTrackingEnabled) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastSyncStr = prefs.getString('last_sleep_sync');
-      final lastSync = lastSyncStr != null ? DateTime.tryParse(lastSyncStr) : null;
-
-      if (force || lastSync == null || DateTime.now().difference(lastSync) > _sleepSyncInterval) {
-        await _sleepSyncService.importRecentIfDue(force: force);
-      }
-    } catch (e) {
-      debugPrint('Background sleep sync failed: $e');
     }
   }
 

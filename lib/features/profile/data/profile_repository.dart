@@ -1,30 +1,31 @@
 // lib/features/profile/data/profile_repository.dart
 import 'package:flutter/material.dart';
-import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart' as db;
 import '../../profile/domain/models/measurement_session.dart';
 import '../../analytics/domain/models/chart_data_point.dart';
+import 'sources/profile_local_data_source.dart';
+import '../domain/repositories/profile_repository.dart';
 
-class ProfileRepository {
-  final DatabaseHelper _dbHelper;
+/// Concrete implementation of [IProfileRepository] for profile and measurement tracking.
+class ProfileRepository implements IProfileRepository {
+  final ProfileLocalDataSource _localDataSource;
 
-  ProfileRepository({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
+  ProfileRepository({required ProfileLocalDataSource localDataSource})
+      : _localDataSource = localDataSource;
 
-  // Added this to expose for other services if needed
-  DatabaseHelper get dbHelper => _dbHelper;
-
+  @override
   Future<db.Profile?> getUserProfile() {
-    return _dbHelper.getUserProfile();
+    return _localDataSource.getUserProfile();
   }
 
+  @override
   Future<void> saveUserProfile({
     required String name,
     required DateTime? birthday,
     required int? height,
     required String? gender,
   }) {
-    return _dbHelper.saveUserProfile(
+    return _localDataSource.saveUserProfile(
       name: name,
       birthday: birthday,
       height: height,
@@ -32,34 +33,42 @@ class ProfileRepository {
     );
   }
 
+  @override
   Future<List<MeasurementSession>> getMeasurementSessions() {
-    return _dbHelper.getMeasurementSessions();
+    return _localDataSource.getMeasurementSessions();
   }
 
+  @override
   Future<DateTime?> getEarliestMeasurementDate() {
-    return _dbHelper.getEarliestMeasurementDate();
+    return _localDataSource.getEarliestMeasurementDate();
   }
 
+  @override
   Future<void> deleteMeasurementSession(int sessionId) {
-    return _dbHelper.deleteMeasurementSession(sessionId);
+    return _localDataSource.deleteMeasurementSession(sessionId);
   }
 
+  @override
   Future<void> insertMeasurementSession(MeasurementSession session) {
-    return _dbHelper.insertMeasurementSession(session);
+    return _localDataSource.insertMeasurementSession(session);
   }
 
+  @override
   Future<List<ChartDataPoint>> getChartDataForTypeAndRange(String type, DateTimeRange range) {
-    return _dbHelper.getChartDataForTypeAndRange(type, range);
+    return _localDataSource.getChartDataForTypeAndRange(type, range);
   }
 
+  @override
   Future<db.AppSetting?> getAppSettings() {
-    return _dbHelper.getAppSettings();
+    return _localDataSource.getAppSettings();
   }
 
+  @override
   Future<int> getCurrentTargetStepsOrDefault() {
-    return _dbHelper.getCurrentTargetStepsOrDefault();
+    return _localDataSource.getCurrentTargetStepsOrDefault();
   }
 
+  @override
   Future<void> saveUserGoals({
     required int calories,
     required int protein,
@@ -68,7 +77,7 @@ class ProfileRepository {
     required int water,
     required int steps,
   }) {
-    return _dbHelper.saveUserGoals(
+    return _localDataSource.saveUserGoals(
       calories: calories,
       protein: protein,
       carbs: carbs,

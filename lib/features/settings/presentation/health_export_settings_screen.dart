@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../../../health_export/adapters/apple_health/apple_health_export_adapter.dart';
-import '../../../health_export/adapters/health_connect/health_connect_export_adapter.dart';
-import '../../../health_export/export_service.dart';
-import '../../../health_export/models/export_models.dart';
+import '../../health_export/adapters/apple_health/apple_health_export_adapter.dart';
+import '../../health_export/adapters/health_connect/health_connect_export_adapter.dart';
+import '../../health_export/export_service.dart';
+import '../../health_export/models/export_models.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/common.dart';

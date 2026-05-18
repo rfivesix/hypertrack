@@ -1,6 +1,7 @@
 // lib/features/exercise_catalog/presentation/create_exercise_screen.dart
 import 'package:flutter/material.dart';
-import '../data/exercise_catalog_repository.dart';
+import 'package:provider/provider.dart';
+import '../domain/repositories/exercise_catalog_repository.dart';
 import '../domain/models/exercise.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
@@ -9,7 +10,7 @@ import '../../../widgets/common/global_app_bar.dart';
 
 /// A screen for creating custom exercises.
 class CreateExerciseScreen extends StatefulWidget {
-  final ExerciseCatalogRepository? repository;
+  final IExerciseCatalogRepository? repository;
 
   const CreateExerciseScreen({super.key, this.repository});
   @override
@@ -17,7 +18,7 @@ class CreateExerciseScreen extends StatefulWidget {
 }
 
 class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
-  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
+  late final IExerciseCatalogRepository _repository = widget.repository ?? context.read<IExerciseCatalogRepository>();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -82,7 +83,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
       // WorkoutDatabaseHelper has `getAllMuscleGroups`. Let's use `WorkoutDatabaseHelper.instance.getAllMuscleGroups()` for muscle groups
       // as muscles are shared. Or let's proxy muscle groups in ExerciseCatalogRepository too.
       // Wait, is there any other place? Let's check. Yes, let's keep it robust.
-      final muscles = await _repository.dbHelper.getAllMuscleGroups();
+      final muscles = await _repository.getAllMuscleGroups();
 
       if (mounted) {
         setState(() {

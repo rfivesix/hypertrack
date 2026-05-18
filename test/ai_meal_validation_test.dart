@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/models/food_item.dart';
+import 'package:train_libre/features/diary/domain/models/food_item.dart';
 import 'package:train_libre/services/ai_meal_validation.dart';
 import 'package:train_libre/services/ai_service.dart';
 

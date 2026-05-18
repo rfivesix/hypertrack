@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../data/database_helper.dart';
+import '../../../data/database_helper.dart';
 import '../models/export_models.dart';
 
 class HealthExportStatusStore {

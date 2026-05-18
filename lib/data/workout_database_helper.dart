@@ -11,6 +11,7 @@ import '../features/workout/domain/models/routine_exercise.dart';
 import '../features/workout/domain/models/set_log.dart';
 import '../features/workout/domain/models/set_template.dart';
 import '../features/workout/domain/models/workout_log.dart';
+import '../features/workout/domain/classification/workout_classification.dart';
 import '../features/statistics/domain/recovery_domain_service.dart';
 import '../util/muscle_analytics_utils.dart';
 import '../util/perf_debug_timer.dart';
@@ -85,86 +86,23 @@ class WorkoutDatabaseHelper {
   }
 
   static List<String> _parseMuscleList(String? jsonStr) {
-    if (jsonStr == null || jsonStr.isEmpty) return [];
-    try {
-      final decoded = jsonDecode(jsonStr);
-      if (decoded is List) {
-        return decoded.map((e) => e.toString()).toList();
-      }
-    } catch (_) {}
-    // Fallback for legacy CSV-style muscle lists.
-    if (jsonStr.contains(',')) {
-      return jsonStr.split(',').map((e) => e.trim()).toList();
-    }
-    return [];
+    return WorkoutClassification.parseMuscleList(jsonStr);
   }
 
-  String _normalizeAnalyticsToken(String? value) {
-    if (value == null) return '';
-    return value
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[/\\]+'), ' ')
-        .replaceAll(RegExp(r'[_\-]+'), ' ')
-        .replaceAll(RegExp(r'\s+'), ' ');
-  }
 
-  bool _looksLikeCardioToken(String? value) {
-    final normalized = _normalizeAnalyticsToken(value);
-    if (normalized.isEmpty) return false;
-
-    const exactCardioTokens = {
-      'cardio',
-      'run',
-      'running',
-      'jog',
-      'jogging',
-      'walk',
-      'walking',
-      'hike',
-      'hiking',
-      'bike',
-      'biking',
-      'cycling',
-      'cycle',
-      'swim',
-      'swimming',
-      'rower',
-      'rowing',
-      'elliptical',
-      'treadmill',
-      'stairmaster',
-      'stepper',
-    };
-
-    if (exactCardioTokens.contains(normalized)) return true;
-
-    return normalized.contains('cardio') ||
-        normalized.contains('treadmill') ||
-        normalized.contains('elliptical') ||
-        normalized.contains('stationary bike') ||
-        normalized.contains('exercise bike') ||
-        normalized.contains('indoor cycling') ||
-        normalized.contains('stair master') ||
-        normalized.contains('stair climber');
-  }
 
   bool _isRecoveryStrengthWorkSet({
     required db.SetLog setRow,
     required db.Exercise? exerciseRow,
   }) {
-    final reps = setRow.reps ?? 0;
-    if (reps <= 0) return false;
-
-    if (_looksLikeCardioToken(setRow.setType)) return false;
-    if (_looksLikeCardioToken(exerciseRow?.categoryName)) return false;
-    if (_looksLikeCardioToken(exerciseRow?.nameDe) ||
-        _looksLikeCardioToken(exerciseRow?.nameEn) ||
-        _looksLikeCardioToken(setRow.exerciseNameSnapshot)) {
-      return false;
-    }
-
-    return true;
+    return WorkoutClassification.isRecoveryStrengthWorkSet(
+      setType: setRow.setType,
+      categoryName: exerciseRow?.categoryName,
+      nameDe: exerciseRow?.nameDe,
+      nameEn: exerciseRow?.nameEn,
+      exerciseNameSnapshot: setRow.exerciseNameSnapshot,
+      reps: setRow.reps ?? 0,
+    );
   }
 
   /// Maps a Drift exercise row to the app-level [Exercise] model.

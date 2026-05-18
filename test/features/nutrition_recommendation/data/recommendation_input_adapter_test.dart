@@ -6,9 +6,9 @@ import 'package:train_libre/data/drift_database.dart'
     show AppDatabase, NutritionLogsCompanion, ProductsCompanion, Profile;
 import 'package:train_libre/features/nutrition_recommendation/data/recommendation_input_adapter.dart';
 import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
-import 'package:train_libre/models/fluid_entry.dart';
-import 'package:train_libre/models/measurement.dart';
-import 'package:train_libre/models/measurement_session.dart';
+import 'package:train_libre/features/diary/domain/models/fluid_entry.dart';
+import 'package:train_libre/features/profile/domain/models/measurement.dart';
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

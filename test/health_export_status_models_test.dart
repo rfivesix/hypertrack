@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/health_export/models/export_models.dart';
+import 'package:train_libre/features/health_export/models/export_models.dart';
 
 void main() {
   group('Health export status model serialization', () {

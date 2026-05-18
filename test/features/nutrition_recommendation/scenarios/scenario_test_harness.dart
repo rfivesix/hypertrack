@@ -19,9 +19,9 @@ import 'package:train_libre/features/nutrition_recommendation/domain/bayesian_td
 import 'package:train_libre/features/nutrition_recommendation/domain/confidence_models.dart';
 import 'package:train_libre/features/nutrition_recommendation/domain/goal_models.dart';
 import 'package:train_libre/features/nutrition_recommendation/domain/recommendation_models.dart';
-import 'package:train_libre/models/food_entry.dart';
-import 'package:train_libre/models/measurement.dart';
-import 'package:train_libre/models/measurement_session.dart';
+import 'package:train_libre/features/diary/domain/models/food_entry.dart';
+import 'package:train_libre/features/profile/domain/models/measurement.dart';
+import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ScenarioProfile {
