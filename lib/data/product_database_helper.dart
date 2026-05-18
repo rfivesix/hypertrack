@@ -8,6 +8,7 @@ import '../config/app_data_sources.dart';
 import '../models/food_item.dart';
 import '../services/catalog_file_migration.dart';
 import '../util/perf_debug_timer.dart';
+import '../domain/use_cases/evaluate_food_source_use_case.dart';
 
 /// Helper class for managing food product data in the Drift database.
 ///
@@ -377,7 +378,6 @@ class ProductDatabaseHelper {
     final dbInstance = await database;
     const int fetchLimit = 20;
     const int returnLimit = 5;
-    final searchTerm = aiName.trim().toLowerCase();
 
     Expression<int> sourcePriority(GeneratedColumn<String> source) {
       return CaseWhenExpression<int>(
@@ -424,39 +424,11 @@ class ProductDatabaseHelper {
     if (rows.isEmpty) return [];
 
     final items = rows.map(_mapRowToFoodItem).toList();
-    items.sort((a, b) {
-      final aName = a.name.toLowerCase();
-      final bName = b.name.toLowerCase();
-
-      int score(String name) {
-        if (name == searchTerm) return 0;
-        if (name.startsWith(searchTerm)) return 1;
-        return 2;
-      }
-
-      final sa = score(aName);
-      final sb = score(bName);
-      if (sa != sb) return sa.compareTo(sb);
-
-      int srcPri(FoodItemSource s) {
-        switch (s) {
-          case FoodItemSource.base:
-            return 0;
-          case FoodItemSource.user:
-            return 1;
-          case FoodItemSource.off:
-            return 2;
-        }
-      }
-
-      final spa = srcPri(a.source);
-      final spb = srcPri(b.source);
-      if (spa != spb) return spa.compareTo(spb);
-
-      return aName.length.compareTo(bName.length);
-    });
-
-    return items.take(returnLimit).toList();
+    return const EvaluateFoodSourceUseCase().execute(
+      candidates: items,
+      searchTerm: aiName,
+      limit: returnLimit,
+    );
   }
 
   // === Legacy / Compatibility ===
