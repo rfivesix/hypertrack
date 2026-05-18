@@ -80,6 +80,71 @@ Sub-areas:
 - `domain/`: canonical entities, metrics, scoring, aggregations
 - `presentation/`: navigation, day/week/month scope UI, detail pages
 
+
+## Architectural Flow
+
+```mermaid
+graph TD
+    subgraph Presentation Layer
+        UI[Flutter Widgets] --> VM[View Models / Feature Controllers]
+    end
+
+    subgraph Pure Domain Layer
+        VM --> UC[Use Cases]
+        UC --> Repos[Repository Contracts]
+        Repos --> Models[Domain Models e.g. DailyGoal]
+    end
+
+    subgraph Infrastructure Grid
+        Repos -.-> Impl[Data Source Implementations]
+        Impl --> DB[Drift AppDatabase]
+        Impl --> Platform[Platform Channels / Adapters]
+    end
+
+    classDef domain fill:#f9f,stroke:#333,stroke-width:2px;
+    class Repos,Models domain;
+```
+
+## Decentralized Data Access Layer
+
+```mermaid
+graph LR
+    FeatureA[Diary LocalDataSource] --> DB[database_helper.dart]
+    FeatureB[Workout LocalDataSource] --> DB
+    FeatureC[Settings LocalDataSource] --> DB
+
+    DB --> SQLite[(Drift SQLite)]
+
+    note[database_helper.dart contains ZERO business logic.<br/>It only handles low-level initialization<br/>and transaction proxying.]
+```
+
+## Asynchronous Coordination Sequence Flow
+
+```mermaid
+sequenceDiagram
+    participant UI as Flutter UI Frame
+    participant Coordinator as DiaryHealthSyncCoordinator
+    participant Platform as Platform Bridge (HealthKit/Health Connect)
+    participant DB as Local Database
+
+    UI->>Coordinator: Request Sync
+    activate Coordinator
+    Coordinator->>Platform: Async Fetch Hardware Data
+    Platform-->>Coordinator: Raw Health Samples
+    Coordinator->>DB: Batch Upsert (Background Isolate)
+    DB-->>Coordinator: Success
+    Coordinator-->>UI: Sync Complete (State Update)
+    deactivate Coordinator
+```
+
+## How to Extend This Context
+
+To spawn a new feature block adhering to this pure layer isolation pattern:
+1. **Define the Domain:** Create a pure Dart model and a repository contract in `lib/features/<name>/domain/`.
+2. **Implement Data Access:** Create a local data source in `lib/features/<name>/data/sources/` that implements the contract, querying the central Drift client via generic methods.
+3. **Build Presentation:** Create ViewModels and UI screens in `lib/features/<name>/presentation/` that depend solely on the domain contracts.
+
+
 ## Navigation model
 
 Navigation is currently mixed:
@@ -102,7 +167,7 @@ Primary persistence is Drift-based via `AppDatabase` (`lib/data/drift_database.d
 
 Notable current areas:
 
-- workout analytics queries in `lib/data/workout_database_helper.dart`
+- workout analytics queries in `lib/data/database_helper.dart (legacy ref removed)`
 - nutrition/settings/steps queries in `lib/data/database_helper.dart`
 - Sleep raw/canonical/derived schema and DAOs in `lib/features/sleep/data/persistence/**`
 

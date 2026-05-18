@@ -59,7 +59,7 @@ Cross-feature links from hub:
 ### Core statistics payloads
 
 - Adapter: `lib/features/statistics/data/statistics_hub_data_adapter.dart`
-- Primary persistence source: `lib/data/workout_database_helper.dart`
+- Primary persistence source: `lib/data/database_helper.dart`
 - Body/nutrition builder path: `BodyNutritionAnalyticsUtils.build(...)` in `lib/util/body_nutrition_analytics_utils.dart`
 
 ### Steps card integration

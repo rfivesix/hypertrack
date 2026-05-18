@@ -8,10 +8,22 @@ Persistence is Drift-backed through `AppDatabase` in `lib/data/drift_database.da
 
 Main access paths currently in use:
 
-- `lib/data/database_helper.dart`
-- `lib/data/workout_database_helper.dart`
-- `lib/data/product_database_helper.dart`
+- `lib/data/database_helper.dart` (Centralized instance)
 - Sleep DAOs in `lib/features/sleep/data/persistence/dao/*`
+
+
+## Single-Instance Database Lifecycle
+
+The application enforces a strict single-instance database rule. The `AppDatabase` is opened exactly once during application startup (in `lib/main.dart` or the initial bootstrap phase) and is strictly propagated across all components via constructor dependency injection. This architecture protects the application from data corruption, avoids multiple instance locks, and ensures atomic transactions across different feature modules.
+
+
+## Exact Database Schema Terminology
+
+To ensure strict clarity across feature boundaries, the following persistence terminology is used:
+- **Canonical Data Tables**: The normalized, structured tables representing core application entities (e.g., workouts, routines, measurements) directly queried by local data sources.
+- **Raw Imported Health Samples**: Unprocessed, transient records ingested directly from platform channels (Apple Health, Health Connect) before undergoing transformation or timeline repair (e.g., `sleep_raw_imports`).
+- **Health Step Segments**: Aggregated, discrete time-windowed step blocks representing physical activity, indexed by source provider.
+- **Open Food Facts Differential Updates**: Delta payloads representing version-controlled insertions and modifications to the offline food catalog, preserving historically referenced custom items (`off_retained`).
 
 ## Exercise catalog source and refresh
 
