@@ -18,6 +18,7 @@ abstract class StepsAggregationRepository {
   Future<StepsRefreshResult> refresh({bool force = false, DateTime? now});
   Future<DateTime?> getLastUpdatedAt();
   Future<bool> isTrackingEnabled();
+  Future<int> getCurrentTargetStepsOrDefault();
 }
 
 class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
@@ -157,6 +158,9 @@ class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
 
   @override
   Future<bool> isTrackingEnabled() async => true;
+
+  @override
+  Future<int> getCurrentTargetStepsOrDefault() async => 10000;
 
   DateTime _atStartOfDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);
@@ -350,6 +354,9 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
 
   @override
   Future<bool> isTrackingEnabled() => stepsSyncService.isTrackingEnabled();
+
+  @override
+  Future<int> getCurrentTargetStepsOrDefault() => dbHelper.getCurrentTargetStepsOrDefault();
 
   DateTime _atStartOfDay(DateTime date) =>
       DateTime(date.year, date.month, date.day);

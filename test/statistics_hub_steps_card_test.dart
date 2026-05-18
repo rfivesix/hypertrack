@@ -88,6 +88,9 @@ class _FakeStepsRepository implements StepsAggregationRepository {
   Future<bool> isTrackingEnabled() async => trackingEnabled;
 
   @override
+  Future<int> getCurrentTargetStepsOrDefault() async => 10000;
+
+  @override
   Future<StepsRefreshResult> refresh({
     bool force = false,
     DateTime? now,

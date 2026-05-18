@@ -51,6 +51,9 @@ class _FakeStepsRepository implements StepsAggregationRepository {
 
   @override
   Future<bool> isTrackingEnabled() async => true;
+
+  @override
+  Future<int> getCurrentTargetStepsOrDefault() async => 10000;
 }
 
 void main() {
