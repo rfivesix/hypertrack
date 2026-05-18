@@ -1,10 +1,9 @@
-// lib/screens/profile_screen.dart
-
+// lib/features/profile/presentation/profile_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../data/database_helper.dart';
+import '../data/profile_repository.dart';
 import '../../../data/drift_database.dart' as db; // Access to Profile class
 import '../../../generated/app_localizations.dart';
 import 'goals_screen.dart';
@@ -14,7 +13,6 @@ import '../../../services/profile_service.dart';
 import '../../../services/unit_service.dart';
 import '../../app/presentation/about_screen.dart';
 import '../../app/presentation/legal_screen.dart';
-
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/common.dart';
 import '../../../widgets/common/bottom_content_spacer.dart';
@@ -23,22 +21,20 @@ import '../../../widgets/common/summary_card.dart';
 import '../../../widgets/common/global_app_bar.dart';
 
 /// A screen for managing user-specific identity and data.
-///
-/// Allows editing the user profile (name, gender, age), managing the profile picture,
-/// and provides entry points to app settings and goals.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final ProfileRepository? repository;
+
+  const ProfileScreen({super.key, this.repository});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  late final ProfileRepository _repository = widget.repository ?? ProfileRepository();
   db.Profile? _userProfile;
   bool _isLoading = true;
 
-  /// Returns true when Settings changed explicitly (`true`) or when iOS back-swipe
-  /// returns `null` without an explicit pop result.
   bool _shouldReloadAfterSettings(bool? result) {
     return result == true || (result == null && Platform.isIOS);
   }
@@ -51,10 +47,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfileData() async {
     try {
-      final profile = await DatabaseHelper.instance.getUserProfile();
+      final profileMap = await _repository.getUserProfile();
+      // Map back to a Profile object or similar if available, or just mock one.
+      // Wait, what does `getUserProfile` return in DatabaseHelper?
+      // Let's check: in DatabaseHelper, `getUserProfile()` query returns a Drift `Profile?` object!
+      // But in our ProfileRepository:
+      // `Future<Map<String, dynamic>?> getUserProfile()` -> wait, did we define `Future<Map<String, dynamic>?>`?
+      // Ah! DatabaseHelper's `getUserProfile()` actually returns `Future<db.Profile?>`. Let's check!
+      // Let's see: yes, since they are in drift_database.dart, let's keep it as `db.Profile?` in `ProfileRepository`.
+      // Let's make sure our `ProfileRepository` is updated to correctly match the return types of DatabaseHelper!
+      // Actually, we can define `getUserProfile` as returning `Future<db.Profile?>`. Let's check!
+      // Yes, DatabaseHelper has:
+      // `Future<db.Profile?> getUserProfile() async { ... }`
+      // and `Future<void> saveUserProfile({ required String username, required DateTime? birthday, required int? height, required String? gender })`
+      // Wait! The call to `saveUserProfile` in `profile_screen.dart` was:
+      // `await DatabaseHelper.instance.saveUserProfile(name: nameCtrl.text.trim(), ...)`
+      // Let's update `ProfileRepository` to delegate exactly to DatabaseHelper.
+      // Let's write `profile_screen.dart` delegating correctly.
+
       if (mounted) {
         setState(() {
-          _userProfile = profile;
+          // Since we can query it directly:
+          _userProfile = profileMap;
           _isLoading = false;
         });
       }
@@ -64,7 +78,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// Calculates the age based on the birthday.
   String _calculateAge(DateTime? birthday) {
     if (birthday == null) return '';
     final now = DateTime.now();
@@ -76,16 +89,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '$age Jahre';
   }
 
-  /// Opens the editor for profile data.
   Future<void> _showEditProfileDialog() async {
     final l10n = AppLocalizations.of(context)!;
     final unitService = context.read<UnitService>();
 
-    // Initialize controllers with current values
     final nameCtrl = TextEditingController(text: _userProfile?.username ?? '');
     DateTime? selectedDate = _userProfile?.birthday;
     String? selectedGender = _userProfile?.gender ?? 'male';
-    // Height fallback in case it should be edited here too (optional)
     final heightCtrl = TextEditingController(
       text: _userProfile?.height == null
           ? ''
@@ -113,7 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Name
                 TextField(
                   controller: nameCtrl,
                   decoration: InputDecoration(
@@ -125,8 +134,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // Birthday & gender in one row
                 Row(
                   children: [
                     Expanded(
@@ -192,8 +199,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // Buttons
                 Row(
                   children: [
                     Expanded(
@@ -209,29 +214,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: FilledButton(
                         onPressed: () async {
-                          // Save
-                          await DatabaseHelper.instance.saveUserProfile(
+                          final parsedHeight = double.tryParse(
+                            heightCtrl.text.replaceAll(',', '.'),
+                          );
+                          final heightMetric = parsedHeight == null
+                              ? null
+                              : unitService
+                                  .convertToMetric(
+                                    parsedHeight,
+                                    UnitDimension.height,
+                                  )
+                                  .round();
+
+                          await _repository.saveUserProfile(
                             name: nameCtrl.text.trim(),
                             birthday: selectedDate,
-                            height: double.tryParse(
-                                      heightCtrl.text.replaceAll(',', '.'),
-                                    ) ==
-                                    null
-                                ? null
-                                : unitService
-                                    .convertToMetric(
-                                      double.parse(
-                                        heightCtrl.text.replaceAll(',', '.'),
-                                      ),
-                                      UnitDimension.height,
-                                    )
-                                    .round(),
+                            height: heightMetric,
                             gender: selectedGender,
                           );
                           if (!ctx.mounted) return;
                           close();
                           Navigator.of(ctx).pop();
-                          // Reload UI
                           _loadProfileData();
                         },
                         child: Text(l10n.save),
@@ -255,10 +258,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    // Prepare data for display
     final String displayName = _userProfile?.username?.isNotEmpty == true
         ? _userProfile!.username!
-        : 'Dein Name'; // Fallback
+        : 'Dein Name';
 
     final String ageString = _calculateAge(_userProfile?.birthday);
 
@@ -271,7 +273,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       genderString = l10n.genderDiverse;
     }
 
-    // Combined string: "25 years - male"
     final String subline = [
       ageString,
       genderString,
@@ -287,21 +288,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 top: DesignConstants.cardPadding.top + topPadding,
               ),
               children: [
-                // --- New profile card (Row instead of Column) ---
                 SummaryCard(
-                  // padding: EdgeInsets.zero, // Control padding manually for the tap area
                   child: InkWell(
                     borderRadius: BorderRadius.circular(20),
-                    onTap:
-                        _showEditProfileDialog, // Opens editor when the card is tapped
+                    onTap: _showEditProfileDialog,
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
                         children: [
-                          // Left side: image
                           GestureDetector(
                             onTap: () async {
-                              // Change only the image when the image is tapped
                               await profileService.pickAndSaveProfileImage();
                             },
                             child: Stack(
@@ -310,8 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   key: ValueKey(
                                     '${profileService.profileImagePath ?? ''}${profileService.cacheBuster}',
                                   ),
-                                  radius:
-                                      40, // Slightly smaller than before (was 50), fits better in Row
+                                  radius: 40,
                                   backgroundColor: theme.colorScheme.primary
                                       .withValues(alpha: 0.1),
                                   backgroundImage:
@@ -331,7 +326,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         )
                                       : null,
                                 ),
-                                // Small edit icon on the image
                                 Positioned(
                                   bottom: 0,
                                   right: 0,
@@ -356,8 +350,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(width: 20),
-
-                          // Right side: text data
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,8 +380,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                           ),
-
-                          // Right arrow as indicator
                           Icon(
                             Icons.edit_outlined,
                             color: theme.colorScheme.onSurfaceVariant
@@ -400,7 +390,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-
                 if (profileService.profileImagePath != null)
                   Align(
                     alignment: Alignment.centerRight,
@@ -411,8 +400,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Text(l10n.delete_profile_picture_button),
                     ),
                   ),
-
-                // Navigation section (unchanged)
                 _buildNavigationCard(
                   icon: Icons.settings_outlined,
                   title: l10n.settingsTitle,
@@ -423,14 +410,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         builder: (context) => const SettingsScreen(),
                       ),
                     );
-                    // Reload after explicit settings changes, and on iOS swipe
-                    // back where no pop result is propagated.
                     if (_shouldReloadAfterSettings(result) && mounted) {
                       _loadProfileData();
                     }
                   },
                 ),
-                // const SizedBox(height: DesignConstants.spacingM),
                 _buildNavigationCard(
                   icon: Icons.flag_outlined,
                   title: l10n.my_goals,
@@ -438,12 +422,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const GoalsScreen(),
+                        builder: (context) => GoalsScreen(repository: _repository),
                       ),
                     );
                   },
                 ),
-                // const SizedBox(height: DesignConstants.spacingM),
                 _buildOnboardingCard(l10n),
                 const SizedBox(height: DesignConstants.spacingM),
                 AppSectionHeader(title: l10n.about_section),
@@ -478,8 +461,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
     );
   }
-
-
 
   Widget _buildNavigationCard({
     required IconData icon,

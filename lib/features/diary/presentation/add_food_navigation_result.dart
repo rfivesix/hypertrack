@@ -1,4 +1,4 @@
-import '../../../models/food_item.dart';
+import '../domain/models/food_item.dart';
 
 /// Interprets values returned by [AddFoodScreen] routes.
 class AddFoodNavigationResult {

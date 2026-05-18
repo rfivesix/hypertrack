@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/tracked_supplement.dart';
+import '../../domain/models/tracked_supplement.dart';
 import '../../../../widgets/common/glass_progress_bar.dart';
 import '../../../../widgets/common/summary_card.dart';
 import '../../../../util/design_constants.dart';

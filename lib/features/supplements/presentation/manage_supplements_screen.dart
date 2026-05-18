@@ -1,8 +1,8 @@
-// lib/screens/manage_supplements_screen.dart
+// lib/features/supplements/presentation/manage_supplements_screen.dart
 import 'package:flutter/material.dart';
-import '../../../data/database_helper.dart';
+import '../data/supplement_repository.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/supplement.dart';
+import '../domain/models/supplement.dart';
 import 'create_supplement_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../util/supplement_l10n.dart';
@@ -13,11 +13,10 @@ import '../../../widgets/common/summary_card.dart';
 import '../../../widgets/common/swipe_action_background.dart';
 
 /// A screen for managing the catalog of available supplements.
-///
-/// Users can view, edit, and delete custom supplements, while built-in
-/// supplements remain protected from deletion.
 class ManageSupplementsScreen extends StatefulWidget {
-  const ManageSupplementsScreen({super.key});
+  final SupplementRepository? repository;
+
+  const ManageSupplementsScreen({super.key, this.repository});
 
   @override
   State<ManageSupplementsScreen> createState() =>
@@ -25,6 +24,7 @@ class ManageSupplementsScreen extends StatefulWidget {
 }
 
 class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
+  late final SupplementRepository _repository = widget.repository ?? SupplementRepository();
   bool _isLoading = true;
   List<Supplement> _supplements = const [];
 
@@ -36,7 +36,7 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
-    final list = await DatabaseHelper.instance.getAllSupplements();
+    final list = await _repository.getAllSupplements();
     if (!mounted) return;
     setState(() {
       _supplements = list;
@@ -47,13 +47,11 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
   Future<void> _navigateToEdit(Supplement s) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => CreateSupplementScreen(supplementToEdit: s),
+        builder: (_) => CreateSupplementScreen(supplementToEdit: s, repository: _repository),
       ),
     );
     if (changed == true) _load();
   }
-
-  // In lib/screens/manage_supplements_screen.dart
 
   Future<void> _delete(Supplement s) async {
     final l10n = AppLocalizations.of(context)!;
@@ -107,7 +105,7 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
 
       if (!ok) return;
 
-      await DatabaseHelper.instance.deleteSupplement(s.id!);
+      await _repository.deleteSupplement(s.id!);
       if (!mounted) return;
       _load();
       ScaffoldMessenger.of(
@@ -207,7 +205,7 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
         onPressed: () async {
           final created = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-              builder: (context) => const CreateSupplementScreen(),
+              builder: (context) => CreateSupplementScreen(repository: _repository),
             ),
           );
           if (created == true) _load();

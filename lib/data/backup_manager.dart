@@ -18,8 +18,8 @@ import 'database_helper.dart';
 import 'drift_database.dart'; // Access to Drift tables and companions.
 import 'product_database_helper.dart';
 import 'workout_database_helper.dart';
-import '../models/food_item.dart';
-import '../models/train_libre_backup.dart';
+import '../features/diary/domain/models/food_item.dart';
+import '../features/app/domain/models/train_libre_backup.dart';
 import '../services/health/steps_sync_service.dart';
 import '../services/storage/saf_storage_service.dart';
 import '../util/encryption_util.dart';

@@ -1,11 +1,14 @@
+// lib/features/supplements/presentation/supplement_hub_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../data/database_helper.dart';
+import 'package:provider/provider.dart';
+import '../data/supplement_repository.dart';
+import 'supplements_view_model.dart';
 import '../../../dialogs/log_supplement_menu.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/supplement.dart';
-import '../../../models/supplement_log.dart';
-import '../../../models/tracked_supplement.dart';
+import '../domain/models/supplement.dart';
+import '../domain/models/supplement_log.dart';
+import '../domain/models/tracked_supplement.dart';
 import 'create_supplement_screen.dart';
 import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
@@ -18,28 +21,28 @@ import '../../../widgets/common/summary_card.dart';
 import '../../../widgets/common/swipe_action_background.dart';
 
 /// A central dashboard for tracking supplement intake and progress.
-///
-/// Provides a date-based view of supplement logs, visualizes progress towards
-/// daily goals, and allows quick logging of doses.
-class SupplementHubScreen extends StatefulWidget {
-  const SupplementHubScreen({super.key});
+class SupplementHubScreen extends StatelessWidget {
+  final SupplementRepository? repository;
+
+  const SupplementHubScreen({super.key, this.repository});
+
   @override
-  State<SupplementHubScreen> createState() => _SupplementHubScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => SupplementsViewModel(repository: repository)..setSelectedDate(DateTime.now()),
+      child: const _SupplementHubScreenContent(),
+    );
+  }
 }
 
-class _SupplementHubScreenState extends State<SupplementHubScreen> {
-  bool _isLoading = true;
-  List<TrackedSupplement> _trackedSupplements = [];
-  List<SupplementLog> _todaysLogs = [];
-  final Map<int, Supplement> _supplementsById = {};
-  DateTime _selectedDate = DateTime.now();
+class _SupplementHubScreenContent extends StatefulWidget {
+  const _SupplementHubScreenContent();
 
   @override
-  void initState() {
-    super.initState();
-    _loadData(_selectedDate);
-  }
+  State<_SupplementHubScreenContent> createState() => _SupplementHubScreenContentState();
+}
 
+class _SupplementHubScreenContentState extends State<_SupplementHubScreenContent> {
   String localizeSupplementName(Supplement s, AppLocalizations l10n) {
     switch (s.code) {
       case 'caffeine':
@@ -51,78 +54,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     }
   }
 
-  Future<void> _loadData(DateTime date) async {
-    setState(() => _isLoading = true);
-    try {
-      final db = DatabaseHelper.instance;
-      final supplementsForDate = await db.getSupplementsForDate(date);
-      final logsForDate = await db.getSupplementLogsForDate(date);
-
-      final Map<int, Supplement> byId = {
-        for (final s in supplementsForDate)
-          if (s.id != null) s.id!: s,
-      };
-
-      final allSupplements = await db.getAllSupplements();
-      for (final s in allSupplements) {
-        if (s.id != null && !byId.containsKey(s.id!)) {
-          byId[s.id!] = s;
-        }
-      }
-
-      final Map<int, double> todaysDoses = {};
-      for (final log in logsForDate) {
-        todaysDoses.update(
-          log.supplementId,
-          (value) => value + log.dose,
-          ifAbsent: () => log.dose,
-        );
-      }
-
-      final List<TrackedSupplement> tracked = [];
-      for (final s in supplementsForDate) {
-        final hasLog = todaysDoses.containsKey(s.id);
-        if (s.isTracked || hasLog) {
-          tracked.add(
-            TrackedSupplement(
-              supplement: s,
-              totalDosedToday: todaysDoses[s.id] ?? 0.0,
-            ),
-          );
-        }
-      }
-
-      for (final id in todaysDoses.keys) {
-        if (!tracked.any((ts) => ts.supplement.id == id)) {
-          if (byId.containsKey(id)) {
-            tracked.add(
-              TrackedSupplement(
-                supplement: byId[id]!,
-                totalDosedToday: todaysDoses[id]!,
-              ),
-            );
-          }
-        }
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _supplementsById
-          ..clear()
-          ..addAll(byId);
-        _trackedSupplements = tracked;
-        _todaysLogs = logsForDate;
-      });
-    } catch (e) {
-      debugPrint('Error loading supplement data: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _logSupplement(Supplement supplement) async {
+  Future<void> _logSupplement(BuildContext context, SupplementsViewModel model, Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
 
     final result = await showGlassBottomMenu<bool>(
@@ -131,18 +63,11 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       contentBuilder: (ctx, close) {
         return LogSupplementDoseBody(
           supplement: supplement,
-          initialTimestamp: _selectedDate.withCurrentTime,
+          initialTimestamp: model.selectedDate.withCurrentTime,
           primaryLabel: l10n.add_button,
           onCancel: close,
           onSubmit: (dose, ts) async {
-            await DatabaseHelper.instance.insertSupplementLog(
-              SupplementLog(
-                supplementId: supplement.id!,
-                dose: dose,
-                unit: supplement.unit,
-                timestamp: ts,
-              ),
-            );
+            await model.logSupplementDose(supplement, dose, ts);
             if (!ctx.mounted) return;
             close();
             Navigator.of(ctx).pop(true);
@@ -152,13 +77,13 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     );
 
     if (result == true) {
-      _loadData(_selectedDate);
+      model.loadData();
     }
   }
 
-  Future<void> _editLogEntry(SupplementLog log) async {
+  Future<void> _editLogEntry(BuildContext context, SupplementsViewModel model, SupplementLog log) async {
     final l10n = AppLocalizations.of(context)!;
-    final supplement = _supplementsById[log.supplementId]!;
+    final supplement = model.supplementsById[log.supplementId]!;
 
     final result = await showGlassBottomMenu<(double, DateTime)?>(
       context: context,
@@ -186,63 +111,32 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         unit: supplement.unit,
         timestamp: result.$2,
       );
-      await DatabaseHelper.instance.updateSupplementLog(updated);
-      _loadData(_selectedDate);
+      await model.updateSupplementLog(updated);
     }
   }
 
-  Future<void> _deleteLogEntry(int logId) async {
-    // New: use the standardized helper
+  Future<void> _deleteLogEntry(BuildContext context, SupplementsViewModel model, int logId) async {
     final confirmed = await showDeleteConfirmation(context);
 
     if (confirmed) {
-      await DatabaseHelper.instance.deleteSupplementLog(logId);
-      _loadData(_selectedDate);
+      await model.deleteSupplementLog(logId);
     }
   }
 
-  Future<void> _deleteSupplement(Supplement supplement) async {
+  Future<void> _deleteSupplement(BuildContext context, SupplementsViewModel model, Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
 
-    // New: use the helper with specific text
     final confirmed = await showDeleteConfirmation(
       context,
       content: l10n.deleteSupplementConfirm,
     );
 
     if (confirmed) {
-      await DatabaseHelper.instance.deleteSupplement(supplement.id!);
-      _loadData(_selectedDate);
+      await model.deleteSupplement(supplement.id!);
     }
   }
 
-  void _navigateDay(bool forward) {
-    final newDay = _selectedDate.add(Duration(days: forward ? 1 : -1));
-    if (forward && newDay.isAfter(DateTime.now())) return;
-    setState(() {
-      _selectedDate = newDay;
-    });
-    _loadData(_selectedDate);
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-      _loadData(_selectedDate);
-    }
-  }
-
-
-
-  Widget _buildProgressCard(TrackedSupplement ts) {
+  Widget _buildProgressCard(BuildContext context, TrackedSupplement ts) {
     final supplement = ts.supplement;
     final isLimit = supplement.dailyLimit != null;
     final target = (isLimit ? supplement.dailyLimit : supplement.dailyGoal)!;
@@ -266,8 +160,8 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     );
   }
 
-  Widget _buildLogEntry(SupplementLog log, AppLocalizations l10n) {
-    final s = _supplementsById[log.supplementId];
+  Widget _buildLogEntry(BuildContext context, SupplementsViewModel model, SupplementLog log, AppLocalizations l10n) {
+    final s = model.supplementsById[log.supplementId];
     final titleText = (s != null) ? localizeSupplementName(s, l10n) : 'Unknown';
 
     return Dismissible(
@@ -285,17 +179,9 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          _editLogEntry(log);
-          return false; // Do not dismiss because the edit dialog opened.
+          _editLogEntry(context, model, log);
+          return false;
         } else {
-          // For delete (EndToStart): return true so the animation runs,
-          // but run the delete logic only in onDismissed.
-          // Or show the dialog here. Since Dismissible removes immediately, the dialog is better here:
-
-          // Call _deleteLogEntry, which shows the dialog.
-          // But Dismissible expects a Future<bool>.
-          // Simpler path for Dismissible with a dialog:
-
           final l10n = AppLocalizations.of(context)!;
           final confirmed = await showGlassBottomMenu<bool>(
             context: context,
@@ -331,7 +217,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       },
       onDismissed: (direction) {
         if (direction == DismissDirection.endToStart) {
-          _deleteLogEntry(log.id!);
+          _deleteLogEntry(context, model, log.id!);
         }
       },
       child: SummaryCard(
@@ -345,19 +231,19 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
     );
   }
 
-  Future<void> _navigateToEditSupplement(Supplement supplement) async {
+  Future<void> _navigateToEditSupplement(BuildContext context, SupplementsViewModel model, Supplement supplement) async {
     final reloaded = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) =>
-            CreateSupplementScreen(supplementToEdit: supplement),
+            CreateSupplementScreen(supplementToEdit: supplement, repository: model.repository),
       ),
     );
     if (reloaded == true) {
-      _loadData(_selectedDate);
+      model.loadData();
     }
   }
 
-  Widget _buildLogActionCard(Supplement supplement) {
+  Widget _buildLogActionCard(BuildContext context, SupplementsViewModel model, Supplement supplement) {
     final l10n = AppLocalizations.of(context)!;
     final isBuiltin = supplement.isBuiltin || supplement.code == 'caffeine';
 
@@ -366,7 +252,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         child: ListTile(
           leading: const Icon(Icons.add_circle_outline),
           title: Text(localizeSupplementName(supplement, l10n)),
-          onTap: () => _logSupplement(supplement),
+          onTap: () => _logSupplement(context, model, supplement),
         ),
       );
     }
@@ -386,10 +272,10 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          _navigateToEditSupplement(supplement);
+          _navigateToEditSupplement(context, model, supplement);
           return false;
         } else {
-          _deleteSupplement(supplement);
+          _deleteSupplement(context, model, supplement);
           return false;
         }
       },
@@ -397,7 +283,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         child: ListTile(
           leading: const Icon(Icons.add_circle_outline),
           title: Text(localizeSupplementName(supplement, l10n)),
-          onTap: () => _logSupplement(supplement),
+          onTap: () => _logSupplement(context, model, supplement),
         ),
       ),
     );
@@ -405,7 +291,7 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ... (build method remains the same)
+    final model = context.watch<SupplementsViewModel>();
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final textTheme = Theme.of(context).textTheme;
@@ -427,13 +313,23 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
-                  onPressed: () => _navigateDay(false),
+                  onPressed: () => model.navigateDay(false),
                 ),
                 Expanded(
                   child: InkWell(
-                    onTap: _pickDate,
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: model.selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        model.setSelectedDate(picked);
+                      }
+                    },
                     child: Text(
-                      DateFormat.yMMMMd(locale).format(_selectedDate),
+                      DateFormat.yMMMMd(locale).format(model.selectedDate),
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -444,9 +340,9 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  onPressed: _selectedDate.isSameDate(DateTime.now())
+                  onPressed: model.selectedDate.isSameDate(DateTime.now())
                       ? null
-                      : () => _navigateDay(true),
+                      : () => model.navigateDay(true),
                 ),
               ],
             ),
@@ -459,15 +355,15 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
             ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
           ),
           Expanded(
-            child: _isLoading
+            child: model.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
-                    onRefresh: () => _loadData(_selectedDate),
+                    onRefresh: () => model.loadData(),
                     child: ListView(
                       padding: DesignConstants.cardPadding,
                       children: [
                         AppSectionHeader(title: l10n.dailyProgressTitle),
-                        if (_trackedSupplements
+                        if (model.tracked
                             .where(
                               (ts) =>
                                   ts.supplement.dailyGoal != null ||
@@ -481,21 +377,21 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                        ..._trackedSupplements
+                        ...model.tracked
                             .where(
                               (ts) =>
                                   ts.supplement.dailyGoal != null ||
                                   ts.supplement.dailyLimit != null,
                             )
-                            .map((ts) => _buildProgressCard(ts)),
+                            .map((ts) => _buildProgressCard(context, ts)),
                         const SizedBox(height: DesignConstants.spacingXL),
                         AppSectionHeader(title: l10n.logIntakeTitle),
-                        ..._trackedSupplements.map(
-                          (ts) => _buildLogActionCard(ts.supplement),
+                        ...model.tracked.map(
+                          (ts) => _buildLogActionCard(context, model, ts.supplement),
                         ),
                         const SizedBox(height: DesignConstants.spacingXL),
                         AppSectionHeader(title: l10n.todaysLogTitle),
-                        if (_todaysLogs.isEmpty)
+                        if (model.todaysLogs.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Text(
@@ -504,8 +400,8 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
                             ),
                           )
                         else
-                          ..._todaysLogs.map(
-                            (log) => _buildLogEntry(log, l10n),
+                          ...model.todaysLogs.map(
+                            (log) => _buildLogEntry(context, model, log, l10n),
                           ),
                       ],
                     ),
@@ -518,11 +414,11 @@ class _SupplementHubScreenState extends State<SupplementHubScreen> {
         onPressed: () async {
           final created = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-              builder: (context) => const CreateSupplementScreen(),
+              builder: (context) => CreateSupplementScreen(repository: model.repository),
             ),
           );
           if (created == true) {
-            _loadData(_selectedDate);
+            model.loadData();
           }
         },
       ),

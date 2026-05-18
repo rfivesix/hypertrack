@@ -1,18 +1,18 @@
 // lib/models/train_libre_backup.dart
 
-import 'exercise.dart';
-import 'food_entry.dart';
-import 'food_item.dart';
-import 'measurement.dart';
-import 'measurement_session.dart';
-import 'routine.dart';
-import 'routine_exercise.dart';
-import 'set_log.dart';
-import 'set_template.dart';
-import 'fluid_entry.dart';
-import 'workout_log.dart';
-import 'supplement.dart';
-import 'supplement_log.dart';
+import '../../../exercise_catalog/domain/models/exercise.dart';
+import '../../../diary/domain/models/food_entry.dart';
+import '../../../diary/domain/models/food_item.dart';
+import '../../../profile/domain/models/measurement.dart';
+import '../../../profile/domain/models/measurement_session.dart';
+import '../../../workout/domain/models/routine.dart';
+import '../../../workout/domain/models/routine_exercise.dart';
+import '../../../workout/domain/models/set_log.dart';
+import '../../../workout/domain/models/set_template.dart';
+import '../../../diary/domain/models/fluid_entry.dart';
+import '../../../workout/domain/models/workout_log.dart';
+import '../../../supplements/domain/models/supplement.dart';
+import '../../../supplements/domain/models/supplement_log.dart';
 
 /// Represents a complete backup of the Train Libre application data.
 ///

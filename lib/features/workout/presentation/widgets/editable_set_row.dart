@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../models/set_log.dart';
+import '../../domain/models/set_log.dart';
 import 'set_type_chip.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../services/unit_service.dart';

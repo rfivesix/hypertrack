@@ -1,18 +1,18 @@
+// lib/features/exercise_catalog/presentation/general_exercise_selection_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/exercise_catalog_repository.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/exercise.dart';
+import '../domain/models/exercise.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/summary_card.dart';
 
 /// A lightweight, general-purpose exercise picker that returns an [Exercise].
-///
-/// This screen is intentionally minimal and should be used in non-diary
-/// contexts that only need to select an item.
 class GeneralExerciseSelectionScreen extends StatefulWidget {
-  const GeneralExerciseSelectionScreen({super.key});
+  final ExerciseCatalogRepository? repository;
+
+  const GeneralExerciseSelectionScreen({super.key, this.repository});
 
   @override
   State<GeneralExerciseSelectionScreen> createState() =>
@@ -21,6 +21,7 @@ class GeneralExerciseSelectionScreen extends StatefulWidget {
 
 class _GeneralExerciseSelectionScreenState
     extends State<GeneralExerciseSelectionScreen> {
+  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   List<Exercise> _results = [];
@@ -51,9 +52,8 @@ class _GeneralExerciseSelectionScreenState
 
   Future<void> _runFilter(String enteredKeyword) async {
     setState(() => _isLoading = true);
-    final results = await WorkoutDatabaseHelper.instance.searchExercises(
+    final results = await _repository.searchExercises(
       query: enteredKeyword,
-      selectedCategories: const [],
     );
     if (!mounted) return;
     setState(() {

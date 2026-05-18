@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../data/database_helper.dart';
 import '../../../data/product_database_helper.dart';
-import '../../../models/chart_data_point.dart';
-import '../../../models/food_entry.dart';
-import '../../../models/fluid_entry.dart';
+import '../../analytics/domain/models/chart_data_point.dart';
+import '../../diary/domain/models/food_entry.dart';
+import '../../diary/domain/models/fluid_entry.dart';
 import '../../../util/perf_debug_timer.dart';
 import '../domain/statistics_range_policy.dart';
 

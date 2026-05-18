@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/measurement_session.dart';
+import '../domain/models/measurement_session.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
 

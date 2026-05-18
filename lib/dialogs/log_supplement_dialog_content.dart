@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../generated/app_localizations.dart';
-import '../models/supplement.dart';
+import '../features/supplements/domain/models/supplement.dart';
 import '../util/design_constants.dart';
 
 /// A dialog content widget for logging supplement intake.

@@ -1,7 +1,7 @@
 // lib/models/timeline_entry.dart
 
-import 'tracked_food_item.dart';
-import 'water_entry.dart';
+import '../../../diary/domain/models/tracked_food_item.dart';
+import '../../../diary/domain/models/water_entry.dart';
 
 // DOC: This is an "abstract" class. It serves as the shared
 // template for all entry types in the diary.

@@ -1,11 +1,10 @@
-// lib/screens/measurements_screen.dart (final, de-materialized, with AppBar)
-
+// lib/features/profile/presentation/measurements_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../data/database_helper.dart';
+import '../data/profile_repository.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/measurement_session.dart';
+import '../domain/models/measurement_session.dart';
 import 'add_measurement_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/bottom_content_spacer.dart';
@@ -20,17 +19,17 @@ import '../../../widgets/common/swipe_action_background.dart';
 import '../../../services/unit_service.dart';
 
 /// A screen for viewing and analyzing body measurement history.
-///
-/// Features a graphical representation of measurement trends over time
-/// and a list of all recorded measurement sessions with deletion support.
 class MeasurementsScreen extends StatefulWidget {
-  const MeasurementsScreen({super.key});
+  final ProfileRepository? repository;
+
+  const MeasurementsScreen({super.key, this.repository});
 
   @override
   State<MeasurementsScreen> createState() => _MeasurementsScreenState();
 }
 
 class _MeasurementsScreenState extends State<MeasurementsScreen> {
+  late final ProfileRepository _repository = widget.repository ?? ProfileRepository();
   bool _isLoading = true;
   List<MeasurementSession> _sessions = [];
   String? _selectedChartType;
@@ -52,7 +51,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   Future<void> _loadMeasurements() async {
     setState(() => _isLoading = true);
     try {
-      final sessions = await DatabaseHelper.instance.getMeasurementSessions();
+      final sessions = await _repository.getMeasurementSessions();
 
       final Set<String> types = {};
       for (final session in sessions) {
@@ -99,7 +98,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
         break;
       case 'All':
         final earliest =
-            await DatabaseHelper.instance.getEarliestMeasurementDate();
+            await _repository.getEarliestMeasurementDate();
         start = earliest ?? now;
         break;
       case '30D':
@@ -116,11 +115,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            // Optional: DateTime.now() could be passed here,
-            // or leave it empty (the screen fallback is now()).
-            // Leave it empty because this screen has no date selection.
             builder: (context) =>
-                AddMeasurementScreen(initialDate: DateTime.now()),
+                AddMeasurementScreen(initialDate: DateTime.now(), repository: _repository),
           ),
         )
         .then((_) => _loadMeasurements());
@@ -134,9 +130,8 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     }
 
     try {
-      await DatabaseHelper.instance.deleteMeasurementSession(
+      await _repository.deleteMeasurementSession(
         sessionId,
-        fallbackTimestamp: session.timestamp,
       );
     } finally {
       if (mounted) {
@@ -214,8 +209,6 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     );
   }
 
-
-
   Widget _buildChartSection(
     AppLocalizations l10n,
     ColorScheme colorScheme,
@@ -277,6 +270,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
             chartType: _selectedChartType!,
             dateRange: _currentChartDateRange,
             unit: _getMeasurementUnit(_selectedChartType!, unitService),
+            repository: _repository,
           ),
         ],
       ),
@@ -328,14 +322,12 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
     return Dismissible(
       key: Key('session_${session.id}'),
       direction: DismissDirection.endToStart,
-      // Same backgrounds as in Nutrition Screen
       background: const SwipeActionBackground(
         color: Colors.redAccent,
         icon: Icons.delete,
         alignment: Alignment.centerRight,
       ),
       confirmDismiss: (direction) async {
-        // New helper
         return await showDeleteConfirmation(context);
       },
       onDismissed: (direction) {
@@ -421,7 +413,6 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   }
 
   String _getMeasurementUnit(String type, UnitService unitService) {
-    // Return units based on the type here.
     switch (type) {
       case 'weight':
         return unitService.suffixFor(UnitDimension.weight);
@@ -448,7 +439,6 @@ class _MeasurementsScreenState extends State<MeasurementsScreen> {
   }
 
   Icon _getMeasurementIcon(String type) {
-    // Return icons based on the type here.
     switch (type) {
       case 'weight':
         return const Icon(Icons.monitor_weight);

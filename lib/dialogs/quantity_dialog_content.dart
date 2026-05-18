@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../generated/app_localizations.dart';
-import '../models/food_item.dart';
+import '../features/diary/domain/models/food_item.dart';
 import '../util/design_constants.dart';
 
 /// A dialog content widget for logging food and liquid quantities.

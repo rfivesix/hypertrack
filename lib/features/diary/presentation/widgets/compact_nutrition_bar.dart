@@ -1,7 +1,7 @@
 // lib/widgets/compact_nutrition_bar.dart
 
 import 'package:flutter/material.dart';
-import '../../../../models/daily_nutrition.dart';
+import '../../domain/models/daily_nutrition.dart';
 import '../../../../util/design_constants.dart';
 import '../../../../widgets/common/glass_progress_bar.dart';
 

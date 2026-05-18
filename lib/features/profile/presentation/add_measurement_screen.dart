@@ -1,32 +1,30 @@
-// lib/screens/add_measurement_screen.dart (final, de-materialized, corrected)
-
+// lib/features/profile/presentation/add_measurement_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../data/database_helper.dart';
+import '../data/profile_repository.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/measurement.dart';
-import '../../../models/measurement_session.dart';
+import '../domain/models/measurement.dart';
+import '../domain/models/measurement_session.dart';
 import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
 import '../../../services/unit_service.dart';
 import '../../../widgets/common/global_app_bar.dart';
-import '../../../widgets/common/summary_card.dart'; // Added
+import '../../../widgets/common/summary_card.dart';
 
 /// A screen for recording new body measurements.
-///
-/// Provides input fields for various metrics (weight, fat percentage, circumferences)
-/// and allows users to set the specific date and time for the measurement session.
 class AddMeasurementScreen extends StatefulWidget {
-  /// The initial date to be selected in the picker.
   final DateTime? initialDate;
-  const AddMeasurementScreen({super.key, this.initialDate});
+  final ProfileRepository? repository;
+
+  const AddMeasurementScreen({super.key, this.initialDate, this.repository});
 
   @override
   State<AddMeasurementScreen> createState() => _AddMeasurementScreenState();
 }
 
 class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
+  late final ProfileRepository _repository = widget.repository ?? ProfileRepository();
   final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _controllers = {};
   late DateTime _selectedDateTime;
@@ -93,7 +91,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
         timestamp: _selectedDateTime,
         measurements: measurements,
       );
-      await DatabaseHelper.instance.insertMeasurementSession(session);
+      await _repository.insertMeasurementSession(session);
       if (mounted) {
         Navigator.of(context).pop(true);
       }
@@ -217,8 +215,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(
-        title: l10n.addMeasurementDialogTitle, // or whatever your l10n key is
-
+        title: l10n.addMeasurementDialogTitle,
         actions: [
           TextButton(
             onPressed: _saveSession,
@@ -239,14 +236,12 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Date & time section
               Text(
                 l10n.date_and_time_of_measurement,
                 style: textTheme.titleMedium,
               ),
               const SizedBox(height: DesignConstants.spacingS),
               SummaryCard(
-                // FIX 2: Date/time in SummaryCard
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16.0,
@@ -287,15 +282,14 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               ),
               const SizedBox(
                 height: DesignConstants.spacingXL,
-              ), // FIX 3: Adjusted spacing
-              // Messwerte-Sektion
+              ),
               Text(l10n.drawerMeasurements, style: textTheme.titleMedium),
               const SizedBox(height: DesignConstants.spacingS),
               ..._measurementTypes.keys.map((key) {
                 return Padding(
                   padding: const EdgeInsets.only(
                     bottom: 12.0,
-                  ), // FIX 4: Adjusted padding
+                  ),
                   child: TextFormField(
                     controller: _controllers[key],
                     decoration: InputDecoration(
@@ -306,7 +300,6 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                       decimal: true,
                     ),
                     validator: (value) {
-                      // Validate only if something was entered
                       if (value != null &&
                           value.isNotEmpty &&
                           double.tryParse(value.replaceAll(',', '.')) == null) {
@@ -319,7 +312,7 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
               }),
               const SizedBox(
                 height: DesignConstants.spacingL,
-              ), // Spacing to the end
+              ),
             ],
           ),
         ),

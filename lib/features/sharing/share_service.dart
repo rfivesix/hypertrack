@@ -7,9 +7,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../data/workout_database_helper.dart';
 import '../../generated/app_localizations.dart';
-import '../../models/exercise.dart';
-import '../../models/routine.dart';
-import '../../models/workout_log.dart';
+import '../exercise_catalog/domain/models/exercise.dart';
+import '../workout/domain/models/routine.dart';
+import '../workout/domain/models/workout_log.dart';
 import '../app/presentation/widgets/glass_bottom_menu.dart';
 import 'routine_share_formatter.dart';
 import 'share_card_renderer.dart';

@@ -4,10 +4,10 @@ import 'package:drift/drift.dart';
 
 import '../../data/database_helper.dart';
 import '../../data/drift_database.dart' as db;
-import '../../models/fluid_entry.dart';
-import '../../models/measurement_session.dart';
-import '../../models/set_log.dart';
-import '../../models/workout_log.dart';
+import '../../features/diary/domain/models/fluid_entry.dart';
+import '../../features/profile/domain/models/measurement_session.dart';
+import '../../features/workout/domain/models/set_log.dart';
+import '../../features/workout/domain/models/workout_log.dart';
 import '../models/export_models.dart';
 
 // Nutrition labels often provide salt (NaCl) while platform schemas expect

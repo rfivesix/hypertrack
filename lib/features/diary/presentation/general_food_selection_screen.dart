@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../data/product_database_helper.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/food_item.dart';
+import '../domain/models/food_item.dart';
 import 'food_detail_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';

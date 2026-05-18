@@ -1,12 +1,12 @@
 import '../../../data/database_helper.dart';
 import '../../../data/product_database_helper.dart';
 import '../../../data/workout_database_helper.dart';
-import '../../../models/fluid_entry.dart';
-import '../../../models/food_entry.dart';
-import '../../../models/food_item.dart';
-import '../../../models/supplement.dart';
-import '../../../models/supplement_log.dart';
-import '../../../models/workout_log.dart';
+import '../domain/models/fluid_entry.dart';
+import '../domain/models/food_entry.dart';
+import '../domain/models/food_item.dart';
+import '../../supplements/domain/models/supplement.dart';
+import '../../supplements/domain/models/supplement_log.dart';
+import '../../workout/domain/models/workout_log.dart';
 import '../../../data/drift_database.dart' as db;
 
 class NutritionRepository {

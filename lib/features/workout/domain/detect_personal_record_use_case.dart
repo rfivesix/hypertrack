@@ -1,4 +1,4 @@
-import '../../../models/set_log.dart';
+import 'models/set_log.dart';
 
 class PRDetectionResult {
   final SetLog updatedSetLog;

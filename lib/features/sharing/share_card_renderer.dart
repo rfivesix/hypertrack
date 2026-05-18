@@ -8,8 +8,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../../models/routine.dart';
-import '../../models/workout_log.dart';
+import '../workout/domain/models/routine.dart';
+import '../workout/domain/models/workout_log.dart';
 import 'routine_share_formatter.dart';
 import 'share_labels.dart';
 import 'share_set_type.dart';

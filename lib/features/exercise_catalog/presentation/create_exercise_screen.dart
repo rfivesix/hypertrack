@@ -1,28 +1,27 @@
-// lib/screens/create_exercise_screen.dart
+// lib/features/exercise_catalog/presentation/create_exercise_screen.dart
 import 'package:flutter/material.dart';
-import '../../../data/workout_database_helper.dart';
-import '../../../models/exercise.dart';
+import '../data/exercise_catalog_repository.dart';
+import '../domain/models/exercise.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/common.dart';
 import '../../../widgets/common/global_app_bar.dart';
 
 /// A screen for creating custom exercises.
-///
-/// Users can define exercise name, category, description, and involved muscle groups.
-/// These custom exercises are stored in the local database.
 class CreateExerciseScreen extends StatefulWidget {
-  const CreateExerciseScreen({super.key});
+  final ExerciseCatalogRepository? repository;
+
+  const CreateExerciseScreen({super.key, this.repository});
   @override
   State<CreateExerciseScreen> createState() => _CreateExerciseScreenState();
 }
 
 class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
+  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  // Use a variable for the dropdown instead of a controller.
   String? _selectedCategory;
 
   // Fallback lists if the DB is empty
@@ -78,18 +77,19 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final db = WorkoutDatabaseHelper.instance;
-      final categories = await db.getAllCategories();
-      final muscles = await db.getAllMuscleGroups();
+      final categories = await _repository.getAllCategories();
+      // Muscle groups are not in catalog repository yet, but let's see how they are implemented in WorkoutDatabaseHelper.
+      // WorkoutDatabaseHelper has `getAllMuscleGroups`. Let's use `WorkoutDatabaseHelper.instance.getAllMuscleGroups()` for muscle groups
+      // as muscles are shared. Or let's proxy muscle groups in ExerciseCatalogRepository too.
+      // Wait, is there any other place? Let's check. Yes, let's keep it robust.
+      final muscles = await _repository.dbHelper.getAllMuscleGroups();
 
       if (mounted) {
         setState(() {
-          // Use DB values or fallback if empty.
           _allCategories =
               categories.isNotEmpty ? categories : _defaultCategories;
           _allMuscleGroups = muscles.isNotEmpty ? muscles : _defaultMuscles;
 
-          // Sort for better UX
           _allCategories.sort();
           _allMuscleGroups.sort();
 
@@ -97,7 +97,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         });
       }
     } catch (e) {
-      debugPrint("Fehler beim Laden der Daten: $e");
+      debugPrint("Error loading data: $e");
       if (mounted) {
         setState(() {
           _allCategories = _defaultCategories;
@@ -116,18 +116,17 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
 
     try {
       final newExercise = Exercise(
-        // ID is null; DB assigns a new ID.
         nameDe: _nameController.text.trim(),
         nameEn: _nameController.text.trim(),
         descriptionDe: _descriptionController.text.trim(),
         descriptionEn: _descriptionController.text.trim(),
-        categoryName: _selectedCategory ?? 'Other', // Fallback
+        categoryName: _selectedCategory ?? 'Other',
         primaryMuscles: _selectedPrimaryMuscles,
         secondaryMuscles: _selectedSecondaryMuscles,
-        imagePath: null, // No image for custom exercises
+        imagePath: null,
       );
 
-      await WorkoutDatabaseHelper.instance.insertExercise(newExercise);
+      await _repository.insertExercise(newExercise);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -136,7 +135,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
-      debugPrint("Fehler beim Speichern: $e");
+      debugPrint("Error saving: $e");
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -188,7 +187,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // --- Name ---
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
@@ -205,7 +203,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
 
-                    // --- Category (dropdown) ---
                     DropdownButtonFormField<String>(
                       initialValue: _selectedCategory,
                       items: _allCategories.map((cat) {
@@ -228,7 +225,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     ),
                     const SizedBox(height: DesignConstants.spacingL),
 
-                    // --- Beschreibung ---
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
@@ -239,7 +235,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
 
-                    // --- Primary muscles ---
                     AppSectionHeader(title: l10n.primary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(
@@ -248,7 +243,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     ),
                     const SizedBox(height: DesignConstants.spacingXL),
 
-                    // --- Secondary muscles ---
                     AppSectionHeader(title: l10n.secondary_muscles_label),
                     const SizedBox(height: 8),
                     _buildMuscleSelector(
@@ -263,8 +257,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
             ),
     );
   }
-
-
 
   Widget _buildMuscleSelector({
     required List<String> availableMuscles,

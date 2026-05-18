@@ -1,5 +1,5 @@
 import '../data/product_database_helper.dart';
-import '../models/food_item.dart';
+import '../features/diary/domain/models/food_item.dart';
 
 const int maxRepairPasses = 3;
 

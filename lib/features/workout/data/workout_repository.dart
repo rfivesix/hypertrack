@@ -1,7 +1,7 @@
-import '../../../models/exercise.dart';
-import '../../../models/routine.dart';
-import '../../../models/set_log.dart';
-import '../../../models/workout_log.dart';
+import '../../exercise_catalog/domain/models/exercise.dart';
+import '../domain/models/routine.dart';
+import '../domain/models/set_log.dart';
+import '../domain/models/workout_log.dart';
 import '../../../data/workout_database_helper.dart';
 
 class WorkoutRepository {

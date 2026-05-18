@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../generated/app_localizations.dart';
-import '../../../../models/daily_nutrition.dart';
+import '../../domain/models/daily_nutrition.dart';
 import '../../../../services/unit_service.dart';
 import '../../../../util/design_constants.dart';
 import '../../../../widgets/common/glass_progress_bar.dart';

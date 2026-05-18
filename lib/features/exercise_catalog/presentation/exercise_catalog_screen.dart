@@ -1,10 +1,9 @@
-// lib/screens/exercise_catalog_screen.dart (Final & De-Materialisiert)
-
+// lib/features/exercise_catalog/presentation/exercise_catalog_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/exercise_catalog_repository.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/exercise.dart';
+import '../domain/models/exercise.dart';
 import 'exercise_detail_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
@@ -15,20 +14,19 @@ import 'create_exercise_screen.dart';
 import '../../../widgets/common/glass_fab.dart';
 
 /// A searchable list of all available exercises in the database.
-///
-/// Can be used for purely browsing exercises or in [isSelectionMode] to pick
-/// an exercise for a [Routine] or [WorkoutLog].
 class ExerciseCatalogScreen extends StatefulWidget {
   /// Whether the screen is used to select an exercise to return to a caller.
   final bool isSelectionMode;
 
   /// Optional callback for handling the selection manually instead of popping.
   final void Function(Exercise)? onExerciseSelected;
+  final ExerciseCatalogRepository? repository;
 
   const ExerciseCatalogScreen({
     super.key,
     this.isSelectionMode = false,
     this.onExerciseSelected,
+    this.repository,
   });
 
   @override
@@ -36,6 +34,7 @@ class ExerciseCatalogScreen extends StatefulWidget {
 }
 
 class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
+  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
   List<Exercise> _foundExercises = [];
   bool _isLoading = true;
   final _searchController = TextEditingController();
@@ -65,18 +64,18 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
   }
 
   Future<void> _loadCategories() async {
-    final categories = await WorkoutDatabaseHelper.instance.getAllCategories();
+    final categories = await _repository.getAllCategories();
     setState(() {
       _allCategories = categories;
       _isLoading = false;
     });
-    _runFilter(_searchController.text); // Initial load or filter
+    _runFilter(_searchController.text);
   }
 
   void _runFilter(String enteredKeyword) async {
-    final results = await WorkoutDatabaseHelper.instance.searchExercises(
+    final results = await _repository.searchExercises(
       query: enteredKeyword,
-      selectedCategories: _selectedCategories,
+      categories: _selectedCategories,
     );
     if (mounted) {
       setState(() {
@@ -85,14 +84,11 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     }
   }
 
-  // In lib/screens/exercise_catalog_screen.dart
-
   void _showFilterDialog(BuildContext context, AppLocalizations l10n) {
     showGlassBottomMenu(
       context: context,
       title: l10n.filterByCategory,
       contentBuilder: (ctx, close) {
-        // Local state for the bottom sheet
         List<String> tempSelected = List.from(_selectedCategories);
 
         return StatefulBuilder(
@@ -100,7 +96,6 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Scrollable list of categories
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 400),
                   child: ListView.builder(
@@ -127,13 +122,12 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Buttons
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          close(); // Close without saving
+                          close();
                         },
                         child: Text(l10n.cancel),
                       ),
@@ -142,7 +136,6 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                     Expanded(
                       child: FilledButton(
                         onPressed: () {
-                          // Update main screen state
                           setState(() {
                             _selectedCategories = tempSelected;
                           });
@@ -185,10 +178,7 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
             ),
         ],
       ),
-
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // FIX 1: Removed AppBar; title and actions are in the body.
-      // Body without duplicate title
       body: Column(
         children: [
           Padding(
@@ -246,7 +236,6 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                         itemBuilder: (context, index) {
                           final exercise = _foundExercises[index];
                           return SummaryCard(
-                            // FIX 3: Exercise card
                             child: ListTile(
                               leading: const Icon(Icons.fitness_center),
                               title: Text(
@@ -257,7 +246,6 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                               subtitle: Text(exercise.categoryName),
                               trailing: widget.isSelectionMode
                                   ? IconButton(
-                                      // Selection mode: add icon
                                       icon: Icon(
                                         Icons.add_circle_outline,
                                         color: colorScheme.primary,
@@ -267,20 +255,18 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                                     )
                                   : const Icon(
                                       Icons.chevron_right,
-                                    ), // Display mode: arrow
+                                    ),
                               onTap: () {
                                 if (widget.onExerciseSelected != null) {
                                   widget.onExerciseSelected!(exercise);
                                 } else if (widget.isSelectionMode) {
-                                  // In selection mode: tap also selects.
                                   Navigator.of(context).pop(exercise);
                                 } else {
-                                  // In display mode: open detail screen.
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           ExerciseDetailScreen(
-                                              exercise: exercise),
+                                              exercise: exercise, repository: _repository),
                                     ),
                                   );
                                 }
@@ -290,7 +276,6 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
                         },
                       ),
           ),
-          // FIX 4: WgerAttributionWidget at the end.
           Padding(
             padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
             child: WgerAttributionWidget(
@@ -305,12 +290,10 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
           Navigator.of(context)
               .push(
             MaterialPageRoute(
-              builder: (context) => const CreateExerciseScreen(),
+              builder: (context) => CreateExerciseScreen(repository: _repository),
             ),
           )
               .then((wasCreated) {
-            // If the screen returns 'true', an exercise was created.
-            // Reload the list to show the new exercise.
             if (wasCreated == true) {
               _runFilter(_searchController.text);
             }
@@ -321,7 +304,6 @@ class _ExerciseCatalogScreenState extends State<ExerciseCatalogScreen> {
     );
   }
 
-  // FIX 5: Helper widget for the filter button.
   Widget _buildFilterButton(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

@@ -1,6 +1,6 @@
 // lib/models/routine_exercise.dart
 
-import 'exercise.dart';
+import '../../../exercise_catalog/domain/models/exercise.dart';
 import 'set_template.dart';
 
 /// Represents an exercise associated with a specific routine.

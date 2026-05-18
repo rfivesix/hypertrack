@@ -1,26 +1,26 @@
-// lib/screens/create_supplement_screen.dart
+// lib/features/supplements/presentation/create_supplement_screen.dart
 import 'package:flutter/material.dart';
-import '../../../data/database_helper.dart';
-import '../../../models/supplement.dart';
+import '../data/supplement_repository.dart';
+import '../domain/models/supplement.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
 import '../../../util/util_convert.dart';
 import '../../../widgets/common/global_app_bar.dart';
 
 /// A screen for creating or editing a supplement definition.
-///
-/// Allows configuring the supplement's name, default dose, unit,
-/// daily goals/limits, and personal notes.
 class CreateSupplementScreen extends StatefulWidget {
   /// The supplement to edit, or null if creating a new one.
   final Supplement? supplementToEdit;
-  const CreateSupplementScreen({super.key, this.supplementToEdit});
+  final SupplementRepository? repository;
+
+  const CreateSupplementScreen({super.key, this.supplementToEdit, this.repository});
 
   @override
   State<CreateSupplementScreen> createState() => _CreateSupplementScreenState();
 }
 
 class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
+  late final SupplementRepository _repository = widget.repository ?? SupplementRepository();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _doseController = TextEditingController();
@@ -84,9 +84,9 @@ class _CreateSupplementScreenState extends State<CreateSupplementScreen> {
     );
 
     if (_isEditing) {
-      await DatabaseHelper.instance.updateSupplement(newSupplement);
+      await _repository.updateSupplement(newSupplement);
     } else {
-      await DatabaseHelper.instance.insertSupplement(newSupplement);
+      await _repository.insertSupplement(newSupplement);
     }
 
     if (!mounted) return;

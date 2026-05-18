@@ -1,7 +1,7 @@
 // lib/models/supplement.dart
 
 import 'package:flutter/widgets.dart';
-import '../generated/app_localizations.dart';
+import '../../../../generated/app_localizations.dart';
 
 /// Represents a supplement that can be tracked by the user.
 ///

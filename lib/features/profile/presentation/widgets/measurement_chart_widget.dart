@@ -4,11 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../data/database_helper.dart';
 import '../../../../generated/app_localizations.dart';
-import '../../../../models/chart_data_point.dart';
+import '../../../analytics/domain/models/chart_data_point.dart';
 import '../../../../services/unit_service.dart';
 import '../../../../util/design_constants.dart';
+import '../../data/profile_repository.dart';
 
 enum MeasurementChartAxisMode { day, time }
 
@@ -16,6 +16,8 @@ enum MeasurementChartAxisMode { day, time }
 ///
 /// Fetches and displays historical data for a specific [chartType] and [dateRange].
 class MeasurementChartWidget extends StatefulWidget {
+  final ProfileRepository? repository;
+
   const MeasurementChartWidget({
     super.key,
     required this.chartType,
@@ -28,6 +30,7 @@ class MeasurementChartWidget extends StatefulWidget {
     this.valueLabelBuilder,
     this.selectedDateLabelBuilder,
     this.axisLabelBuilder,
+    this.repository,
   })  : dataPoints = null,
         axisMode = MeasurementChartAxisMode.day;
 
@@ -43,6 +46,7 @@ class MeasurementChartWidget extends StatefulWidget {
     this.valueLabelBuilder,
     this.selectedDateLabelBuilder,
     this.axisLabelBuilder,
+    this.repository,
   })  : chartType = null,
         dateRange = null;
 
@@ -161,7 +165,8 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
       _isLoadingChart = true;
       _touchedIndex = null;
     });
-    final data = await DatabaseHelper.instance.getChartDataForTypeAndRange(
+    final repo = widget.repository ?? ProfileRepository();
+    final data = await repo.getChartDataForTypeAndRange(
       chartType,
       dateRange,
     );

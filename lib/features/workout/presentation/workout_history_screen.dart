@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../services/unit_service.dart';
 import '../../../data/workout_database_helper.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/workout_log.dart';
+import '../domain/models/workout_log.dart';
 import 'workout_log_detail_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../util/time_util.dart';

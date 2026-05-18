@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
 import 'log_supplement_dialog_content.dart';
 import '../generated/app_localizations.dart';
-import '../models/supplement.dart';
+import '../features/supplements/domain/models/supplement.dart';
 import '../util/supplement_l10n.dart';
 
 /// A menu that shows a list of supplements to choose from.

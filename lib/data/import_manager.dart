@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'workout_database_helper.dart';
 import 'drift_database.dart' as db;
-import '../models/set_log.dart';
+import '../features/workout/domain/models/set_log.dart';
 import '../services/unit_service.dart';
 
 class WorkoutImportData {

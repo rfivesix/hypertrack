@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../data/workout_database_helper.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/routine.dart';
+import '../domain/models/routine.dart';
 import '../../../services/haptic_feedback_service.dart';
 import 'edit_routine_screen.dart';
 import '../../exercise_catalog/presentation/exercise_catalog_screen.dart';

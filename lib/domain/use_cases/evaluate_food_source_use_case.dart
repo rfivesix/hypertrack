@@ -1,4 +1,4 @@
-import '../../models/food_item.dart';
+import '../../features/diary/domain/models/food_item.dart';
 
 /// Use Case to score and prioritize food source candidates.
 /// Prioritizes exact matches, starts-with prefixes, and specific source types

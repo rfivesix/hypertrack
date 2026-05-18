@@ -5,7 +5,7 @@ import 'package:drift/drift.dart';
 import 'database_helper.dart';
 import 'drift_database.dart' as db;
 import '../config/app_data_sources.dart';
-import '../models/food_item.dart';
+import '../features/diary/domain/models/food_item.dart';
 import '../services/catalog_file_migration.dart';
 import '../util/perf_debug_timer.dart';
 import '../domain/use_cases/evaluate_food_source_use_case.dart';

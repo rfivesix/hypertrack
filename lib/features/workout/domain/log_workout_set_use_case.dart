@@ -1,5 +1,5 @@
-import '../../../models/set_log.dart';
-import '../../../models/set_template.dart';
+import 'models/set_log.dart';
+import 'models/set_template.dart';
 
 class LogSetResult {
   final SetLog updatedSet;

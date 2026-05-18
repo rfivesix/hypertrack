@@ -1,6 +1,6 @@
 // lib/util/supplement_l10n.dart
 import '../generated/app_localizations.dart';
-import '../models/supplement.dart';
+import '../features/supplements/domain/models/supplement.dart';
 
 /// Localizes the name of a [Supplement] using its internal code.
 String localizeSupplementName(Supplement s, AppLocalizations l10n) {

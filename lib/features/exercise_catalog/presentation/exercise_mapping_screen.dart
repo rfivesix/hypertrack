@@ -1,8 +1,8 @@
-// lib/screens/exercise_mapping_screen.dart
+// lib/features/exercise_catalog/presentation/exercise_mapping_screen.dart
 import 'package:flutter/material.dart';
-import '../../../data/workout_database_helper.dart';
+import '../data/exercise_catalog_repository.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/exercise.dart';
+import '../domain/models/exercise.dart';
 import 'general_exercise_selection_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
@@ -10,18 +10,19 @@ import '../../../widgets/common/summary_card.dart';
 import '../../../widgets/common/glass_pill_button.dart';
 
 /// A screen for mapping unknown exercise names to known database [Exercise] objects.
-///
-/// Typically used after importing workout data where some items don't have direct matches.
 class ExerciseMappingScreen extends StatefulWidget {
   /// A list of exercise names that could not be matched automatically.
   final List<String> unknownNames;
-  const ExerciseMappingScreen({super.key, required this.unknownNames});
+  final ExerciseCatalogRepository? repository;
+
+  const ExerciseMappingScreen({super.key, required this.unknownNames, this.repository});
 
   @override
   State<ExerciseMappingScreen> createState() => _ExerciseMappingScreenState();
 }
 
 class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
+  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
   final Map<String, Exercise> _selection = {};
   final Map<String, List<Exercise>> _suggestions = {};
   bool _applying = false;
@@ -34,7 +35,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
 
   Future<void> _loadSuggestions() async {
     for (final name in widget.unknownNames) {
-      final matches = await WorkoutDatabaseHelper.instance.searchExercises(
+      final matches = await _repository.searchExercises(
         query: name,
       );
       if (matches.isNotEmpty && mounted) {
@@ -46,7 +47,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
   Future<void> _pickTarget(String sourceName) async {
     final Exercise? picked = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const GeneralExerciseSelectionScreen(),
+        builder: (_) => GeneralExerciseSelectionScreen(repository: _repository),
       ),
     );
     if (picked != null && mounted) {
@@ -64,8 +65,7 @@ class _ExerciseMappingScreenState extends State<ExerciseMappingScreen> {
       for (final e in _selection.entries)
         e.key: e.value.nameDe.isNotEmpty ? e.value.nameDe : e.value.nameEn,
     };
-    // Apply the selected exercise mapping to the workout database
-    await WorkoutDatabaseHelper.instance.applyExerciseNameMapping(mapping);
+    await _repository.applyExerciseNameMapping(mapping);
     if (mounted) {
       setState(() => _applying = false);
       Navigator.of(context).pop(true);

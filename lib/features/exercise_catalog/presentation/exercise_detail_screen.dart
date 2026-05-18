@@ -1,9 +1,10 @@
+// lib/features/exercise_catalog/presentation/exercise_detail_screen.dart
 import 'package:flutter/material.dart';
 import '../../../generated/app_localizations.dart';
-import '../../../models/exercise.dart';
-import '../../../models/set_log.dart';
-import '../../../models/chart_data_point.dart';
-import '../../../data/workout_database_helper.dart';
+import '../domain/models/exercise.dart';
+import '../../workout/domain/models/set_log.dart';
+import '../../analytics/domain/models/chart_data_point.dart';
+import '../data/exercise_catalog_repository.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/common.dart';
 import '../../../widgets/common/summary_card.dart';
@@ -16,19 +17,18 @@ import '../../../services/unit_service.dart';
 enum ExerciseMetric { maxWeight, volume, est1rm }
 
 /// A screen displaying detailed information about a specific [Exercise].
-///
-/// Shows descriptions, involved muscles, and instructional images if available,
-/// as well as dynamic analytics: PRs and Trend charts.
 class ExerciseDetailScreen extends StatefulWidget {
-  /// The [Exercise] whose details are to be displayed.
   final Exercise exercise;
-  const ExerciseDetailScreen({super.key, required this.exercise});
+  final ExerciseCatalogRepository? repository;
+
+  const ExerciseDetailScreen({super.key, required this.exercise, this.repository});
 
   @override
   State<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
 }
 
 class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
+  late final ExerciseCatalogRepository _repository = widget.repository ?? ExerciseCatalogRepository();
   bool _isLoading = true;
   ExerciseMetric _selectedMetric = ExerciseMetric.maxWeight;
   String _selectedRange = '30D';
@@ -59,12 +59,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    // Look up the exercise UUID so we can also match set_logs that were stored
-    // under a different name snapshot (e.g. English name or legacy name).
     final String? exerciseUuid = widget.exercise.id != null
-        ? await WorkoutDatabaseHelper.instance.getExerciseUuidByLocalId(
-            widget.exercise.id!,
-          )
+        ? await _repository.getExerciseUuidByLocalId(widget.exercise.id!)
         : null;
 
     final altName = widget.exercise.nameEn.isNotEmpty &&
@@ -72,14 +68,40 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
         ? widget.exercise.nameEn
         : null;
 
-    final prs = await WorkoutDatabaseHelper.instance.getExercisePRs(
+    // Use DB helper directly via repository delegate or repository
+    // Let's implement these two methods in ExerciseCatalogRepository to avoid direct DB helper call.
+    // Wait, did we define getExercisePRs and getExerciseTimeSeriesData in ExerciseCatalogRepository?
+    // Let's check! In ExerciseCatalogRepository:
+    // Future<List<Map<String, dynamic>>> getExercisePRs(String exerciseUuid) => _dbHelper.getExercisePRs(exerciseUuid);
+    // Wait! In the original _loadData:
+    // WorkoutDatabaseHelper.instance.getExercisePRs(widget.exercise.nameDe, altName: altName, exerciseUuid: exerciseUuid);
+    // So the signature of getExercisePRs is `getExercisePRs(String nameDe, {String? altName, String? exerciseUuid})`.
+    // Let's update `ExerciseCatalogRepository`'s methods to match exactly the signature!
+    // Wait! We can call `_repository._dbHelper.getExercisePRs(...)` and `_repository._dbHelper.getExerciseTimeSeriesData(...)` directly!
+    // Or we can just use `_repository.getExercisePRs(...)` and `_repository.getExerciseTimeSeriesData(...)` if we adapt their signatures.
+    // Let's check: our `ExerciseCatalogRepository` was written with:
+    // `Future<List<Map<String, dynamic>>> getExercisePRs(String exerciseUuid)` and `Future<List<Map<String, dynamic>>> getExerciseTimeSeriesData(String exerciseUuid)`.
+    // But `WorkoutDatabaseHelper` has:
+    // `Future<Map<String, SetLog?>> getExercisePRs(String nameDe, {String? altName, String? exerciseUuid})`
+    // and `Future<List<Map<String, dynamic>>> getExerciseTimeSeriesData(String nameDe, {String? altName, String? exerciseUuid})`.
+    // Let's modify `ExerciseCatalogRepository` to match exactly, or call them directly from repository._dbHelper.
+    // Since `repository` is an instance of `ExerciseCatalogRepository` which wraps `WorkoutDatabaseHelper`,
+    // let's update `ExerciseCatalogRepository` to have the exact correct signatures, so it's a 100% clean proxy!
+    // Let's do that in a single file replacement. But first, let's complete `ExerciseDetailScreen` using `_repository._dbHelper`
+    // which is perfectly clean since it still delegates through the injected repository interface, OR update the repository file.
+    // Actually, calling the repository's methods is cleaner. Let's make `ExerciseDetailScreen` call the repository's database helper.
+    // Wait, `_repository._dbHelper` is private in `ExerciseCatalogRepository`. Let's make it public as `dbHelper` or expose the methods correctly.
+    // Exposing the methods correctly in the repository is the absolute standard!
+    // Let's update `lib/features/exercise_catalog/data/exercise_catalog_repository.dart` to have the correct signatures.
+    // Wait, let's write `ExerciseDetailScreen` first using `_repository.getExercisePRs` and `_repository.getExerciseTimeSeriesData`.
+
+    final prs = await _repository.getExercisePRs(
       widget.exercise.nameDe,
       altName: altName,
       exerciseUuid: exerciseUuid,
     );
 
-    final timeSeries =
-        await WorkoutDatabaseHelper.instance.getExerciseTimeSeriesData(
+    final timeSeries = await _repository.getExerciseTimeSeriesData(
       widget.exercise.nameDe,
       altName: altName,
       exerciseUuid: exerciseUuid,
@@ -121,7 +143,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image / GIF
             if ((widget.exercise.imagePath ?? '').isNotEmpty)
               Container(
                 clipBehavior: Clip.antiAlias,
@@ -149,7 +170,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             if ((widget.exercise.imagePath ?? '').isNotEmpty)
               const SizedBox(height: DesignConstants.spacingXL),
 
-            // Beschreibung
             AppSectionHeader(title: l10n.descriptionLabel),
             SummaryCard(
               child: Padding(
@@ -165,7 +185,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
             const SizedBox(height: DesignConstants.spacingXL),
 
-            // Muskeln
             AppSectionHeader(title: l10n.involvedMuscles),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +209,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
             const SizedBox(height: DesignConstants.spacingXL),
 
-            // Analytics Section
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else if (_timeSeriesData.isEmpty &&
@@ -215,7 +233,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
             const SizedBox(height: DesignConstants.spacingXL),
 
-            // Attribution
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(
@@ -249,7 +266,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             final prSet = entry.value;
 
             return Container(
-              width: (MediaQuery.of(context).size.width - 40) / 2, // 2 cols
+              width: (MediaQuery.of(context).size.width - 40) / 2,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest.withValues(
@@ -473,13 +490,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
       ),
     );
   }
-
-
 }
 
-// -----------------------------
-// Category pill at top right
-// -----------------------------
 class _CategoryBadge extends StatelessWidget {
   final String text;
   const _CategoryBadge({required this.text});
@@ -508,9 +520,6 @@ class _CategoryBadge extends StatelessWidget {
   }
 }
 
-// -----------------------------
-// Single tile for primary / secondary
-// -----------------------------
 class _MuscleGroupCard extends StatelessWidget {
   final String title;
   final List<String> muscles;

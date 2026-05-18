@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../data/database_helper.dart';
-import '../../../models/chart_data_point.dart';
-import '../../../models/fluid_entry.dart';
+import '../../analytics/domain/models/chart_data_point.dart';
+import '../../diary/domain/models/fluid_entry.dart';
 import '../../../services/health/steps_sync_service.dart';
 import '../../../data/drift_database.dart' as db;
 import '../domain/goal_models.dart';
