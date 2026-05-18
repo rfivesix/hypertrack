@@ -9,7 +9,7 @@ Train Libre AI meal features remain optional and BYOK-based:
 - global AI features are off by default
 - provider/model/key selection stays in `AiService`
 - API keys are stored with `flutter_secure_storage`
-- recent meal history for recommendations is a separate opt-in setting and is off by default
+- recommendation generation uses deterministic on-device macro context assembly (remaining/day goals + meal slot targeting), not recent-meal-history prompt injection
 
 The model is used to propose food names and gram amounts. Deterministic app code then validates, matches, computes nutrition, repairs when possible, and surfaces warnings before anything is saved.
 
@@ -24,9 +24,11 @@ The model is used to propose food names and gram amounts. Deterministic app code
 - `lib/features/diary/presentation/ai_meal_review_screen.dart`
   Review-first capture UI. Shows validation quality, item warnings, unmatched items, and partial-save confirmation.
 - `lib/features/diary/presentation/ai_recommendation_screen.dart`
-  Recommendation UI. Computes remaining meal target, branches on context opt-in, validates target fit, repairs, and shows warnings.
+  Recommendation UI. Computes remaining/day macro context, derives per-meal target context, calls generation, validates target fit, repairs, and shows warnings.
 - `lib/features/settings/presentation/ai_settings_screen.dart`
-  Global AI enablement, provider/model/API key setup, and the separate recommendation context-sharing switch.
+  Global AI enablement, provider/model/API key setup, and custom AI instruction editing.
+- `lib/services/theme_service.dart`
+  Persists `ai_enabled` and `ai_custom_instructions`; no separate recommendation-context toggle is used.
 
 ## Shared Validation Domain
 
@@ -69,7 +71,13 @@ Deterministic:
 - recommendation target-fit validation for kcal/protein/carbs/fat
 - repair retry bound (`maxRepairPasses = 3`)
 - save planning for matched vs unmatched items
-- context-sharing branch based on settings
+- deterministic recommendation context assembly from:
+  - remaining macros for selected date
+  - daily goal fallback resolution
+  - meal-slot target planning via `AiMealTargetPlanner.computeMealTarget(...)`
+  - explicit user dietary/situation preferences
+  - optional custom request text
+  - optional global custom AI instructions
 
 ## Validation Rules
 
@@ -133,7 +141,7 @@ The review UI remains manual and review-first. Users can edit quantities, replac
 ## Recommendation Pipeline
 
 ```text
-generate_recommendation(request, context_opt_in):
+generate_recommendation(request):
     remaining = compute_remaining_targets(request.date)
     daily_goal = load_goal_for_date(request.date)
     target_context = AiMealTargetPlanner.computeMealTarget(
@@ -141,14 +149,13 @@ generate_recommendation(request, context_opt_in):
         daily_goal = daily_goal,
         meal_type = request.meal_type
     )
-    optional_context = null
-    if context_opt_in:
-        optional_context = build_recent_meal_context(last_7_days)
+    preferences = build_preference_list(request.dietary, request.situation)
+    custom_instructions = load_global_ai_custom_instructions()
     candidate = ai_generation_pass(
         target_context = target_context,
-        optional_context = optional_context,
-        preferences = request.preferences,
-        constraints = request.constraints
+        preferences = preferences,
+        custom_request = request.custom_request,
+        ai_custom_instructions = custom_instructions
     )
     validation = validate_meal_candidate(
         candidate = candidate,
@@ -172,7 +179,7 @@ generate_recommendation(request, context_opt_in):
     return build_recommendation_ui(validation)
 ```
 
-The recommendation UI displays locally recomputed totals, target deltas, validation score, warnings, whether recent meal context was shared, and repair-limit status.
+The recommendation UI displays locally recomputed totals, target deltas, validation score, warnings, and repair-limit status.
 
 ## Shared Validation Algorithm
 
@@ -250,14 +257,24 @@ evaluate_target_fit(totals, target):
     )
 ```
 
-## Privacy Branch
+## Recommendation context model (current)
 
-Recommendation context sharing is controlled separately from global AI enablement:
+Recommendation context is assembled in `AiRecommendationScreen` and passed to `AiService.generateMealRecommendation(...)` as explicit fields, not as a separate context-history object.
 
-- `ai_enabled`: global AI feature visibility/use
-- `ai_recommendation_context_enabled`: whether a recent-meal summary may be included in recommendation prompts
+Current context inputs:
 
-When context sharing is off, recommendation prompts explicitly say no recent meal history was shared. Recommendations still work using target macros, preferences, constraints, and custom request only.
+- remaining macros for selected date (`DatabaseHelper.getRemainingMacrosForDate`)
+- daily goals for selected date (`DatabaseHelper.getGoalsForDate`) with app-default fallback when no history exists
+- meal-slot-aware per-meal target (`AiMealTargetPlanner.computeMealTarget`)
+- selected dietary/situation preferences
+- optional free-text custom request
+- optional global custom AI instructions from `ThemeService.aiCustomInstructions`
+
+Current settings model:
+
+- `ai_enabled` controls global AI feature availability
+- `ai_custom_instructions` stores user constraints/allergy-style guidance
+- no separate recommendation context-sharing runtime toggle is used by the recommendation flow
 
 ## Repair Bound
 
