@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.7-alpha.2] (90020) - 2026-05-18
+### Added
+- **Localized feature-bound DataSources**: DiaryLocalDataSource, WorkoutLocalDataSource, SupplementLocalDataSource, ProfileLocalDataSource, StepsLocalDataSource communicating directly with the core Drift database client.
+
+### Refactored
+- **The Great Migration**: Complete dissolution of the monolithic product_database_helper.dart and workout_database_helper.dart files. Moved architectural infrastructure utilities (backup, seeding, import/export managers) into a unified lib/core/infrastructure/ grid.
+- **Pure Domain Models**: Established total Domain Purity by removing Drift database model leaks (e.g., db.DailyGoalsHistoryData) from repository contracts and use cases, mapping them cleanly to pure Dart entities (like DailyGoal) within the Data layer.
+
+### Fixed
+- **Runtime & Testing**: Eliminated the critical Drift multiple-instances database runtime warning by enforcing a strict single-instance initialization with constructor dependency injection via Provider. Adjusted timestamp delays to 1.1s to accommodate SQLite's CURRENT_TIMESTAMP clock resolution. Fixed day-inclusive range selections for diary queries.
+
+### Removed
+- **Dead Code Pruning**: Permanently deleted 3 obsolete legacy screens (home.dart, nutrition_screen.dart, measurement_session_detail_screen.dart) with zero remaining active layout compiler links. Relocated health_export to the local feature scope folder.
+
 ## [0.9.7-alpha.1] - 2026-05-17
 ### Added
 - **Open Food Facts (OFF) Enrichment**: Significantly expanded food data with Caffeine content, Vegan/Vegetarian/Palm-oil tags, and full Ingredients lists.
