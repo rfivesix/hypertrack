@@ -19,7 +19,11 @@ class SupplementLocalDataSource {
             name: row.name,
             defaultDose: row.dose,
             unit: row.unit,
+            dailyGoal: row.dailyGoal,
             dailyLimit: row.dailyLimit,
+            notes: row.notes,
+            isBuiltin: row.isBuiltin,
+            isTracked: row.isTracked,
             code: row.code))
         .toList();
   }
@@ -30,7 +34,11 @@ class SupplementLocalDataSource {
             name: s.name,
             dose: s.defaultDose,
             unit: s.unit,
+            dailyGoal: drift.Value(s.dailyGoal),
             dailyLimit: drift.Value(s.dailyLimit),
+            notes: drift.Value(s.notes),
+            isBuiltin: drift.Value(s.isBuiltin),
+            isTracked: drift.Value(s.isTracked),
             code: drift.Value(s.code),
             createdAt: drift.Value(DateTime.now()),
             updatedAt: drift.Value(DateTime.now())));
@@ -44,7 +52,11 @@ class SupplementLocalDataSource {
             name: drift.Value(s.name),
             dose: drift.Value(s.defaultDose),
             unit: drift.Value(s.unit),
+            dailyGoal: drift.Value(s.dailyGoal),
             dailyLimit: drift.Value(s.dailyLimit),
+            notes: drift.Value(s.notes),
+            isBuiltin: drift.Value(s.isBuiltin),
+            isTracked: drift.Value(s.isTracked),
             code: drift.Value(s.code),
             updatedAt: drift.Value(DateTime.now())));
   }
@@ -111,7 +123,11 @@ class SupplementLocalDataSource {
               name: s.name,
               defaultDose: s.dose,
               unit: s.unit,
+              dailyGoal: s.dailyGoal,
               dailyLimit: s.dailyLimit,
+              notes: s.notes,
+              isBuiltin: s.isBuiltin,
+              isTracked: s.isTracked,
               code: s.code);
         }
       } else if (h.createdAt.isBefore(end) ||
@@ -126,6 +142,8 @@ class SupplementLocalDataSource {
             dailyGoal: h.dailyGoal,
             dailyLimit: h.dailyLimit,
             code: s.code,
+            notes: s.notes,
+            isBuiltin: s.isBuiltin,
             isTracked: h.isTracked,
           );
         }
@@ -136,7 +154,11 @@ class SupplementLocalDataSource {
               name: s.name,
               defaultDose: s.dose,
               unit: s.unit,
+              dailyGoal: s.dailyGoal,
               dailyLimit: s.dailyLimit,
+              notes: s.notes,
+              isBuiltin: s.isBuiltin,
+              isTracked: s.isTracked,
               code: s.code);
         }
       }

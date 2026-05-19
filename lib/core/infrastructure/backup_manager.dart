@@ -25,6 +25,7 @@ import '../../features/diary/domain/models/food_item.dart';
 import '../../features/app/domain/models/train_libre_backup.dart';
 import '../../util/encryption_util.dart';
 import '../../features/diary/data/sources/product_local_data_source.dart';
+import '../../services/storage/saf_storage_service.dart';
 
 typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
 
@@ -712,16 +713,74 @@ class BackupManager {
         suffix = '-enc';
       }
 
-      final directory = dirPath != null
-          ? Directory(dirPath)
-          : await getApplicationDocumentsDirectory();
+      final savedDir = prefs.getString('auto_backup_dir');
+      final treeUri = prefs.getString('auto_backup_tree_uri');
+      final isAndroidSaf = Platform.isAndroid && treeUri != null && treeUri.trim().isNotEmpty;
+
+      if (isAndroidSaf) {
+        final ts = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        final fileName = '$currentAutoBackupFilePrefix$suffix-[$ts].json';
+        String? savedSafPath;
+        try {
+          savedSafPath = await SafStorageService.instance.writeTextFileToTree(
+            treeUri: treeUri,
+            fileName: fileName,
+            content: content,
+          );
+        } catch (e) {
+          debugPrint('Auto-backup SAF write threw error: $e');
+        }
+
+        if (savedSafPath != null) {
+          await prefs.setInt('last_auto_backup_timestamp',
+              DateTime.now().millisecondsSinceEpoch);
+          await prefs.setString('auto_backup_last_file_path', savedSafPath);
+          await prefs.setString('auto_backup_last_dir_used', savedDir ?? 'SAF Shared Storage');
+          await prefs.setBool('auto_backup_last_used_fallback', false);
+          await prefs.remove('auto_backup_last_error');
+
+          if (retention > 0) {
+            try {
+              await SafStorageService.instance.pruneAutoBackupsInTree(
+                treeUri: treeUri,
+                filePrefix: currentAutoBackupFilePrefix,
+                retention: retention,
+              );
+            } catch (e) {
+              debugPrint('Auto-backup SAF prune failed: $e');
+            }
+          }
+          return true;
+        } else {
+          debugPrint('Auto-backup SAF write returned null, falling back to local sandbox...');
+        }
+      }
+
+      final docsDir = await getApplicationDocumentsDirectory();
+      final directory = await resolveWritableBackupDirectory(
+        docsDir: docsDir,
+        dirPath: dirPath,
+        savedDir: savedDir,
+      );
+
+      final chosenPath = (dirPath != null && dirPath.trim().isNotEmpty)
+          ? dirPath.trim()
+          : (savedDir != null && savedDir.trim().isNotEmpty ? savedDir.trim() : null);
+      final isFallbackUsed = chosenPath != null && directory.path != chosenPath;
+
       final ts = DateFormat('yyyy-MM-dd').format(DateTime.now());
       final file = File(p.join(
           directory.path, '$currentAutoBackupFilePrefix$suffix-[$ts].json'));
 
-      await file.writeAsString(content);
+      await directory.create(recursive: true);
+      await file.writeAsString(content, flush: true);
       await prefs.setInt(
           'last_auto_backup_timestamp', DateTime.now().millisecondsSinceEpoch);
+
+      await prefs.setString('auto_backup_last_file_path', file.path);
+      await prefs.setString('auto_backup_last_dir_used', directory.path);
+      await prefs.setBool('auto_backup_last_used_fallback', isFallbackUsed);
+      await prefs.remove('auto_backup_last_error');
 
       // Handle retention
       if (retention > 0) {
@@ -742,6 +801,12 @@ class BackupManager {
 
       return true;
     } catch (e) {
+      try {
+        final prefs = await _prefsLoader();
+        await prefs.setString('auto_backup_last_error', e.toString());
+        await prefs.remove('auto_backup_last_file_path');
+        await prefs.setBool('auto_backup_last_used_fallback', false);
+      } catch (_) {}
       return false;
     }
   }
@@ -832,7 +897,7 @@ class BackupManager {
     String? savedDir,
     String? externalFallbackDir,
   }) async {
-    final defaultDir = Directory(p.join(docsDir.path, 'Backups'));
+    final defaultDir = Directory(p.join(docsDir.path, 'backups'));
     final candidates = <String>[
       if (dirPath != null && dirPath.trim().isNotEmpty) dirPath.trim(),
       if (savedDir != null && savedDir.trim().isNotEmpty) savedDir.trim(),

@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../services/haptic_feedback_service.dart';
+
 import '../../../../generated/app_localizations.dart';
 import '../../../analytics/presentation/widgets/analytics_chart_defaults.dart';
 import '../../domain/analytics_state.dart';
@@ -181,7 +183,9 @@ class _BodyNutritionNormalizedTrendChartState
             final idx = spots.first.spotIndex;
             if (idx != _lastVibratedIndex) {
               _lastVibratedIndex = idx;
-              HapticFeedback.lightImpact();
+              if (HapticFeedbackService.instance.isEnabled) {
+                HapticFeedback.lightImpact();
+              }
             }
           }
         },

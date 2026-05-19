@@ -49,7 +49,7 @@ void main() {
   );
 
   test(
-    'resolveWritableBackupDirectory falls back to docs Backups when explicit path is invalid',
+    'resolveWritableBackupDirectory falls back to docs backups when explicit path is invalid',
     () async {
       final root = await Directory.systemTemp.createTemp(
         'hypertrack_backup_manager_test_',
@@ -63,7 +63,7 @@ void main() {
       final invalidAsFile = File(p.join(root.path, 'not_a_directory'));
       await invalidAsFile.writeAsString('block directory creation');
 
-      final expectedFallback = p.join(root.path, 'Backups');
+      final expectedFallback = p.join(root.path, 'backups');
       final resolved = await BackupManager.resolveWritableBackupDirectory(
         docsDir: root,
         dirPath: invalidAsFile.path,

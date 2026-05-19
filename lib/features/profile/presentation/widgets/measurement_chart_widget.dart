@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../services/haptic_feedback_service.dart';
+
 import '../../../../generated/app_localizations.dart';
 import '../../../analytics/domain/models/chart_data_point.dart';
 import '../../../../services/unit_service.dart';
@@ -184,7 +186,9 @@ class _MeasurementChartWidgetState extends State<MeasurementChartWidget> {
     if (newIndex == _touchedIndex) return;
     _touchedIndex = newIndex;
     if (newIndex != null) {
-      HapticFeedback.lightImpact();
+      if (HapticFeedbackService.instance.isEnabled) {
+        HapticFeedback.lightImpact();
+      }
     }
     if (mounted) setState(() {});
   }

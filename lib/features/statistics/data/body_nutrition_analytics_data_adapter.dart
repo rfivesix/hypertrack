@@ -5,6 +5,7 @@ import '../../diary/data/sources/product_local_data_source.dart';
 import '../../analytics/domain/models/chart_data_point.dart';
 import '../../diary/domain/models/food_entry.dart';
 import '../../diary/domain/models/fluid_entry.dart';
+import '../../diary/domain/models/food_item.dart';
 import '../../../util/perf_debug_timer.dart';
 import '../domain/statistics_range_policy.dart';
 
@@ -134,16 +135,16 @@ class BodyNutritionAnalyticsDataAdapter {
     return dates.first;
   }
 
-  // Audit Log Summary: Resolution for Issue #356 - Prevent fluid double-counting
+  // Audit Log Summary: Resolution for Issue #380 & Issue #356 - Prevent fluid double-counting
   // Fluids that are linked to food entries (e.g., juices tracked as food items)
   // are already aggregated in the food loop below. We filter out any fluid entry
-  // where `linkedFoodEntryId != null` to ensure items are aggregated exactly once.
+  // that possesses a valid linkedNutritionLogId or is defensively matched to a food entry.
   Future<Map<DateTime, double>> _dailyCaloriesMap({
     required List<FoodEntry> foodEntries,
     required List<FluidEntry> fluidEntries,
   }) async {
     final map = <DateTime, double>{};
-    final foodCaloriesPer100gCache = await _hydrateCaloriesByBarcode(
+    final foodProductsByBarcode = await _hydrateProductsByBarcode(
       foodEntries,
     );
 
@@ -154,14 +155,37 @@ class BodyNutritionAnalyticsDataAdapter {
         entry.timestamp.day,
       );
       final barcode = entry.barcode;
-      final caloriesPer100g = foodCaloriesPer100gCache[barcode] ?? 0;
+      final product = foodProductsByBarcode[barcode];
+      final caloriesPer100g = product?.calories ?? 0;
       final amountGrams = entry.quantityInGrams.toDouble();
       final added = caloriesPer100g * (amountGrams / 100.0);
       map[day] = (map[day] ?? 0.0) + added;
     }
 
-    for (final entry
-        in fluidEntries.where((e) => e.linkedFoodEntryId == null)) {
+    for (final entry in fluidEntries) {
+      final isLinked = entry.linkedFoodEntryId != null;
+      final isDuplicateOfFood = foodEntries.any((food) {
+        final foodItem = foodProductsByBarcode[food.barcode];
+        final isFluidFood = foodItem != null &&
+            (foodItem.isFluid || (foodItem.isLiquid ?? false));
+        if (!isFluidFood) return false;
+
+        // Match by linked ID
+        if (entry.linkedFoodEntryId == food.id) return true;
+
+        // Defensive match: same day/time and similar quantity
+        final timeDiff =
+            entry.timestamp.difference(food.timestamp).inSeconds.abs();
+        if (timeDiff < 2 && entry.quantityInMl == food.quantityInGrams) {
+          return true;
+        }
+        return false;
+      });
+
+      if (isLinked || isDuplicateOfFood) {
+        continue;
+      }
+
       final day = DateTime.utc(
         entry.timestamp.year,
         entry.timestamp.month,
@@ -174,7 +198,7 @@ class BodyNutritionAnalyticsDataAdapter {
     return map;
   }
 
-  Future<Map<String, int>> _hydrateCaloriesByBarcode(
+  Future<Map<String, FoodItem>> _hydrateProductsByBarcode(
     List<FoodEntry> foodEntries,
   ) async {
     final uniqueBarcodes = foodEntries
@@ -189,13 +213,8 @@ class BodyNutritionAnalyticsDataAdapter {
     final products = await _productDatabaseHelper.getProductsByBarcodes(
       uniqueBarcodes,
     );
-    final hydrated = <String, int>{
-      for (final product in products) product.barcode: product.calories,
+    return {
+      for (final product in products) product.barcode: product,
     };
-
-    for (final barcode in uniqueBarcodes) {
-      hydrated.putIfAbsent(barcode, () => 0);
-    }
-    return hydrated;
   }
 }

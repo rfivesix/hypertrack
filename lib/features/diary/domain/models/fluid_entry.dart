@@ -77,4 +77,31 @@ class FluidEntry {
       linkedFoodEntryId: map['linked_food_entry_id'], // *** New ***
     );
   }
+
+  /// Creates a copy of this [FluidEntry] with the given fields replaced.
+  FluidEntry copyWith({
+    int? id,
+    DateTime? timestamp,
+    int? quantityInMl,
+    String? name,
+    int? kcal,
+    double? sugarPer100ml,
+    double? carbsPer100ml,
+    double? caffeinePer100ml,
+    int? linkedFoodEntryId,
+    DateTime? updatedAt,
+  }) {
+    return FluidEntry(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      quantityInMl: quantityInMl ?? this.quantityInMl,
+      name: name ?? this.name,
+      kcal: kcal ?? this.kcal,
+      sugarPer100ml: sugarPer100ml ?? this.sugarPer100ml,
+      carbsPer100ml: carbsPer100ml ?? this.carbsPer100ml,
+      caffeinePer100ml: caffeinePer100ml ?? this.caffeinePer100ml,
+      linkedFoodEntryId: linkedFoodEntryId ?? this.linkedFoodEntryId,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

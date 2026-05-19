@@ -22,6 +22,7 @@ void main() {
       expect(service.isAiEnabled, false);
       expect(service.aiCustomInstructions, '');
       expect(service.materialColorsEnabled, false);
+      expect(service.hapticsEnabled, true);
     });
 
     test('loads saved preferences on initialization', () async {
@@ -31,6 +32,7 @@ void main() {
         'ai_enabled': true,
         'ai_custom_instructions': 'No peanuts',
         'material_colors_enabled': true,
+        'haptics_enabled': false,
       });
 
       final service = ThemeService();
@@ -41,6 +43,7 @@ void main() {
       expect(service.isAiEnabled, true);
       expect(service.aiCustomInstructions, 'No peanuts');
       expect(service.materialColorsEnabled, true);
+      expect(service.hapticsEnabled, false);
     });
 
     test('setters persist changed values and update observable state',
@@ -54,6 +57,7 @@ void main() {
       await service.setAiEnabled(true);
       await service.setAiCustomInstructions('Vegan');
       await service.setMaterialColorsEnabled(true);
+      await service.setHapticsEnabled(false);
 
       final prefs = await SharedPreferences.getInstance();
       expect(service.themeMode, ThemeMode.light);
@@ -61,11 +65,13 @@ void main() {
       expect(service.isAiEnabled, true);
       expect(service.aiCustomInstructions, 'Vegan');
       expect(service.materialColorsEnabled, true);
+      expect(service.hapticsEnabled, false);
       expect(prefs.getInt('theme_mode'), ThemeMode.light.index);
       expect(prefs.getInt('visual_style'), 0); // Changed from 1 to 0
       expect(prefs.getBool('ai_enabled'), true);
       expect(prefs.getString('ai_custom_instructions'), 'Vegan');
       expect(prefs.getBool('material_colors_enabled'), true);
+      expect(prefs.getBool('haptics_enabled'), false);
     });
 
     test('setters are no-ops when assigning existing values', () async {
@@ -75,6 +81,7 @@ void main() {
         'ai_enabled': true,
         'ai_custom_instructions': 'Vegan',
         'material_colors_enabled': true,
+        'haptics_enabled': true,
       });
 
       final service = ThemeService();
@@ -89,6 +96,7 @@ void main() {
       await service.setAiEnabled(true);
       await service.setAiCustomInstructions('Vegan');
       await service.setMaterialColorsEnabled(true);
+      await service.setHapticsEnabled(true);
 
       expect(notifications, 0);
     });
