@@ -1983,5 +1983,7 @@
   "aiSettingsInstructionBody": "This feature uses AI to analyze food images and provide nutrient estimates. Your images are only sent to the selected AI provider when you use the feature. It relies on a Bring-Your-Own-Key (BYOK) architecture, keeping your data locally on your device until analysis.",
   "aiSettingsSetupGuideTitle": "Setup Guide",
   "aiSettingsSetupGuideBody": "To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.",
-  "aiSettingsGetApiKeyButton": "View Setup Guide"
+  "aiSettingsGetApiKeyButton": "View Setup Guide",
+  "legal_document_version_value": "1.2",
+  "legal_document_last_updated_value": "May 20, 2026"
 }

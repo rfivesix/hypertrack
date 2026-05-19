@@ -4772,4 +4772,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSettingsGetApiKeyButton => 'View Setup Guide';
+
+  @override
+  String get legal_document_version_value => '1.2';
+
+  @override
+  String get legal_document_last_updated_value => 'May 20, 2026';
 }

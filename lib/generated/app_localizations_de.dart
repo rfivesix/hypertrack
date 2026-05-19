@@ -4815,4 +4815,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiSettingsGetApiKeyButton => 'Schritt-für-Schritt Anleitung';
+
+  @override
+  String get legal_document_version_value => '1.2';
+
+  @override
+  String get legal_document_last_updated_value => '20. Mai 2026';
 }

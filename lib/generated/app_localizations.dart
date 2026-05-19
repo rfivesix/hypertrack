@@ -8417,6 +8417,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Setup Guide'**
   String get aiSettingsGetApiKeyButton;
+
+  /// No description provided for @legal_document_version_value.
+  ///
+  /// In en, this message translates to:
+  /// **'1.2'**
+  String get legal_document_version_value;
+
+  /// No description provided for @legal_document_last_updated_value.
+  ///
+  /// In en, this message translates to:
+  /// **'May 20, 2026'**
+  String get legal_document_last_updated_value;
 }
 
 class _AppLocalizationsDelegate
