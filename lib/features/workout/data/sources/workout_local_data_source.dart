@@ -501,6 +501,7 @@ class WorkoutLocalDataSource {
           exercise: _mapExerciseToModel(exData),
           setTemplates: setTemplates,
           pauseSeconds: reData.pauseSeconds,
+          notes: reData.notes,
         ),
       );
     }
@@ -586,6 +587,8 @@ class WorkoutLocalDataSource {
         await replaceSetTemplatesForExercise(newRe.id!, re.setTemplates);
         // Copy rest duration
         await updatePauseTime(newRe.id!, re.pauseSeconds);
+        // Copy notes
+        await updateRoutineExerciseNotes(newRe.id!, re.notes);
       }
     }
   }
@@ -598,6 +601,80 @@ class WorkoutLocalDataSource {
         .write(
       db.RoutineExercisesCompanion(pauseSeconds: drift.Value(seconds)),
     );
+  }
+
+  Future<void> updateRoutineExerciseNotes(int routineExerciseId, String? notes) async {
+    final dbInstance = await database;
+    await (dbInstance.update(
+      dbInstance.routineExercises,
+    )..where((tbl) => tbl.localId.equals(routineExerciseId)))
+        .write(
+      db.RoutineExercisesCompanion(notes: drift.Value(notes)),
+    );
+  }
+
+  Future<void> saveWorkoutExerciseNote({
+    required int workoutLogId,
+    required String exerciseName,
+    required String? notes,
+  }) async {
+    final dbInstance = await database;
+    final workoutLogUuid = await _getUuidFromLocalId(
+      dbInstance.workoutLogs,
+      workoutLogId,
+    );
+    if (workoutLogUuid == null) return;
+
+    // Resolve exercise uuid if exists
+    final exRow = await (dbInstance.select(dbInstance.exercises)
+          ..where(
+            (tbl) =>
+                tbl.nameDe.equals(exerciseName) |
+                tbl.nameEn.equals(exerciseName),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    final exerciseUuid = exRow?.id;
+
+    // Check if a note already exists for this exercise in this workout
+    final existingRow = await (dbInstance.select(dbInstance.workoutExerciseLogs)
+          ..where((tbl) =>
+              tbl.workoutLogId.equals(workoutLogUuid) &
+              tbl.exerciseNameSnapshot.equals(exerciseName))
+          ..limit(1))
+        .getSingleOrNull();
+
+    final companion = db.WorkoutExerciseLogsCompanion(
+      workoutLogId: drift.Value(workoutLogUuid),
+      exerciseId: drift.Value(exerciseUuid),
+      exerciseNameSnapshot: drift.Value(exerciseName),
+      notes: drift.Value(notes),
+    );
+
+    if (existingRow != null) {
+      await (dbInstance.update(dbInstance.workoutExerciseLogs)
+            ..where((tbl) => tbl.localId.equals(existingRow.localId)))
+          .write(companion);
+    } else {
+      await dbInstance.into(dbInstance.workoutExerciseLogs).insert(companion);
+    }
+  }
+
+  Future<Map<String, String>> getWorkoutExerciseNotes(int workoutLogId) async {
+    final dbInstance = await database;
+    final workoutLogUuid = await _getUuidFromLocalId(
+      dbInstance.workoutLogs,
+      workoutLogId,
+    );
+    if (workoutLogUuid == null) return {};
+
+    final rows = await (dbInstance.select(dbInstance.workoutExerciseLogs)
+          ..where((tbl) => tbl.workoutLogId.equals(workoutLogUuid)))
+        .get();
+
+    return {
+      for (final r in rows) r.exerciseNameSnapshot ?? '': r.notes ?? '',
+    };
   }
 
   Future<Routine?> getRoutineByName(String name) async {

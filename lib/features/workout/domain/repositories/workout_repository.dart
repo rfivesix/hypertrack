@@ -22,6 +22,13 @@ abstract class IWorkoutRepository {
   Future<void> deleteSetLogs(List<int> ids);
   Future<void> finishWorkout(int logId, {String? title, String? notes});
   Future<void> updatePauseTime(int routineExerciseId, int? seconds);
+  Future<void> updateRoutineExerciseNotes(int routineExerciseId, String? notes);
+  Future<void> saveWorkoutExerciseNote({
+    required int workoutLogId,
+    required String exerciseName,
+    required String? notes,
+  });
+  Future<Map<String, String>> getWorkoutExerciseNotes(int workoutLogId);
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName);
   Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
       DateTime start, DateTime end);

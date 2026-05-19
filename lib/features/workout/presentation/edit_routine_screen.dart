@@ -134,7 +134,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     if (!mounted) return;
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
-        builder: (context) => const ExerciseCatalogScreen(isSelectionMode: true),
+        builder: (context) =>
+            const ExerciseCatalogScreen(isSelectionMode: true),
       ),
     );
 
@@ -229,6 +230,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         );
       }
       await db.replaceSetTemplatesForExercise(re.id!, currentTemplates);
+      await db.updateRoutineExerciseNotes(re.id!, re.notes);
     }
 
     if (mounted && !isAddingExercise) {
@@ -278,18 +280,102 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       final updatedTemplates = [...re.setTemplates];
       updatedTemplates.removeAt(index);
 
-      final updatedExercise = RoutineExercise(
-        id: re.id,
-        exercise: re.exercise,
-        setTemplates: updatedTemplates,
-        pauseSeconds: re.pauseSeconds,
-      );
+      final updatedExercise = re.copyWith(setTemplates: updatedTemplates);
       _routineExercises[exerciseIndex] = updatedExercise;
 
       _repsControllers.remove(setTemplateId)?.dispose();
       _weightControllers.remove(setTemplateId)?.dispose();
       _rirControllers.remove(setTemplateId)?.dispose();
     });
+  }
+
+  void _editExerciseNotes(BuildContext context, RoutineExercise re) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: re.notes ?? '');
+
+    final result = await showGlassBottomMenu<String?>(
+      context: context,
+      title: "Übungsnotiz",
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: "Notizen oder Hinweise eingeben...",
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                if (re.notes != null && re.notes!.isNotEmpty) ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    tooltip: "Notiz löschen",
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop('');
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(controller.text.trim());
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        final exerciseIndex = _routineExercises.indexOf(re);
+        if (exerciseIndex != -1) {
+          _routineExercises[exerciseIndex] = re.copyWith(
+            notes: result,
+            clearNotes: result.isEmpty,
+          );
+        }
+      });
+      if (re.id != null) {
+        await WorkoutLocalDataSource.instance.updateRoutineExerciseNotes(
+            re.id!, result.isNotEmpty ? result : null);
+      }
+    }
   }
 
   void _changeSetType(SetTemplate setTemplate, String newType) {
@@ -616,6 +702,14 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                           ),
                                         ),
                                       IconButton(
+                                        icon: const Icon(
+                                          Icons.edit,
+                                        ),
+                                        tooltip: "Notizen bearbeiten",
+                                        onPressed: () => _editExerciseNotes(
+                                            context, routineExercise),
+                                      ),
+                                      IconButton(
                                         icon: const Icon(Icons.timer_outlined),
                                         tooltip: l10n.editPauseTime,
                                         onPressed: () =>
@@ -633,6 +727,58 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                                     ],
                                   ),
                                 ),
+                                if (routineExercise.notes != null &&
+                                    routineExercise.notes!.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 16.0,
+                                      right: 16.0,
+                                      bottom: 12.0,
+                                    ),
+                                    child: InkWell(
+                                      onTap: () => _editExerciseNotes(
+                                          context, routineExercise),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.5),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: colorScheme.onSurfaceVariant
+                                                .withValues(alpha: 0.1),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Icon(
+                                              Icons.description_outlined,
+                                              size: 16,
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                routineExercise.notes!,
+                                                style: textTheme.bodyMedium
+                                                    ?.copyWith(
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 0.0,

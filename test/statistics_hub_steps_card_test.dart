@@ -163,6 +163,16 @@ class _FakeWorkoutRepository implements IWorkoutRepository {
   @override
   Future<void> updatePauseTime(int routineExerciseId, int? seconds) async {}
   @override
+  Future<void> updateRoutineExerciseNotes(int routineExerciseId, String? notes) async {}
+  @override
+  Future<void> saveWorkoutExerciseNote({
+    required int workoutLogId,
+    required String exerciseName,
+    required String? notes,
+  }) async {}
+  @override
+  Future<Map<String, String>> getWorkoutExerciseNotes(int workoutLogId) async => {};
+  @override
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async => [];
   @override
   Future<List<WorkoutLog>> getWorkoutLogsForDateRange(

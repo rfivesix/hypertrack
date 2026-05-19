@@ -96,6 +96,7 @@ class RoutineExercises extends Table with HybridId, MetaColumns {
   TextColumn get exerciseId => text().references(Exercises, #id)();
   IntColumn get orderIndex => integer()();
   IntColumn get pauseSeconds => integer().nullable()();
+  TextColumn get notes => text().nullable()();
 }
 
 // 6. RoutineSetTemplates
@@ -374,6 +375,15 @@ class HealthStepSegments extends Table with HybridId, MetaColumns {
   TextColumn get externalKey => text().unique()();
 }
 
+// 20. WorkoutExerciseLogs
+class WorkoutExerciseLogs extends Table with HybridId, MetaColumns {
+  TextColumn get workoutLogId =>
+      text().references(WorkoutLogs, #id, onDelete: KeyAction.cascade)();
+  TextColumn get exerciseId => text().nullable().references(Exercises, #id)();
+  TextColumn get exerciseNameSnapshot => text().nullable()();
+  TextColumn get notes => text().nullable()();
+}
+
 @DriftDatabase(
   tables: [
     Profiles,
@@ -401,6 +411,7 @@ class HealthStepSegments extends Table with HybridId, MetaColumns {
     DailyGoalsHistory,
     SupplementSettingsHistory,
     HealthStepSegments,
+    WorkoutExerciseLogs,
   ],
 )
 
@@ -409,7 +420,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -585,6 +596,10 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 17) {
             await m.addColumn(fluidLogs, fluidLogs.carbsPer100ml);
+          }
+          if (from < 18) {
+            await m.addColumn(routineExercises, routineExercises.notes);
+            await m.createTable(workoutExerciseLogs);
           }
         },
       );
