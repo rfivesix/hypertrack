@@ -1,1 +1,7 @@
-Version 0.9.7 (Build 90021) brings significant improvements to workout logging and UI clarity. This update adds support for Reps-in-Reserve (RIR) with enhanced data propagation, introduces mathematical average fallback for rep ranges (e.g., "8-12"), and harmonizes diary summary cards for a cleaner look. We've also improved progress bar readability with dual-layer clipping for better text contrast and fixed various analytics layout issues.
+This hotfix release brings important stability and functionality corrections to Train Libre:
+
+* Fixed a tracking bug to ensure all logged supplements and their daily goal progress bars display correctly in the Diary and Supplement Hub.
+* Fixed an analytics data calculation error that double-counted fluids on historical weight and nutrition charts.
+* Fixed the automated backup framework to ensure data archives are safely created and stored in secure application paths.
+* Fixed chart behaviors to make sure haptic feedback remains fully disabled when turned off in the app settings.
+* Improved the exercise notes layout by adding direct tap-to-edit support and a clean delete function to manage your training reminders.

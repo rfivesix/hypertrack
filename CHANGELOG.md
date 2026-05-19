@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.9.7] (90021) - 2026-05-18
+## [0.9.8] - 2026-05-19
+
+### Fixed
+- Fixed mapping regression where supplements lost tracking status and daily goals, disappearing from the Diary screen and Supplement Hub.
+- Fixed database-level fluid food double-counting across the analytics compilation pipeline and correlation charts.
+- Fixed failing auto-backup process by resolving target directory structures through secure application documents paths.
+- Fixed haptic feedback on graph screens to strictly respect the app-wide disabled setting configuration.
+- Fixed exercise notes UI layout flaws by removing duplicate edit action buttons and eliminating emoji assets from text wrappers.
+
+### Added
+- Added direct tap-to-edit interactions to exercise note display cards across live tracking and history screens.
+- Added explicit note deletion capabilities to easily clear text values and update database rows back to null.
+
+## [0.9.7] - 2026-05-18
 ### Added
 - **Reps-in-Reserve (RIR) Enhancement**: Improved RIR data propagation and null-safety during workout logging.
 - **Rep Range Fallback**: Implemented mathematical average calculation for rep ranges (e.g., "8-12" defaults to 10 reps) in workout templates and live logging.
