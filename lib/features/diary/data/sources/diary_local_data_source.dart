@@ -1,4 +1,5 @@
 // lib/features/diary/data/sources/diary_local_data_source.dart
+import 'dart:async';
 import '../../../../data/drift_database.dart' as drift_db
     hide Supplement, SupplementLog, WorkoutLog;
 import 'package:drift/drift.dart' as drift;
@@ -21,6 +22,96 @@ class DiaryLocalDataSource {
     SupplementLocalDataSource? supplementDbHelper,
   }) : _supplementDbHelper =
             supplementDbHelper ?? SupplementLocalDataSource(_db);
+
+  Stream<drift_db.DailyGoalsHistoryData?> watchGoalsForDate(DateTime date) {
+    final historyStream = _db.select(_db.dailyGoalsHistory).watch();
+    final settingsStream = _db.select(_db.appSettings).watch();
+
+    final controller = StreamController<drift_db.DailyGoalsHistoryData?>();
+    StreamSubscription? sub1;
+    StreamSubscription? sub2;
+
+    void runQuery() async {
+      try {
+        final result = await getGoalsForDate(date);
+        if (!controller.isClosed) {
+          controller.add(result);
+        }
+      } catch (e) {
+        if (!controller.isClosed) {
+          controller.addError(e);
+        }
+      }
+    }
+
+    controller.onListen = () {
+      runQuery();
+      sub1 = historyStream.listen((_) => runQuery());
+      sub2 = settingsStream.listen((_) => runQuery());
+    };
+
+    controller.onCancel = () {
+      sub1?.cancel();
+      sub2?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Stream<List<FoodEntry>> watchEntriesForDate(DateTime date) {
+    final start = DateTime(date.year, date.month, date.day);
+    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = _db.select(_db.nutritionLogs)
+      ..where((tbl) => tbl.consumedAt.isBetweenValues(start, end));
+
+    return query.watch().map((rows) {
+      return rows
+          .map(
+            (row) => FoodEntry(
+              id: row.localId,
+              barcode: row.legacyBarcode ?? 'UNKNOWN',
+              timestamp: row.consumedAt,
+              quantityInGrams: row.amount.toInt(),
+              mealType: row.mealType,
+              updatedAt: row.updatedAt,
+            ),
+          )
+          .toList();
+    });
+  }
+
+  Stream<List<FluidEntry>> watchFluidEntriesForDate(DateTime date) {
+    final start = DateTime(date.year, date.month, date.day);
+    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = _db.select(_db.fluidLogs).join([
+      drift.leftOuterJoin(
+        _db.nutritionLogs,
+        _db.nutritionLogs.id.equalsExp(_db.fluidLogs.linkedNutritionLogId),
+      ),
+    ])..where(_db.fluidLogs.consumedAt.isBetweenValues(start, end));
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        final fluidRow = row.readTable(_db.fluidLogs);
+        final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+        final isLinked = nutritionRow != null;
+        return FluidEntry(
+          id: fluidRow.localId,
+          name: fluidRow.name,
+          quantityInMl: fluidRow.amountMl,
+          timestamp: fluidRow.consumedAt,
+          kcal: isLinked ? 0 : fluidRow.kcal,
+          sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
+          carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
+          caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
+          linkedFoodEntryId: nutritionRow?.localId,
+        );
+      }).toList();
+    });
+  }
+
 
   Future<drift_db.DailyGoalsHistoryData?> getGoalsForDate(DateTime date) async {
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
