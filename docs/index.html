@@ -14,6 +14,7 @@
   <title>Train Libre | Offline-first fitness tracking</title>
   <link rel="icon" href="../web/favicon.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="katex.min.css">
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
@@ -357,6 +358,55 @@
               </div>
             </div>
           </article>
+        </div>
+
+        <div class="deep-dive-section reveal">
+          <div class="transparency-header">
+            <span class="section-kicker" data-i18n="transparency_kicker">Deep Technical Disclosure</span>
+            <h2 class="section-heading" data-i18n="transparency_title">Algorithmic Transparency</h2>
+          </div>
+          <div class="deep-dive-grid">
+            <div class="deep-dive-card">
+              <h3 data-i18n="ai_meal_deep_t">Algorithmic Details</h3>
+              <p class="deep-dive-intro" data-i18n="ai_meal_deep_c">Algorithmic Invariants & Local Matching Pipeline</p>
+              <ul class="deep-dive-features">
+                <li data-i18n="ai_meal_privacy_t">BYOK Privacy Invariant</li>
+                <li data-i18n="ai_meal_matching_t">Local Deterministic Matching</li>
+                <li data-i18n="ai_meal_retry_t">3-Pass Self-Repair Retry Loop</li>
+                <li data-i18n="ai_meal_ban_t">Strict Nutrient Computation Ban</li>
+              </ul>
+              <div class="deep-dive-link-container">
+                <a href="./ai-nutrition/" class="deep-dive-link" data-i18n="learn_more">Learn more</a>
+              </div>
+            </div>
+
+            <div class="deep-dive-card">
+              <h3 data-i18n="tdee_deep_t">Mathematical Deep-Dive</h3>
+              <p class="deep-dive-intro" data-i18n="tdee_deep_c">Recursive Estimation & Metabolic Smoothing Mechanics</p>
+              <ul class="deep-dive-features">
+                <li data-i18n="tdee_kalman_t">Recursive Kalman Filtering</li>
+                <li data-i18n="tdee_math_t">Observed Maintenance Equation</li>
+                <li data-i18n="tdee_ramp_t">9-Week Linear Energetic Ramp</li>
+                <li data-i18n="tdee_noise_t">Handling Missing Data (Q = 40)</li>
+              </ul>
+              <div class="deep-dive-link-container">
+                <a href="./adaptive-nutrition/" class="deep-dive-link" data-i18n="learn_more">Learn more</a>
+              </div>
+            </div>
+
+            <div class="deep-dive-card">
+              <h3 data-i18n="rec_deep_t">Analytical Infrastructure</h3>
+              <p class="deep-dive-intro" data-i18n="rec_deep_c">Three-Layer Architecture & Composite Indices</p>
+              <ul class="deep-dive-features">
+                <li data-i18n="rec_schema_t">Three-Layer Sleep Schema</li>
+                <li data-i18n="rec_score_t">Sleep Health Score V2</li>
+                <li data-i18n="rec_pulse_t">Hourly Pulse Aggregation</li>
+              </ul>
+              <div class="deep-dive-link-container">
+                <a href="./recovery/" class="deep-dive-link" data-i18n="learn_more">Learn more</a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
