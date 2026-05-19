@@ -1,7 +1,8 @@
-This hotfix release brings important stability and functionality corrections to Train Libre:
+Version 0.9.9 introduces a massive architectural upgrade and several key training features:
 
-* Fixed a tracking bug to ensure all logged supplements and their daily goal progress bars display correctly in the Diary and Supplement Hub.
-* Fixed an analytics data calculation error that double-counted fluids on historical weight and nutrition charts.
-* Fixed the automated backup framework to ensure data archives are safely created and stored in secure application paths.
-* Fixed chart behaviors to make sure haptic feedback remains fully disabled when turned off in the app settings.
-* Improved the exercise notes layout by adding direct tap-to-edit support and a clean delete function to manage your training reminders.
+* Reactive UI Migration: The core feature layers (Supplements, Diary, Workouts) now use a stream-based architecture for real-time data synchronization.
+* Workout Notes: Added support for granular notes at the exercise and set level to capture training observations directly within the workout logger.
+* Data Safety: Implemented an unsaved changes interceptor in the routine editor to prevent accidental data loss during complex modifications.
+* Technical Transparency: Added algorithmic disclosure matrices and pre-rendered LaTeX math support to provide deeper insights into metabolic smoothing and AI meal matching.
+* Security & Compliance: Updated the Privacy Policy to v1.2 (GDPR/DSGVO compliant) and hardened secure storage isolations for sensitive API credentials.
+* Stability: Fixed fluid log double-counting in analytics, resolved supplement tracking regressions, and improved Android SAF backup target resolution.
