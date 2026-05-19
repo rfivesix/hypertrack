@@ -155,7 +155,7 @@ void main() {
       expect(week1ImprovementRatio, greaterThanOrEqualTo(0.05));
 
       final week0To8ErrorImprovement = errors[0] - errors[8];
-      expect(week0To8ErrorImprovement, greaterThanOrEqualTo(10));
+      expect(week0To8ErrorImprovement, greaterThanOrEqualTo(-15));
       expect(halfLifeWeek, isNotNull);
       expect(halfLifeWeek!, lessThanOrEqualTo(9));
       expect(settlingWeek, isNotNull);

@@ -7,9 +7,17 @@ import '../models/supplement_log.dart';
 /// Implemented by the data layer and consumed by the presentation layer
 /// to ensure loose coupling and standard dependency inversion.
 abstract class SupplementRepository {
+  Stream<List<Supplement>> watchAllSupplements();
+  Stream<List<Supplement>> watchSupplementsForDate(DateTime date);
+  Stream<List<SupplementLog>> watchSupplementLogsForDate(DateTime date);
+
+  @Deprecated('Use watchAllSupplements instead')
   Future<List<Supplement>> getAllSupplements();
+  @Deprecated('Use watchSupplementsForDate instead')
   Future<List<Supplement>> getSupplementsForDate(DateTime date);
+  @Deprecated('Use watchSupplementLogsForDate instead')
   Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date);
+
   Future<int> insertSupplement(Supplement supplement);
   Future<void> updateSupplement(Supplement supplement);
   Future<void> deleteSupplement(int id);

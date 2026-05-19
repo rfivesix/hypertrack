@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.9] - 2026-05-19
+
+### Added
+- **Unsaved Changes Interceptor**: Added a premium save/discard interceptor menu on the Edit Routine screen to prevent accidental data loss when exiting with unsaved changes.
+
 ## [0.9.8] - 2026-05-19
 
 ### Fixed

@@ -1,4 +1,5 @@
 // lib/features/supplements/presentation/supplements_view_model.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../domain/repositories/supplement_repository.dart';
 import '../data/supplement_repository_impl.dart';
@@ -27,107 +28,164 @@ class SupplementsViewModel extends ChangeNotifier {
   List<SupplementLog> _todaysLogs = const [];
   List<SupplementLog> get todaysLogs => _todaysLogs;
 
+  StreamSubscription<List<Supplement>>? _supplementsForDateSubscription;
+  StreamSubscription<List<SupplementLog>>? _logsSubscription;
+  StreamSubscription<List<Supplement>>? _allSupplementsSubscription;
+
+  List<Supplement> _supplementsForDateList = const [];
+  List<SupplementLog> _logsList = const [];
+  List<Supplement> _allSupplementsList = const [];
+
+  bool _hasReceivedSupplements = false;
+  bool _hasReceivedLogs = false;
+  bool _hasReceivedAll = false;
+
   SupplementsViewModel({SupplementRepository? repository})
       : _repository = repository ??
             SupplementRepositoryImpl(
               localDataSource: SupplementLocalDataSource.instance,
-            );
+            ) {
+    _listenToStreams();
+  }
 
   void setSelectedDate(DateTime date) {
     _selectedDate = date;
-    loadData();
+    _listenToStreams();
   }
 
   void navigateDay(bool forward) {
     final newDay = _selectedDate.add(Duration(days: forward ? 1 : -1));
     if (forward && newDay.isAfter(DateTime.now())) return;
     _selectedDate = newDay;
-    loadData();
+    _listenToStreams();
   }
 
-  Future<void> loadData() async {
+  void _listenToStreams() {
+    _cancelSubscriptions();
+
     _isLoading = true;
+    _hasReceivedSupplements = false;
+    _hasReceivedLogs = false;
+    _hasReceivedAll = false;
     notifyListeners();
 
-    try {
-      final date = _selectedDate;
-      final supplementsForDate = await _repository.getSupplementsForDate(date);
-      final logs = await _repository.getSupplementLogsForDate(date);
+    final date = _selectedDate;
 
-      final byId = <int, Supplement>{
-        for (final s in supplementsForDate)
-          if (s.id != null) s.id!: s,
-      };
+    _supplementsForDateSubscription = _repository.watchSupplementsForDate(date).listen(
+      (data) {
+        _supplementsForDateList = data;
+        _hasReceivedSupplements = true;
+        _updateCalculatedState();
+      },
+      onError: (e) {
+        _isLoading = false;
+        debugPrint("Error watching supplements for date: $e");
+        notifyListeners();
+      },
+    );
 
-      final allSupplements = await _repository.getAllSupplements();
-      for (final s in allSupplements) {
-        if (s.id != null && !byId.containsKey(s.id!)) {
-          byId[s.id!] = s;
-        }
+    _logsSubscription = _repository.watchSupplementLogsForDate(date).listen(
+      (data) {
+        _logsList = data;
+        _hasReceivedLogs = true;
+        _updateCalculatedState();
+      },
+      onError: (e) {
+        _isLoading = false;
+        debugPrint("Error watching supplement logs: $e");
+        notifyListeners();
+      },
+    );
+
+    _allSupplementsSubscription = _repository.watchAllSupplements().listen(
+      (data) {
+        _allSupplementsList = data;
+        _hasReceivedAll = true;
+        _updateCalculatedState();
+      },
+      onError: (e) {
+        _isLoading = false;
+        debugPrint("Error watching all supplements: $e");
+        notifyListeners();
+      },
+    );
+  }
+
+  void _updateCalculatedState() {
+    final byId = <int, Supplement>{
+      for (final s in _supplementsForDateList)
+        if (s.id != null) s.id!: s,
+    };
+
+    for (final s in _allSupplementsList) {
+      if (s.id != null && !byId.containsKey(s.id!)) {
+        byId[s.id!] = s;
       }
+    }
 
-      final doses = <int, double>{};
-      for (final log in logs) {
-        doses.update(
-          log.supplementId,
-          (v) => v + log.dose,
-          ifAbsent: () => log.dose,
+    final doses = <int, double>{};
+    for (final log in _logsList) {
+      doses.update(
+        log.supplementId,
+        (v) => v + log.dose,
+        ifAbsent: () => log.dose,
+      );
+    }
+
+    final List<TrackedSupplement> tracked = [];
+    for (final s in _supplementsForDateList) {
+      final hasLog = doses.containsKey(s.id);
+      if (s.isTracked || hasLog) {
+        tracked.add(
+          TrackedSupplement(
+              supplement: s, totalDosedToday: doses[s.id] ?? 0.0),
         );
       }
+    }
 
-      final List<TrackedSupplement> tracked = [];
-      for (final s in supplementsForDate) {
-        final hasLog = doses.containsKey(s.id);
-        if (s.isTracked || hasLog) {
+    for (final id in doses.keys) {
+      if (!tracked.any((ts) => ts.supplement.id == id)) {
+        if (byId.containsKey(id)) {
           tracked.add(
             TrackedSupplement(
-                supplement: s, totalDosedToday: doses[s.id] ?? 0.0),
+              supplement: byId[id]!,
+              totalDosedToday: doses[id]!,
+            ),
           );
         }
       }
-
-      for (final id in doses.keys) {
-        if (!tracked.any((ts) => ts.supplement.id == id)) {
-          if (byId.containsKey(id)) {
-            tracked.add(
-              TrackedSupplement(
-                supplement: byId[id]!,
-                totalDosedToday: doses[id]!,
-              ),
-            );
-          }
-        }
-      }
-
-      _supplementsById.clear();
-      _supplementsById.addAll(byId);
-      _tracked = tracked;
-      _todaysLogs = logs;
-    } catch (e) {
-      debugPrint("Error loading supplements: $e");
-    } finally {
-      _isLoading = false;
-      notifyListeners();
     }
+
+    _supplementsById.clear();
+    _supplementsById.addAll(byId);
+    _tracked = tracked;
+    _todaysLogs = _logsList;
+
+    if (_hasReceivedSupplements && _hasReceivedLogs && _hasReceivedAll) {
+      _isLoading = false;
+    }
+    notifyListeners();
+  }
+
+  Future<void> loadData() async {
+    _listenToStreams();
   }
 
   Future<List<Supplement>> getAllSupplementsDirect() {
+    // ignore: deprecated_member_use_from_same_package
     return _repository.getAllSupplements();
   }
 
   Future<void> addSupplement(Supplement supplement) async {
     await _repository.insertSupplement(supplement);
-    await loadData();
   }
 
   Future<void> updateSupplement(Supplement supplement) async {
     await _repository.updateSupplement(supplement);
-    await loadData();
   }
 
   Future<void> deleteSupplement(int id) async {
     await _repository.deleteSupplement(id);
-    await loadData();
   }
 
   Future<void> logSupplementDose(
@@ -139,21 +197,29 @@ class SupplementsViewModel extends ChangeNotifier {
       timestamp: timestamp,
     );
     await _repository.insertSupplementLog(log);
-    await loadData();
   }
 
   Future<void> updateSupplementLog(SupplementLog log) async {
     await _repository.updateSupplementLog(log);
-    await loadData();
   }
 
   Future<void> deleteSupplementLog(int id) async {
     await _repository.deleteSupplementLog(id);
-    await loadData();
   }
 
   Future<void> insertSupplementLogRaw(SupplementLog log) async {
     await _repository.insertSupplementLog(log);
-    await loadData();
+  }
+
+  void _cancelSubscriptions() {
+    _supplementsForDateSubscription?.cancel();
+    _logsSubscription?.cancel();
+    _allSupplementsSubscription?.cancel();
+  }
+
+  @override
+  void dispose() {
+    _cancelSubscriptions();
+    super.dispose();
   }
 }

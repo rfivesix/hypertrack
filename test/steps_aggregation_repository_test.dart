@@ -22,6 +22,19 @@ void main() {
       },
     );
 
+    test('watchDayAggregation returns stream that emits initial aggregation', () async {
+      final targetDate = DateTime(2026, 3, 26, 14, 30);
+      final stream = repository.watchDayAggregation(targetDate);
+      final day = await stream.first;
+
+      expect(day.hourlyBuckets.length, 24);
+      expect(day.date, DateTime(2026, 3, 26));
+      expect(
+        day.totalSteps,
+        day.hourlyBuckets.fold<int>(0, (sum, bucket) => sum + bucket.steps),
+      );
+    });
+
     test('week aggregation starts on Monday and returns 7 days', () async {
       final targetDate = DateTime(2026, 3, 26); // Thursday
       final week = await repository.getWeekAggregation(targetDate);

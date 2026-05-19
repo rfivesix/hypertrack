@@ -227,6 +227,8 @@
   "cancel": "Abbrechen",
   "delete": "Löschen",
   "save": "Speichern",
+  "unsavedChangesTitle": "Ungespeicherte Änderungen",
+  "unsavedChangesContent": "Du hast ungespeicherte Änderungen. Möchtest du diese vor dem Verlassen speichern?",
   "share": "Teilen",
   "shareWorkout": "Workout teilen",
   "shareRoutine": "Routine teilen",

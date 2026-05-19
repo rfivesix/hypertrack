@@ -49,6 +49,112 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   final Map<int, TextEditingController> _rirControllers = {};
   static const ShareService _shareService = ShareService();
 
+  String _originalState = '';
+  bool _canPop = false;
+
+  String _serializeState() {
+    final sb = StringBuffer();
+    sb.write(_nameController.text.trim());
+    sb.write('|');
+    for (var re in _routineExercises) {
+      sb.write('${re.id}:${re.notes ?? ''}:${re.pauseSeconds ?? ''};');
+      for (var st in re.setTemplates) {
+        final reps = _repsControllers[st.id]?.text ?? '';
+        final weight = _weightControllers[st.id]?.text ?? '';
+        final rir = _rirControllers[st.id]?.text ?? '';
+        sb.write('${st.id}:${st.setType}:$reps:$weight:$rir,');
+      }
+      sb.write(';');
+    }
+    return sb.toString();
+  }
+
+  bool _hasUnsavedChanges() {
+    return _serializeState() != _originalState;
+  }
+
+  void _handlePopAttempt([Object? result]) async {
+    if (!_hasUnsavedChanges()) {
+      setState(() {
+        _canPop = true;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).pop(result);
+      });
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showGlassBottomMenu<bool?>(
+      context: context,
+      title: l10n.unsavedChangesTitle,
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                l10n.unsavedChangesContent,
+                textAlign: TextAlign.center,
+                style: Theme.of(ctx).textTheme.bodyMedium,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(false);
+                    },
+                    child: Text(l10n.discardButton),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(true);
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == null) {
+      return;
+    }
+
+    if (!confirmed) {
+      if (mounted) {
+        setState(() {
+          _canPop = true;
+        });
+        Navigator.of(context).pop(false);
+      }
+    } else {
+      final success = await _persistRoutineState();
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.snackbarRoutineSaved)),
+        );
+        HapticFeedbackService.instance.confirmationFeedback();
+        setState(() {
+          _canPop = true;
+        });
+        Navigator.of(context).pop(true);
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +164,8 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       _nameController.text = widget.routine!.name;
       _originalName = widget.routine!.name;
       _loadExercisesForRoutine();
+    } else {
+      _originalState = _serializeState();
     }
   }
 
@@ -121,6 +229,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         _routineExercises = routineWithExercises.exercises;
         _isLoading = false;
       });
+      _originalState = _serializeState();
     } else if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -128,7 +237,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
   Future<void> _addExercises() async {
     if (_isNewRoutine) {
-      final success = await _saveRoutine(isAddingExercise: true);
+      final success = await _persistRoutineState(isAddingExercise: true);
       if (!success) return;
     }
     if (!mounted) return;
@@ -168,11 +277,12 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
           _routineExercises = [..._routineExercises, newRoutineExercise];
         });
         HapticFeedbackService.instance.confirmationFeedback();
+        _originalState = _serializeState();
       }
     }
   }
 
-  Future<bool> _saveRoutine({bool isAddingExercise = false}) async {
+  Future<bool> _persistRoutineState({bool isAddingExercise = false}) async {
     final l10n = AppLocalizations.of(context)!;
     FocusScope.of(context).unfocus();
 
@@ -233,14 +343,23 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
       await db.updateRoutineExerciseNotes(re.id!, re.notes);
     }
 
-    if (mounted && !isAddingExercise) {
+    _originalState = _serializeState();
+    return true;
+  }
+
+  Future<bool> _saveRoutine() async {
+    final success = await _persistRoutineState();
+    if (success && mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.snackbarRoutineSaved)));
+      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.snackbarRoutineSaved)));
       HapticFeedbackService.instance.confirmationFeedback();
+      setState(() {
+        _canPop = true;
+      });
       Navigator.of(context).pop(true);
     }
-    return true;
+    return success;
   }
 
   void _addSet(RoutineExercise routineExercise) {
@@ -375,6 +494,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         await WorkoutLocalDataSource.instance.updateRoutineExerciseNotes(
             re.id!, result.isNotEmpty ? result : null);
       }
+      _originalState = _serializeState();
     }
   }
 
@@ -549,6 +669,7 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         _routineExercises,
       );
     }
+    _originalState = _serializeState();
   }
 
   void _shareCurrentRoutine() {
@@ -569,11 +690,24 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: GlobalAppBar(
-        title: _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
+    return PopScope(
+      canPop: _canPop,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        _handlePopAttempt(result);
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: GlobalAppBar(
+          automaticallyImplyLeading: false,
+          leading: Navigator.of(context).canPop()
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => _handlePopAttempt(),
+                )
+              : null,
+          title: _isNewRoutine ? l10n.titleNewRoutine : l10n.titleEditRoutine,
         actions: [
           if (!_isNewRoutine)
             IconButton(
@@ -850,8 +984,9 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
         onPressed: _addExercises,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-    );
-  }
+    ),
+  );
+}
 
   // --- HEADER ROW (Dynamic) ---
   Widget _buildHeaderRow(RoutineExercise re, AppLocalizations l10n) {

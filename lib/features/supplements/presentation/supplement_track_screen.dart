@@ -251,13 +251,12 @@ class _SupplementTrackScreenContentState
             tooltip: l10n.manageSupplementsTitle,
             icon: const Icon(Icons.tune),
             onPressed: () async {
-              final changed = await Navigator.of(context).push<bool>(
+              await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
                   builder: (_) =>
                       ManageSupplementsScreen(repository: model.repository),
                 ),
               );
-              if (changed == true) model.loadData();
             },
           ),
         ],
@@ -380,15 +379,12 @@ class _SupplementTrackScreenContentState
       floatingActionButton: GlassFab(
         label: l10n.createSupplementTitle,
         onPressed: () async {
-          final created = await Navigator.of(context).push<bool>(
+          await Navigator.of(context).push<bool>(
             MaterialPageRoute(
               builder: (context) =>
                   CreateSupplementScreen(repository: model.repository),
             ),
           );
-          if (created == true) {
-            model.loadData();
-          }
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

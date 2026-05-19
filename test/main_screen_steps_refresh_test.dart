@@ -27,6 +27,11 @@ class _FakeStepsRepository implements StepsAggregationRepository {
       throw UnimplementedError();
 
   @override
+  Stream<DayStepsAggregation> watchDayAggregation(DateTime date) async* {
+    yield await getDayAggregation(date);
+  }
+
+  @override
   Future<WeekStepsAggregation> getWeekAggregation(DateTime dateInWeek) async =>
       throw UnimplementedError();
 
