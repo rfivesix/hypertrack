@@ -64,6 +64,11 @@ class AboutScreen extends StatelessWidget {
                             'Version $version ($buildNumber)',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
+                          const SizedBox(height: DesignConstants.spacingXS),
+                          Text(
+                            'GNU General Public License v3.0',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ],
                       ),
                     ),
