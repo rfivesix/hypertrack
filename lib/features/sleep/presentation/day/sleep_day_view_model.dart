@@ -15,11 +15,7 @@ class SleepDayViewModel extends ChangeNotifier {
     DateTime? selectedDay,
   })  : _repository = repository,
         _syncService = syncService ?? SleepSyncService(),
-        _period = SleepPeriodSelection(anchorDate: selectedDay) {
-    SleepSyncService.lastImportAtListenable.addListener(
-      _onSleepImportCompleted,
-    );
-  }
+        _period = SleepPeriodSelection(anchorDate: selectedDay);
 
   final SleepDayDataRepository _repository;
   final SleepImportService _syncService;
@@ -41,25 +37,41 @@ class SleepDayViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  StreamSubscription<SleepDayOverviewData?>? _overviewSubscription;
+
   Future<void> load() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+
     if (!isDayScope) {
+      _overviewSubscription?.cancel();
+      _overviewSubscription = null;
       _overview = null;
       _isLoading = false;
       notifyListeners();
       return;
     }
+
+    _overviewSubscription?.cancel();
+    _overviewSubscription = _repository.watchOverview(_period.anchorDate).listen(
+      (data) {
+        _overview = data;
+        _isLoading = false;
+        notifyListeners();
+      },
+      onError: (Object error) {
+        _errorMessage = 'Unable to load sleep day.';
+        _overview = null;
+        _isLoading = false;
+        notifyListeners();
+      },
+    );
+
     try {
       await _syncService.importRecentIfDue();
-      _overview = await _repository.fetchOverview(_period.anchorDate);
     } catch (_) {
-      _errorMessage = 'Unable to load sleep day.';
-      _overview = null;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      // Background sync failures shouldn't prevent displaying cached DB data
     }
   }
 
@@ -82,23 +94,21 @@ class SleepDayViewModel extends ChangeNotifier {
   }
 
   Future<bool> importNow() async {
+    _isLoading = true;
+    notifyListeners();
     final result = await _syncService.importRecent();
     if (result.success) {
       await load();
-      return true;
+    } else {
+      _isLoading = false;
+      notifyListeners();
     }
-    return false;
-  }
-
-  void _onSleepImportCompleted() {
-    unawaited(load());
+    return result.success;
   }
 
   @override
   void dispose() {
-    SleepSyncService.lastImportAtListenable.removeListener(
-      _onSleepImportCompleted,
-    );
+    _overviewSubscription?.cancel();
     unawaited(_syncService.dispose());
     unawaited(_repository.dispose());
     super.dispose();

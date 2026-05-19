@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -62,6 +64,7 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
   DateTime? _lastUpdatedAtUtc;
   int _targetSteps = StepsSyncService.defaultStepsGoal;
   String _stepsProviderRaw = 'local';
+  StreamSubscription<DayStepsAggregation>? _dayStepsSubscription;
 
   @override
   void initState() {
@@ -73,7 +76,14 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
     _loadScopeData();
   }
 
+  @override
+  void dispose() {
+    _dayStepsSubscription?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadScopeData() async {
+    _dayStepsSubscription?.cancel();
     setState(() => _isLoading = true);
     try {
       final anchor = _anchorDate;
@@ -81,22 +91,42 @@ class _StepsModuleScreenState extends State<StepsModuleScreen> {
           DatabaseHelper.instance.getCurrentTargetStepsOrDefault();
       final providerNameFuture =
           widget.stepsProviderNameLoader?.call() ?? _loadProviderName();
-      switch (_scope) {
-        case StepsScope.day:
-          _dayData = await _repository.getDayAggregation(anchor);
-          break;
-        case StepsScope.week:
-          _weekData = await _repository.getWeekAggregation(anchor);
-          break;
-        case StepsScope.month:
-          _monthData = await _repository.getMonthAggregation(anchor);
-          break;
-      }
+
       _lastUpdatedAtUtc = await _repository.getLastUpdatedAt();
       _targetSteps = await targetStepsFuture;
       _stepsProviderRaw = await providerNameFuture;
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+
+      switch (_scope) {
+        case StepsScope.day:
+          _dayStepsSubscription = _repository.watchDayAggregation(anchor).listen(
+            (data) {
+              if (!mounted) return;
+              setState(() {
+                _dayData = data;
+                _isLoading = false;
+              });
+            },
+            onError: (e) {
+              debugPrint('StepsModuleScreen: failed to watch day data: $e');
+              if (mounted) {
+                setState(() => _isLoading = false);
+              }
+            },
+          );
+          break;
+        case StepsScope.week:
+          _weekData = await _repository.getWeekAggregation(anchor);
+          if (mounted) {
+            setState(() => _isLoading = false);
+          }
+          break;
+        case StepsScope.month:
+          _monthData = await _repository.getMonthAggregation(anchor);
+          if (mounted) {
+            setState(() => _isLoading = false);
+          }
+          break;
+      }
     } catch (e) {
       if (!mounted) return;
       debugPrint('StepsModuleScreen: failed to load scope data: $e');

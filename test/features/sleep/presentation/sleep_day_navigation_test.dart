@@ -30,6 +30,11 @@ class _FakeSleepDayRepository implements SleepDayDataRepository {
   }
 
   @override
+  Stream<SleepDayOverviewData?> watchOverview(DateTime day) async* {
+    yield await fetchOverview(day);
+  }
+
+  @override
   Future<void> dispose() async {}
 }
 

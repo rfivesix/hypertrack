@@ -8,6 +8,7 @@ import '../domain/steps_models.dart';
 
 abstract class StepsAggregationRepository {
   Future<DayStepsAggregation> getDayAggregation(DateTime date);
+  Stream<DayStepsAggregation> watchDayAggregation(DateTime date);
   Future<WeekStepsAggregation> getWeekAggregation(DateTime dateInWeek);
   Future<MonthStepsAggregation> getMonthAggregation(DateTime dateInMonth);
   Future<RangeStepsAggregation> getRangeAggregation({
@@ -23,6 +24,11 @@ abstract class StepsAggregationRepository {
 
 class InMemoryStepsAggregationRepository implements StepsAggregationRepository {
   const InMemoryStepsAggregationRepository();
+
+  @override
+  Stream<DayStepsAggregation> watchDayAggregation(DateTime date) async* {
+    yield await getDayAggregation(date);
+  }
 
   @override
   Future<DayStepsAggregation> getDayAggregation(DateTime date) async {
@@ -181,6 +187,18 @@ class HealthStepsAggregationRepository implements StepsAggregationRepository {
 
   final DatabaseHelper dbHelper;
   final StepsSyncService stepsSyncService;
+
+  @override
+  Stream<DayStepsAggregation> watchDayAggregation(DateTime date) async* {
+    yield await getDayAggregation(date);
+
+    final db = await dbHelper.database;
+    const stepsTable = 'health_step_segments';
+
+    yield* db.tableUpdates().where((updates) {
+      return updates.any((update) => update.table == stepsTable);
+    }).asyncMap((_) => getDayAggregation(date));
+  }
 
   @override
   Future<DayStepsAggregation> getDayAggregation(DateTime date) async {
