@@ -59,12 +59,20 @@ Train Libre is built with Flutter and supports:
 
 ## Documentation
 
-- [Project Overview](documentation/overview.md)
-- [System Architecture](documentation/architecture.md)
-- [Data Models & Storage](documentation/data_models_and_storage.md)
-- [Statistics & Analytics](documentation/statistics_module.md)
-- [Adaptive Nutrition Recommendation](documentation/adaptive_nutrition_recommendation_current_state.md)
-- [AI Meal Features Architecture](documentation/ai_meal_features_architecture.md)
+This project features a comprehensive, modular documentation suite split by target audience and component. Use the links below to access the technical resources:
+
+### Developer Resources
+*   [Developer Overview](documentation/developer/overview.md): Technical vision, key architectural pillars, technology stack, and testing philosophy.
+*   [Architecture & SQLite Lifecycle](documentation/developer/architecture.md): Clean Architecture layering and database connection lifecycle pattern.
+*   [Data Flow & State Lifecycle](documentation/developer/data_flow_and_state.md): Reactive reads, imperative writes, subscription cancellation, and UI concurrency guards.
+
+### Advanced Features & Algorithmic Transparency
+*   [Smart Features Overview](documentation/features/overview.md): Overview of algorithmic features and architectural privacy invariants.
+*   [Bayesian TDEE Estimator](documentation/features/bayesian_tdee_estimator.md): Comprehensive mathematical and statistical formulation of the Kalman filter-based adaptive energy expenditure engine.
+*   [BYOK AI Meal Validation](documentation/features/byok_ai_validation.md): AI meal capture pipeline details, fuzzy validation scoring, and the 3-pass self-repair verification loop.
+*   [One-Way Health Sync & Export](documentation/features/health_sync_export.md): Data export pipelines, SQLite-backed idempotency tracking, step segment merging policies, and fault-tolerance patterns.
+
+For the full interlinked documentation map, see the main [Documentation Entry Point](documentation/README.md).
 
 ## Roadmap
 
@@ -78,3 +86,4 @@ The long-term vision, future modules, and planned features are maintained in the
 ## License
 
 [GPL-3.0](LICENSE)
+
