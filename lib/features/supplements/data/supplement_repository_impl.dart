@@ -12,16 +12,34 @@ class SupplementRepositoryImpl implements SupplementRepository {
       : _localDataSource = localDataSource;
 
   @override
+  Stream<List<Supplement>> watchAllSupplements() {
+    return _localDataSource.watchAllSupplements();
+  }
+
+  @override
+  Stream<List<Supplement>> watchSupplementsForDate(DateTime date) {
+    return _localDataSource.watchSupplementsForDate(date);
+  }
+
+  @override
+  Stream<List<SupplementLog>> watchSupplementLogsForDate(DateTime date) {
+    return _localDataSource.watchSupplementLogsForDate(date);
+  }
+
+  @override
+  @Deprecated('Use watchAllSupplements instead')
   Future<List<Supplement>> getAllSupplements() {
     return _localDataSource.getAllSupplements();
   }
 
   @override
+  @Deprecated('Use watchSupplementsForDate instead')
   Future<List<Supplement>> getSupplementsForDate(DateTime date) {
     return _localDataSource.getSupplementsForDate(date);
   }
 
   @override
+  @Deprecated('Use watchSupplementLogsForDate instead')
   Future<List<SupplementLog>> getSupplementLogsForDate(DateTime date) {
     return _localDataSource.getSupplementLogsForDate(date);
   }

@@ -61,7 +61,7 @@ class _SupplementHubScreenContentState
       Supplement supplement) async {
     final l10n = AppLocalizations.of(context)!;
 
-    final result = await showGlassBottomMenu<bool>(
+    await showGlassBottomMenu<bool>(
       context: context,
       title: localizeSupplementName(supplement, l10n),
       contentBuilder: (ctx, close) {
@@ -79,10 +79,6 @@ class _SupplementHubScreenContentState
         );
       },
     );
-
-    if (result == true) {
-      model.loadData();
-    }
   }
 
   Future<void> _editLogEntry(BuildContext context, SupplementsViewModel model,
@@ -240,15 +236,12 @@ class _SupplementHubScreenContentState
 
   Future<void> _navigateToEditSupplement(BuildContext context,
       SupplementsViewModel model, Supplement supplement) async {
-    final reloaded = await Navigator.of(context).push<bool>(
+    await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => CreateSupplementScreen(
             supplementToEdit: supplement, repository: model.repository),
       ),
     );
-    if (reloaded == true) {
-      model.loadData();
-    }
   }
 
   Widget _buildLogActionCard(
@@ -422,15 +415,12 @@ class _SupplementHubScreenContentState
       floatingActionButton: GlassFab(
         label: l10n.createSupplementTitle,
         onPressed: () async {
-          final created = await Navigator.of(context).push<bool>(
+          await Navigator.of(context).push<bool>(
             MaterialPageRoute(
               builder: (context) =>
                   CreateSupplementScreen(repository: model.repository),
             ),
           );
-          if (created == true) {
-            model.loadData();
-          }
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

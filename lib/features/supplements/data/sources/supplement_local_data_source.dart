@@ -28,6 +28,24 @@ class SupplementLocalDataSource {
         .toList();
   }
 
+  Stream<List<Supplement>> watchAllSupplements() {
+    return dbInstance.select(dbInstance.supplements).watch().map((rows) {
+      return rows
+          .map((row) => Supplement(
+              id: row.localId,
+              name: row.name,
+              defaultDose: row.dose,
+              unit: row.unit,
+              dailyGoal: row.dailyGoal,
+              dailyLimit: row.dailyLimit,
+              notes: row.notes,
+              isBuiltin: row.isBuiltin,
+              isTracked: row.isTracked,
+              code: row.code))
+          .toList();
+    });
+  }
+
   Future<int> insertSupplement(Supplement s) async {
     return await dbInstance.into(dbInstance.supplements).insert(
         db.SupplementsCompanion.insert(
@@ -93,6 +111,35 @@ class SupplementLocalDataSource {
         sourceFluidEntryId: null, // Add if available in table
       );
     }).toList();
+  }
+
+  Stream<List<SupplementLog>> watchSupplementLogsForDate(DateTime date) {
+    final start = DateTime(date.year, date.month, date.day),
+        end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    final query = dbInstance.select(dbInstance.supplementLogs).join([
+      drift.innerJoin(
+        dbInstance.supplements,
+        dbInstance.supplements.id
+            .equalsExp(dbInstance.supplementLogs.supplementId),
+      )
+    ])
+      ..where(dbInstance.supplementLogs.takenAt.isBetweenValues(start, end));
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        final log = row.readTable(dbInstance.supplementLogs);
+        final s = row.readTable(dbInstance.supplements);
+        return SupplementLog(
+          id: log.localId,
+          supplementId: s.localId,
+          dose: log.amount,
+          unit: s.unit,
+          timestamp: log.takenAt,
+          sourceFoodEntryId: null,
+          sourceFluidEntryId: null,
+        );
+      }).toList();
+    });
   }
 
   Future<List<Supplement>> getSupplementsForDate(DateTime date) async {
@@ -164,6 +211,78 @@ class SupplementLocalDataSource {
       }
     }
     return latestMap.values.toList();
+  }
+
+  Stream<List<Supplement>> watchSupplementsForDate(DateTime date) {
+    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = dbInstance.select(dbInstance.supplements).join([
+      drift.leftOuterJoin(
+        dbInstance.supplementSettingsHistory,
+        dbInstance.supplementSettingsHistory.supplementId
+            .equalsExp(dbInstance.supplements.id),
+      ),
+    ]);
+
+    return query.watch().map((rows) {
+      final Map<String, Supplement> latestMap = {};
+      final Map<String, DateTime?> latestDateMap = {};
+
+      for (final row in rows) {
+        final s = row.readTable(dbInstance.supplements);
+        final h = row.readTableOrNull(dbInstance.supplementSettingsHistory);
+
+        final currentBestDate = latestDateMap[s.id];
+
+        if (h == null) {
+          if (!latestMap.containsKey(s.id)) {
+            latestMap[s.id] = Supplement(
+                id: s.localId,
+                name: s.name,
+                defaultDose: s.dose,
+                unit: s.unit,
+                dailyGoal: s.dailyGoal,
+                dailyLimit: s.dailyLimit,
+                notes: s.notes,
+                isBuiltin: s.isBuiltin,
+                isTracked: s.isTracked,
+                code: s.code);
+          }
+        } else if (h.createdAt.isBefore(end) ||
+            h.createdAt.isAtSameMomentAs(end)) {
+          if (currentBestDate == null || h.createdAt.isAfter(currentBestDate)) {
+            latestDateMap[s.id] = h.createdAt;
+            latestMap[s.id] = Supplement(
+              id: s.localId,
+              name: s.name,
+              defaultDose: h.dose,
+              unit: s.unit,
+              dailyGoal: h.dailyGoal,
+              dailyLimit: h.dailyLimit,
+              code: s.code,
+              notes: s.notes,
+              isBuiltin: s.isBuiltin,
+              isTracked: h.isTracked,
+            );
+          }
+        } else {
+          if (!latestMap.containsKey(s.id)) {
+            latestMap[s.id] = Supplement(
+                id: s.localId,
+                name: s.name,
+                defaultDose: s.dose,
+                unit: s.unit,
+                dailyGoal: s.dailyGoal,
+                dailyLimit: s.dailyLimit,
+                notes: s.notes,
+                isBuiltin: s.isBuiltin,
+                isTracked: s.isTracked,
+                code: s.code);
+          }
+        }
+      }
+      return latestMap.values.toList();
+    });
   }
 
   Future<void> logSupplement(
