@@ -63,7 +63,10 @@ Status: implemented.
 
 Behavior:
 
-- `day` scope: loads `SleepDayViewModel` overview data
+- `day` scope: Binds reactively to `SleepDayViewModel` overview data.
+  * **Reactive Subscription**: `SleepDayViewModel` subscribes to the repository's `watchOverview(selectedDay)` stream, saving it in a private `_overviewSubscription` field.
+  * **Date-Switch Recycling**: When a new day is selected or the view shifted, `SleepDayViewModel` synchronously cancels the active `_overviewSubscription` before establishing a new listener.
+  * **Clean Teardown**: `dispose()` explicitly cancels `_overviewSubscription` to prevent memory leaks.
 - `week` scope: queries derived analyses in Monday-Sunday range and aggregates with `SleepPeriodAggregationEngine.aggregateWeek(...)`
 - `month` scope: queries analyses for month range and aggregates with `aggregateMonth(...)`
 
@@ -107,7 +110,9 @@ Fallback strategy:
 ### Day composition repository
 
 - Interface + implementation: `lib/features/sleep/data/sleep_day_repository.dart`
-- Main method: `fetchOverview(DateTime day)`
+- Main methods:
+  - `fetchOverview(DateTime day)`: One-shot Future-based overview query.
+  - `watchOverview(DateTime day)`: Reactive stream-based watcher query.
 
 Composes day data from:
 
@@ -115,6 +120,14 @@ Composes day data from:
 - `SleepCanonicalSessionsDao`
 - `SleepCanonicalStageSegmentsDao`
 - `SleepCanonicalHeartRateSamplesDao`
+
+The `watchOverview(DateTime day)` method utilizes Drift table update monitors (`tableUpdates()`) to dynamically watch the four underlying database tables:
+* `sleep_nightly_analyses`
+* `sleep_canonical_sessions`
+* `sleep_canonical_stage_segments`
+* `sleep_canonical_heart_rate_samples`
+
+Any insertion, update, or deletion in these tables triggers a reactive push, running `fetchOverview(day)` to map rows into a new `SleepDayOverviewData` domain entity and emit it downstream.
 
 Returns `SleepDayOverviewData` including:
 
