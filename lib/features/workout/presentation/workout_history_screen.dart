@@ -1,5 +1,3 @@
-// lib/screens/workout_history_screen.dart (final, de-materialized with AppBar)
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +5,7 @@ import '../../../services/unit_service.dart';
 import '../data/sources/workout_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/workout_log.dart';
+import '../domain/repositories/workout_repository.dart';
 import 'workout_log_detail_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../util/time_util.dart';
@@ -26,30 +25,17 @@ class WorkoutHistoryScreen extends StatefulWidget {
 }
 
 class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
-  bool _isLoading = true;
-  List<WorkoutLog> _logs = [];
+  late final Stream<List<WorkoutLog>> _logsStream;
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
-  }
-
-  Future<void> _loadHistory() async {
-    setState(() => _isLoading = true);
-    // FIX: Use getFullWorkoutLogs() to load sets directly.
-    final data = await WorkoutLocalDataSource.instance.getFullWorkoutLogs();
-    if (mounted) {
-      setState(() {
-        _logs = data;
-        _isLoading = false;
-      });
-    }
+    _logsStream = Provider.of<IWorkoutRepository>(context, listen: false)
+        .watchFullWorkoutLogs();
   }
 
   Future<void> _deleteLog(int logId) async {
     await WorkoutLocalDataSource.instance.deleteWorkoutLog(logId);
-    _loadHistory();
   }
 
   @override
@@ -65,164 +51,177 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       extendBodyBehindAppBar: true,
       appBar: GlobalAppBar(title: l10n.workoutHistoryTitle),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _logs.isEmpty
-              // FIX: Improved empty state.
-              ? Center(
-                  child: Padding(
-                    padding: DesignConstants.cardPadding.copyWith(
-                      top: DesignConstants.cardPadding.top + topPadding,
+      body: StreamBuilder<List<WorkoutLog>>(
+        stream: _logsStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.redAccent),
+              ),
+            );
+          }
+
+          final logs = snapshot.data ?? [];
+          if (logs.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: DesignConstants.cardPadding.copyWith(
+                  top: DesignConstants.cardPadding.top + topPadding,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.history_toggle_off_outlined,
+                      size: 80,
+                      color: Colors.grey.shade400,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(height: DesignConstants.spacingL),
+                    Text(
+                      l10n.workoutHistoryEmptyTitle,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: DesignConstants.spacingS),
+                    Text(
+                      l10n.emptyHistory,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: DesignConstants.cardPadding.copyWith(
+              top: DesignConstants.cardPadding.top + topPadding,
+            ),
+            itemCount: logs.length,
+            itemBuilder: (context, index) {
+              final log = logs[index];
+              final duration = log.endTime?.difference(log.startTime);
+
+              // New: calculate volume and sets for this log.
+              final totalSets = log.sets.length;
+              final totalVolume = log.sets.fold<double>(
+                0,
+                (sum, set) => sum + (set.weightKg ?? 0) * (set.reps ?? 0),
+              );
+
+              return Dismissible(
+                key: Key('log_${log.id}'),
+                direction: DismissDirection.endToStart,
+
+                // FIXED: Only `secondaryBackground` is needed here.
+                background: const SwipeActionBackground(
+                  color: Colors.redAccent,
+                  icon: Icons.delete,
+                  alignment: Alignment.centerRight,
+                ),
+                confirmDismiss: (direction) async {
+                  // New: helper (specific text needed here)
+                  return await showDeleteConfirmation(
+                    context,
+                    content: l10n.deleteWorkoutConfirmContent,
+                  );
+                },
+                onDismissed: (direction) {
+                  _deleteLog(log.id!);
+                },
+                child: SummaryCard(
+                  child: ListTile(
+                    leading: const Icon(Icons.event_note, size: 40),
+                    title: Text(
+                      log.routineName ?? l10n.freeWorkoutTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    // FIX: Subtitle is now a Column with more information.
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.history_toggle_off_outlined,
-                          size: 80,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: DesignConstants.spacingL),
+                        const SizedBox(height: 4),
                         Text(
-                          l10n.workoutHistoryEmptyTitle,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                          textAlign: TextAlign.center,
+                          DateFormat.yMMMMd(
+                            locale,
+                          ).add_Hm().format(log.startTime),
                         ),
-                        const SizedBox(height: DesignConstants.spacingS),
-                        Text(
-                          l10n.emptyHistory,
-                          textAlign: TextAlign.center,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.monitor_weight_outlined,
+                              size: 14,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '${context.read<UnitService>().convertDisplayValue(totalVolume, UnitDimension.weight).toStringAsFixed(0)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: DesignConstants.spacingM),
+                            Icon(
+                              Icons.replay_circle_filled_outlined,
+                              size: 14,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                l10n.setCount(
+                                  totalSets,
+                                ), // Uses the plural function
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                )
-              : ListView.builder(
-                  padding: DesignConstants.cardPadding.copyWith(
-                    top: DesignConstants.cardPadding.top + topPadding,
-                  ),
-                  itemCount: _logs.length,
-                  itemBuilder: (context, index) {
-                    final log = _logs[index];
-                    final duration = log.endTime?.difference(log.startTime);
-
-                    // New: calculate volume and sets for this log.
-                    final totalSets = log.sets.length;
-                    final totalVolume = log.sets.fold<double>(
-                      0,
-                      (sum, set) => sum + (set.weightKg ?? 0) * (set.reps ?? 0),
-                    );
-
-                    return Dismissible(
-                      key: Key('log_${log.id}'),
-                      direction: DismissDirection.endToStart,
-
-                      // FIXED: Only `secondaryBackground` is needed here.
-                      background: const SwipeActionBackground(
-                        color: Colors.redAccent,
-                        icon: Icons.delete,
-                        alignment: Alignment.centerRight,
+                    trailing: duration != null
+                        ? Text(
+                            formatDuration(duration),
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          )
+                        : null,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            WorkoutLogDetailScreen(logId: log.id!),
                       ),
-                      confirmDismiss: (direction) async {
-                        // New: helper (specific text needed here)
-                        return await showDeleteConfirmation(
-                          context,
-                          content: l10n.deleteWorkoutConfirmContent,
-                        );
-                      },
-                      onDismissed: (direction) {
-                        _deleteLog(log.id!);
-                      },
-                      child: SummaryCard(
-                        child: ListTile(
-                          leading: const Icon(Icons.event_note, size: 40),
-                          title: Text(
-                            log.routineName ?? l10n.freeWorkoutTitle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          // FIX: Subtitle is now a Column with more information.
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat.yMMMMd(
-                                  locale,
-                                ).add_Hm().format(log.startTime),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.monitor_weight_outlined,
-                                    size: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      '${context.read<UnitService>().convertDisplayValue(totalVolume, UnitDimension.weight).toStringAsFixed(0)} ${context.read<UnitService>().suffixFor(UnitDimension.weight)}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                      width: DesignConstants.spacingM),
-                                  Icon(
-                                    Icons.replay_circle_filled_outlined,
-                                    size: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      l10n.setCount(
-                                        totalSets,
-                                      ), // Uses the plural function
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          trailing: duration != null
-                              ? Text(
-                                  formatDuration(duration),
-                                  style: TextStyle(
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                )
-                              : null,
-                          onTap: () => Navigator.of(context)
-                              .push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      WorkoutLogDetailScreen(logId: log.id!),
-                                ),
-                              )
-                              .then((_) => _loadHistory()),
-                        ),
-                      ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

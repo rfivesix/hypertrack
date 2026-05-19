@@ -18,12 +18,7 @@ import '../../../services/health/steps_sync_service.dart';
 import '../../sleep/data/sleep_day_repository.dart';
 import '../../pulse/domain/pulse_models.dart';
 import 'diary_health_sync_coordinator.dart';
-
-import 'package:drift/drift.dart' as drift;
-import '../../../data/database_helper.dart';
-import '../../../data/drift_database.dart' as db;
 import '../../workout/domain/models/workout_log.dart';
-import '../../workout/domain/models/set_log.dart';
 
 DateTime normalizeDiaryDate(DateTime date) => date.dateOnly;
 DateTime resolveDiaryInitialDate({DateTime? initialDate, DateTime? now}) {
@@ -85,6 +80,7 @@ class DiaryLoadCoordinator {
 class DiaryViewModel extends ChangeNotifier {
   final IDiaryRepository _nutritionRepo;
   final SupplementRepository _supplementRepo;
+  final IWorkoutRepository _workoutRepo;
 
   @visibleForTesting
   SupplementRepository get supplementRepo => _supplementRepo;
@@ -144,6 +140,7 @@ class DiaryViewModel extends ChangeNotifier {
     DateTime? initialDate,
   })  : _nutritionRepo = nutritionRepo,
         _supplementRepo = supplementRepo,
+        _workoutRepo = workoutRepo,
         selectedDateNotifier =
             ValueNotifier((initialDate ?? DateTime.now()).dateOnly) {
     healthSyncCoordinator.addListener(notifyListeners);
@@ -164,69 +161,7 @@ class DiaryViewModel extends ChangeNotifier {
     super.dispose();
   }
 
-  Stream<List<WorkoutLog>> watchWorkoutLogsForDate(DateTime date) {
-    final dbInstance = DatabaseHelper.instance.dbInstance;
-    final effectiveStart = DateTime(date.year, date.month, date.day);
-    final effectiveEnd = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
-    final query = dbInstance.select(dbInstance.workoutLogs)
-      ..where((tbl) =>
-          tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd) &
-          tbl.status.equals('completed'))
-      ..orderBy([
-        (t) => drift.OrderingTerm(
-              expression: t.startTime,
-              mode: drift.OrderingMode.desc,
-            ),
-      ]);
-
-    return query.watch().asyncMap((rows) async {
-      if (rows.isEmpty) return [];
-      final localIdsByUuid = {
-        for (final row in rows) row.id: row.localId,
-      };
-      final setRows = await (dbInstance.select(dbInstance.setLogs)
-            ..where((tbl) => tbl.workoutLogId.isIn(localIdsByUuid.keys))
-            ..orderBy([
-              (t) => drift.OrderingTerm(expression: t.workoutLogId),
-              (t) => drift.OrderingTerm(expression: t.logOrder),
-            ]))
-          .get();
-
-      final setsByWorkoutUuid = <String, List<db.SetLog>>{};
-      for (final setRow in setRows) {
-        setsByWorkoutUuid.putIfAbsent(setRow.workoutLogId, () => []).add(setRow);
-      }
-
-      return rows
-          .map((row) => WorkoutLog(
-                id: row.localId,
-                routineName: row.routineNameSnapshot,
-                startTime: row.startTime,
-                endTime: row.endTime,
-                notes: row.notes,
-                sets: (setsByWorkoutUuid[row.id] ?? [])
-                    .map((s) => SetLog(
-                          id: s.localId,
-                          workoutLogId: row.localId,
-                          exerciseName: s.exerciseNameSnapshot ?? 'Unknown',
-                          setType: s.setType,
-                          weightKg: s.weight,
-                          reps: s.reps,
-                          restTimeSeconds: s.restTimeSeconds,
-                          isCompleted: s.isCompleted,
-                          logOrder: s.logOrder,
-                          notes: s.notes,
-                          distanceKm: s.distance,
-                          durationSeconds: s.durationSeconds,
-                          rpe: s.rpe,
-                          rir: s.rir,
-                        ))
-                    .toList(),
-              ))
-          .toList();
-    });
-  }
 
   void setSelectedDate(DateTime date) {
     final diaryDate = normalizeDiaryDate(date);
@@ -269,7 +204,9 @@ class DiaryViewModel extends ChangeNotifier {
       _updateCalculatedState();
     });
 
-    _workoutsSubscription = watchWorkoutLogsForDate(diaryDate).listen((workouts) {
+    _workoutsSubscription = _workoutRepo
+        .watchWorkoutLogsForDateRange(diaryDate, diaryDate)
+        .listen((workouts) {
       _activeWorkouts = workouts;
       _updateCalculatedState();
     });

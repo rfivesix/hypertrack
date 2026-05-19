@@ -7,6 +7,7 @@ import 'package:train_libre/data/database_helper.dart';
 import 'package:train_libre/data/drift_database.dart'
     hide SupplementLog, Supplement, WorkoutLog, SetLog, Routine, Exercise;
 import 'package:train_libre/features/diary/data/sources/diary_local_data_source.dart';
+import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
 import 'package:train_libre/features/diary/data/nutrition_repository.dart';
 import 'package:train_libre/features/diary/domain/repositories/diary_repository.dart';
 import 'package:train_libre/features/diary/domain/models/food_entry.dart';
@@ -20,6 +21,7 @@ import 'package:train_libre/features/workout/domain/models/workout_log.dart';
 import 'package:train_libre/features/workout/domain/models/set_log.dart';
 import 'package:train_libre/features/workout/domain/models/routine.dart';
 import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart';
+import 'package:train_libre/features/workout/data/workout_repository.dart';
 
 class FakeSupplementRepository implements SupplementRepository {
   final supplementsController = StreamController<List<Supplement>>.broadcast();
@@ -54,6 +56,8 @@ class FakeSupplementRepository implements SupplementRepository {
 }
 
 class FakeWorkoutRepository implements IWorkoutRepository {
+  final workoutLogsController = StreamController<List<WorkoutLog>>.broadcast();
+
   @override
   Future<WorkoutLog?> getOngoingWorkout() async => null;
   @override
@@ -88,6 +92,21 @@ class FakeWorkoutRepository implements IWorkoutRepository {
   Future<List<SetLog>> getLastSetsForExercise(String exerciseName) async => [];
   @override
   Future<List<WorkoutLog>> getWorkoutLogsForDateRange(DateTime start, DateTime end) async => [];
+  @override
+  Stream<List<WorkoutLog>> watchFullWorkoutLogs() => Stream.value([]);
+  @override
+  Stream<List<SetLog>> watchSetLogsForWorkout(int workoutLogId) => Stream.value([]);
+  @override
+  Stream<List<Routine>> watchAllRoutines() => Stream.value([]);
+  Stream<List<WorkoutLog>> Function(DateTime start, DateTime end)? watchWorkoutLogsForDateRangeMock;
+
+  @override
+  Stream<List<WorkoutLog>> watchWorkoutLogsForDateRange(DateTime start, DateTime end) {
+    if (watchWorkoutLogsForDateRangeMock != null) {
+      return watchWorkoutLogsForDateRangeMock!(start, end);
+    }
+    return workoutLogsController.stream;
+  }
 }
 
 void main() {
@@ -105,10 +124,11 @@ void main() {
       DatabaseHelper.setDriftDb(database);
       localDataSource = DiaryLocalDataSource(database);
       repository = NutritionRepository(localDataSource: localDataSource);
+      final workoutDataSource = WorkoutLocalDataSource(database);
       viewModel = DiaryViewModel(
         nutritionRepo: repository,
         supplementRepo: FakeSupplementRepository(),
-        workoutRepo: FakeWorkoutRepository(),
+        workoutRepo: WorkoutRepository(localDataSource: workoutDataSource),
       );
     });
 
@@ -236,6 +256,118 @@ void main() {
       expect(viewModel.trackedSupplements, isNotEmpty);
       expect(viewModel.trackedSupplements.first.supplement.name, equals('Creatine'));
       expect(viewModel.trackedSupplements.first.totalDosedToday, equals(5.0));
+    });
+
+    test('watchFullWorkoutLogs emits completed logs reactively on DB insert', () async {
+      final date = DateTime(2026, 5, 19);
+      final workoutDataSource = WorkoutLocalDataSource(database);
+      final stream = workoutDataSource.watchFullWorkoutLogs();
+
+      final emissions = <List<WorkoutLog>>[];
+      final sub = stream.listen(emissions.add);
+
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(emissions.last, isEmpty);
+
+      // Insert a completed workout
+      await database.into(database.workoutLogs).insert(
+        WorkoutLogsCompanion(
+          startTime: drift.Value(date),
+          endTime: drift.Value(date.add(const Duration(minutes: 60))),
+          status: const drift.Value('completed'),
+          routineNameSnapshot: const drift.Value('Reactive Hypertrophy'),
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(emissions.last, hasLength(1));
+      expect(emissions.last.first.routineName, equals('Reactive Hypertrophy'));
+
+      await sub.cancel();
+    });
+
+    test('watchAllRoutines emits routines reactively on DB insert', () async {
+      final workoutDataSource = WorkoutLocalDataSource(database);
+      final stream = workoutDataSource.watchAllRoutines();
+
+      final emissions = <List<Routine>>[];
+      final sub = stream.listen(emissions.add);
+
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(emissions.last, isEmpty);
+
+      // Insert a new routine
+      await database.into(database.routines).insert(
+        RoutinesCompanion(
+          name: const drift.Value('Powerbuilding Day A'),
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(emissions.last, hasLength(1));
+      expect(emissions.last.first.name, equals('Powerbuilding Day A'));
+
+      await sub.cancel();
+    });
+
+    test('DiaryViewModel rapid date switches cancel old subscriptions and prevent stale processing', () async {
+      final dateA = DateTime(2026, 5, 19);
+      final dateB = DateTime(2026, 5, 20);
+
+      final workoutControllerA = StreamController<List<WorkoutLog>>.broadcast();
+      final workoutControllerB = StreamController<List<WorkoutLog>>.broadcast();
+
+      final fakeWorkoutRepo = FakeWorkoutRepository();
+      fakeWorkoutRepo.watchWorkoutLogsForDateRangeMock = (start, end) {
+        if (start.year == dateA.year && start.month == dateA.month && start.day == dateA.day) {
+          return workoutControllerA.stream;
+        } else {
+          return workoutControllerB.stream;
+        }
+      };
+
+      final testVM = DiaryViewModel(
+        nutritionRepo: repository,
+        supplementRepo: FakeSupplementRepository(),
+        workoutRepo: fakeWorkoutRepo,
+        initialDate: dateA,
+      );
+
+      // Initially selected dateA
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      // Switch rapidly to dateB
+      testVM.setSelectedDate(dateB);
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      // Emission on old dateA should NOT update view model
+      workoutControllerA.add([
+        WorkoutLog(
+          id: 1,
+          routineName: 'Stale Workout',
+          startTime: dateA,
+          endTime: dateA.add(const Duration(minutes: 45)),
+        )
+      ]);
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(testVM.workoutSummary, isNull);
+
+      // Emission on new dateB should update view model
+      workoutControllerB.add([
+        WorkoutLog(
+          id: 2,
+          routineName: 'Current Workout',
+          startTime: dateB,
+          endTime: dateB.add(const Duration(minutes: 45)),
+        )
+      ]);
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(testVM.workoutSummary, isNotNull);
+      expect(testVM.workoutSummary!['count'], equals(1));
+
+      await workoutControllerA.close();
+      await workoutControllerB.close();
+      testVM.dispose();
     });
   });
 }

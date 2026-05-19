@@ -25,6 +25,10 @@ class WorkoutRepository implements IWorkoutRepository {
       _localDataSource.getSetLogsForWorkout(workoutLogId);
 
   @override
+  Stream<List<SetLog>> watchSetLogsForWorkout(int workoutLogId) =>
+      _localDataSource.watchSetLogsForWorkout(workoutLogId);
+
+  @override
   Future<Routine?> getRoutineByName(String name) =>
       _localDataSource.getRoutineByName(name);
 
@@ -96,4 +100,17 @@ class WorkoutRepository implements IWorkoutRepository {
   Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
           DateTime start, DateTime end) =>
       _localDataSource.getWorkoutLogsForDateRange(start, end);
+
+  @override
+  Stream<List<WorkoutLog>> watchFullWorkoutLogs() =>
+      _localDataSource.watchFullWorkoutLogs();
+
+  @override
+  Stream<List<Routine>> watchAllRoutines() =>
+      _localDataSource.watchAllRoutines();
+
+  @override
+  Stream<List<WorkoutLog>> watchWorkoutLogsForDateRange(
+          DateTime start, DateTime end) =>
+      _localDataSource.watchWorkoutLogsForDateRange(start, end);
 }

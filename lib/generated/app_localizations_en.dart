@@ -622,6 +622,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
+  String get unsavedChangesTitle => 'Unsaved Changes';
+
+  @override
+  String get unsavedChangesContent =>
+      'You have unsaved changes. Do you want to save them before leaving?';
+
+  @override
   String get share => 'Share';
 
   @override

@@ -1244,6 +1244,18 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved Changes'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesContent.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Do you want to save them before leaving?'**
+  String get unsavedChangesContent;
+
   /// No description provided for @share.
   ///
   /// In en, this message translates to:

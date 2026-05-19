@@ -627,6 +627,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get save => 'Speichern';
 
   @override
+  String get unsavedChangesTitle => 'Ungespeicherte Änderungen';
+
+  @override
+  String get unsavedChangesContent =>
+      'Du hast ungespeicherte Änderungen. Möchtest du diese vor dem Verlassen speichern?';
+
+  @override
   String get share => 'Teilen';
 
   @override

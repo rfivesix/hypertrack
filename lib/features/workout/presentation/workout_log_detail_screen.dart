@@ -1,9 +1,11 @@
 // lib/screens/workout_log_detail_screen.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../domain/repositories/workout_repository.dart';
 import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
@@ -64,18 +66,75 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   Map<String, double> _categoryVolume = {};
   static const ShareService _shareService = ShareService();
 
+  StreamSubscription<List<SetLog>>? _setLogsSubscription;
+
   @override
   void initState() {
     super.initState();
     _notesController = TextEditingController();
     _loadDetails();
+    _setLogsSubscription = context
+        .read<IWorkoutRepository>()
+        .watchSetLogsForWorkout(widget.logId)
+        .listen(_onSetLogsUpdated);
   }
 
   @override
   void dispose() {
+    _setLogsSubscription?.cancel();
     _notesController.dispose();
     _clearControllers();
     super.dispose();
+  }
+
+  void _onSetLogsUpdated(List<SetLog> updatedSets) async {
+    if (!mounted || _isEditMode || _log == null) return;
+
+    final repo = context.read<IWorkoutRepository>();
+    final mutableSets = List<SetLog>.from(updatedSets);
+    await _calculateHistoricalPRs(mutableSets, beforeTimestamp: _log!.startTime);
+
+    final updatedGroups = <String, List<SetLog>>{};
+    for (var set in mutableSets) {
+      updatedGroups.putIfAbsent(set.exerciseName, () => []).add(set);
+    }
+
+    // Resolve any newly added exercises not in _exerciseDetails
+    for (final set in mutableSets) {
+      if (!_exerciseDetails.containsKey(set.exerciseName)) {
+        final ex = await repo.resolveExerciseForSetLog(set);
+        if (ex != null) {
+          _exerciseDetails[set.exerciseName] = ex;
+        }
+      }
+    }
+
+    // Recalculate volume based on the resolved map
+    final catVol = <String, double>{};
+    for (var set in mutableSets) {
+      final v = (set.weightKg ?? 0) * (set.reps ?? 0);
+      if (v > 0) {
+        final cat = _exerciseDetails[set.exerciseName]?.categoryName ?? 'Other';
+        catVol.update(cat, (val) => val + v, ifAbsent: () => v);
+      }
+    }
+
+    if (!mounted || _isEditMode) return;
+
+    setState(() {
+      _log = WorkoutLog(
+        id: _log!.id,
+        routineName: _log!.routineName,
+        startTime: _log!.startTime,
+        endTime: _log!.endTime,
+        notes: _log!.notes,
+        startZoneOffsetMinutes: _log!.startZoneOffsetMinutes,
+        endZoneOffsetMinutes: _log!.endZoneOffsetMinutes,
+        sets: mutableSets,
+      );
+      _groupedSets = updatedGroups;
+      _categoryVolume = catVol;
+    });
   }
 
   void _clearControllers() {

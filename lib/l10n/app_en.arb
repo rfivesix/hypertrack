@@ -227,6 +227,8 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "save": "Save",
+  "unsavedChangesTitle": "Unsaved Changes",
+  "unsavedChangesContent": "You have unsaved changes. Do you want to save them before leaving?",
   "share": "Share",
   "shareWorkout": "Share workout",
   "shareRoutine": "Share routine",

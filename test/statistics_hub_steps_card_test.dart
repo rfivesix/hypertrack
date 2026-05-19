@@ -178,6 +178,14 @@ class _FakeWorkoutRepository implements IWorkoutRepository {
   Future<List<WorkoutLog>> getWorkoutLogsForDateRange(
           DateTime start, DateTime end) async =>
       [];
+  @override
+  Stream<List<WorkoutLog>> watchFullWorkoutLogs() => const Stream.empty();
+  @override
+  Stream<List<SetLog>> watchSetLogsForWorkout(int workoutLogId) => const Stream.empty();
+  @override
+  Stream<List<Routine>> watchAllRoutines() => const Stream.empty();
+  @override
+  Stream<List<WorkoutLog>> watchWorkoutLogsForDateRange(DateTime start, DateTime end) => Stream.value([]);
 }
 
 class _FakePulseRepository implements PulseAnalysisRepository {
