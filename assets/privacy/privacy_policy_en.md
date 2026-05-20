@@ -1,7 +1,7 @@
 # Privacy Policy for the App "Train Libre"
 
-**Version:** 1.2  
-**As of:** May 20, 2026  
+**Version:** 1.3  
+**As of:** May 21, 2026  
 
 This privacy policy informs you in accordance with Articles 13 and 14 of the General Data Protection Regulation (GDPR) about the processing of personal data and health-related data in the mobile application "Train Libre". 
 
@@ -73,8 +73,10 @@ Train Libre offers the option to analyze meals via photos or free-text descripti
 
 * **Supported Providers:** OpenAI, Google Gemini, Anthropic Claude, Mistral AI, xAI Grok.
 * **Secure Local Key Storage:** The API key you enter is stored encrypted using the `flutter_secure_storage` package in the operating system's secured storage area (iOS Keychain or Android Keystore). The key remains exclusively local to your device and is never transmitted to us.
-* **Restricted Data Transmission:** When using the AI analysis, your device sends the captured meal photo or entered text description directly via an encrypted HTTPS connection to the API of the selected AI provider.
-* **Privacy Protection via System Prompt:** To maximize your privacy, the app's globally stored system prompt is configured to instruct the AI provider to identify only food components and estimate their weight in grams. The AI provider is explicitly instructed **not** to perform any nutrient calculations (such as calories, protein, fat, or carbohydrates). The determination of nutrients is then performed completely locally and offline on your device by matching the recognized food names with your local offline catalog. Thus, no personal nutrition or health history is transmitted to the AI services.
+* **Restricted Data Transmission:** When using the AI analysis, your device sends the captured meal photo or entered text description directly via an encrypted HTTPS connection to the API of the selected AI provider. **No personalized account data, user metadata, or historical profile information from Train Libre is attached to these external endpoint payloads.**
+* **Analytical AI Processing (No Generative Coaching):** The AI analysis is used for the **exclusive analytical purpose** of decomposing meal photos or text descriptions into **atomic ingredients**. Train Libre does **not** use AI to dynamically generate or propose personalized recipes, meal plans, or automated health coaching.
+* **Privacy Protection via System Prompt:** To maximize your privacy, the app's globally stored system prompt is configured to instruct the AI provider to identify only food components and estimate their weight in grams. The AI provider is explicitly instructed **not** to perform any nutrient calculations (such as calories, protein, fat, or carbohydrates). The determination of nutrients is then performed via a **hybrid approach**: recognized food names are matched against your **local offline database** using a deterministic **Jaro-Winkler-based matching engine** (SQLite/Drift).
+* **Local-First Alignment:** Core macro calculations, user profiling, and history tracking remain **strictly local-first** on your device and are never transmitted to external providers or used to train global AI models.
 * **Responsibility:** Since you are using your personal API key, you enter into a direct user relationship with the respective AI provider. Data processing by the AI provider is subject to their respective privacy policies. Please check your provider's privacy policy (especially regarding the use of data for training purposes and server locations) before using the function. For transmissions to providers outside the European Union (especially the USA), this occurs on the basis of standard contractual clauses or adequacy decisions that you have agreed with the provider.
 
 ### B. Offline Catalog Updates (Open Food Facts & Exercise Catalog)
