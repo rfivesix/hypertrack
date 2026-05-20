@@ -134,6 +134,7 @@ class AdaptiveScenarioHarness {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     final database = AppDatabase(NativeDatabase.memory());
+    DatabaseHelper.setDriftDb(database);
     final dbHelper = DatabaseHelper.forTesting(database);
     final productDb = ProductLocalDataSource.forTesting(database);
     final workoutDb = WorkoutLocalDataSource.forTesting(database);
