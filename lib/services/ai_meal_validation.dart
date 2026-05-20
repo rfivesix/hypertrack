@@ -1,5 +1,7 @@
 import '../features/diary/data/sources/product_local_data_source.dart';
 import '../features/diary/domain/models/food_item.dart';
+import 'ai_meal_context.dart';
+import 'ai_repair_candidate.dart';
 
 const int maxRepairPasses = 3;
 
@@ -23,22 +25,26 @@ class AiMealCandidate {
   final String? mealName;
   final String? description;
   final List<AiMealCandidateItem> items;
+  final AiMealContext? context;
 
   const AiMealCandidate({
     this.mealName,
     this.description,
     required this.items,
+    this.context,
   });
 
   AiMealCandidate copyWith({
     String? mealName,
     String? description,
     List<AiMealCandidateItem>? items,
+    AiMealContext? context,
   }) {
     return AiMealCandidate(
       mealName: mealName ?? this.mealName,
       description: description ?? this.description,
       items: items ?? this.items,
+      context: context ?? this.context,
     );
   }
 
@@ -47,6 +53,7 @@ class AiMealCandidate {
       if (mealName != null) 'meal_name': mealName,
       if (description != null) 'description': description,
       'items': items.map((item) => item.toJson()).toList(growable: false),
+      if (context != null) 'mealContext': context!.toJson(),
     };
   }
 }
@@ -270,6 +277,15 @@ class AiValidatedMealItem {
   bool get isMatched => match.bestMatch != null;
   bool get hasError =>
       issues.any((issue) => issue.severity == AiValidationSeverity.error);
+
+  /// Returns the top-N database alternatives as repair candidates.
+  /// Used during Phase D to inject real DB entities into the repair prompt.
+  List<AiRepairCandidate> getRepairCandidates({int limit = 5}) {
+    return match.alternatives
+        .take(limit)
+        .map(AiRepairCandidate.fromFoodItem)
+        .toList(growable: false);
+  }
 }
 
 class AiValidationResult {
@@ -376,6 +392,29 @@ class AiValidationResult {
             : '- item ${issue.itemIndex! + 1}';
         buffer.writeln('$prefix [${issue.code}]: ${issue.message}');
       }
+    }
+
+    // Per-item candidate injection
+    for (var i = 0; i < items.length; i++) {
+      final item = items[i];
+      final actionableIssues = item.issues
+          .where((issue) => issue.severity != AiValidationSeverity.info);
+      if (actionableIssues.isEmpty) continue;
+
+      final candidates = item.getRepairCandidates(limit: 5);
+      if (candidates.isEmpty) continue;
+
+      buffer
+        ..writeln('')
+        ..writeln('CANDIDATES for item ${i + 1} ("${item.candidate.name}"):')
+        ..writeln('Choose the EXACT name from one of these real database entries:');
+      for (final candidate in candidates) {
+        buffer.writeln(candidate.toPromptLine());
+      }
+      buffer.writeln(
+        'Pick the entry whose macro density best fits the meal context. '
+        'Use the EXACT name string as your "name" value.',
+      );
     }
 
     buffer.writeln(
@@ -502,6 +541,7 @@ class AiMealValidationEngine {
         targetContext: targetContext,
         macroFit: macroFit,
         mode: mode,
+        context: normalized.candidate.context,
       ),
     );
 
@@ -804,10 +844,77 @@ class AiMealValidationEngine {
       );
     }
 
-    if (_hasStateMismatch(item.name, match.bestMatch!.name)) {
+    bool stateMismatch = _hasStateMismatch(item.name, match.bestMatch!.name);
+    if (!stateMismatch && item.stateHint != null) {
+      final hint = item.stateHint!.toLowerCase();
+      final dbName = _normalizeText(match.bestMatch!.name);
+
+      bool isRawHint = hint == 'raw' || hint == 'roh';
+      bool isCookedHint = hint == 'cooked' || hint == 'boiled' || hint == 'gekocht' || hint == 'fried' || hint == 'gebraten' || hint == 'baked' || hint == 'gebacken';
+
+      bool isRawDb = dbName.contains('raw') || dbName.contains('roh');
+      bool isCookedDb = dbName.contains('cooked') || dbName.contains('boiled') || dbName.contains('gekocht') || dbName.contains('fried') || dbName.contains('gebraten') || dbName.contains('baked') || dbName.contains('gebacken') || dbName.contains('zubereitet');
+
+      if ((isRawHint && isCookedDb) || (isCookedHint && isRawDb)) {
+        stateMismatch = true;
+      }
+    }
+
+    if (stateMismatch) {
+      bool isExtremeMismatch = false;
+      final food = match.bestMatch!;
+
+      if (item.stateHint != null) {
+        final hint = item.stateHint!.toLowerCase();
+        bool isRawHint = hint == 'raw' || hint == 'roh';
+        bool isCookedHint = hint == 'cooked' || hint == 'boiled' || hint == 'gekocht' || hint == 'fried' || hint == 'gebraten' || hint == 'baked' || hint == 'gebacken';
+
+        FoodItem? alternativeWithHintState;
+        for (final alt in match.alternatives) {
+          final altName = _normalizeText(alt.name);
+          bool isRawAlt = altName.contains('raw') || altName.contains('roh');
+          bool isCookedAlt = altName.contains('cooked') || altName.contains('boiled') || altName.contains('gekocht') || altName.contains('fried') || altName.contains('gebraten') || altName.contains('baked') || altName.contains('gebacken') || altName.contains('zubereitet');
+
+          if ((isRawHint && isRawAlt) || (isCookedHint && isCookedAlt)) {
+            alternativeWithHintState = alt;
+            break;
+          }
+        }
+
+        if (alternativeWithHintState != null) {
+          final altKcal = alternativeWithHintState.calories;
+          if (altKcal > 0) {
+            final deltaPercent = (food.calories - altKcal).abs() / altKcal;
+            if (deltaPercent > 0.30) {
+              isExtremeMismatch = true;
+            }
+          }
+        } else {
+          final dbName = _normalizeText(food.name);
+          bool isRawDb = dbName.contains('raw') || dbName.contains('roh');
+          bool isCookedDb = dbName.contains('cooked') || dbName.contains('boiled') || dbName.contains('gekocht') || dbName.contains('fried') || dbName.contains('gebraten') || dbName.contains('baked') || dbName.contains('gebacken') || dbName.contains('zubereitet');
+
+          if ((isRawHint && isCookedDb) || (isCookedHint && isRawDb)) {
+            isExtremeMismatch = true;
+          }
+        }
+      } else {
+        final ai = _normalizeText(item.name);
+        final db = _normalizeText(food.name);
+        bool isRawAi = ai.contains('raw') || ai.contains('roh');
+        bool isCookedAi = ai.contains('cooked') || ai.contains('boiled') || ai.contains('gekocht') || ai.contains('fried') || ai.contains('gebraten') || ai.contains('baked') || ai.contains('gebacken');
+
+        bool isRawDb = db.contains('raw') || db.contains('roh');
+        bool isCookedDb = db.contains('cooked') || db.contains('boiled') || db.contains('gekocht') || db.contains('fried') || db.contains('gebraten') || db.contains('baked') || db.contains('gebacken') || db.contains('zubereitet');
+
+        if ((isRawAi && isCookedDb) || (isCookedAi && isRawDb)) {
+          isExtremeMismatch = true;
+        }
+      }
+
       issues.add(
         AiValidationIssue(
-          severity: AiValidationSeverity.warning,
+          severity: isExtremeMismatch ? AiValidationSeverity.error : AiValidationSeverity.warning,
           code: 'state_mismatch',
           message: 'The AI item state may not match the database entry.',
           itemIndex: index,
@@ -867,6 +974,22 @@ class AiMealValidationEngine {
       );
     }
 
+    // C4. Density anomaly detection
+    if (food.calories > 0 && item.grams > 0) {
+      final effectiveDensity = nutrition.kcal / item.grams * 100;
+      final dbDensity = food.calories.toDouble();
+      if (effectiveDensity > dbDensity * 2.0 || effectiveDensity < dbDensity / 2.0) {
+        issues.add(
+          AiValidationIssue(
+            severity: AiValidationSeverity.warning,
+            code: 'implausible_portion_density',
+            message: 'Portion calories deviate significantly from product density.',
+            itemIndex: index,
+          ),
+        );
+      }
+    }
+
     return issues;
   }
 
@@ -876,6 +999,7 @@ class AiMealValidationEngine {
     required AiMacroTargetContext? targetContext,
     required AiTargetFitResult? macroFit,
     required AiValidationMode mode,
+    AiMealContext? context,
   }) {
     final issues = <AiValidationIssue>[];
 
@@ -956,6 +1080,62 @@ class AiMealValidationEngine {
           message: 'Total macros are unusually high; review portions.',
         ),
       );
+    }
+
+    // C1 & C2: Meal Context Anchor validation
+    if (context != null) {
+      // C1. Anchor deviation check
+      if (context.expectedKcalRange.length >= 2) {
+        final low = context.expectedKcalRange[0];
+        final high = context.expectedKcalRange[1];
+        if (low > 0 || high > 0) {
+          if (totals.kcal < low * 0.50 || totals.kcal > high * 1.50) {
+            issues.add(
+              AiValidationIssue(
+                severity: AiValidationSeverity.error,
+                code: 'anchor_kcal_extreme',
+                message: 'Total kcal (${totals.kcalRounded} kcal) deviates extremely from meal context expected range [$low-$high].',
+              ),
+            );
+          } else if (totals.kcal < low * 0.75 || totals.kcal > high * 1.25) {
+            issues.add(
+              AiValidationIssue(
+                severity: AiValidationSeverity.warning,
+                code: 'anchor_kcal_deviation',
+                message: 'Total kcal (${totals.kcalRounded} kcal) deviates from meal context expected range [$low-$high].',
+              ),
+            );
+          }
+        }
+      }
+
+      // C2. Macro profile check
+      if (totals.kcal > 0) {
+        final proteinPercent = (totals.protein * 4) / totals.kcal * 100;
+        final carbsPercent = (totals.carbs * 4) / totals.kcal * 100;
+        final fatPercent = (totals.fat * 9) / totals.kcal * 100;
+
+        void checkMacro(String key, double actualVal, String macroName) {
+          final range = context.expectedMacroProfile[key];
+          if (range != null && range.length >= 2) {
+            final low = range[0];
+            final high = range[1];
+            if (actualVal < low - 15 || actualVal > high + 15) {
+              issues.add(
+                AiValidationIssue(
+                  severity: AiValidationSeverity.warning,
+                  code: 'anchor_macro_profile_deviation',
+                  message: 'Actual $macroName percent (${actualVal.round()}%) deviates by >15% from expected context range [$low-$high%].',
+                ),
+              );
+            }
+          }
+        }
+
+        checkMacro('proteinPercent', proteinPercent, 'protein');
+        checkMacro('carbsPercent', carbsPercent, 'carbs');
+        checkMacro('fatPercent', fatPercent, 'fat');
+      }
     }
 
     return issues;

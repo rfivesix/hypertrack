@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../generated/app_localizations.dart';
+import '../../../services/ai_matching_language_service.dart';
 import '../../../services/ai_service.dart';
 import '../../../services/theme_service.dart';
 import '../../../theme/color_constants.dart';
@@ -34,6 +35,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   bool _isTesting = false;
   bool _obscureKey = true;
   bool _hasKey = false;
+  AiMatchingLanguage _aiMatchingLanguage = AiMatchingLanguage.auto;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
         await AiService.instance.resolveAndPersistSelectedModel(provider);
     final key = await AiService.instance.getApiKey(provider);
     final models = await AiService.instance.getModelOptions(provider);
+    final aiMatchLang = await AiMatchingLanguageService.readChoice();
     final resolvedModel = _resolveModelSelection(model, models, provider);
     if (mounted) {
       setState(() {
@@ -64,6 +67,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
           provider,
         );
         _hasKey = key != null && key.isNotEmpty;
+        _aiMatchingLanguage = aiMatchLang;
         if (_hasKey) {
           // Show masked placeholder — never display the real key
           _keyController.text = '••••••••••••••••••••';
@@ -349,6 +353,37 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                                   onChanged: _onModelChanged,
                                 ),
                           const SizedBox(height: 10),
+                          // AI Matching Language
+                          DropdownButtonFormField<AiMatchingLanguage>(
+                            initialValue: _aiMatchingLanguage,
+                            decoration: const InputDecoration(
+                              labelText: 'AI Food Name Language',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: AiMatchingLanguage.auto,
+                                child: Text('Auto'),
+                              ),
+                              DropdownMenuItem(
+                                value: AiMatchingLanguage.en,
+                                child: Text('English'),
+                              ),
+                              DropdownMenuItem(
+                                value: AiMatchingLanguage.de,
+                                child: Text('Deutsch'),
+                              ),
+                            ],
+                            onChanged: (v) async {
+                              if (v == null) return;
+                              setState(() => _aiMatchingLanguage = v);
+                              await AiMatchingLanguageService.writeChoice(v);
+                            },
+                          ),
                           TextField(
                             controller: _keyController,
                             obscureText: _obscureKey,

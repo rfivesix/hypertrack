@@ -4316,6 +4316,12 @@ abstract class AppLocalizations {
   /// **'Add item manually'**
   String get aiReviewAddItem;
 
+  /// No description provided for @aiReviewReplaceItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace item'**
+  String get aiReviewReplaceItem;
+
   /// No description provided for @aiReviewSaveToDiary.
   ///
   /// In en, this message translates to:

@@ -918,6 +918,7 @@
   "aiReviewNoMatch": "No match — tap to search",
   "aiReviewConfidence": "Confidence",
   "aiReviewAddItem": "Add item manually",
+  "aiReviewReplaceItem": "Replace item",
   "aiReviewSaveToDiary": "Save to Diary",
   "aiReviewFeedbackHint": "Describe what the AI got wrong...",
   "aiReviewRetryButton": "Retry with Feedback",

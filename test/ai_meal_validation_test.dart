@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/features/diary/domain/models/food_item.dart';
+import 'package:train_libre/services/ai_meal_context.dart';
+import 'package:train_libre/services/ai_repair_candidate.dart';
 import 'package:train_libre/services/ai_meal_validation.dart';
 
 FoodItem food(
@@ -223,6 +225,135 @@ void main() {
       expect(outcome.repairLimitReached, isTrue);
       expect(outcome.validation.passed, isFalse);
       expect(outcome.validation.items.single.candidate.grams, 103);
+    });
+  });
+
+  group('AiMealContext & AiRepairCandidate models', () {
+    test('AiMealContext JSON serialization', () {
+      final json = {
+        'dishType': 'Döner Kebab',
+        'expectedKcalRange': [600, 800],
+        'expectedMacroProfile': {
+          'proteinPercent': [20, 30],
+          'carbsPercent': [40, 50],
+          'fatPercent': [25, 35],
+        },
+        'cookingMethod': 'roasted',
+        'contextNotes': 'spicy',
+      };
+      final context = AiMealContext.fromJson(json);
+      expect(context.dishType, 'Döner Kebab');
+      expect(context.expectedKcalRange, [600, 800]);
+      expect(context.expectedMacroProfile['proteinPercent'], [20, 30]);
+
+      final serialized = context.toJson();
+      expect(serialized['dishType'], 'Döner Kebab');
+      expect(serialized['expectedKcalRange'], [600, 800]);
+    });
+
+    test('AiRepairCandidate prompt line', () {
+      final f = food('Chicken breast', kcal: 120, protein: 24, carbs: 0, fat: 2);
+      final candidate = AiRepairCandidate.fromFoodItem(f);
+      expect(candidate.exactName, 'Chicken breast');
+      expect(candidate.kcalPer100g, 120);
+      expect(candidate.source, 'base');
+      expect(
+        candidate.toPromptLine(),
+        '  - "Chicken breast" (120 kcal | P24 C0 F2 per 100g) [base]',
+      );
+    });
+  });
+
+  group('AiMealValidationEngine - Advanced Cross-Check Rules', () {
+    test('C1: expected kcal range check (deviation and extreme)', () async {
+      final engine = engineWith({
+        'chicken': [food('Chicken', kcal: 100, protein: 20, carbs: 0, fat: 2)],
+      });
+
+      final context = const AiMealContext(
+        dishType: 'Test Kebab',
+        expectedKcalRange: [400, 600],
+        expectedMacroProfile: {},
+      );
+
+      // 1. Fits in range (e.g. 500 kcal) -> no deviation
+      var result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'Chicken', grams: 500)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_kcal_deviation' || issue.code == 'anchor_kcal_extreme'), isFalse);
+
+      // 2. Deviates by >25% (e.g. 290 kcal is below 400 * 0.75 = 300 kcal) -> warning
+      result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'Chicken', grams: 290)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_kcal_deviation'), isTrue);
+
+      // 3. Deviates by >50% (e.g. 190 kcal is below 400 * 0.50 = 200 kcal) -> error
+      result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'Chicken', grams: 190)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_kcal_extreme'), isTrue);
+    });
+
+    test('C2: expected macro profile percent checks', () async {
+      final engine = engineWith({
+        'high fat food': [food('High Fat Food', kcal: 200, protein: 5, carbs: 5, fat: 18)], // P10% C10% F81% approx
+      });
+
+      final context = const AiMealContext(
+        dishType: 'Lean Meal',
+        expectedKcalRange: [100, 500],
+        expectedMacroProfile: {
+          'fatPercent': [10, 20],
+        },
+      );
+
+      final result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'High Fat Food', grams: 100)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_macro_profile_deviation'), isTrue);
+    });
+
+    test('C3: cooking state mismatch escalation to error', () async {
+      final engine = engineWith({
+        'chicken raw': [
+          food('Chicken raw', kcal: 110, protein: 23, carbs: 0, fat: 1),
+          food('Chicken cooked', kcal: 165, protein: 31, carbs: 0, fat: 4),
+        ],
+      });
+
+      final result = await engine.validateMealCandidate(
+        candidate: const AiMealCandidate(
+          items: [
+            AiMealCandidateItem(
+              name: 'Chicken raw',
+              grams: 100,
+              stateHint: 'cooked',
+            )
+          ],
+        ),
+        mode: AiValidationMode.capture,
+      );
+
+      final issue = result.allIssues.firstWhere((issue) => issue.code == 'state_mismatch');
+      expect(issue.severity, AiValidationSeverity.error);
     });
   });
 }

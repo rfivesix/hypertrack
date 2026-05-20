@@ -2369,6 +2369,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiReviewAddItem => 'Add item manually';
 
   @override
+  String get aiReviewReplaceItem => 'Replace item';
+
+  @override
   String get aiReviewSaveToDiary => 'Save to Diary';
 
   @override

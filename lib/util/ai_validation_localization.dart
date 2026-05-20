@@ -75,6 +75,7 @@ String aiValidationIssueText(
         issue.parameters['delta'] as int? ?? 0,
       );
     default:
+      if (issue.message.isNotEmpty) return issue.message;
       return l10n.aiValidationUnknownIssue(issue.code);
   }
 }

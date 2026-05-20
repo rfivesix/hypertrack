@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import 'ai_meal_validation.dart';
+import 'ai_meal_context.dart';
 
 // ---------------------------------------------------------------------------
 // Enums & Data Models
@@ -308,23 +309,49 @@ class AiService {
 You are a nutrition analysis assistant. Analyze the provided meal image(s) or description.
 
 CRITICAL RULES:
-1. Break down EVERY meal into its individual, atomic, loggable food components.
+1. Establish a holistic meal context anchor *before* decomposing. Identify the dish and its overall cooking method, expected calories, and macro percentage ranges based on culinary knowledge.
+2. Break down EVERY meal into its individual, atomic, loggable food components.
    For example, "Cheeseburger with fries" must become: burger bun, beef patty, cheese slice, lettuce, tomato, ketchup, french fries — each as a separate item with its own estimated weight.
-2. Do NOT return composite meal names. Always decompose into individual ingredients.
-3. Estimate weights in grams as accurately as possible based on visual cues or typical serving sizes.
-4. Set confidence between 0.0 and 1.0 based on how certain you are about each item and its quantity.
-5. CONSOLIDATE duplicate items: if the user mentions or you detect multiple quantities of the same food (e.g. "4 eggs"), return ONE single entry with the total combined weight. Never return duplicate rows for the same food item.
-6. Do NOT estimate, guess, or return any nutritional data (calories, protein, fat, carbs, etc.). Your job is ONLY to identify the food name and estimate the realistic total portion weight in grams. The app will look up nutritional values from its own database.
-7. Use SIMPLE, SHORT base food names only. For example, use "Banane" not "Reife Banane", "Ei" not "Gekochtes Ei", "Apfel" not "Grüner Apfel". Keep names as generic and simple as possible to maximize database matching.$langRule
+3. Do NOT return composite meal names. Always decompose into individual ingredients.
+4. Estimate weights in grams as accurately as possible based on visual cues or typical serving sizes.
+5. Set confidence between 0.0 and 1.0 based on how certain you are about each item and its quantity.
+6. Provide a "stateHint" string for each item (e.g. "cooked", "raw", "fried", "baked", "boiled", "grilled", etc.) to help the matching engine select the correct database variant.
+7. CONSOLIDATE duplicate items: if the user mentions or you detect multiple quantities of the same food (e.g. "4 eggs"), return ONE single entry with the total combined weight. Never return duplicate rows for the same food item.
+8. Do NOT estimate, guess, or return any nutritional data (calories, protein, fat, carbs, etc.) inside the items array. The items array must ONLY contain identification and estimated weight. The holistic "mealContext" anchor *does* contain expected macronutrient ranges for the overall meal.
+9. Use SIMPLE, SHORT base food names only. For example, use "Banane" not "Reife Banane", "Ei" not "Gekochtes Ei", "Apfel" not "Grüner Apfel". Keep names as generic and simple as possible to maximize database matching.$langRule
 
-Respond ONLY with a valid JSON array. No markdown, no explanation, no extra text.
-Each element must have exactly these fields:
-- "name": string (individual food component name)
-- "estimatedGrams": integer (estimated weight in grams)
-- "confidence": number (0.0 to 1.0)
+Respond ONLY with a valid JSON object. No markdown, no explanation, no extra text.
+The JSON object must have exactly these two fields:
+1. "mealContext": An object containing:
+   - "dishType": string (the name of the dish/meal)
+   - "expectedKcalRange": array of two integers [low, high]
+   - "expectedMacroProfile": an object with keys "proteinPercent", "carbsPercent", "fatPercent", each being an array of two integers [low, high] (representing the range of percentage of calories, e.g. [20, 30])
+   - "cookingMethod": string (overall cooking method)
+   - "contextNotes": string (contextual culinary details)
+2. "items": An array where each element has:
+   - "name": string (individual food component name)
+   - "estimatedGrams": integer (estimated weight in grams)
+   - "confidence": number (0.0 to 1.0)
+   - "stateHint": string or null (e.g. "cooked", "raw", "boiled")
 
 Example response:
-[{"name": "Egg", "estimatedGrams": 240, "confidence": 0.9}, {"name": "Butter", "estimatedGrams": 10, "confidence": 0.7}]
+{
+  "mealContext": {
+    "dishType": "Omelette with Butter",
+    "expectedKcalRange": [250, 350],
+    "expectedMacroProfile": {
+      "proteinPercent": [20, 30],
+      "carbsPercent": [1, 5],
+      "fatPercent": [70, 80]
+    },
+    "cookingMethod": "pan-fried in butter",
+    "contextNotes": "Made with 3 eggs and 10g of butter"
+  },
+  "items": [
+    {"name": "Egg", "estimatedGrams": 150, "confidence": 0.9, "stateHint": "cooked"},
+    {"name": "Butter", "estimatedGrams": 10, "confidence": 0.8, "stateHint": "raw"}
+  ]
+}
 ''';
   }
 
@@ -584,121 +611,56 @@ Example response:
   ///
   /// Optionally accepts a [textHint] describing the meal for better accuracy.
   /// Pass [languageCode] (e.g. 'de') to get food names in that language.
-  Future<List<AiSuggestedItem>> analyzeImages(
+  /// Analyzes one or more meal images and returns an AI suggested meal candidate.
+  ///
+  /// Optionally accepts a [textHint] describing the meal for better accuracy.
+  /// Pass [languageCode] (e.g. 'de') to get food names in that language.
+  Future<AiMealCandidate> analyzeImages(
     List<File> images, {
     String? textHint,
     String? languageCode,
   }) async {
-    final provider = await getSelectedProvider();
-    final apiKey = await getApiKey(provider);
-    if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
-    final model = await resolveAndPersistSelectedModel(provider);
-
-    // Encode images to base64
-    final imageDataList = <String>[];
-    for (final img in images) {
-      final bytes = await img.readAsBytes();
-      imageDataList.add(await compute(base64Encode, bytes));
-    }
-
     final userContent =
         textHint ?? 'Analyze this meal and identify all food components.';
     final prompt = _buildSystemPrompt(languageCode: languageCode);
 
-    switch (provider) {
-      case AiProvider.openai:
-        return _callOpenAi(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.gemini:
-        return _callGemini(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.anthropic:
-        return _callAnthropic(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.mistral:
-        return _callMistral(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.xai:
-        return _callXai(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-    }
+    final raw = await _callSelectedProviderRaw(
+      userContent: userContent,
+      systemPrompt: prompt,
+      images: images,
+      temperature: 0.3,
+    );
+
+    return _parseMealCandidateFromContent(raw);
   }
 
-  /// Analyzes a text-only meal description and returns suggested food items.
+  /// Analyzes a text-only meal description and returns an AI suggested meal candidate.
   ///
   /// Pass [languageCode] (e.g. 'de') to get food names in that language.
-  Future<List<AiSuggestedItem>> analyzeText(
+  Future<AiMealCandidate> analyzeText(
     String description, {
     String? languageCode,
   }) async {
-    final provider = await getSelectedProvider();
-    final apiKey = await getApiKey(provider);
-    if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
-    final model = await resolveAndPersistSelectedModel(provider);
     final prompt = _buildSystemPrompt(languageCode: languageCode);
 
-    switch (provider) {
-      case AiProvider.openai:
-        return _callOpenAi(apiKey, model, description, [],
-            systemPrompt: prompt);
-      case AiProvider.gemini:
-        return _callGemini(apiKey, model, description, [],
-            systemPrompt: prompt);
-      case AiProvider.anthropic:
-        return _callAnthropic(
-          apiKey,
-          model,
-          description,
-          [],
-          systemPrompt: prompt,
-        );
-      case AiProvider.mistral:
-        return _callMistral(apiKey, model, description, [],
-            systemPrompt: prompt);
-      case AiProvider.xai:
-        return _callXai(apiKey, model, description, [], systemPrompt: prompt);
-    }
+    final raw = await _callSelectedProviderRaw(
+      userContent: description,
+      systemPrompt: prompt,
+      temperature: 0.3,
+    );
+
+    return _parseMealCandidateFromContent(raw);
   }
 
   /// Retries analysis with user feedback to refine the results.
   ///
   /// Pass [languageCode] (e.g. 'de') to get food names in that language.
-  Future<List<AiSuggestedItem>> retry({
+  Future<AiMealCandidate> retry({
     required List<AiSuggestedItem> previousResults,
     required String feedback,
     List<File>? images,
     String? languageCode,
   }) async {
-    final provider = await getSelectedProvider();
-    final apiKey = await getApiKey(provider);
-    if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
-    final model = await resolveAndPersistSelectedModel(provider);
-
     final previousJson = jsonEncode(
       previousResults.map((e) => e.toJson()).toList(),
     );
@@ -708,60 +670,18 @@ $previousJson
 
 User correction/feedback: $feedback
 
-Please provide an updated analysis incorporating the user's feedback. Return the corrected JSON array.''';
+Please provide an updated analysis incorporating the user's feedback. Return the corrected JSON object containing mealContext and items.''';
 
-    // Re-encode images if provided
-    final imageDataList = <String>[];
-    if (images != null) {
-      for (final img in images) {
-        final bytes = await img.readAsBytes();
-        imageDataList.add(await compute(base64Encode, bytes));
-      }
-    }
     final prompt = _buildSystemPrompt(languageCode: languageCode);
 
-    switch (provider) {
-      case AiProvider.openai:
-        return _callOpenAi(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.gemini:
-        return _callGemini(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.anthropic:
-        return _callAnthropic(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.mistral:
-        return _callMistral(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-      case AiProvider.xai:
-        return _callXai(
-          apiKey,
-          model,
-          userContent,
-          imageDataList,
-          systemPrompt: prompt,
-        );
-    }
+    final raw = await _callSelectedProviderRaw(
+      userContent: userContent,
+      systemPrompt: prompt,
+      images: images,
+      temperature: 0.3,
+    );
+
+    return _parseMealCandidateFromContent(raw);
   }
 
   /// Tests whether the API key is valid by sending a minimal request.
@@ -1401,6 +1321,112 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   // JSON Parsing
   // ---------------------------------------------------------------------------
 
+  /// Extracts the meal candidate (holistic context and items) from the AI response.
+  ///
+  /// Supports both wrapping JSON object with mealContext + items, and flat JSON array fallback.
+  AiMealCandidate _parseMealCandidateFromContent(String content) {
+    // Strip markdown code fences if present
+    var cleaned = content.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replaceFirst(RegExp(r'^```\w*\n?'), '');
+      cleaned = cleaned.replaceFirst(RegExp(r'\n?```$'), '');
+      cleaned = cleaned.trim();
+    }
+
+    // Try to parse as JSON object
+    try {
+      final decoded = jsonDecode(cleaned);
+      if (decoded is Map<String, dynamic>) {
+        final contextMap = decoded['mealContext'];
+        final AiMealContext? mealContext = contextMap != null && contextMap is Map<String, dynamic>
+            ? AiMealContext.fromJson(contextMap)
+            : null;
+
+        final rawItems = decoded['items'];
+        if (rawItems is List) {
+          final items = rawItems
+              .map((e) => AiMealCandidateItem(
+                    name: (e['name'] as String?) ?? '',
+                    grams: (e['estimatedGrams'] as num?)?.toInt() ?? 0,
+                    confidence: (e['confidence'] as num?)?.toDouble(),
+                    stateHint: e['stateHint'] as String?,
+                  ))
+              .toList();
+          return AiMealCandidate(
+            context: mealContext,
+            items: items,
+          );
+        }
+      }
+
+      // Fallback: If it's a List directly
+      if (decoded is List) {
+        final items = decoded
+            .map((e) => AiMealCandidateItem(
+                  name: (e['name'] as String?) ?? '',
+                  grams: (e['estimatedGrams'] as num?)?.toInt() ?? 0,
+                  confidence: (e['confidence'] as num?)?.toDouble(),
+                  stateHint: e['stateHint'] as String?,
+                ))
+            .toList();
+        return AiMealCandidate(items: items);
+      }
+    } catch (_) {
+      // If direct jsonDecode failed, try fallback boundary-search
+    }
+
+    // Boundary search fallback for robustness
+    final startBracket = cleaned.indexOf('{');
+    final endBracket = cleaned.lastIndexOf('}');
+    if (startBracket != -1 && endBracket != -1 && endBracket > startBracket) {
+      try {
+        final jsonStr = cleaned.substring(startBracket, endBracket + 1);
+        final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
+        final contextMap = decoded['mealContext'];
+        final AiMealContext? mealContext = contextMap != null && contextMap is Map<String, dynamic>
+            ? AiMealContext.fromJson(contextMap)
+            : null;
+
+        final rawItems = decoded['items'];
+        if (rawItems is List) {
+          final items = rawItems
+              .map((e) => AiMealCandidateItem(
+                    name: (e['name'] as String?) ?? '',
+                    grams: (e['estimatedGrams'] as num?)?.toInt() ?? 0,
+                    confidence: (e['confidence'] as num?)?.toDouble(),
+                    stateHint: e['stateHint'] as String?,
+                  ))
+              .toList();
+          return AiMealCandidate(
+            context: mealContext,
+            items: items,
+          );
+        }
+      } catch (_) {}
+    }
+
+    // Array boundary search fallback
+    final startArray = cleaned.indexOf('[');
+    final endArray = cleaned.lastIndexOf(']');
+    if (startArray != -1 && endArray != -1 && endArray > startArray) {
+      try {
+        final jsonStr = cleaned.substring(startArray, endArray + 1);
+        final List<dynamic> itemsList = jsonDecode(jsonStr) as List<dynamic>;
+        final items = itemsList
+            .map((e) => AiMealCandidateItem(
+                  name: (e['name'] as String?) ?? '',
+                  grams: (e['estimatedGrams'] as num?)?.toInt() ?? 0,
+                  confidence: (e['confidence'] as num?)?.toDouble(),
+                  stateHint: e['stateHint'] as String?,
+                ))
+            .toList();
+        return AiMealCandidate(items: items);
+      } catch (_) {}
+    }
+
+    throw const AiParseException('No valid JSON object or array found in response.');
+  }
+
   /// Extracts the JSON array from the AI response text.
   ///
   /// Handles cases where the AI wraps JSON in markdown code fences.
@@ -1441,6 +1467,7 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     required AiValidationResult validation,
     List<File>? images,
     String? languageCode,
+    AiMealContext? mealContext,
   }) async {
     final userContent = '''
 Previous meal capture candidate:
@@ -1448,18 +1475,20 @@ ${jsonEncode(candidate.items.map((item) => {
               'name': item.name,
               'estimatedGrams': item.grams,
               if (item.confidence != null) 'confidence': item.confidence,
+              if (item.stateHint != null) 'stateHint': item.stateHint,
             }).toList())}
 
 Deterministic validation feedback:
 ${validation.toRepairFeedback()}
 
-Repair the candidate. Prefer simple database-matchable food names and realistic gram amounts.''';
+Repair the candidate. When database candidates are listed, pick the EXACT name from the list. Adjust grams to fit the meal context anchor.''';
 
     final raw = await _callSelectedProviderRaw(
       userContent: userContent,
       images: images,
       systemPrompt: _buildRepairPrompt(
         languageCode: languageCode,
+        mealContext: mealContext,
       ),
       temperature: 0.1,
     );
@@ -1475,6 +1504,7 @@ Repair the candidate. Prefer simple database-matchable food names and realistic 
             ),
           )
           .toList(growable: false),
+      context: candidate.context,
     );
   }
 
@@ -1548,21 +1578,34 @@ Repair the candidate. Prefer simple database-matchable food names and realistic 
 
   static String _buildRepairPrompt({
     String? languageCode,
+    AiMealContext? mealContext,
   }) {
     final langRule = (languageCode != null && languageCode.isNotEmpty)
         ? '\n- Return food names in the "$languageCode" language.'
+        : '';
+
+    final anchorBlock = mealContext != null
+        ? '\n\nMEAL CONTEXT ANCHOR:\n'
+            '- Dish: ${mealContext.dishType}\n'
+            '- Expected total kcal: ${mealContext.expectedKcalRange[0]}-${mealContext.expectedKcalRange[1]}\n'
+            '- Expected macro profile: P${mealContext.expectedMacroProfile["proteinPercent"]}% '
+            'C${mealContext.expectedMacroProfile["carbsPercent"]}% '
+            'F${mealContext.expectedMacroProfile["fatPercent"]}%\n'
+            '- Cooking: ${mealContext.cookingMethod ?? "unknown"}\n'
+            'Adjust gram amounts so the total aligns with this anchor.'
         : '';
 
     return '''
 You are repairing an AI meal candidate after deterministic local validation.
 
 Rules:
-- Make the smallest useful correction that fixes validation issues.
-- Use simple, generic, local-database-matchable food names.
+- When CANDIDATES are listed for an item, you MUST pick one of the provided exact names. Do NOT invent new names.
+- If no candidates are listed, use simple, generic, local-database-matchable food names.
+- Adjust estimatedGrams to bring the total meal nutrition closer to the meal context anchor.
 - Correct unrealistic quantities.
 - Do not invent or return nutrition values.
 - Respect strict target macros when provided; local code will verify kcal/protein/carbs/fat again.
-- Use low creativity and keep the output deterministic.$langRule
+- Use low creativity and keep the output deterministic.$langRule$anchorBlock
 
 Return ONLY a valid JSON array:
 [{"name":"Food name","estimatedGrams":100,"confidence":0.8}]

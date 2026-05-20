@@ -968,6 +968,7 @@
   "aiReviewNoMatch": "Kein Treffer — tippe zum Suchen",
   "aiReviewConfidence": "Konfidenz",
   "aiReviewAddItem": "Zutat manuell hinzufügen",
+  "aiReviewReplaceItem": "Zutat ersetzen",
   "aiReviewSaveToDiary": "Ins Tagebuch speichern",
   "aiReviewFeedbackHint": "Beschreibe, was die KI falsch erkannt hat...",
   "aiReviewRetryButton": "Mit Korrektur erneut versuchen",

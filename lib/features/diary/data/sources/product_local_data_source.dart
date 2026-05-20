@@ -464,6 +464,139 @@ class ProductLocalDataSource {
     );
   }
 
+  /// Returns up to [limit] fuzzy-match candidates for an AI-identified food name,
+  /// enriched with macro density profiles for injection into repair prompts.
+  ///
+  /// Unlike [fuzzyMatchForAi] which returns the single best match for initial
+  /// validation, this method returns a broader set of plausible alternatives
+  /// sorted by a composite score of text similarity + macro plausibility.
+  Future<List<FoodItem>> fuzzyMatchCandidatesForRepair(
+    String aiName, {
+    String? stateHint,
+    int limit = 5,
+  }) async {
+    final tokens = aiName
+        .trim()
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.length > 1)
+        .toList();
+    if (tokens.isEmpty) return [];
+
+    final dbInstance = await database;
+    const int fetchLimit = 30;
+
+    Expression<int> sourcePriority(GeneratedColumn<String> source) {
+      return CaseWhenExpression<int>(
+        cases: [
+          CaseWhen(source.equals('base'), then: const Constant(0)),
+          CaseWhen(source.equals('user'), then: const Constant(1)),
+        ],
+        orElse: const Constant(2),
+      );
+    }
+
+    List<db.Product> rows = [];
+
+    if (tokens.length > 1) {
+      var query = dbInstance.select(dbInstance.products)
+        ..limit(fetchLimit)
+        ..orderBy([
+          (t) => OrderingTerm(
+              expression: sourcePriority(t.source), mode: OrderingMode.asc),
+          (t) =>
+              OrderingTerm(expression: t.name.length, mode: OrderingMode.asc),
+        ]);
+      for (final token in tokens) {
+        query = query..where((t) => t.name.like('%$token%'));
+      }
+      rows = await query.get();
+    }
+
+    if (rows.isEmpty) {
+      tokens.sort((a, b) => b.length.compareTo(a.length));
+      final bestToken = tokens.first;
+      rows = await (dbInstance.select(dbInstance.products)
+            ..where((t) => t.name.like('%$bestToken%'))
+            ..orderBy([
+              (t) => OrderingTerm(
+                  expression: sourcePriority(t.source), mode: OrderingMode.asc),
+              (t) => OrderingTerm(
+                  expression: t.name.length, mode: OrderingMode.asc),
+            ])
+            ..limit(fetchLimit))
+          .get();
+    }
+
+    if (rows.isEmpty) return [];
+
+    final items = rows.map(_mapRowToFoodItem).toList();
+
+    // Re-rank items incorporating stateHint
+    items.sort((a, b) {
+      final aName = a.getLocalizedName(null).toLowerCase();
+      final bName = b.getLocalizedName(null).toLowerCase();
+
+      // State hint scoring/boosting
+      double stateBoost(String name) {
+        if (stateHint != null) {
+          final hint = stateHint.toLowerCase();
+          if (hint == 'cooked') {
+            if (name.contains('gekocht') || name.contains('zubereitet') || name.contains('gebraten') || name.contains('gebacken')) {
+              return -2.0; // Lower is better in sort (ascending)
+            }
+            if (name.contains('roh')) {
+              return 2.0; // raw is penalized when we expect cooked
+            }
+          } else if (hint == 'raw') {
+            if (name.contains('roh')) {
+              return -2.0;
+            }
+            if (name.contains('gekocht') || name.contains('zubereitet') || name.contains('gebraten')) {
+              return 2.0;
+            }
+          }
+        }
+        return 0.0;
+      }
+
+      final scoreA = stateBoost(aName);
+      final scoreB = stateBoost(bName);
+      if (scoreA != scoreB) return scoreA.compareTo(scoreB);
+
+      // Fallback to text matching
+      final searchLower = aiName.trim().toLowerCase();
+      int textScore(String name) {
+        if (name == searchLower) return 0;
+        if (name.startsWith(searchLower)) return 1;
+        return 2;
+      }
+
+      final sa = textScore(aName);
+      final sb = textScore(bName);
+      if (sa != sb) return sa.compareTo(sb);
+
+      int srcPri(FoodItemSource s) {
+        switch (s) {
+          case FoodItemSource.base:
+            return 0;
+          case FoodItemSource.user:
+            return 1;
+          case FoodItemSource.off:
+            return 2;
+        }
+      }
+
+      final spa = srcPri(a.source);
+      final spb = srcPri(b.source);
+      if (spa != spb) return spa.compareTo(spb);
+
+      return aName.length.compareTo(bName.length);
+    });
+
+    return items.take(limit).toList();
+  }
+
   // === Legacy / Compatibility ===
   Future<dynamic> get offDatabase async => null;
 

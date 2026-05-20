@@ -2381,6 +2381,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aiReviewAddItem => 'Zutat manuell hinzufügen';
 
   @override
+  String get aiReviewReplaceItem => 'Zutat ersetzen';
+
+  @override
   String get aiReviewSaveToDiary => 'Ins Tagebuch speichern';
 
   @override

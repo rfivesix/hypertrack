@@ -34,8 +34,15 @@ class FoodDetailScreen extends StatefulWidget {
   /// The food item to display if not provided by [trackedItem].
   final FoodItem? foodItem;
 
-  const FoodDetailScreen({super.key, this.trackedItem, this.foodItem})
-      : assert(trackedItem != null || foodItem != null);
+  /// When true, hides the "Add to diary" FAB for inspect-only navigation.
+  final bool readOnly;
+
+  const FoodDetailScreen({
+    super.key,
+    this.trackedItem,
+    this.foodItem,
+    this.readOnly = false,
+  }) : assert(trackedItem != null || foodItem != null);
 
   @override
   State<FoodDetailScreen> createState() => _FoodDetailScreenState();
@@ -250,12 +257,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: GlassFab(
-        onPressed: () {
-          Navigator.of(context).pop(widget.foodItem);
-        },
-        label: l10n.mealsAddToDiary,
-      ),
+      floatingActionButton: widget.readOnly
+          ? null
+          : GlassFab(
+              onPressed: () {
+                Navigator.of(context).pop(widget.foodItem);
+              },
+              label: l10n.mealsAddToDiary,
+            ),
       appBar: GlobalAppBar(
         title: () {
           final themeService = Provider.of<ThemeService>(context);
