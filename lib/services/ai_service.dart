@@ -1433,115 +1433,8 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   }
 
   // ---------------------------------------------------------------------------
-  // Meal Recommendation
+  // Repair
   // ---------------------------------------------------------------------------
-
-  /// Generates a personalised meal recommendation based on dietary preferences,
-  /// and recent eating history.
-  ///
-  ///   - [targetMacros] The calculated macros the AI should aggressively aim to fill for *this* meal.
-  ///   - [preferences] User dietary/situational preferences.
-  Future<AiMealRecommendation> generateMealRecommendation({
-    required Map<String, int> targetMacros,
-    required List<String> preferences,
-    required String mealTypeLabel,
-    String? customRequest,
-    String? languageCode,
-    String? aiCustomInstructions,
-  }) async {
-    final provider = await getSelectedProvider();
-    final apiKey = await getApiKey(provider);
-    if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
-    final model = await resolveAndPersistSelectedModel(provider);
-
-    final systemPrompt = _buildRecommendationPrompt(
-      languageCode: languageCode,
-      aiCustomInstructions: aiCustomInstructions,
-    );
-
-    final refinedPreferences = _refineRecommendationPreferences(preferences);
-
-    final userContent = buildMealRecommendationUserPromptForTesting(
-      targetMacros: targetMacros,
-      preferences: refinedPreferences,
-      mealTypeLabel: mealTypeLabel,
-      customRequest: customRequest,
-    );
-
-    String rawContent;
-    switch (provider) {
-      case AiProvider.openai:
-        rawContent = await _callOpenAiRaw(
-          apiKey,
-          model,
-          userContent,
-          [],
-          systemPrompt: systemPrompt,
-        );
-        break;
-      case AiProvider.gemini:
-        rawContent = await _callGeminiRaw(
-          apiKey,
-          model,
-          userContent,
-          [],
-          systemPrompt: systemPrompt,
-        );
-        break;
-      case AiProvider.anthropic:
-        rawContent = await _callAnthropicRaw(
-          apiKey,
-          model,
-          userContent,
-          [],
-          systemPrompt: systemPrompt,
-        );
-        break;
-      case AiProvider.mistral:
-        rawContent = await _callMistralRaw(
-          apiKey,
-          model,
-          userContent,
-          [],
-          systemPrompt: systemPrompt,
-        );
-        break;
-      case AiProvider.xai:
-        rawContent = await _callXaiRaw(
-          apiKey,
-          model,
-          userContent,
-          [],
-          systemPrompt: systemPrompt,
-        );
-        break;
-    }
-
-    return _parseRecommendationFromContent(rawContent);
-  }
-
-  @visibleForTesting
-  static String buildMealRecommendationUserPromptForTesting({
-    required Map<String, int> targetMacros,
-    required List<String> preferences,
-    required String mealTypeLabel,
-    String? customRequest,
-  }) {
-    return '''
-Target Meal: $mealTypeLabel
-
-Target macros for THIS meal:
-- Calories: ${targetMacros['kcal']} kcal
-- Protein: ${targetMacros['protein']}g
-- Carbs: ${targetMacros['carbs']}g
-- Fat: ${targetMacros['fat']}g
-
-User constraints (Dietary/Situation): ${preferences.isEmpty ? 'None' : preferences.join('\n- ')}
-
-Custom user request: ${customRequest != null && customRequest.trim().isNotEmpty ? customRequest.trim() : 'None'}
-
-Suggest ONE meal for $mealTypeLabel that fits the user constraints and fills the target macros for THIS meal as accurately as possible.''';
-  }
 
   Future<AiMealCandidate> repairMealCaptureCandidate({
     required AiMealCandidate candidate,
@@ -1566,7 +1459,6 @@ Repair the candidate. Prefer simple database-matchable food names and realistic 
       userContent: userContent,
       images: images,
       systemPrompt: _buildRepairPrompt(
-        mode: AiValidationMode.capture,
         languageCode: languageCode,
       ),
       temperature: 0.1,
@@ -1584,73 +1476,6 @@ Repair the candidate. Prefer simple database-matchable food names and realistic 
           )
           .toList(growable: false),
     );
-  }
-
-  Future<AiMealCandidate> repairMealRecommendationCandidate({
-    required AiMealCandidate candidate,
-    required AiValidationResult validation,
-    required Map<String, int> targetMacros,
-    required List<String> preferences,
-    required String mealTypeLabel,
-    String? customRequest,
-    String? languageCode,
-    String? aiCustomInstructions,
-  }) async {
-    final previous = {
-      'meal_name': candidate.mealName ?? 'Meal',
-      'description': candidate.description ?? '',
-      'ingredients': candidate.items
-          .map(
-            (item) => {
-              'name': item.name,
-              'amount_in_grams': item.grams,
-            },
-          )
-          .toList(growable: false),
-    };
-
-    final userContent = '''
-Previous recommendation:
-${jsonEncode(previous)}
-
-Original request:
-${buildMealRecommendationUserPromptForTesting(
-      targetMacros: targetMacros,
-      preferences: _refineRecommendationPreferences(preferences),
-      mealTypeLabel: mealTypeLabel,
-      customRequest: customRequest,
-    )}
-
-Deterministic validation feedback:
-${validation.toRepairFeedback()}
-
-Repair the recommendation. Keep ONE meal, use simple database-matchable ingredients, and adjust grams so locally recomputed kcal/protein/carbs/fat fit the target tolerances.''';
-
-    final raw = await _callSelectedProviderRaw(
-      userContent: userContent,
-      systemPrompt: _buildRepairPrompt(
-        mode: AiValidationMode.recommendation,
-        languageCode: languageCode,
-      ),
-      temperature: 0.1,
-    );
-    final recommendation = _parseRecommendationFromContent(raw);
-    return recommendation.toMealCandidate();
-  }
-
-  static List<String> _refineRecommendationPreferences(
-    List<String> preferences,
-  ) {
-    return preferences.map((p) {
-      if (p == 'On the go') {
-        return 'ON THE GO: The meal MUST be instantly edible from a supermarket (e.g., protein bar, pre-made sandwich, fruit, skyr). NO cooking, NO microwave, NO utensils required. DO NOT suggest raw meat, lentils, rice, or anything needing prep.';
-      } else if (p == 'No cooking') {
-        return 'NO COOKING: The meal MUST be cold and require NO stove/microwave (e.g., salad, cottage cheese with nuts, sandwich). DO NOT suggest raw meat, pasta, or foods needing heat.';
-      } else if (p == 'Cooking allowed') {
-        return 'WITH COOKING: Full kitchen available. Feel free to suggest meals requiring a stove/oven (e.g., cooked meat, rice, cooked veggies).';
-      }
-      return p;
-    }).toList(growable: false);
   }
 
   Future<String> _callSelectedProviderRaw({
@@ -1722,19 +1547,11 @@ Repair the recommendation. Keep ONE meal, use simple database-matchable ingredie
   }
 
   static String _buildRepairPrompt({
-    required AiValidationMode mode,
     String? languageCode,
   }) {
     final langRule = (languageCode != null && languageCode.isNotEmpty)
         ? '\n- Return food names in the "$languageCode" language.'
         : '';
-    final schema = mode == AiValidationMode.capture
-        ? '''
-Return ONLY a valid JSON array:
-[{"name":"Food name","estimatedGrams":100,"confidence":0.8}]'''
-        : '''
-Return ONLY a valid JSON object:
-{"meal_name":"Meal name","description":"Short fit rationale","ingredients":[{"name":"Food name","amount_in_grams":100}]}''';
 
     return '''
 You are repairing an AI meal candidate after deterministic local validation.
@@ -1747,54 +1564,9 @@ Rules:
 - Respect strict target macros when provided; local code will verify kcal/protein/carbs/fat again.
 - Use low creativity and keep the output deterministic.$langRule
 
-$schema
+Return ONLY a valid JSON array:
+[{"name":"Food name","estimatedGrams":100,"confidence":0.8}]
 No markdown, no explanations, no extra text.''';
-  }
-
-  /// System prompt for meal recommendations.
-  static String _buildRecommendationPrompt({
-    String? languageCode,
-    String? aiCustomInstructions,
-  }) {
-    final langRule = (languageCode != null && languageCode.isNotEmpty)
-        ? '\n- IMPORTANT: All food/ingredient names MUST be in the "$languageCode" language.'
-        : '';
-
-    final customInstructionsRule =
-        (aiCustomInstructions != null && aiCustomInstructions.trim().isNotEmpty)
-            ? '''
-### CRITICAL VETO CONSTRAINTS & ALLERGIES
-The user has defined the following absolute restrictions. Treat these as medical-grade constraints. Including any ingredient that violates these rules will cause a critical application failure:
-
-USER CONSTRAINT: "${aiCustomInstructions.trim()}"
-
-Rule: If the constraint says "Keine Milchprodukte" or "No Dairy", you are strictly FORBIDDEN from using milk, yogurt, quark, skyr, whey protein, cheese, butter, or cream. You must substitute them with plant-based alternatives (e.g., soy, almond, pea protein) or structure a different recipe entirely.
-'''
-            : '';
-
-    return '''
-You are a personal nutrition coach. The user wants a meal suggestion for a specific meal (Breakfast, Lunch, Dinner, or Snack).
-
-CRITICAL RULES:
-1. PORTION SCALING: The provided macros are exactly what you should aim to fill for THIS SINGLE MEAL. Do NOT leave 'space' or hold back calories/macros for future meals. The user wants a meal recommendation whose nutrition matches the provided targets as optimally as possible.
-2. USER CONSTRAINTS: You must STRICTLY respect the user's constraints (Dietary/Situation). The user might give very strict situational limits (like "NO COOKING" or "ON THE GO"). Adhere to them exactly! Dietary limits (e.g. Vegan) must also be strictly followed.
-3. Suggest ONE highly appropriate meal.
-4. Use SIMPLE, SHORT base food names for ingredients (e.g. "Reis" not "Langkorn-Basmatireis"), to maximize database matching. Prefer raw, uncompounded kitchen staples (e.g., 'Vollei', 'Eiklar', 'Hähnchenbrust') over processed or ambiguous grocery items (like 'Hühnerfrikassee' or 'Eiercreme'), unless explicitly requested by the user.
-5. Estimate realistic ingredient amounts in grams.
-6. SEMANTIC AUDIT: Before finalizing the JSON output array, perform a semantic audit step: Check every single ingredient against the CRITICAL VETO CONSTRAINTS. If a violation is found, delete the meal plan and regenerate a completely compliant one.$langRule
-
-$customInstructionsRule
-Respond ONLY with a valid JSON object. No markdown, no explanation, no extra text.
-The JSON must have exactly these fields:
-- "meal_name": string (short name of the suggested meal)
-- "description": string (1-2 sentences explaining why this meal fits)
-- "ingredients": array of objects, each with:
-  - "name": string (simple ingredient name)
-  - "amount_in_grams": integer (estimated weight in grams)
-
-Example:
-{"meal_name": "Chicken Rice Bowl", "description": "High protein, moderate carbs to meet your remaining goals.", "ingredients": [{"name": "Chicken breast", "amount_in_grams": 200}, {"name": "Rice", "amount_in_grams": 150}, {"name": "Broccoli", "amount_in_grams": 100}]}
-''';
   }
 
   /// Calls OpenAI and returns the raw content string (for recommendation parsing).
@@ -1937,139 +1709,5 @@ Example:
       if (e is AiServiceException) rethrow;
       throw AiNetworkException('Request failed: $e');
     }
-  }
-
-  /// Parses the AI's JSON object response into an [AiMealRecommendation].
-  AiMealRecommendation _parseRecommendationFromContent(String content) {
-    var cleaned = content.trim();
-
-    // Strip markdown code fences (```json ... ```)
-    final fenceRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)```');
-    final fenceMatch = fenceRegex.firstMatch(cleaned);
-    if (fenceMatch != null) {
-      cleaned = fenceMatch.group(1)?.trim() ?? cleaned;
-    }
-
-    // Find the JSON object that contains "meal_name" to avoid
-    // matching stray braces in thinking/reasoning text.
-    int startIdx = -1;
-    int braceDepth = 0;
-    int? objStart;
-
-    for (int i = 0; i < cleaned.length; i++) {
-      if (cleaned[i] == '{') {
-        if (braceDepth == 0) objStart = i;
-        braceDepth++;
-      } else if (cleaned[i] == '}') {
-        braceDepth--;
-        if (braceDepth == 0 && objStart != null) {
-          final candidate = cleaned.substring(objStart, i + 1);
-          if (candidate.contains('"meal_name"') ||
-              candidate.contains('"ingredients"')) {
-            startIdx = objStart;
-            break;
-          }
-          objStart = null;
-        }
-      }
-    }
-
-    if (startIdx == -1) {
-      // Fallback: try basic indexOf
-      startIdx = cleaned.indexOf('{');
-    }
-    final endIdx = cleaned.lastIndexOf('}');
-    if (startIdx == -1 || endIdx == -1 || endIdx <= startIdx) {
-      throw AiParseException('No JSON object found in response. Raw: $cleaned');
-    }
-
-    final jsonStr = cleaned.substring(startIdx, endIdx + 1);
-    final Map<String, dynamic> json;
-    try {
-      json = jsonDecode(jsonStr) as Map<String, dynamic>;
-    } catch (e) {
-      throw AiParseException('JSON decode failed: $e\nRaw: $cleaned');
-    }
-
-    final mealName = json['meal_name'] as String? ?? 'Meal';
-    final description = json['description'] as String? ?? '';
-    final ingredientsRaw = json['ingredients'] as List<dynamic>? ?? [];
-
-    final ingredients = ingredientsRaw
-        .map(
-          (e) => AiRecommendedIngredient(
-            name: (e as Map<String, dynamic>)['name'] as String? ?? '',
-            amountInGrams: (e['amount_in_grams'] as num?)?.toInt() ?? 100,
-          ),
-        )
-        .toList();
-
-    if (ingredients.isEmpty) {
-      throw const AiParseException('No ingredients found in recommendation.');
-    }
-
-    return AiMealRecommendation(
-      mealName: mealName,
-      description: description,
-      ingredients: ingredients,
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Meal Recommendation Data Models
-// ---------------------------------------------------------------------------
-
-/// A single ingredient in an AI-recommended meal.
-class AiRecommendedIngredient {
-  final String name;
-  final int amountInGrams;
-
-  const AiRecommendedIngredient({
-    required this.name,
-    required this.amountInGrams,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'amount_in_grams': amountInGrams,
-    };
-  }
-}
-
-/// Complete meal recommendation from the AI.
-class AiMealRecommendation {
-  final String mealName;
-  final String description;
-  final List<AiRecommendedIngredient> ingredients;
-
-  const AiMealRecommendation({
-    required this.mealName,
-    required this.description,
-    required this.ingredients,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'meal_name': mealName,
-      'description': description,
-      'ingredients': ingredients.map((item) => item.toJson()).toList(),
-    };
-  }
-
-  AiMealCandidate toMealCandidate() {
-    return AiMealCandidate(
-      mealName: mealName,
-      description: description,
-      items: ingredients
-          .map(
-            (ingredient) => AiMealCandidateItem(
-              name: ingredient.name,
-              grams: ingredient.amountInGrams,
-            ),
-          )
-          .toList(growable: false),
-    );
   }
 }

@@ -23,7 +23,6 @@ import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/common.dart';
 import '../../../widgets/common/bottom_content_spacer.dart';
-import '../../../theme/color_constants.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../profile/presentation/widgets/measurement_chart_widget.dart';
 import 'widgets/nutrition_summary_widget.dart';
@@ -40,7 +39,6 @@ import '../../steps/presentation/steps_module_screen.dart';
 import '../../sleep/presentation/sleep_navigation.dart';
 import '../../pulse/presentation/pulse_analysis_screen.dart';
 import '../../sleep/presentation/widgets/sleep_period_scope_layout.dart';
-import 'ai_recommendation_screen.dart';
 import '../../workout/presentation/workout_history_screen.dart';
 import '../../workout/presentation/widgets/todays_workout_summary_card.dart';
 
@@ -991,30 +989,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                 Expanded(child: Text(title, style: titleStyle)),
                 Icon(isOpen ? Icons.expand_less : Icons.expand_more),
                 const SizedBox(width: 4),
-                if (Provider.of<ThemeService>(context).isAiEnabled)
-                  IconButton(
-                    icon: ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (bounds) =>
-                          createAiGradientShader(bounds),
-                      child: const Icon(Icons.auto_awesome_rounded),
-                    ),
-                    iconSize: 20,
-                    onPressed: () async {
-                      final result = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          builder: (_) => AiRecommendationScreen(
-                            mealType: mealKey,
-                            date: viewModel.selectedDate,
-                          ),
-                        ),
-                      );
-                      if (result == true) {
-                        viewModel.loadDataForDate(viewModel.selectedDate);
-                      }
-                    },
-                    tooltip: 'AI Recommend',
-                  ),
                 IconButton(
                   icon: const Icon(Icons.add_circle),
                   color: theme.colorScheme.primary,

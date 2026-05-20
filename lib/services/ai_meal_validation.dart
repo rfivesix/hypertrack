@@ -3,7 +3,7 @@ import '../features/diary/domain/models/food_item.dart';
 
 const int maxRepairPasses = 3;
 
-enum AiValidationMode { capture, recommendation }
+enum AiValidationMode { capture }
 
 enum AiValidationSeverity { info, warning, error }
 
@@ -427,79 +427,6 @@ class AiDiarySavePlan {
   bool get isPartial => matchedItems.isNotEmpty && unmatchedItems.isNotEmpty;
 }
 
-class AiMealTargetPlanner {
-  const AiMealTargetPlanner._();
-
-  static AiMacroTargetContext computeMealTarget({
-    required AiMacroTargetContext remaining,
-    required AiMacroTargetContext dailyGoal,
-    required String mealType,
-  }) {
-    int pct(num value, double ratio) => (value * ratio).round();
-
-    AiMacroTargetContext planned;
-    switch (mealType) {
-      case 'mealtypeBreakfast':
-        planned = AiMacroTargetContext(
-          kcal: pct(dailyGoal.kcal, 1 / 3),
-          protein: pct(dailyGoal.protein, 1 / 3),
-          carbs: pct(dailyGoal.carbs, 1 / 3),
-          fat: pct(dailyGoal.fat, 1 / 3),
-        );
-        break;
-      case 'mealtypeLunch':
-        planned = AiMacroTargetContext(
-          kcal: remaining.kcal - pct(dailyGoal.kcal, 1 / 3),
-          protein: remaining.protein - pct(dailyGoal.protein, 1 / 3),
-          carbs: remaining.carbs - pct(dailyGoal.carbs, 1 / 3),
-          fat: remaining.fat - pct(dailyGoal.fat, 1 / 3),
-        );
-        break;
-      case 'mealtypeSnack':
-        planned = AiMacroTargetContext(
-          kcal: pct(dailyGoal.kcal, 0.1),
-          protein: pct(dailyGoal.protein, 0.1),
-          carbs: pct(dailyGoal.carbs, 0.1),
-          fat: pct(dailyGoal.fat, 0.1),
-        );
-        break;
-      case 'mealtypeDinner':
-      default:
-        planned = remaining;
-        break;
-    }
-
-    final clamped = AiMacroTargetContext(
-      kcal: _clampTarget(planned.kcal, remaining.kcal),
-      protein: _clampTarget(planned.protein, remaining.protein),
-      carbs: _clampTarget(planned.carbs, remaining.carbs),
-      fat: _clampTarget(planned.fat, remaining.fat),
-    );
-
-    if (mealType == 'mealtypeLunch' &&
-        clamped.kcal <= 0 &&
-        remaining.kcal > 50) {
-      return AiMacroTargetContext(
-        kcal: _clampTarget((remaining.kcal * 0.5).round(), remaining.kcal),
-        protein: _clampTarget(
-          (remaining.protein * 0.5).round(),
-          remaining.protein,
-        ),
-        carbs: _clampTarget((remaining.carbs * 0.5).round(), remaining.carbs),
-        fat: _clampTarget((remaining.fat * 0.5).round(), remaining.fat),
-      );
-    }
-
-    return clamped;
-  }
-
-  static int _clampTarget(int value, int remaining) {
-    if (remaining <= 0) return 0;
-    if (value <= 0) return 0;
-    return value > remaining ? remaining : value;
-  }
-}
-
 class AiMealValidationEngine {
   final AiFoodMatchLoader _matchLoader;
 
@@ -849,9 +776,7 @@ class AiMealValidationEngine {
     if (match.quality == AiMatchQuality.weak) {
       issues.add(
         AiValidationIssue(
-          severity: mode == AiValidationMode.recommendation
-              ? AiValidationSeverity.error
-              : AiValidationSeverity.warning,
+          severity: AiValidationSeverity.warning,
           code: 'weak_db_match',
           message: 'The local database match is weak.',
           itemIndex: index,
@@ -934,9 +859,7 @@ class AiMealValidationEngine {
         nutrition.fat > 220) {
       issues.add(
         AiValidationIssue(
-          severity: mode == AiValidationMode.recommendation
-              ? AiValidationSeverity.error
-              : AiValidationSeverity.warning,
+          severity: AiValidationSeverity.warning,
           code: 'implausible_item_nutrition',
           message: 'Nutrition for this quantity is unusually high.',
           itemIndex: index,
@@ -1035,52 +958,6 @@ class AiMealValidationEngine {
       );
     }
 
-    if (mode == AiValidationMode.recommendation && macroFit != null) {
-      if (!macroFit.kcalWithinTolerance) {
-        issues.add(
-          AiValidationIssue(
-            severity: AiValidationSeverity.error,
-            code: 'target_kcal_mismatch',
-            message:
-                'Calories miss the target by ${macroFit.kcalDelta.round()} kcal.',
-            parameters: {'delta': macroFit.kcalDelta.round()},
-          ),
-        );
-      }
-      if (!macroFit.proteinWithinTolerance) {
-        issues.add(
-          AiValidationIssue(
-            severity: AiValidationSeverity.error,
-            code: 'target_protein_mismatch',
-            message:
-                'Protein misses the target by ${macroFit.proteinDelta.round()}g.',
-            parameters: {'delta': macroFit.proteinDelta.round()},
-          ),
-        );
-      }
-      if (!macroFit.carbsWithinTolerance) {
-        issues.add(
-          AiValidationIssue(
-            severity: AiValidationSeverity.error,
-            code: 'target_carbs_mismatch',
-            message:
-                'Carbs miss the target by ${macroFit.carbsDelta.round()}g.',
-            parameters: {'delta': macroFit.carbsDelta.round()},
-          ),
-        );
-      }
-      if (!macroFit.fatWithinTolerance) {
-        issues.add(
-          AiValidationIssue(
-            severity: AiValidationSeverity.error,
-            code: 'target_fat_mismatch',
-            message: 'Fat misses the target by ${macroFit.fatDelta.round()}g.',
-            parameters: {'delta': macroFit.fatDelta.round()},
-          ),
-        );
-      }
-    }
-
     return issues;
   }
 
@@ -1109,11 +986,6 @@ class AiMealValidationEngine {
     required AiValidationMode mode,
   }) {
     if (issues.any((issue) => issue.severity == AiValidationSeverity.error)) {
-      return false;
-    }
-    if (mode == AiValidationMode.recommendation &&
-        macroFit != null &&
-        !macroFit.overallFit) {
       return false;
     }
     return score >= 70;
