@@ -96,16 +96,15 @@ class DiaryLocalDataSource {
       return rows.map((row) {
         final fluidRow = row.readTable(_db.fluidLogs);
         final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
-        final isLinked = nutritionRow != null;
         return FluidEntry(
           id: fluidRow.localId,
           name: fluidRow.name,
           quantityInMl: fluidRow.amountMl,
           timestamp: fluidRow.consumedAt,
-          kcal: isLinked ? 0 : fluidRow.kcal,
-          sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
-          carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
-          caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
+          kcal: fluidRow.kcal,
+          sugarPer100ml: fluidRow.sugarPer100ml,
+          carbsPer100ml: fluidRow.carbsPer100ml,
+          caffeinePer100ml: fluidRow.caffeinePer100ml,
           linkedFoodEntryId: nutritionRow?.localId,
         );
       }).toList();
@@ -197,16 +196,15 @@ class DiaryLocalDataSource {
     return rows.map((row) {
       final fluidRow = row.readTable(_db.fluidLogs);
       final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
-      final isLinked = nutritionRow != null;
       return FluidEntry(
         id: fluidRow.localId,
         name: fluidRow.name,
         quantityInMl: fluidRow.amountMl,
         timestamp: fluidRow.consumedAt,
-        kcal: isLinked ? 0 : fluidRow.kcal,
-        sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
-        carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
-        caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
+        kcal: fluidRow.kcal,
+        sugarPer100ml: fluidRow.sugarPer100ml,
+        carbsPer100ml: fluidRow.carbsPer100ml,
+        caffeinePer100ml: fluidRow.caffeinePer100ml,
         linkedFoodEntryId: nutritionRow?.localId,
       );
     }).toList();
@@ -392,16 +390,15 @@ class DiaryLocalDataSource {
     return rows.map((row) {
       final fluidRow = row.readTable(_db.fluidLogs);
       final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
-      final isLinked = nutritionRow != null;
       return FluidEntry(
         id: fluidRow.localId,
         name: fluidRow.name,
         quantityInMl: fluidRow.amountMl,
         timestamp: fluidRow.consumedAt,
-        kcal: isLinked ? 0 : fluidRow.kcal,
-        sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
-        carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
-        caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
+        kcal: fluidRow.kcal,
+        sugarPer100ml: fluidRow.sugarPer100ml,
+        carbsPer100ml: fluidRow.carbsPer100ml,
+        caffeinePer100ml: fluidRow.caffeinePer100ml,
         linkedFoodEntryId: nutritionRow?.localId,
       );
     }).toList();
@@ -508,16 +505,15 @@ class DiaryLocalDataSource {
     return rows.map((row) {
       final fluidRow = row.readTable(_db.fluidLogs);
       final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
-      final isLinked = nutritionRow != null;
       return FluidEntry(
         id: fluidRow.localId,
         name: fluidRow.name,
         quantityInMl: fluidRow.amountMl,
         timestamp: fluidRow.consumedAt,
-        kcal: isLinked ? 0 : fluidRow.kcal,
-        sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
-        carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
-        caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
+        kcal: fluidRow.kcal,
+        sugarPer100ml: fluidRow.sugarPer100ml,
+        carbsPer100ml: fluidRow.carbsPer100ml,
+        caffeinePer100ml: fluidRow.caffeinePer100ml,
         linkedFoodEntryId: nutritionRow?.localId,
       );
     }).toList();

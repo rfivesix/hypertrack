@@ -49,3 +49,6 @@ android/key.properties
 android/key.properties
 *.jks
 *.keystore
+
+# Other
+/docs/node_modules/

@@ -516,10 +516,10 @@ class _MainScreenState extends State<MainScreen>
           timestamp: timestamp,
           quantityInMl: quantity,
           name: selectedFoodItem.name,
-          kcal: null,
-          sugarPer100ml: null,
-          carbsPer100ml: null,
-          caffeinePer100ml: null,
+          kcal: (selectedFoodItem.calories / 100 * quantity).round(),
+          sugarPer100ml: result.sugarPer100ml,
+          carbsPer100ml: result.sugarPer100ml,
+          caffeinePer100ml: result.caffeinePer100ml,
           linkedFoodEntryId: newFoodEntryId,
         );
         await DatabaseHelper.instance.insertFluidEntry(newFluidEntry);
