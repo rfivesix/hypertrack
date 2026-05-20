@@ -1,0 +1,6 @@
+- Reactive UI Migration: Core features now use real-time stream synchronization.
+- Workout Notes: Added exercise and set-level notes to the training logger.
+- Data Safety: New unsaved changes guardian in the routine editor.
+- Transparency: Algorithmic disclosures and pre-rendered LaTeX math support.
+- Security: Privacy Policy v1.2 and hardened secure storage key isolations.
+- Stability: Fixed fluid double-counting and supplement tracking regressions.

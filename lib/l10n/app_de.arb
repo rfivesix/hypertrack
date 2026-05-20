@@ -227,6 +227,8 @@
   "cancel": "Abbrechen",
   "delete": "Löschen",
   "save": "Speichern",
+  "unsavedChangesTitle": "Ungespeicherte Änderungen",
+  "unsavedChangesContent": "Du hast ungespeicherte Änderungen. Möchtest du diese vor dem Verlassen speichern?",
   "share": "Teilen",
   "shareWorkout": "Workout teilen",
   "shareRoutine": "Routine teilen",
@@ -2162,5 +2164,7 @@
   "aiSettingsInstructionBody": "Diese Funktion nutzt KI zur Analyse von Lebensmittelbildern und liefert Nährwertschätzungen. Deine Bilder werden nur dann an den ausgewählten KI-Anbieter gesendet, wenn du die Funktion nutzt. Sie basiert auf einer Bring-Your-Own-Key (BYOK)-Architektur, wodurch deine Daten lokal auf dem Gerät bleiben, bis sie analysiert werden.",
   "aiSettingsSetupGuideTitle": "Einrichtungs-Anleitung",
   "aiSettingsSetupGuideBody": "Um diese Funktion zu nutzen, benötigst du einen API-Key von einem KI-Anbieter (z. B. Google Gemini, da hierfür aktuell ein kostenloser Key erhältlich ist).",
-  "aiSettingsGetApiKeyButton": "Schritt-für-Schritt Anleitung"
+  "aiSettingsGetApiKeyButton": "Schritt-für-Schritt Anleitung",
+  "legal_document_version_value": "1.2",
+  "legal_document_last_updated_value": "20. Mai 2026"
 }

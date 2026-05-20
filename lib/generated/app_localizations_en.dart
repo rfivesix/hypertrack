@@ -622,6 +622,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
+  String get unsavedChangesTitle => 'Unsaved Changes';
+
+  @override
+  String get unsavedChangesContent =>
+      'You have unsaved changes. Do you want to save them before leaving?';
+
+  @override
   String get share => 'Share';
 
   @override
@@ -4765,4 +4772,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSettingsGetApiKeyButton => 'View Setup Guide';
+
+  @override
+  String get legal_document_version_value => '1.2';
+
+  @override
+  String get legal_document_last_updated_value => 'May 20, 2026';
 }

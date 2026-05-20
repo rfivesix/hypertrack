@@ -10,6 +10,7 @@
   <title>Recovery Tracker | Train Libre</title>
   <link rel="icon" href="../../web/favicon.png">
   <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../katex.min.css">
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
@@ -32,9 +33,10 @@
           <span>Train Libre</span>
         </a>
         <div class="nav-links">
-          <a href="../#features" data-i18n="nav_features">Features</a>
-          <a href="../#intelligence" data-i18n="nav_guidance">AI Guidance</a>
-          <a href="../#privacy" data-i18n="nav_privacy">Privacy</a>
+          <a href="#features" data-i18n="nav_overview">Overview</a>
+          <a href="#science" data-i18n="nav_science">Science</a>
+          <a href="#limitations" data-i18n="nav_limitations">Limitations</a>
+          <a href="#evidence" data-i18n="nav_evidence">Evidence</a>
           <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
             rel="noreferrer">GitHub</a>
         </div>
@@ -94,7 +96,7 @@
         </div>
       </section>
 
-      <section class="section">
+      <section id="features" class="section">
         <div class="feature-grid">
           <article class="feature-card reveal delay-1" style="--feature: var(--green); --feature-rgb: 102, 200, 109;">
             <div class="feature-icon" aria-hidden="true">
@@ -128,16 +130,47 @@
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section id="science" class="section section-tight">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="recovery_how_t">The Science of Inferred Readiness</h2>
           <p class="section-copy" data-i18n="recovery_how_c1">The tracker uses an 'Equivalent Set' model. Research (e.g., Vieira et al., 2021) shows that training to failure (0 RIR) significantly elongates recovery time, sometimes by 24–48 hours, compared to submaximal training.</p>
           <p class="section-copy" data-i18n="recovery_how_c2">Train Libre applies this by weighting your working sets. A set at 0 RIR is flagged as high-fatigue, extending the estimated recovery window. The system also recognizes that compound movements like bench pressing create recovery pressure not just for the chest, but also for the triceps and front delts.</p>
           <p class="section-copy" data-i18n="recovery_how_c3">Different muscle groups recover at different rates. Larger, high-load groups (like the quads or lower back) are assigned longer base windows than smaller groups (like the biceps or calves).</p>
+          
+          <h3 style="margin-top: 32px; margin-bottom: 16px; font-weight: 800; color: var(--fg);" data-i18n="rec_deep_c">Three-Layer Architecture & Composite Indices</h3>
+          
+          <div class="pipeline-flow">
+            <div class="pipeline-step">
+              <div class="pipeline-num">1</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="rec_schema_t">Three-Layer Sleep Schema</div>
+                <div class="pipeline-desc" data-i18n="rec_schema_c">Sleep data processing is segmented into three distinct layers: (1) <strong>Raw Time-Series Ingestion</strong> from Apple HealthKit or Google Health Connect; (2) <strong>Local Validation & Duplicate Resolution</strong> of overlapping sleep intervals using wearable priority hierarchies; (3) <strong>Composite Index Computation</strong> performed offline.</div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">2</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="rec_score_t">Sleep Health Score V2</div>
+                <div class="pipeline-desc" data-i18n="rec_score_c">Calculates a composite score based on sleep efficiency (time asleep / time in bed), WASO (Wake After Sleep Onset - tracking structural disruptions), and the Sleep Regularity Index (SRI), which measures the probability of being in the same state (asleep/awake) at any two time points 24 hours apart.</div>
+                <div class="math-block">
+                  <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>SRI</mtext><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mi>δ</mi><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">(</mo><msub><mi>t</mi><mi>i</mi></msub><mo stretchy="false">)</mo><mo separator="true">,</mo><mi>s</mi><mo stretchy="false">(</mo><msub><mi>t</mi><mi>i</mi></msub><mo>+</mo><mn>24</mn><mtext>h</mtext><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mo>×</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">\text{SRI} = \frac{1}{N} \sum_{i=1}^N \delta(s(t_i), s(t_i + 24\text{h})) \times 100</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">SRI</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.106em;vertical-align:-1.2777em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2777em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0379em;">δ</span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">s</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">24</span><span class="mord text"><span class="mord">h</span></span><span class="mclose">))</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">100</span></span></span></span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">3</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="rec_pulse_t">Hourly Pulse Aggregation</div>
+                <div class="pipeline-desc" data-i18n="rec_pulse_c">Queries raw high-frequency heart rate samples, removes outliers via local z-scoring, and aggregates them into 1-hour blocks (<span class="math-inline">[timestamp, min_bpm, max_bpm, avg_bpm, sample_count]</span>). This reduces storage space by 98% while retaining diagnostic pulse-rate curves for sleep analysis and resting heart rate (RHR) trends.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section id="limitations" class="section section-tight">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="recovery_limits_t">Why it is a guide, not a measurement</h2>
           <p class="section-copy" data-i18n="recovery_limits_c1">Logged data is a proxy for training stress. The heuristic cannot 'see' external factors like sleep debt, nutritional deficiencies, or systemic life stress unless they are manually logged or integrated via health services.</p>
@@ -152,7 +185,7 @@
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section id="evidence" class="section section-tight">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="evidence_read_more">Evidence & further reading</h2>
           <ul class="evidence-links">

@@ -14,6 +14,7 @@
   <title>Privacy Policy | Train Libre</title>
   <link rel="icon" href="../../web/favicon.png">
   <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../katex.min.css">
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
@@ -36,10 +37,10 @@
           <span>Train Libre</span>
         </a>
         <div class="nav-links">
-          <a href="../index.html#features" data-i18n="nav_features">Features</a>
-          <a href="../index.html#intelligence" data-i18n="nav_guidance">AI Guidance</a>
-          <a href="./index.html" data-i18n="nav_privacy">Privacy</a>
-          <a href="../index.html#showcase" data-i18n="nav_showcase">Showcase</a>
+          <a href="#section2" data-i18n="nav_privacy_philosophy">Philosophy</a>
+          <a href="#section3" data-i18n="nav_privacy_local">Local Data</a>
+          <a href="#section4" data-i18n="nav_privacy_thirdparty">BYOK &amp; Services</a>
+          <a href="#section7" data-i18n="nav_privacy_rights">Your Rights</a>
           <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
             rel="noreferrer">GitHub</a>
         </div>
@@ -106,16 +107,13 @@
         <aside class="toc reveal" aria-label="Privacy policy sections">
           <p class="toc-title">Sections</p>
           <nav>
-            <a href="#section1" data-i18n="p_1_t">1. General Information</a>
-            <a href="#section2" data-i18n="p_2_t">2. Local-First & Privacy by Design</a>
-            <a href="#section3" data-i18n="p_3_t">3. Legal Bases for Processing</a>
-            <a href="#section4" data-i18n="p_4_t">4. Categories of Recipients</a>
-            <a href="#section5" data-i18n="p_5_t">5. International Data Transfers (BYOK AI)</a>
-            <a href="#section6" data-i18n="p_6_t">6. HealthKit & Health Connect Integration</a>
-            <a href="#section7" data-i18n="p_7_t">7. No Tracking / No Analytics</a>
-            <a href="#section8" data-i18n="p_8_t">8. Retention Periods</a>
-            <a href="#section9" data-i18n="p_9_t">9. Web Hosting (GitHub Pages)</a>
-            <a href="#section10" data-i18n="p_10_t">10. Your Data Subject Rights</a>
+            <a href="#section1" data-i18n="p_1_t">1. Controller</a>
+            <a href="#section2" data-i18n="p_2_t">2. Core Philosophy</a>
+            <a href="#section3" data-i18n="p_3_t">3. Locally Processed Data</a>
+            <a href="#section4" data-i18n="p_4_t">4. Third-Party Integrations / BYOK</a>
+            <a href="#section5" data-i18n="p_5_t">5. Health Data Interfaces</a>
+            <a href="#section6" data-i18n="p_6_t">6. Data Security & Backups</a>
+            <a href="#section7" data-i18n="p_7_t">7. Data Subject Rights</a>
             <a href="#contact" data-i18n="p_cont_t">Contact</a>
           </nav>
         </aside>
@@ -123,102 +121,169 @@
         <article class="policy-card">
           <div class="policy-section reveal">
             <div class="last-updated-box">
-              <span data-i18n="legal_version">Version: 1.1</span> | <span data-i18n="legal_date">Date: May 12, 2026</span>
+              <span data-i18n="legal_version">Version 1.2</span> (<span data-i18n="legal_date">20. Mai 2026 / May 20, 2026</span>)
             </div>
-            <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" data-i18n="legal_intro">This document contains the Technical Data Inventory...</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" data-i18n="legal_intro">
+              This privacy policy informs you in accordance with Articles 13 and 14 of the General Data Protection Regulation (GDPR) about the processing of personal data and health-related data in the mobile application "Train Libre" and during a visit to this website.<br><br>Since Train Libre is designed as a local-first application, full control over your data remains directly with you at all times. We do not operate any central database or application servers to store your profiles, workouts, or nutrition logs.
+            </p>
           </div>
 
           <section class="policy-section reveal" id="section1">
-            <h2 data-i18n="p_1_t">1. General Information</h2>
-            <p data-i18n="p_1_c1">This Privacy Policy informs you according to Art. 13 GDPR about the processing of personal data in “Train Libre”.</p>
-            <p data-i18n="p_1_c2">Controller: Richard Georg Schotte, Berlin (see Legal Notice for address). E-Mail: feedback@schotte.me</p>
+            <h2 data-i18n="p_1_t">1. Controller</h2>
+            <p data-i18n="p_1_c1">
+              The controller for data processing within the meaning of Article 4(7) of the GDPR is the developer and service provider:<br><br><strong>Richard Georg Schotte</strong><br>Bundesallee 114<br>12161 Berlin<br>Germany<br><br>Email: feedback@schotte.me<br>Phone: (+49) 1520 6915571<br><br>Since the controller is an individual developer and the statutory requirements for the mandatory appointment of a data protection officer pursuant to Article 37 of the GDPR and Section 38 of the German Federal Data Protection Act (BDSG) are not met, no separate data protection officer has been appointed. All data protection-related inquiries can be directed directly to the email address provided above.
+            </p>
           </section>
 
           <section class="policy-section reveal" id="section2">
-            <h2 data-i18n="p_2_t">2. Local-First & Privacy by Design</h2>
-            <p data-i18n="p_2_c1">Train Libre is a "local-first" application. All sensitive health data remains exclusively on your device. We do not operate a cloud backend and have no access to your data.</p>
+            <h2 data-i18n="p_2_t">2. Core Philosophy</h2>
+            <p data-i18n="p_2_c1">
+              Train Libre is based on the principles of "privacy by design" and "privacy by default" (Article 25 of the GDPR) as well as the principle of data minimization (Article 5(1)(c) of the GDPR).
+            </p>
+            <ul>
+              <li data-i18n="p_2_l1"><strong>No User Accounts:</strong> No registration or creation of a user account is required to use the app. No email addresses, passwords, or login credentials are stored on external servers.</li>
+              <li data-i18n="p_2_l2"><strong>Local-First Architecture:</strong> All profile settings, athletic activities, nutrition data, vital signs, and measurements entered by you are stored exclusively in a local SQLite database on your own end device.</li>
+              <li data-i18n="p_2_l3"><strong>No Central Backend Server:</strong> We do not operate any cloud databases or application servers to store or process your training and nutrition data. Your data remains in your physical possession.</li>
+              <li data-i18n="p_2_l4"><strong>No Tracking or Analytics SDKs:</strong> Train Libre completely dispenses with the integration of third-party advertising networks, behavior-based analysis services, or error diagnostics SDKs (such as Firebase Analytics, Google Analytics, Mixpanel, Sentry, or Crashlytics). No profiling or behavior-based evaluation for marketing purposes takes place.</li>
+              <li data-i18n="p_2_l5"><strong>Web Hosting & No Cookies (Website Visit):</strong> When you access this website, your web browser connects to the servers of our hosting provider (GitHub Pages / GitHub Inc., 88 Colin P. Kelly Jr St, San Francisco, CA 94107, USA) for technical reasons. In this context, standard, non-identifiable technical server log files (IP address, user-agent, timestamp) are automatically processed to deliver the page. This is based on our legitimate interest in providing a secure and error-free website (Art. 6(1)(f) GDPR). This website does not use cookies, tracking scripts, or analytical tools.</li>
+            </ul>
           </section>
 
           <section class="policy-section reveal" id="section3">
-            <h2 data-i18n="p_3_t">3. Legal Bases for Processing</h2>
+            <h2 data-i18n="p_3_t">3. Locally Processed Data</h2>
+            <p data-i18n="p_3_c1">
+              By using the app, your mobile device's operating system processes data in a local SQLite database (Drift/sqflite). This storage is necessary for the operation of the app and to fulfill its core functions.
+            </p>
             <div style="margin-bottom: 1.5rem;">
-              <h3 data-i18n="p_3_a_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">A. Health Data (Art. 9 GDPR)</h3>
-              <p data-i18n="p_3_a_c1">The app processes special categories of personal data (weight, heart rate, sleep data, nutrition).</p>
+              <h3 data-i18n="p_3_a_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">A. Categories of Processed Data</h3>
+              <p data-i18n="p_3_a_c1">The local database includes the following data categories:</p>
               <ul>
-                <li data-i18n="p_3_a_l1">Legal Basis: Your explicit consent according to Art. 9(2)(a) GDPR in conjunction with Art. 6(1)(a) GDPR.</li>
-                <li data-i18n="p_3_a_l2">Voluntary Nature: Providing health data is not legally or contractually required. However, without it, tracking and analysis features are not available.</li>
+                <li data-i18n="p_3_a_l1">1. <strong>Profile Settings and Goals:</strong> Username, date of birth, body height, gender, profile picture file path, and individually defined daily goals (target calories, target protein, target carbohydrates, target fat, target water, target steps).</li>
+                <li data-i18n="p_3_a_l2">2. <strong>Training and Activity Logs (Workouts):</strong> Training plans (routines), exercise templates, historical workout logs (start and end times, notes, exercise sets with rep and weight values, RPE and RIR values, rest times, cardiovascular activities including distance, duration, and calories burned).</li>
+                <li data-i18n="p_3_a_l3">3. <strong>Nutrition and Fluid Logs (Nutrition & Fluids):</strong> Consumed food items (timestamp, amount in grams/milliliters, meal type), water and beverage logs (amount, nutrient content, caffeine content).</li>
+                <li data-i18n="p_3_a_l4">4. <strong>Food and Product Catalog (User-Products):</strong> Products individually created by the user, including barcode, product name, brand, and macro/micronutrient information per 100g/ml (calories, protein, carbohydrates, fat, sugar, dietary fiber, salt, caffeine, list of ingredients, and additives).</li>
+                <li data-i18n="p_3_a_l5">5. <strong>Supplements:</strong> Set up supplements (name, default dose, unit, daily goal, and daily limit) as well as historical supplement log entries with intake timestamp and amount.</li>
+                <li data-i18n="p_3_a_l6">6. <strong>Body Dimensions and Measurements (Measurements):</strong> Historical measurement values for body weight and various body circumferences (e.g., chest, waist) including date and unit.</li>
+                <li data-i18n="p_3_a_l7">7. <strong>Heart Rate Data Aggregates:</strong> Local hourly aggregations of heart rate (minimum, maximum, and average beats per minute, as well as sample count).</li>
+                <li data-i18n="p_3_a_l8">8. <strong>Sleep Data Analyses:</strong> Processed sleep data including sleep phases (deep sleep, REM, light sleep, waking phases), sleep efficiency, resting heart rate, sleep interruptions, sleep regularity, as well as historical raw data imports from system interfaces.</li>
+                <li data-i18n="p_3_a_l9">9. <strong>Local Step Segments:</strong> Step counts imported from system interfaces with precise start and end times as well as data source identifiers for local duplicate cleaning.</li>
               </ul>
             </div>
-            <div style="margin-bottom: 1.5rem;">
-              <h3 data-i18n="p_3_b_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">B. App Functionality</h3>
-              <p data-i18n="p_3_b_c1">Processing of settings and profiles is based on Art. 6(1)(b) GDPR (performance of a contract/usage agreement).</p>
-            </div>
             <div>
-              <h3 data-i18n="p_3_c_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">C. Support & Feedback</h3>
-              <p data-i18n="p_3_c_c1">Handled based on Art. 6(1)(b) GDPR and our legitimate interest in support quality and abuse prevention (Art. 6(1)(f) GDPR).</p>
+              <h3 data-i18n="p_3_b_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">B. Legal Basis for Processing</h3>
+              <p data-i18n="p_3_b_c1">
+                Since storage and evaluation take place exclusively locally on your end device, control over data protection and data processing remains in your own sphere. Insofar as the app is considered within the scope of the GDPR, the following legal bases apply:
+              </p>
+              <ul>
+                <li data-i18n="p_3_b_l1"><strong>General Data and Settings (Article 6(1)(b) of the GDPR):</strong> The processing of general profile settings, training plans, and app preferences is carried out to fulfill the user relationship (provision of app functionalities).</li>
+                <li data-i18n="p_3_b_l2"><strong>Health Data (Article 9(2)(a) of the GDPR in conjunction with Article 6(1)(a) of the GDPR):</strong> For the processing of physical measurements, heart rate data, sleep analyses, and nutrition logs (which fall under special categories of data as health-related data), you grant your explicit consent by actively entering them or enabling the import. You can withdraw this consent at any time by deleting the corresponding entries or by resetting all app data.</li>
+              </ul>
             </div>
           </section>
 
           <section class="policy-section reveal" id="section4">
-            <h2 data-i18n="p_4_t">4. Categories of Recipients</h2>
-            <p data-i18n="p_4_c1">Apart from technical connection data processed by the hosting provider and third-party services described below, we do not receive the contents of your in‑app data. Recipients of technical or user-generated data may be:</p>
-            <ul>
-              <li data-i18n="p_4_l1">AI Providers (OpenAI, Google, etc.): Act as separate controllers when you use BYOK AI features.</li>
-              <li data-i18n="p_4_l2">Catalog Services (Open Food Facts, wger, GitHub): Receive technical connection data (IP, User-Agent) during updates.</li>
-              <li data-i18n="p_4_l3">Cloud Providers (Apple/Google): Receive data via your system-wide backups if enabled.</li>
-            </ul>
+            <h2 data-i18n="p_4_t">4. Third-Party Integrations / BYOK</h2>
+            <p data-i18n="p_4_c1">
+              To provide advanced features, the app has interfaces to external services. These functions are optional and require your active participation.
+            </p>
+            <div style="margin-bottom: 1.5rem;">
+              <h3 data-i18n="p_4_a_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">A. Bring-Your-Own-Key (BYOK) AI Meal Capture</h3>
+              <p data-i18n="p_4_a_c1">
+                Train Libre offers the option to analyze meals via photos or free-text descriptions using artificial intelligence. This function is based on the "Bring-Your-Own-Key" (BYOK) principle. You must store your own API key from a supported provider in the app to use this.
+              </p>
+              <ul>
+                <li data-i18n="p_4_a_l1"><strong>Supported Providers:</strong> OpenAI, Google Gemini, Anthropic Claude, Mistral AI, xAI Grok.</li>
+                <li data-i18n="p_4_a_l2"><strong>Secure Local Key Storage:</strong> The API key you enter is stored encrypted using the <code>flutter_secure_storage</code> package in the operating system's secured storage area (iOS Keychain or Android Keystore). The key remains exclusively local to your device and is never transmitted to us.</li>
+                <li data-i18n="p_4_a_l3"><strong>Restricted Data Transmission:</strong> When using the AI analysis, your device sends the captured meal photo or entered text description directly via an encrypted HTTPS connection to the API of the selected AI provider.</li>
+                <li data-i18n="p_4_a_l4"><strong>Privacy Protection via System Prompt:</strong> To maximize your privacy, the app's globally stored system prompt is configured to instruct the AI provider to identify only food components and estimate their weight in grams. The AI provider is explicitly instructed <strong>not</strong> to perform any nutrient calculations (such as calories, protein, fat, or carbohydrates). The determination of nutrients is then performed completely locally and offline on your device by matching the recognized food names with your local offline catalog. Thus, no personal nutrition or health history is transmitted to the AI services.</li>
+                <li data-i18n="p_4_a_l5"><strong>Responsibility:</strong> Since you are using your personal API key, you enter into a direct user relationship with the respective AI provider. Data processing by the AI provider is subject to their respective privacy policies. Please check your provider's privacy policy (especially regarding the use of data for training purposes and server locations) before using the function. For transmissions to providers outside the European Union (especially the USA), this occurs on the basis of standard contractual clauses or adequacy decisions that you have agreed with the provider.</li>
+              </ul>
+            </div>
+            <div>
+              <h3 data-i18n="p_4_b_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">B. Offline Catalog Updates (Open Food Facts & Exercise Catalog)</h3>
+              <p data-i18n="p_4_b_c1">
+                To scan food barcodes offline and look up exercises, Train Libre uses local product and exercise catalogs. These catalogs are downloaded directly to your device as precompiled SQLite database files.
+              </p>
+              <ul>
+                <li data-i18n="p_4_b_l1"><strong>How it Works:</strong> The app checks at regular intervals whether updates are available for the food catalog (based on Open Food Facts) or the exercise catalog (based on wger/GitHub). The check and subsequent download of the compressed catalog databases are performed via an encrypted HTTPS connection directly to the servers of the hosting service provider (e.g., GitHub Pages / GitHub Inc. or Open Food Facts).</li>
+                <li data-i18n="p_4_b_l2"><strong>Data Minimization:</strong> When downloading catalog updates, technical connection data (in particular your IP address, date/time of access, and the app's User-Agent) are transmitted to the host as a system requirement. No user-generated data, scanned barcodes, or personal profile characteristics are sent to the catalog hosts at any time.</li>
+                <li data-i18n="p_4_b_l3"><strong>Local Barcode Mapping:</strong> The matching of a scanned barcode or the search for food and exercises takes place 100 percent offline on your device. Unlike conventional nutrition apps, scanning a product does not send a request with the barcode to a cloud server.</li>
+              </ul>
+            </div>
           </section>
 
           <section class="policy-section reveal" id="section5">
-            <h2 data-i18n="p_5_t">5. International Data Transfers (BYOK AI)</h2>
-            <p data-i18n="p_5_c1">When using AI services, data may be transferred to third countries (especially the USA) subject to Art. 44 et seq. GDPR.</p>
-            <ul>
-              <li data-i18n="p_5_l1">Safeguards: Providers typically use Standard Contractual Clauses (SCCs) or other legal mechanisms.</li>
-              <li data-i18n="p_5_l2">Note: As you use your own API key, processing is subject to the provider's privacy policy. Please review their policies before transmitting health data.</li>
-            </ul>
+            <h2 data-i18n="p_5_t">5. Health Data Interfaces</h2>
+            <p data-i18n="p_5_c1">
+              Train Libre can interact with your operating system's system-wide health databases (Apple HealthKit on iOS or Google Health Connect on Android). This interaction takes place exclusively locally on your end device and requires your explicit approval, which can be revoked at any time, in the system settings of the respective operating system.
+            </p>
+            <div style="margin-bottom: 1.5rem;">
+              <h3 data-i18n="p_5_a_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">A. Data Import (Reading)</h3>
+              <p data-i18n="p_5_a_c1">
+                If you grant permission to the app, Train Libre reads data from Apple HealthKit or Google Health Connect to display and process it locally within the app:
+              </p>
+              <ul>
+                <li data-i18n="p_5_a_l1"><strong>Step Counts:</strong> Import of recorded step count segments for offline evaluation.</li>
+                <li data-i18n="p_5_a_l2"><strong>Sleep Data:</strong> Import of sleep intervals and sleep phases.</li>
+                <li data-i18n="p_5_a_l3"><strong>Heart Rate:</strong> Import of heart rate samples to calculate local hourly aggregations.</li>
+              </ul>
+              <p data-i18n="p_5_a_c2">
+                The import is used exclusively for display and local analysis within Train Libre. No transfer of this imported data to external servers takes place.
+              </p>
+            </div>
+            <div>
+              <h3 data-i18n="p_5_b_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">B. Data Export (Writing & Idempotency)</h3>
+              <p data-i18n="p_5_b_c1">
+                At your request, Train Libre can export data manually recorded in the app to the system health databases (Apple HealthKit / Google Health Connect):
+              </p>
+              <ul>
+                <li data-i18n="p_5_b_l1"><strong>Body Dimensions:</strong> Export of weight measurements.</li>
+                <li data-i18n="p_5_b_l2"><strong>Nutrition and Hydration:</strong> Export of consumed nutritional values, calories, and water amounts.</li>
+                <li data-i18n="p_5_b_l3"><strong>Workouts:</strong> Export of completed training sessions.</li>
+              </ul>
+              <p data-i18n="p_5_b_c2">
+                <strong>Local Idempotency Protection:</strong> To prevent duplicate data from being written to your system health database during repeated synchronizations, Train Libre features a local logging system. In the <code>health_export_records</code> table of the local SQLite database, a unique ID, the target platform (Apple Health or Health Connect), the data domain, and a unique idempotency key are stored together with the export timestamp for every successful write operation. This comparison takes place purely locally on your device and serves to ensure data consistency.
+              </p>
+            </div>
           </section>
 
           <section class="policy-section reveal" id="section6">
-            <h2 data-i18n="p_6_t">6. HealthKit & Health Connect Integration</h2>
-            <p data-i18n="p_6_c1">Train Libre can read and write health data via Apple HealthKit and Google Health Connect. This synchronization happens entirely on your device.</p>
-            <p data-i18n="p_6_c2">The app only accesses these services if you explicitly grant permission in your system settings.</p>
-            <p data-i18n="p_6_c3">Please also review Apple’s and Google’s separate privacy policies for these health platforms.</p>
+            <h2 data-i18n="p_6_t">6. Data Security & Backups</h2>
+            <p data-i18n="p_6_c1">
+              Since all data resides locally on your end device, the security of the device is critical to protecting your data.
+            </p>
+            <div style="margin-bottom: 1.5rem;">
+              <h3 data-i18n="p_6_a_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">A. Local Data Isolation</h3>
+              <p data-i18n="p_6_a_c1">
+                The operating system (iOS/Android) isolates Train Libre's app data using sandbox mechanisms. Other installed applications do not have access to the local SQLite database or the API keys stored in the secured app settings without your consent.
+              </p>
+            </div>
+            <div>
+              <h3 data-i18n="p_6_b_t" style="font-size: 1.1rem; margin-bottom: 0.5rem;">B. Manual and Automatic Backups</h3>
+              <p data-i18n="p_6_b_c1">
+                The app offers functions to back up your data in order to prevent data loss in the event of device replacement or damage.
+              </p>
+              <ul>
+                <li data-i18n="p_6_b_l1">1. <strong>File Generation and Export:</strong> You can generate a complete backup of all data stored in the SQLite database and in the settings. This backup is generated as a structured JSON file in the operating system's temporary storage area and exported via the system's own share menu (Share Sheet). After the export, the temporary file is deleted immediately.</li>
+                <li data-i18n="p_6_b_l2">2. <strong>Encryption:</strong> To protect your sensitive data, backups can be encrypted with a password of your choice before export. The encryption is performed locally on the device using strong cryptographic algorithms. Unencrypted backups should always be stored in secure locations.</li>
+                <li data-i18n="p_6_b_l3">3. <strong>Automatic Backups:</strong> You can enable automatic backups at configurable intervals. On Android, this feature uses the Storage Access Framework (SAF) to save directly to a target folder selected by you. Alternatively, the file is saved in the local app document directory. These backup files remain on your device unless you actively copy them to an external cloud storage location (e.g., iCloud Drive or Google Drive).</li>
+                <li data-i18n="p_6_b_l4">4. <strong>System Backups:</strong> Please note that if system-wide device backups are enabled (e.g., via Apple iCloud or Google Drive Backup), Train Libre's application data will by default be uploaded to the respective cloud by the operating system. This is beyond our control and can be disabled for Train Libre in your device's system settings.</li>
+              </ul>
+            </div>
           </section>
 
           <section class="policy-section reveal" id="section7">
-            <h2 data-i18n="p_7_t">7. No Tracking / No Analytics</h2>
-            <p data-i18n="p_7_c1">The app does not use tracking or analytics SDKs (e.g., Firebase Analytics, Google Analytics, Sentry). No profiling for marketing purposes is performed.</p>
-          </section>
-
-          <section class="policy-section reveal" id="section8">
-            <h2 data-i18n="p_8_t">8. Retention Periods</h2>
+            <h2 data-i18n="p_7_t">7. Data Subject Rights</h2>
+            <p data-i18n="p_7_c1">
+              As a data subject, you have extensive rights under the GDPR. Since Train Libre is a local-first app, you can exercise most of these rights directly and independently within the app without depending on our cooperation.
+            </p>
             <ul>
-              <li data-i18n="p_8_l1">App Data: Stored on your device until deleted or uninstalled.</li>
-              <li data-i18n="p_8_l2">E-Mails: Retained only as long as needed for handling the request and documentation, subject to statutory retention duties.</li>
+              <li data-i18n="p_7_l1"><strong>Right of Access (Article 15 of the GDPR) & Data Portability (Article 20 of the GDPR):</strong> You have the right to know what data is stored in the app. You can view your entire database yourself at any time and export it in a machine-readable format (JSON file) using the integrated backup export function. You can also export reports in standard formats (such as CSV).</li>
+              <li data-i18n="p_7_l2"><strong>Right to Rectification (Article 16 of the GDPR):</strong> You can correct or change all profile data, workouts, nutrition logs, body weights, and settings entered manually by you at any time directly in the app's user interfaces.</li>
+              <li data-i18n="p_7_l3"><strong>Right to Erasure / "Right to be Forgotten" (Article 17 of the GDPR):</strong> You can manually delete individual records (e.g., a specific workout or food log) in the app.</li>
+              <li data-i18n="p_7_l4"><strong>Irrevocable Data Erasure (AppData Reset):</strong> The app has an integrated deletion function for all local application data. You can execute the complete data deletion function in the settings. This process irrevocably deletes:<br>• All SharedPreferences settings and app states.<br>• All recorded training logs, custom exercises, and routines.<br>• All nutrition logs, meal templates, and custom food items.<br>• All entered body measurements, supplement logbooks, and historical daily goals.<br>• All locally cached heart rate and sleep analysis stages.<br>• All API keys for AI providers stored in the operating system's secure storage.<br><br>After executing this function, the app is in its factory default state. Please note that data already exported to Apple Health or Google Health Connect cannot be deleted by this internal app function, as it is under the control of the operating system. However, you can delete this exported data at any time directly in the system's own health apps from Apple or Google.</li>
+              <li data-i18n="p_7_l5"><strong>Right to Lodge a Complaint with a Supervisory Authority (Article 77 of the GDPR):</strong> Without prejudice to internal app control options, you have the right to lodge a complaint with a competent data protection supervisory authority. This can be, for example, the supervisory authority of your habitual residence, your place of work, or the place of the alleged infringement (e.g., the Berlin Commissioner for Data Protection and Freedom of Information).</li>
             </ul>
-          </section>
-
-          <section class="policy-section reveal" id="section9">
-            <h2 data-i18n="p_9_t">9. Web Hosting (GitHub Pages)</h2>
-            <p data-i18n="p_9_c1">This website is hosted on GitHub Pages. The service provider is GitHub Inc., 88 Colin P. Kelly Jr St, San Francisco, CA 94107, USA (and GitHub B.V., Vijzelstraat 68-72, 1017 HL Amsterdam, The Netherlands, according to GitHub’s privacy statement).</p>
-            <p data-i18n="p_9_c2">When you access our website, your browser connects to GitHub’s servers. In this context, technical data such as your IP address, requested URL, date and time, browser and operating system information may be stored in server log files.</p>
-            <p data-i18n="p_9_c3">The legal basis is our legitimate interest in providing a secure and efficient website according to Art. 6(1)(f) GDPR.</p>
-            <p data-i18n="p_9_c4">For details, please see GitHub’s privacy statement at https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement.</p>
-          </section>
-
-          <section class="policy-section reveal" id="section10">
-            <h2 data-i18n="p_10_t">10. Your Data Subject Rights</h2>
-            <p data-i18n="p_10_c1">You have the following rights:</p>
-            <ul>
-              <li data-i18n="p_10_l1">Access (Art. 15)</li>
-              <li data-i18n="p_10_l2">Rectification (Art. 16)</li>
-              <li data-i18n="p_10_l3">Erasure (Art. 17)</li>
-              <li data-i18n="p_10_l4">Restriction of processing (Art. 18)</li>
-              <li data-i18n="p_10_l5">Data portability (Art. 20)</li>
-              <li data-i18n="p_10_l6">Objection (Art. 21)</li>
-              <li data-i18n="p_10_l7">Withdrawal of consent (Art. 7(3)) with future effect.</li>
-            </ul>
-            <p data-i18n="p_10_c2">You also have the right to lodge a complaint with a supervisory authority (Art. 77), such as the Berlin Commissioner for Data Protection and Freedom of Information.</p>
           </section>
 
           <section class="policy-section reveal" id="contact">

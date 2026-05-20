@@ -1,1 +1,8 @@
-Version 0.9.7 (Build 90021) brings significant improvements to workout logging and UI clarity. This update adds support for Reps-in-Reserve (RIR) with enhanced data propagation, introduces mathematical average fallback for rep ranges (e.g., "8-12"), and harmonizes diary summary cards for a cleaner look. We've also improved progress bar readability with dual-layer clipping for better text contrast and fixed various analytics layout issues.
+Version 0.9.9 introduces a massive architectural upgrade and several key training features:
+
+* Reactive UI Migration: The core feature layers (Supplements, Diary, Workouts) now use a stream-based architecture for real-time data synchronization.
+* Workout Notes: Added support for granular notes at the exercise and set level to capture training observations directly within the workout logger.
+* Data Safety: Implemented an unsaved changes interceptor in the routine editor to prevent accidental data loss during complex modifications.
+* Technical Transparency: Added algorithmic disclosure matrices and pre-rendered LaTeX math support to provide deeper insights into metabolic smoothing and AI meal matching.
+* Security & Compliance: Updated the Privacy Policy to v1.2 (GDPR/DSGVO compliant) and hardened secure storage isolations for sensitive API credentials.
+* Stability: Fixed fluid log double-counting in analytics, resolved supplement tracking regressions, and improved Android SAF backup target resolution.

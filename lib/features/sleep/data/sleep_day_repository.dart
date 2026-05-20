@@ -83,6 +83,7 @@ class SleepDayOverviewData {
 
 abstract class SleepDayDataRepository {
   Future<SleepDayOverviewData?> fetchOverview(DateTime day);
+  Stream<SleepDayOverviewData?> watchOverview(DateTime day);
   Future<void> dispose();
 }
 
@@ -103,6 +104,27 @@ class SleepDayRepository implements SleepDayDataRepository {
   SleepCanonicalSessionsDao? _sessionsDao;
   SleepCanonicalStageSegmentsDao? _segmentsDao;
   SleepCanonicalHeartRateSamplesDao? _hrDao;
+
+  @override
+  Stream<SleepDayOverviewData?> watchOverview(DateTime day) async* {
+    await _ensureDaos();
+    final db = _database ??= await _databaseFuture;
+
+    // Yield initial loaded state
+    yield await fetchOverview(day);
+
+    // Watch for updates to any of the raw sleep tables
+    const sleepTables = {
+      'sleep_nightly_analyses',
+      'sleep_canonical_sessions',
+      'sleep_canonical_stage_segments',
+      'sleep_canonical_heart_rate_samples',
+    };
+
+    yield* db.tableUpdates().where((updates) {
+      return updates.any((update) => sleepTables.contains(update.table));
+    }).asyncMap((_) => fetchOverview(day));
+  }
 
   @override
   Future<SleepDayOverviewData?> fetchOverview(DateTime day) async {

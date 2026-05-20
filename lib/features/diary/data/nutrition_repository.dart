@@ -16,6 +16,31 @@ class NutritionRepository implements IDiaryRepository {
   }) : _localDataSource = localDataSource;
 
   @override
+  Stream<DailyGoal?> watchGoalsForDate(DateTime date) {
+    return _localDataSource.watchGoalsForDate(date).map((data) {
+      if (data == null) return null;
+      return DailyGoal(
+        targetCalories: data.targetCalories,
+        targetProtein: data.targetProtein,
+        targetCarbs: data.targetCarbs,
+        targetFat: data.targetFat,
+        targetWater: data.targetWater,
+        targetSteps: data.targetSteps,
+        createdAt: data.createdAt,
+      );
+    });
+  }
+
+  @override
+  Stream<List<FoodEntry>> watchEntriesForDate(DateTime date) =>
+      _localDataSource.watchEntriesForDate(date);
+
+  @override
+  Stream<List<FluidEntry>> watchFluidEntriesForDate(DateTime date) =>
+      _localDataSource.watchFluidEntriesForDate(date);
+
+  @override
+  @Deprecated('Use watchGoalsForDate instead')
   Future<DailyGoal?> getGoalsForDate(DateTime date) async {
     final data = await _localDataSource.getGoalsForDate(date);
     if (data == null) return null;
@@ -31,10 +56,12 @@ class NutritionRepository implements IDiaryRepository {
   }
 
   @override
+  @Deprecated('Use watchEntriesForDate instead')
   Future<List<FoodEntry>> getEntriesForDate(DateTime date) =>
       _localDataSource.getEntriesForDate(date);
 
   @override
+  @Deprecated('Use watchFluidEntriesForDate instead')
   Future<List<FluidEntry>> getFluidEntriesForDate(DateTime date) =>
       _localDataSource.getFluidEntriesForDate(date);
 

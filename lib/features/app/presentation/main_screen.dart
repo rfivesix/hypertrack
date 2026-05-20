@@ -202,10 +202,8 @@ class _MainScreenState extends State<MainScreen>
   }
 
   Future<void> _refreshHomeScreen() async {
-    final targetDate = _currentActiveDate;
     if (_currentIndex == 0) {
-      await _tagebuchKey.currentState?.loadDataForDate(
-        targetDate,
+      await _tagebuchKey.currentState?.syncHealthData(
         forceStepsRefresh: false, // Don't force 30-day refresh on every log
       );
     } else {
@@ -218,11 +216,7 @@ class _MainScreenState extends State<MainScreen>
     bool queueIfInFlight = false,
   }) async {
     if (_currentIndex != 0) return;
-    final targetDate = _currentActiveDate;
-    await _tagebuchKey.currentState?.loadDataForDate(
-      targetDate,
-      queueIfInFlight: queueIfInFlight,
-    );
+    await _tagebuchKey.currentState?.syncHealthData();
   }
 
   Future<void> _showLogSupplementMenu() async {

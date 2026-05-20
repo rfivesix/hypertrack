@@ -6,9 +6,19 @@ import '../models/food_item.dart';
 
 /// Abstract contract for Diary data persistence and operations.
 abstract class IDiaryRepository {
+  Stream<DailyGoal?> watchGoalsForDate(DateTime date);
+  Stream<List<FoodEntry>> watchEntriesForDate(DateTime date);
+  Stream<List<FluidEntry>> watchFluidEntriesForDate(DateTime date);
+
+  @Deprecated('Use watchGoalsForDate instead')
   Future<DailyGoal?> getGoalsForDate(DateTime date);
+
+  @Deprecated('Use watchEntriesForDate instead')
   Future<List<FoodEntry>> getEntriesForDate(DateTime date);
+
+  @Deprecated('Use watchFluidEntriesForDate instead')
   Future<List<FluidEntry>> getFluidEntriesForDate(DateTime date);
+
   Future<List<FoodItem>> getProductsByBarcodes(List<String> barcodes);
 
   Future<void> deleteFoodEntry(int id);

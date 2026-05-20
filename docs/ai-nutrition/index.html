@@ -10,6 +10,7 @@
   <title>AI Meal Recognition | Train Libre</title>
   <link rel="icon" href="../../web/favicon.png">
   <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../katex.min.css">
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
@@ -32,9 +33,10 @@
           <span>Train Libre</span>
         </a>
         <div class="nav-links">
-          <a href="../#features" data-i18n="nav_features">Features</a>
-          <a href="../#intelligence" data-i18n="nav_guidance">AI Guidance</a>
-          <a href="../#privacy" data-i18n="nav_privacy">Privacy</a>
+          <a href="#features" data-i18n="nav_overview">Overview</a>
+          <a href="#architecture" data-i18n="nav_architecture">Architecture</a>
+          <a href="#limitations" data-i18n="nav_limitations">Limitations</a>
+          <a href="#evidence" data-i18n="nav_evidence">Evidence</a>
           <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
             rel="noreferrer">GitHub</a>
         </div>
@@ -94,7 +96,7 @@
         </div>
       </section>
 
-      <section class="section">
+      <section class="section" id="features">
         <div class="feature-grid">
           <article class="feature-card reveal delay-1" style="--feature: var(--orange); --feature-rgb: 255, 155, 5;">
             <div class="feature-icon" aria-hidden="true">
@@ -129,15 +131,51 @@
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section class="section section-tight" id="architecture">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="ai_meal_how_t">The Architecture: Local-First & BYOK</h2>
           <p class="section-copy" data-i18n="ai_meal_how_c1">Train Libre uses a "Bring Your Own Key" (BYOK) model. You choose a provider and model; the app handles the orchestration. Your data stays local, and the AI is only called when you trigger a capture.</p>
           <p class="section-copy" data-i18n="ai_meal_how_c2">Recognition is treated as a noisy proposal. Once the AI returns food names and grams, the app runs a deterministic validation pass. It attempts to repair common errors and flags low-confidence matches before you see the result.</p>
+          
+          <h3 style="margin-top: 32px; margin-bottom: 16px; font-weight: 800; color: var(--fg);" data-i18n="ai_meal_deep_c">Algorithmic Invariants & Local Matching Pipeline</h3>
+          
+          <div class="pipeline-flow">
+            <div class="pipeline-step">
+              <div class="pipeline-num">1</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="ai_meal_privacy_t">BYOK Privacy Invariant</div>
+                <div class="pipeline-desc" data-i18n="ai_meal_privacy_c">Your API key is stored securely using the operating system's Keychain (iOS) or Keystore (Android) via <code>flutter_secure_storage</code>. Raw image bytes or text descriptions are sent directly to your chosen AI provider (OpenAI, Anthropic, Gemini, Mistral, xAI) via TLS 1.3. No intermediate Train Libre server exists. Personal user profiles, weight history, and targets never leave your device.</div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">2</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="ai_meal_matching_t">Local Deterministic Matching</div>
+                <div class="pipeline-desc" data-i18n="ai_meal_matching_c">The AI operates only as a proposing layer. Once the model outputs food names and raw gram estimates, Train Libre matches these proposals against the local SQLite database (compiled from Open Food Facts and wger) using a tokenized Jaro-Winkler fuzzy matching scoring engine (validation threshold <span class="math-inline"><span class="math-var">D<sub>v</sub></span> &ge; 0.82</span>). If the match confidence is low, a local warning is flagged.</div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">3</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="ai_meal_retry_t">3-Pass Self-Repair Retry Loop</div>
+                <div class="pipeline-desc" data-i18n="ai_meal_retry_c">To counter structural LLM hallucinations, the app runs a local 3-pass self-repair routine: (1) <strong>Structured Extraction</strong>: forces JSON output using strict schemas; (2) <strong>Quantity Normalization</strong>: standardizes qualitative descriptors (e.g., 'a splash of milk', 'one medium slice') into metric grams; (3) <strong>Syntactic Repair</strong>: attempts regex-based extraction of malformed JSON arrays before initiating up to 3 automated localized retries.</div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">4</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="ai_meal_ban_t">Strict Nutrient Computation Ban</div>
+                <div class="pipeline-desc" data-i18n="ai_meal_ban_c">The AI is programmatically banned from calculating calories, macros, or nutritional totals (enforced via system instructions). All macro arithmetic is calculated 100% locally and offline on your device using verified food catalog densities. This prevents your health status from leaking to LLMs and ensures perfect mathematical consistency (1g Protein = 4 kcal, 1g Carb = 4 kcal, 1g Fat = 9 kcal).</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section class="section section-tight" id="limitations">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="ai_meal_limits_t">Scientific & Technical Limitations</h2>
           <p class="section-copy" data-i18n="ai_meal_limits_c1">Research into computer-vision-based nutrition estimation highlights several fundamental hurdles that make 100% accuracy impossible for consumer apps:</p>
@@ -162,7 +200,7 @@
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section class="section section-tight" id="evidence">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="evidence_read_more">Evidence & further reading</h2>
           <ul class="evidence-links">

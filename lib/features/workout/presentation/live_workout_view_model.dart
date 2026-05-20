@@ -118,6 +118,13 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
       if (re.id != null) {
         pauseTimes[re.id!] = re.pauseSeconds;
       }
+      if (re.notes != null && re.notes!.isNotEmpty) {
+        await _repository.saveWorkoutExerciseNote(
+          workoutLogId: log.id!,
+          exerciseName: re.exercise.nameEn,
+          notes: re.notes,
+        );
+      }
     }
 
     _createInitialSetLogs();
@@ -155,6 +162,7 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> restoreWorkoutSession(WorkoutLog log) async {
     _workoutLog = log;
     final savedSets = await _repository.getSetLogsForWorkout(log.id!);
+    final savedExerciseNotes = await _repository.getWorkoutExerciseNotes(log.id!);
 
     _setLogs.clear();
     _exercises.clear();
@@ -236,11 +244,13 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
         _totalSets++;
       }
 
+      final savedNote = savedExerciseNotes[exercise.nameEn] ?? savedExerciseNotes[exercise.nameDe];
       final re = RoutineExercise(
         id: syntheticReId,
         exercise: exercise,
         setTemplates: templates,
         pauseSeconds: pauseSec,
+        notes: savedNote,
       );
 
       _exercises.add(re);
@@ -638,6 +648,27 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
           _repository.updateSetLogs([updatedLog]);
         }
       }
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateExerciseNotes(String exerciseName, String? notes) async {
+    for (int i = 0; i < _exercises.length; i++) {
+      if (_exercises[i].exercise.nameEn == exerciseName || _exercises[i].exercise.nameDe == exerciseName) {
+        _exercises[i] = _exercises[i].copyWith(
+          notes: notes,
+          clearNotes: notes == null || notes.isEmpty,
+        );
+        break;
+      }
+    }
+
+    if (_workoutLog?.id != null) {
+      await _repository.saveWorkoutExerciseNote(
+        workoutLogId: _workoutLog!.id!,
+        exerciseName: exerciseName,
+        notes: notes,
+      );
     }
     notifyListeners();
   }

@@ -321,6 +321,15 @@ class WorkoutLocalDataSource {
     return rows.map((r) => Routine(id: r.localId, name: r.name)).toList();
   }
 
+  Stream<List<Routine>> watchAllRoutines() {
+    final dbInstance = DatabaseHelper.instance.dbInstance;
+    final query = dbInstance.select(dbInstance.routines)
+      ..orderBy([(t) => drift.OrderingTerm(expression: t.name)]);
+    return query.watch().map((rows) {
+      return rows.map((r) => Routine(id: r.localId, name: r.name)).toList();
+    });
+  }
+
   Future<List<Routine>> getAllRoutinesWithDetails() async {
     final basicRoutines = await getAllRoutines();
     final detailed = <Routine>[];
@@ -501,6 +510,7 @@ class WorkoutLocalDataSource {
           exercise: _mapExerciseToModel(exData),
           setTemplates: setTemplates,
           pauseSeconds: reData.pauseSeconds,
+          notes: reData.notes,
         ),
       );
     }
@@ -586,6 +596,8 @@ class WorkoutLocalDataSource {
         await replaceSetTemplatesForExercise(newRe.id!, re.setTemplates);
         // Copy rest duration
         await updatePauseTime(newRe.id!, re.pauseSeconds);
+        // Copy notes
+        await updateRoutineExerciseNotes(newRe.id!, re.notes);
       }
     }
   }
@@ -598,6 +610,80 @@ class WorkoutLocalDataSource {
         .write(
       db.RoutineExercisesCompanion(pauseSeconds: drift.Value(seconds)),
     );
+  }
+
+  Future<void> updateRoutineExerciseNotes(int routineExerciseId, String? notes) async {
+    final dbInstance = await database;
+    await (dbInstance.update(
+      dbInstance.routineExercises,
+    )..where((tbl) => tbl.localId.equals(routineExerciseId)))
+        .write(
+      db.RoutineExercisesCompanion(notes: drift.Value(notes)),
+    );
+  }
+
+  Future<void> saveWorkoutExerciseNote({
+    required int workoutLogId,
+    required String exerciseName,
+    required String? notes,
+  }) async {
+    final dbInstance = await database;
+    final workoutLogUuid = await _getUuidFromLocalId(
+      dbInstance.workoutLogs,
+      workoutLogId,
+    );
+    if (workoutLogUuid == null) return;
+
+    // Resolve exercise uuid if exists
+    final exRow = await (dbInstance.select(dbInstance.exercises)
+          ..where(
+            (tbl) =>
+                tbl.nameDe.equals(exerciseName) |
+                tbl.nameEn.equals(exerciseName),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    final exerciseUuid = exRow?.id;
+
+    // Check if a note already exists for this exercise in this workout
+    final existingRow = await (dbInstance.select(dbInstance.workoutExerciseLogs)
+          ..where((tbl) =>
+              tbl.workoutLogId.equals(workoutLogUuid) &
+              tbl.exerciseNameSnapshot.equals(exerciseName))
+          ..limit(1))
+        .getSingleOrNull();
+
+    final companion = db.WorkoutExerciseLogsCompanion(
+      workoutLogId: drift.Value(workoutLogUuid),
+      exerciseId: drift.Value(exerciseUuid),
+      exerciseNameSnapshot: drift.Value(exerciseName),
+      notes: drift.Value(notes),
+    );
+
+    if (existingRow != null) {
+      await (dbInstance.update(dbInstance.workoutExerciseLogs)
+            ..where((tbl) => tbl.localId.equals(existingRow.localId)))
+          .write(companion);
+    } else {
+      await dbInstance.into(dbInstance.workoutExerciseLogs).insert(companion);
+    }
+  }
+
+  Future<Map<String, String>> getWorkoutExerciseNotes(int workoutLogId) async {
+    final dbInstance = await database;
+    final workoutLogUuid = await _getUuidFromLocalId(
+      dbInstance.workoutLogs,
+      workoutLogId,
+    );
+    if (workoutLogUuid == null) return {};
+
+    final rows = await (dbInstance.select(dbInstance.workoutExerciseLogs)
+          ..where((tbl) => tbl.workoutLogId.equals(workoutLogUuid)))
+        .get();
+
+    return {
+      for (final r in rows) r.exerciseNameSnapshot ?? '': r.notes ?? '',
+    };
   }
 
   Future<Routine?> getRoutineByName(String name) async {
@@ -977,6 +1063,38 @@ class WorkoutLocalDataSource {
     return _loadWorkoutLogsWithSets(rows);
   }
 
+  Stream<List<WorkoutLog>> watchFullWorkoutLogs() {
+    final dbInstance = DatabaseHelper.instance.dbInstance;
+    final query = dbInstance.select(dbInstance.workoutLogs)
+          ..where((tbl) => tbl.status.equals('completed'))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                  expression: t.startTime,
+                  mode: drift.OrderingMode.desc,
+                ),
+          ]);
+    return query.watch().asyncMap((rows) => _loadWorkoutLogsWithSets(rows));
+  }
+
+  Stream<List<WorkoutLog>> watchWorkoutLogsForDateRange(
+      DateTime start, DateTime end) {
+    final dbInstance = DatabaseHelper.instance.dbInstance;
+    final effectiveStart = DateTime(start.year, start.month, start.day);
+    final effectiveEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final query = dbInstance.select(dbInstance.workoutLogs)
+      ..where((tbl) =>
+          tbl.startTime.isBetweenValues(effectiveStart, effectiveEnd) &
+          tbl.status.equals('completed'))
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+              expression: t.startTime,
+              mode: drift.OrderingMode.desc,
+            ),
+      ]);
+    return query.watch().asyncMap((rows) => _loadWorkoutLogsWithSets(rows));
+  }
+
   Future<WorkoutLog?> getLatestWorkoutLog() async {
     final dbInstance = await database;
     final row = await (dbInstance.select(dbInstance.workoutLogs)
@@ -1052,6 +1170,27 @@ class WorkoutLocalDataSource {
   Future<List<SetLog>> getSetLogsForWorkout(int workoutLogId) async {
     final full = await getWorkoutLogById(workoutLogId);
     return full?.sets ?? [];
+  }
+
+  Stream<List<SetLog>> watchSetLogsForWorkout(int workoutLogId) async* {
+    final dbInstance = DatabaseHelper.instance.dbInstance;
+    final logRow = await (dbInstance.select(
+      dbInstance.workoutLogs,
+    )..where((tbl) => tbl.localId.equals(workoutLogId)))
+        .getSingleOrNull();
+
+    if (logRow == null) {
+      yield [];
+      return;
+    }
+
+    final query = dbInstance.select(dbInstance.setLogs)
+      ..where((tbl) => tbl.workoutLogId.equals(logRow.id))
+      ..orderBy([(t) => drift.OrderingTerm(expression: t.logOrder)]);
+      
+    yield* query.watch().map(
+          (rows) => rows.map((r) => _mapSetLogToModel(r, workoutLogId)).toList(),
+        );
   }
 
   // ===========================================================================

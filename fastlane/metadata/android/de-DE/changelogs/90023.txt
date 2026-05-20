@@ -1,0 +1,6 @@
+- Reaktive UI-Architektur: Echtzeit-Synchronisierung für Kernfunktionen.
+- Trainings-Notizen: Notizen auf Übungs- und Satzebene im Logger hinzugefügt.
+- Datensicherheit: Schutz vor Datenverlust beim Bearbeiten von Routinen.
+- Transparenz: Algorithmus-Details und LaTeX-Unterstützung für Formeln.
+- Sicherheit: Datenschutzerklärung v1.2 und gehärtete Key-Isolation.
+- Stabilität: Korrektur von Doppelzählungen bei Flüssigkeiten und SAF-Backups.

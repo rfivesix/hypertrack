@@ -4,7 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.9.7] (90021) - 2026-05-18
+## [0.9.9] - 2026-05-20
+
+### Added
+- **Reactive UI Architecture**: Completed a multi-phase migration (Phase 1-3) of the core feature layers (Supplements, Diary/Nutrition, Workouts) to a stream-based reactive architecture using Drift watchers, eliminating manual UI refresh cycles.
+- **Workout Set & Exercise Notes**: Extended the training domain models and database schema (`SetLogs`, `RoutineSetTemplates`, `WorkoutExerciseLogs`) to support granular text observations with direct tap-to-edit interactions in `LiveWorkoutScreen`.
+- **Unsaved Changes Interceptor**: Implemented a navigation guardian in `EditRoutineScreen` with a `showGlassBottomMenu` confirmation dialog to prevent data loss during complex template modifications.
+- **Algorithmic Transparency Matrix**: Integrated technical disclosure matrices into the documentation and in-app views, detailing Bayesian TDEE estimation and local deterministic AI matching invariants.
+- **LaTeX Math Integration**: Integrated KaTeX (`docs/katex.min.css`, `docs/script.js`) for high-precision rendering of metabolic and statistical formulas across documentation and technical UI views.
+- **Technical Documentation Overhaul**: Completely restructured the `documentation/` directory to align with Pure Clean Architecture, separating developer-facing architectural guides from feature overviews.
+- **Attribution Inventory**: Added a comprehensive license and attribution inventory to the `AboutScreen` for bundled open-source dependencies.
+
+### Fixed
+- **Fluid Deduplication**: Resolved a critical analytics error in `BodyNutritionAnalyticsDataAdapter` where fluid logs linked to food entries were double-counted in daily totals.
+- **Supplement Tracking Stability**: Fixed a mapping regression in `SupplementRepositoryImpl` that caused tracking status and daily goal visibility to be lost during reactive state transitions.
+- **Android SAF Target Resolution**: Corrected `BackupManager` logic for Android Storage Access Framework (SAF) to ensure reliable archive writing to secure, user-selected external directories.
+- **Haptic Preference Enforcement**: Hardened `HapticFeedbackService` to strictly respect `AppConfig` settings, preventing unrequested vibration events during graph and chart interactions.
+
+### Security & Compliance
+- **Privacy Policy v1.2**: Synchronized localized (DE/EN) GDPR/DSGVO compliant policies across the mobile `LegalScreen` and web documentation.
+- **Secure Storage Hardening**: Improved data isolation and reset logic in `LocalAppDataResetService` to ensure the complete erasure of sensitive AI provider credentials and model selections.
+
+## [0.9.8] - 2026-05-19
+
+### Fixed
+- Fixed mapping regression where supplements lost tracking status and daily goals, disappearing from the Diary screen and Supplement Hub.
+- Fixed database-level fluid food double-counting across the analytics compilation pipeline and correlation charts.
+- Fixed failing auto-backup process by resolving target directory structures through secure application documents paths.
+- Fixed haptic feedback on graph screens to strictly respect the app-wide disabled setting configuration.
+- Fixed exercise notes UI layout flaws by removing duplicate edit action buttons and eliminating emoji assets from text wrappers.
+
+### Added
+- Added direct tap-to-edit interactions to exercise note display cards across live tracking and history screens.
+- Added explicit note deletion capabilities to easily clear text values and update database rows back to null.
+
+## [0.9.7] - 2026-05-18
 ### Added
 - **Reps-in-Reserve (RIR) Enhancement**: Improved RIR data propagation and null-safety during workout logging.
 - **Rep Range Fallback**: Implemented mathematical average calculation for rep ranges (e.g., "8-12" defaults to 10 reps) in workout templates and live logging.

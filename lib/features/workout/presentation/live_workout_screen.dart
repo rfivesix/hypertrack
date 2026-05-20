@@ -250,11 +250,90 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
     ).removeExercise(exerciseToRemove.id!);
   }
 
+  void _editExerciseNotes(BuildContext context, RoutineExercise re) async {
+    final l10n = AppLocalizations.of(context)!;
+    final manager = Provider.of<LiveWorkoutViewModel>(context, listen: false);
+    final controller = TextEditingController(text: re.notes ?? '');
+
+    final result = await showGlassBottomMenu<String?>(
+      context: context,
+      title: "Übungsnotiz",
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: "Notizen oder Hinweise eingeben...",
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                if (re.notes != null && re.notes!.isNotEmpty) ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    tooltip: "Notiz löschen",
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop('');
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(controller.text.trim());
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      await manager.updateExerciseNotes(re.exercise.nameEn, result);
+    }
+  }
+
   void _addExercise() async {
     final manager = Provider.of<LiveWorkoutViewModel>(context, listen: false);
     final selectedExercise = await Navigator.of(context).push<Exercise>(
       MaterialPageRoute(
-        builder: (context) => const ExerciseCatalogScreen(isSelectionMode: true),
+        builder: (context) =>
+            const ExerciseCatalogScreen(isSelectionMode: true),
       ),
     );
 
@@ -796,8 +875,7 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                 } else {
                   val = double.tryParse(sanitized);
                 }
-                final seconds =
-                    (val != null) ? (val * 60).round() : null;
+                final seconds = (val != null) ? (val * 60).round() : null;
                 final clearDuration = seconds == null && text.isEmpty;
                 if (seconds != manager.setLogs[templateId]?.durationSeconds ||
                     clearDuration) {
@@ -878,14 +956,17 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                     color: isCompleted ? Colors.green : Colors.grey,
                   ),
                   onPressed: () async {
-                    await manager.updateSet(templateId, isCompleted: !isCompleted);
+                    await manager.updateSet(templateId,
+                        isCompleted: !isCompleted);
                     if (!isCompleted) {
                       final updatedSet = manager.setLogs[templateId];
                       if (updatedSet != null) {
                         if (isCardio) {
                           if (updatedSet.distanceKm != null) {
                             manager.weightControllers[templateId]?.text =
-                                updatedSet.distanceKm!.toStringAsFixed(1).replaceAll('.0', '');
+                                updatedSet.distanceKm!
+                                    .toStringAsFixed(1)
+                                    .replaceAll('.0', '');
                           }
                           if (updatedSet.durationSeconds != null) {
                             manager.repsControllers[templateId]?.text =
@@ -893,12 +974,14 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                           }
                         } else {
                           if (updatedSet.weightKg != null) {
-                            final displayWeight = unitService.convertDisplayValue(
-                                updatedSet.weightKg!, UnitDimension.weight);
-                            manager.weightControllers[templateId]?.text = displayWeight
-                                .toStringAsFixed(2)
-                                .replaceAll(RegExp(r'0*$'), '')
-                                .replaceAll(RegExp(r'\.$'), '');
+                            final displayWeight =
+                                unitService.convertDisplayValue(
+                                    updatedSet.weightKg!, UnitDimension.weight);
+                            manager.weightControllers[templateId]?.text =
+                                displayWeight
+                                    .toStringAsFixed(2)
+                                    .replaceAll(RegExp(r'0*$'), '')
+                                    .replaceAll(RegExp(r'\.$'), '');
                           }
                           if (updatedSet.reps != null) {
                             manager.repsControllers[templateId]?.text =
@@ -1309,6 +1392,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                                                   ),
                                                 IconButton(
                                                   icon: const Icon(
+                                                    Icons.edit,
+                                                  ),
+                                                  tooltip: "Notizen bearbeiten",
+                                                  onPressed: () =>
+                                                      _editExerciseNotes(
+                                                          context,
+                                                          routineExercise),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
                                                     Icons.timer_outlined,
                                                   ),
                                                   tooltip: l10n.editPauseTime,
@@ -1331,6 +1424,67 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                                               ],
                                             ),
                                           ),
+                                          if (routineExercise.notes != null &&
+                                              routineExercise.notes!.isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                left: 16.0,
+                                                right: 16.0,
+                                                bottom: 12.0,
+                                              ),
+                                              child: InkWell(
+                                                onTap: () => _editExerciseNotes(
+                                                    context, routineExercise),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                child: Container(
+                                                  width: double.infinity,
+                                                  padding:
+                                                      const EdgeInsets.all(12),
+                                                  decoration: BoxDecoration(
+                                                    color: colorScheme
+                                                        .surfaceContainerHighest
+                                                        .withValues(alpha: 0.5),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                    border: Border.all(
+                                                      color: colorScheme
+                                                          .onSurfaceVariant
+                                                          .withValues(
+                                                              alpha: 0.1),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .description_outlined,
+                                                        size: 16,
+                                                        color: colorScheme
+                                                            .onSurfaceVariant,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Text(
+                                                          routineExercise
+                                                              .notes!,
+                                                          style: textTheme
+                                                              .bodyMedium
+                                                              ?.copyWith(
+                                                            color: colorScheme
+                                                                .onSurfaceVariant,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                           if (showE1rmSummary)
                                             _buildExerciseE1rmSummary(
                                               l10n,

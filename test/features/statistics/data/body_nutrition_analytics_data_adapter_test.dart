@@ -151,5 +151,83 @@ void main() {
       expect(result.range.end, DateTime(2026, 4, 10, 23, 59, 59));
       expect(result.weightPoints, isEmpty);
     });
+
+    test('deduplicates fluid entries that are linked or match food entries defensively', () async {
+      final logDate = DateTime(2026, 4, 2, 10, 0, 0);
+
+      // Create a fluid food item
+      await productHelper.insertProduct(
+        FoodItem(
+          barcode: 'liquid-food',
+          name: 'Liquid Food Product',
+          calories: 100,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          isLiquid: true,
+          isFluid: true,
+          source: FoodItemSource.user,
+        ),
+      );
+
+      // Insert food entry
+      final foodEntryId = await dbHelper.insertFoodEntry(
+        FoodEntry(
+          barcode: 'liquid-food',
+          timestamp: logDate,
+          quantityInGrams: 250,
+          mealType: 'Snack',
+        ),
+      );
+
+      // 1. Linked Fluid Entry (by linkedFoodEntryId)
+      await dbHelper.insertFluidEntry(
+        FluidEntry(
+          timestamp: logDate,
+          quantityInMl: 250,
+          name: 'Liquid Food Product',
+          kcal: 250,
+          linkedFoodEntryId: foodEntryId,
+        ),
+      );
+
+      // 2. Unlinked Defensive Duplicate (matches timestamp and quantity of liquid-food)
+      await dbHelper.insertFluidEntry(
+        FluidEntry(
+          timestamp: logDate,
+          quantityInMl: 250,
+          name: 'Liquid Food Product Duplicate',
+          kcal: 250,
+          linkedFoodEntryId: null, // Unlinked
+        ),
+      );
+
+      // 3. Independent Standalone Fluid Entry (should be counted)
+      await dbHelper.insertFluidEntry(
+        FluidEntry(
+          timestamp: logDate.add(const Duration(hours: 4)),
+          quantityInMl: 300,
+          name: 'Independent Water',
+          kcal: 50,
+          linkedFoodEntryId: null,
+        ),
+      );
+
+      final result = await adapter.fetch(
+        rangeIndex: 4, // all-time
+        now: DateTime(2026, 4, 5, 9, 30),
+      );
+
+      // Total expected calories for April 2nd:
+      // Food entry: 100 * (250 / 100) = 250 kcal
+      // Linked fluid entry: skipped (0 kcal)
+      // Defensive duplicate: skipped (0 kcal)
+      // Independent fluid entry: 50 kcal
+      // Total: 250 + 50 = 300 kcal
+      expect(
+        result.caloriesByDay[DateTime.utc(2026, 4, 2)],
+        closeTo(300.0, 0.001),
+      );
+    });
   });
 }

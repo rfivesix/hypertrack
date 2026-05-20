@@ -1,9 +1,11 @@
 // lib/screens/workout_log_detail_screen.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../domain/repositories/workout_repository.dart';
 import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
@@ -48,6 +50,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   WorkoutHeartRateSummary? _heartRateSummary;
   Map<String, List<SetLog>> _groupedSets = {};
   Map<String, Exercise> _exerciseDetails = {};
+  Map<String, String> _exerciseNotes = {};
   bool _isEditMode = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _notesController;
@@ -63,18 +66,75 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
   Map<String, double> _categoryVolume = {};
   static const ShareService _shareService = ShareService();
 
+  StreamSubscription<List<SetLog>>? _setLogsSubscription;
+
   @override
   void initState() {
     super.initState();
     _notesController = TextEditingController();
     _loadDetails();
+    _setLogsSubscription = context
+        .read<IWorkoutRepository>()
+        .watchSetLogsForWorkout(widget.logId)
+        .listen(_onSetLogsUpdated);
   }
 
   @override
   void dispose() {
+    _setLogsSubscription?.cancel();
     _notesController.dispose();
     _clearControllers();
     super.dispose();
+  }
+
+  void _onSetLogsUpdated(List<SetLog> updatedSets) async {
+    if (!mounted || _isEditMode || _log == null) return;
+
+    final repo = context.read<IWorkoutRepository>();
+    final mutableSets = List<SetLog>.from(updatedSets);
+    await _calculateHistoricalPRs(mutableSets, beforeTimestamp: _log!.startTime);
+
+    final updatedGroups = <String, List<SetLog>>{};
+    for (var set in mutableSets) {
+      updatedGroups.putIfAbsent(set.exerciseName, () => []).add(set);
+    }
+
+    // Resolve any newly added exercises not in _exerciseDetails
+    for (final set in mutableSets) {
+      if (!_exerciseDetails.containsKey(set.exerciseName)) {
+        final ex = await repo.resolveExerciseForSetLog(set);
+        if (ex != null) {
+          _exerciseDetails[set.exerciseName] = ex;
+        }
+      }
+    }
+
+    // Recalculate volume based on the resolved map
+    final catVol = <String, double>{};
+    for (var set in mutableSets) {
+      final v = (set.weightKg ?? 0) * (set.reps ?? 0);
+      if (v > 0) {
+        final cat = _exerciseDetails[set.exerciseName]?.categoryName ?? 'Other';
+        catVol.update(cat, (val) => val + v, ifAbsent: () => v);
+      }
+    }
+
+    if (!mounted || _isEditMode) return;
+
+    setState(() {
+      _log = WorkoutLog(
+        id: _log!.id,
+        routineName: _log!.routineName,
+        startTime: _log!.startTime,
+        endTime: _log!.endTime,
+        notes: _log!.notes,
+        startZoneOffsetMinutes: _log!.startZoneOffsetMinutes,
+        endZoneOffsetMinutes: _log!.endZoneOffsetMinutes,
+        sets: mutableSets,
+      );
+      _groupedSets = updatedGroups;
+      _categoryVolume = catVol;
+    });
   }
 
   void _clearControllers() {
@@ -127,6 +187,9 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       }
       return;
     }
+
+    final savedExerciseNotes = await WorkoutLocalDataSource.instance
+        .getWorkoutExerciseNotes(widget.logId);
 
     final heartRateFuture = _heartRateService.loadForWorkoutWindow(
       startTime: data.startTime,
@@ -220,6 +283,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       _log = data;
       _groupedSets = updatedGroups;
       _exerciseDetails = details;
+      _exerciseNotes = savedExerciseNotes;
       _categoryVolume = catVol;
       _heartRateSummary = heartRateSummary;
       _pulseTrackingEnabled = pulseTrackingEnabled;
@@ -489,6 +553,14 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         set.copyWith(id: null, workoutLogId: widget.logId),
       );
     }
+    for (final exerciseName in _exerciseNotes.keys) {
+      final note = _exerciseNotes[exerciseName];
+      await dbHelper.saveWorkoutExerciseNote(
+        workoutLogId: widget.logId,
+        exerciseName: exerciseName,
+        notes: note != null && note.isNotEmpty ? note : null,
+      );
+    }
 
     if (mounted) {
       HapticFeedbackService.instance.confirmationFeedback();
@@ -499,6 +571,87 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
     setState(() => _isEditMode = false);
     _loadDetails();
+  }
+
+  void _editExerciseNotes(BuildContext context, String exerciseName) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller =
+        TextEditingController(text: _exerciseNotes[exerciseName] ?? '');
+
+    final result = await showGlassBottomMenu<String?>(
+      context: context,
+      title: "Übungsnotiz",
+      contentBuilder: (ctx, close) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: "Notizen oder Hinweise eingeben...",
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                if (_exerciseNotes[exerciseName] != null &&
+                    _exerciseNotes[exerciseName]!.isNotEmpty) ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    tooltip: "Notiz löschen",
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop('');
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      close();
+                      Navigator.of(ctx).pop(controller.text.trim());
+                    },
+                    child: Text(l10n.save),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _exerciseNotes[exerciseName] = result;
+      });
+    }
   }
 
   @override
@@ -675,7 +828,8 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                           .push<Exercise>(
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const ExerciseCatalogScreen(isSelectionMode: true),
+                                          const ExerciseCatalogScreen(
+                                              isSelectionMode: true),
                                     ),
                                   );
                                   if (selectedExercise != null) {
@@ -1000,8 +1154,19 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                 ),
               ),
             ),
-            trailing: _isEditMode
-                ? IconButton(
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isEditMode)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit,
+                    ),
+                    tooltip: "Notizen bearbeiten",
+                    onPressed: () => _editExerciseNotes(context, exerciseName),
+                  ),
+                if (_isEditMode)
+                  IconButton(
                     icon: const Icon(
                       Icons.delete_outline,
                       color: Colors.redAccent,
@@ -1015,11 +1180,67 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                           _rirControllers.remove(set.id!)?.dispose();
                         }
                         _groupedSets.remove(exerciseName);
+                        _exerciseNotes.remove(exerciseName);
                       });
                     },
                   )
-                : const Icon(Icons.info_outline),
+                else
+                  const Icon(Icons.info_outline),
+              ],
+            ),
           ),
+          if (_exerciseNotes[exerciseName] != null &&
+              _exerciseNotes[exerciseName]!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 12.0,
+              ),
+              child: InkWell(
+                onTap: _isEditMode
+                    ? () => _editExerciseNotes(context, exerciseName)
+                    : null,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurfaceVariant
+                          .withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.description_outlined,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _exerciseNotes[exerciseName]!,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
           // Header Row
           Padding(

@@ -5,6 +5,7 @@ import '../../supplements/domain/repositories/supplement_repository.dart';
 import '../../workout/domain/repositories/workout_repository.dart';
 import '../../../core/infrastructure/user_preferences_repository.dart';
 import '../domain/calculate_daily_nutrition_use_case.dart';
+import '../domain/models/daily_goal.dart';
 import '../domain/models/daily_nutrition.dart';
 import '../domain/models/fluid_entry.dart';
 import '../domain/models/tracked_food_item.dart';
@@ -17,6 +18,7 @@ import '../../../services/health/steps_sync_service.dart';
 import '../../sleep/data/sleep_day_repository.dart';
 import '../../pulse/domain/pulse_models.dart';
 import 'diary_health_sync_coordinator.dart';
+import '../../workout/domain/models/workout_log.dart';
 
 DateTime normalizeDiaryDate(DateTime date) => date.dateOnly;
 DateTime resolveDiaryInitialDate({DateTime? initialDate, DateTime? now}) {
@@ -79,6 +81,9 @@ class DiaryViewModel extends ChangeNotifier {
   final IDiaryRepository _nutritionRepo;
   final SupplementRepository _supplementRepo;
   final IWorkoutRepository _workoutRepo;
+
+  @visibleForTesting
+  SupplementRepository get supplementRepo => _supplementRepo;
   final UserPreferencesRepository _prefsRepo =
       UserPreferencesRepository.instance;
   final CalculateDailyNutritionUseCase _calculateUseCase =
@@ -86,8 +91,20 @@ class DiaryViewModel extends ChangeNotifier {
 
   final DiaryHealthSyncCoordinator healthSyncCoordinator =
       DiaryHealthSyncCoordinator();
-  final DiaryLoadCoordinator _loadCoordinator = DiaryLoadCoordinator();
-  Future<void>? _activeDiaryLoadFuture;
+
+  StreamSubscription<DailyGoal?>? _goalsSubscription;
+  StreamSubscription<List<FoodEntry>>? _entriesSubscription;
+  StreamSubscription<List<FluidEntry>>? _fluidsSubscription;
+  StreamSubscription<List<Supplement>>? _supplementsSubscription;
+  StreamSubscription<List<SupplementLog>>? _supplementLogsSubscription;
+  StreamSubscription<List<WorkoutLog>>? _workoutsSubscription;
+
+  DailyGoal? _activeGoals;
+  List<FoodEntry> _activeEntries = [];
+  List<FluidEntry> _activeFluids = [];
+  List<Supplement> _activeSupplements = [];
+  List<SupplementLog> _activeSupplementLogs = [];
+  List<WorkoutLog> _activeWorkouts = [];
 
   bool isLoading = true;
   DailyNutrition? dailyNutrition;
@@ -127,151 +144,145 @@ class DiaryViewModel extends ChangeNotifier {
         selectedDateNotifier =
             ValueNotifier((initialDate ?? DateTime.now()).dateOnly) {
     healthSyncCoordinator.addListener(notifyListeners);
-    loadDataForDate(selectedDate);
+    setSelectedDate(selectedDate);
   }
 
   @override
   void dispose() {
+    _goalsSubscription?.cancel();
+    _entriesSubscription?.cancel();
+    _fluidsSubscription?.cancel();
+    _supplementsSubscription?.cancel();
+    _supplementLogsSubscription?.cancel();
+    _workoutsSubscription?.cancel();
     healthSyncCoordinator.removeListener(notifyListeners);
     healthSyncCoordinator.dispose();
     selectedDateNotifier.dispose();
     super.dispose();
   }
 
-  bool _isCurrentLoad(int generation, DateTime date) {
-    return _loadCoordinator.isCurrent(generation, date);
+
+
+  void setSelectedDate(DateTime date) {
+    final diaryDate = normalizeDiaryDate(date);
+    selectedDateNotifier.value = diaryDate;
+
+    // Cancel existing subscriptions
+    _goalsSubscription?.cancel();
+    _entriesSubscription?.cancel();
+    _fluidsSubscription?.cancel();
+    _supplementsSubscription?.cancel();
+    _supplementLogsSubscription?.cancel();
+    _workoutsSubscription?.cancel();
+
+    isLoading = true;
+    notifyListeners();
+
+    // Re-establish reactive stream listeners for the new selected date
+    _goalsSubscription = _nutritionRepo.watchGoalsForDate(diaryDate).listen((goals) {
+      _activeGoals = goals;
+      _updateCalculatedState();
+    });
+
+    _entriesSubscription = _nutritionRepo.watchEntriesForDate(diaryDate).listen((entries) {
+      _activeEntries = entries;
+      _updateCalculatedState();
+    });
+
+    _fluidsSubscription = _nutritionRepo.watchFluidEntriesForDate(diaryDate).listen((fluids) {
+      _activeFluids = fluids;
+      _updateCalculatedState();
+    });
+
+    _supplementsSubscription = _supplementRepo.watchSupplementsForDate(diaryDate).listen((supps) {
+      _activeSupplements = supps;
+      _updateCalculatedState();
+    });
+
+    _supplementLogsSubscription = _supplementRepo.watchSupplementLogsForDate(diaryDate).listen((logs) {
+      _activeSupplementLogs = logs;
+      _updateCalculatedState();
+    });
+
+    _workoutsSubscription = _workoutRepo
+        .watchWorkoutLogsForDateRange(diaryDate, diaryDate)
+        .listen((workouts) {
+      _activeWorkouts = workouts;
+      _updateCalculatedState();
+    });
+
+    // Delegate all health data loading and background sync
+    unawaited(healthSyncCoordinator.loadAndSyncHealthData(
+      date: diaryDate,
+      forceStepsRefresh: false,
+      isCurrentLoad: (d) => d.isSameDate(diaryDate),
+    ));
   }
 
+  Future<void> syncHealthData({bool forceStepsRefresh = false}) async {
+    await healthSyncCoordinator.loadAndSyncHealthData(
+      date: selectedDate,
+      forceStepsRefresh: forceStepsRefresh,
+      isCurrentLoad: (d) => d.isSameDate(selectedDate),
+    );
+  }
+
+  @Deprecated('Use setSelectedDate or syncHealthData instead')
   Future<void> loadDataForDate(
     DateTime date, {
     bool forceStepsRefresh = false,
     bool queueIfInFlight = false,
   }) async {
-    final diaryDate = normalizeDiaryDate(date);
-    final activeFuture = _activeDiaryLoadFuture;
-    if (activeFuture != null &&
-        _loadCoordinator.coalesceIfInFlight(
-          diaryDate,
-          forceStepsRefresh: forceStepsRefresh,
-          queueIfInFlight: queueIfInFlight,
-        )) {
-      return activeFuture;
+    setSelectedDate(date);
+    if (forceStepsRefresh) {
+      await syncHealthData(forceStepsRefresh: true);
     }
-
-    _loadCoordinator.markInFlight(diaryDate);
-    late final Future<void> loadFuture;
-    loadFuture = _runDiaryLoadQueue(
-      diaryDate,
-      forceStepsRefresh: forceStepsRefresh,
-    ).whenComplete(() {
-      if (identical(_activeDiaryLoadFuture, loadFuture)) {
-        _activeDiaryLoadFuture = null;
-        _loadCoordinator.clearInFlight(diaryDate);
-      }
-    });
-    _activeDiaryLoadFuture = loadFuture;
-    return loadFuture;
   }
 
-  Future<void> _runDiaryLoadQueue(
-    DateTime diaryDate, {
-    required bool forceStepsRefresh,
-  }) async {
-    var shouldForceStepsRefresh = forceStepsRefresh;
-    do {
-      _loadCoordinator.clearPendingReload();
-      await _loadDataForDateOnce(
-        diaryDate,
-        forceStepsRefresh: shouldForceStepsRefresh,
-      );
-      shouldForceStepsRefresh = _loadCoordinator.pendingForceStepsRefresh;
-    } while (_loadCoordinator.hasPendingReload &&
-        selectedDate.isSameDate(diaryDate));
-  }
-
-  Future<void> _loadDataForDateOnce(
-    DateTime diaryDate, {
-    required bool forceStepsRefresh,
-  }) async {
-    final loadGeneration = _loadCoordinator.begin(diaryDate);
-
-    selectedDateNotifier.value = diaryDate;
-    isLoading = true;
-    notifyListeners();
-
+  void _updateCalculatedState() async {
     try {
-      final goals = await _nutritionRepo.getGoalsForDate(diaryDate);
       final targetSugar = await _prefsRepo.getTargetSugar() ?? 50;
       final targetCaffeine = await _prefsRepo.getTargetCaffeine() ?? 400;
       showSugarInOverview = await _prefsRepo.getShowSugarInDiaryOverview();
 
-      final entries = await _nutritionRepo.getEntriesForDate(diaryDate);
-      final rawFluidEntries =
-          await _nutritionRepo.getFluidEntriesForDate(diaryDate);
-      final startOfDay =
-          DateTime(diaryDate.year, diaryDate.month, diaryDate.day);
-      final endOfDay = DateTime(
-          diaryDate.year, diaryDate.month, diaryDate.day, 23, 59, 59, 999);
-      final workoutLogs =
-          await _workoutRepo.getWorkoutLogsForDateRange(startOfDay, endOfDay);
-
-      final barcodes = entries.map((e) => e.barcode).toSet().toList();
+      final barcodes = _activeEntries.map((e) => e.barcode).toSet().toList();
       final products = await _nutritionRepo.getProductsByBarcodes(barcodes);
 
-      final supplementsForDate =
-          await _supplementRepo.getSupplementsForDate(diaryDate);
       final allSupplements = await _supplementRepo.getAllSupplements();
-      final todaysLogs =
-          await _supplementRepo.getSupplementLogsForDate(diaryDate);
-
-      if (!_isCurrentLoad(loadGeneration, diaryDate)) return;
 
       final state = _calculateUseCase.execute(
-        goals: goals,
+        goals: _activeGoals,
         targetSugar: targetSugar,
         targetCaffeine: targetCaffeine,
-        foodEntries: entries,
-        fluidEntries: rawFluidEntries,
+        foodEntries: _activeEntries,
+        fluidEntries: _activeFluids,
         foodProducts: products,
-        workoutLogs: workoutLogs,
-        supplementsForDate: supplementsForDate,
+        workoutLogs: _activeWorkouts,
+        supplementsForDate: _activeSupplements,
         allSupplements: allSupplements,
-        todaysSupplementLogs: todaysLogs,
+        todaysSupplementLogs: _activeSupplementLogs,
       );
 
       dailyNutrition = state.summary;
       entriesByMeal = state.entriesByMeal;
-      fluidEntries = rawFluidEntries;
+      fluidEntries = _activeFluids;
       trackedSupplements = state.trackedSupplements;
       workoutSummary = state.workoutSummary;
-      targetSteps = goals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
+      targetSteps = _activeGoals?.targetSteps ?? StepsSyncService.defaultStepsGoal;
 
       isLoading = false;
       notifyListeners();
-
-      // Delegate all health data loading and background sync
-      unawaited(healthSyncCoordinator.loadAndSyncHealthData(
-        date: diaryDate,
-        forceStepsRefresh: forceStepsRefresh,
-        isCurrentLoad: (date) => _isCurrentLoad(loadGeneration, date),
-      ));
     } catch (e, st) {
-      debugPrint('Error loading diary data: $e\n$st');
-      if (_isCurrentLoad(loadGeneration, diaryDate)) {
-        isLoading = false;
-        notifyListeners();
-      }
+      debugPrint('Error calculating reactive diary state: $e\n$st');
     }
   }
 
   Future<void> deleteFoodEntry(int id) async {
     await _nutritionRepo.deleteFoodEntry(id);
-    loadDataForDate(selectedDate);
   }
 
   Future<void> deleteFluidEntry(int id) async {
     await _nutritionRepo.deleteFluidEntry(id);
-    loadDataForDate(selectedDate);
   }
 
   Future<void> deleteFluidEntryByLinkedFoodId(int linkedFoodId) async {
@@ -280,7 +291,6 @@ class DiaryViewModel extends ChangeNotifier {
 
   Future<void> updateFluidEntry(FluidEntry entry) async {
     await _nutritionRepo.updateFluidEntry(entry);
-    loadDataForDate(selectedDate);
   }
 
   Future<void> updateFoodEntry(FoodEntry entry) async {
@@ -325,12 +335,12 @@ class DiaryViewModel extends ChangeNotifier {
 
   void pickDate(DateTime newDate) {
     if (!newDate.isSameDate(selectedDate)) {
-      loadDataForDate(newDate);
+      setSelectedDate(newDate);
     }
   }
 
   void navigateDay(bool forward) {
     final newDay = selectedDate.dateOnly.add(Duration(days: forward ? 1 : -1));
-    loadDataForDate(newDay);
+    setSelectedDate(newDay);
   }
 }

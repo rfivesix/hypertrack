@@ -1,10 +1,10 @@
-// lib/screens/routines_screen.dart (final, de-materialized, corrected)
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/routine.dart';
+import '../domain/repositories/workout_repository.dart';
 import '../../../services/haptic_feedback_service.dart';
 import 'edit_routine_screen.dart';
 import 'live_workout_screen.dart';
@@ -28,52 +28,15 @@ class RoutinesScreen extends StatefulWidget {
 }
 
 class _RoutinesScreenState extends State<RoutinesScreen> {
-  bool _isLoading = true;
-  List<Routine> _routines = [];
   static const ShareService _shareService = ShareService();
-  // final l10n was removed because it is instantiated in didChangeDependencies.
+  late final Stream<List<Routine>> _routinesStream;
+  bool _initialRoutineOpened = false;
 
   @override
   void initState() {
     super.initState();
-    // _loadRoutines is now called from didChangeDependencies.
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Ensure l10n is available before _loadRoutines is called.
-    // l10n is instantiated here, where context is safely available.
-    _loadRoutines(AppLocalizations.of(context)!);
-  }
-
-  Future<void> _loadRoutines(AppLocalizations l10n) async {
-    // l10n added as a parameter
-    setState(() => _isLoading = true);
-    final data = await WorkoutLocalDataSource.instance.getAllRoutines();
-    if (mounted) {
-      setState(() {
-        _routines = data;
-        _isLoading = false;
-      });
-      // If an initialRoutineId was passed, navigate there directly.
-      if (widget.initialRoutineId != null) {
-        final routineToEdit = _routines.firstWhere(
-          (r) => r.id == widget.initialRoutineId,
-          orElse: () => throw Exception(l10n.errorRoutineNotFound),
-        ); // Use l10n here
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Navigator.of(context)
-              .push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      EditRoutineScreen(routine: routineToEdit),
-                ),
-              )
-              .then((_) => _loadRoutines(l10n)); // Pass l10n here
-        });
-      }
-    }
+    _routinesStream = Provider.of<IWorkoutRepository>(context, listen: false)
+        .watchAllRoutines();
   }
 
   void _startWorkout(Routine routine) async {
@@ -92,18 +55,14 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     Navigator.of(context).pop();
     if (fullRoutine != null) {
       HapticFeedbackService.instance.confirmationFeedback();
-      final l10n =
-          AppLocalizations.of(context)!; // Get l10n from the build context
-      Navigator.of(context)
-          .push(
-            MaterialPageRoute(
-              builder: (context) => LiveWorkoutScreen(
-                routine: fullRoutine,
-                workoutLog: newWorkoutLog,
-              ),
-            ),
-          )
-          .then((_) => _loadRoutines(l10n)); // Pass l10n here
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => LiveWorkoutScreen(
+            routine: fullRoutine,
+            workoutLog: newWorkoutLog,
+          ),
+        ),
+      );
     }
   }
 
@@ -114,32 +73,23 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     );
     if (!mounted) return;
     HapticFeedbackService.instance.confirmationFeedback();
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute(
-            builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
-          ),
-        )
-        .then((_) => _loadRoutines(l10n)); // Pass l10n here
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LiveWorkoutScreen(workoutLog: newWorkoutLog),
+      ),
+    );
   }
 
   void _createNewRoutine() {
-    final l10n =
-        AppLocalizations.of(context)!; // Get l10n from the build context
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute(builder: (context) => const EditRoutineScreen()),
-        )
-        .then((_) => _loadRoutines(l10n)); // Pass l10n here
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const EditRoutineScreen()),
+    );
   }
 
   // New methods for the menu
   void _duplicateRoutine(int routineId) async {
-    final l10n =
-        AppLocalizations.of(context)!; // Get l10n from the build context
     await WorkoutLocalDataSource.instance.duplicateRoutine(routineId);
     HapticFeedbackService.instance.confirmationFeedback();
-    _loadRoutines(l10n); // Pass l10n here
   }
 
   Future<void> _shareRoutine(Routine routine) async {
@@ -155,7 +105,6 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
   // 1. The menu method
   void _deleteRoutine(BuildContext context, Routine routine) async {
     final l10n = AppLocalizations.of(context)!;
-    // New helper
     final confirmed = await showDeleteConfirmation(
       context,
       content: l10n.deleteRoutineConfirmContent(routine.name),
@@ -163,7 +112,6 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
 
     if (confirmed) {
       await WorkoutLocalDataSource.instance.deleteRoutine(routine.id!);
-      _loadRoutines(l10n);
     }
   }
 
@@ -179,103 +127,125 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
       extendBodyBehindAppBar: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: GlobalAppBar(title: l10n.workoutRoutinesTitle),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _routines.isEmpty
-              ? _buildEmptyState(context, l10n, textTheme)
-              : ListView.builder(
-                  padding: DesignConstants.cardPadding.copyWith(
-                    top: DesignConstants.cardPadding.top + topPadding,
+      body: StreamBuilder<List<Routine>>(
+        stream: _routinesStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final routines = snapshot.data ?? [];
+
+          // If an initialRoutineId was passed, navigate there directly on first load.
+          if (widget.initialRoutineId != null &&
+              !_initialRoutineOpened &&
+              routines.isNotEmpty) {
+            _initialRoutineOpened = true;
+            try {
+              final routineToEdit = routines.firstWhere(
+                (r) => r.id == widget.initialRoutineId,
+              );
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EditRoutineScreen(routine: routineToEdit),
                   ),
-                  itemCount: _routines.length + 1, // instead of +2
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildStartEmptyWorkoutCard(context, l10n);
-                    }
-                    final routine = _routines[index - 1];
-                    return Dismissible(
-                      key: Key('routine_${routine.id}'),
-                      direction: DismissDirection.endToStart,
+                );
+              });
+            } catch (_) {}
+          }
 
-                      // Same backgrounds as in Nutrition Screen
-                      background: const SwipeActionBackground(
-                        color: Colors.redAccent,
-                        icon: Icons.delete,
-                        alignment: Alignment.centerRight,
+          if (routines.isEmpty) {
+            return _buildEmptyState(context, l10n, textTheme);
+          }
+
+          return ListView.builder(
+            padding: DesignConstants.cardPadding.copyWith(
+              top: DesignConstants.cardPadding.top + topPadding,
+            ),
+            itemCount: routines.length + 1, // instead of +2
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _buildStartEmptyWorkoutCard(context, l10n);
+              }
+              final routine = routines[index - 1];
+              return Dismissible(
+                key: Key('routine_${routine.id}'),
+                direction: DismissDirection.endToStart,
+
+                // Same backgrounds as in Nutrition Screen
+                background: const SwipeActionBackground(
+                  color: Colors.redAccent,
+                  icon: Icons.delete,
+                  alignment: Alignment.centerRight,
+                ),
+
+                confirmDismiss: (direction) async {
+                  return await showDeleteConfirmation(context);
+                },
+
+                onDismissed: (direction) {
+                  if (direction == DismissDirection.endToStart) {
+                    _deleteRoutine(context, routine); // actually delete
+                  }
+                },
+
+                child: SummaryCard(
+                  child: ListTile(
+                    leading: ElevatedButton(
+                      onPressed: () => _startWorkout(routine),
+                      child: Text(l10n.startButton),
+                    ),
+                    title: Text(
+                      routine.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(l10n.editRoutineSubtitle),
+                    trailing: PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: textTheme.bodyMedium?.color,
                       ),
-
-                      // Swipe logic as in Nutrition:
-                      // left->right = edit (do not really dismiss),
-                      // right->left = delete (with confirmation)
-                      confirmDismiss: (direction) async {
-                        // New helper
-                        return await showDeleteConfirmation(context);
-                      },
-
-                      onDismissed: (direction) {
-                        if (direction == DismissDirection.endToStart) {
-                          _deleteRoutine(context, routine); // actually delete
+                      onSelected: (value) {
+                        if (value == 'duplicate') {
+                          _duplicateRoutine(routine.id!);
+                        } else if (value == 'share') {
+                          _shareRoutine(routine);
+                        } else if (value == 'delete') {
+                          _deleteRoutine(context, routine);
                         }
                       },
-
-                      child: SummaryCard(
-                        child: ListTile(
-                          leading: ElevatedButton(
-                            onPressed: () => _startWorkout(routine),
-                            child: Text(l10n.startButton),
-                          ),
-                          title: Text(
-                            routine.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(l10n.editRoutineSubtitle),
-                          trailing: PopupMenuButton<String>(
-                            icon: Icon(
-                              Icons.more_vert,
-                              color: textTheme.bodyMedium?.color,
-                            ),
-                            onSelected: (value) {
-                              if (value == 'duplicate') {
-                                _duplicateRoutine(routine.id!);
-                              } else if (value == 'share') {
-                                _shareRoutine(routine);
-                              } else if (value == 'delete') {
-                                _deleteRoutine(context, routine);
-                              }
-                            },
-                            itemBuilder: (BuildContext context) =>
-                                <PopupMenuEntry<String>>[
-                              PopupMenuItem<String>(
-                                value: 'duplicate',
-                                child: Text(l10n.duplicate),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'share',
-                                child: Text(l10n.share),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'delete',
-                                child: Text(l10n.delete),
-                              ),
-                            ],
-                          ),
-                          onTap: () {
-                            Navigator.of(context)
-                                .push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditRoutineScreen(routine: routine),
-                                  ),
-                                )
-                                .then(
-                                  (_) => _loadRoutines(l10n),
-                                ); // Pass l10n here
-                          },
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'duplicate',
+                          child: Text(l10n.duplicate),
                         ),
-                      ),
-                    );
-                  },
+                        PopupMenuItem<String>(
+                          value: 'share',
+                          child: Text(l10n.share),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Text(l10n.delete),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              EditRoutineScreen(routine: routine),
+                        ),
+                      );
+                    },
+                  ),
                 ),
+              );
+            },
+          );
+        },
+      ),
       floatingActionButton: GlassFab(
         label: l10n.addRoutineButton,
         onPressed: _createNewRoutine,

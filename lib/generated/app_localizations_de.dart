@@ -627,6 +627,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get save => 'Speichern';
 
   @override
+  String get unsavedChangesTitle => 'Ungespeicherte Änderungen';
+
+  @override
+  String get unsavedChangesContent =>
+      'Du hast ungespeicherte Änderungen. Möchtest du diese vor dem Verlassen speichern?';
+
+  @override
   String get share => 'Teilen';
 
   @override
@@ -4808,4 +4815,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiSettingsGetApiKeyButton => 'Schritt-für-Schritt Anleitung';
+
+  @override
+  String get legal_document_version_value => '1.2';
+
+  @override
+  String get legal_document_last_updated_value => '20. Mai 2026';
 }

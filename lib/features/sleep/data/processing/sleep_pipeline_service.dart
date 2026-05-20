@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/drift_database.dart';
@@ -181,6 +182,14 @@ class SleepPipelineService {
       await _segmentsDao.upsertBatch(result.segmentRows);
       await _hrDao.upsertBatch(result.hrRows);
       await _analysesDao.upsertBatch(result.analysisRows);
+    });
+
+    _database.notifyUpdates({
+      const TableUpdate('sleep_raw_imports'),
+      const TableUpdate('sleep_canonical_sessions'),
+      const TableUpdate('sleep_canonical_stage_segments'),
+      const TableUpdate('sleep_canonical_heart_rate_samples'),
+      const TableUpdate('sleep_nightly_analyses'),
     });
 
     return SleepPipelineRunResult(

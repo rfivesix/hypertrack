@@ -81,10 +81,23 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
   ValueNotifier<DateTime> get selectedDateNotifier =>
       viewModel.selectedDateNotifier;
 
+  void setSelectedDate(DateTime date) {
+    context.read<DiaryViewModel>().setSelectedDate(date);
+  }
+
+  Future<void> syncHealthData({bool forceStepsRefresh = false}) async {
+    await context
+        .read<DiaryViewModel>()
+        .syncHealthData(forceStepsRefresh: forceStepsRefresh);
+  }
+
+  @Deprecated('Use setSelectedDate or syncHealthData instead')
   Future<void> loadDataForDate(DateTime date,
       {bool queueIfInFlight = false, bool forceStepsRefresh = false}) async {
-    return context.read<DiaryViewModel>().loadDataForDate(date,
-        queueIfInFlight: queueIfInFlight, forceStepsRefresh: forceStepsRefresh);
+    setSelectedDate(date);
+    if (forceStepsRefresh) {
+      await syncHealthData(forceStepsRefresh: true);
+    }
   }
 
   String _selectedChartRangeKey = '30D';
@@ -199,7 +212,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                         );
 
                         close();
-                        vm.loadDataForDate(vm.selectedDate);
                       } catch (e) {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -338,8 +350,7 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
         result.timestamp,
         foodEntryId: trackedItem.entry.id,
       );
-
-      vm.loadDataForDate(vm.selectedDate);
+      // No manual reload needed, state is reactive
     }
   }
 
@@ -358,7 +369,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
 
     final addFoodResult = AddFoodNavigationResult.fromRouteResult(routeResult);
     if (addFoodResult.shouldRefresh) {
-      vm.loadDataForDate(vm.selectedDate);
       return;
     }
 
@@ -415,8 +425,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
         foodEntryId: newFoodEntryId,
       );
     }
-
-    vm.loadDataForDate(vm.selectedDate);
   }
 
   // Add these two new methods to the class.
@@ -638,9 +646,8 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
 
     return viewModel.isLoading
         ? const Center(child: CircularProgressIndicator())
-        : RefreshIndicator(
-            onRefresh: () => loadDataForDate(viewModel.selectedDate,
-                forceStepsRefresh: true),
+         : RefreshIndicator(
+            onRefresh: () => syncHealthData(forceStepsRefresh: true),
             child: ListView(
               padding: finalPadding,
               children: [
@@ -656,16 +663,13 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                 const SizedBox(height: DesignConstants.spacingXS),
                 SupplementSummaryWidget(
                   trackedSupplements: viewModel.trackedSupplements,
-                  onTap: () => Navigator.of(context)
-                      .push(
-                        MaterialPageRoute(
-                          // FIX #65: Pass date along
-                          builder: (context) => SupplementTrackScreen(
-                              initialDate: viewModel.selectedDate),
-                        ),
-                      )
-                      .then((_) =>
-                          viewModel.loadDataForDate(viewModel.selectedDate)),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      // FIX #65: Pass date along
+                      builder: (context) => SupplementTrackScreen(
+                          initialDate: viewModel.selectedDate),
+                    ),
+                  ),
                 ),
                 if (viewModel.stepsTrackingEnabled) ...[
                   _buildStepsSummaryCard()

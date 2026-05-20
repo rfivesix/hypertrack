@@ -8,6 +8,7 @@
   <title>Imprint | Train Libre</title>
   <link rel="icon" href="../web/favicon.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="katex.min.css">
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
@@ -30,10 +31,9 @@
           <span>Train Libre</span>
         </a>
         <div class="nav-links">
-          <a href="./index.html#features" data-i18n="nav_features">Features</a>
-          <a href="./index.html#intelligence" data-i18n="nav_guidance">AI Guidance</a>
-          <a href="./privacy-policy/" data-i18n="nav_privacy">Privacy</a>
-          <a href="./index.html#showcase" data-i18n="nav_showcase">Showcase</a>
+          <a href="#provider" data-i18n="nav_imp_provider">Provider</a>
+          <a href="#contact" data-i18n="nav_imp_contact">Contact</a>
+          <a href="#representative" data-i18n="nav_imp_representative">Representative</a>
           <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
             rel="noreferrer">GitHub</a>
         </div>
@@ -87,19 +87,34 @@
           <span class="eyebrow" data-i18n="nav_imprint">Imprint</span>
           <h1 id="imp-title" data-i18n="imp_title">Legal Notice</h1>
           
-          <div class="legal-notice-container" style="text-align: left; max-width: 600px; margin: 2rem auto;">
-            <p class="hero-copy" style="font-weight: bold;" data-i18n="imp_angaben">Information according to § 5 DDG:</p>
-            <p class="hero-copy" style="font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">
-              <span data-i18n="imp_service_provider">Service Provider / Responsible for the App “Train Libre”:</span><br>
-              <strong data-i18n="imp_name">Richard Georg Schotte</strong><br>
-              <span data-i18n="imp_address">Bundesallee 114<br>12161 Berlin<br>Germany</span><br><br>
-              <strong data-i18n="imp_contact_label">Contact:</strong><br>
-              <span data-i18n="imp_email">E-Mail: feedback@schotte.me</span><br>
-              <span data-i18n="imp_phone">Phone: (+49) 1520 6915571</span><br><br>
-              <strong data-i18n="imp_rep_label">Authorized Representative:</strong><br>
-              <span data-i18n="imp_rep_val">Richard Georg Schotte (Sole Developer)</span><br><br>
-              <span data-i18n="imp_vat_label">Umsatzsteuer-ID:</span> <span data-i18n="imp_vat_val">Nicht vorhanden</span>
-            </p>
+          <div class="legal-notice-container" style="text-align: left; max-width: 600px; margin: 2rem auto; display: flex; flex-direction: column; gap: 2rem;">
+            <p class="hero-copy" style="font-weight: bold; margin-bottom: -1rem;" data-i18n="imp_angaben">Information according to § 5 DDG:</p>
+            
+            <section id="provider" class="reveal" style="padding-top: 1rem;">
+              <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--color-accent);" data-i18n="nav_imp_provider">Provider</h2>
+              <p class="hero-copy" style="font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                <span data-i18n="imp_service_provider">Service Provider / Responsible for the App “Train Libre”:</span><br>
+                <strong data-i18n="imp_name">Richard Georg Schotte</strong><br>
+                <span data-i18n="imp_address">Bundesallee 114<br>12161 Berlin<br>Germany</span>
+              </p>
+            </section>
+
+            <section id="contact" class="reveal" style="padding-top: 1rem;">
+              <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--color-accent);" data-i18n="nav_imp_contact">Contact</h2>
+              <p class="hero-copy" style="font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                <span data-i18n="imp_email">E-Mail: feedback@schotte.me</span><br>
+                <span data-i18n="imp_phone">Phone: (+49) 1520 6915571</span>
+              </p>
+            </section>
+
+            <section id="representative" class="reveal" style="padding-top: 1rem;">
+              <h2 style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--color-accent);" data-i18n="nav_imp_representative">Representative</h2>
+              <p class="hero-copy" style="font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                <strong data-i18n="imp_rep_label">Authorized Representative:</strong><br>
+                <span data-i18n="imp_rep_val">Richard Georg Schotte (Sole Developer)</span><br><br>
+                <span data-i18n="imp_vat_label">Umsatzsteuer-ID:</span> <span data-i18n="imp_vat_val">Nicht vorhanden</span>
+              </p>
+            </section>
           </div>
 
           <div class="hero-actions">

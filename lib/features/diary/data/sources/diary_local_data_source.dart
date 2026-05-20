@@ -1,4 +1,5 @@
 // lib/features/diary/data/sources/diary_local_data_source.dart
+import 'dart:async';
 import '../../../../data/drift_database.dart' as drift_db
     hide Supplement, SupplementLog, WorkoutLog;
 import 'package:drift/drift.dart' as drift;
@@ -21,6 +22,96 @@ class DiaryLocalDataSource {
     SupplementLocalDataSource? supplementDbHelper,
   }) : _supplementDbHelper =
             supplementDbHelper ?? SupplementLocalDataSource(_db);
+
+  Stream<drift_db.DailyGoalsHistoryData?> watchGoalsForDate(DateTime date) {
+    final historyStream = _db.select(_db.dailyGoalsHistory).watch();
+    final settingsStream = _db.select(_db.appSettings).watch();
+
+    final controller = StreamController<drift_db.DailyGoalsHistoryData?>();
+    StreamSubscription? sub1;
+    StreamSubscription? sub2;
+
+    void runQuery() async {
+      try {
+        final result = await getGoalsForDate(date);
+        if (!controller.isClosed) {
+          controller.add(result);
+        }
+      } catch (e) {
+        if (!controller.isClosed) {
+          controller.addError(e);
+        }
+      }
+    }
+
+    controller.onListen = () {
+      runQuery();
+      sub1 = historyStream.listen((_) => runQuery());
+      sub2 = settingsStream.listen((_) => runQuery());
+    };
+
+    controller.onCancel = () {
+      sub1?.cancel();
+      sub2?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Stream<List<FoodEntry>> watchEntriesForDate(DateTime date) {
+    final start = DateTime(date.year, date.month, date.day);
+    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = _db.select(_db.nutritionLogs)
+      ..where((tbl) => tbl.consumedAt.isBetweenValues(start, end));
+
+    return query.watch().map((rows) {
+      return rows
+          .map(
+            (row) => FoodEntry(
+              id: row.localId,
+              barcode: row.legacyBarcode ?? 'UNKNOWN',
+              timestamp: row.consumedAt,
+              quantityInGrams: row.amount.toInt(),
+              mealType: row.mealType,
+              updatedAt: row.updatedAt,
+            ),
+          )
+          .toList();
+    });
+  }
+
+  Stream<List<FluidEntry>> watchFluidEntriesForDate(DateTime date) {
+    final start = DateTime(date.year, date.month, date.day);
+    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final query = _db.select(_db.fluidLogs).join([
+      drift.leftOuterJoin(
+        _db.nutritionLogs,
+        _db.nutritionLogs.id.equalsExp(_db.fluidLogs.linkedNutritionLogId),
+      ),
+    ])..where(_db.fluidLogs.consumedAt.isBetweenValues(start, end));
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        final fluidRow = row.readTable(_db.fluidLogs);
+        final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+        final isLinked = nutritionRow != null;
+        return FluidEntry(
+          id: fluidRow.localId,
+          name: fluidRow.name,
+          quantityInMl: fluidRow.amountMl,
+          timestamp: fluidRow.consumedAt,
+          kcal: isLinked ? 0 : fluidRow.kcal,
+          sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
+          carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
+          caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
+          linkedFoodEntryId: nutritionRow?.localId,
+        );
+      }).toList();
+    });
+  }
+
 
   Future<drift_db.DailyGoalsHistoryData?> getGoalsForDate(DateTime date) async {
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
@@ -106,15 +197,16 @@ class DiaryLocalDataSource {
     return rows.map((row) {
       final fluidRow = row.readTable(_db.fluidLogs);
       final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+      final isLinked = nutritionRow != null;
       return FluidEntry(
         id: fluidRow.localId,
         name: fluidRow.name,
         quantityInMl: fluidRow.amountMl,
         timestamp: fluidRow.consumedAt,
-        kcal: fluidRow.kcal,
-        sugarPer100ml: fluidRow.sugarPer100ml,
-        carbsPer100ml: fluidRow.carbsPer100ml,
-        caffeinePer100ml: fluidRow.caffeinePer100ml,
+        kcal: isLinked ? 0 : fluidRow.kcal,
+        sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
+        carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
+        caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
         linkedFoodEntryId: nutritionRow?.localId,
       );
     }).toList();
@@ -125,6 +217,16 @@ class DiaryLocalDataSource {
     final old = await (_db.select(_db.fluidLogs)
           ..where((t) => t.localId.equals(entry.id!)))
         .getSingleOrNull();
+
+    String? linkedUuid;
+    if (entry.linkedFoodEntryId != null) {
+      final log = await (_db.select(_db.nutritionLogs)
+            ..where((t) => t.localId.equals(entry.linkedFoodEntryId!)))
+          .getSingleOrNull();
+      if (log != null) {
+        linkedUuid = log.id;
+      }
+    }
 
     await (_db.update(_db.fluidLogs)
           ..where((tbl) => tbl.localId.equals(entry.id!)))
@@ -137,6 +239,7 @@ class DiaryLocalDataSource {
         sugarPer100ml: drift.Value(entry.sugarPer100ml),
         carbsPer100ml: drift.Value(entry.carbsPer100ml),
         caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
+        linkedNutritionLogId: drift.Value(linkedUuid),
       ),
     );
 
@@ -163,6 +266,23 @@ class DiaryLocalDataSource {
   }
 
   Future<int> insertFluidEntry(FluidEntry entry) async {
+    String? linkedUuid;
+    if (entry.linkedFoodEntryId != null) {
+      final log = await (_db.select(_db.nutritionLogs)
+            ..where((t) => t.localId.equals(entry.linkedFoodEntryId!)))
+          .getSingleOrNull();
+      if (log != null) {
+        linkedUuid = log.id;
+        final existingFluid = await (_db.select(_db.fluidLogs)
+              ..where((t) => t.linkedNutritionLogId.equals(log.id)))
+            .getSingleOrNull();
+        if (existingFluid != null) {
+          await updateFluidEntry(entry.copyWith(id: existingFluid.localId));
+          return existingFluid.localId;
+        }
+      }
+    }
+
     return await _db.into(_db.fluidLogs).insert(
           drift_db.FluidLogsCompanion.insert(
             name: entry.name,
@@ -172,6 +292,7 @@ class DiaryLocalDataSource {
             sugarPer100ml: drift.Value(entry.sugarPer100ml),
             carbsPer100ml: drift.Value(entry.carbsPer100ml),
             caffeinePer100ml: drift.Value(entry.caffeinePer100ml),
+            linkedNutritionLogId: drift.Value(linkedUuid),
           ),
         );
   }
@@ -205,6 +326,15 @@ class DiaryLocalDataSource {
   }
 
   Future<void> deleteFoodEntry(int id) async {
+    final log = await (_db.select(_db.nutritionLogs)
+          ..where((t) => t.localId.equals(id)))
+        .getSingleOrNull();
+    if (log != null) {
+      await (_db.delete(_db.fluidLogs)
+            ..where((t) => t.linkedNutritionLogId.equals(log.id)))
+          .go();
+    }
+
     await (_db.delete(_db.nutritionLogs)
           ..where((tbl) => tbl.localId.equals(id)))
         .go();
@@ -262,15 +392,16 @@ class DiaryLocalDataSource {
     return rows.map((row) {
       final fluidRow = row.readTable(_db.fluidLogs);
       final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+      final isLinked = nutritionRow != null;
       return FluidEntry(
         id: fluidRow.localId,
         name: fluidRow.name,
         quantityInMl: fluidRow.amountMl,
         timestamp: fluidRow.consumedAt,
-        kcal: fluidRow.kcal,
-        sugarPer100ml: fluidRow.sugarPer100ml,
-        carbsPer100ml: fluidRow.carbsPer100ml,
-        caffeinePer100ml: fluidRow.caffeinePer100ml,
+        kcal: isLinked ? 0 : fluidRow.kcal,
+        sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
+        carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
+        caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
         linkedFoodEntryId: nutritionRow?.localId,
       );
     }).toList();
@@ -377,15 +508,16 @@ class DiaryLocalDataSource {
     return rows.map((row) {
       final fluidRow = row.readTable(_db.fluidLogs);
       final nutritionRow = row.readTableOrNull(_db.nutritionLogs);
+      final isLinked = nutritionRow != null;
       return FluidEntry(
         id: fluidRow.localId,
         name: fluidRow.name,
         quantityInMl: fluidRow.amountMl,
         timestamp: fluidRow.consumedAt,
-        kcal: fluidRow.kcal,
-        sugarPer100ml: fluidRow.sugarPer100ml,
-        carbsPer100ml: fluidRow.carbsPer100ml,
-        caffeinePer100ml: fluidRow.caffeinePer100ml,
+        kcal: isLinked ? 0 : fluidRow.kcal,
+        sugarPer100ml: isLinked ? 0.0 : fluidRow.sugarPer100ml,
+        carbsPer100ml: isLinked ? 0.0 : fluidRow.carbsPer100ml,
+        caffeinePer100ml: isLinked ? 0.0 : fluidRow.caffeinePer100ml,
         linkedFoodEntryId: nutritionRow?.localId,
       );
     }).toList();
@@ -401,7 +533,11 @@ class DiaryLocalDataSource {
         name: row.name,
         defaultDose: row.dose,
         unit: row.unit,
+        dailyGoal: row.dailyGoal,
         dailyLimit: row.dailyLimit,
+        notes: row.notes,
+        isBuiltin: row.isBuiltin,
+        isTracked: row.isTracked,
         code: row.code);
   }
 

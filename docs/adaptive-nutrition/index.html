@@ -10,6 +10,7 @@
   <title>Adaptive Nutrition | Train Libre</title>
   <link rel="icon" href="../../web/favicon.png">
   <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../katex.min.css">
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
@@ -32,9 +33,10 @@
           <span>Train Libre</span>
         </a>
         <div class="nav-links">
-          <a href="../#features" data-i18n="nav_features">Features</a>
-          <a href="../#intelligence" data-i18n="nav_guidance">AI Guidance</a>
-          <a href="../#privacy" data-i18n="nav_privacy">Privacy</a>
+          <a href="#features" data-i18n="nav_overview">Overview</a>
+          <a href="#mathematics" data-i18n="nav_mathematics">Mathematics</a>
+          <a href="#limitations" data-i18n="nav_limitations">Limitations</a>
+          <a href="#evidence" data-i18n="nav_evidence">Evidence</a>
           <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
             rel="noreferrer">GitHub</a>
         </div>
@@ -94,7 +96,7 @@
         </div>
       </section>
 
-      <section class="section">
+      <section id="features" class="section">
         <div class="feature-grid">
           <article class="feature-card reveal delay-1" style="--feature: var(--blue); --feature-rgb: 133, 215, 244;">
             <div class="feature-icon" aria-hidden="true">
@@ -128,16 +130,64 @@
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section id="mathematics" class="section section-tight">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="adapt_nut_how_t">How it works: Bayesian Recursive Estimation</h2>
           <p class="section-copy" data-i18n="adapt_nut_how_c1">Instead of relying on static formulas like Mifflin-St Jeor—which research shows can be significantly off for individuals—Train Libre treats your metabolism as a dynamic "hidden state".</p>
           <p class="section-copy" data-i18n="adapt_nut_how_c2">The app uses a Bayesian-inspired recursive estimator (similar to a Kalman filter). Every week, it compares its prediction (based on your intake) with the actual weight trend. It then calculates the "gain"—deciding how much to trust the new data versus the previous estimate.</p>
           <p class="section-copy" data-i18n="adapt_nut_how_c3">To handle the "noise" of water retention and glycogen shifts, the system uses a 7-day confirmation rule for goal changes and a phase-dependent scaling factor for energy density (kcal/kg).</p>
+          
+          <h3 style="margin-top: 32px; margin-bottom: 16px; font-weight: 800; color: var(--fg);" data-i18n="tdee_deep_c">Recursive Estimation & Metabolic Smoothing Mechanics</h3>
+          
+          <div class="pipeline-flow">
+            <div class="pipeline-step">
+              <div class="pipeline-num">1</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="tdee_kalman_t">Recursive Kalman Filtering</div>
+                <div class="pipeline-desc" data-i18n="tdee_kalman_c">Your metabolic maintenance rate is modeled as a hidden dynamic state <span class="math-inline"><span class="math-var">x<sub>t</sub></span></span> and estimated recursively. The system transition is governed by <span class="math-inline"><span class="math-var">x<sub>t</sub></span> = <span class="math-var">x<sub>t-1</sub></span> + <span class="math-var">w<sub>t</sub></span></span>, where the process noise <span class="math-inline"><span class="math-var">w<sub>t</sub></span> ~ <span class="math-var">N</span>(0, <span class="math-var">Q</span>)</span> models metabolic fluctuations.</div>
+                <div class="math-block">
+                  <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>w</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t = x_{t-1} + w_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7917em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0269em;">w</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0269em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
+                  <div style="text-align: center; font-size: 0.85em; color: var(--muted); margin-top: 8px;">
+                    <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>where </mtext><msub><mi>w</mi><mi>t</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo stretchy="false">(</mo><mn>0</mn><mo separator="true">,</mo><mi>Q</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mtext> and </mtext><mi>Q</mi><mo>=</mo><mn>40</mn></mrow><annotation encoding="application/x-tex">\text{where } w_t \sim \mathcal{N}(0, Q), \text{ and } Q = 40</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord text"><span class="mord">where </span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0269em;">w</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0269em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∼</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathcal" style="margin-right:0.1474em;">N</span><span class="mopen">(</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">Q</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord"> and </span></span><span class="mord mathnormal">Q</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">40</span></span></span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">2</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="tdee_math_t">Observed Maintenance Equation</div>
+                <div class="pipeline-desc" data-i18n="tdee_math_c">The daily observed calorie maintenance (<span class="math-inline"><span class="math-var">M<sub>t</sub></span></span>) is computed using your energy intake and the derivative of your smoothed bodyweight: <span class="math-inline"><span class="math-var">M<sub>t</sub></span> = <span class="math-var">avgCalories<sub>t</sub></span> - (&Delta;<span class="math-var">Weight<sub>t</sub></span> &times; <span class="math-var">kcalPerKg<sub>t</sub></span>)</span>. We smooth weight scale logs to eliminate daily water retention and glycogen noise.</div>
+                <div class="math-block">
+                  <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub><mo>=</mo><msub><mtext>avgCalories</mtext><mi>t</mi></msub><mo>−</mo><mo stretchy="false">(</mo><mi mathvariant="normal">Δ</mi><msub><mtext>Weight</mtext><mi>t</mi></msub><mo>×</mo><msub><mtext>kcalPerKg</mtext><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">M_t = \text{avgCalories}_t - (\Delta\text{Weight}_t \times \text{kcalPerKg}_t)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">M</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9386em;vertical-align:-0.2441em;"></span><span class="mord"><span class="mord text"><span class="mord">avgCalories</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">Δ</span><span class="mord"><span class="mord text"><span class="mord">Weight</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord text"><span class="mord">kcalPerKg</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">3</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="tdee_ramp_t">9-Week Linear Energetic Ramp</div>
+                <div class="pipeline-desc" data-i18n="tdee_ramp_c">When starting a diet phase, rapid body mass changes are heavily skewed by non-adipose factors (glycogen depletion, sodium drops). To prevent the estimator from oversteering, the energetic cost of body mass changes (<span class="math-inline"><span class="math-var">kcalPerKg<sub>t</sub></span></span>) ramps linearly over 9 weeks from a prior-driven 3,000 kcal/kg to the fat-tissue-equilibrium value of 7,700 kcal/kg.</div>
+                <div class="math-block">
+                  <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mtext>kcalPerKg</mtext><mi>t</mi></msub><mo>=</mo><mn>3000</mn><mo>+</mo><mi>min</mi><mo>⁡</mo><mrow><mo fence="true">(</mo><mn>1</mn><mo separator="true">,</mo><mfrac><mi>t</mi><mrow><mn>9</mn><mtext> weeks</mtext></mrow></mfrac><mo fence="true">)</mo></mrow><mo>×</mo><mn>4700</mn></mrow><annotation encoding="application/x-tex">\text{kcalPerKg}_t = 3000 + \min\left(1, \frac{t}{9\text{ weeks}}\right) \times 4700</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9386em;vertical-align:-0.2441em;"></span><span class="mord"><span class="mord text"><span class="mord">kcalPerKg</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3000</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.4em;vertical-align:-0.95em;"></span><span class="mop">min</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2921em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">9</span><span class="mord text"><span class="mord"> weeks</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4700</span></span></span></span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">4</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="tdee_noise_t">Handling Missing Data (Q = 40)</div>
+                <div class="pipeline-desc" data-i18n="tdee_noise_c">On days with missing food logs or weight measurements, the measurement update is bypassed. The state covariance <span class="math-inline"><span class="math-var">P<sub>t</sub></span></span> propagates by adding the process noise variance (<span class="math-inline"><span class="math-var">Q</span> = 40</span>). This increases the uncertainty bounds (Likely Range) in the UI and automatically dampens subsequent updates, preventing sudden weight spikes from distorting your long-term metabolic baseline.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section id="limitations" class="section section-tight">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="adapt_nut_limits_t">Uncertainty & Interpretation</h2>
           <p class="section-copy" data-i18n="adapt_nut_limits_c1">Daily scale weight is high-noise data. Factors like sodium intake, hydration, and muscle glycogen can cause shifts of several kilograms that do not represent changes in body tissue.</p>
@@ -155,7 +205,7 @@
         </div>
       </section>
 
-      <section class="section section-tight">
+      <section id="evidence" class="section section-tight">
         <div class="reveal">
           <h2 class="section-heading" data-i18n="evidence_read_more">Evidence & further reading</h2>
           <ul class="evidence-links">
