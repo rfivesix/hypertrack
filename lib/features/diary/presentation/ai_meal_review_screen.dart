@@ -968,6 +968,28 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                     ),
                 ],
               ),
+              // Token Usage Indicator
+              Padding(
+                padding: const EdgeInsets.only(top: 4, left: 26),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.toll_rounded,
+                      size: 11,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Kosten: ~${1200 + (_items.length * 80)} Tokens',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               // Expanded details
               if (isExpanded) ...[
                 if (validation.repairLimitReached) ...[

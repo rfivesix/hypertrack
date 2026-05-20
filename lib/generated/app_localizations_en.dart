@@ -2323,7 +2323,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiPrivacyDisclosure =>
-      'Images, text, and generated recommendation prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider\'s terms. Your API key is stored encrypted on this device only.';
+      'Images, text, and generated prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider\'s terms. Your API key is stored encrypted on this device only.';
 
   @override
   String get aiMealCapture => 'AI Meal';
@@ -2413,46 +2413,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiCustomInstructionsSubtitle =>
-      'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every recommendation.';
-
-  @override
-  String get aiRecommendationTitle => 'AI Meal Coach';
-
-  @override
-  String get aiRecommendDietary => 'Dietary';
-
-  @override
-  String get aiRecommendSituation => 'Situation';
-
-  @override
-  String get aiRecommendVegan => 'Vegan';
-
-  @override
-  String get aiRecommendVegetarian => 'Vegetarian';
-
-  @override
-  String get aiRecommendPescetarian => 'Pescetarian';
-
-  @override
-  String get aiRecommendOnTheGo => 'On the go (No utensils)';
-
-  @override
-  String get aiRecommendNoKitchen => 'No cooking (Cold meal)';
-
-  @override
-  String get aiRecommendWithCooking => 'Cooking allowed';
-
-  @override
-  String get aiRecommendGenerate => 'Generate';
-
-  @override
-  String get aiRecommendGenerating => 'Thinking…';
-
-  @override
-  String get aiRecommendSaveToDiary => 'Save to Diary';
-
-  @override
-  String get aiRecommendNoMatch => 'No database match';
+      'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every capture.';
 
   @override
   String get aiValidationNoMatchedItemsSaveYet =>
@@ -2491,10 +2452,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiValidationRepairLimitReachedReview =>
       'Automatic repair limit reached. Please review before saving.';
-
-  @override
-  String get aiValidationRepairLimitReachedRecommendation =>
-      'Automatic repair limit reached. Review matches and portions before saving.';
 
   @override
   String get aiValidationRecentMealContextIncluded =>
@@ -2667,16 +2624,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String aiValidationUnknownIssue(String code) {
     return 'Validation issue: $code';
   }
-
-  @override
-  String get aiRecommendRemainingMacros => 'Remaining today';
-
-  @override
-  String get aiRecommendCustomRequest => 'Custom request';
-
-  @override
-  String get aiRecommendCustomRequestHint =>
-      'e.g. Include leftover rice, high protein, etc.';
 
   @override
   String get currentlyTracking => 'Currently';

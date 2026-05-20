@@ -2335,7 +2335,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiPrivacyDisclosure =>
-      'Bilder, Texte und erzeugte Empfehlungs-Prompts werden nur an den gewählten KI-Anbieter gesendet, wenn du eine KI-Aktion nutzt. Speicherung und Verarbeitung beim Anbieter richten sich nach dessen Bedingungen. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.';
+      'Bilder, Texte und erzeugte Prompts werden nur an den gewählten KI-Anbieter gesendet, wenn du eine KI-Aktion nutzt. Speicherung und Verarbeitung beim Anbieter richten sich nach dessen Bedingungen. Dein API-Schlüssel wird verschlüsselt nur auf diesem Gerät gespeichert.';
 
   @override
   String get aiMealCapture => 'KI-Mahlzeit';
@@ -2427,46 +2427,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiCustomInstructionsSubtitle =>
-      'Gib der KI feste Regeln mit (z.B. Allergien, No-Go-Foods wie \'keine Bowls\' oder Intoleranzen), die bei jeder Empfehlung beachtet werden sollen.';
-
-  @override
-  String get aiRecommendationTitle => 'KI-Mahlzeitcoach';
-
-  @override
-  String get aiRecommendDietary => 'Ernährungsweise';
-
-  @override
-  String get aiRecommendSituation => 'Situation';
-
-  @override
-  String get aiRecommendVegan => 'Vegan';
-
-  @override
-  String get aiRecommendVegetarian => 'Vegetarisch';
-
-  @override
-  String get aiRecommendPescetarian => 'Pescetarisch';
-
-  @override
-  String get aiRecommendOnTheGo => 'Unterwegs (Sofort essbar)';
-
-  @override
-  String get aiRecommendNoKitchen => 'Ohne Kochen (Kaltes Gericht)';
-
-  @override
-  String get aiRecommendWithCooking => 'Mit Kochen (Zubereitung)';
-
-  @override
-  String get aiRecommendGenerate => 'Generieren';
-
-  @override
-  String get aiRecommendGenerating => 'Denke nach…';
-
-  @override
-  String get aiRecommendSaveToDiary => 'Im Tagebuch speichern';
-
-  @override
-  String get aiRecommendNoMatch => 'Kein Datenbank-Treffer';
+      'Gib der KI feste Regeln mit (z.B. Allergien, No-Go-Foods wie \'keine Bowls\' oder Intoleranzen), die bei jeder Mahlzeiten-Erfassung beachtet werden sollen.';
 
   @override
   String get aiValidationNoMatchedItemsSaveYet =>
@@ -2507,10 +2468,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get aiValidationRepairLimitReachedReview =>
       'Automatische Reparaturgrenze erreicht. Bitte vor dem Speichern prüfen.';
-
-  @override
-  String get aiValidationRepairLimitReachedRecommendation =>
-      'Automatische Reparaturgrenze erreicht. Bitte Zuordnungen und Portionsgrößen vor dem Speichern prüfen.';
 
   @override
   String get aiValidationRecentMealContextIncluded =>
@@ -2690,16 +2647,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String aiValidationUnknownIssue(String code) {
     return 'Validierungsproblem: $code';
   }
-
-  @override
-  String get aiRecommendRemainingMacros => 'Heute noch übrig';
-
-  @override
-  String get aiRecommendCustomRequest => 'Eigener Wunsch';
-
-  @override
-  String get aiRecommendCustomRequestHint =>
-      'z. B. auf restlichen Reis achten, viel Protein, usw.';
 
   @override
   String get currentlyTracking => 'Aktuell';

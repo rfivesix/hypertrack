@@ -384,6 +384,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                               await AiMatchingLanguageService.writeChoice(v);
                             },
                           ),
+                          const SizedBox(height: 10),
                           TextField(
                             controller: _keyController,
                             obscureText: _obscureKey,
