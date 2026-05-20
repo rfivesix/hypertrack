@@ -22,7 +22,7 @@
       f1_copy: "Log set by set with routines, warm-ups, working sets, failure sets, dropsets, reps, weight, and RIR.",
       f1_small: "Routines, history, session review",
       f2_title: "Nutrition, hydration, and supplements together.",
-      f2_copy: "Track meals, calories, macros, fluids, caffeine, creatine, and custom supplements in one local journal.",
+      f2_copy: "Track meals, calories, macros, fluids, caffeine, creatine, and custom supplements in one local diary.",
       f2_small: "Food, water, macros, doses",
       f3_title: "Body data with context.",
       f3_copy: "Log bodyweight and measurements, then read them beside nutrition trends and training consistency.",
@@ -288,11 +288,11 @@
       ai_meal_limits_c1: "Research into computer-vision-based nutrition estimation highlights several fundamental hurdles that make 100% accuracy impossible for consumer apps:",
       rec_deep_c: "Three-Stage Fatigue & Readiness Modeling",
       rec_schema_t: "Three-Stage Muscle Recovery Model",
-      rec_schema_c: "Muscle recovery is segmented into three logical phases: (1) <strong>Fatigue Ingestion</strong> resolving raw set volume and intensity; (2) <strong>Dynamic Window Resolution</strong> computing customized baseline recovery times ($T_{\\text{rec}}$ and $T_{\\text{ready}}$) based on target muscle groups; (3) <strong>Continuous Readiness Estimation</strong> calculating muscle status over time.",
+      rec_schema_c: "Muscle recovery is segmented into three logical phases: (1) <strong>Fatigue Ingestion</strong> resolving raw set volume and intensity; (2) <strong>Dynamic Window Resolution</strong> computing customized baseline recovery times (<span class=\"math-inline\"><span class=\"math-var\">T<sub>rec</sub></span></span> and <span class=\"math-inline\"><span class=\"math-var\">T<sub>ready</sub></span></span>) based on target muscle groups; (3) <strong>Continuous Readiness Estimation</strong> calculating muscle status over time.",
       rec_score_t: "Continuous Muscle Readiness Score R(t)",
-      rec_score_c: "Calculates the dynamic readiness $R(t)$ of each muscle group using a piecewise interpolation: acute fatigue ($t \\le T_{\\text{rec}}$) interpolating from $10\\%$ to $60\\%$, the adaptation window ($T_{\\text{rec}} < t \\le T_{\\text{ready}}$) from $60\\%$ to $85\\%$, and supercompensation ($t > T_{\\text{ready}}$) up to $100\\%$ over a $48$-hour window.",
+      rec_score_c: "Calculates the dynamic readiness <span class=\"math-inline\"><span class=\"math-var\">R(t)</span></span> of each muscle group using a piecewise interpolation: acute fatigue (<span class=\"math-inline\"><span class=\"math-var\">t</span> &le; <span class=\"math-var\">T<sub>rec</sub></span></span>) interpolating from 10% to 60%, the adaptation window (<span class=\"math-inline\"><span class=\"math-var\">T<sub>rec</sub></span> &lt; <span class=\"math-var\">t</span> &le; <span class=\"math-var\">T<sub>ready</sub></span></span>) from 60% to 85%, and supercompensation (<span class=\"math-inline\"><span class=\"math-var\">t</span> &gt; <span class=\"math-var\">T<sub>ready</sub></span></span>) up to 100% over a 48-hour window.",
       rec_pulse_t: "Volume and Intensity Calibration",
-      rec_pulse_c: "Modulates recovery duration by applying volume extensions (adding $+6\\text{h}$ to $+36\\text{h}$ depending on total sets) and an intensity penalty (adding a flat $+24\\text{h}$ if average RIR is $\\le 0.5$ or RPE is $\\ge 8.5$), reflecting the high metabolic cost of training to failure.",
+      rec_pulse_c: "Modulates recovery duration by applying volume extensions (adding +6h to +36h depending on total sets) and an intensity penalty (adding a flat +24h if average RIR is <span class=\"math-inline\">&le; 0.5</span> or RPE is <span class=\"math-inline\">&ge; 8.5</span>), reflecting the high metabolic cost of training to failure.",
       recovery_limits_c1: "Logged data is a proxy for training stress. The heuristic cannot 'see' external factors like sleep debt, nutritional deficiencies, or systemic life stress unless they are manually logged or integrated via health services.",
       transparency_kicker: "Deep Technical Disclosure",
       transparency_title: "Algorithmic Transparency",
@@ -588,11 +588,11 @@
       ai_meal_limits_c1: "Die sport- und ernährungswissenschaftliche Forschung zur computergestützten Nährwerterfassung hebt mehrere fundamentale Hürden hervor, die eine absolute Genauigkeit bei endnutzerorientierten Anwendungen unmöglich machen:",
       rec_deep_c: "Drei-Stufen-Ermüdungs- und Bereitschaftsmodell",
       rec_schema_t: "Drei-Stufen-Regenerationsmodell",
-      rec_schema_c: "Die Modellierung der muskulären Regeneration erfolgt auf drei separaten Ebenen: (1) <strong>Erfassung der Belastung</strong> durch Auswertung von Satzanzahl und Intensität; (2) <strong>Dynamische Zeitfenster-Bestimmung</strong> zur Festlegung der Erholungszeiten ($T_{\\text{rec}}$ und $T_{\\text{ready}}$) basierend auf der Muskelgruppe; (3) <strong>Kontinuierliche Bereitschaftsschätzung</strong> über den zeitlichen Verlauf.",
+      rec_schema_c: "Die Modellierung der muskulären Regeneration erfolgt auf drei separaten Ebenen: (1) <strong>Erfassung der Belastung</strong> durch Auswertung von Satzanzahl und Intensität; (2) <strong>Dynamische Zeitfenster-Bestimmung</strong> zur Festlegung der Erholungszeiten (<span class=\"math-inline\"><span class=\"math-var\">T<sub>rec</sub></span></span> und <span class=\"math-inline\"><span class=\"math-var\">T<sub>ready</sub></span></span>) basierend auf der Muskelgruppe; (3) <strong>Kontinuierliche Bereitschaftsschätzung</strong> über den zeitlichen Verlauf.",
       rec_score_t: "Kontinuierlicher Bereitschafts-Score R(t)",
-      rec_score_c: "Berechnet die dynamische Muskelbereitschaft $R(t)$ über eine dreistufige Interpolation. In der akuten Ermüdungsphase ($t \\le T_{\\text{rec}}$) steigt der Wert von $10\\%$ auf $60\\%$. Im Anpassungsfenster ($T_{\\text{rec}} < t \\le T_{\\text{ready}}$) steigt er von $60\\%$ auf $85\\%$. In der anschließenden Superkompensation ($t > T_{\\text{ready}}$) erfolgt der Anstieg auf bis zu $100\\%$ über einen Zeitraum von $48$ Stunden.",
+      rec_score_c: "Berechnet die dynamische Muskelbereitschaft <span class=\"math-inline\"><span class=\"math-var\">R(t)</span></span> über eine dreistufige Interpolation. In der akuten Ermüdungsphase (<span class=\"math-inline\"><span class=\"math-var\">t</span> &le; <span class=\"math-var\">T<sub>rec</sub></span></span>) steigt der Wert von 10% auf 60%. Im Anpassungsfenster (<span class=\"math-inline\"><span class=\"math-var\">T<sub>rec</sub></span> &lt; <span class=\"math-var\">t</span> &le; <span class=\"math-var\">T<sub>ready</sub></span></span>) steigt er von 60% auf 85%. In der anschließenden Superkompensation (<span class=\"math-inline\"><span class=\"math-var\">t</span> &gt; <span class=\"math-var\">T<sub>ready</sub></span></span>) erfolgt der Anstieg auf bis zu 100% über einen Zeitraum von 48 Stunden.",
       rec_pulse_t: "Volumen- und Intensitäts-Kalibrierung",
-      rec_pulse_c: "Passt das Erholungsfenster dynamisch an. Ein hohes Trainingsvolumen verlängert das Fenster um $+6$ bis $+36$ Stunden. Sehr intensives Training nahe am Muskelversagen (durchschnittlicher RIR-Wert von höchstens $0,5$ oder RPE-Wert von mindestens $8,5$) führt zu einer pauschalen Verlängerung um $+24$ Stunden, was den hohen energetischen Regenerationsbedarf berücksichtigt.",
+      rec_pulse_c: "Passt das Erholungsfenster dynamisch an. Ein hohes Trainingsvolumen verlängert das Fenster um +6 bis +36 Stunden. Sehr intensives Training nahe am Muskelversagen (durchschnittlicher RIR-Wert von höchstens <span class=\"math-inline\">0,5</span> oder RPE-Wert von mindestens <span class=\"math-inline\">8,5</span>) führt zu einer pauschalen Verlängerung um +24 Stunden, was den hohen energetischen Regenerationsbedarf berücksichtigt.",
       recovery_limits_c1: "Die protokollierten Daten bilden ausschließlich die physische Trainingsbelastung ab. Die Heuristik kann externe Faktoren wie Schlafmangel, Nährstoffdefizite oder allgemeinen Alltagsstress nicht erfassen, sofern diese nicht manuell protokolliert oder über Schnittstellen zu externen Systemen integriert werden.",
       transparency_kicker: "Detaillierte technische Offenlegung",
       transparency_title: "Algorithmische Transparenz",
@@ -786,4 +786,4 @@ document.addEventListener("DOMContentLoaded", () => {
 // Early theme initialization to prevent flash
 const savedTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
 document.documentElement.setAttribute("data-theme", savedTheme);
-}) ();
+})();
