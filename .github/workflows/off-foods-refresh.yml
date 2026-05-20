@@ -92,12 +92,12 @@ jobs:
 
       - name: Validate script syntax
         run: |
-          python -m py_compile skript/create_off_food_db.py
-          python -m py_compile skript/off_catalog_diff.py
-          python -m py_compile skript/resolve_off_reference_manifest.py
-          python -m py_compile skript/build_off_catalog_manifest.py
-          python -m py_compile skript/build_off_release_notes.py
-          python -m py_compile skript/publish_off_run_summary.py
+          python -m py_compile script/create_off_food_db.py
+          python -m py_compile script/off_catalog_diff.py
+          python -m py_compile script/resolve_off_reference_manifest.py
+          python -m py_compile script/build_off_catalog_manifest.py
+          python -m py_compile script/build_off_release_notes.py
+          python -m py_compile script/publish_off_run_summary.py
 
       - name: Download Open Food Facts parquet source
         run: |
@@ -109,7 +109,7 @@ jobs:
       - name: Generate country OFF catalog and build report
         id: generate
         run: |
-          python skript/create_off_food_db.py \
+          python script/create_off_food_db.py \
             --country-code "$COUNTRY_CODE" \
             --parquet-path "$OFF_PARQUET_LOCAL_PATH" \
             --source-url "$OFF_PARQUET_SOURCE_URL" \
@@ -139,7 +139,7 @@ jobs:
 
           if curl -fsSL "$MANIFEST_URL" -o "$RELEASE_REFERENCE_MANIFEST_PATH"; then
             echo "reference_manifest_found=true" >> "$GITHUB_OUTPUT"
-            python skript/resolve_off_reference_manifest.py
+            python script/resolve_off_reference_manifest.py
           else
             echo "reference_manifest_found=false" >> "$GITHUB_OUTPUT"
             echo "No previous release manifest found. Diff baseline unavailable." | tee "artifacts/off_reference_missing_${COUNTRY_CODE}.txt"
@@ -167,7 +167,7 @@ jobs:
 
           if [ -f "$RELEASE_REFERENCE_DB_PATH" ]; then
             echo "reference_db_found=true" >> "$GITHUB_OUTPUT"
-            DIFF_CMD="python skript/off_catalog_diff.py --old \"$RELEASE_REFERENCE_DB_PATH\" --new \"$GENERATED_DB_PATH\" --json-out \"$DIFF_REPORT_PATH\" --fail-on-removed-threshold 100"
+            DIFF_CMD="python script/off_catalog_diff.py --old \"$RELEASE_REFERENCE_DB_PATH\" --new \"$GENERATED_DB_PATH\" --json-out \"$DIFF_REPORT_PATH\" --fail-on-removed-threshold 100"
             if [ "$FAIL_ON_BREAKING" = "true" ]; then
               DIFF_CMD="$DIFF_CMD --fail-on-breaking"
             fi
@@ -186,11 +186,11 @@ jobs:
 
       - name: Build OFF catalog manifest artifact
         if: steps.generate.outcome == 'success'
-        run: python skript/build_off_catalog_manifest.py
+        run: python script/build_off_catalog_manifest.py
 
       - name: Build OFF release notes
         if: steps.generate.outcome == 'success'
-        run: python skript/build_off_release_notes.py
+        run: python script/build_off_release_notes.py
 
       - name: Upload generated OFF DB artifact
         if: always() && steps.generate.outcome == 'success'
@@ -257,7 +257,7 @@ jobs:
 
       - name: Publish run summary
         if: always()
-        run: python skript/publish_off_run_summary.py
+        run: python script/publish_off_run_summary.py
         env:
           PUBLISH_OUTCOME: ${{ steps.publish_release.outcome }}
           GENERATOR_SUCCESS: ${{ steps.generator_status.outputs.generator_success }}
