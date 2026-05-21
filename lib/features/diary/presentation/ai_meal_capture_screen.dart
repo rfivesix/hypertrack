@@ -126,6 +126,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
 
     // Resolve the AI matching language (decoupled from app UI locale)
     final aiMatchLang = await AiMatchingLanguageService.readChoice();
+    if (!mounted) return;
     final languageCode = await AiMatchingLanguageService.resolveLanguageCode(
       choice: aiMatchLang,
       context: context,

@@ -270,6 +270,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
     _startAiWaitingHaptics();
     try {
       final aiMatchLang = await AiMatchingLanguageService.readChoice();
+      if (!mounted) return;
       final languageCode = await AiMatchingLanguageService.resolveLanguageCode(
         choice: aiMatchLang,
         context: context,

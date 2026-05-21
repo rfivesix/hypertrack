@@ -702,157 +702,6 @@ Please provide an updated analysis incorporating the user's feedback. Return the
   // Provider-specific HTTP calls
   // ---------------------------------------------------------------------------
 
-  Future<List<AiSuggestedItem>> _callOpenAi(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    final effectiveModel = _normalizeOpenAiModelId(model);
-    final contentParts = <Map<String, dynamic>>[];
-
-    // Add image parts
-    for (final img64 in imagesBase64) {
-      contentParts.add({
-        'type': 'image_url',
-        'image_url': {'url': 'data:image/jpeg;base64,$img64', 'detail': 'low'},
-      });
-    }
-
-    // Add text part
-    contentParts.add({'type': 'text', 'text': userContent});
-
-    final body = jsonEncode({
-      'model': effectiveModel,
-      'messages': [
-        {'role': 'system', 'content': systemPrompt},
-        {'role': 'user', 'content': contentParts},
-      ],
-      ..._openAiTokenParams(effectiveModel),
-      'temperature': 0.3,
-    });
-
-    try {
-      final response = await http
-          .post(
-            Uri.parse('https://api.openai.com/v1/chat/completions'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
-            },
-            body: body,
-          )
-          .timeout(const Duration(seconds: 60));
-
-      return _handleOpenAiResponse(response);
-    } on SocketException {
-      throw const AiNetworkException();
-    } catch (e) {
-      if (e is AiServiceException) rethrow;
-      throw AiNetworkException('Request failed: $e');
-    }
-  }
-
-  List<AiSuggestedItem> _handleOpenAiResponse(http.Response response) {
-    if (response.statusCode == 401) throw const AiAuthException();
-    if (response.statusCode == 429) throw const AiRateLimitException();
-    if (response.statusCode != 200) {
-      final message = _extractProviderErrorMessage(response.body);
-      throw AiNetworkException(
-        message != null
-            ? 'API returned status ${response.statusCode}: $message'
-            : 'API returned status ${response.statusCode}',
-      );
-    }
-
-    try {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final choices = json['choices'] as List<dynamic>?;
-      if (choices == null || choices.isEmpty) throw const AiParseException();
-
-      final messageContent = choices[0]['message']['content'] as String? ?? '';
-      return _parseItemsFromContent(messageContent);
-    } catch (e) {
-      if (e is AiServiceException) rethrow;
-      throw const AiParseException();
-    }
-  }
-
-  Future<List<AiSuggestedItem>> _callGemini(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    final parts = <Map<String, dynamic>>[];
-
-    // Add image parts
-    for (final img64 in imagesBase64) {
-      parts.add({
-        'inlineData': {'mimeType': 'image/jpeg', 'data': img64},
-      });
-    }
-
-    // Add text parts (system prompt + user content combined)
-    parts.add({'text': '$systemPrompt\n\n$userContent'});
-
-    final body = jsonEncode({
-      'contents': [
-        {'parts': parts},
-      ],
-      'generationConfig': {'temperature': 0.3, 'maxOutputTokens': 8192},
-    });
-
-    try {
-      final response = await _postGeminiGenerateContent(
-        apiKey: apiKey,
-        model: model,
-        body: body,
-      );
-      return _handleGeminiResponse(response);
-    } on SocketException {
-      throw const AiNetworkException();
-    } catch (e) {
-      if (e is AiServiceException) rethrow;
-      throw AiNetworkException('Request failed: $e');
-    }
-  }
-
-  List<AiSuggestedItem> _handleGeminiResponse(http.Response response) {
-    if (response.statusCode == 401 || response.statusCode == 403) {
-      throw const AiAuthException();
-    }
-    if (response.statusCode == 429) throw const AiRateLimitException();
-    if (response.statusCode != 200) {
-      final message = _extractProviderErrorMessage(response.body);
-      throw AiNetworkException(
-        message != null
-            ? 'API returned status ${response.statusCode}: $message'
-            : 'API returned status ${response.statusCode}',
-      );
-    }
-
-    try {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final candidates = json['candidates'] as List<dynamic>?;
-      if (candidates == null || candidates.isEmpty) {
-        throw const AiParseException();
-      }
-
-      final content = candidates[0]['content'] as Map<String, dynamic>?;
-      final parts = content?['parts'] as List<dynamic>?;
-      if (parts == null || parts.isEmpty) throw const AiParseException();
-
-      final text = parts[0]['text'] as String? ?? '';
-      return _parseItemsFromContent(text);
-    } catch (e) {
-      if (e is AiServiceException) rethrow;
-      throw const AiParseException();
-    }
-  }
-
   List<String> _geminiModelCandidates(String model) {
     final normalized = _normalizeGeminiModelId(model);
     final candidates = <String>[normalized];
@@ -913,23 +762,6 @@ Please provide an updated analysis incorporating the user's feedback. Return the
           '{"error":{"message":"Gemini request failed before any response was received."}}',
           400,
         );
-  }
-
-  Future<List<AiSuggestedItem>> _callAnthropic(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    final raw = await _callAnthropicRaw(
-      apiKey,
-      model,
-      userContent,
-      imagesBase64,
-      systemPrompt: systemPrompt,
-    );
-    return _parseItemsFromContent(raw);
   }
 
   Future<String> _callAnthropicRaw(
@@ -997,24 +829,6 @@ Please provide an updated analysis incorporating the user's feedback. Return the
     }
   }
 
-  Future<List<AiSuggestedItem>> _callMistral(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    final raw = await _callOpenAiCompatibleRaw(
-      endpoint: 'https://api.mistral.ai/v1/chat/completions',
-      authHeader: 'Bearer $apiKey',
-      model: model,
-      userContent: userContent,
-      imagesBase64: imagesBase64,
-      systemPrompt: systemPrompt,
-    );
-    return _parseItemsFromContent(raw);
-  }
-
   Future<String> _callMistralRaw(
     String apiKey,
     String model,
@@ -1032,24 +846,6 @@ Please provide an updated analysis incorporating the user's feedback. Return the
       systemPrompt: systemPrompt,
       temperature: temperature,
     );
-  }
-
-  Future<List<AiSuggestedItem>> _callXai(
-    String apiKey,
-    String model,
-    String userContent,
-    List<String> imagesBase64, {
-    required String systemPrompt,
-  }) async {
-    final raw = await _callOpenAiCompatibleRaw(
-      endpoint: 'https://api.x.ai/v1/chat/completions',
-      authHeader: 'Bearer $apiKey',
-      model: model,
-      userContent: userContent,
-      imagesBase64: imagesBase64,
-      systemPrompt: systemPrompt,
-    );
-    return _parseItemsFromContent(raw);
   }
 
   Future<String> _callXaiRaw(

@@ -59,8 +59,25 @@ class BaseFoodLanguageService {
     if (choice == BaseFoodLanguage.en) return 'en';
     if (choice == BaseFoodLanguage.de) return 'de';
 
-    // Auto mode: follow app locale with region fallback.
     final locale = Localizations.localeOf(context).languageCode;
+    return resolveLanguageCodeFromLocale(
+      choice: choice,
+      locale: locale,
+      activeCountry: activeCountry,
+    );
+  }
+
+  /// Version of [resolveLanguageCode] that takes a [locale] string instead
+  /// of a [BuildContext].
+  static String resolveLanguageCodeFromLocale({
+    required BaseFoodLanguage choice,
+    required String locale,
+    OffCatalogCountry? activeCountry,
+  }) {
+    if (choice == BaseFoodLanguage.en) return 'en';
+    if (choice == BaseFoodLanguage.de) return 'de';
+
+    // Auto mode: follow locale with region fallback.
     if (locale == 'de') return 'de';
 
     // Non-German locale: check region for a sensible default.

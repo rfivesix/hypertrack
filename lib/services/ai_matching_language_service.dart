@@ -61,11 +61,14 @@ class AiMatchingLanguageService {
     if (choice == AiMatchingLanguage.en) return 'en';
     if (choice == AiMatchingLanguage.de) return 'de';
 
+    // Capture locale before async gap to avoid linter warning
+    final locale = Localizations.localeOf(context).languageCode;
+
     // Auto mode: follow base-food display language.
     final baseFoodChoice = await BaseFoodLanguageService.readChoice();
-    return BaseFoodLanguageService.resolveLanguageCode(
+    return BaseFoodLanguageService.resolveLanguageCodeFromLocale(
       choice: baseFoodChoice,
-      context: context,
+      locale: locale,
     );
   }
 
