@@ -449,8 +449,8 @@ class _LegalSection {
 }
 
 const _germanLegalDocument = _LegalDocument(
-  version: '1.2',
-  date: '20. Mai 2026',
+  version: '1.3',
+  date: '21. Mai 2026',
   legalNotice: '''
 Angaben gemäß § 5 DDG:
 
@@ -542,8 +542,10 @@ Train Libre bietet die Möglichkeit, Mahlzeiten über Fotos oder Freitextbeschre
 
 - Unterstützte Anbieter: OpenAI, Google Gemini, Anthropic Claude, Mistral AI, xAI Grok.
 - Sichere lokale Schlüsselverwahrung: Der von Ihnen eingegebene API-Schlüssel wird unter Verwendung des Pakets flutter_secure_storage verschlüsselt im gesicherten Speicherbereich des Betriebssystems abgelegt (iOS Keychain bzw. Android Keystore). Der Schlüssel verbleibt ausschließlich lokal auf Ihrem Gerät und wird niemals an uns übertragen.
-- Eingeschränkte Datenübertragung: Bei der Nutzung der KI-Analyse sendet Ihr Gerät das aufgenommene Mahlzeiten-Foto bzw. die eingegebene Textbeschreibung direkt über eine verschlüsselte HTTPS-Verbindung an die API des ausgewählten KI-Anbieters.
-- Privatsphärenschutz per System-Prompt: Um Ihre Privatsphäre maximal zu schützen, ist der systemweit hinterlegte Prompt der App so konfiguriert, dass der KI-Anbieter angewiesen wird, ausschließlich Lebensmittelkomponenten zu identifizieren und deren Gewicht in Gramm zu schätzen. Der KI-Anbieter wird ausdrücklich angewiesen, keine Nährwertberechnungen (wie Kalorien, Proteine, Fett oder Kohlenhydrate) durchzuführen. Die Ermittlung der Nährwerte erfolgt im Anschluss vollständig lokal offline auf Ihrem Gerät durch Abgleich der erkannten Lebensmittelnamen mit Ihrem lokalen Offline-Katalog. Es wird somit keine persönliche Ernährungs- oder Gesundheitshistorie an die KI-Dienste übermittelt.
+- Eingeschränkte Datenübertragung: Bei der Nutzung der KI-Analyse sendet Ihr Gerät das aufgenommene Mahlzeiten-Foto bzw. die eingegebene Textbeschreibung direkt über eine verschlüsselte HTTPS-Verbindung an die API des ausgewählten KI-Anbieters. Es werden keinerlei personalisierte Kontodaten, Metadaten oder Profilinformationen aus Train Libre an diese externen Endpunkte übermittelt.
+- Analytische KI-Verarbeitung (Kein generatives Coaching): Die KI-Analyse dient dem ausschließlichen analytischen Zweck, Mahlzeiten in ihre atomaren Bestandteile (Zutaten) zu zerlegen. Train Libre nutzt die KI nicht zur dynamischen Generierung oder zum Vorschlag von Rezepten, Ernährungsplänen oder automatisiertem Gesundheitscoaching.
+- Hybride lokale Verifizierung: Um Ihre Privatsphäre maximal zu schützen, ist der systemweit hinterlegte Prompt der App so konfiguriert, dass der KI-Anbieter angewiesen wird, ausschließlich Lebensmittelkomponenten zu identifizieren und deren Gewicht in Gramm zu schätzen. Der KI-Anbieter wird ausdrücklich angewiesen, keine Nährwertberechnungen (wie Kalorien, Proteine, Fett oder Kohlenhydrate) durchzuführen. Die Ermittlung der Nährwerte erfolgt über einen hybriden Ansatz: Die erkannten Lebensmittelnamen werden über eine lokale Jaro-Winkler-basierte Matching-Engine (SQLite/Drift) vollständig offline auf Ihrem Gerät mit Ihrem lokalen Katalog abgeglichen.
+- Local-First-Prinzip: Die Berechnung der Makronährstoffe, das Nutzer-Profiling sowie die Verlaufshistorie verbleiben strikt lokal auf Ihrem Endgerät und werden niemals für das Training globaler KI-Modelle verwendet.
 - Verantwortlichkeit: Da Sie Ihren persönlichen API-Schlüssel verwenden, schließen Sie direkt ein Nutzungsverhältnis mit dem jeweiligen KI-Anbieter ab. Die Datenverarbeitung durch den KI-Anbieter unterliegt dessen jeweiligen Datenschutzbestimmungen. Bitte prüfen Sie die Datenschutzrichtlinien Ihres Anbieters (insbesondere bezüglich der Datenverwendung für Trainingszwecke und der Serverstandorte), bevor Sie die Funktion nutzen. Bei Übertragungen an Anbieter außerhalb der Europäischen Union (insbesondere in die USA) erfolgt dies auf Grundlage von Standardvertragsklauseln oder Angemessenheitsbeschlüssen, die Sie mit dem Anbieter vereinbart haben.
 
 B. Offline-Katalog-Updates (Open Food Facts & Exercise Catalog)
