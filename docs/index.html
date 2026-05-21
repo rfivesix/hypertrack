@@ -58,11 +58,17 @@
             <div class="dropdown-menu">
               <button class="dropdown-item" data-lang="en">
                 <span>English</span>
-                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
               </button>
               <button class="dropdown-item" data-lang="de">
                 <span>Deutsch</span>
-                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
               </button>
             </div>
           </div>
@@ -108,10 +114,6 @@
       </div>
 
       <div class="hero-content reveal">
-        <div class="eyebrow">
-          <span class="eyebrow-dot" aria-hidden="true"></span>
-          <span data-i18n="hero_eyebrow">Offline-first fitness tracking</span>
-        </div>
         <h1 id="hero-title">Train Libre</h1>
         <p class="hero-statement" data-i18n="hero_statement">Own every rep, meal, calorie, and recovery signal.</p>
         <p class="hero-copy" data-i18n="hero_copy">A private, local-first app for structured workout logging, reviewable
@@ -137,17 +139,9 @@
             <span data-i18n="hero_cta_android">Android (Obtainium)</span>
           </a>
         </div>
-        <div class="hero-points" aria-label="Product principles">
-          <span data-i18n="hero_point_1">AI meal recognition</span>
-          <span data-i18n="hero_point_2">Adaptive calorie guidance</span>
-          <span data-i18n="hero_point_3">Optional BYOK AI</span>
-          <span data-i18n="hero_point_4">Local data by default</span>
-        </div>
+
       </div>
 
-      <div class="scroll-cue" aria-hidden="true">
-        <a href="#features" tabindex="-1"><span></span></a>
-      </div>
     </section>
 
     <main>
@@ -273,7 +267,14 @@
               food names and gram
               estimates, then matches them against the local food database and rebuilds calories and macros inside the
               app.</p>
+            <div class="macro-badges">
+              <span class="macro-badge kcal">800 kcal</span>
+              <span class="macro-badge pro">P 40g</span>
+              <span class="macro-badge carb">C 116g</span>
+              <span class="macro-badge fat">F 20g</span>
+            </div>
             <div class="intelligence-points" aria-label="AI meal recognition details">
+
               <span data-i18n="intel_c1_p1">Photo and text capture</span>
               <span data-i18n="intel_c1_p2">Gram estimates</span>
               <span data-i18n="intel_c1_p3">Local nutrition totals</span>
@@ -382,7 +383,8 @@
 
             <div class="deep-dive-card">
               <h3 data-i18n="tdee_deep_t">Mathematical Deep-Dive</h3>
-              <p class="deep-dive-intro" data-i18n="tdee_deep_c">Recursive Estimation & Metabolic Smoothing Mechanics</p>
+              <p class="deep-dive-intro" data-i18n="tdee_deep_c">Recursive Estimation & Metabolic Smoothing Mechanics
+              </p>
               <ul class="deep-dive-features">
                 <li data-i18n="tdee_kalman_t">Recursive Kalman Filtering</li>
                 <li data-i18n="tdee_math_t">Observed Maintenance Equation</li>

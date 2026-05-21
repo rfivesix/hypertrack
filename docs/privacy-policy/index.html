@@ -91,7 +91,6 @@
     <main>
       <section class="hero hero-compact" aria-labelledby="policy-title">
         <div class="hero-content reveal">
-          <span class="eyebrow" data-i18n="nav_privacy">Privacy Policy</span>
           <h1 id="policy-title" data-i18n="priv_hero_title">Your data stays with you.</h1>
           <p class="hero-copy" data-i18n="priv_hero_copy">Train Libre is offline-first. This policy explains how we
             handle your data locally and when optional features interact with third-party services.</p>
@@ -121,7 +120,7 @@
         <article class="policy-card">
           <div class="policy-section reveal">
             <div class="last-updated-box">
-              <span data-i18n="legal_version">Version 1.2</span> (<span data-i18n="legal_date">20. Mai 2026 / May 20, 2026</span>)
+              <span data-i18n="legal_version">Version 1.3</span> (<span data-i18n="legal_date">21. Mai 2026 / May 21, 2026</span>)
             </div>
             <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" data-i18n="legal_intro">
               This privacy policy informs you in accordance with Articles 13 and 14 of the General Data Protection Regulation (GDPR) about the processing of personal data and health-related data in the mobile application "Train Libre" and during a visit to this website.<br><br>Since Train Libre is designed as a local-first application, full control over your data remains directly with you at all times. We do not operate any central database or application servers to store your profiles, workouts, or nutrition logs.
@@ -194,9 +193,11 @@
               <ul>
                 <li data-i18n="p_4_a_l1"><strong>Supported Providers:</strong> OpenAI, Google Gemini, Anthropic Claude, Mistral AI, xAI Grok.</li>
                 <li data-i18n="p_4_a_l2"><strong>Secure Local Key Storage:</strong> The API key you enter is stored encrypted using the <code>flutter_secure_storage</code> package in the operating system's secured storage area (iOS Keychain or Android Keystore). The key remains exclusively local to your device and is never transmitted to us.</li>
-                <li data-i18n="p_4_a_l3"><strong>Restricted Data Transmission:</strong> When using the AI analysis, your device sends the captured meal photo or entered text description directly via an encrypted HTTPS connection to the API of the selected AI provider.</li>
-                <li data-i18n="p_4_a_l4"><strong>Privacy Protection via System Prompt:</strong> To maximize your privacy, the app's globally stored system prompt is configured to instruct the AI provider to identify only food components and estimate their weight in grams. The AI provider is explicitly instructed <strong>not</strong> to perform any nutrient calculations (such as calories, protein, fat, or carbohydrates). The determination of nutrients is then performed completely locally and offline on your device by matching the recognized food names with your local offline catalog. Thus, no personal nutrition or health history is transmitted to the AI services.</li>
-                <li data-i18n="p_4_a_l5"><strong>Responsibility:</strong> Since you are using your personal API key, you enter into a direct user relationship with the respective AI provider. Data processing by the AI provider is subject to their respective privacy policies. Please check your provider's privacy policy (especially regarding the use of data for training purposes and server locations) before using the function. For transmissions to providers outside the European Union (especially the USA), this occurs on the basis of standard contractual clauses or adequacy decisions that you have agreed with the provider.</li>
+                <li data-i18n="p_4_a_l3"><strong>Restricted Data Transmission:</strong> When using the AI analysis, your device sends the captured meal photo or entered text description directly via an encrypted HTTPS connection to the API of the selected AI provider. No personalized account data, user metadata, or historical profile information from Train Libre is attached to these external endpoint payloads.</li>
+                <li data-i18n="p_4_a_l4"><strong>Analytical AI Processing (No Generative Coaching):</strong> The AI analysis is used for the <strong>exclusive analytical purpose</strong> of decomposing meal photos or text descriptions into <strong>atomic ingredients</strong>. Train Libre does <strong>not</strong> use AI to dynamically generate or propose personalized recipes, meal plans, or automated health coaching.</li>
+                <li data-i18n="p_4_a_l5"><strong>Privacy Protection via System Prompt:</strong> To maximize your privacy, the app's globally stored system prompt is configured to instruct the AI provider to identify only food components and estimate their weight in grams. The AI provider is explicitly instructed <strong>not</strong> to perform any nutrient calculations (such as calories, protein, fat, or carbohydrates). The determination of nutrients is then performed via a <strong>hybrid approach</strong>: recognized food names are matched against your <strong>local offline database</strong> using a deterministic <strong>Jaro-Winkler-based matching engine</strong> (SQLite/Drift).</li>
+                <li data-i18n="p_4_a_l6"><strong>Local-First Alignment:</strong> Core macro calculations, user profiling, and history tracking remain <strong>strictly local-first</strong> on your device and are never transmitted to external providers or used to train global AI models.</li>
+                <li data-i18n="p_4_a_l7"><strong>Responsibility:</strong> Since you are using your personal API key, you enter into a direct user relationship with the respective AI provider. Data processing by the AI provider is subject to their respective privacy policies. Please check your provider's privacy policy (especially regarding the use of data for training purposes and server locations) before using the function. For transmissions to providers outside the European Union (especially the USA), this occurs on the basis of standard contractual clauses or adequacy decisions that you have agreed with the provider.</li>
               </ul>
             </div>
             <div>
