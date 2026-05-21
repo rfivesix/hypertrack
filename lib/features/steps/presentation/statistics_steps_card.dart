@@ -409,18 +409,79 @@ class StatisticsStepsCard extends StatelessWidget {
 
   List<StepsBucket> _normalizedBucketsForDisplay() {
     if (dailyTotals.isEmpty) return dailyTotals;
+
+    // 1. Aggregate raw daily totals into coarser buckets for long ranges.
+    final aggregated = _aggregateBuckets(dailyTotals);
+
+    // 2. For 7-day view, inject live today step count into the last bar.
     final isTodaySubtitle = _isTodayLabel(currentStepsSubtitle);
-    final isSevenDays = dailyTotals.length <= 7;
+    final isSevenDayView = aggregated.length <= 7;
     final canInjectToday =
-        isTodaySubtitle && isSevenDays && dailyTotals.length > 1;
-    if (!canInjectToday) return dailyTotals;
-    final mutable = List<StepsBucket>.from(dailyTotals);
+        isTodaySubtitle && isSevenDayView && aggregated.length > 1;
+    if (!canInjectToday) return aggregated;
+
+    final mutable = List<StepsBucket>.from(aggregated);
     final last = mutable.last;
     mutable[mutable.length - 1] = StepsBucket(
       start: last.start,
       steps: currentSteps,
     );
     return mutable;
+  }
+
+  /// Aggregates [raw] daily buckets into coarser buckets for long time ranges.
+  ///
+  /// - ≤ 30 buckets  → pass-through (day-level bars, one per day)
+  /// - 31–180 buckets → ISO-week buckets with **daily average** steps
+  /// - > 180 buckets  → Calendar-month buckets with **daily average** steps
+  ///
+  /// Daily averages preserve the meaning of the [dailyGoal] dashed line:
+  /// a bar that reaches the line means the average day in that period met the
+  /// goal. The result is capped to [_maxAggregatedBars] most-recent buckets.
+  static const int _maxAggregatedBars = 15;
+
+  List<StepsBucket> _aggregateBuckets(List<StepsBucket> raw) {
+    if (raw.length <= 30) return raw;
+
+    if (raw.length <= 180) {
+      // ISO-week aggregation — daily average.
+      final Map<DateTime, List<int>> byWeek = {};
+      for (final b in raw) {
+        final d = b.start;
+        final monday = d.subtract(Duration(days: d.weekday - 1));
+        final key = DateTime(monday.year, monday.month, monday.day);
+        byWeek.putIfAbsent(key, () => []).add(b.steps);
+      }
+      final buckets = byWeek.entries.map((e) {
+        final count = e.value.length;
+        final avg = count > 0
+            ? e.value.fold(0, (s, v) => s + v) ~/ count
+            : 0;
+        return StepsBucket(start: e.key, steps: avg);
+      }).toList()
+        ..sort((a, b) => a.start.compareTo(b.start));
+      return buckets.length > _maxAggregatedBars
+          ? buckets.sublist(buckets.length - _maxAggregatedBars)
+          : buckets;
+    }
+
+    // Calendar-month aggregation — daily average.
+    final Map<DateTime, List<int>> byMonth = {};
+    for (final b in raw) {
+      final key = DateTime(b.start.year, b.start.month, 1);
+      byMonth.putIfAbsent(key, () => []).add(b.steps);
+    }
+    final buckets = byMonth.entries.map((e) {
+      final count = e.value.length;
+      final avg = count > 0
+          ? e.value.fold(0, (s, v) => s + v) ~/ count
+          : 0;
+      return StepsBucket(start: e.key, steps: avg);
+    }).toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+    return buckets.length > _maxAggregatedBars
+        ? buckets.sublist(buckets.length - _maxAggregatedBars)
+        : buckets;
   }
 
   bool _isTodayLabel(String text) {

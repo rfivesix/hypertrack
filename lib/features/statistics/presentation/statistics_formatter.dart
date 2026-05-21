@@ -150,4 +150,36 @@ class StatisticsPresentationFormatter implements StatisticsFormatter {
     }
     return l10n.analyticsGuidanceLowerEmphasis(undertrained.join(', '));
   }
+
+  static String muscleGroupLabel(AppLocalizations l10n, String muscleGroup) {
+    switch (muscleGroup.trim().toLowerCase()) {
+      case 'chest':
+        return l10n.muscleChest;
+      case 'back':
+        return l10n.muscleBack;
+      case 'shoulders':
+        return l10n.muscleShoulders;
+      case 'biceps':
+        return l10n.muscleBiceps;
+      case 'triceps':
+        return l10n.muscleTriceps;
+      case 'quads':
+        return l10n.muscleQuads;
+      case 'hamstrings':
+        return l10n.muscleHamstrings;
+      case 'glutes':
+        return l10n.muscleGlutes;
+      case 'calves':
+        return l10n.muscleCalves;
+      case 'lower back':
+        return l10n.muscleLowerBack;
+      default:
+        return _capitaliseLabel(muscleGroup); // Fallback
+    }
+  }
+
+  static String _capitaliseLabel(String label) {
+    if (label.isEmpty) return label;
+    return label[0].toUpperCase() + label.substring(1);
+  }
 }

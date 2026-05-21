@@ -1969,5 +1969,15 @@
   "aiSettingsSetupGuideBody": "To use this feature, you need an API key from an AI provider. Google Gemini is used as a primary example because it currently offers a free tier for developers and users.",
   "aiSettingsGetApiKeyButton": "View Setup Guide",
   "legal_document_version_value": "1.2",
-  "legal_document_last_updated_value": "May 20, 2026"
+  "legal_document_last_updated_value": "May 20, 2026",
+  "muscleChest": "Chest",
+  "muscleBack": "Back",
+  "muscleShoulders": "Shoulders",
+  "muscleBiceps": "Biceps",
+  "muscleTriceps": "Triceps",
+  "muscleQuads": "Quads",
+  "muscleHamstrings": "Hamstrings",
+  "muscleGlutes": "Glutes",
+  "muscleCalves": "Calves",
+  "muscleLowerBack": "Lower Back"
 }

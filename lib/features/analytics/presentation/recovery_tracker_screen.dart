@@ -22,7 +22,22 @@ class RecoveryTrackerScreen extends StatefulWidget {
 }
 
 class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
-  static const _maxRadarMuscles = 8;
+  /// Canonical major muscle groups shown on the radar, in fixed clockwise
+  /// display order (starting from top). The order is stable so the polygon
+  /// shape stays recognisable across sessions regardless of training history.
+  static const List<String> _canonicalRadarOrder = [
+    'chest',
+    'shoulders',
+    'triceps',
+    'back',
+    'biceps',
+    'lower back',
+    'glutes',
+    'hamstrings',
+    'quads',
+    'calves',
+  ];
+
   bool _isLoading = true;
   RecoveryAnalyticsPayload _recovery = const RecoveryAnalyticsPayload(
     hasData: false,
@@ -74,7 +89,9 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     AppLocalizations l10n,
     RecoveryMusclePayload muscle,
   ) {
-    final muscleName = muscle.muscleGroup;
+    final rawName = muscle.muscleGroup;
+    final muscleName =
+        StatisticsPresentationFormatter.muscleGroupLabel(l10n, rawName);
     final hours = muscle.hoursSinceLastSignificantLoad.round();
     final highFatigue = muscle.highSessionFatigue;
 
@@ -83,6 +100,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     }
     return l10n.recoveryExplanationBasic(muscleName, hours);
   }
+
 
   bool _shouldHideMuscle(String name) {
     return RecoveryDomainService.shouldHideMuscle(name) ||
@@ -212,20 +230,32 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     return tracked < trackedFromStates ? trackedFromStates : tracked;
   }
 
-  List<MuscleRadarDatum> _buildRadarData(List<RecoveryMusclePayload> muscles) {
-    final sorted = [...muscles]..sort(
-        (a, b) => _readinessScore(a).compareTo(_readinessScore(b)),
-      );
+  List<MuscleRadarDatum> _buildRadarData(
+    List<RecoveryMusclePayload> muscles,
+    AppLocalizations l10n,
+  ) {
+    // Build a lookup of major group → readiness score from real recovery data.
+    final Map<String, double> scoreByGroup = {};
+    for (final m in muscles) {
+      final key = RecoveryDomainService.majorMuscleGroupFor(m.muscleGroup);
+      if (key == null) continue;
+      final score = _readinessScore(m);
+      // If multiple minor muscles map to the same major group, keep the lowest
+      // readiness score (most fatigued wins — conservative display).
+      if (!scoreByGroup.containsKey(key) || score < scoreByGroup[key]!) {
+        scoreByGroup[key] = score;
+      }
+    }
 
-    return sorted
-        .take(_maxRadarMuscles)
-        .map(
-          (m) => MuscleRadarDatum(
-            label: m.muscleGroup,
-            value: _readinessScore(m),
-          ),
-        )
-        .toList();
+    // Return all canonical groups in fixed display order, injecting 100.0
+    // (fully rested / fresh) for any group not found in training data.
+    return _canonicalRadarOrder.map((group) {
+      final score = scoreByGroup[group] ?? 100.0;
+      return MuscleRadarDatum(
+        label: StatisticsPresentationFormatter.muscleGroupLabel(l10n, group),
+        value: score,
+      );
+    }).toList();
   }
 
   @override
@@ -247,7 +277,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final visibleMuscles = muscles
         .where((m) => !_shouldHideMuscle(m.muscleGroup))
         .toList(growable: false);
-    final radarData = _buildRadarData(visibleMuscles);
+    final radarData = _buildRadarData(visibleMuscles, l10n);
 
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
@@ -395,7 +425,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (radarData.isEmpty)
+                          if (!hasData)
                             AnalyticsChartDefaults.stateView(
                               context: context,
                               l10n: l10n,
@@ -439,7 +469,12 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                     )
                   else
                     ...visibleMuscles.map((muscle) {
-                      final muscleName = muscle.muscleGroup;
+                      final rawName = muscle.muscleGroup;
+                      final muscleName =
+                          StatisticsPresentationFormatter.muscleGroupLabel(
+                        l10n,
+                        rawName,
+                      );
                       final state = muscle.state;
                       final stateColor = _stateColor(context, state);
                       final hours =

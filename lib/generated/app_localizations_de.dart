@@ -4771,4 +4771,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get legal_document_last_updated_value => '20. Mai 2026';
+
+  @override
+  String get muscleChest => 'Brust';
+
+  @override
+  String get muscleBack => 'Rücken';
+
+  @override
+  String get muscleShoulders => 'Schultern';
+
+  @override
+  String get muscleBiceps => 'Bizeps';
+
+  @override
+  String get muscleTriceps => 'Trizeps';
+
+  @override
+  String get muscleQuads => 'Quadrizeps';
+
+  @override
+  String get muscleHamstrings => 'Beinbeuger';
+
+  @override
+  String get muscleGlutes => 'Glutes';
+
+  @override
+  String get muscleCalves => 'Waden';
+
+  @override
+  String get muscleLowerBack => 'Unterer Rücken';
 }

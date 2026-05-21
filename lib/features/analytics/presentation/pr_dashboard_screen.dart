@@ -109,6 +109,7 @@ class _PRDashboardScreenState extends State<PRDashboardScreen> {
                       _windowChip(7, l10n.filter7Days),
                       _windowChip(30, l10n.filter30Days),
                       _windowChip(90, l10n.filter3Months),
+                      _windowChip(3650, l10n.filterAll),
                     ],
                   ),
                   const SizedBox(height: DesignConstants.spacingS),

@@ -2085,31 +2085,39 @@ class WorkoutLocalDataSource {
         ).map((m) => m.trim()).where((m) => m.isNotEmpty),
       }..removeAll(primary);
 
-      if (primary.isEmpty && secondary.isEmpty) {
-        contributions.add({
-          'day': row.startTime,
-          'muscleGroup': 'Other',
-          'equivalentSets': 1.0,
-        });
-        continue;
-      }
-
+      // Map each raw muscle name to a canonical major group.
+      // Discard muscles that don't map (abs, core, etc.) and the 'Other'
+      // fallback — the summary will naturally omit exercises with no valid
+      // muscles rather than polluting the chart with a catch-all bucket.
+      bool anyMapped = false;
       for (final muscle in primary) {
+        final majorGroup =
+            RecoveryDomainService.majorMuscleGroupFor(muscle);
+        if (majorGroup == null) continue;
         contributions.add({
           'day': row.startTime,
-          'muscleGroup': muscle,
+          'muscleGroup': majorGroup,
           'equivalentSets': 1.0,
         });
+        anyMapped = true;
       }
 
       for (final muscle in secondary) {
+        final majorGroup =
+            RecoveryDomainService.majorMuscleGroupFor(muscle);
+        if (majorGroup == null) continue;
         contributions.add({
           'day': row.startTime,
-          'muscleGroup': muscle,
+          'muscleGroup': majorGroup,
           'equivalentSets': 0.5,
         });
+        anyMapped = true;
       }
-    }
+
+      // If no muscles mapped (e.g. exercise has no tagged muscles), skip.
+      // The previous 'Other' bucket is intentionally removed.
+      if (!anyMapped) continue;
+    } // end for (final row in params.rows)
 
     return MuscleAnalyticsUtils.buildSummary(
       contributions: contributions,
@@ -2254,6 +2262,9 @@ class WorkoutLocalDataSource {
       }
     }
 
+    // Group significant sessions by canonical major muscle group.
+    // Minor muscles (lats, traps, etc.) are merged into major groups.
+    // Muscles that map to null (abs, core, forearms) are discarded.
     final Map<String, List<Map<String, dynamic>>> significantByMuscle = {};
 
     for (final session in muscleSessionMap.values) {
@@ -2262,54 +2273,76 @@ class WorkoutLocalDataSource {
         continue;
       }
 
-      final muscle = session['muscleGroup'] as String;
-      significantByMuscle.putIfAbsent(muscle, () => []).add(session);
+      final rawMuscle = session['muscleGroup'] as String;
+      final majorGroup = RecoveryDomainService.majorMuscleGroupFor(rawMuscle);
+      if (majorGroup == null) continue; // discard unmapped muscle
+
+      significantByMuscle.putIfAbsent(majorGroup, () => []).add(session);
     }
 
     final List<Map<String, dynamic>> muscles = [];
 
     for (final entry in significantByMuscle.entries) {
-      final muscle = entry.key;
+      final muscle = entry.key; // canonical major group key
       final sessions = entry.value;
+      // Sort most-recent first.
       sessions.sort(
         (a, b) =>
             (b['startTime'] as DateTime).compareTo(a['startTime'] as DateTime),
       );
 
-      final lastSession = sessions.first;
-      final lastTime = lastSession['startTime'] as DateTime;
+      // Most recent session determines timing (minimum hours since last load).
+      final mostRecentSession = sessions.first;
+      final lastTime = mostRecentSession['startTime'] as DateTime;
       final hoursSince = now.difference(lastTime).inMinutes / 60.0;
 
-      final rirCount = lastSession['rirCount'] as int;
-      final rpeCount = lastSession['rpeCount'] as int;
+      // Sum equivalent sets across all merged sessions (conservative: treats
+      // the full group as if all sub-muscles contributed to one session).
+      final totalEquivalentSets = sessions.fold<double>(
+        0.0,
+        (sum, s) => sum + (s['equivalentSets'] as double),
+      );
 
+      // Use most-recent session RIR/RPE for fatigue assessment.
+      final rirCount = mostRecentSession['rirCount'] as int;
+      final rpeCount = mostRecentSession['rpeCount'] as int;
       final avgRir =
-          rirCount > 0 ? (lastSession['rirSum'] as double) / rirCount : null;
+          rirCount > 0 ? (mostRecentSession['rirSum'] as double) / rirCount : null;
       final avgRpe =
-          rpeCount > 0 ? (lastSession['rpeSum'] as double) / rpeCount : null;
+          rpeCount > 0 ? (mostRecentSession['rpeSum'] as double) / rpeCount : null;
 
-      final highSessionFatigue = RecoveryDomainService.hasHighSessionFatigue(
+      // OR fatigue across all merged sessions.
+      bool highSessionFatigue = RecoveryDomainService.hasHighSessionFatigue(
         avgRir: avgRir,
         avgRpe: avgRpe,
       );
-      final lastEquivalentSets = lastSession['equivalentSets'] as double;
+      for (final s in sessions.skip(1)) {
+        final rc = s['rirCount'] as int;
+        final pc = s['rpeCount'] as int;
+        final r = rc > 0 ? (s['rirSum'] as double) / rc : null;
+        final p = pc > 0 ? (s['rpeSum'] as double) / pc : null;
+        if (RecoveryDomainService.hasHighSessionFatigue(avgRir: r, avgRpe: p)) {
+          highSessionFatigue = true;
+          break;
+        }
+      }
 
       final recoveringUpper = RecoveryDomainService.recoveringUpperHours(
         highSessionFatigue: highSessionFatigue,
         muscleGroup: muscle,
-        lastEquivalentSets: lastEquivalentSets,
+        lastEquivalentSets: totalEquivalentSets,
       );
       final readyUpper = RecoveryDomainService.readyUpperHours(
         highSessionFatigue: highSessionFatigue,
         muscleGroup: muscle,
-        lastEquivalentSets: lastEquivalentSets,
+        lastEquivalentSets: totalEquivalentSets,
       );
 
       final state = RecoveryDomainService.muscleState(
         hoursSinceLastSignificantLoad: hoursSince,
         highSessionFatigue: highSessionFatigue,
         muscleGroup: muscle,
-        lastEquivalentSets: lastEquivalentSets,
+        lastEquivalentSets: totalEquivalentSets,
       );
 
       muscles.add({
@@ -2317,7 +2350,7 @@ class WorkoutLocalDataSource {
         'state': state,
         'hoursSinceLastSignificantLoad': hoursSince,
         'lastSignificantLoadAt': lastTime,
-        'lastEquivalentSets': lastEquivalentSets,
+        'lastEquivalentSets': totalEquivalentSets,
         'avgRir': avgRir,
         'avgRpe': avgRpe,
         'highSessionFatigue': highSessionFatigue,
@@ -2942,9 +2975,34 @@ class WorkoutLocalDataSource {
   }) async {
     final stopwatch = Stopwatch()..start();
     final now = DateTime.now();
-    final recentStart = now.subtract(Duration(days: daysWindow));
-    final previousStart = recentStart.subtract(Duration(days: daysWindow));
     final dbInstance = await database;
+
+    // All-Time mode: daysWindow >= 3650 (sentinel for "entire training history").
+    // Fetches earliest completed workout, splits lifetime at the midpoint,
+    // and compares the first half (previous) against the second half (recent).
+    DateTime previousStart;
+    DateTime recentStart;
+
+    if (daysWindow >= 3650) {
+      // Query the earliest completed workout's start time.
+      final earliest = await (dbInstance.select(dbInstance.workoutLogs)
+            ..where((tbl) => tbl.status.equals('completed'))
+            ..orderBy([(t) => drift.OrderingTerm(expression: t.startTime)])
+            ..limit(1))
+          .getSingleOrNull();
+
+      final t0 = earliest?.startTime ??
+          now.subtract(const Duration(days: 365)); // fallback
+      final lifetimeDays = now.difference(t0).inDays;
+      final halfDays = (lifetimeDays / 2).floor();
+      final midpoint = t0.add(Duration(days: halfDays));
+
+      previousStart = t0;
+      recentStart = midpoint;
+    } else {
+      recentStart = now.subtract(Duration(days: daysWindow));
+      previousStart = recentStart.subtract(Duration(days: daysWindow));
+    }
 
     final query = dbInstance.select(dbInstance.setLogs).join([
       drift.innerJoin(
@@ -3019,7 +3077,7 @@ class WorkoutLocalDataSource {
       fields: {
         'rows': rows.length,
         'resultRows': limited.length,
-        'range': '${daysWindow}d',
+        'range': daysWindow >= 3650 ? 'all-time' : '${daysWindow}d',
       },
     );
     return limited;
