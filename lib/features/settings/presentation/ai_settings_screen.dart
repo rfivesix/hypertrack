@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../generated/app_localizations.dart';
+import '../../../services/ai_matching_language_service.dart';
 import '../../../services/ai_service.dart';
 import '../../../services/theme_service.dart';
 import '../../../theme/color_constants.dart';
@@ -26,7 +27,6 @@ class AiSettingsScreen extends StatefulWidget {
 
 class _AiSettingsScreenState extends State<AiSettingsScreen> {
   final _keyController = TextEditingController();
-  final _instructionsController = TextEditingController();
   AiProvider _selectedProvider = AiProvider.openai;
   String _selectedModel = '';
   List<AiModelOption> _modelOptions = const [];
@@ -35,19 +35,17 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   bool _isTesting = false;
   bool _obscureKey = true;
   bool _hasKey = false;
+  AiMatchingLanguage _aiMatchingLanguage = AiMatchingLanguage.auto;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
-    _instructionsController.text =
-        context.read<ThemeService>().aiCustomInstructions;
   }
 
   @override
   void dispose() {
     _keyController.dispose();
-    _instructionsController.dispose();
     super.dispose();
   }
 
@@ -57,6 +55,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
         await AiService.instance.resolveAndPersistSelectedModel(provider);
     final key = await AiService.instance.getApiKey(provider);
     final models = await AiService.instance.getModelOptions(provider);
+    final aiMatchLang = await AiMatchingLanguageService.readChoice();
     final resolvedModel = _resolveModelSelection(model, models, provider);
     if (mounted) {
       setState(() {
@@ -68,6 +67,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
           provider,
         );
         _hasKey = key != null && key.isNotEmpty;
+        _aiMatchingLanguage = aiMatchLang;
         if (_hasKey) {
           // Show masked placeholder — never display the real key
           _keyController.text = '••••••••••••••••••••';
@@ -308,28 +308,6 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                         ),
                         if (aiEnabled) ...[
                           const SizedBox(height: 12),
-                          Text(
-                            l10n.aiCustomInstructionsTitle,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            l10n.aiCustomInstructionsSubtitle,
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _instructionsController,
-                            maxLines: 5,
-                            minLines: 2,
-                            onChanged: (value) =>
-                                themeService.setAiCustomInstructions(value),
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Z.B. Keine Erdnüsse, Vegan...',
-                            ),
-                          ),
-                          const SizedBox(height: 16),
                           DropdownButtonFormField<AiProvider>(
                             initialValue: _selectedProvider,
                             decoration: InputDecoration(
@@ -374,6 +352,38 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                                       .toList(),
                                   onChanged: _onModelChanged,
                                 ),
+                          const SizedBox(height: 10),
+                          // AI Matching Language
+                          DropdownButtonFormField<AiMatchingLanguage>(
+                            initialValue: _aiMatchingLanguage,
+                            decoration: const InputDecoration(
+                              labelText: 'AI Food Name Language',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: AiMatchingLanguage.auto,
+                                child: Text('Auto'),
+                              ),
+                              DropdownMenuItem(
+                                value: AiMatchingLanguage.en,
+                                child: Text('English'),
+                              ),
+                              DropdownMenuItem(
+                                value: AiMatchingLanguage.de,
+                                child: Text('Deutsch'),
+                              ),
+                            ],
+                            onChanged: (v) async {
+                              if (v == null) return;
+                              setState(() => _aiMatchingLanguage = v);
+                              await AiMatchingLanguageService.writeChoice(v);
+                            },
+                          ),
                           const SizedBox(height: 10),
                           TextField(
                             controller: _keyController,

@@ -47,7 +47,7 @@ Train Libre is built with Flutter and supports:
 - **Workout Tracker:** Log sets (warm-up, failure, dropsets), routines, and session history.
 - **Calorie & Macro Tracker:** Track nutrition, hydration, and supplements with adaptive weekly guidance.
 - **Bodyweight & Recovery Analytics:** Deep insights into muscle readiness, volume trends, and body measurements.
-- **Optional AI Meal Tools:** Capture meals from photos or text via BYOK (Bring Your Own Key) setup. Always reviewable before saving.
+- **Next-Gen AI Meal Capture:** Capture meals from photos or text via BYOK (Bring Your Own Key) setup. Fully integrated with a holistic culinary anchor (`mealContext`) and a state-aware "Top-N Fuzzy Alternatives" SQLite matching system that prevents hallucinations. Always reviewable and self-repairing before saving.
 - **Privacy & Local-First:** Data stays on device. Optional one-way health export to Apple Health and Google Health Connect.
 
 ## Privacy & Philosophy

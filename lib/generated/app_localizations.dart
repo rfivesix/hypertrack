@@ -4235,7 +4235,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiPrivacyDisclosure.
   ///
   /// In en, this message translates to:
-  /// **'Images, text, and generated recommendation prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider\'s terms. Your API key is stored encrypted on this device only.'**
+  /// **'Images, text, and generated prompts are sent to the selected AI provider only when you use an AI action. Provider retention and processing follow that provider\'s terms. Your API key is stored encrypted on this device only.'**
   String get aiPrivacyDisclosure;
 
   /// No description provided for @aiMealCapture.
@@ -4316,6 +4316,12 @@ abstract class AppLocalizations {
   /// **'Add item manually'**
   String get aiReviewAddItem;
 
+  /// No description provided for @aiReviewReplaceItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace item'**
+  String get aiReviewReplaceItem;
+
   /// No description provided for @aiReviewSaveToDiary.
   ///
   /// In en, this message translates to:
@@ -4391,86 +4397,8 @@ abstract class AppLocalizations {
   /// No description provided for @aiCustomInstructionsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every recommendation.'**
+  /// **'Give the AI fixed rules (e.g., allergies, no-go foods like \'no bowls\', or intolerances) to be followed with every capture.'**
   String get aiCustomInstructionsSubtitle;
-
-  /// No description provided for @aiRecommendationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Meal Coach'**
-  String get aiRecommendationTitle;
-
-  /// No description provided for @aiRecommendDietary.
-  ///
-  /// In en, this message translates to:
-  /// **'Dietary'**
-  String get aiRecommendDietary;
-
-  /// No description provided for @aiRecommendSituation.
-  ///
-  /// In en, this message translates to:
-  /// **'Situation'**
-  String get aiRecommendSituation;
-
-  /// No description provided for @aiRecommendVegan.
-  ///
-  /// In en, this message translates to:
-  /// **'Vegan'**
-  String get aiRecommendVegan;
-
-  /// No description provided for @aiRecommendVegetarian.
-  ///
-  /// In en, this message translates to:
-  /// **'Vegetarian'**
-  String get aiRecommendVegetarian;
-
-  /// No description provided for @aiRecommendPescetarian.
-  ///
-  /// In en, this message translates to:
-  /// **'Pescetarian'**
-  String get aiRecommendPescetarian;
-
-  /// No description provided for @aiRecommendOnTheGo.
-  ///
-  /// In en, this message translates to:
-  /// **'On the go (No utensils)'**
-  String get aiRecommendOnTheGo;
-
-  /// No description provided for @aiRecommendNoKitchen.
-  ///
-  /// In en, this message translates to:
-  /// **'No cooking (Cold meal)'**
-  String get aiRecommendNoKitchen;
-
-  /// No description provided for @aiRecommendWithCooking.
-  ///
-  /// In en, this message translates to:
-  /// **'Cooking allowed'**
-  String get aiRecommendWithCooking;
-
-  /// No description provided for @aiRecommendGenerate.
-  ///
-  /// In en, this message translates to:
-  /// **'Generate'**
-  String get aiRecommendGenerate;
-
-  /// No description provided for @aiRecommendGenerating.
-  ///
-  /// In en, this message translates to:
-  /// **'Thinking…'**
-  String get aiRecommendGenerating;
-
-  /// No description provided for @aiRecommendSaveToDiary.
-  ///
-  /// In en, this message translates to:
-  /// **'Save to Diary'**
-  String get aiRecommendSaveToDiary;
-
-  /// No description provided for @aiRecommendNoMatch.
-  ///
-  /// In en, this message translates to:
-  /// **'No database match'**
-  String get aiRecommendNoMatch;
 
   /// No description provided for @aiValidationNoMatchedItemsSaveYet.
   ///
@@ -4537,12 +4465,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatic repair limit reached. Please review before saving.'**
   String get aiValidationRepairLimitReachedReview;
-
-  /// No description provided for @aiValidationRepairLimitReachedRecommendation.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic repair limit reached. Review matches and portions before saving.'**
-  String get aiValidationRepairLimitReachedRecommendation;
 
   /// No description provided for @aiValidationRecentMealContextIncluded.
   ///
@@ -4762,24 +4684,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Validation issue: {code}'**
   String aiValidationUnknownIssue(String code);
-
-  /// No description provided for @aiRecommendRemainingMacros.
-  ///
-  /// In en, this message translates to:
-  /// **'Remaining today'**
-  String get aiRecommendRemainingMacros;
-
-  /// No description provided for @aiRecommendCustomRequest.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom request'**
-  String get aiRecommendCustomRequest;
-
-  /// No description provided for @aiRecommendCustomRequestHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. Include leftover rice, high protein, etc.'**
-  String get aiRecommendCustomRequestHint;
 
   /// No description provided for @currentlyTracking.
   ///
