@@ -2142,6 +2142,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsFoodDbRegionUnitedStates => 'Vereinigte Staaten (US)';
 
   @override
+  String get settingsColorfulMacroBadgesTitle => 'Bunte Nährwert-Badges';
+
+  @override
+  String get settingsColorfulMacroBadgesSubtitle =>
+      'Nutzt das farbcodierte Badge-Design aus der KI-Prüfung auch im Tagebuch.';
+
+  @override
   String get settingsFoodDbRegionUnitedKingdom => 'Vereinigtes Königreich (UK)';
 
   @override

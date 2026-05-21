@@ -12,11 +12,14 @@ class ThemeService extends ChangeNotifier {
   static const _aiEnabledKey = 'ai_enabled';
   static const _materialColorsEnabledKey = 'material_colors_enabled';
   static const _hapticsEnabledKey = 'haptics_enabled';
+  static const _useColorfulMacroBadgesKey = 'use_colorful_macro_badges';
+
   ThemeMode _themeMode = ThemeMode.system;
   int _visualStyle = 1; // 1 = Liquid (Standard), 0 = Frosted
   bool _isAiEnabled = false;
   bool _materialColorsEnabled = false;
   bool _hapticsEnabled = true;
+  bool _useColorfulMacroBadges = true;
   BaseFoodLanguage _baseFoodLanguage = BaseFoodLanguage.auto;
 
   /// The current theme mode (light, dark, or system).
@@ -34,6 +37,9 @@ class ThemeService extends ChangeNotifier {
   /// Whether haptic feedback is enabled globally.
   bool get hapticsEnabled => _hapticsEnabled;
 
+  /// Whether to use colorful macro badges in the diary.
+  bool get useColorfulMacroBadges => _useColorfulMacroBadges;
+
   /// The user's preferred display language for base foods.
   BaseFoodLanguage get baseFoodLanguage => _baseFoodLanguage;
 
@@ -44,6 +50,7 @@ class ThemeService extends ChangeNotifier {
     _loadAiEnabled();
     _loadMaterialColorsEnabled();
     _loadHapticsEnabled();
+    _loadUseColorfulMacroBadges();
     _loadBaseFoodLanguage();
   }
 
@@ -54,7 +61,6 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- New method ---
   Future<void> _loadVisualStyle() async {
     final prefs = await SharedPreferences.getInstance();
     _visualStyle = prefs.getInt(_styleKey) ?? 1;
@@ -98,6 +104,12 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _loadUseColorfulMacroBadges() async {
+    final prefs = await SharedPreferences.getInstance();
+    _useColorfulMacroBadges = prefs.getBool(_useColorfulMacroBadgesKey) ?? true;
+    notifyListeners();
+  }
+
   Future<void> _loadBaseFoodLanguage() async {
     _baseFoodLanguage = await BaseFoodLanguageService.readChoice();
     notifyListeners();
@@ -129,6 +141,15 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_hapticsEnabledKey, enabled);
+  }
+
+  /// Sets whether colorful macro badges should be used in the diary.
+  Future<void> setUseColorfulMacroBadges(bool enabled) async {
+    if (enabled == _useColorfulMacroBadges) return;
+    _useColorfulMacroBadges = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_useColorfulMacroBadgesKey, enabled);
   }
 
   /// Sets the base food display language and persists it to storage.

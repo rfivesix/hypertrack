@@ -28,6 +28,7 @@ import '../../profile/presentation/widgets/measurement_chart_widget.dart';
 import 'widgets/nutrition_summary_widget.dart';
 import '../../supplements/presentation/widgets/supplement_summary_widget.dart';
 import '../../../widgets/common/swipe_action_background.dart';
+import '../../../widgets/common/macro_badge_row.dart';
 import '../../../widgets/common/summary_card.dart';
 import '../../../widgets/common/glass_progress_bar.dart';
 import 'diary_view_model.dart';
@@ -1002,13 +1003,12 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
           // <<< New: macro row below the title (own line, left aligned)
           if (items.isNotEmpty) ...[
             const SizedBox(height: 4),
-            AppMetadataRow(
-              items: [
-                '${macros.calories.round()} kcal',
-                '${macros.protein.round()}g P',
-                '${macros.carbs.round()}g C',
-                '${macros.fat.round()}g F',
-              ],
+            MacroBadgeRow(
+              kcal: macros.calories.round(),
+              protein: macros.protein,
+              carbs: macros.carbs,
+              fat: macros.fat,
+              useBadges: context.read<ThemeService>().useColorfulMacroBadges,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
@@ -1223,20 +1223,19 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                         (entry.caffeinePer100ml! / 100) * entry.quantityInMl;
                   }
                 }
-                final l10n = AppLocalizations.of(ctx)!;
-                return AppMetadataRow(
-                  items: [
-                    '$totalKcal kcal',
-                    '${totalSugar.toStringAsFixed(0)}g ${l10n.sugar}',
-                    '${totalCaffeine.toStringAsFixed(0)}mg ${l10n.supplement_caffeine}',
-                    '${totalMl}ml',
-                  ],
+                return MacroBadgeRow(
+                  kcal: totalKcal.round(),
+                  sugar: totalSugar,
+                  caffeine: totalCaffeine,
+                  waterMl: totalMl,
+                  useBadges: ctx.read<ThemeService>().useColorfulMacroBadges,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w500,
                   ),
                 );
-              },
+                },
+
             ),
           ],
           AnimatedCrossFade(

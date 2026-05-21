@@ -3872,6 +3872,18 @@ abstract class AppLocalizations {
   /// **'United States (US)'**
   String get settingsFoodDbRegionUnitedStates;
 
+  /// No description provided for @settingsColorfulMacroBadgesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Colorful Macro Badges'**
+  String get settingsColorfulMacroBadgesTitle;
+
+  /// No description provided for @settingsColorfulMacroBadgesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the color-coded badge design from AI verification in the diary as well.'**
+  String get settingsColorfulMacroBadgesSubtitle;
+
   /// No description provided for @settingsFoodDbRegionUnitedKingdom.
   ///
   /// In en, this message translates to:

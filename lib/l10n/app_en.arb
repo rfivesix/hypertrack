@@ -825,6 +825,8 @@
   "settingsFoodDbRegionGermany": "Germany (DE)",
   "settingsFoodDbRegionSwitzerland": "Switzerland (CH)",
   "settingsFoodDbRegionUnitedStates": "United States (US)",
+  "settingsColorfulMacroBadgesTitle": "Colorful Macro Badges",
+  "settingsColorfulMacroBadgesSubtitle": "Uses the color-coded badge design from AI verification in the diary as well.",
   "settingsFoodDbRegionUnitedKingdom": "United Kingdom (UK)",
   "settingsFoodDbRegionChanged": "Food database region set to {region}. Changes apply on the next catalog refresh/import cycle.",
   "@settingsFoodDbRegionChanged": {

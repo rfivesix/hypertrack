@@ -2131,6 +2131,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFoodDbRegionUnitedStates => 'United States (US)';
 
   @override
+  String get settingsColorfulMacroBadgesTitle => 'Colorful Macro Badges';
+
+  @override
+  String get settingsColorfulMacroBadgesSubtitle =>
+      'Uses the color-coded badge design from AI verification in the diary as well.';
+
+  @override
   String get settingsFoodDbRegionUnitedKingdom => 'United Kingdom (UK)';
 
   @override

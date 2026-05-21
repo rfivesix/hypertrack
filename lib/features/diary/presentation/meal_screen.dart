@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../data/database_helper.dart';
 import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../../../services/theme_service.dart';
 import '../domain/models/food_entry.dart';
 import '../domain/models/food_item.dart';
 import '../../supplements/domain/models/supplement.dart';
@@ -15,6 +17,7 @@ import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../../widgets/common/glass_fab.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/summary_card.dart';
+import '../../../widgets/common/macro_badge_row.dart';
 import '../../../widgets/common/swipe_action_background.dart';
 
 /// A comprehensive screen for viewing and editing a meal and its ingredients.
@@ -249,38 +252,15 @@ class _MealScreenState extends State<MealScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _items.isEmpty
-                                  ? '– ${l10n.unit_kcal}'
-                                  : '$_totalKcal ${l10n.unit_kcal}',
+                            MacroBadgeRow(
+                              kcal: _items.isEmpty ? null : _totalKcal.round(),
+                              protein: _items.isEmpty ? null : _totalP,
+                              carbs: _items.isEmpty ? null : _totalC,
+                              fat: _items.isEmpty ? null : _totalF,
+                              useBadges: Provider.of<ThemeService>(context).useColorfulMacroBadges,
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 6,
-                              children: [
-                                _MacroChip(
-                                  label: 'C',
-                                  value:
-                                      _items.isEmpty ? '–' : _format1(_totalC),
-                                  unit: l10n.unit_grams,
-                                ),
-                                _MacroChip(
-                                  label: 'F',
-                                  value:
-                                      _items.isEmpty ? '–' : _format1(_totalF),
-                                  unit: l10n.unit_grams,
-                                ),
-                                _MacroChip(
-                                  label: 'P',
-                                  value:
-                                      _items.isEmpty ? '–' : _format1(_totalP),
-                                  unit: l10n.unit_grams,
-                                ),
-                              ],
                             ),
                           ],
                         );
@@ -337,7 +317,6 @@ class _MealScreenState extends State<MealScreen> {
     );
   }
 
-  String _format1(double v) => v.toStringAsFixed(1);
 
   Future<void> _save() async {
     if (_saving) return;
@@ -790,34 +769,6 @@ class _MealScreenState extends State<MealScreen> {
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-      ),
-    );
-  }
-}
-
-/// Small chip label for C/F/P.
-class _MacroChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final String unit;
-  const _MacroChip({
-    required this.label,
-    required this.value,
-    required this.unit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        '$label  $value$unit',
-        style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }

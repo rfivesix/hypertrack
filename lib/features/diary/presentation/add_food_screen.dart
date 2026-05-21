@@ -23,6 +23,7 @@ import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../../widgets/common/glass_fab.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import 'widgets/off_attribution_widget.dart';
+import '../../../widgets/common/macro_badge_row.dart';
 import '../../../widgets/common/summary_card.dart';
 import 'package:provider/provider.dart';
 import '../../../services/haptic_feedback_service.dart';
@@ -946,7 +947,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Widget _buildMealCard(Map<String, dynamic> meal, AppLocalizations l10n) {
-    final color = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final color = theme.colorScheme;
+    final themeService = Provider.of<ThemeService>(context);
     final mealId = meal['id'] as int;
 
     return SummaryCard(
@@ -968,11 +971,15 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               children: [
                 Text('${l10n.mealIngredientsTitle}: $count'),
                 const SizedBox(height: 2),
-                Text(
-                  '${totals.kcal} kcal   •   C ${totals.carbs.toStringAsFixed(1)} g   •   F ${totals.fat.toStringAsFixed(1)} g   •   P ${totals.protein.toStringAsFixed(1)} g',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                MacroBadgeRow(
+                  kcal: totals.kcal,
+                  protein: totals.protein,
+                  carbs: totals.carbs,
+                  fat: totals.fat,
+                  useBadges: themeService.useColorfulMacroBadges,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ],
             );

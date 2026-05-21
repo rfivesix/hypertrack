@@ -880,6 +880,8 @@
   "settingsFoodDbRegionGermany": "Deutschland (DE)",
   "settingsFoodDbRegionSwitzerland": "Schweiz (CH)",
   "settingsFoodDbRegionUnitedStates": "Vereinigte Staaten (US)",
+  "settingsColorfulMacroBadgesTitle": "Bunte Nährwert-Badges",
+  "settingsColorfulMacroBadgesSubtitle": "Nutzt das farbcodierte Badge-Design aus der KI-Prüfung auch im Tagebuch.",
   "settingsFoodDbRegionUnitedKingdom": "Vereinigtes Königreich (UK)",
   "settingsFoodDbRegionChanged": "Region der Lebensmittel-Datenbank auf {region} gesetzt. Änderungen gelten beim nächsten Katalog-Refresh/Import.",
   "@settingsFoodDbRegionChanged": {
