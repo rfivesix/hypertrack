@@ -88,11 +88,13 @@ class _BodyNutritionNormalizedTrendChartState
       displayWeightSeries,
       unit: unitService.suffixFor(UnitDimension.weight),
       fractionDigits: 1,
+      minVariance: 2.0,
     );
     final calorieScale = _SeriesScale.fromSeries(
       calorieSeries,
       unit: 'kcal',
       fractionDigits: 0,
+      minVariance: 200.0,
     );
 
     final weightPoints = _buildPoints(
@@ -100,12 +102,14 @@ class _BodyNutritionNormalizedTrendChartState
       firstDay: firstDay,
       maxX: maxX,
       scale: weightScale,
+      aggregationMethod: AggregationMethod.average,
     );
     final caloriePoints = _buildPoints(
       series: calorieSeries,
       firstDay: firstDay,
       maxX: maxX,
       scale: calorieScale,
+      aggregationMethod: AggregationMethod.average,
     );
     // Debug: when used as compact (hub), print range and last raw-series dates
     assert(() {
@@ -409,19 +413,32 @@ class _BodyNutritionNormalizedTrendChartState
     required DateTime firstDay,
     required double maxX,
     required _SeriesScale scale,
+    AggregationMethod aggregationMethod = AggregationMethod.average,
   }) {
-    final deduplicatedByX = <int, _ChartPoint>{};
+    final Map<int, List<DailyValuePoint>> groupedByX = {};
     final maxXInt = maxX.round();
     for (final point in series) {
       final xIndex = _xOf(point.day, firstDay).round();
       final y = point.value;
       if (!y.isFinite || xIndex < 0 || xIndex > maxXInt) continue;
-      deduplicatedByX[xIndex] = _ChartPoint(
-        day: point.day,
-        rawValue: y,
-        spot: FlSpot(xIndex.toDouble(), scale.toPlotValue(y)),
-      );
+      groupedByX.putIfAbsent(xIndex, () => []).add(point);
     }
+
+    final deduplicatedByX = <int, _ChartPoint>{};
+    groupedByX.forEach((xIndex, points) {
+      final day = points.first.day;
+      final sum = points.map((p) => p.value).reduce((a, b) => a + b);
+      final accumulatedValue = (aggregationMethod == AggregationMethod.sum)
+          ? sum
+          : sum / points.length;
+
+      deduplicatedByX[xIndex] = _ChartPoint(
+        day: day,
+        rawValue: accumulatedValue,
+        spot: FlSpot(xIndex.toDouble(), scale.toPlotValue(accumulatedValue)),
+      );
+    });
+
     final orderedPoints = deduplicatedByX.values.toList(growable: true)
       ..sort((a, b) => a.spot.x.compareTo(b.spot.x));
     if (orderedPoints.isEmpty) {
@@ -536,6 +553,7 @@ class _SeriesScale {
     List<DailyValuePoint> series, {
     required String unit,
     required int fractionDigits,
+    double minVariance = 0.0,
   }) {
     final finiteValues = series
         .map((point) => point.value)
@@ -550,8 +568,15 @@ class _SeriesScale {
       );
     }
 
-    final min = finiteValues.reduce(math.min);
-    final max = finiteValues.reduce(math.max);
+    double min = finiteValues.reduce(math.min);
+    double max = finiteValues.reduce(math.max);
+    final span = max - min;
+    if (span < minVariance) {
+      final mid = (min + max) / 2;
+      min = mid - (minVariance / 2);
+      max = mid + (minVariance / 2);
+    }
+
     return _SeriesScale(
       min: min,
       max: max,
@@ -601,3 +626,5 @@ String _formatNumber(double value, int fractionDigits) {
   final whole = NumberFormat.decimalPattern().format(int.parse(parts[0]));
   return parts.length == 1 ? whole : '$whole.${parts[1]}';
 }
+
+enum AggregationMethod { average, sum }

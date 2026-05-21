@@ -14,6 +14,7 @@ import 'services/unit_service.dart';
 import 'features/workout/presentation/live_workout_view_model.dart';
 import 'package:provider/provider.dart';
 import 'services/theme_service.dart';
+import 'theme/app_colors.dart';
 import 'theme/color_constants.dart';
 import 'package:intl/date_symbol_data_local.dart'; // FIX: Initialize intl formatting
 
@@ -193,6 +194,20 @@ class _MyAppState extends State<MyApp> {
         final baseLightTheme = ThemeData(
           useMaterial3: false, // No Material You
           colorScheme: lightScheme,
+          extensions: [
+            AppSurfaces(summaryCard: cardLight),
+            MacroColors(
+              calories: Colors.orange,
+              protein: Colors.red.shade400,
+              carbs: Colors.green.shade400,
+              fat: Colors.purple.shade300,
+              water: Colors.blue,
+              sugar: Colors.pink.shade200,
+              fiber: Colors.brown.shade400,
+              salt: Colors.grey.shade500,
+              caffeine: Colors.brown,
+            ),
+          ],
           primaryColor: lightScheme.primary, // Accent in Material 2 contexts
           scaffoldBackgroundColor: Colors.white,
           canvasColor: Colors.white,
@@ -376,6 +391,20 @@ class _MyAppState extends State<MyApp> {
         final baseDarkTheme = ThemeData(
           useMaterial3: false, // No Material You
           colorScheme: darkScheme,
+          extensions: [
+            AppSurfaces(summaryCard: cardDark),
+            MacroColors(
+              calories: Colors.orange,
+              protein: Colors.red.shade400,
+              carbs: Colors.green.shade400,
+              fat: Colors.purple.shade300,
+              water: Colors.blue,
+              sugar: Colors.pink.shade200,
+              fiber: Colors.brown.shade400,
+              salt: Colors.grey.shade500,
+              caffeine: Colors.brown,
+            ),
+          ],
           primaryColor: darkScheme.primary, // Accent in Material 2 contexts
           scaffoldBackgroundColor: Colors.black,
           canvasColor: Colors.black,
@@ -592,3 +621,4 @@ class NoGlowScrollBehavior extends ScrollBehavior {
     return const BouncingScrollPhysics();
   }
 }
+

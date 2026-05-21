@@ -65,7 +65,10 @@ class _MuscleGroupAnalyticsScreenState
     return StatisticsPresentationFormatter.compactNumber(value);
   }
 
-  List<MuscleRadarDatum> _buildRadarData(List<Map<String, dynamic>> muscles) {
+  List<MuscleRadarDatum> _buildRadarData(
+    List<Map<String, dynamic>> muscles,
+    AppLocalizations l10n,
+  ) {
     final sorted = muscles
         .where(
           (m) => !StatisticsPresentationFormatter.isOtherCategoryLabel(
@@ -82,7 +85,10 @@ class _MuscleGroupAnalyticsScreenState
       return sorted
           .map(
             (m) => MuscleRadarDatum(
-              label: m['muscleGroup'] as String,
+              label: StatisticsPresentationFormatter.muscleGroupLabel(
+                l10n,
+                m['muscleGroup'] as String,
+              ),
               value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
             ),
           )
@@ -93,7 +99,10 @@ class _MuscleGroupAnalyticsScreenState
         .take(_maxMuscleBars)
         .map(
           (m) => MuscleRadarDatum(
-            label: m['muscleGroup'] as String,
+            label: StatisticsPresentationFormatter.muscleGroupLabel(
+              l10n,
+              m['muscleGroup'] as String,
+            ),
             value: (m['equivalentSets'] as num?)?.toDouble() ?? 0.0,
           ),
         )
@@ -118,7 +127,7 @@ class _MuscleGroupAnalyticsScreenState
         (_analytics['undertrained'] as List<dynamic>? ?? const [])
             .cast<String>();
     final dataQualityOk = (_analytics['dataQualityOk'] as bool?) ?? false;
-    final radarData = _buildRadarData(muscles);
+    final radarData = _buildRadarData(muscles, l10n);
     final radarMax = radarData.isEmpty
         ? 0.0
         : radarData
@@ -311,8 +320,19 @@ class _MuscleGroupAnalyticsScreenState
         (a, b) => (b['value'] as double).compareTo(a['value'] as double),
       );
 
+    final labels = items
+        .take(_maxMuscleBars)
+        .map(
+          (e) => StatisticsPresentationFormatter.muscleGroupLabel(
+            l10n,
+            e['muscleGroup'] as String,
+          ),
+        )
+        .toList();
+
     return _buildMuscleBarChart(
       items: items.take(_maxMuscleBars).toList(),
+      labels: labels,
       unit: l10n.analyticsUnitSets,
       emptyLabel: l10n.noWorkoutDataLabel,
       yAxisLabel:
@@ -340,8 +360,19 @@ class _MuscleGroupAnalyticsScreenState
         (a, b) => (b['value'] as double).compareTo(a['value'] as double),
       );
 
+    final labels = items
+        .take(_maxMuscleBars)
+        .map(
+          (e) => StatisticsPresentationFormatter.muscleGroupLabel(
+            l10n,
+            e['muscleGroup'] as String,
+          ),
+        )
+        .toList();
+
     return _buildMuscleBarChart(
       items: items.take(_maxMuscleBars).toList(),
+      labels: labels,
       unit: '/${l10n.analyticsPerWeekAbbrev}',
       emptyLabel: l10n.noWorkoutDataLabel,
       yAxisLabel:
@@ -352,6 +383,7 @@ class _MuscleGroupAnalyticsScreenState
 
   Widget _buildMuscleBarChart({
     required List<Map<String, dynamic>> items,
+    required List<String> labels,
     required String unit,
     required String emptyLabel,
     required String footer,
@@ -375,8 +407,28 @@ class _MuscleGroupAnalyticsScreenState
       );
     }
 
-    final labels = items.map((e) => e['muscleGroup'] as String).toList();
     final values = items.map((e) => (e['value'] as num).toDouble()).toList();
+
+    final rawMax = values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
+    final double computedMaxY;
+    double tickInterval;
+
+    if (rawMax <= 5) {
+      computedMaxY = 5.0;
+      tickInterval = 1.0;
+    } else if (rawMax <= 10) {
+      computedMaxY = 10.0;
+      tickInterval = 2.0;
+    } else if (rawMax <= 20) {
+      computedMaxY = 20.0;
+      tickInterval = 4.0;
+    } else {
+      computedMaxY = (rawMax * 1.15).ceilToDouble();
+      tickInterval = (computedMaxY / 5).ceilToDouble();
+      if (tickInterval == 0) {
+        tickInterval = 1.0;
+      }
+    }
 
     return SummaryCard(
       child: Padding(
@@ -419,10 +471,7 @@ class _MuscleGroupAnalyticsScreenState
                   alignment: BarChartAlignment.spaceAround,
                   gridData: AnalyticsChartDefaults.compactGrid,
                   borderData: AnalyticsChartDefaults.noBorder,
-                  maxY: (values.reduce((a, b) => a > b ? a : b) * 1.2).clamp(
-                    1,
-                    1e12,
-                  ),
+                  maxY: computedMaxY,
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
                       tooltipBorderRadius: BorderRadius.circular(16),
@@ -471,6 +520,7 @@ class _MuscleGroupAnalyticsScreenState
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 40,
+                        interval: tickInterval,
                         getTitlesWidget: (value, meta) =>
                             AnalyticsChartDefaults.tickLabel(
                           context,
@@ -481,7 +531,7 @@ class _MuscleGroupAnalyticsScreenState
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 36,
+                        reservedSize: 48,
                         getTitlesWidget: (value, meta) {
                           final index = value.toInt();
                           if (index < 0 || index >= labels.length) {
@@ -491,8 +541,10 @@ class _MuscleGroupAnalyticsScreenState
                           final compact = label.length > 8
                               ? '${label.substring(0, 8)}...'
                               : label;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 4,
+                            angle: -45 * 3.141592653589793 / 180,
                             child: AnalyticsChartDefaults.tickLabel(
                               context,
                               compact,

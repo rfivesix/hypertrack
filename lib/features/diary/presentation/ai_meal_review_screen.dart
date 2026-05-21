@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../data/database_helper.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_entry.dart';
@@ -11,10 +12,12 @@ import '../../../services/ai_meal_validation.dart';
 import '../../../services/ai_matching_language_service.dart';
 import '../../../services/ai_service.dart';
 import '../../../services/haptic_feedback_service.dart';
+import '../../../services/theme_service.dart';
 import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
 import '../../../util/ai_validation_localization.dart';
 import '../../../widgets/common/global_app_bar.dart';
+import '../../../widgets/common/macro_badge_row.dart';
 import '../../../widgets/common/summary_card.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import 'general_food_selection_screen.dart';
@@ -825,58 +828,12 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
       );
     }
 
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      children: [
-        _macroBadge(
-          '${n.kcalRounded}',
-          'kcal',
-          const Color(0xFFE65100),
-          theme,
-        ),
-        _macroBadge(
-          'P ${n.proteinRounded}',
-          'g',
-          const Color(0xFF1565C0),
-          theme,
-        ),
-        _macroBadge(
-          'C ${n.carbsRounded}',
-          'g',
-          const Color(0xFF2E7D32),
-          theme,
-        ),
-        _macroBadge(
-          'F ${n.fatRounded}',
-          'g',
-          const Color(0xFFBF360C),
-          theme,
-        ),
-      ],
-    );
-  }
-
-  Widget _macroBadge(
-    String value,
-    String unit,
-    Color color,
-    ThemeData theme,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        '$value$unit',
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
-      ),
+    return MacroBadgeRow(
+      kcal: n.kcalRounded,
+      protein: n.proteinRounded.toDouble(),
+      carbs: n.carbsRounded.toDouble(),
+      fat: n.fatRounded.toDouble(),
+      useBadges: Provider.of<ThemeService>(context, listen: false).useColorfulMacroBadges,
     );
   }
 

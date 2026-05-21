@@ -3872,6 +3872,18 @@ abstract class AppLocalizations {
   /// **'United States (US)'**
   String get settingsFoodDbRegionUnitedStates;
 
+  /// No description provided for @settingsColorfulMacroBadgesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Colorful Macro Badges'**
+  String get settingsColorfulMacroBadgesTitle;
+
+  /// No description provided for @settingsColorfulMacroBadgesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the color-coded badge design from AI verification in the diary as well.'**
+  String get settingsColorfulMacroBadgesSubtitle;
+
   /// No description provided for @settingsFoodDbRegionUnitedKingdom.
   ///
   /// In en, this message translates to:
@@ -8333,6 +8345,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'May 20, 2026'**
   String get legal_document_last_updated_value;
+
+  /// No description provided for @muscleChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get muscleChest;
+
+  /// No description provided for @muscleBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get muscleBack;
+
+  /// No description provided for @muscleShoulders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoulders'**
+  String get muscleShoulders;
+
+  /// No description provided for @muscleBiceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Biceps'**
+  String get muscleBiceps;
+
+  /// No description provided for @muscleTriceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Triceps'**
+  String get muscleTriceps;
+
+  /// No description provided for @muscleQuads.
+  ///
+  /// In en, this message translates to:
+  /// **'Quads'**
+  String get muscleQuads;
+
+  /// No description provided for @muscleHamstrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamstrings'**
+  String get muscleHamstrings;
+
+  /// No description provided for @muscleGlutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Glutes'**
+  String get muscleGlutes;
+
+  /// No description provided for @muscleCalves.
+  ///
+  /// In en, this message translates to:
+  /// **'Calves'**
+  String get muscleCalves;
+
+  /// No description provided for @muscleLowerBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower Back'**
+  String get muscleLowerBack;
 }
 
 class _AppLocalizationsDelegate

@@ -880,6 +880,8 @@
   "settingsFoodDbRegionGermany": "Deutschland (DE)",
   "settingsFoodDbRegionSwitzerland": "Schweiz (CH)",
   "settingsFoodDbRegionUnitedStates": "Vereinigte Staaten (US)",
+  "settingsColorfulMacroBadgesTitle": "Bunte Nährwert-Badges",
+  "settingsColorfulMacroBadgesSubtitle": "Nutzt das farbcodierte Badge-Design aus der KI-Prüfung auch im Tagebuch.",
   "settingsFoodDbRegionUnitedKingdom": "Vereinigtes Königreich (UK)",
   "settingsFoodDbRegionChanged": "Region der Lebensmittel-Datenbank auf {region} gesetzt. Änderungen gelten beim nächsten Katalog-Refresh/Import.",
   "@settingsFoodDbRegionChanged": {
@@ -2150,5 +2152,15 @@
   "aiSettingsSetupGuideBody": "Um diese Funktion zu nutzen, benötigst du einen API-Key von einem KI-Anbieter (z. B. Google Gemini, da hierfür aktuell ein kostenloser Key erhältlich ist).",
   "aiSettingsGetApiKeyButton": "Schritt-für-Schritt Anleitung",
   "legal_document_version_value": "1.2",
-  "legal_document_last_updated_value": "20. Mai 2026"
+  "legal_document_last_updated_value": "20. Mai 2026",
+  "muscleChest": "Brust",
+  "muscleBack": "Rücken",
+  "muscleShoulders": "Schultern",
+  "muscleBiceps": "Bizeps",
+  "muscleTriceps": "Trizeps",
+  "muscleQuads": "Quadrizeps",
+  "muscleHamstrings": "Beinbeuger",
+  "muscleGlutes": "Glutes",
+  "muscleCalves": "Waden",
+  "muscleLowerBack": "Unterer Rücken"
 }

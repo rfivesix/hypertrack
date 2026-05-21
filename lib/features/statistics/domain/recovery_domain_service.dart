@@ -150,6 +150,77 @@ class RecoveryDomainService {
     ),
   };
 
+  /// Maps normalised minor muscle names to one of the 10 canonical major
+  /// muscle groups. A null value means the muscle should be discarded (e.g.
+  /// abs, core, forearms are not major strength-training groups).
+  static const Map<String, String?> _majorGroupMap = {
+    // Chest
+    'chest': 'chest',
+    'pecs': 'chest',
+    'upper chest': 'chest',
+    'lower chest': 'chest',
+    'pectorals': 'chest',
+    // Back (including traps)
+    'back': 'back',
+    'lats': 'back',
+    'latissimus': 'back',
+    'upper back': 'back',
+    'mid back': 'back',
+    'middle back': 'back',
+    'rhomboids': 'back',
+    'serratus': 'back',
+    'traps': 'back',
+    'trapezius': 'back',
+    // Shoulders
+    'shoulder': 'shoulders',
+    'shoulders': 'shoulders',
+    'delt': 'shoulders',
+    'delts': 'shoulders',
+    'front delt': 'shoulders',
+    'front delts': 'shoulders',
+    'rear delt': 'shoulders',
+    'rear delts': 'shoulders',
+    'side delt': 'shoulders',
+    'side delts': 'shoulders',
+    'lateral delt': 'shoulders',
+    'lateral delts': 'shoulders',
+    'anterior delts': 'shoulders',
+    'posterior delts': 'shoulders',
+    // Biceps
+    'biceps': 'biceps',
+    'brachialis': 'biceps',
+    // Triceps
+    'triceps': 'triceps',
+    // Quads
+    'quads': 'quads',
+    'quadriceps': 'quads',
+    // Hamstrings
+    'hamstrings': 'hamstrings',
+    // Glutes (includes hip muscles)
+    'glutes': 'glutes',
+    'gluteus': 'glutes',
+    'adductors': 'glutes',
+    'hip flexors': 'glutes',
+    'hip adductors': 'glutes',
+    // Calves
+    'calves': 'calves',
+    'calf': 'calves',
+    'gastrocnemius': 'calves',
+    'soleus': 'calves',
+    'tibialis': 'calves',
+    // Lower Back
+    'lower back': 'lower back',
+    'spinal erectors': 'lower back',
+    'erectors': 'lower back',
+    'erector spinae': 'lower back',
+    // Discarded — not tracked as major training groups
+    'abs': null,
+    'abdominals': null,
+    'core': null,
+    'obliques': null,
+    'forearms': null,
+  };
+
   static const List<_PressureAnchor> _loadPressureAnchors = [
     _PressureAnchor(0.0, 0.0),
     _PressureAnchor(1.0, 10.0),
@@ -272,6 +343,24 @@ class RecoveryDomainService {
   static bool shouldHideMuscle(String name) {
     final normalized = normalizeMuscleName(name);
     return normalized == 'brachialis';
+  }
+
+  /// Returns the canonical major muscle group key for [rawName], or null if
+  /// the muscle does not map to any tracked major group and should be
+  /// discarded (e.g. abs, core, obliques, forearms).
+  ///
+  /// The input is normalised (trimmed, lowercased, whitespace-collapsed) before
+  /// the map lookup. Unknown muscles not present in [_majorGroupMap] are treated
+  /// as null (discard).
+  static String? majorMuscleGroupFor(String rawName) {
+    final normalized = normalizeMuscleName(rawName);
+    if (normalized.isEmpty) return null;
+    // containsKey distinguishes "key is present with null value" (discard)
+    // from "key is absent" (also discard — unknown muscle).
+    if (_majorGroupMap.containsKey(normalized)) {
+      return _majorGroupMap[normalized]; // may be null (discard signal)
+    }
+    return null; // unknown muscle → discard
   }
 
   static double readinessScore({

@@ -2142,6 +2142,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsFoodDbRegionUnitedStates => 'Vereinigte Staaten (US)';
 
   @override
+  String get settingsColorfulMacroBadgesTitle => 'Bunte Nährwert-Badges';
+
+  @override
+  String get settingsColorfulMacroBadgesSubtitle =>
+      'Nutzt das farbcodierte Badge-Design aus der KI-Prüfung auch im Tagebuch.';
+
+  @override
   String get settingsFoodDbRegionUnitedKingdom => 'Vereinigtes Königreich (UK)';
 
   @override
@@ -4771,4 +4778,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get legal_document_last_updated_value => '20. Mai 2026';
+
+  @override
+  String get muscleChest => 'Brust';
+
+  @override
+  String get muscleBack => 'Rücken';
+
+  @override
+  String get muscleShoulders => 'Schultern';
+
+  @override
+  String get muscleBiceps => 'Bizeps';
+
+  @override
+  String get muscleTriceps => 'Trizeps';
+
+  @override
+  String get muscleQuads => 'Quadrizeps';
+
+  @override
+  String get muscleHamstrings => 'Beinbeuger';
+
+  @override
+  String get muscleGlutes => 'Glutes';
+
+  @override
+  String get muscleCalves => 'Waden';
+
+  @override
+  String get muscleLowerBack => 'Unterer Rücken';
 }

@@ -341,9 +341,10 @@ void main() {
       final muscles = _musclesByName(analytics);
 
       expect(analytics['hasData'], isTrue);
-      expect(muscles.keys, containsAll(['chest', 'lats']));
+      // 'lats' is mapped to the 'back' major muscle group.
+      expect(muscles.keys, containsAll(['chest', 'back']));
       expect(muscles['chest']!['lastEquivalentSets'], 1.0);
-      expect(muscles['lats']!['lastEquivalentSets'], 1.0);
+      expect(muscles['back']!['lastEquivalentSets'], 1.0);
       expect(muscles.keys, isNot(contains('front_delts')));
       expect(muscles.keys, isNot(contains('quads')));
       expect(muscles.keys, isNot(contains('hamstrings')));

@@ -1,0 +1,1 @@
+v0.9.11: Introducing colorful Macro Badges, a smarter Search & Scan UI for faster food entry, and critical privacy hardening by stripping unused microphone permissions. Improved statistics and UX.
