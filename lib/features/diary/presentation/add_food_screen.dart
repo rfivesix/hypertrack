@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../data/database_helper.dart';
@@ -663,78 +664,116 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final bgColor = Theme.of(context).inputDecorationTheme.fillColor ??
+        colorScheme.surfaceContainerHighest;
+
     // UI: Suchleiste + Scanner-Button (wie in _buildSearchTab)
     final searchRow = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // 1. Search Capsule (Mit eckigeren Ecken und zentriertem Barcode)
           Expanded(
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged, // Uses debounce
-              decoration: InputDecoration(
-                hintText: l10n.searchHintText,
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 20,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(
-                          Icons.clear,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        onPressed: () {
-                          _searchController.clear();
-                          _runFilter('');
-                        },
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // AI gradient entry point – only visible when AI is enabled
-          if (Provider.of<ThemeService>(context).isAiEnabled) ...[
-            IconButton(
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.surfaceContainerHighest,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: ShaderMask(
-                blendMode: BlendMode.srcIn,
-                shaderCallback: (bounds) => createAiGradientShader(bounds),
-                child: const Icon(Icons.auto_awesome),
-              ),
-              onPressed: () async {
-                final result = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => AiMealCaptureScreen(
-                      initialDate: widget.initialDate,
-                      initialMealType: widget.initialMealType,
-                    ),
+            child: SizedBox(
+              height: 48,
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                  hintText: l10n.searchHintText,
+                  isDense: true,
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 20,
                   ),
-                );
-                if (result == true && mounted) {
-                  Navigator.of(context).pop(true);
-                }
-              },
-            ),
-            const SizedBox(width: 4),
-          ],
-          IconButton(
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (_searchController.text.isNotEmpty) ...[
+                        // Zustand A: Text ist da -> Zeige NUR das X zum Löschen
+                        SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              Icons.clear,
+                              color: colorScheme.onSurfaceVariant,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              _runFilter('');
+                            },
+                          ),
+                        ),
+                      ] else ...[
+                        // Zustand B: Feld ist leer -> Zeige NUR den Barcode-Scanner
+                        SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              CupertinoIcons.barcode_viewfinder,
+                              color: colorScheme.primary,
+                              size: 26,
+                            ),
+                            onPressed: _scanBarcodeAndPop,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(
+                          width: 4), // Minimaler Abstand zum Kapselrand
+                    ],
+                  ),
+                  // Symmetrisches Padding für links und rechts im Gehäuse
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
               ),
             ),
-            icon: Icon(Icons.qr_code_scanner, color: colorScheme.primary),
-            onPressed: _scanBarcodeAndPop,
           ),
+          // 2. Action Tile (Nur für KI, falls aktiviert)
+          if (Provider.of<ThemeService>(context).isAiEnabled) ...[
+            const SizedBox(width: 12),
+            Container(
+              height: 48,
+              width: 48,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius:
+                    BorderRadius.circular(12), // Behält die eckigeren Ecken
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (bounds) => createAiGradientShader(bounds),
+                  child: const Icon(Icons.auto_awesome, size: 24),
+                ),
+                onPressed: () async {
+                  final result = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => AiMealCaptureScreen(
+                        initialDate: widget.initialDate,
+                        initialMealType: widget.initialMealType,
+                      ),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    Navigator.of(context).pop(true);
+                  }
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );
