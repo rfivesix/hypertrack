@@ -1,0 +1,1 @@
+v0.9.11: Neue farbige Makro-Badges, eine intelligentere Such- und Scan-Oberfläche für eine schnellere Lebensmitteleingabe und kritische Datenschutz-Härtung durch Entfernen ungenutzter Mikrofon-Berechtigungen. Verbesserte Statistiken und UX.

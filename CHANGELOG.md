@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.11] - 2026-05-22
+
+### Added
+- **Optional Colorful Macro Badges (#397)**: Introduced a vibrant new visualization for macronutrients to improve data readability at a glance.
+  - Added the dynamic `MacroBadgeRow` theme extension for high-contrast nutritional summaries.
+  - Integrated a global preference toggle in Appearance Settings (defaulting to ON for all users).
+  - Implemented smart-hiding logic that automatically cleans up the UI by suppressing zero-value badges for fluids and beverages.
+- **Unified Search & Scan UX (#401/#402)**: Completely refactored the search interface in `AddFoodScreen` and `GeneralFoodSelectionScreen`.
+  - Implemented a smart toggle mechanic that displays the barcode viewfinder when the field is empty and switches to a 'clear' cross icon during active typing.
+  - Streamlined the layout to eliminate icon clutter and improve one-handed navigation efficiency.
+
+### Privacy & Security
+- **Android Ghost Permission Removal (#405)**: Hardened the application's privacy profile by explicitly stripping third-party injected microphone permissions.
+  - Added `tools:node="remove"` for `RECORD_AUDIO` and `MODIFY_AUDIO_SETTINGS` in the `AndroidManifest.xml`.
+  - Guarantees 100% privacy compliance by ensuring the app cannot access the microphone even if required by transitive dependencies.
+
+### Changed
+- **Statistics UI Refinements**: Polished the layout and data visualization in the Statistics module, including improvements to the normalized trend charts for better readability.
+- **Theme Service Optimization**: Refactored `ThemeService` to persist and manage the new macro badge preferences across app sessions.
+- **Localization Updates**: Synchronized and expanded localized strings (DE/EN) to support the new UI components and privacy disclosures.
+
 ## [0.9.10] - 2026-05-21
 
 ### Added
