@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:train_libre/features/diary/domain/models/food_item.dart';
+import 'package:train_libre/services/ai_meal_context.dart';
+import 'package:train_libre/services/ai_repair_candidate.dart';
 import 'package:train_libre/services/ai_meal_validation.dart';
-import 'package:train_libre/services/ai_service.dart';
 
 FoodItem food(
   String name, {
@@ -118,68 +119,6 @@ void main() {
       expect(result.passed, isFalse);
     });
 
-    test('evaluates recommendation target fit with explicit tolerances',
-        () async {
-      final engine = engineWith({
-        'macro bowl': [
-          food(
-            'Macro bowl',
-            kcal: 500,
-            protein: 40,
-            carbs: 60,
-            fat: 15,
-          ),
-        ],
-      });
-
-      final pass = await engine.validateMealCandidate(
-        candidate: const AiMealCandidate(
-          items: [AiMealCandidateItem(name: 'Macro bowl', grams: 100)],
-        ),
-        targetContext: const AiMacroTargetContext(
-          kcal: 520,
-          protein: 42,
-          carbs: 58,
-          fat: 16,
-        ),
-        mode: AiValidationMode.recommendation,
-      );
-
-      expect(pass.macroFit!.overallFit, isTrue);
-      expect(pass.passed, isTrue);
-
-      final fail = await engine.validateMealCandidate(
-        candidate: const AiMealCandidate(
-          items: [AiMealCandidateItem(name: 'Macro bowl', grams: 100)],
-        ),
-        targetContext: const AiMacroTargetContext(
-          kcal: 900,
-          protein: 90,
-          carbs: 120,
-          fat: 45,
-        ),
-        mode: AiValidationMode.recommendation,
-      );
-
-      expect(fail.macroFit!.overallFit, isFalse);
-      expect(
-        fail.errors.map((issue) => issue.code),
-        containsAll({
-          'target_kcal_mismatch',
-          'target_protein_mismatch',
-          'target_carbs_mismatch',
-          'target_fat_mismatch',
-        }),
-      );
-      expect(
-        fail.errors
-            .firstWhere((issue) => issue.code == 'target_kcal_mismatch')
-            .parameters['delta'],
-        -400,
-      );
-      expect(fail.passed, isFalse);
-    });
-
     test('creates save plans that expose partial unmatched saves', () async {
       final engine = engineWith({
         'rice': [food('Rice')],
@@ -201,31 +140,6 @@ void main() {
       expect(plan.isPartial, isTrue);
       expect(plan.matchedItems.length, 1);
       expect(plan.unmatchedItems.length, 1);
-    });
-
-    test(
-        'meal target planner does not invent a calorie floor at zero remaining',
-        () {
-      final target = AiMealTargetPlanner.computeMealTarget(
-        remaining: const AiMacroTargetContext(
-          kcal: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
-        ),
-        dailyGoal: const AiMacroTargetContext(
-          kcal: 2400,
-          protein: 160,
-          carbs: 260,
-          fat: 80,
-        ),
-        mealType: 'mealtypeSnack',
-      );
-
-      expect(target.kcal, 0);
-      expect(target.protein, 0);
-      expect(target.carbs, 0);
-      expect(target.fat, 0);
     });
   });
 
@@ -280,55 +194,6 @@ void main() {
       expect(outcome.validation.items.single.candidate.name, 'Rice');
     });
 
-    test('repairs recommendation candidates after poor target fit', () async {
-      final engine = engineWith({
-        'tiny snack': [
-          food(
-            'Tiny snack',
-            kcal: 100,
-            protein: 5,
-            carbs: 10,
-            fat: 2,
-          ),
-        ],
-        'target bowl': [
-          food(
-            'Target bowl',
-            kcal: 500,
-            protein: 40,
-            carbs: 55,
-            fat: 15,
-          ),
-        ],
-      });
-
-      final outcome = await AiRepairOrchestrator(
-        validationEngine: engine,
-      ).run(
-        initialCandidate: const AiMealCandidate(
-          mealName: 'Tiny snack',
-          items: [AiMealCandidateItem(name: 'Tiny snack', grams: 100)],
-        ),
-        targetContext: const AiMacroTargetContext(
-          kcal: 500,
-          protein: 40,
-          carbs: 55,
-          fat: 15,
-        ),
-        mode: AiValidationMode.recommendation,
-        repairer: (_, __, ___) async {
-          return const AiMealCandidate(
-            mealName: 'Target bowl',
-            items: [AiMealCandidateItem(name: 'Target bowl', grams: 100)],
-          );
-        },
-      );
-
-      expect(outcome.repairPassesUsed, 1);
-      expect(outcome.validation.passed, isTrue);
-      expect(outcome.validation.macroFit!.overallFit, isTrue);
-    });
-
     test('stops after maxRepairPasses and returns the latest candidate',
         () async {
       final engine = engineWith({
@@ -363,36 +228,132 @@ void main() {
     });
   });
 
-  group('AI recommendation prompt context', () {
-    test('omits recent meal history when context sharing is disabled', () {
-      final prompt = AiService.buildMealRecommendationUserPromptForTesting(
-        targetMacros: const {
-          'kcal': 500,
-          'protein': 40,
-          'carbs': 50,
-          'fat': 15,
+  group('AiMealContext & AiRepairCandidate models', () {
+    test('AiMealContext JSON serialization', () {
+      final json = {
+        'dishType': 'Döner Kebab',
+        'expectedKcalRange': [600, 800],
+        'expectedMacroProfile': {
+          'proteinPercent': [20, 30],
+          'carbsPercent': [40, 50],
+          'fatPercent': [25, 35],
         },
-        preferences: const [],
-        mealTypeLabel: 'Lunch',
-      );
+        'cookingMethod': 'roasted',
+        'contextNotes': 'spicy',
+      };
+      final context = AiMealContext.fromJson(json);
+      expect(context.dishType, 'Döner Kebab');
+      expect(context.expectedKcalRange, [600, 800]);
+      expect(context.expectedMacroProfile['proteinPercent'], [20, 30]);
 
-      expect(prompt, isNot(contains('Mon: Oatmeal')));
+      final serialized = context.toJson();
+      expect(serialized['dishType'], 'Döner Kebab');
+      expect(serialized['expectedKcalRange'], [600, 800]);
     });
 
-    test('builds prompt with preferences', () {
-      final prompt = AiService.buildMealRecommendationUserPromptForTesting(
-        targetMacros: const {
-          'kcal': 500,
-          'protein': 40,
-          'carbs': 50,
-          'fat': 15,
-        },
-        preferences: const ['Vegetarian'],
-        mealTypeLabel: 'Lunch',
+    test('AiRepairCandidate prompt line', () {
+      final f = food('Chicken breast', kcal: 120, protein: 24, carbs: 0, fat: 2);
+      final candidate = AiRepairCandidate.fromFoodItem(f);
+      expect(candidate.exactName, 'Chicken breast');
+      expect(candidate.kcalPer100g, 120);
+      expect(candidate.source, 'base');
+      expect(
+        candidate.toPromptLine(),
+        '  - "Chicken breast" (120 kcal | P24 C0 F2 per 100g) [base]',
+      );
+    });
+  });
+
+  group('AiMealValidationEngine - Advanced Cross-Check Rules', () {
+    test('C1: expected kcal range check (deviation and extreme)', () async {
+      final engine = engineWith({
+        'chicken': [food('Chicken', kcal: 100, protein: 20, carbs: 0, fat: 2)],
+      });
+
+      final context = const AiMealContext(
+        dishType: 'Test Kebab',
+        expectedKcalRange: [400, 600],
+        expectedMacroProfile: {},
       );
 
-      expect(
-          prompt, contains('User constraints (Dietary/Situation): Vegetarian'));
+      // 1. Fits in range (e.g. 500 kcal) -> no deviation
+      var result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'Chicken', grams: 500)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_kcal_deviation' || issue.code == 'anchor_kcal_extreme'), isFalse);
+
+      // 2. Deviates by >25% (e.g. 290 kcal is below 400 * 0.75 = 300 kcal) -> warning
+      result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'Chicken', grams: 290)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_kcal_deviation'), isTrue);
+
+      // 3. Deviates by >50% (e.g. 190 kcal is below 400 * 0.50 = 200 kcal) -> error
+      result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'Chicken', grams: 190)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_kcal_extreme'), isTrue);
+    });
+
+    test('C2: expected macro profile percent checks', () async {
+      final engine = engineWith({
+        'high fat food': [food('High Fat Food', kcal: 200, protein: 5, carbs: 5, fat: 18)], // P10% C10% F81% approx
+      });
+
+      final context = const AiMealContext(
+        dishType: 'Lean Meal',
+        expectedKcalRange: [100, 500],
+        expectedMacroProfile: {
+          'fatPercent': [10, 20],
+        },
+      );
+
+      final result = await engine.validateMealCandidate(
+        candidate: AiMealCandidate(
+          items: const [AiMealCandidateItem(name: 'High Fat Food', grams: 100)],
+          context: context,
+        ),
+        mode: AiValidationMode.capture,
+      );
+
+      expect(result.allIssues.any((issue) => issue.code == 'anchor_macro_profile_deviation'), isTrue);
+    });
+
+    test('C3: cooking state mismatch escalation to error', () async {
+      final engine = engineWith({
+        'chicken raw': [
+          food('Chicken raw', kcal: 110, protein: 23, carbs: 0, fat: 1),
+          food('Chicken cooked', kcal: 165, protein: 31, carbs: 0, fat: 4),
+        ],
+      });
+
+      final result = await engine.validateMealCandidate(
+        candidate: const AiMealCandidate(
+          items: [
+            AiMealCandidateItem(
+              name: 'Chicken raw',
+              grams: 100,
+              stateHint: 'cooked',
+            )
+          ],
+        ),
+        mode: AiValidationMode.capture,
+      );
+
+      final issue = result.allIssues.firstWhere((issue) => issue.code == 'state_mismatch');
+      expect(issue.severity, AiValidationSeverity.error);
     });
   });
 }

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../services/ai_meal_validation.dart';
 import '../../../services/ai_service.dart';
+import '../../../services/ai_matching_language_service.dart';
 import '../../../services/haptic_feedback_service.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../../widgets/common/global_app_bar.dart';
@@ -123,27 +124,32 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     setState(() => _isAnalyzing = true);
     _startAiWaitingHaptics();
 
-    // Pass the current app language so the AI returns localised food names
-    final languageCode = Localizations.localeOf(context).languageCode;
+    // Resolve the AI matching language (decoupled from app UI locale)
+    final aiMatchLang = await AiMatchingLanguageService.readChoice();
+    if (!mounted) return;
+    final languageCode = await AiMatchingLanguageService.resolveLanguageCode(
+      choice: aiMatchLang,
+      context: context,
+    );
 
     try {
-      List<AiSuggestedItem> results;
+      AiMealCandidate candidate;
       final text = _textController.text.trim();
 
       if (_images.isNotEmpty) {
-        results = await AiService.instance.analyzeImages(
+        candidate = await AiService.instance.analyzeImages(
           _images,
           textHint: text.isNotEmpty ? text : null,
           languageCode: languageCode,
         );
       } else {
-        results = await AiService.instance.analyzeText(
+        candidate = await AiService.instance.analyzeText(
           text,
           languageCode: languageCode,
         );
       }
 
-      final validationOutcome = await _validateAndRepair(results, languageCode);
+      final validationOutcome = await _validateAndRepair(candidate, languageCode);
 
       if (!mounted) return;
 
@@ -194,21 +200,9 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
   }
 
   Future<AiRepairOutcome> _validateAndRepair(
-    List<AiSuggestedItem> results,
+    AiMealCandidate candidate,
     String languageCode,
   ) {
-    final candidate = AiMealCandidate(
-      items: results
-          .map(
-            (item) => AiMealCandidateItem(
-              name: item.name,
-              grams: item.estimatedGrams,
-              confidence: item.confidence,
-              matchedBarcode: item.matchedBarcode,
-            ),
-          )
-          .toList(growable: false),
-    );
     final engine = AiMealValidationEngine();
     final orchestrator = AiRepairOrchestrator(validationEngine: engine);
     return orchestrator.run(
@@ -220,6 +214,7 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
           validation: validation,
           images: _images.isNotEmpty ? _images : null,
           languageCode: languageCode,
+          mealContext: candidate.context,
         );
       },
     );

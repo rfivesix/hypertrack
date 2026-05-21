@@ -8,6 +8,7 @@ import '../../../generated/app_localizations.dart';
 import '../domain/models/food_entry.dart';
 import '../domain/models/food_item.dart';
 import '../../../services/ai_meal_validation.dart';
+import '../../../services/ai_matching_language_service.dart';
 import '../../../services/ai_service.dart';
 import '../../../services/haptic_feedback_service.dart';
 import '../../../util/date_util.dart';
@@ -17,6 +18,7 @@ import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/summary_card.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import 'general_food_selection_screen.dart';
+import 'food_detail_screen.dart';
 
 /// Review screen for AI-suggested food items.
 ///
@@ -53,6 +55,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   bool _isMatching = true;
   bool _aiWaitingHapticActive = false;
   AiValidationResult? _validation;
+  bool _validationExpanded = false;
 
   // Meal type selection
   late String _selectedMealType;
@@ -114,6 +117,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
 
   AiMealCandidate _candidateFromReviewItems() {
     return AiMealCandidate(
+      context: _validation?.candidate.context,
       items: _items
           .map(
             (item) => AiMealCandidateItem(
@@ -265,24 +269,17 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
     setState(() => _isRetrying = true);
     _startAiWaitingHaptics();
     try {
-      final languageCode = Localizations.localeOf(context).languageCode;
-      final newResults = await AiService.instance.retry(
+      final aiMatchLang = await AiMatchingLanguageService.readChoice();
+      if (!mounted) return;
+      final languageCode = await AiMatchingLanguageService.resolveLanguageCode(
+        choice: aiMatchLang,
+        context: context,
+      );
+      final candidate = await AiService.instance.retry(
         previousResults: _items.map((e) => e.suggestion).toList(),
         feedback: feedback,
         images: widget.originalImages.isNotEmpty ? widget.originalImages : null,
         languageCode: languageCode,
-      );
-      final candidate = AiMealCandidate(
-        items: newResults
-            .map(
-              (item) => AiMealCandidateItem(
-                name: item.name,
-                grams: item.estimatedGrams,
-                confidence: item.confidence,
-                matchedBarcode: item.matchedBarcode,
-              ),
-            )
-            .toList(growable: false),
       );
       final orchestrator = AiRepairOrchestrator(
         validationEngine: AiMealValidationEngine(),
@@ -297,6 +294,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
             images:
                 widget.originalImages.isNotEmpty ? widget.originalImages : null,
             languageCode: languageCode,
+            mealContext: candidate.context,
           );
         },
       );
@@ -466,54 +464,8 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                   const SizedBox(height: DesignConstants.spacingM),
                 ],
 
-                // Meal type + time selector
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedMealType,
-                            decoration: InputDecoration(
-                              labelText: l10n.mealTypeLabel,
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 'mealtypeBreakfast',
-                                child: Text(l10n.mealtypeBreakfast),
-                              ),
-                              DropdownMenuItem(
-                                value: 'mealtypeLunch',
-                                child: Text(l10n.mealtypeLunch),
-                              ),
-                              DropdownMenuItem(
-                                value: 'mealtypeDinner',
-                                child: Text(l10n.mealtypeDinner),
-                              ),
-                              DropdownMenuItem(
-                                value: 'mealtypeSnack',
-                                child: Text(l10n.mealtypeSnack),
-                              ),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) {
-                                setState(() => _selectedMealType = v);
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // Meal type selector removed from here — relocated to bottom bar
 
-                const SizedBox(height: DesignConstants.spacingM),
 
                 // Items list
                 if (_isMatching)
@@ -587,9 +539,9 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
               ],
             ),
           ),
-          // Fixed save button at bottom
+          // Fixed bottom bar: meal-type selector + save button
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               boxShadow: [
@@ -600,28 +552,89 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                 ),
               ],
             ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: FilledButton.icon(
-                onPressed: (_items.isNotEmpty && !_isSaving && !_isMatching)
-                    ? _saveToDiary
-                    : null,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+            child: Row(
+              children: [
+                // Meal-type compact dropdown
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _selectedMealType,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      isDense: true,
+                    ),
+                    isExpanded: true,
+                    items: [
+                      DropdownMenuItem(
+                        value: 'mealtypeBreakfast',
+                        child: Text(
+                          l10n.mealtypeBreakfast,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      )
-                    : const Icon(Icons.check),
-                label: Text(
-                  l10n.aiReviewSaveToDiary,
-                  style: const TextStyle(fontSize: 18),
+                      ),
+                      DropdownMenuItem(
+                        value: 'mealtypeLunch',
+                        child: Text(
+                          l10n.mealtypeLunch,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'mealtypeDinner',
+                        child: Text(
+                          l10n.mealtypeDinner,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'mealtypeSnack',
+                        child: Text(
+                          l10n.mealtypeSnack,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() => _selectedMealType = v);
+                      }
+                    },
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                // Save button
+                Expanded(
+                  flex: 3,
+                  child: SizedBox(
+                    height: 48,
+                    child: FilledButton.icon(
+                      onPressed:
+                          (_items.isNotEmpty && !_isSaving && !_isMatching)
+                              ? _saveToDiary
+                              : null,
+                      icon: _isSaving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.check),
+                      label: Text(
+                        l10n.aiReviewSaveToDiary,
+                        style: const TextStyle(fontSize: 16),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -665,7 +678,9 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
         padding: const EdgeInsets.only(bottom: 8),
         child: SummaryCard(
           child: InkWell(
-            onTap: () => _replaceWithFood(index),
+            onTap: hasMatch
+                ? () => _inspectFood(index)
+                : () => _replaceWithFood(index),
             borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -698,6 +713,9 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                               fontStyle: FontStyle.italic,
                             ),
                           ),
+                        // Macro badges row
+                        const SizedBox(height: 6),
+                        _buildMacroBadges(item, theme),
                         const SizedBox(height: 4),
                         // Confidence chip
                         Container(
@@ -746,6 +764,16 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                       ],
                     ),
                   ),
+                  // Center-right: swap icon
+                  IconButton(
+                    icon: Icon(
+                      Icons.swap_horiz_rounded,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    tooltip: l10n.aiReviewReplaceItem,
+                    onPressed: () => _replaceWithFood(index),
+                    visualDensity: VisualDensity.compact,
+                  ),
                   // Right: quantity
                   GestureDetector(
                     onTap: () => _editQuantity(index),
@@ -775,84 +803,271 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
     );
   }
 
+  /// Builds the compact per-portion macro badges row (kcal, P, C, F).
+  Widget _buildMacroBadges(_ReviewItem item, ThemeData theme) {
+    final n = item.nutrition;
+    final isZero = n.kcalRounded == 0 &&
+        n.proteinRounded == 0 &&
+        n.carbsRounded == 0 &&
+        n.fatRounded == 0;
+
+    if (isZero) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          '---',
+          style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey),
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        _macroBadge(
+          '${n.kcalRounded}',
+          'kcal',
+          const Color(0xFFE65100),
+          theme,
+        ),
+        _macroBadge(
+          'P ${n.proteinRounded}',
+          'g',
+          const Color(0xFF1565C0),
+          theme,
+        ),
+        _macroBadge(
+          'C ${n.carbsRounded}',
+          'g',
+          const Color(0xFF2E7D32),
+          theme,
+        ),
+        _macroBadge(
+          'F ${n.fatRounded}',
+          'g',
+          const Color(0xFFBF360C),
+          theme,
+        ),
+      ],
+    );
+  }
+
+  Widget _macroBadge(
+    String value,
+    String unit,
+    Color color,
+    ThemeData theme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        '$value$unit',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+      ),
+    );
+  }
+
+  /// Opens FoodDetailScreen in read-only mode to inspect the current match.
+  void _inspectFood(int index) {
+    final item = _items[index];
+    if (item.matchedFood == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FoodDetailScreen(
+          foodItem: item.matchedFood,
+          readOnly: true,
+        ),
+      ),
+    );
+  }
+
   Widget _buildValidationSummary(ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
     final validation = _validation!;
-    final issues = validation.allIssues
+    final allActionableIssues = validation.allIssues
         .where((issue) => issue.severity != AiValidationSeverity.info)
-        .take(4)
         .toList(growable: false);
     final color = validation.passed
         ? Colors.green
         : validation.errors.isNotEmpty
             ? theme.colorScheme.error
             : Colors.orange;
-    final title = validation.passed
-        ? l10n.aiValidationValidationPassedTitle
-        : l10n.aiValidationReviewSuggestedTitle;
-    final subtitle = [
-      '${validation.totals.kcalRounded} ${l10n.unit_kcal}',
-      '${validation.totals.proteinRounded}${l10n.unit_grams} ${l10n.protein}',
-      '${validation.totals.carbsRounded}${l10n.unit_grams} ${l10n.carbs}',
-      '${validation.totals.fatRounded}${l10n.unit_grams} ${l10n.fat}',
-    ].join(' · ');
+
+    // Auto-expand when validation failed or has errors
+    final shouldAutoExpand =
+        !validation.passed || validation.errors.isNotEmpty;
+    final isExpanded = _validationExpanded || shouldAutoExpand;
+
+    // Compact totals string
+    final compactTotals =
+        '${validation.totals.kcalRounded} kcal · '
+        'P${validation.totals.proteinRounded} · '
+        'C${validation.totals.carbsRounded} · '
+        'F${validation.totals.fatRounded}';
 
     return SummaryCard(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  validation.passed
-                      ? Icons.verified_rounded
-                      : Icons.warning_amber_rounded,
-                  color: color,
+      child: InkWell(
+        onTap: shouldAutoExpand
+            ? null
+            : () => setState(
+                  () => _validationExpanded = !_validationExpanded,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '$title · ${l10n.aiValidationScoreLabel(validation.score)}',
+        borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Collapsed header row: icon + score + totals + chevron
+              Row(
+                children: [
+                  Icon(
+                    validation.passed
+                        ? Icons.verified_rounded
+                        : Icons.warning_amber_rounded,
+                    color: color,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${validation.score}/100',
                     style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: color,
                     ),
                   ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      compactTotals,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (!shouldAutoExpand)
+                    Icon(
+                      isExpanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
+                ],
+              ),
+              // Token Usage Indicator
+              Padding(
+                padding: const EdgeInsets.only(top: 4, left: 26),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.toll_rounded,
+                      size: 11,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Kosten: ~${1200 + (_items.length * 80)} Tokens',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              // Expanded details
+              if (isExpanded) ...[
+                if (validation.repairLimitReached) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.aiValidationRepairLimitReachedReview,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+                if (allActionableIssues.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  ...allActionableIssues.take(4).map(
+                        (issue) => Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            '\u2022 ${aiValidationIssueText(l10n, issue)}',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                      ),
+                  if (allActionableIssues.length > 4) ...[
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: InkWell(
+                        onTap: () => _showAllIssues(allActionableIssues, l10n),
+                        child: Text(
+                          'Show all (${allActionableIssues.length})',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (validation.repairLimitReached) ...[
-              const SizedBox(height: 6),
-              Text(
-                l10n.aiValidationRepairLimitReachedReview,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ],
-            if (issues.isNotEmpty) ...[
-              const SizedBox(height: 8),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAllIssues(
+    List<AiValidationIssue> issues,
+    AppLocalizations l10n,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.aiValidationReviewSuggestedTitle,
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
               ...issues.map(
                 (issue) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    '• ${aiValidationIssueText(l10n, issue)}',
-                    style: theme.textTheme.bodySmall,
+                    '\u2022 ${aiValidationIssueText(l10n, issue)}',
+                    style: Theme.of(ctx).textTheme.bodySmall,
                   ),
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );

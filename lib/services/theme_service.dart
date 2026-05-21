@@ -10,13 +10,11 @@ class ThemeService extends ChangeNotifier {
   static const _themeKey = 'theme_mode';
   static const _styleKey = 'visual_style';
   static const _aiEnabledKey = 'ai_enabled';
-  static const _aiCustomInstructionsKey = 'ai_custom_instructions';
   static const _materialColorsEnabledKey = 'material_colors_enabled';
   static const _hapticsEnabledKey = 'haptics_enabled';
   ThemeMode _themeMode = ThemeMode.system;
   int _visualStyle = 1; // 1 = Liquid (Standard), 0 = Frosted
   bool _isAiEnabled = false;
-  String _aiCustomInstructions = '';
   bool _materialColorsEnabled = false;
   bool _hapticsEnabled = true;
   BaseFoodLanguage _baseFoodLanguage = BaseFoodLanguage.auto;
@@ -29,9 +27,6 @@ class ThemeService extends ChangeNotifier {
 
   /// Whether AI features are enabled globally.
   bool get isAiEnabled => _isAiEnabled;
-
-  /// Global instructions for the AI (e.g. allergies, diet).
-  String get aiCustomInstructions => _aiCustomInstructions;
 
   /// Whether Android dynamic Material colors are enabled.
   bool get materialColorsEnabled => _materialColorsEnabled;
@@ -47,7 +42,6 @@ class ThemeService extends ChangeNotifier {
     _loadThemeMode();
     _loadVisualStyle();
     _loadAiEnabled();
-    _loadAiCustomInstructions();
     _loadMaterialColorsEnabled();
     _loadHapticsEnabled();
     _loadBaseFoodLanguage();
@@ -91,12 +85,6 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _loadAiCustomInstructions() async {
-    final prefs = await SharedPreferences.getInstance();
-    _aiCustomInstructions = prefs.getString(_aiCustomInstructionsKey) ?? '';
-    notifyListeners();
-  }
-
   Future<void> _loadMaterialColorsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     _materialColorsEnabled = prefs.getBool(_materialColorsEnabledKey) ?? false;
@@ -122,15 +110,6 @@ class ThemeService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_aiEnabledKey, enabled);
-  }
-
-  /// Sets the global custom instructions for the AI.
-  Future<void> setAiCustomInstructions(String instructions) async {
-    if (instructions == _aiCustomInstructions) return;
-    _aiCustomInstructions = instructions;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_aiCustomInstructionsKey, instructions);
   }
 
   /// Sets whether Android dynamic Material colors should be used.
