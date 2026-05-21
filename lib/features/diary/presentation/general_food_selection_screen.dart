@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_item.dart';
 import 'food_detail_screen.dart';
+import 'scanner_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/summary_card.dart';
@@ -57,6 +59,29 @@ class _GeneralFoodSelectionScreenState
     _searchDebounce = Timer(const Duration(milliseconds: 300), () {
       _runFilter(query);
     });
+  }
+
+  Future<void> _scanBarcodeAndPop() async {
+    final l10n = AppLocalizations.of(context)!;
+    final String? barcode = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (context) => const ScannerScreen()),
+    );
+
+    if (barcode != null && mounted) {
+      final foodItem =
+          await ProductLocalDataSource.instance.getProductByBarcode(
+        barcode,
+      );
+      if (!mounted) return;
+
+      if (foodItem != null) {
+        Navigator.of(context).pop(foodItem);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.snackbarBarcodeNotFound(barcode))),
+        );
+      }
+    }
   }
 
   Future<void> _runFilter(String enteredKeyword) async {
@@ -156,27 +181,67 @@ class _GeneralFoodSelectionScreenState
         padding: DesignConstants.cardPadding,
         child: Column(
           children: [
-            TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: l10n.searchHintText,
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(
-                          Icons.clear,
-                          color: colorScheme.onSurfaceVariant,
+            SizedBox(
+              height: 48,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {});
+                  _onSearchChanged(val);
+                },
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                  hintText: l10n.searchHintText,
+                  isDense: true,
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (_searchController.text.isNotEmpty) ...[
+                        SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              Icons.clear,
+                              color: colorScheme.onSurfaceVariant,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {});
+                              _runFilter('');
+                            },
+                          ),
                         ),
-                        onPressed: () {
-                          _searchController.clear();
-                          _runFilter('');
-                        },
-                      )
-                    : null,
+                      ] else ...[
+                        SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              CupertinoIcons.barcode_viewfinder,
+                              color: colorScheme.primary,
+                              size: 26,
+                            ),
+                            onPressed: _scanBarcodeAndPop,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: DesignConstants.spacingM),
