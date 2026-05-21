@@ -57,7 +57,7 @@
       dash_maintenance_copy: "Profile prior + recent logs",
       dash_fresh: "Fresh this week",
       dash_kcal: "kcal/day",
-      dash_range: "Likely range <span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><mn>2480</mn><mtext>–</mtext><mn>2800</mn></mrow><annotation encoding=\"application/x-tex\">2480\text{--}2800</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"base\"><span class=\"strut\" style=\"height:0.6444em;\"></span><span class=\"mord\">2480</span><span class=\"mord text\"><span class=\"mord\">–</span></span><span class=\"mord\">2800</span></span></span></span>",
+      dash_range: "Likely range 2480-2800",
       dash_confidence: "Medium confidence",
       macro_kcal: "target kcal",
       macro_protein: "protein",
@@ -96,12 +96,12 @@
       footer_privacy: "Privacy Policy",
       footer_imprint: "Imprint",
       imp_title: "Legal Notice",
-      
+
       // LEGAL & PRIVACY (Verbatim from assets/legal/privacy_policy.md)
       legal_version: "Version 1.3",
       legal_date: "21. Mai 2026 / May 21, 2026",
       legal_intro: "This privacy policy informs you in accordance with Articles 13 and 14 of the General Data Protection Regulation (GDPR) about the processing of personal data and health-related data in the mobile application \"Train Libre\" and during a visit to this website.<br><br>Since Train Libre is designed as a local-first application, full control over your data remains directly with you at all times. We do not operate any central database or application servers to store your profiles, workouts, or nutrition logs.",
-      
+
       // Legal Notice (English)
       imp_heading: "Legal Notice",
       imp_angaben: "Information according to § 5 DDG:",
@@ -115,7 +115,7 @@
       imp_rep_val: "Richard Georg Schotte (Sole Developer)",
       imp_vat_label: "VAT-ID:",
       imp_vat_val: "Not available",
-      
+
       // Privacy Policy (English)
       priv_hero_title: "Your data stays with you.",
       priv_hero_copy: "Train Libre is offline-first. All sensitive health data remains exclusively on your device. This policy explains how we handle your data locally and when optional features interact with third-party services.",
@@ -194,7 +194,7 @@
       p_7_l4: "<strong>Irrevocable Data Erasure (AppData Reset):</strong> The app has an integrated deletion function for all local application data. You can execute the complete data deletion function in the settings. This process irrevocably deletes:<br>• All SharedPreferences settings and app states.<br>• All recorded training logs, custom exercises, and routines.<br>• All nutrition logs, meal templates, and custom food items.<br>• All entered body measurements, supplement logbooks, and historical daily goals.<br>• All locally cached heart rate and sleep analysis stages.<br>• All API keys for AI providers stored in the operating system's secure storage.<br><br>After executing this function, the app is in its factory default state. Please note that data already exported to Apple Health or Google Health Connect cannot be deleted by this internal app function, as it is under the control of the operating system. However, you can delete this exported data at any time directly in the system's own health apps from Apple or Google.",
       p_7_l5: "<strong>Right to Lodge a Complaint with a Supervisory Authority (Article 77 of the GDPR):</strong> Without prejudice to internal app control options, you have the right to lodge a complaint with a competent data protection supervisory authority. This can be, for example, the supervisory authority of your habitual residence, your place of work, or the place of the alleged infringement (e.g., the Berlin Commissioner for Data Protection and Freedom of Information).",
       p_cont_t: "Contact",
-      
+
       learn_more: "Learn more",
       evidence_read_more: "Evidence & further reading",
       footer_recovery: "Recovery Tracker",
@@ -359,7 +359,7 @@
       dash_maintenance_copy: "Profil-Ausgangswerte und aktuelle Logs",
       dash_fresh: "Empfehlung für diese Woche",
       dash_kcal: "kcal/Tag",
-      dash_range: "Wahrscheinlicher Bereich: <span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><mn>2480</mn><mtext>–</mtext><mn>2800</mn></mrow><annotation encoding=\"application/x-tex\">2480\\text{--}2800</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"base\"><span class=\"strut\" style=\"height:0.6444em;\"></span><span class=\"mord\">2480</span><span class=\"mord text\"><span class=\"mord\">–</span></span><span class=\"mord\">2800</span></span></span></span>",
+      dash_range: "Wahrscheinlicher Bereich: 2480-2800",
       dash_confidence: "Mittlere Konfidenz",
       macro_kcal: "Ziel-Kalorien",
       macro_protein: "Protein",
@@ -403,7 +403,7 @@
       legal_version: "Version 1.3",
       legal_date: "21. Mai 2026 / May 21, 2026",
       legal_intro: "Diese Datenschutzerklärung informiert Sie gemäß Art. 13 und 14 der Datenschutz-Grundverordnung (DSGVO) über die Verarbeitung personenbezogener Daten und gesundheitsbezogener Daten in der mobilen Applikation „Train Libre“ sowie beim Besuch dieser Website.<br><br>Da Train Libre als Local-First-Applikation konzipiert ist, verbleibt die vollständige Kontrolle über Ihre Daten zu jedem Zeitpunkt direkt bei Ihnen. Wir betreiben keine zentralen Datenbank- oder Anwendungsserver zur Speicherung Ihrer Profile, Workouts oder Ernährungsprotokolle.",
-      
+
       // Impressum (Deutsch)
       imp_heading: "Impressum (Anbieterkennzeichnung)",
       imp_angaben: "Angaben gemäß § 5 DDG:",
@@ -496,7 +496,7 @@
       p_7_l4: "<strong>Unwiderrufliche Datenlöschung (AppData Reset):</strong> Die App verfügt über eine integrierte Löschfunktion für alle lokalen Anwendungsdaten. In den Einstellungen können Sie die Funktion zur vollständigen Datenlöschung ausführen. Dieser Prozess löscht unwiderruflich:<br>• Alle SharedPreferences-Einstellungen und App-Zustände.<br>• Alle aufgezeichneten Trainingsprotokolle, benutzerdefinierten Übungen und Routinen.<br>• Alle Ernährungsprotokolle, Mahlzeitenvorlagen und benutzerdefinierten Lebensmittel.<br>• Alle eingetragenen Körpermaße, Supplement-Logbücher und historischen Tagesziele.<br>• Sämtliche lokal zwischengespeicherten Puls- und Schlafanalystufen.<br>• Alle in der sicheren Betriebssystem-Ablage hinterlegten API-Schlüssel für KI-Anbieter.<br><br>Nach Ausführung dieser Funktion befindet sich die App im Auslieferungszustand. Bitte beachten Sie, dass bereits an Apple Health oder Google Health Connect exportierte Daten durch diese appinterne Funktion nicht gelöscht werden können, da diese in der Hoheit des Betriebssystems liegen. Sie können diese exportierten Daten jedoch jederzeit direkt in den systemeigenen Health-Apps von Apple oder Google löschen.",
       p_7_l5: "<strong>Recht auf Beschwerde bei einer Aufsichtsbehörde (Art. 77 DSGVO):</strong> Unbeschadet der appinternen Kontrollmöglichkeiten haben Sie das Recht, Beschwerde bei einer zuständigen Datenschutz-Aufsichtsbehörde einzulegen. Dies kann beispielsweise die Aufsichtsbehörde Ihres üblichen Aufenthaltsortes, Ihres Arbeitsplatzes oder des Sitzes des Verantwortlichen sein (z. B. die Berliner Beauftragte für Datenschutz und Informationsfreiheit).",
       p_cont_t: "Kontakt",
-      
+
       learn_more: "Mehr erfahren",
       evidence_read_more: "Wissenschaftliche Quellen",
       footer_recovery: "Regenerations-Tracker",
@@ -608,186 +608,148 @@
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Theme logic
-const updateScreenshots = (theme) => {
-  const oldTheme = theme === "dark" ? "light" : "dark";
-  document.querySelectorAll("img").forEach((img) => {
-    if (img.src.includes(`assets/screenshots/iOS/${oldTheme}/`)) {
-      img.src = img.src.replace(`/${oldTheme}/`, `/${theme}/`).replace(`_${oldTheme}_`, `_${theme}_`);
-    }
-    if (img.dataset.fallbackSrc && img.dataset.fallbackSrc.includes(`assets/screenshots/iOS/${oldTheme}/`)) {
-      img.dataset.fallbackSrc = img.dataset.fallbackSrc.replace(`/${oldTheme}/`, `/${theme}/`).replace(`_${oldTheme}_`, `_${theme}_`);
-    }
-  });
-};
-
-const updateTheme = (theme) => {
-  document.documentElement.setAttribute("data-theme", theme);
-  localStorage.setItem("theme", theme);
-  updateScreenshots(theme);
-};
-
-const initTheme = () => {
-  const themeToggle = document.getElementById("theme-toggle");
-  const currentTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-  updateTheme(currentTheme);
-
-  if (themeToggle) {
-    // Remove old listeners to avoid multiple attachments
-    const newToggle = themeToggle.cloneNode(true);
-    themeToggle.parentNode.replaceChild(newToggle, themeToggle);
-
-    newToggle.addEventListener("click", () => {
-      const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      updateTheme(theme);
-    });
-  }
-};
-
-// Language logic
-const updateTranslations = (lang) => {
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    const key = el.getAttribute("data-i18n");
-    const val = TRANSLATIONS[lang] ? TRANSLATIONS[lang][key] : null;
-    if (val) {
-      // Use innerHTML if the content contains HTML tags
-      if (val.includes('<')) {
-         el.innerHTML = val;
-      } else {
-         el.textContent = val;
+  // Theme logic
+  const updateScreenshots = (theme) => {
+    const oldTheme = theme === "dark" ? "light" : "dark";
+    document.querySelectorAll("img").forEach((img) => {
+      if (img.src.includes(`assets/screenshots/iOS/${oldTheme}/`)) {
+        img.src = img.src.replace(`/${oldTheme}/`, `/${theme}/`).replace(`_${oldTheme}_`, `_${theme}_`);
       }
-    }
-  });
-  document.documentElement.setAttribute("lang", lang);
-};
-
-const initLang = () => {
-  const dropdown = document.getElementById("lang-dropdown");
-  const toggleBtn = dropdown?.querySelector(".control-btn");
-  const menu = dropdown?.querySelector(".dropdown-menu");
-  const items = dropdown?.querySelectorAll(".dropdown-item");
-  
-  let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("de") ? "de" : "en");
-  updateTranslations(currentLang);
-
-  // Update active state in menu
-  const updateActiveState = (lang) => {
-    items?.forEach(item => {
-      if (item.dataset.lang === lang) {
-        item.classList.add("is-active");
-      } else {
-        item.classList.remove("is-active");
+      if (img.dataset.fallbackSrc && img.dataset.fallbackSrc.includes(`assets/screenshots/iOS/${oldTheme}/`)) {
+        img.dataset.fallbackSrc = img.dataset.fallbackSrc.replace(`/${oldTheme}/`, `/${theme}/`).replace(`_${oldTheme}_`, `_${theme}_`);
       }
     });
   };
 
-  updateActiveState(currentLang);
+  const updateTheme = (theme) => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+    updateScreenshots(theme);
+  };
 
-  if (toggleBtn && menu) {
-    toggleBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = menu.classList.contains("is-open");
-      if (isOpen) {
-        menu.classList.remove("is-open");
-        toggleBtn.setAttribute("aria-expanded", "false");
-      } else {
-        menu.classList.add("is-open");
-        toggleBtn.setAttribute("aria-expanded", "true");
+  const initTheme = () => {
+    const themeToggle = document.getElementById("theme-toggle");
+    const currentTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    updateTheme(currentTheme);
+
+    if (themeToggle) {
+      // Remove old listeners to avoid multiple attachments
+      const newToggle = themeToggle.cloneNode(true);
+      themeToggle.parentNode.replaceChild(newToggle, themeToggle);
+
+      newToggle.addEventListener("click", () => {
+        const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        updateTheme(theme);
+      });
+    }
+  };
+
+  // Language logic
+  const updateTranslations = (lang) => {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      const val = TRANSLATIONS[lang] ? TRANSLATIONS[lang][key] : null;
+      if (val) {
+        // Use innerHTML if the content contains HTML tags
+        if (val.includes('<')) {
+          el.innerHTML = val;
+        } else {
+          el.textContent = val;
+        }
       }
     });
+    document.documentElement.setAttribute("lang", lang);
+  };
 
-    items?.forEach(item => {
-      item.addEventListener("click", () => {
-        const lang = item.dataset.lang;
-        if (lang !== currentLang) {
-          currentLang = lang;
-          updateTranslations(currentLang);
-          localStorage.setItem("lang", currentLang);
-          updateActiveState(currentLang);
+  const initLang = () => {
+    const dropdown = document.getElementById("lang-dropdown");
+    const toggleBtn = dropdown?.querySelector(".control-btn");
+    const menu = dropdown?.querySelector(".dropdown-menu");
+    const items = dropdown?.querySelectorAll(".dropdown-item");
+
+    let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("de") ? "de" : "en");
+    updateTranslations(currentLang);
+
+    // Update active state in menu
+    const updateActiveState = (lang) => {
+      items?.forEach(item => {
+        if (item.dataset.lang === lang) {
+          item.classList.add("is-active");
+        } else {
+          item.classList.remove("is-active");
         }
+      });
+    };
+
+    updateActiveState(currentLang);
+
+    if (toggleBtn && menu) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = menu.classList.contains("is-open");
+        if (isOpen) {
+          menu.classList.remove("is-open");
+          toggleBtn.setAttribute("aria-expanded", "false");
+        } else {
+          menu.classList.add("is-open");
+          toggleBtn.setAttribute("aria-expanded", "true");
+        }
+      });
+
+      items?.forEach(item => {
+        item.addEventListener("click", () => {
+          const lang = item.dataset.lang;
+          if (lang !== currentLang) {
+            currentLang = lang;
+            updateTranslations(currentLang);
+            localStorage.setItem("lang", currentLang);
+            updateActiveState(currentLang);
+          }
+          menu.classList.remove("is-open");
+          toggleBtn.setAttribute("aria-expanded", "false");
+        });
+      });
+
+      document.addEventListener("click", () => {
         menu.classList.remove("is-open");
         toggleBtn.setAttribute("aria-expanded", "false");
       });
-    });
+    }
+  };
 
-    document.addEventListener("click", () => {
-      menu.classList.remove("is-open");
-      toggleBtn.setAttribute("aria-expanded", "false");
-    });
-  }
-};
-
-// Reveal logic
-const initReveal = () => {
-  const revealTargets = document.querySelectorAll(".reveal");
-  if ("IntersectionObserver" in window && !reduceMotion) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.16, rootMargin: "0px 0px -8% 0px" });
-
-    revealTargets.forEach((target) => observer.observe(target));
-  } else {
+  // Reveal logic (Now snappy/instant)
+  const initReveal = () => {
+    const revealTargets = document.querySelectorAll(".reveal");
     revealTargets.forEach((target) => target.classList.add("is-visible"));
-  }
-};
-
-// Parallax/Scroll logic
-const initParallax = () => {
-  if (reduceMotion) return;
-
-  const heroStage = document.querySelector(".hero-stage");
-  const heroContent = document.querySelector(".hero-content");
-  const phoneRow = document.querySelector(".phone-row");
-
-  if (heroStage) {
-    window.addEventListener("pointermove", (event) => {
-      const mx = (event.clientX / window.innerWidth - 0.5).toFixed(3);
-      const my = (event.clientY / window.innerHeight - 0.5).toFixed(3);
-      heroStage.style.setProperty("--mx", mx);
-      heroStage.style.setProperty("--my", my);
-    }, { passive: true });
-  }
-
-  const syncScroll = () => {
-    const y = Math.min(window.scrollY, 520);
-    if (heroStage) heroStage.style.setProperty("--scroll", y.toFixed(0));
-    if (heroContent) heroContent.style.setProperty("--hero-copy-scroll", y.toFixed(0));
-    if (phoneRow) {
-      const rowY = Math.max(0, window.scrollY - phoneRow.offsetTop + 650);
-      phoneRow.style.setProperty("--row-scroll", rowY.toFixed(0));
-    }
   };
 
-  syncScroll();
-  window.addEventListener("scroll", syncScroll, { passive: true });
-};
+  // Parallax/Scroll logic (Removed for Flutter-like stillness)
+  const initParallax = () => {
+    // Purged to remove scroll-jacking and generic SaaS effects
+  };
 
-// Fallback images
-const initImages = () => {
-  document.querySelectorAll("img[data-fallback-src]").forEach((image) => {
-    image.addEventListener("error", () => {
-      if (image.dataset.fallbackLoaded === "true") return;
-      image.dataset.fallbackLoaded = "true";
-      image.src = image.dataset.fallbackSrc;
+
+  // Fallback images
+  const initImages = () => {
+    document.querySelectorAll("img[data-fallback-src]").forEach((image) => {
+      image.addEventListener("error", () => {
+        if (image.dataset.fallbackLoaded === "true") return;
+        image.dataset.fallbackLoaded = "true";
+        image.src = image.dataset.fallbackSrc;
+      });
     });
+  };
+
+  // Execution
+  document.addEventListener("DOMContentLoaded", () => {
+    initTheme();
+    initLang();
+    initReveal();
+    initParallax();
+    initImages();
   });
-};
 
-// Execution
-document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
-  initLang();
-  initReveal();
-  initParallax();
-  initImages();
-});
-
-// Early theme initialization to prevent flash
-const savedTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-document.documentElement.setAttribute("data-theme", savedTheme);
+  // Early theme initialization to prevent flash
+  const savedTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", savedTheme);
 })();
