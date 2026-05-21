@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.10] - 2026-05-21
+
+### Added
+- **Next-Gen AI Meal Capture**: Completely overhauled the analytical AI capture pipeline. Recognition is now backed by an advanced "Top-N Fuzzy Alternatives" Jaro-Winkler candidate selection loop, ensuring zero hallucinations by strictly matching against the local food database.
+- **Holistic Calorie Anchors**: Integrated a `mealContext` calorie anchor that cross-checks AI weight estimations against expected dish-type benchmarks to prevent extreme outlier errors.
+- **AI Validation Logic (C1-C4)**: Implemented multi-dimensional cross-check validation rules to automatically verify ingredient compatibility, portion density, and logical consistency.
+- **Macro Badges & Deep Inspection**: Added compact P/C/F macro badges to ingredient result cards and a read-only deep inspection view for granular verification of matched database entries.
+- **Resource Monitoring**: Integrated a token cost indicator for transparency on API consumption and an isolated `AiMatchingLanguageService` to decouple AI matching from the app's UI locale.
+
+### Removed
+- **Generative AI Coach**: Deprecated and removed the generative AI Meal Recommendation/Coach pipeline to focus exclusively on local-first analytical accuracy.
+- **Global Custom Prompts**: Excised custom prompt settings and dead localization strings to streamline the AI configuration flow.
+
+### Changed
+- **UX Layout Optimization**: Relocated the meal-type selector to the bottom navigation save bar, reclaiming vertical screen real estate for ingredient lists.
+- **UI Refinements**: Fixed overlapping layout margins in the AI settings dialog and improved the visual hierarchy of the AI capture review screen.
+- **Privacy Policy v1.3**: Upgraded the global Privacy Policy to version 1.3 to reflect the new analytical-only hybrid matching engine and local-first data integrity.
+
 ## [0.9.9] - 2026-05-20
 
 ### Added
