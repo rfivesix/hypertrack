@@ -188,6 +188,7 @@ class AdaptiveScenarioHarness {
             source: drift.Value('base'),
           ),
         );
+    await database.delete(database.measurements).go();
   }
 
   void _rebuildAdaptiveLayer() {
