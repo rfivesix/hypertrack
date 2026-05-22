@@ -1,0 +1,1 @@
+v0.9.12: Kritischer iOS-Fix: Barcode-Erkennung durch Anpassung des Xcode Strip Styles reaktiviert. Scanner-Performance durch 720p-Auflösung und fokussierten Suchbereich massiv beschleunigt.

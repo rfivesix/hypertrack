@@ -1,0 +1,1 @@
+v0.9.12: Critical iOS Fix: Restored native barcode scanning by configuring Xcode Strip Style to Non-Global Symbols. Accelerated scanning speed using a optimized 720p resolution and focused crop area.

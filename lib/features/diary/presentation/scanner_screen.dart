@@ -132,7 +132,12 @@ class _ScannerScreenState extends State<ScannerScreen>
             developer.log('Scanner controller error: $error', error: error);
           }
         },
-        codeFormat: Format.ean8 | Format.ean13,
+        codeFormat: Format.ean8 |
+            Format.ean13 |
+            Format.upca |
+            Format.upce |
+            Format.code39 |
+            Format.code128,
         showFlashlight: false, // Hidden to match app design
         showGallery: false,
         showToggleCamera: false,
@@ -141,14 +146,15 @@ class _ScannerScreenState extends State<ScannerScreen>
         tryRotate: true,
         tryDownscale: true,
         tryInverted: false, //just for testing with front camera
-        // Increased cropPercent for better reliability with EAN barcodes
-        // which are often wider and need more context.
-        cropPercent: 0.8,
+        // Optimized cropPercent to reduce FFI frame footprint while keeping 
+        // barcodes easily targetable within the viewfinder.
+        cropPercent: 0.55,
         // Throttle frames to balance processing power and detection accuracy
         scanDelay: const Duration(milliseconds: 300),
         scanDelaySuccess: const Duration(milliseconds: 800),
-        // Medium resolution to prevent Out-Of-Memory crashes on high-end devices
-        resolution: ResolutionPreset.veryHigh,
+        // High resolution provides the perfect balance between sharp barcodes 
+        // and low CPU/FFI buffer decoding overhead on iOS.
+        resolution: ResolutionPreset.high,
       );
     }
 
