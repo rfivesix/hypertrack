@@ -154,8 +154,9 @@ class CalculateDailyNutritionUseCase {
 
     Supplement? caffeineSupplement;
     try {
-      caffeineSupplement =
-          allSupplements.firstWhere((s) => s.code == 'caffeine');
+      caffeineSupplement = allSupplements.firstWhere(
+        (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
+      );
     } catch (e) {
       caffeineSupplement = null;
     }

@@ -53,6 +53,10 @@ class FakeSupplementRepository implements SupplementRepository {
   Future<void> updateSupplementLog(SupplementLog log) async {}
   @override
   Future<void> deleteSupplementLog(int id) async {}
+  @override
+  Future<void> deleteCaffeineLogByFoodEntryId(int foodEntryId) async {}
+  @override
+  Future<void> deleteCaffeineLogByFluidEntryId(int fluidEntryId) async {}
 }
 
 class FakeWorkoutRepository implements IWorkoutRepository {

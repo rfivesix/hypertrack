@@ -331,6 +331,9 @@ class DiaryLocalDataSource {
       await (_db.delete(_db.fluidLogs)
             ..where((t) => t.linkedNutritionLogId.equals(log.id)))
           .go();
+      await (_db.delete(_db.supplementLogs)
+            ..where((t) => t.sourceNutritionLogId.equals(log.id)))
+          .go();
     }
 
     await (_db.delete(_db.nutritionLogs)

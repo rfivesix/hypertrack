@@ -647,7 +647,9 @@ class _MainScreenState extends State<MainScreen>
     final supplements = await DatabaseHelper.instance.getAllSupplements();
     Supplement? caffeineSupplement;
     try {
-      caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
+      caffeineSupplement = supplements.firstWhere(
+        (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
+      );
     } catch (e) {
       return;
     }

@@ -1339,7 +1339,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         final qty =
             int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
 
-        await DatabaseHelper.instance.insertFoodEntry(
+        final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
           FoodEntry(
             barcode: bc,
             timestamp: selectedDate, // <--- Usage
@@ -1351,7 +1351,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         final fi = products[bc];
         final c100 = fi?.caffeineMgPer100ml;
         if (fi?.isLiquid == true && c100 != null && c100 > 0) {
-          await _logCaffeineDose(c100 * (qty / 100.0), selectedDate);
+          await _logCaffeineDose(
+            c100 * (qty / 100.0),
+            selectedDate,
+            foodEntryId: newFoodEntryId,
+          );
         }
       }
 
@@ -1368,7 +1372,11 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     }
   }
 
-  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp) async {
+  Future<void> _logCaffeineDose(
+    double doseMg,
+    DateTime timestamp, {
+    int? foodEntryId,
+  }) async {
     if (doseMg <= 0) return;
 
     // Search/create caffeine supplement
@@ -1394,8 +1402,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        // sourceFoodEntryId: link here if the new FoodEntry ID is available.
-        // This flow logs multiple entries; linking can be extended later.
+        sourceFoodEntryId: foodEntryId,
       ),
     );
   }
