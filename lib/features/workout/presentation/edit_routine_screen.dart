@@ -2,7 +2,6 @@
 // FINAL: Cardio Clean-Up (1 Set, Cleaner Layout, Empty Defaults)
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
@@ -12,16 +11,14 @@ import '../domain/models/routine_exercise.dart';
 import '../domain/models/set_template.dart';
 import '../../../services/haptic_feedback_service.dart';
 import '../../exercise_catalog/presentation/exercise_catalog_screen.dart';
-import '../../exercise_catalog/presentation/exercise_detail_screen.dart';
 import '../../../util/design_constants.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../../widgets/common/glass_fab.dart';
 import '../../../widgets/common/global_app_bar.dart';
-import 'widgets/set_type_chip.dart';
 import '../../exercise_catalog/presentation/widgets/wger_attribution_widget.dart';
-import 'widgets/workout_card.dart';
-import 'package:provider/provider.dart';
-import '../../../services/unit_service.dart';
+import 'widgets/edit_routine_exercise_card.dart';
+import 'widgets/exercise_notes_dialog.dart';
+import 'widgets/routine_pause_time_dialog.dart';
 
 /// A screen for creating or modifying a [Routine].
 ///
@@ -409,73 +406,24 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
   }
 
   void _editExerciseNotes(BuildContext context, RoutineExercise re) async {
-    final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController(text: re.notes ?? '');
-
     final result = await showGlassBottomMenu<String?>(
       context: context,
       title: "Übungsnotiz",
       contentBuilder: (ctx, close) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: controller,
-              maxLines: 3,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                hintText: "Notizen oder Hinweise eingeben...",
-                filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                if (re.notes != null && re.notes!.isNotEmpty) ...[
-                  IconButton(
-                    icon: Icon(
-                      Icons.delete_outline,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    tooltip: "Notiz löschen",
-                    onPressed: () {
-                      close();
-                      Navigator.of(ctx).pop('');
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      close();
-                      Navigator.of(ctx).pop(null);
-                    },
-                    child: Text(l10n.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      close();
-                      Navigator.of(ctx).pop(controller.text.trim());
-                    },
-                    child: Text(l10n.save),
-                  ),
-                ),
-              ],
-            ),
-          ],
+        return ExerciseNotesDialog(
+          initialNotes: re.notes,
+          onSave: (notes) {
+            close();
+            Navigator.of(ctx).pop(notes);
+          },
+          onDelete: () {
+            close();
+            Navigator.of(ctx).pop('');
+          },
+          onCancel: () {
+            close();
+            Navigator.of(ctx).pop(null);
+          },
         );
       },
     );
@@ -573,61 +521,21 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
 
   void _editPauseTime(RoutineExercise re) async {
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController(
-      text: re.pauseSeconds?.toString() ?? '',
-    );
 
     final result = await showGlassBottomMenu<int?>(
       context: context,
       title: l10n.editPauseTimeTitle,
       contentBuilder: (ctx, close) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: l10n.pauseInSeconds,
-                hintText: "z.B. 90",
-                suffixText: "s",
-                filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      close();
-                      Navigator.of(ctx).pop(null);
-                    },
-                    child: Text(l10n.cancel),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      final seconds = int.tryParse(controller.text);
-                      close();
-                      Navigator.of(ctx).pop(seconds);
-                    },
-                    child: Text(l10n.save),
-                  ),
-                ),
-              ],
-            ),
-          ],
+        return RoutinePauseTimeDialog(
+          initialPauseSeconds: re.pauseSeconds,
+          onSave: (seconds) {
+            close();
+            Navigator.of(ctx).pop(seconds);
+          },
+          onCancel: () {
+            close();
+            Navigator.of(ctx).pop(null);
+          },
         );
       },
     );
@@ -776,197 +684,20 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
                           final routineExercise = _routineExercises[index];
                           final bool isCardio = _isCardio(routineExercise);
 
-                          return WorkoutCard(
+                          return EditRoutineExerciseCard(
                             key: ValueKey(routineExercise.id),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0,
-                                    vertical: 8.0,
-                                  ),
-                                  title: InkWell(
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ExerciseDetailScreen(
-                                          exercise: routineExercise.exercise,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4.0,
-                                      ),
-                                      child: Text(
-                                        routineExercise.exercise
-                                            .getLocalizedName(
-                                          context,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: textTheme.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  leading: ReorderableDragStartListener(
-                                    index: index,
-                                    child: const Icon(Icons.drag_handle),
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (routineExercise.pauseSeconds !=
-                                              null &&
-                                          routineExercise.pauseSeconds! > 0)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: 4.0,
-                                          ),
-                                          child: Text(
-                                            "${routineExercise.pauseSeconds}s",
-                                            style:
-                                                textTheme.bodyMedium?.copyWith(
-                                              color: colorScheme.primary,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                        ),
-                                        tooltip: "Notizen bearbeiten",
-                                        onPressed: () => _editExerciseNotes(
-                                            context, routineExercise),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.timer_outlined),
-                                        tooltip: l10n.editPauseTime,
-                                        onPressed: () =>
-                                            _editPauseTime(routineExercise),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete_outline,
-                                          color: Colors.redAccent,
-                                        ),
-                                        tooltip: l10n.removeExercise,
-                                        onPressed: () => _deleteSingleExercise(
-                                            routineExercise),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (routineExercise.notes != null &&
-                                    routineExercise.notes!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 16.0,
-                                      right: 16.0,
-                                      bottom: 12.0,
-                                    ),
-                                    child: InkWell(
-                                      onTap: () => _editExerciseNotes(
-                                          context, routineExercise),
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: colorScheme
-                                              .surfaceContainerHighest
-                                              .withValues(alpha: 0.5),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                            color: colorScheme.onSurfaceVariant
-                                                .withValues(alpha: 0.1),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Icon(
-                                              Icons.description_outlined,
-                                              size: 16,
-                                              color:
-                                                  colorScheme.onSurfaceVariant,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                routineExercise.notes!,
-                                                style: textTheme.bodyMedium
-                                                    ?.copyWith(
-                                                  color: colorScheme
-                                                      .onSurfaceVariant,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 0.0,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildHeaderRow(routineExercise, l10n),
-                                      ...routineExercise.setTemplates
-                                          .asMap()
-                                          .entries
-                                          .map((entry) {
-                                        final setIndex = entry.key;
-                                        final setTemplate = entry.value;
-
-                                        int workingSetIndex = 0;
-                                        for (int i = 0; i <= setIndex; i++) {
-                                          if (routineExercise
-                                                  .setTemplates[i].setType !=
-                                              'warmup') {
-                                            workingSetIndex++;
-                                          }
-                                        }
-
-                                        return _buildSetTemplateRow(
-                                          workingSetIndex,
-                                          setIndex,
-                                          routineExercise,
-                                          setTemplate,
-                                          setIndex,
-                                          isCardio, // <--- CARDIO FLAG
-                                          l10n,
-                                        );
-                                      }),
-                                      const SizedBox(
-                                        height: DesignConstants.spacingS,
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16.0,
-                                        ),
-                                        child: TextButton.icon(
-                                          onPressed: () =>
-                                              _addSet(routineExercise),
-                                          icon: const Icon(Icons.add),
-                                          label: Text(l10n.addSetButton),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                            routineExercise: routineExercise,
+                            index: index,
+                            isCardio: isCardio,
+                            repsControllers: _repsControllers,
+                            weightControllers: _weightControllers,
+                            rirControllers: _rirControllers,
+                            onEditNotes: () => _editExerciseNotes(context, routineExercise),
+                            onEditPauseTime: () => _editPauseTime(routineExercise),
+                            onDeleteExercise: () => _deleteSingleExercise(routineExercise),
+                            onAddSet: () => _addSet(routineExercise),
+                            onShowSetTypePicker: _showSetTypePicker,
+                            onRemoveSet: (template, listIndex) => _removeSet(routineExercise, template.id!, listIndex),
                           );
                         },
                       ),
@@ -987,210 +718,4 @@ class _EditRoutineScreenState extends State<EditRoutineScreen> {
     ),
   );
 }
-
-  // --- HEADER ROW (Dynamic) ---
-  Widget _buildHeaderRow(RoutineExercise re, AppLocalizations l10n) {
-    final bool isCardio = _isCardio(re);
-    if (isCardio) {
-      return Row(
-        children: [
-          _buildHeader(l10n.setLabel, flex: 2), // FIX: Smaller
-          _buildHeader(
-            l10n.cardioDistanceLabel,
-            flex: 4,
-          ), // FIX: Lots of space
-          const SizedBox(width: 8),
-          _buildHeader(l10n.cardioTimeLabel, flex: 4), // FIX: Lots of space
-          const SizedBox(width: 8),
-          _buildHeader(l10n.cardioIntensityLabel, flex: 2),
-          const SizedBox(width: 48),
-        ],
-      );
-    }
-    // Standard Strength Header
-    return Row(
-      children: [
-        _buildHeader(l10n.setLabel, flex: 2),
-        _buildHeader(
-            context.read<UnitService>().suffixFor(UnitDimension.weight),
-            flex: 2),
-        const SizedBox(width: 8),
-        _buildHeader(l10n.repsLabel, flex: 2),
-        const SizedBox(width: 8),
-        _buildHeader("RIR", flex: 2),
-        const SizedBox(width: 48),
-      ],
-    );
-  }
-
-  // --- TEMPLATE ROW (Dynamic) ---
-  Widget _buildSetTemplateRow(
-    int setIndex,
-    int rowIndex,
-    RoutineExercise re,
-    SetTemplate template,
-    int listIndex,
-    bool isCardio,
-    AppLocalizations l10n,
-  ) {
-    final isLightMode = Theme.of(context).brightness == Brightness.light;
-    final bool isColoredRow = rowIndex > 0 && rowIndex.isOdd;
-
-    final Color rowColor;
-    if (isColoredRow) {
-      rowColor = isLightMode
-          ? Colors.grey.withValues(alpha: 0.08)
-          : Colors.white.withValues(alpha: 0.05);
-    } else {
-      rowColor = Colors.transparent;
-    }
-
-    return Container(
-      color: rowColor,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: isCardio ? 2 : 2, // FIX: Smaller for cardio.
-              child: Center(
-                child: SetTypeChip(
-                  setType: template.setType,
-                  setIndex: (template.setType == 'warmup') ? null : setIndex,
-                  onTap: () => _showSetTypePicker(template),
-                ),
-              ),
-            ),
-            if (isCardio) ...[
-              // CARDIO FIELDS
-              Expanded(
-                flex: 4, // FIX: More space
-                child: TextFormField(
-                  controller: _weightControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    fillColor: Colors.transparent,
-                    hintText: "-",
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2, // FIX: More space
-                child: TextFormField(
-                  controller: _repsControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    fillColor: Colors.transparent,
-                    hintText: "-",
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _rirControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    fillColor: Colors.transparent,
-                    hintText: "-",
-                  ),
-                ),
-              ),
-            ] else ...[
-              // STRENGTH FIELDS
-              Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _weightControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    fillColor: Colors.transparent,
-                    hintText: context
-                        .read<UnitService>()
-                        .suffixFor(UnitDimension.weight),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _repsControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    fillColor: Colors.transparent,
-                    hintText: l10n.set_reps_hint,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _rirControllers[template.id!],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    fillColor: Colors.transparent,
-                    hintText: "-",
-                  ),
-                ),
-              ),
-            ],
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: SizedBox(
-                width: 48,
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.redAccent,
-                  ),
-                  onPressed: () => _removeSet(re, template.id!, listIndex),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(String text, {required int flex}) => Expanded(
-        flex: flex,
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
 }

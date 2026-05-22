@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../data/database_helper.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/food_entry.dart';
@@ -12,16 +11,14 @@ import '../../../services/ai_meal_validation.dart';
 import '../../../services/ai_matching_language_service.dart';
 import '../../../services/ai_service.dart';
 import '../../../services/haptic_feedback_service.dart';
-import '../../../services/theme_service.dart';
 import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
-import '../../../util/ai_validation_localization.dart';
 import '../../../widgets/common/global_app_bar.dart';
-import '../../../widgets/common/macro_badge_row.dart';
-import '../../../widgets/common/summary_card.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import 'general_food_selection_screen.dart';
 import 'food_detail_screen.dart';
+import 'widgets/meal_review_comparison_card.dart';
+import 'widgets/meal_review_validation_summary.dart';
 
 /// Review screen for AI-suggested food items.
 ///
@@ -58,7 +55,7 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
   bool _isMatching = true;
   bool _aiWaitingHapticActive = false;
   AiValidationResult? _validation;
-  bool _validationExpanded = false;
+
 
   // Meal type selection
   late String _selectedMealType;
@@ -463,7 +460,10 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                 ),
                 const SizedBox(height: DesignConstants.spacingM),
                 if (_validation != null) ...[
-                  _buildValidationSummary(theme),
+                  MealReviewValidationSummary(
+                    validation: _validation!,
+                    itemsCount: _items.length,
+                  ),
                   const SizedBox(height: DesignConstants.spacingM),
                 ],
 
@@ -479,10 +479,25 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
                     ),
                   )
                 else
-                  ..._items.asMap().entries.map(
-                        (entry) =>
-                            _buildItemCard(entry.key, entry.value, l10n, theme),
-                      ),
+                  ..._items.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final item = entry.value;
+                    return MealReviewComparisonCard(
+                      dismissibleKey: ValueKey(item.hashCode),
+                      name: item.suggestion.name,
+                      estimatedGrams: item.suggestion.estimatedGrams,
+                      confidence: item.suggestion.confidence,
+                      matchedFood: item.matchedFood,
+                      issues: item.issues,
+                      nutrition: item.nutrition,
+                      onDismissed: () => _removeItem(index),
+                      onTap: item.matchedFood != null
+                          ? () => _inspectFood(index)
+                          : () => _replaceWithFood(index),
+                      onReplace: () => _replaceWithFood(index),
+                      onEditQuantity: () => _editQuantity(index),
+                    );
+                  }),
 
                 // Add item button
                 Padding(
@@ -645,198 +660,6 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
     );
   }
 
-  Widget _buildItemCard(
-    int index,
-    _ReviewItem item,
-    AppLocalizations l10n,
-    ThemeData theme,
-  ) {
-    final confidence = item.suggestion.confidence;
-    final Color confidenceColor;
-    if (confidence >= 0.8) {
-      confidenceColor = Colors.green;
-    } else if (confidence >= 0.5) {
-      confidenceColor = Colors.orange;
-    } else {
-      confidenceColor = Colors.red;
-    }
-
-    final hasMatch = item.matchedFood != null;
-
-    return Dismissible(
-      key: ValueKey(item.hashCode),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: Colors.red,
-          borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
-        ),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      onDismissed: (_) => _removeItem(index),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: SummaryCard(
-          child: InkWell(
-            onTap: hasMatch
-                ? () => _inspectFood(index)
-                : () => _replaceWithFood(index),
-            borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  // Left: food info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.suggestion.name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        if (hasMatch)
-                          Text(
-                            '${item.matchedFood!.getLocalizedName(context)} • ${item.matchedFood!.calories} kcal/100g',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.primary,
-                            ),
-                          )
-                        else
-                          Text(
-                            l10n.aiReviewNoMatch,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        // Macro badges row
-                        const SizedBox(height: 6),
-                        _buildMacroBadges(item, theme),
-                        const SizedBox(height: 4),
-                        // Confidence chip
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: confidenceColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${(confidence * 100).round()}%',
-                            style: TextStyle(
-                              color: confidenceColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (item.issues
-                            .where(
-                              (issue) =>
-                                  issue.severity != AiValidationSeverity.info,
-                            )
-                            .isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          ...item.issues
-                              .where(
-                                (issue) =>
-                                    issue.severity != AiValidationSeverity.info,
-                              )
-                              .take(2)
-                              .map(
-                                (issue) => Text(
-                                  aiValidationIssueText(l10n, issue),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: issue.severity ==
-                                            AiValidationSeverity.error
-                                        ? theme.colorScheme.error
-                                        : Colors.orange[800],
-                                  ),
-                                ),
-                              ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // Center-right: swap icon
-                  IconButton(
-                    icon: Icon(
-                      Icons.swap_horiz_rounded,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    tooltip: l10n.aiReviewReplaceItem,
-                    onPressed: () => _replaceWithFood(index),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  // Right: quantity
-                  GestureDetector(
-                    onTap: () => _editQuantity(index),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${item.suggestion.estimatedGrams}g',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Builds the compact per-portion macro badges row (kcal, P, C, F).
-  Widget _buildMacroBadges(_ReviewItem item, ThemeData theme) {
-    final n = item.nutrition;
-    final isZero = n.kcalRounded == 0 &&
-        n.proteinRounded == 0 &&
-        n.carbsRounded == 0 &&
-        n.fatRounded == 0;
-
-    if (isZero) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          '---',
-          style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey),
-        ),
-      );
-    }
-
-    return MacroBadgeRow(
-      kcal: n.kcalRounded,
-      protein: n.proteinRounded.toDouble(),
-      carbs: n.carbsRounded.toDouble(),
-      fat: n.fatRounded.toDouble(),
-      useBadges: Provider.of<ThemeService>(context, listen: false).useColorfulMacroBadges,
-    );
-  }
-
   /// Opens FoodDetailScreen in read-only mode to inspect the current match.
   void _inspectFood(int index) {
     final item = _items[index];
@@ -846,185 +669,6 @@ class _AiMealReviewScreenState extends State<AiMealReviewScreen> {
         builder: (_) => FoodDetailScreen(
           foodItem: item.matchedFood,
           readOnly: true,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildValidationSummary(ThemeData theme) {
-    final l10n = AppLocalizations.of(context)!;
-    final validation = _validation!;
-    final allActionableIssues = validation.allIssues
-        .where((issue) => issue.severity != AiValidationSeverity.info)
-        .toList(growable: false);
-    final color = validation.passed
-        ? Colors.green
-        : validation.errors.isNotEmpty
-            ? theme.colorScheme.error
-            : Colors.orange;
-
-    // Auto-expand when validation failed or has errors
-    final shouldAutoExpand =
-        !validation.passed || validation.errors.isNotEmpty;
-    final isExpanded = _validationExpanded || shouldAutoExpand;
-
-    // Compact totals string
-    final compactTotals =
-        '${validation.totals.kcalRounded} kcal · '
-        'P${validation.totals.proteinRounded} · '
-        'C${validation.totals.carbsRounded} · '
-        'F${validation.totals.fatRounded}';
-
-    return SummaryCard(
-      child: InkWell(
-        onTap: shouldAutoExpand
-            ? null
-            : () => setState(
-                  () => _validationExpanded = !_validationExpanded,
-                ),
-        borderRadius: BorderRadius.circular(DesignConstants.borderRadiusM),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Collapsed header row: icon + score + totals + chevron
-              Row(
-                children: [
-                  Icon(
-                    validation.passed
-                        ? Icons.verified_rounded
-                        : Icons.warning_amber_rounded,
-                    color: color,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${validation.score}/100',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      compactTotals,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (!shouldAutoExpand)
-                    Icon(
-                      isExpanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      color: theme.colorScheme.onSurfaceVariant,
-                      size: 20,
-                    ),
-                ],
-              ),
-              // Token Usage Indicator
-              Padding(
-                padding: const EdgeInsets.only(top: 4, left: 26),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.toll_rounded,
-                      size: 11,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Kosten: ~${1200 + (_items.length * 80)} Tokens',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 10,
-                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Expanded details
-              if (isExpanded) ...[
-                if (validation.repairLimitReached) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.aiValidationRepairLimitReachedReview,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.error,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-                if (allActionableIssues.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  ...allActionableIssues.take(4).map(
-                        (issue) => Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            '\u2022 ${aiValidationIssueText(l10n, issue)}',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ),
-                      ),
-                  if (allActionableIssues.length > 4) ...[
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: InkWell(
-                        onTap: () => _showAllIssues(allActionableIssues, l10n),
-                        child: Text(
-                          'Show all (${allActionableIssues.length})',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showAllIssues(
-    List<AiValidationIssue> issues,
-    AppLocalizations l10n,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.aiValidationReviewSuggestedTitle,
-                style: Theme.of(ctx).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              ...issues.map(
-                (issue) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    '\u2022 ${aiValidationIssueText(l10n, issue)}',
-                    style: Theme.of(ctx).textTheme.bodySmall,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
