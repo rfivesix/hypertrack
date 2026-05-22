@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [ß.9.12] - 2026-05-xx
-### Changed
-* **Barcode-scanner:** Imrpoved performance for the barcode scanner. This could be a reason why some users have problems with scanning items.
+## [0.9.12] - 2026-05-xx
+
+### Fixed
+- **iOS Barcode Recognition & Xcode Strip Style (#399)**: Resolved a critical issue where the barcode scanner ran smoothly but failed to recognize any barcodes on iOS release builds.
+  - Corrected Xcode **Strip Style** from `All Symbols` to `Non-Global Symbols` in Build Settings, preventing the aggressive compilation pipeline from stripping the essential C++ (`zxing-cpp`) native function symbols required by Dart FFI.
+  - Retained the optimized `ReaderWidget` configuration (720p `ResolutionPreset.high` and `0.55` crop factor), drastically increasing the scan frame decoding speed and reducing data processing overhead over the FFI bridge without losing scanning accuracy.
 
 ## [0.9.11] - 2026-05-22
 
