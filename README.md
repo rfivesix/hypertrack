@@ -5,8 +5,8 @@
 <p align="center">
   <a href="https://github.com/rfivesix/train-libre/releases">
     <img src="https://img.shields.io/github/v/release/rfivesix/train-libre?color=brightgreen&style=for-the-badge" alt="Latest Release">
-    <img src="https://visitor-badge.laobi.icu/badge?page_id=rfivesix.train-libre&"/>
   </a>
+  <img src="https://komarev.com/ghvc/?username=rfivesix-train-libre&label=visitors&color=007ec6&style=for-the-badge" alt="Visitors">
   <a href="https://github.com/rfivesix/train-libre/commits/main">
     <img src="https://img.shields.io/github/last-commit/rfivesix/train-libre?color=green&style=for-the-badge" alt="Last Commit">
   </a>
