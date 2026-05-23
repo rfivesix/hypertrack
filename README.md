@@ -2,6 +2,23 @@
 
 **Private workout and nutrition tracking for Android and iOS.**
 
+<p align="center">
+  <a href="https://github.com/rfivesix/train-libre/releases">
+    <img src="https://img.shields.io/github/v/release/rfivesix/train-libre?color=brightgreen&style=for-the-badge" alt="Latest Release">
+  </a>
+  <img src="https://api.visitorbadge.io/api/visitors?id=rfivesix.train-libre&label=visitors&color=007ec6&style=for-the-badge" alt="Visitors">
+  <img src="https://img.shields.io/github/last-commit/rfivesix/train-libre?color=green&style=for-the-badge" alt="Last Commit">
+</p>
+
+<br />
+
+<p align="center">
+  <a href="https://star-history.com/#rfivesix/train-libre&dark">
+    <img src="https://api.star-history.com/svg?repos=rfivesix/train-libre&theme=dark" alt="Star History Chart" width="100%" max-width="600px">
+  </a>
+</p>
+
+
 Train Libre is an open-source, offline-first fitness app for logging workouts, calories, macros, bodyweight, and recovery — without ads, mandatory accounts, or analytics SDKs.
 
 Designed for people who want serious tracking without social feeds, gamification, or subscription pressure, Train Libre prioritizes **privacy**, **local data ownership**, and **transparent analytics**.
