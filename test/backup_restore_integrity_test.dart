@@ -719,5 +719,65 @@ void main() {
       expect(rows.first.dailyGoal, closeTo(4.0, 0.0001));
       expect(rows.first.dailyLimit, closeTo(9.5, 0.0001));
     });
+
+    test('malformed health segments are skipped during restore', () async {
+      final payload = <String, dynamic>{
+        'schemaVersion': BackupManager.currentSchemaVersion,
+        'foodEntries': const <dynamic>[],
+        'mealTemplates': const <dynamic>[],
+        'fluidEntries': const <dynamic>[],
+        'favoriteBarcodes': const <dynamic>[],
+        'customFoodItems': const <dynamic>[],
+        'measurementSessions': const <dynamic>[],
+        'routines': const <dynamic>[],
+        'workoutLogs': const <dynamic>[],
+        'userPreferences': const <String, dynamic>{},
+        'supplements': const <dynamic>[],
+        'supplementLogs': const <dynamic>[],
+        'customExercises': const <dynamic>[],
+        'dailyGoalsHistory': const <dynamic>[],
+        'supplementSettingsHistory': const <dynamic>[],
+        'appSettings': null,
+        'profile': null,
+        'healthStepSegments': <Map<String, dynamic>>[
+          {
+            'provider': 'apple',
+            'externalKey': 'valid-1',
+            'startAt': '2026-04-01T10:00:00Z',
+            'endAt': '2026-04-01T11:00:00Z',
+            'stepCount': 500,
+          },
+          {
+            'provider': '', // Empty provider
+            'externalKey': 'invalid-1',
+            'startAt': '2026-04-01T10:00:00Z',
+            'endAt': '2026-04-01T11:00:00Z',
+            'stepCount': 500,
+          },
+          {
+            'provider': 'apple',
+            'externalKey': 'invalid-2',
+            'startAt': '2026-04-01T11:00:00Z', // start == end
+            'endAt': '2026-04-01T11:00:00Z',
+            'stepCount': 500,
+          },
+          {
+            'provider': 'apple',
+            'externalKey': 'invalid-3',
+            'startAt': '2026-04-01T10:00:00Z',
+            'endAt': '2026-04-01T11:00:00Z',
+            'stepCount': -1, // Negative step count
+          },
+        ],
+      };
+
+      final imported =
+          await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
+
+      final segments = await db.select(db.healthStepSegments).get();
+      expect(segments.length, 1);
+      expect(segments.first.externalKey, 'valid-1');
+    });
   });
 }

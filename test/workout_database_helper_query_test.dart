@@ -5,6 +5,8 @@ import 'package:train_libre/data/drift_database.dart' as db;
 import 'package:train_libre/data/drift_database.dart';
 import 'package:train_libre/features/statistics/domain/recovery_domain_service.dart';
 import 'package:train_libre/features/workout/data/sources/workout_local_data_source.dart';
+import 'package:train_libre/features/workout/domain/models/set_log.dart'
+    as domain_set;
 import 'package:train_libre/features/exercise_catalog/domain/models/exercise.dart'
     as model;
 
@@ -60,8 +62,164 @@ void main() {
       expect(categories, ['Cardio', 'Strength']);
     });
 
-    test(
-        'searchExercises applies query + category filters and keeps name order',
+    test('getExercisePRs calculates correct brackets and estimated 1RM',
+        () async {
+      final log = await helper.startWorkout(routineName: 'PR Test');
+
+      // 1 RM: 100kg
+      await helper.insertSetLog(domain_set.SetLog(
+        workoutLogId: log.id!,
+        exerciseName: 'Bench Press',
+        setType: 'normal',
+        weightKg: 100,
+        reps: 1,
+        isCompleted: true,
+        logOrder: 0,
+      ));
+
+      // 5 RM: 90kg (Bracket 4-6 RM)
+      await helper.insertSetLog(domain_set.SetLog(
+        workoutLogId: log.id!,
+        exerciseName: 'Bench Press',
+        setType: 'normal',
+        weightKg: 90,
+        reps: 5,
+        isCompleted: true,
+        logOrder: 1,
+      ));
+
+      // 12 RM: 70kg (Bracket 11-15 RM)
+      await helper.insertSetLog(domain_set.SetLog(
+        workoutLogId: log.id!,
+        exerciseName: 'Bench Press',
+        setType: 'normal',
+        weightKg: 70,
+        reps: 12,
+        isCompleted: true,
+        logOrder: 2,
+      ));
+
+      final prs = await helper.getExercisePRs('Bench Press');
+
+      expect(prs['1 RM']?.weightKg, 100);
+      expect(prs['4-6 RM']?.weightKg, 90);
+      expect(prs['11-15 RM']?.weightKg, 70);
+      expect(prs['2-3 RM'], isNull);
+
+      // Brzycki for 90kg x 5: 90 / (1.0278 - 0.0278 * 5) = 90 / 0.8888 = 101.26
+      // Brzycki for 100kg x 1: 100 / (1.0278 - 0.0278 * 1) = 100 / 1.0 = 100
+      // So Est. 1RM should be from the 90x5 set.
+      expect(prs['Est. 1RM']?.weightKg, 90);
+      expect(prs['Est. 1RM']?.reps, 5);
+    });
+
+    test('getWeeklyVolumeData aggregates tonnage and sets correctly by week',
+        () async {
+      final now = DateTime.now();
+
+      // Workout this week
+      final log1 = await helper.startWorkout(routineName: 'Week 0');
+      await (database.update(database.workoutLogs)
+            ..where((t) => t.localId.equals(log1.id!)))
+          .write(db.WorkoutLogsCompanion(
+        status: const drift.Value('completed'),
+        startTime: drift.Value(now),
+      ));
+
+      await helper.insertSetLog(domain_set.SetLog(
+        workoutLogId: log1.id!,
+        exerciseName: 'Bench Press',
+        setType: 'normal',
+        weightKg: 100,
+        reps: 10,
+        isCompleted: true,
+        logOrder: 0,
+      ));
+
+      // Workout last week
+      final lastWeek = now.subtract(const Duration(days: 7));
+      final log2 = await helper.startWorkout(routineName: 'Week -1');
+      await (database.update(database.workoutLogs)
+            ..where((t) => t.localId.equals(log2.id!)))
+          .write(db.WorkoutLogsCompanion(
+        status: const drift.Value('completed'),
+        startTime: drift.Value(lastWeek),
+      ));
+
+      await helper.insertSetLog(domain_set.SetLog(
+        workoutLogId: log2.id!,
+        exerciseName: 'Bench Press',
+        setType: 'normal',
+        weightKg: 50,
+        reps: 10,
+        isCompleted: true,
+        logOrder: 0,
+      ));
+
+      final data = await helper.getWeeklyVolumeData(weeksBack: 4);
+
+      // Check if we found both entries
+      final thisWeekEntry =
+          data.firstWhere((e) => (e['tonnage'] as double) > 900);
+      final lastWeekEntry =
+          data.firstWhere((e) => (e['tonnage'] as double) == 500);
+
+      expect(thisWeekEntry['tonnage'], 1000.0);
+      expect(thisWeekEntry['setCount'], 1);
+      expect(lastWeekEntry['tonnage'], 500.0);
+      expect(lastWeekEntry['setCount'], 1);
+    });
+
+    test('getMuscleGroupAnalytics calculates volume and sets per muscle group',
+        () async {
+      final now = DateTime.now();
+
+      // Create an exercise with muscles
+      await helper.insertExercise(
+        const model.Exercise(
+          nameDe: 'Bankdruecken',
+          nameEn: 'Bench Press',
+          descriptionDe: '',
+          descriptionEn: '',
+          categoryName: 'Strength',
+          primaryMuscles: ['chest'],
+          secondaryMuscles: ['triceps'],
+        ),
+      );
+
+      final log = await helper.startWorkout(routineName: 'Muscle Test');
+      await (database.update(database.workoutLogs)
+            ..where((t) => t.localId.equals(log.id!)))
+          .write(db.WorkoutLogsCompanion(
+        status: const drift.Value('completed'),
+        startTime: drift.Value(now),
+      ));
+
+      await helper.insertSetLog(domain_set.SetLog(
+        workoutLogId: log.id!,
+        exerciseName: 'Bench Press',
+        setType: 'normal',
+        weightKg: 100,
+        reps: 10,
+        isCompleted: true,
+        logOrder: 0,
+      ));
+
+      final result = await helper.getMuscleGroupAnalytics(daysBack: 7);
+
+      expect(result['muscles'], isNotEmpty);
+      final muscles = result['muscles'] as List;
+      final chestEntry = muscles.firstWhere((e) => e['muscleGroup'] == 'chest');
+      final tricepsEntry = muscles.firstWhere((e) => e['muscleGroup'] == 'triceps');
+
+      // Primary muscle gets 1.0 contribution
+      expect(chestEntry['equivalentSets'], 1.0);
+
+      // Secondary muscle gets 0.5 contribution
+      expect(tricepsEntry['equivalentSets'], 0.5);
+    });
+
+    test('searchExercises applies query + category filters and keeps name order',
         () async {
       await helper.insertExercise(
         const model.Exercise(

@@ -127,12 +127,12 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
 
-    _createInitialSetLogs();
+    await _createInitialSetLogs();
     _startWorkoutTimer();
     notifyListeners();
   }
 
-  void _createInitialSetLogs() async {
+  Future<void> _createInitialSetLogs() async {
     _totalVolume = 0;
     _totalSets = 0;
 
@@ -609,15 +609,15 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  void reorderExercise(int oldIndex, int newIndex) {
+  Future<void> reorderExercise(int oldIndex, int newIndex) async {
     if (oldIndex < newIndex) newIndex -= 1;
     final item = _exercises.removeAt(oldIndex);
     _exercises.insert(newIndex, item);
-    _updateLogOrdersInDatabase();
+    await _updateLogOrdersInDatabase();
     notifyListeners();
   }
 
-  void _updateLogOrdersInDatabase() async {
+  Future<void> _updateLogOrdersInDatabase() async {
     int globalOrderCounter = 0;
     final List<SetLog> setsToUpdate = [];
     for (final routineExercise in _exercises) {
@@ -631,12 +631,12 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
     }
-    if (setsToUpdate.isNotEmpty) _repository.updateSetLogs(setsToUpdate);
+    if (setsToUpdate.isNotEmpty) await _repository.updateSetLogs(setsToUpdate);
   }
 
-  void updatePauseTime(int routineExerciseId, int seconds) {
+  Future<void> updatePauseTime(int routineExerciseId, int seconds) async {
     pauseTimes[routineExerciseId] = seconds;
-    _repository.updatePauseTime(routineExerciseId, seconds);
+    await _repository.updatePauseTime(routineExerciseId, seconds);
 
     final exercise = _exercises.firstWhere((e) => e.id == routineExerciseId);
     for (var t in exercise.setTemplates) {
@@ -645,7 +645,7 @@ class LiveWorkoutViewModel extends ChangeNotifier with WidgetsBindingObserver {
         if (log.isCompleted != true) {
           final updatedLog = log.copyWith(restTimeSeconds: seconds);
           _setLogs[t.id!] = updatedLog;
-          _repository.updateSetLogs([updatedLog]);
+          await _repository.updateSetLogs([updatedLog]);
         }
       }
     }

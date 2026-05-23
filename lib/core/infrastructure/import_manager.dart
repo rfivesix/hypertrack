@@ -62,7 +62,7 @@ class ImportManager {
 
       // 2. Offload decoding and grouping to background isolate
       final workoutGroups = await compute(
-        _decodeAndGroupWorkouts,
+        decodeAndGroupWorkouts,
         ImportBackgroundTaskParams(
           fileBytes: fileBytes,
           extension: extension,
@@ -117,7 +117,8 @@ class ImportManager {
     }
   }
 
-  static List<WorkoutImportData> _decodeAndGroupWorkouts(
+  @visibleForTesting
+  static List<WorkoutImportData> decodeAndGroupWorkouts(
     ImportBackgroundTaskParams params,
   ) {
     final extension = params.extension;
