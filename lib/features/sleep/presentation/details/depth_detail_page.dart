@@ -48,15 +48,13 @@ class DepthDetailPage extends StatelessWidget {
     final deepPct = (deepDuration.inMinutes / totalMinutes) * 100;
     final lightPct = (lightDuration.inMinutes / totalMinutes) * 100;
     final remPct = (remDuration.inMinutes / totalMinutes) * 100;
-    final stageDepthScore = scoreStageDepthQualityV1(
+    final architectureScore = scoreArchitectureV3(
+      durationMinutes: totalMinutes,
       lightSleepPct: lightPct,
       deepSleepPct: deepPct,
       remSleepPct: remPct,
-      stageDataConfidence: overview.stageDataConfidence,
-      sourcePlatform: overview.session.sourcePlatform,
-      sourceAppId: overview.session.sourceAppId,
     );
-    final rating = (stageDepthScore ?? 0) >= 68
+    final rating = ((architectureScore ?? 0) * 100) >= 68
         ? l10n.sleepDepthRatingRestorative
         : l10n.sleepDepthRatingLightLeaning;
 

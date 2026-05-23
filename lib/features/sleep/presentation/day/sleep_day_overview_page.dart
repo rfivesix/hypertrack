@@ -15,6 +15,7 @@ import '../month/sleep_month_overview_page.dart';
 import '../week/sleep_week_overview_page.dart';
 import '../widgets/sleep_period_scope_layout.dart';
 import '../widgets/sleep_metric_tile_grid.dart';
+import '../widgets/sleep_score_breakdown_card.dart';
 import '../widgets/sleep_score_card.dart';
 import '../widgets/sleep_timeline_card.dart';
 import 'sleep_day_view_model.dart' hide SleepPeriodScope;
@@ -318,6 +319,10 @@ class _SleepDayOverviewContent extends StatelessWidget {
         const SizedBox(height: _sleepOverviewSectionSpacing),
         SleepScoreCard(overview: overview),
         const SizedBox(height: _sleepOverviewSectionSpacing),
+        if (overview.scoringResult != null) ...[
+          SleepScoreBreakdownCard(scoringResult: overview.scoringResult!),
+          const SizedBox(height: _sleepOverviewSectionSpacing),
+        ],
         SleepMetricTileGrid(overview: overview),
       ],
     );

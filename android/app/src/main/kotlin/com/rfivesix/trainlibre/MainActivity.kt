@@ -1186,32 +1186,45 @@ class MainActivity : FlutterFragmentActivity() {
                 val client = HealthConnectClient.getOrCreate(this@MainActivity)
                 val from = Instant.parse(fromIso)
                 val to = Instant.parse(toIso)
-                val allRecords = mutableListOf<HeartRateRecord>()
+                
+                val buckets = mutableMapOf<Instant, MutableList<Double>>()
+                val sources = mutableMapOf<Instant, String>()
+                val nativeIds = mutableMapOf<Instant, String>()
+                
                 var pageToken: String? = null
                 do {
                     val response = client.readRecords(
                         ReadRecordsRequest(
                             recordType = HeartRateRecord::class,
                             timeRangeFilter = TimeRangeFilter.between(from, to),
+                            pageSize = 2000,
                             pageToken = pageToken,
                         ),
                     )
-                    allRecords.addAll(response.records)
+                    
+                    for (record in response.records) {
+                        for (sample in record.samples) {
+                            val truncated = sample.time.truncatedTo(java.time.temporal.ChronoUnit.MINUTES)
+                            buckets.getOrPut(truncated) { mutableListOf() }.add(sample.beatsPerMinute.toDouble())
+                            if (!sources.containsKey(truncated)) {
+                                sources[truncated] = record.metadata.dataOrigin.packageName
+                                nativeIds[truncated] = record.metadata.id
+                            }
+                        }
+                    }
+                    
                     pageToken = response.pageToken
                 } while (pageToken != null)
 
-                val payload = allRecords
-                    .flatMap { record ->
-                        record.samples.mapIndexed { index, sample ->
-                            mapOf(
-                                "sampledAtUtcIso" to sample.time.toString(),
-                                "bpm" to sample.beatsPerMinute.toDouble(),
-                                "sourceId" to record.metadata.dataOrigin.packageName,
-                                "nativeId" to "${record.metadata.id}-$index",
-                            )
-                        }
-                    }
-                    .sortedBy { row -> row["sampledAtUtcIso"] as String }
+                val payload = buckets.entries.map { (time, bpms) ->
+                    mapOf(
+                        "sampledAtUtcIso" to time.toString(),
+                        "bpm" to bpms.average(),
+                        "sourceId" to (sources[time] ?: "aggregated"),
+                        "nativeId" to (nativeIds[time] ?: "aggregated"),
+                    )
+                }.sortedBy { row -> row["sampledAtUtcIso"] as String }
+                
                 withContext(Dispatchers.Main) {
                     result.success(payload)
                 }

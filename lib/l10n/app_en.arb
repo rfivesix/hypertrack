@@ -1981,5 +1981,16 @@
   "muscleHamstrings": "Hamstrings",
   "muscleGlutes": "Glutes",
   "muscleCalves": "Calves",
-  "muscleLowerBack": "Lower Back"
+  "muscleLowerBack": "Lower Back",
+  "sleepDetailAnalysisHeader": "Detailed Analysis",
+  "sleepMetricDurationLabel": "Sleep Duration",
+  "sleepMetricContinuityLabel": "Continuity (WASO/SE)",
+  "sleepMetricDepthLabel": "Sleep Stage Depth",
+  "sleepMetricTimingLabel": "Circadian Timing",
+  "sleepMetricRegularityLabel": "Regularity",
+  "sleepBannerTstBottleneck": "Sleep duration penalty active: Your total sleep volume was below the regenerative optimum of 6.5 hours, which restricts anabolic hormone release.",
+  "sleepBannerRemBottleneck": "REM sleep deficiency penalty: Your REM sleep was below 60 minutes. This impairs neuronal recovery and mental freshness.",
+  "sleepBannerN3Bottleneck": "Deep sleep deficiency penalty: Critical lack of N3 deep sleep (<70 min). Physical muscle tissue repair is suboptimal.",
+  "sleepBannerTimingBottleneck": "Circadian phase shift penalty: Your mid-sleep was after 05:30 AM. Sleeping against the inner clock reduces sleep quality and insulin sensitivity.",
+  "sleepBannerDefaultPenalty": "Clinical protective brake active: Your sleep volume was suboptimal (<6h) or circadian timing (sleep onset) was severely shifted. The total score has been limited."
 }

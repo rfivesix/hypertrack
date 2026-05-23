@@ -267,6 +267,7 @@ class SleepNightlyAnalysisRecord {
     this.regularitySri,
     this.regularityValidDays,
     this.regularityIsStable,
+    this.scoreBreakdownJson,
     required this.analyzedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -291,6 +292,7 @@ class SleepNightlyAnalysisRecord {
   final double? regularitySri;
   final int? regularityValidDays;
   final bool? regularityIsStable;
+  final String? scoreBreakdownJson;
   final DateTime analyzedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -317,6 +319,7 @@ class SleepNightlyAnalysisCompanion {
     this.regularitySri,
     this.regularityValidDays,
     this.regularityIsStable,
+    this.scoreBreakdownJson,
     required this.analyzedAt,
   });
 
@@ -339,5 +342,6 @@ class SleepNightlyAnalysisCompanion {
   final double? regularitySri;
   final int? regularityValidDays;
   final bool? regularityIsStable;
+  final String? scoreBreakdownJson;
   final DateTime analyzedAt;
 }

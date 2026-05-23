@@ -420,7 +420,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -601,6 +601,28 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(routineExercises, routineExercises.notes);
             await m.createTable(workoutExerciseLogs);
           }
+          if (from < 19) {
+            // Defensive migration for auto-restored databases
+            final columns = await customSelect('PRAGMA table_info(sleep_nightly_analyses)').get();
+            final names = columns.map((c) => c.read<String>('name')).toSet();
+
+            if (!names.contains('score_breakdown_json')) {
+              await customStatement(
+                'ALTER TABLE sleep_nightly_analyses ADD COLUMN score_breakdown_json TEXT NULL',
+              );
+            }
+          }
+          if (from < 20) {
+            // Defensive migration for auto-restored databases / existing installs at v19
+            final columns = await customSelect('PRAGMA table_info(sleep_nightly_analyses)').get();
+            final names = columns.map((c) => c.read<String>('name')).toSet();
+
+            if (!names.contains('score_breakdown_json')) {
+              await customStatement(
+                'ALTER TABLE sleep_nightly_analyses ADD COLUMN score_breakdown_json TEXT NULL',
+              );
+            }
+          }
         },
       );
 }
@@ -738,6 +760,7 @@ Future<void> _createSleepPersistenceSchema(GeneratedDatabase db) async {
       regularity_sri REAL NULL,
       regularity_valid_days INTEGER NULL,
       regularity_is_stable INTEGER NULL,
+      score_breakdown_json TEXT NULL,
       analyzed_at INTEGER NOT NULL,
       created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
       updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)

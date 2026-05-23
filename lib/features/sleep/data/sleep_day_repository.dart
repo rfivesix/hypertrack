@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import '../../../data/database_helper.dart';
 import '../../../data/drift_database.dart';
 import '../domain/sleep_domain.dart';
+import '../domain/scoring/sleep_scoring_engine.dart';
 import '../domain/metrics/heart_rate_metrics.dart';
 import '../domain/metrics/nightly_metrics_calculator.dart';
 import 'persistence/dao/sleep_canonical_dao.dart';
@@ -54,6 +57,10 @@ class SleepDayOverviewData {
   final Duration? lightDuration;
   final Duration? remDuration;
   final List<SleepRegularityNight> regularityNights;
+
+  SleepScoringResult? get scoringResult => analysis.scoreBreakdownJson != null
+      ? SleepScoringResult.fromJson(analysis.scoreBreakdownJson!)
+      : null;
 
   Duration get totalSleepDuration {
     if (totalSleepMinutes != null) {
@@ -195,6 +202,9 @@ class SleepDayRepository implements SleepDayDataRepository {
       sourcePlatform: record.sourcePlatform,
       sourceAppId: record.sourceAppId,
       sourceRecordHash: record.sourceRecordHash,
+      scoreBreakdownJson: record.scoreBreakdownJson != null
+          ? jsonDecode(record.scoreBreakdownJson!) as Map<String, dynamic>
+          : null,
     );
 
     final repaired = repairSleepTimeline(session: session, segments: segments);

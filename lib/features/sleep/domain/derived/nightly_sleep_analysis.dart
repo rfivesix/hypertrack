@@ -28,6 +28,7 @@ class NightlySleepAnalysis {
     this.sourcePlatform,
     this.sourceAppId,
     this.sourceRecordHash,
+    this.scoreBreakdownJson,
   });
 
   final String id;
@@ -52,6 +53,7 @@ class NightlySleepAnalysis {
   final String? sourcePlatform;
   final String? sourceAppId;
   final String? sourceRecordHash;
+  final Map<String, dynamic>? scoreBreakdownJson;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'id': id,
@@ -76,5 +78,6 @@ class NightlySleepAnalysis {
         'sourcePlatform': sourcePlatform,
         'sourceAppId': sourceAppId,
         'sourceRecordHash': sourceRecordHash,
+        'scoreBreakdownJson': scoreBreakdownJson,
       };
 }

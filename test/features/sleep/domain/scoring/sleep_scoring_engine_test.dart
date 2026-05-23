@@ -1,343 +1,158 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:train_libre/features/sleep/domain/sleep_enums.dart';
 import 'package:train_libre/features/sleep/domain/scoring/sleep_scoring_engine.dart';
 
 void main() {
-  group('component scoring v2', () {
-    test('duration keeps broad 7h-9h plateau', () {
-      expect(scoreDurationV2(420), 100); // 7.0h
-      expect(scoreDurationV2(480), 100); // 8.0h
-      expect(scoreDurationV2(540), 100); // 9.0h
+  group('SHS v3 Component Scoring', () {
+    test('duration (D)', () {
+      expect(scoreDurationV3(420), 1.0); // 7.0h
+      expect(scoreDurationV3(480), 1.0); // 8.0h
+      expect(scoreDurationV3(540), 1.0); // 9.0h
+      
+      expect(scoreDurationV3(360), closeTo(0.6, 0.01)); // 6h -> exp(-1/2) = 0.606
+      expect(scoreDurationV3(240), 0.0); // 4h (<5h clips to 0)
     });
 
-    test('duration is clearly worse below 7h', () {
-      expect(scoreDurationV2(390), closeTo(80, 0.01)); // 6.5h
-      expect(scoreDurationV2(375), closeTo(65, 0.01)); // 6.25h
-      expect(scoreDurationV2(360), closeTo(50, 0.01)); // 6.0h
+    test('sleep efficiency (C_SE)', () {
+      expect(scoreSleepEfficiencyV3(90), 0.5); // 1 / (1 + exp(0)) = 0.5
+      expect(scoreSleepEfficiencyV3(100), closeTo(0.99, 0.01));
+      expect(scoreSleepEfficiencyV3(80), closeTo(0.006, 0.01));
     });
 
-    test('duration strongly penalizes below 6h', () {
-      expect(scoreDurationV2(355), closeTo(45, 0.01)); // 5h55m
-      expect(scoreDurationV2(330), closeTo(20, 0.01)); // 5.5h
-      expect(scoreDurationV2(300), closeTo(5, 0.01)); // 5.0h
-      expect(scoreDurationV2(240), 0); // 4.0h
+    test('waso (C_WASO)', () {
+      expect(scoreWasoV3(20), 1.0);
+      expect(scoreWasoV3(50), 0.5); // (30/30)^2 = 1 -> 1/2 = 0.5
     });
 
-    test('duration applies milder long-sleep penalty', () {
-      expect(scoreDurationV2(570), closeTo(95, 0.01)); // 9.5h
-      expect(scoreDurationV2(630), closeTo(80, 0.01)); // 10.5h
-      expect(scoreDurationV2(690), 50); // > 11h clamp
+    test('architecture (A)', () {
+      // 1. Penalized light sleep: > 60% (e.g., 70% light sleep)
+      final penalized = scoreArchitectureV3(
+        durationMinutes: 480, // 8h
+        lightSleepPct: 70,
+        deepSleepPct: 20, // 96min deep -> ~1.0 aN3
+        remSleepPct: 25, // 120min rem -> ~1.0 aRem
+      );
+      expect(penalized, isNotNull);
+      // P_N1 = exp(-(70-60)^2 / 200) = exp(-100/200) = exp(-0.5) = 0.606
+      // aN3 = 1.0 * exp(-(96-90)^2 / 3200) = 1.0 * exp(-36/3200) = 0.988
+      // aRem = 1.0 * exp(-(120-100)^2 / 3200) = 1.0 * exp(-400/3200) = 0.882
+      // Score = (0.45 * 0.988 + 0.45 * 0.882) * 0.606 + 0.10 = 0.8415 * 0.606 + 0.1 = 0.61
+      expect(penalized!, closeTo(0.61, 0.05));
+
+      // 2. Healthy light sleep: <= 60% (e.g., 44% light sleep) should NOT be penalized (P_N1 = 1.0)
+      final healthy = scoreArchitectureV3(
+        durationMinutes: 480, // 8h
+        lightSleepPct: 44,
+        deepSleepPct: 20, // 96min deep -> ~1.0 aN3
+        remSleepPct: 25, // 120min rem -> ~1.0 aRem
+      );
+      expect(healthy, isNotNull);
+      // P_N1 = 1.0 (no penalty)
+      // Score = (0.45 * 0.988 + 0.45 * 0.882) * 1.0 + 0.10 = 0.8415 * 1.0 + 0.1 = 0.9415
+      expect(healthy!, closeTo(0.94, 0.05));
     });
 
-    test('sleep-efficiency piecewise mapping', () {
-      expect(scoreSleepEfficiencyV1(92), 100);
-      expect(scoreSleepEfficiencyV1(87.5), closeTo(92.5, 0.01));
-      expect(scoreSleepEfficiencyV1(82.5), closeTo(75, 0.01));
-      expect(scoreSleepEfficiencyV1(75), closeTo(45, 0.01));
-      expect(scoreSleepEfficiencyV1(35), closeTo(12.5, 0.01));
+    test('timing (T_circ)', () {
+      expect(scoreTimingV3(3.5, 0), 1.0); // Mid-sleep 3.5
+      expect(scoreTimingV3(23.5, 480), 1.0); // Onset 23.5 -> MS = 23.5 + 4 = 27.5 -> 3.5. Score = 1.0
+      
+      final late = scoreTimingV3(3.0, 480); // Onset 03:00 -> MS 07:00 (7.0). MS > 5.5, triggers penalty.
+      expect(late, lessThan(0.5));
     });
 
-    test('waso piecewise mapping', () {
-      expect(scoreWasoV1(20), 100);
-      expect(scoreWasoV1(45), closeTo(85, 0.01));
-      expect(scoreWasoV1(90), closeTo(50, 0.01));
-      expect(scoreWasoV1(180), closeTo(15, 0.01));
-      expect(scoreWasoV1(300), 0);
+    test('regularity (R)', () {
+      expect(scoreRegularityV3(0.0), 1.0);
+      expect(scoreRegularityV3(1.0), 0.5);
+      expect(scoreRegularityV3(2.0), 0.2); // 1 / (1 + 4) = 0.2
     });
   });
 
-  group('renormalization and availability', () {
-    test('renormalizes continuity when only one subcomponent is available', () {
-      final result = calculateSleepScore(
-        const SleepScoringInput(sleepEfficiencyPct: 90, wasoMinutes: null),
-      );
-      expect(result.continuityScore, 100);
-      expect(result.score, 100);
-      expect(result.completeness, closeTo(0.2975, 0.0001));
-    });
-
-    test('renormalizes top-level score when regularity is unavailable', () {
-      final result = calculateSleepScore(
-        const SleepScoringInput(
-          durationMinutes: 420,
-          sleepEfficiencyPct: 90,
-          wasoMinutes: 30,
-        ),
-      );
-      expect(result.score, 100);
-      expect(result.state, SleepScoreState.good);
-      expect(result.completeness, closeTo(0.6375, 0.0001));
-      expect(result.regularityUsed, isFalse);
-    });
-
-    test('returns unavailable when no top-level components are available', () {
-      final result = calculateSleepScore(const SleepScoringInput());
-      expect(result.score, isNull);
-      expect(result.state, SleepScoreState.unavailable);
-      expect(result.completeness, 0);
-    });
-
-    test(
-      'regularity thresholds: <5 unavailable, 5-6 available, >=7 stable',
-      () {
-        final noRegularity = calculateSleepScore(
-          const SleepScoringInput(regularitySri: 82, regularityValidDays: 4),
-        );
-        expect(noRegularity.regularityUsed, isFalse);
-        expect(noRegularity.regularityStable, isFalse);
-        expect(noRegularity.score, isNull);
-
-        final available = calculateSleepScore(
-          const SleepScoringInput(regularitySri: 82, regularityValidDays: 5),
-        );
-        expect(available.regularityUsed, isTrue);
-        expect(available.regularityStable, isFalse);
-        expect(available.score, closeTo(82, 0.01));
-        expect(available.completeness, closeTo(0.2125, 0.0001));
-
-        final stable = calculateSleepScore(
-          const SleepScoringInput(regularitySri: 82, regularityValidDays: 7),
-        );
-        expect(stable.regularityUsed, isTrue);
-        expect(stable.regularityStable, isTrue);
-        expect(stable.score, closeTo(82, 0.01));
-        expect(stable.completeness, closeTo(0.2125, 0.0001));
-      },
-    );
-
-    test('~5h56m night scores meaningfully lower than legacy v1 profile', () {
-      const input = SleepScoringInput(
-        durationMinutes: 356, // 5h56m
+  group('SHS v3 Soft Caps', () {
+    test('TST 4h (Pathological short sleep degradation)', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 240, // 4h
         sleepEfficiencyPct: 95,
-        wasoMinutes: 20,
-        regularitySri: 90,
-        regularityValidDays: 7,
-      );
-      final v2 = calculateSleepScore(input);
-      expect(v2.score, isNotNull);
-      expect(v2.score!, lessThan(80));
+        wasoMinutes: 10,
+      ));
+      // Base score topLevel ~ 38.48. dynamicMultiplier = 0.50. Score = 19.24.
+      expect(res.score, closeTo(19.24, 1.0));
+      expect(res.stageScoreCap, closeTo(19.24, 1.0));
+      expect(res.dynamicMultiplier, closeTo(0.50, 0.01));
+      expect(res.multiplierBottleneck, 'tst');
+    });
 
-      final v1Duration = _legacyDurationV1(input.durationMinutes!);
-      final v1Score = (0.35 * v1Duration) + (0.35 * 100) + (0.30 * 90);
-      expect(v1Score, greaterThan(80));
-      expect(v2.score!, lessThan(v1Score - 5));
+    test('TST 5.5h (Suboptimal duration degradation)', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 330, // 5.5h (< 6.5h)
+        sleepEfficiencyPct: 95,
+        wasoMinutes: 10,
+        deepSleepPct: 25,
+        remSleepPct: 25,
+        sleepOnsetHourLocal: 23.0,
+      ));
+      // Base score topLevel ~ 59.21. dynamicMultiplier = 0.6667. Score = 39.47.
+      expect(res.score, closeTo(39.47, 1.0));
+      expect(res.stageScoreCap, closeTo(39.47, 1.0));
+      expect(res.dynamicMultiplier, closeTo(0.6667, 0.001));
+      expect(res.multiplierBottleneck, 'tst');
+    });
+    
+    test('Late timing MS = 7.0 (Circadian phase delay degradation)', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 480, // 8h
+        sleepEfficiencyPct: 95,
+        wasoMinutes: 10,
+        deepSleepPct: 25,
+        remSleepPct: 25,
+        sleepOnsetHourLocal: 3.0, // MS = 7.0 > 5.5
+      ));
+      // Base score topLevel ~ 77.96. dynamicMultiplier = 0.6625. Score = 51.65.
+      expect(res.score, closeTo(51.65, 1.0));
+      expect(res.stageScoreCap, closeTo(51.65, 1.0));
+      expect(res.dynamicMultiplier, closeTo(0.6625, 0.001));
+      expect(res.multiplierBottleneck, 'timing');
+    });
+
+    test('Excellent sleep (no caps)', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 450, // 7.5h
+        sleepEfficiencyPct: 95,
+        wasoMinutes: 10,
+        deepSleepPct: 20,
+        remSleepPct: 25,
+        lightSleepPct: 5,
+        sleepOnsetHourLocal: 23.5, // MS = 3.25
+      ));
+      expect(res.stageScoreCap, isNull);
+      expect(res.score, greaterThan(80.0));
+      expect(res.state, SleepScoreState.good);
+      expect(res.dynamicMultiplier, 1.0);
+      expect(res.multiplierBottleneck, isNull);
+    });
+
+    test('REM sleep penalty bottleneck', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 480, // 8h
+        sleepEfficiencyPct: 95,
+        wasoMinutes: 10,
+        deepSleepPct: 25,
+        remSleepPct: 5, // REM = 24 minutes (< 40 min -> max penalty 0.65)
+        sleepOnsetHourLocal: 23.0,
+      ));
+      expect(res.dynamicMultiplier, closeTo(0.65, 0.01));
+      expect(res.multiplierBottleneck, 'rem');
+    });
+
+    test('N3 sleep penalty bottleneck', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 480, // 8h
+        sleepEfficiencyPct: 95,
+        wasoMinutes: 10,
+        deepSleepPct: 5, // N3 = 24 minutes (< 40 min -> max penalty 0.60)
+        remSleepPct: 25,
+        sleepOnsetHourLocal: 23.0,
+      ));
+      expect(res.dynamicMultiplier, closeTo(0.60, 0.01));
+      expect(res.multiplierBottleneck, 'n3');
     });
   });
-
-  group('stage-aware guardrails', () {
-    test(
-      'mostly light sleep without REM reduces high base score meaningfully',
-      () {
-        const baseInput = SleepScoringInput(
-          durationMinutes: 480,
-          sleepEfficiencyPct: 94,
-          wasoMinutes: 20,
-          regularitySri: 90,
-          regularityValidDays: 7,
-        );
-        const mostlyLightInput = SleepScoringInput(
-          durationMinutes: 480,
-          sleepEfficiencyPct: 94,
-          wasoMinutes: 20,
-          regularitySri: 90,
-          regularityValidDays: 7,
-          lightSleepPct: 88,
-          deepSleepPct: 12,
-          remSleepPct: 0,
-          stageDataConfidence: SleepStageConfidence.unknown,
-          sourcePlatform: 'health_connect',
-        );
-
-        final base = calculateSleepScore(baseInput);
-        final guarded = calculateSleepScore(mostlyLightInput);
-
-        expect(base.score, isNotNull);
-        expect(guarded.score, isNotNull);
-        expect(base.score!, greaterThan(90));
-        expect(guarded.score!, lessThan(85));
-        expect(guarded.score!, lessThan(base.score! - 8));
-        expect(guarded.stageDepthScore, isNotNull);
-        expect(guarded.stageScoreCap, isNotNull);
-      },
-    );
-
-    test('balanced staged sleep remains close to baseline score', () {
-      const baseInput = SleepScoringInput(
-        durationMinutes: 480,
-        sleepEfficiencyPct: 94,
-        wasoMinutes: 20,
-        regularitySri: 90,
-        regularityValidDays: 7,
-      );
-      const balancedInput = SleepScoringInput(
-        durationMinutes: 480,
-        sleepEfficiencyPct: 94,
-        wasoMinutes: 20,
-        regularitySri: 90,
-        regularityValidDays: 7,
-        lightSleepPct: 56,
-        deepSleepPct: 22,
-        remSleepPct: 20,
-        stageDataConfidence: SleepStageConfidence.high,
-      );
-
-      final base = calculateSleepScore(baseInput);
-      final balanced = calculateSleepScore(balancedInput);
-
-      expect(base.score, isNotNull);
-      expect(balanced.score, isNotNull);
-      expect((base.score! - balanced.score!).abs(), lessThan(2.0));
-      expect(balanced.score!, greaterThan(90));
-    });
-
-    test('missing REM from likely limited source avoids near-perfect totals',
-        () {
-      const input = SleepScoringInput(
-        durationMinutes: 480,
-        sleepEfficiencyPct: 94,
-        wasoMinutes: 20,
-        regularitySri: 90,
-        regularityValidDays: 7,
-        lightSleepPct: 62,
-        deepSleepPct: 38,
-        remSleepPct: 0,
-        stageDataConfidence: SleepStageConfidence.unknown,
-        sourcePlatform: 'health_connect',
-        sourceAppId: 'com.withings.mobile',
-      );
-
-      final result = calculateSleepScore(input);
-      expect(result.score, isNotNull);
-      expect(result.score!, lessThan(94));
-      expect(result.score!, greaterThan(80));
-      expect(result.stageScoreCap, isNotNull);
-      expect(result.stageScoreCap!, lessThan(94));
-    });
-
-    test('100% asleepUnspecified is deterministic and conservative', () {
-      const input = SleepScoringInput(
-        durationMinutes: 480,
-        sleepEfficiencyPct: 94,
-        wasoMinutes: 20,
-        regularitySri: 90,
-        regularityValidDays: 7,
-        asleepUnspecifiedPct: 100,
-        stageDataConfidence: SleepStageConfidence.low,
-      );
-
-      final result = calculateSleepScore(input);
-      expect(result.stageDepthScore, closeTo(54, 0.01));
-      expect(result.stageScoreCap, closeTo(81.6, 0.01));
-      expect(result.completeness, lessThan(0.75));
-    });
-
-    test('no-stage night can score but has limited support', () {
-      const noStages = SleepScoringInput(
-        durationMinutes: 480,
-        sleepEfficiencyPct: 94,
-        wasoMinutes: 20,
-        regularitySri: 90,
-        regularityValidDays: 7,
-      );
-      const balancedStages = SleepScoringInput(
-        durationMinutes: 480,
-        sleepEfficiencyPct: 94,
-        wasoMinutes: 20,
-        regularitySri: 90,
-        regularityValidDays: 7,
-        lightSleepPct: 56,
-        deepSleepPct: 22,
-        remSleepPct: 20,
-        stageDataConfidence: SleepStageConfidence.high,
-      );
-
-      final noStageResult = calculateSleepScore(noStages);
-      final balancedResult = calculateSleepScore(balancedStages);
-      expect(noStageResult.score, greaterThan(90));
-      expect(noStageResult.completeness, lessThan(balancedResult.completeness));
-      expect(noStageResult.stageDepthScore, isNull);
-    });
-
-    test(
-      'high-fidelity missing REM is penalized more than low-fidelity missing REM',
-      () {
-        const highFidelity = SleepScoringInput(
-          durationMinutes: 480,
-          sleepEfficiencyPct: 94,
-          wasoMinutes: 20,
-          regularitySri: 90,
-          regularityValidDays: 7,
-          lightSleepPct: 62,
-          deepSleepPct: 38,
-          remSleepPct: 0,
-          stageDataConfidence: SleepStageConfidence.high,
-        );
-        const lowFidelity = SleepScoringInput(
-          durationMinutes: 480,
-          sleepEfficiencyPct: 94,
-          wasoMinutes: 20,
-          regularitySri: 90,
-          regularityValidDays: 7,
-          lightSleepPct: 62,
-          deepSleepPct: 38,
-          remSleepPct: 0,
-          stageDataConfidence: SleepStageConfidence.unknown,
-          sourcePlatform: 'health_connect',
-          sourceAppId: 'com.withings.mobile',
-        );
-
-        final high = calculateSleepScore(highFidelity);
-        final low = calculateSleepScore(lowFidelity);
-        expect(high.stageDepthScore, lessThan(low.stageDepthScore!));
-        expect(high.stageScoreCap, lessThan(low.stageScoreCap!));
-        expect(low.completeness, lessThan(0.9));
-      },
-    );
-
-    test('normal staged night regression stays stable', () {
-      const withoutStages = SleepScoringInput(
-        durationMinutes: 420,
-        sleepEfficiencyPct: 90,
-        wasoMinutes: 30,
-        regularitySri: 85,
-        regularityValidDays: 7,
-      );
-      const withStages = SleepScoringInput(
-        durationMinutes: 420,
-        sleepEfficiencyPct: 90,
-        wasoMinutes: 30,
-        regularitySri: 85,
-        regularityValidDays: 7,
-        lightSleepPct: 54,
-        deepSleepPct: 21,
-        remSleepPct: 22,
-        stageDataConfidence: SleepStageConfidence.medium,
-      );
-
-      final baseline = calculateSleepScore(withoutStages);
-      final staged = calculateSleepScore(withStages);
-      expect(baseline.score, isNotNull);
-      expect(staged.score, isNotNull);
-      expect((baseline.score! - staged.score!).abs(), lessThan(2.0));
-    });
-  });
-}
-
-double _legacyDurationV1(int durationMinutes) {
-  final hours = durationMinutes / 60.0;
-  if (hours < 4.0) return 0;
-  if (hours < 5.0) return _legacyLinear(hours, 4.0, 5.0, 0, 30);
-  if (hours < 6.0) return _legacyLinear(hours, 5.0, 6.0, 30, 70);
-  if (hours < 7.0) return _legacyLinear(hours, 6.0, 7.0, 70, 100);
-  if (hours <= 9.0) return 100;
-  if (hours <= 10.0) return _legacyLinear(hours, 9.0, 10.0, 100, 85);
-  if (hours <= 11.0) return _legacyLinear(hours, 10.0, 11.0, 85, 60);
-  return 60;
-}
-
-double _legacyLinear(double x, double x0, double x1, double y0, double y1) {
-  if (x <= x0) return y0;
-  if (x >= x1) return y1;
-  final t = (x - x0) / (x1 - x0);
-  return y0 + (y1 - y0) * t;
 }

@@ -2162,5 +2162,16 @@
   "muscleHamstrings": "Beinbeuger",
   "muscleGlutes": "Glutes",
   "muscleCalves": "Waden",
-  "muscleLowerBack": "Unterer Rücken"
+  "muscleLowerBack": "Unterer Rücken",
+  "sleepDetailAnalysisHeader": "Detail-Analyse",
+  "sleepMetricDurationLabel": "Schlafdauer",
+  "sleepMetricContinuityLabel": "Kontinuität (WASO/SE)",
+  "sleepMetricDepthLabel": "Schlafphasen-Tiefe",
+  "sleepMetricTimingLabel": "Zirkadianes Timing",
+  "sleepMetricRegularityLabel": "Regelmäßigkeit",
+  "sleepBannerTstBottleneck": "Abzug für Schlafdauer active: Dein Gesamtschlafvolumen lag unter dem regenerativen Optimum von 6.5 Stunden, was den anabolen Hormonausstoß einschränkt.",
+  "sleepBannerRemBottleneck": "Abzug für REM-Phasen-Mangel: Dein REM-Schlaf lag unter 60 Minuten. Dies beeinträchtigt die neuronale Erholung und mentale Frische.",
+  "sleepBannerN3Bottleneck": "Abzug für Tiefschlaf-Mangel: Kritischer Mangel an N3-Tiefschlaf (<70 Min). Die physische Muskelgewebe-Reparatur ist suboptimal.",
+  "sleepBannerTimingBottleneck": "Abzug für zirkadiane Phasenverschiebung: Deine Schlafmitte lag nach 05:30 Uhr morgens. Schlaf gegen die innere Uhr vermindert die Schlafqualität und Insulinsensitivität.",
+  "sleepBannerDefaultPenalty": "Klinische Schutzbremse aktiv: Dein Schlafvolumen was suboptimal (<6h) oder das zirkadiane Timing (Einschlafzeitpunkt) war stark verschoben. Der Gesamtwert wurde limitiert."
 }
