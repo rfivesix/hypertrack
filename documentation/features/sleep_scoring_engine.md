@@ -16,7 +16,7 @@ The base score $SHS_{base} \in [0, 100]$ aggregates 5 dimensions according to sp
 
 *   **Sleep Duration ($D$)** - **30%**: Evaluates overall sleep volume against homeostatic sleep need.
 *   **Sleep Continuity ($C$)** - **20%**: Assesses fragmentation, divided equally ($50/50$) between Sleep Efficiency ($C_{SE}$) and Wake After Sleep Onset ($C_{WASO}$).
-*   **Sleep Stage Depth / Architecture ($A$)** - **25%**: Sleep architecture quality, evaluating absolute minutes of Deep (N3) and REM sleep, with high light sleep (N1) penalties.
+*   **Sleep Stage Depth / Architecture ($A$)** - **25%**: Sleep architecture quality, evaluating absolute minutes of Deep (N3) and REM sleep, with Light-stage (N1+N2) percentage penalties.
 *   **Circadian Timing ($T_{circ}$)** - **15%**: Synchronization of sleep onset/mid-point with the natural light-dark cycle.
 *   **Sleep Regularity ($R$)** - **10%**: Day-to-day stability of the sleep schedule using a rolling mid-sleep standard deviation.
 
@@ -40,12 +40,12 @@ $$SHS_{final} = \text{clamp}\Big( SHS_{base} \cdot \text{dynamicMultiplier}, \; 
 ## 2. Dimension Specifications
 
 ### 2.1 Sleep Duration ($D$)
-Calculated from total sleep time in hours ($h = \text{durationMinutes} / 60$). It utilizes a Gaussian distribution centered around the $7.0 \text{--} 9.0$ hours anabolic plateau. Severe short sleep ($<5.0\text{h}$) or extreme hypersomnia ($>10.5\text{h}$) results in a score of $0.0$.
+Calculated from total sleep time in hours ($h = \text{durationMinutes} / 60$). It utilizes a Gaussian distribution centered around the $7.0 \text{--} 9.0$ hours anabolic plateau. Severe short sleep has no hard limit, letting the Gaussian decay smoothly toward zero, while extreme hypersomnia ($h > 10.5\text{h}$) results in a score of $0.0$.
 
 $$S_D(h) = \begin{cases} 
-      0.0 & \text{if } h < 5.0 \text{ or } h > 10.5 \\
+      0.0 & \text{if } h > 10.5 \\
       1.0 & \text{if } 7.0 \le h \le 9.0 \\
-      \exp\left( -\frac{(h - 7.0)^2}{2 \cdot 1.0^2} \right) & \text{if } 5.0 \le h < 7.0 \\
+      \exp\left( -\frac{(h - 7.0)^2}{2 \cdot 1.0^2} \right) & \text{if } h < 7.0 \\
       \exp\left( -\frac{(h - 9.0)^2}{2 \cdot 1.0^2} \right) & \text{if } 9.0 < h \le 10.5
    \end{cases}$$
 
@@ -66,6 +66,17 @@ $$S_{WASO}(W) = \frac{1}{1 + \left( \frac{W_{pen}}{30} \right)^2}$$
 
 Where $W_{pen} = \max(W - 20.0, \; 0.0)$ and $W$ is the WASO duration in minutes.
 
+#### On-Device Fallback for Missing Metrics
+If a connected smartwatch does not supply explicit Time-In-Bed or Awake-Minutes (rendering Efficiency and WASO unobservable), the engine automatically evaluates a robust fallback using sleep stage distribution and duration:
+
+$$S_{C, fallback} = 0.9 \cdot (1.0 - \text{lightSleepPenalty}) + 0.1 \cdot \text{durationPenalty}$$
+
+Where:
+*   $\text{lightSleepPenalty} = 1.0 - P_{light}(p_{light})$ (based on the Light-stage (N1+N2) percentage penalty).
+*   $\text{durationPenalty} = S_D(h)$ (the Sleep Duration subscore).
+
+This ensures commercial smartwatch summaries still generate a highly reliable continuity score.
+
 ### 2.3 Sleep Stage Depth / Architecture ($A$)
 Evaluates the physiological structure of sleep stages based on absolute minutes of restorative stages, penalized by excessive light sleep.
 
@@ -79,18 +90,18 @@ Similar joint linear-Gaussian curve optimized for a peak at $100$ minutes:
 
 $$A_{REM}(t_{REM}) = \min\left( 1.0, \; \frac{t_{REM}}{100.0} \right) \cdot \exp\left( -\frac{(t_{REM} - 100.0)^2}{2 \cdot 40.0^2} \right)$$
 
-#### Light Sleep Penalty ($P_{N1}$)
-Triggers an exponential penalty decay when light sleep exceeds $60\%$ of total sleep time.
+#### Light-stage (N1+N2) Percentage Penalty ($P_{light}$)
+Triggers an exponential penalty decay when light sleep (which represents clinical stages N1 and N2 combined on consumer wearables) exceeds $65\%$ of total sleep time.
 
-$$P_{N1}(p_{N1}) = \begin{cases}
-      1.0 & \text{if } p_{N1} \le 60.0 \\
-      \exp\left( -\frac{(p_{N1} - 60.0)^2}{2 \cdot 10.0^2} \right) & \text{if } p_{N1} > 60.0
+$$P_{light}(p_{light}) = \begin{cases}
+      1.0 & \text{if } p_{light} \le 65.0 \\
+      \exp\left( -\frac{(p_{light} - 65.0)^2}{2 \cdot 7.0^2} \right) & \text{if } p_{light} > 65.0
    \end{cases}$$
 
-Where $p_{N1}$ is the percentage of light sleep.
+Where $p_{light}$ is the percentage of light sleep.
 
 #### Combined Architecture Score
-$$S_A = \text{clamp}\Big( (0.45 \cdot A_{N3} + 0.45 \cdot A_{REM}) \cdot P_{N1} + 0.10, \; 0.0, \; 1.0 \Big)$$
+$$S_A = \text{clamp}\Big( (0.45 \cdot A_{N3} + 0.45 \cdot A_{REM}) \cdot P_{light} + 0.10, \; 0.0, \; 1.0 \Big)$$
 
 ### 2.4 Circadian Timing ($T_{circ}$)
 Assesses circadian alignment using the mid-sleep clock hour ($MS$), computed to handle midnight crossings cleanly. The base score is a Gaussian curve centered at $03:30$ ($MS = 3.5$). An exponential late-phase penalty applies if mid-sleep occurs past $05:30$ ($MS > 5.5$).
@@ -109,7 +120,31 @@ $$S_R(SD_{mid}) = \frac{1}{1 + (SD_{mid} / 1.0)^2}$$
 
 ---
 
-## 3. The Soft-Cap Multiplier Mechanics
+## 3. Smartwatch Data Mapping Spec
+
+Clinical sleep studies (Polysomnography or PSG) differentiate between four distinct sleep stages: Wake, N1 (lightest), N2 (moderate light), and N3 (deep slow-wave sleep). However, commercial smartwatches and fitness trackers (Apple Watch, Garmin, Fitbit, Oura) compress these clinical categories into a unified, consumer-friendly taxonomy. 
+
+To bridge the gap between academic clinical science and commercial API constraints, the Sleep Health Scoring Engine maps wearable data streams to the mathematical models as follows:
+
+### 3.1 Parameter Translation Matrix
+
+| Wearable Stage Category | Engine Metric Symbol | Scientific PSG Translation | Description & Mapping Formula |
+| :--- | :--- | :--- | :--- |
+| **Deep Sleep** | $t_{N3}$ | Stage N3 (Slow-Wave Sleep) | Absolute minutes spent in slow-wave sleep. Fed directly into deep sleep quality score ($A_{N3}$) and Deep Sleep Multiplier ($M_{N3}$). |
+| **REM Sleep** | $t_{REM}$ | Stage REM (Rapid Eye Movement) | Absolute minutes spent in dream sleep. Fed directly into REM sleep quality score ($A_{REM}$) and REM Sleep Multiplier ($M_{REM}$). |
+| **Light Sleep** | $p_{light}$ | Stage N1 + Stage N2 | Expressed as a percentage of Total Sleep Time (TST): <br> $$p_{light} = 100 \cdot \left( \frac{\text{Vendor Light Sleep Minutes}}{\text{Total Sleep Time Minutes}} \right)$$ <br> Fed into the Light-stage Percentage Penalty ($P_{light}$) curve. |
+
+### 3.2 Clinical Rationale for Smartwatch Mapping
+
+1. **Light Sleep Compression ($p_{light}$)**: Smartwatches are highly accurate at separating overall light sleep from deep/REM, but lack the EEG resolution to reliably differentiate PSG Stage N1 from Stage N2. In healthy PSG, N1 constitutes ~5% and N2 constitutes ~50% of sleep (totaling ~55%). To account for this wearable limitation, our engine establishes an optimal threshold for Light-stage sleep at $\le 65\%$. This grants a generous 10% clinical buffer to prevent false penalties from tracking noise while strictly penalizing highly fragmented sleep (where light sleep exceeds 65% due to stage-regression).
+2. **Missing SE/WASO Continuity Fallback**: Classic sleep continuity metrics require explicit and highly accurate recognition of micro-arousals (WASO) and total sleep opportunity (Sleep Efficiency). Cheap trackers or restrictive API integrations often do not export total awake minutes or time-in-bed. When WASO/SE are missing:
+   - The engine falls back to an architecture-continuity proxy ($S_{C, fallback}$).
+   - The fallback is weighted 90% towards $1.0 - \text{lightSleepPenalty}$ and 10% towards the $S_D(h)$ duration score.
+   - This prevents double-counting sleep duration in the final score while using excessive light sleep as an accurate physiological proxy for sleep fragmentation and light sleep regression caused by nocturnal awakenings.
+
+---
+
+## 4. The Soft-Cap Multiplier Mechanics
 
 To prevent high scores when a critical physiological sleep domain is dangerously compromised, SHS v3.5 implements a dynamic, continuous soft-cap multiplier. 
 
@@ -130,28 +165,32 @@ Where $\text{clamp}(v, x_{min}, x_{max})$ constrains the input parameter $v$ to 
 ### Multiplier Threshold Formulations
 
 #### 1. REM Sleep Multiplier ($M_{REM}$)
+
 Degrades score if REM duration ($t_{REM}$) falls below $60$ minutes:
 
 $$M_{REM} = \_linear(t_{REM}, \; 40.0, \; 60.0, \; 0.65, \; 1.0)$$
 
 #### 2. Deep Sleep (N3) Multiplier ($M_{N3}$)
+
 Degrades score if N3 duration ($t_{N3}$) falls below $70$ minutes:
 
 $$M_{N3} = \_linear(t_{N3}, \; 40.0, \; 70.0, \; 0.60, \; 1.0)$$
 
 #### 3. Total Sleep Time (TST) Multiplier ($M_{TST}$)
+
 Degrades score if sleep volume ($h$ hours) falls below $6.5$ hours:
 
 $$M_{TST} = \_linear(h, \; 5.0, \; 6.5, \; 0.50, \; 1.0)$$
 
 #### 4. Circadian Timing Multiplier ($M_{circ}$)
+
 Degrades score if the mid-sleep clock hour ($MS$) shifts later than $05:30$ ($5.5$):
 
 $$M_{circ} = \_linear(MS, \; 7.5, \; 5.5, \; 0.55, \; 1.0)$$
 
 ---
 
-## 4. The Boundary Table
+## 5. The Boundary Table
 
 The following table summarizes the boundary conditions of the continuous soft-cap multiplier system:
 

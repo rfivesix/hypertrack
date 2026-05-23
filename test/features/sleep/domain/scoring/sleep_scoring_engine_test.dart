@@ -9,7 +9,8 @@ void main() {
       expect(scoreDurationV3(540), 1.0); // 9.0h
       
       expect(scoreDurationV3(360), closeTo(0.6, 0.01)); // 6h -> exp(-1/2) = 0.606
-      expect(scoreDurationV3(240), 0.0); // 4h (<5h clips to 0)
+      expect(scoreDurationV3(240), closeTo(0.011, 0.001)); // 4h -> exp(-9/2) = 0.011
+      expect(scoreDurationV3(120), closeTo(0.0000037, 0.0000001)); // 2h -> exp(-25/2) = 3.72665e-6
     });
 
     test('sleep efficiency (C_SE)', () {
@@ -32,11 +33,11 @@ void main() {
         remSleepPct: 25, // 120min rem -> ~1.0 aRem
       );
       expect(penalized, isNotNull);
-      // P_N1 = exp(-(70-60)^2 / 200) = exp(-100/200) = exp(-0.5) = 0.606
+      // p_light = exp(-(70-65)^2 / 98) = exp(-25/98) = 0.7748
       // aN3 = 1.0 * exp(-(96-90)^2 / 3200) = 1.0 * exp(-36/3200) = 0.988
       // aRem = 1.0 * exp(-(120-100)^2 / 3200) = 1.0 * exp(-400/3200) = 0.882
-      // Score = (0.45 * 0.988 + 0.45 * 0.882) * 0.606 + 0.10 = 0.8415 * 0.606 + 0.1 = 0.61
-      expect(penalized!, closeTo(0.61, 0.05));
+      // Score = (0.45 * 0.988 + 0.45 * 0.882) * 0.7748 + 0.10 = 0.8415 * 0.7748 + 0.1 = 0.752
+      expect(penalized!, closeTo(0.75, 0.05));
 
       // 2. Healthy light sleep: <= 60% (e.g., 44% light sleep) should NOT be penalized (P_N1 = 1.0)
       final healthy = scoreArchitectureV3(
@@ -73,9 +74,9 @@ void main() {
         sleepEfficiencyPct: 95,
         wasoMinutes: 10,
       ));
-      // Base score topLevel ~ 38.48. dynamicMultiplier = 0.50. Score = 19.24.
-      expect(res.score, closeTo(19.24, 1.0));
-      expect(res.stageScoreCap, closeTo(19.24, 1.0));
+      // Base score topLevel ~ 38.81. dynamicMultiplier = 0.50. Score = 19.4.
+      expect(res.score, closeTo(19.4, 1.0));
+      expect(res.stageScoreCap, closeTo(19.4, 1.0));
       expect(res.dynamicMultiplier, closeTo(0.50, 0.01));
       expect(res.multiplierBottleneck, 'tst');
     });
@@ -153,6 +154,39 @@ void main() {
       ));
       expect(res.dynamicMultiplier, closeTo(0.60, 0.01));
       expect(res.multiplierBottleneck, 'n3');
+    });
+
+    test('Missing SE/WASO data fallback continuity score', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 480, // 8h -> durationScore = 1.0 -> durationPenalty = 1.0
+        lightSleepPct: 70, // p_light = 0.7748 -> lightSleepPenalty = 0.2252
+        // sleepEfficiencyPct and wasoMinutes are null
+      ));
+      // S_C_fallback = 0.9 * (1.0 - 0.2252) + 0.1 * 1.0 = 0.7973
+      // continuityScore = 0.7973 * 100 = 79.73
+      expect(res.continuityScore, closeTo(79.73, 0.01));
+    });
+
+    test('Fallback continuity with high p_light and good duration', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 480, // 8h -> durationScore = 1.0
+        lightSleepPct: 75, // p_light = 0.3604 -> lightSleepPenalty = 0.6396
+        // sleepEfficiencyPct and wasoMinutes are null
+      ));
+      // S_C_fallback = 0.9 * 0.3604 + 0.1 * 1.0 = 0.4244
+      // continuityScore = 42.44
+      expect(res.continuityScore, closeTo(42.44, 0.01));
+    });
+
+    test('Fallback continuity with normal p_light and short duration', () {
+      final res = calculateSleepScore(const SleepScoringInput(
+        durationMinutes: 330, // 5.5h -> durationScore = 0.32465
+        lightSleepPct: 55, // p_light = 1.0 -> lightSleepPenalty = 0.0
+        // sleepEfficiencyPct and wasoMinutes are null
+      ));
+      // S_C_fallback = 0.9 * 1.0 + 0.1 * 0.32465 = 0.9325
+      // continuityScore = 93.25
+      expect(res.continuityScore, closeTo(93.25, 0.01));
     });
   });
 }

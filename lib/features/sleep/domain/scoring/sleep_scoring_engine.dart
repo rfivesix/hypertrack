@@ -192,6 +192,15 @@ SleepScoringResult calculateSleepScore(
     continuityScore = seComponent;
   } else if (wasoComponent != null) {
     continuityScore = wasoComponent;
+  } else {
+    final double lightSleepPctVal = input.lightSleepPct ?? 0.0;
+    double pLight = 1.0;
+    if (lightSleepPctVal > 65.0) {
+      pLight = math.exp(-math.pow(lightSleepPctVal - 65.0, 2) / (2.0 * math.pow(7.0, 2)));
+    }
+    final double lightSleepPenalty = 1.0 - pLight;
+
+    continuityScore = 0.9 * (1.0 - lightSleepPenalty) + 0.1 * (durationScore ?? 0.0);
   }
 
   // --- Architecture Score (A) ---
@@ -235,7 +244,7 @@ SleepScoringResult calculateSleepScore(
       state: SleepScoreState.unavailable,
       completeness: 0,
       durationScore: durationScore != null ? durationScore * 100 : null,
-      continuityScore: continuityScore != null ? continuityScore * 100 : null,
+      continuityScore: continuityScore * 100,
       seScore: seComponent != null ? seComponent * 100 : null,
       wasoScore: wasoComponent != null ? wasoComponent * 100 : null,
       regularityScore: regularityScore != null ? regularityScore * 100 : null,
@@ -306,7 +315,7 @@ SleepScoringResult calculateSleepScore(
     state: _scoreState(clamped),
     completeness: activeWeight.clamp(0.0, 1.0).toDouble(),
     durationScore: durationScore != null ? durationScore * 100 : null,
-    continuityScore: continuityScore != null ? continuityScore * 100 : null,
+    continuityScore: continuityScore * 100,
     seScore: seComponent != null ? seComponent * 100 : null,
     wasoScore: wasoComponent != null ? wasoComponent * 100 : null,
     regularityScore: regularityScore != null ? regularityScore * 100 : null,
@@ -327,7 +336,7 @@ SleepScoringResult calculateSleepScore(
 /// Returns a [0, 1] continuous score.
 double scoreDurationV3(int durationMinutes) {
   final double hours = durationMinutes / 60.0;
-  if (hours < 5.0 || hours > 10.5) return 0.0;
+  if (hours > 10.5) return 0.0;
   
   if (hours >= 7.0 && hours <= 9.0) {
     return 1.0; // Plateau
@@ -365,17 +374,17 @@ double? scoreArchitectureV3({
   
   final double n3Min = (deepSleepPct / 100.0) * durationMinutes;
   final double remMin = (remSleepPct / 100.0) * durationMinutes;
-  final double n1Pct = lightSleepPct ?? 0.0;
+  final double lightSleepPctVal = lightSleepPct ?? 0.0;
 
   final double aN3 = math.min(1.0, n3Min / 90.0) * math.exp(-math.pow(n3Min - 90.0, 2) / (2.0 * math.pow(40.0, 2)));
   final double aRem = math.min(1.0, remMin / 100.0) * math.exp(-math.pow(remMin - 100.0, 2) / (2.0 * math.pow(40.0, 2)));
   
-  double pN1 = 1.0;
-  if (n1Pct > 60.0) {
-    pN1 = math.exp(-math.pow(n1Pct - 60.0, 2) / (2.0 * math.pow(10.0, 2)));
+  double pLight = 1.0;
+  if (lightSleepPctVal > 65.0) {
+    pLight = math.exp(-math.pow(lightSleepPctVal - 65.0, 2) / (2.0 * math.pow(7.0, 2)));
   }
 
-  double score = (0.45 * aN3 + 0.45 * aRem) * pN1 + 0.10;
+  double score = (0.45 * aN3 + 0.45 * aRem) * pLight + 0.10;
   return score.clamp(0.0, 1.0);
 }
 
