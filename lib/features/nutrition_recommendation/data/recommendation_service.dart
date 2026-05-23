@@ -508,7 +508,14 @@ class AdaptiveNutritionRecommendationService {
     final settings = await _databaseHelper.getAppSettings();
     final steps = settings?.targetSteps ??
         await _databaseHelper.getCurrentTargetStepsOrDefault();
-    final water = settings?.targetWater ?? 3000;
+
+    int water = settings?.targetWater ?? 3000;
+    if (settings?.targetWater == null) {
+      final weight = await _databaseHelper.getLatestWeight();
+      if (weight != null) {
+        water = ((weight / 20.0) * 1000.0).round();
+      }
+    }
 
     await _databaseHelper.saveUserGoals(
       calories: recommendation.recommendedCalories,

@@ -386,6 +386,15 @@ class DatabaseHelper {
           fat: fatGoal ?? fat ?? 70,
           water: waterGoal ?? water ?? 2000,
           steps: stepsGoal ?? steps ?? 8000);
+  Future<double?> getLatestWeight() async {
+    final sessions = await getMeasurementSessions();
+    for (final session in sessions) {
+      final m = session.measurements.where((m) => m.type == 'weight').firstOrNull;
+      if (m != null) return m.value;
+    }
+    return null;
+  }
+
   Future<double?> getLatestBodyFatPercentageBefore(DateTime b) =>
       profileLocalDataSource.getLatestBodyFatPercentageBefore(b);
   Future<void> saveUserProfile(

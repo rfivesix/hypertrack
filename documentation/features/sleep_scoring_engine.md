@@ -200,3 +200,8 @@ The following table summarizes the boundary conditions of the continuous soft-ca
 | **Deep Sleep ($M_{N3}$)** | N3 Minutes ($t_{N3}$) | $\ge 70.0\text{ min}$ | $\le 40.0\text{ min}$ | $1.0 \rightarrow 0.60$ | Deep N3 sleep is the primary driver of physical recovery, growth hormone release, and tissue repair. |
 | **Sleep Duration ($M_{TST}$)** | TST Hours ($h$) | $\ge 6.5\text{ hours}$ | $\le 5.0\text{ hours}$ | $1.0 \rightarrow 0.50$ | Insufficient sleep duration restricts core metabolic recovery and disrupts homeostatic anabolic processes. |
 | **Circadian Timing ($M_{circ}$)** | Mid-Sleep Clock ($MS$) | $\le 05:30\text{ (5.5)}$ | $\ge 07:30\text{ (7.5)}$ | $1.0 \rightarrow 0.55$ | Late phase delay (sleep against the circadian clock) severely reduces insulin sensitivity and sleep architecture quality. |
+
+---
+
+## 6. Clinical Disclaimer
+The Sleep Health Score (SHS) is a directional heuristic designed for health optimization and educational purposes. It is not a diagnostic tool for sleep apnea, insomnia, or other clinical sleep disorders. The accuracy of the score is inherently dependent on the data quality and sampling frequency of the underlying wearable hardware.

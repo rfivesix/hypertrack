@@ -12,11 +12,12 @@ import '../../supplements/domain/models/supplement.dart';
 import '../../supplements/domain/models/supplement_log.dart';
 import '../../../services/haptic_feedback_service.dart';
 import 'food_detail_screen.dart';
+import 'general_food_selection_screen.dart';
 import '../../../widgets/common/common.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../../widgets/common/glass_fab.dart';
 import '../../../widgets/common/global_app_bar.dart';
-import '../../../widgets/common/summary_card.dart';
+
 import '../../../widgets/common/macro_badge_row.dart';
 import '../../../widgets/common/swipe_action_background.dart';
 
@@ -191,48 +192,45 @@ class _MealScreenState extends State<MealScreen> {
               padding: EdgeInsets.fromLTRB(16, 12 + topPadding, 16, 96),
               children: [
                 // Name and notes section.
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _editMode
-                            ? TextField(
-                                controller: _nameCtrl,
-                                textInputAction: TextInputAction.done,
-                                decoration: InputDecoration(
-                                  labelText: l10n.mealNameLabel,
-                                ),
-                                onChanged: (_) => setState(() {}),
-                              )
-                            : Text(
-                                _nameCtrl.text.isNotEmpty
-                                    ? _nameCtrl.text
-                                    : l10n.unknown,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                AppCardContainer(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _editMode
+                          ? TextField(
+                              controller: _nameCtrl,
+                              textInputAction: TextInputAction.done,
+                              decoration: InputDecoration(
+                                labelText: l10n.mealNameLabel,
                               ),
-                        const SizedBox(height: 8),
-                        _editMode
-                            ? TextField(
-                                controller: _notesCtrl,
-                                maxLines: 3,
-                                decoration: InputDecoration(
-                                  labelText: l10n.mealNotesLabel,
-                                ),
-                              )
-                            : Text(
-                                _notesCtrl.text.isNotEmpty
-                                    ? _notesCtrl.text
-                                    : l10n.noNotes,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.grey.shade600,
-                                ),
+                              onChanged: (_) => setState(() {}),
+                            )
+                          : Text(
+                              _nameCtrl.text.isNotEmpty
+                                  ? _nameCtrl.text
+                                  : l10n.unknown,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
                               ),
-                      ],
-                    ),
+                            ),
+                      const SizedBox(height: 8),
+                      _editMode
+                          ? TextField(
+                              controller: _notesCtrl,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: l10n.mealNotesLabel,
+                              ),
+                            )
+                          : Text(
+                              _notesCtrl.text.isNotEmpty
+                                  ? _notesCtrl.text
+                                  : l10n.noNotes,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                    ],
                   ),
                 ),
 
@@ -240,31 +238,15 @@ class _MealScreenState extends State<MealScreen> {
 
                 // === Nutrients (total sum) ===
                 AppSectionHeader(title: l10n.nutritionSectionLabel),
-                SummaryCard(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 14,
-                    ),
-                    child: FutureBuilder<void>(
-                      future: _recomputeTotals(),
-                      builder: (_, __) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            MacroBadgeRow(
-                              kcal: _items.isEmpty ? null : _totalKcal.round(),
-                              protein: _items.isEmpty ? null : _totalP,
-                              carbs: _items.isEmpty ? null : _totalC,
-                              fat: _items.isEmpty ? null : _totalF,
-                              useBadges: Provider.of<ThemeService>(context).useColorfulMacroBadges,
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                AppCardContainer(
+                  child: MacroBadgeRow(
+                    kcal: _items.isEmpty ? null : _totalKcal.round(),
+                    protein: _items.isEmpty ? null : _totalP,
+                    carbs: _items.isEmpty ? null : _totalC,
+                    fat: _items.isEmpty ? null : _totalF,
+                    useBadges: Provider.of<ThemeService>(context).useColorfulMacroBadges,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -361,188 +343,80 @@ class _MealScreenState extends State<MealScreen> {
 
   Future<void> _addIngredientFlow() async {
     final l10n = AppLocalizations.of(context)!;
-    final searchCtrl = TextEditingController();
-    // Default amount to 100
     final qtyCtrl = TextEditingController(text: '100');
 
-    // 1. Step: select product
-    // Open the search menu. It returns a tuple (barcode, amount).
-    final picked = await showGlassBottomMenu<(String, int)?>(
+    // 1. Navigate to general food selection screen (AddFoodScreen) in selectionMode
+    final pickedProduct = await Navigator.of(context).push<FoodItem?>(
+      MaterialPageRoute(
+        builder: (_) => const GeneralFoodSelectionScreen(),
+      ),
+    );
+
+    if (pickedProduct == null) return;
+
+    final String barcode = pickedProduct.barcode;
+    int quantity = -1;
+
+    // Ask for amount
+    final displayName = pickedProduct.name.isNotEmpty ? pickedProduct.name : barcode;
+    if (!mounted) return;
+
+    final qtyResult = await showGlassBottomMenu<int?>(
       context: context,
-      title: l10n.mealAddIngredient,
-      contentBuilder: (searchCtx, closeSearch) {
-        // Local state for search results
-        List<FoodItem> results = [];
-        bool loading = false;
-        Timer? debounce;
-
-        return StatefulBuilder(
-          builder: (context, setStateSB) {
-            Future<void> runSearch(String q) async {
-              if (q.trim().isEmpty) {
-                setStateSB(() => results = []);
-                return;
-              }
-              setStateSB(() => loading = true);
-              final res = await ProductLocalDataSource.instance.searchProducts(
-                q.trim(),
-              );
-              setStateSB(() {
-                results = res;
-                loading = false;
-              });
-            }
-
-            return Column(
-              mainAxisSize: MainAxisSize.min,
+      title: displayName,
+      contentBuilder: (qtyCtx, closeQty) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.mealIngredientAmountLabel),
+            const SizedBox(height: 12),
+            TextField(
+              controller: qtyCtrl,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                suffixText: '${l10n.unit_grams}/${l10n.unit_milliliters}',
+              ),
+              onSubmitted: (val) {
+                final q = int.tryParse(val);
+                closeQty();
+                Navigator.of(qtyCtx).pop(q);
+              },
+            ),
+            const SizedBox(height: 16),
+            Row(
               children: [
-                TextField(
-                  controller: searchCtrl,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchHintText,
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      closeQty();
+                      Navigator.of(qtyCtx).pop(null);
+                    },
+                    child: Text(l10n.cancel),
                   ),
-                  onChanged: (val) {
-                    debounce?.cancel();
-                    debounce = Timer(
-                      const Duration(milliseconds: 300),
-                      () => runSearch(val),
-                    );
-                  },
                 ),
-                const SizedBox(height: 8),
-                if (loading) const LinearProgressIndicator(minHeight: 2),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 300),
-                  child: results.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Text(
-                            searchCtrl.text.isEmpty
-                                ? l10n.searchInitialHint
-                                : l10n.searchNoResults,
-                          ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: results.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (_, i) {
-                            final fi = results[i];
-                            return ListTile(
-                              dense: true,
-                              title: Text(fi.name),
-                              subtitle: Text(fi.brand),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.add_circle_outline),
-                                onPressed: () async {
-                                  // Here is the fix:
-                                  // Do not close the search menu immediately.
-                                  // Open the amount dialog above it (nested) or replace the content.
-                                  // Safest option: ask for the amount in a separate step.
-
-                                  // Ask for amount
-                                  // NOTE: Use searchCtx for the Navigator here to stay in the same overlay context
-                                  // or close and reopen.
-
-                                  // Strategy: close and return the result (barcode),
-                                  // then ask for the amount in the parent. This is most stable.
-                                  closeSearch();
-                                  Navigator.of(searchCtx).pop(
-                                    (fi.barcode, -1),
-                                  ); // -1 means: "barcode selected, ask for amount"
-                                },
-                              ),
-                            );
-                          },
-                        ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final val = int.tryParse(qtyCtrl.text);
+                      closeQty();
+                      Navigator.of(qtyCtx).pop(val);
+                    },
+                    child: Text(l10n.add_button),
+                  ),
                 ),
               ],
-            );
-          },
+            ),
+          ],
         );
       },
     );
 
-    // Cancel if nothing was selected.
-    if (picked == null) return;
-
-    final String barcode = picked.$1;
-    int quantity = picked.$2;
-
-    // If amount is not set yet (-1), ask now.
-    if (quantity == -1) {
-      // Load product name for the title
-      final fi = await ProductLocalDataSource.instance.getProductByBarcode(
-        barcode,
-      );
-      final displayName = fi?.name ?? barcode;
-
-      if (!mounted) return;
-
-      final qtyResult = await showGlassBottomMenu<int?>(
-        context: context,
-        title: displayName,
-        contentBuilder: (qtyCtx, closeQty) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.mealIngredientAmountLabel),
-              const SizedBox(height: 12),
-              TextField(
-                controller: qtyCtrl,
-                keyboardType: TextInputType.number,
-                autofocus: true,
-                decoration: InputDecoration(
-                  suffixText: '${l10n.unit_grams}/${l10n.unit_milliliters}',
-                ),
-                onSubmitted: (val) {
-                  final q = int.tryParse(val);
-                  closeQty();
-                  Navigator.of(qtyCtx).pop(q);
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        closeQty();
-                        Navigator.of(qtyCtx).pop(null);
-                      },
-                      child: Text(l10n.cancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () {
-                        final val = int.tryParse(qtyCtrl.text);
-                        closeQty();
-                        Navigator.of(qtyCtx).pop(val);
-                      },
-                      child: Text(l10n.add_button),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
-      );
-
-      if (qtyResult != null && qtyResult > 0) {
-        quantity = qtyResult;
-      } else {
-        return; // Canceled at amount step
-      }
+    if (qtyResult != null && qtyResult > 0) {
+      quantity = qtyResult;
+    } else {
+      return; // Canceled at amount step
     }
 
     // Add to list
@@ -806,9 +680,9 @@ class _IngredientCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final color = theme.colorScheme.primary;
     final bc = item['barcode'] as String;
     final qty = (item['quantity_in_grams'] as num?)?.toDouble() ?? 0.0;
+    final themeService = Provider.of<ThemeService>(context);
 
     Widget buildCard(FoodItem? fi) {
       final name = (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
@@ -826,7 +700,7 @@ class _IngredientCard extends StatelessWidget {
         p = (fi.protein) * factor;
       }
 
-      final title = InkWell(
+      final titleWidget = InkWell(
         onTap: () {
           if (fi != null) {
             Navigator.of(context).push(
@@ -868,32 +742,46 @@ class _IngredientCard extends StatelessWidget {
         ),
       );
 
-      return SummaryCard(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const SizedBox(width: 4),
-                  Icon(Icons.local_dining, color: color),
-                  const SizedBox(width: 12),
-                  Expanded(child: title),
-                  if (!editMode) trailingView else trailingEdit,
-                ],
-              ),
-              if (showPerIngredientMacros && fi != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'C ${c.toStringAsFixed(1)} g   •   F ${f.toStringAsFixed(1)} g   •   P ${p.toStringAsFixed(1)} g',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ],
-          ),
+      return AppCardContainer(
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: titleWidget,
+          subtitle: (fi != null)
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: themeService.useColorfulMacroBadges
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (!editMode)
+                              Text(
+                                '${qty.toInt()}$unit',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color,
+                                ),
+                              ),
+                            if (!editMode) const SizedBox(height: 4),
+                            MacroBadgeRow(
+                              kcal: editMode ? kcal : null,
+                              protein: p,
+                              carbs: c,
+                              fat: f,
+                              useBadges: true,
+                            ),
+                          ],
+                        )
+                      : AppMetadataRow(
+                          items: [
+                            if (editMode) '$kcal ${l10n.unit_kcal}',
+                            if (!editMode) '${qty.toInt()}$unit',
+                            '${p.toStringAsFixed(1)}g P',
+                            '${c.toStringAsFixed(1)}g C',
+                            '${f.toStringAsFixed(1)}g F',
+                          ],
+                        ),
+                )
+              : null,
+          trailing: editMode ? trailingEdit : trailingView,
         ),
       );
     }

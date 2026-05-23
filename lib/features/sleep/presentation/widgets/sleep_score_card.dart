@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../generated/app_localizations.dart';
 import '../../../../widgets/common/summary_card.dart';
+import '../../../../widgets/common/algorithm_info_sheet.dart';
 import '../../domain/sleep_domain.dart';
 import '../../data/sleep_day_repository.dart';
 
@@ -62,7 +63,20 @@ class SleepScoreCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.sleepScoreCardTitle),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(l10n.sleepScoreCardTitle),
+                      AlgorithmInfoButton(
+                        title: l10n.infoSleepTitle,
+                        explanation: l10n.infoSleepExplanation,
+                        keyPoints: l10n.infoSleepKeyPoints.split('\n'),
+                        technicalTitle: l10n.infoSleepTechnicalTitle,
+                        technicalExplanation: l10n.infoSleepTechnicalExplanation,
+                        markdownAssetPath: 'documentation/features/sleep_scoring_engine.md',
+                      ),
+                    ],
+                  ),
                   Text(
                     _qualityLabel(l10n, quality),
                     style: Theme.of(context).textTheme.titleMedium,

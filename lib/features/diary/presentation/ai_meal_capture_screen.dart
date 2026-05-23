@@ -14,6 +14,7 @@ import '../../../widgets/common/global_app_bar.dart';
 import 'ai_meal_review_screen.dart';
 import '../../settings/presentation/ai_settings_screen.dart';
 import '../../../util/design_constants.dart';
+import '../../../widgets/common/algorithm_info_sheet.dart';
 
 /// Screen for capturing meal input via photo(s) or text before AI analysis.
 ///
@@ -271,7 +272,20 @@ class _AiMealCaptureScreenState extends State<AiMealCaptureScreen>
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: GlobalAppBar(title: l10n.aiCaptureTitle),
+      appBar: GlobalAppBar(
+        title: l10n.aiCaptureTitle,
+        actions: [
+          AlgorithmInfoButton(
+            title: l10n.infoAiMealTitle,
+            explanation: l10n.infoAiMealExplanation,
+            keyPoints: l10n.infoAiMealKeyPoints.split('\n'),
+            technicalTitle: l10n.infoAiMealTechnicalTitle,
+            technicalExplanation: l10n.infoAiMealTechnicalExplanation,
+            markdownAssetPath: 'documentation/features/byok_ai_validation.md',
+            iconColor: theme.colorScheme.onSurface,
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(

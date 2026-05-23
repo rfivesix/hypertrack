@@ -132,4 +132,10 @@ Recommendations are given a confidence rating based on logging history and uncer
 1.  **High Confidence**: Logging history $\ge 21$ days, effective sample size $\ge 10$, and posterior variance $\le 25\%$ of the variance cap.
 2.  **Medium Confidence**: Logging history $\ge 14$ days, effective sample size $\ge 7$, and posterior variance $\le 45\%$ of the variance cap.
 3.  **Low Confidence**: Logging history $\ge 7$ days, effective sample size $\ge 4$, and posterior variance $\le 70\%$ of the variance cap.
-4.  **Not Enough Data**: Assigned if the above conditions are unmet, or during the initial stabilization bootstrap phase.
+3.  **Not Enough Data**: Assigned if the above conditions are unmet, or during the initial stabilization bootstrap phase.
+
+---
+
+## 6. Clinical Disclaimer
+The Bayesian TDEE Estimator is a mathematical heuristic based on thermodynamic energy balance principles and recursive filtering. While highly accurate for most individuals, it cannot account for complex metabolic pathologies, medication-induced thermal variance, or severe hormonal disruptions. Users should consult a qualified nutrition professional before making aggressive adjustments to their caloric intake based on these estimates.
+

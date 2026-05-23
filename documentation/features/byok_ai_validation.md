@@ -138,3 +138,8 @@ A candidate only passes validation if:
 
 ### 3. Repair Feedback Generation
 If the candidate fails, the engine generates a structured feedback block detailing the precise index of the offending items and the error codes (e.g., `state_mismatch`, `anchor_kcal_extreme`). The orchestrator submits this log alongside the list of verified **Top-N Database Candidates** and the **`mealContext`** back to the LLM. The loop runs for a maximum of **3 passes** before returning a final failed validation status.
+
+---
+
+## 7. Clinical Disclaimer
+The AI Meal Capture system is an estimation tool designed to simplify dietary logging. Portion sizes and ingredient weights are heuristic estimates and may deviate from actual values. Users should manually verify all structural components and weights before finalizing their logs, especially when managing medical conditions like diabetes.

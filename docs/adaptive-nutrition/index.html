@@ -11,19 +11,196 @@
   <link rel="icon" href="../../web/favicon.png">
   <link rel="stylesheet" href="../style.css">
   <link rel="stylesheet" href="../katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" defer onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError : false
+  });"></script>
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
       document.documentElement.setAttribute("data-theme", theme);
     })();
   </script>
+  <style>
+    /* Premium live calculator styles */
+    .calc-container {
+      background: var(--panel);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-l);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-top: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      margin-top: 16px;
+    }
+    
+    @media (max-width: 900px) {
+      .calc-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .input-label {
+      font-weight: 750;
+      font-size: 0.95rem;
+      color: var(--fg);
+    }
+    
+    .input-val-badge {
+      font-size: 0.85rem;
+      background: rgba(221, 255, 0, 0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    
+    [data-theme="light"] .input-val-badge {
+      background: rgba(141, 161, 0, 0.12);
+      color: #8da100;
+    }
+    
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .slider-row input[type="range"] {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--line);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    
+    .slider-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform 100ms ease;
+    }
+    
+    .slider-row input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    
+    .input-number-box {
+      width: 68px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--fg);
+      border-radius: 8px;
+      padding: 6px 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+    }
+    
+    .input-number-box:focus {
+      border-color: var(--accent);
+    }
+    
+    /* Result card styles */
+    .result-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .score-hero-card {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-m);
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+      position: relative;
+    }
+    
+    .bottleneck-card {
+      background: rgba(245, 83, 83, 0.06);
+      border: 1px solid rgba(245, 83, 83, 0.22);
+      border-radius: var(--radius-m);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-top: 10px;
+    }
+    
+    .bottleneck-card.no-penalty {
+      background: rgba(102, 200, 109, 0.06);
+      border: 1px solid rgba(102, 200, 109, 0.15);
+    }
+    
+    .bottleneck-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+      margin-top: -2px;
+    }
+    
+    .bottleneck-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--fg);
+    }
+    
+    .bottleneck-copy {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+  </style>
 </head>
 
 <body>
   <div class="page">
     <header class="site-header">
       <nav class="nav" aria-label="Primary navigation">
-        <a class="brand" href="../#top" aria-label="Train Libre home">
+        <a class="brand" href="../index.html" aria-label="Train Libre home">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 270.933 270.933" role="img">
               <path fill="#ddff00"
@@ -84,7 +261,7 @@
       </nav>
     </header>
 
-    <main>
+    <main class="main-content">
       <section class="hero-minimal">
         <div class="hero-content reveal">
           <h1 data-i18n="adapt_nut_hero_t">Adaptive Nutrition Estimation</h1>
@@ -142,9 +319,9 @@
                 <div class="pipeline-title" data-i18n="tdee_kalman_t">Recursive Kalman Filtering</div>
                 <div class="pipeline-desc" data-i18n="tdee_kalman_c">Your metabolic maintenance rate is modeled as a hidden dynamic state <span class="math-inline"><span class="math-var">x<sub>t</sub></span></span> and estimated recursively. The system transition is governed by <span class="math-inline"><span class="math-var">x<sub>t</sub></span> = <span class="math-var">x<sub>t-1</sub></span> + <span class="math-var">w<sub>t</sub></span></span>, where the process noise <span class="math-inline"><span class="math-var">w<sub>t</sub></span> ~ <span class="math-var">N</span>(0, <span class="math-var">Q</span>)</span> models metabolic fluctuations.</div>
                 <div class="math-block">
-                  <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>w</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t = x_{t-1} + w_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7917em;vertical-align:-0.2083em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">t</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2083em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0269em;">w</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0269em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
+                  $$x_t = x_{t-1} + w_t$$
                   <div style="text-align: center; font-size: 0.85em; color: var(--muted); margin-top: 8px;">
-                    <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>where </mtext><msub><mi>w</mi><mi>t</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo stretchy="false">(</mo><mn>0</mn><mo separator="true">,</mo><mi>Q</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mtext> and </mtext><mi>Q</mi><mo>=</mo><mn>40</mn></mrow><annotation encoding="application/x-tex">\text{where } w_t \sim \mathcal{N}(0, Q), \text{ and } Q = 40</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord text"><span class="mord">where </span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0269em;">w</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0269em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∼</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathcal" style="margin-right:0.1474em;">N</span><span class="mopen">(</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">Q</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord text"><span class="mord"> and </span></span><span class="mord mathnormal">Q</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">40</span></span></span></span>
+                    $$\text{where } w_t \sim \mathcal{N}(0, Q), \text{ and } Q = 40$$
                   </div>
                 </div>
               </div>
@@ -156,7 +333,7 @@
                 <div class="pipeline-title" data-i18n="tdee_math_t">Observed Maintenance Equation</div>
                 <div class="pipeline-desc" data-i18n="tdee_math_c">The daily observed calorie maintenance (<span class="math-inline"><span class="math-var">M<sub>t</sub></span></span>) is computed using your energy intake and the derivative of your smoothed bodyweight: <span class="math-inline"><span class="math-var">M<sub>t</sub></span> = <span class="math-var">avgCalories<sub>t</sub></span> - (&Delta;<span class="math-var">Weight<sub>t</sub></span> &times; <span class="math-var">kcalPerKg<sub>t</sub></span>)</span>. We smooth weight scale logs to eliminate daily water retention and glycogen noise.</div>
                 <div class="math-block">
-                  <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub><mo>=</mo><msub><mtext>avgCalories</mtext><mi>t</mi></msub><mo>−</mo><mo stretchy="false">(</mo><mi mathvariant="normal">Δ</mi><msub><mtext>Weight</mtext><mi>t</mi></msub><mo>×</mo><msub><mtext>kcalPerKg</mtext><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">M_t = \text{avgCalories}_t - (\Delta\text{Weight}_t \times \text{kcalPerKg}_t)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">M</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9386em;vertical-align:-0.2441em;"></span><span class="mord"><span class="mord text"><span class="mord">avgCalories</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">Δ</span><span class="mord"><span class="mord text"><span class="mord">Weight</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord text"><span class="mord">kcalPerKg</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>
+                  $$M_t = \text{avgCalories}_t - (\Delta\text{Weight}_t \times \text{kcalPerKg}_t)$$
                 </div>
               </div>
             </div>
@@ -167,7 +344,7 @@
                 <div class="pipeline-title" data-i18n="tdee_ramp_t">9-Week Linear Energetic Ramp</div>
                 <div class="pipeline-desc" data-i18n="tdee_ramp_c">When starting a diet phase, rapid body mass changes are heavily skewed by non-adipose factors (glycogen depletion, sodium drops). To prevent the estimator from oversteering, the energetic cost of body mass changes (<span class="math-inline"><span class="math-var">kcalPerKg<sub>t</sub></span></span>) ramps linearly over 9 weeks from a prior-driven 3,000 kcal/kg to the fat-tissue-equilibrium value of 7,700 kcal/kg.</div>
                 <div class="math-block">
-                  <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mtext>kcalPerKg</mtext><mi>t</mi></msub><mo>=</mo><mn>3000</mn><mo>+</mo><mi>min</mi><mo>⁡</mo><mrow><mo fence="true">(</mo><mn>1</mn><mo separator="true">,</mo><mfrac><mi>t</mi><mrow><mn>9</mn><mtext> weeks</mtext></mrow></mfrac><mo fence="true">)</mo></mrow><mo>×</mo><mn>4700</mn></mrow><annotation encoding="application/x-tex">\text{kcalPerKg}_t = 3000 + \min\left(1, \frac{t}{9\text{ weeks}}\right) \times 4700</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9386em;vertical-align:-0.2441em;"></span><span class="mord"><span class="mord text"><span class="mord">kcalPerKg</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3000</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.4em;vertical-align:-0.95em;"></span><span class="mop">min</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2921em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">9</span><span class="mord text"><span class="mord"> weeks</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">4700</span></span></span></span></span>
+                  $$\text{kcalPerKg}_t = 3000 + \min\left(1, \frac{t}{9\text{ weeks}}\right) \times 4700$$
                 </div>
               </div>
             </div>
@@ -178,6 +355,95 @@
                 <div class="pipeline-title" data-i18n="tdee_noise_t">Handling Missing Data (Q = 40)</div>
                 <div class="pipeline-desc" data-i18n="tdee_noise_c">On days with missing food logs or weight measurements, the measurement update is bypassed. The state covariance <span class="math-inline"><span class="math-var">P<sub>t</sub></span></span> propagates by adding the process noise variance (<span class="math-inline"><span class="math-var">Q</span> = 40</span>). This increases the uncertainty bounds (Likely Range) in the UI and automatically dampens subsequent updates, preventing sudden weight spikes from distorting your long-term metabolic baseline.</div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INTERACTIVE BAYESIAN TDEE CALCULATOR -->
+      <section id="tdee-calculator" class="section">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="tdee_calc_heading">Interactive Bayesian TDEE Calculator</h2>
+          <p class="section-copy" data-i18n="tdee_calc_copy">Adjust the inputs below to simulate how daily calorie intake, weight changes, and tracking consistency affect the maintenance estimate and calculation confidence bounds in real time.</p>
+          
+          <div class="calc-container">
+            <div class="calc-grid">
+              
+              <!-- Input Panel -->
+              <div class="input-section">
+                
+                <!-- Daily Calorie Intake -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-tdee-calories" data-i18n="tdee_input_calories">Average Daily Calorie Intake</label>
+                    <span class="input-val-badge" id="val-tdee-calories">2500 kcal</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-tdee-calories" min="1200" max="5000" value="2500" step="50">
+                    <input type="number" class="input-number-box" id="num-tdee-calories" value="2500">
+                  </div>
+                </div>
+                
+                <!-- Weight Change Rate -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-tdee-weight-change" data-i18n="tdee_input_weight_change">Daily Weight Change Rate</label>
+                    <span class="input-val-badge" id="val-tdee-weight-change">0.00 kg/day (0.00 kg/week)</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-tdee-weight-change" min="-0.5" max="0.5" value="0.0" step="0.01">
+                    <input type="number" class="input-number-box" id="num-tdee-weight-change" value="0.0" step="0.01">
+                  </div>
+                </div>
+
+                <!-- Tracking Duration -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-tdee-duration" data-i18n="tdee_input_duration">Tracking Duration</label>
+                    <span class="input-val-badge" id="val-tdee-duration">4 weeks</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-tdee-duration" min="1" max="52" value="4" step="1">
+                    <input type="number" class="input-number-box" id="num-tdee-duration" value="4">
+                  </div>
+                </div>
+                
+                <!-- Unlogged Days -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-tdee-unlogged" data-i18n="tdee_input_unlogged">Unlogged Days (Process Noise)</label>
+                    <span class="input-val-badge" id="val-tdee-unlogged">0 days</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-tdee-unlogged" min="0" max="7" value="0" step="1">
+                    <input type="number" class="input-number-box" id="num-tdee-unlogged" value="0">
+                  </div>
+                </div>
+                
+              </div>
+              
+              <!-- Result Display Panel -->
+              <div class="result-section">
+                
+                <!-- Maintenance Calories Display -->
+                <div class="score-hero-card" style="min-height: 200px;">
+                  <div style="font-size: 0.95rem; font-weight: 750; color: var(--muted); margin-bottom: 8px;" data-i18n="tdee_est_label">Estimated TDEE</div>
+                  <div style="font-size: 3.5rem; font-weight: 900; color: var(--accent); line-height: 1;" id="tdee-display">2500</div>
+                  <div style="font-size: 0.95rem; font-weight: 700; color: var(--fg); margin-top: 4px;">kcal/day</div>
+                  <div style="font-size: 0.85rem; color: var(--muted); margin-top: 10px;" id="tdee-range-display">Likely Range: 2475 - 2525 kcal (±25)</div>
+                </div>
+                
+                <!-- Data Confidence Warning Card -->
+                <div class="bottleneck-card" id="tdee-confidence-card">
+                  <div class="bottleneck-icon" id="tdee-confidence-icon">ℹ️</div>
+                  <div>
+                    <div class="bottleneck-title" id="tdee-confidence-title">High Data Confidence</div>
+                    <div class="bottleneck-copy" id="tdee-confidence-copy">Consistent daily logs have been captured. The recursive filter covariance remains locked (P_t = 100). Estimation is highly reliable.</div>
+                  </div>
+                </div>
+                
+              </div>
+              
             </div>
           </div>
         </div>
@@ -225,7 +491,7 @@
 
     <footer class="site-footer">
       <div>
-        <a class="brand" href="../#top" aria-label="Train Libre home">
+        <a class="brand" href="../index.html" aria-label="Train Libre home">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 270.933 270.933" role="img">
               <path fill="#ddff00"
@@ -242,6 +508,7 @@
         <a href="../ai-nutrition/" data-i18n="intel_c1_label">AI meal recognition</a>
         <a href="../adaptive-nutrition/" data-i18n="intel_c2_label">Calorie estimation</a>
         <a href="../recovery/" data-i18n="footer_recovery">Recovery Tracker</a>
+        <a href="../sleep-score/" data-i18n="sleep_score_hero_t">Sleep Health Score</a>
         <a href="../privacy-policy/" data-i18n="footer_privacy">Privacy Policy</a>
         <a href="../impressum.html" data-i18n="footer_imprint">Imprint</a>
         <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
@@ -250,6 +517,118 @@
   </div>
 
   <script src="../script.js"></script>
+  
+  <!-- REAL-TIME INTERACTIVE JS CALCULATION ENGINES -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // -----------------------------------------------------------------------
+      // Slider/Number Box synchronization helper
+      // -----------------------------------------------------------------------
+      const syncInput = (sliderId, numberId, onUpdate) => {
+        const slider = document.getElementById(sliderId);
+        const number = document.getElementById(numberId);
+        
+        slider.addEventListener("input", () => {
+          number.value = slider.value;
+          onUpdate(parseFloat(slider.value));
+        });
+        
+        number.addEventListener("change", () => {
+          let val = parseFloat(number.value);
+          const min = parseFloat(slider.min);
+          const max = parseFloat(slider.max);
+          if (isNaN(val)) val = parseFloat(slider.value);
+          if (val < min) val = min;
+          if (val > max) val = max;
+          slider.value = val;
+          number.value = val;
+          onUpdate(val);
+        });
+      };
+
+      // -----------------------------------------------------------------------
+      // BAYESIAN TDEE ESTIMATOR ENGINE (Upgraded)
+      // -----------------------------------------------------------------------
+      const recalculateTdee = () => {
+        const calories = parseFloat(document.getElementById("input-tdee-calories").value);
+        document.getElementById("val-tdee-calories").innerText = `${calories.toFixed(0)} kcal`;
+
+        const weightChange = parseFloat(document.getElementById("input-tdee-weight-change").value);
+        const weeklyChange = weightChange * 7;
+        const sign = weightChange > 0 ? "+" : "";
+        document.getElementById("val-tdee-weight-change").innerText = `${sign}${weightChange.toFixed(2)} kg/day (${sign}${weeklyChange.toFixed(2)} kg/week)`;
+
+        const duration = parseInt(document.getElementById("input-tdee-duration").value);
+        const lang = localStorage.getItem("lang") || "en";
+        document.getElementById("val-tdee-duration").innerText = duration === 1 
+          ? (lang === "de" ? "1 Woche" : "1 week") 
+          : `${duration} ${lang === "de" ? "Wochen" : "weeks"}`;
+
+        const unloggedDays = parseInt(document.getElementById("input-tdee-unlogged").value);
+        document.getElementById("val-tdee-unlogged").innerText = unloggedDays === 1 
+          ? (lang === "de" ? "1 Tag" : "1 day") 
+          : `${unloggedDays} ${lang === "de" ? "Tage" : "days"}`;
+
+        // Mathematical Core: M_t = Calories - (Delta Weight * 7700)
+        // Production-grade energy trend constant: 7700 kcal/kg
+        const tdee = calories - (weightChange * 7700);
+
+        // State Covariance: P_t = Base_Variance + (unloggedDays * 40)
+        // Simulation of recursive error expansion
+        const baseVariance = 400 / Math.sqrt(duration);
+        const covariance = baseVariance + (unloggedDays * 40);
+        const uncertainty = 1.96 * Math.sqrt(covariance); // 95% Confidence Interval
+
+        // Display results
+        document.getElementById("tdee-display").innerText = Math.round(tdee);
+        document.getElementById("tdee-range-display").innerText = lang === "de"
+          ? `Wahrscheinlicher Bereich: ${Math.round(tdee - uncertainty)} - ${Math.round(tdee + uncertainty)} kcal (±${Math.round(uncertainty)})`
+          : `Likely Range: ${Math.round(tdee - uncertainty)} - ${Math.round(tdee + uncertainty)} kcal (±${Math.round(uncertainty)})`;
+
+        // Update confidence warnings and classes
+        const card = document.getElementById("tdee-confidence-card");
+        const icon = document.getElementById("tdee-confidence-icon");
+        const title = document.getElementById("tdee-confidence-title");
+        const copy = document.getElementById("tdee-confidence-copy");
+
+        card.className = "bottleneck-card";
+
+        if (unloggedDays >= 5 || duration < 2) {
+          icon.innerText = "⚠️";
+          title.innerText = lang === "de" ? "Kritisch niedrige Datenabdeckung" : "Low Data Confidence";
+          copy.innerText = lang === "de"
+            ? `Eingeschränkte Datenbasis (Dauer: ${duration}W, Lücken: ${unloggedDays}T). Die Fehlerkovarianz ist hoch (P_t = ${Math.round(covariance)}). Train Libre stützt sich verstärkt auf Profil-Ausgangswerte.`
+            : `Limited data baseline (Duration: ${duration}w, Gaps: ${unloggedDays}d). The estimation error covariance is high (P_t = ${Math.round(covariance)}). The system relies more on profile priors to protect integrity.`;
+        } else if (unloggedDays >= 3 || duration < 4) {
+          icon.innerText = "⚠️";
+          card.style.borderColor = "var(--orange)";
+          title.innerText = lang === "de" ? "Suboptimale Datenabdeckung" : "Suboptimal Data Confidence";
+          copy.innerText = lang === "de"
+            ? `Erhöhte Filterkovarianz (P_t = ${Math.round(covariance)}). Zukünftige Gewichtsschwankungen werden gedämpft verarbeitet, um Fehlsteuerungen durch Rauschen zu vermeiden.`
+            : `Elevated filter covariance (P_t = ${Math.round(covariance)}). Future adjustments are dampened to avoid oversteering due to transient weight noise.`;
+        } else {
+          card.classList.add("no-penalty");
+          icon.innerText = "ℹ️";
+          title.innerText = lang === "de" ? "Hohe Datenabdeckung" : "High Data Confidence";
+          copy.innerText = lang === "de"
+            ? `Konsistente Logs erfasst (P_t = ${Math.round(covariance)}). Deine Stoffwechselschätzung ist präzise und reagiert aktiv auf Veränderungen.`
+            : `Consistent daily logs captured (P_t = ${Math.round(covariance)}). Your metabolic estimation is highly reliable and actively tracks changes.`;
+        }
+      };
+
+      // TDEE Listeners
+      syncInput("input-tdee-calories", "num-tdee-calories", recalculateTdee);
+      syncInput("input-tdee-weight-change", "num-tdee-weight-change", recalculateTdee);
+      syncInput("input-tdee-duration", "num-tdee-duration", recalculateTdee);
+      syncInput("input-tdee-unlogged", "num-tdee-unlogged", recalculateTdee);
+
+      // Listen for language changes
+      document.addEventListener("langChanged", recalculateTdee);
+
+      // Run initial calculation
+      recalculateTdee();
+    });
+  </script>
 </body>
 
 </html>

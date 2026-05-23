@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.14] - 2026-05-23
+
+### Added
+- **Clinical Algorithm Disclosure Engine**: Implemented a reusable, asynchronous asset-backed disclosure system (`AlgorithmInfoButton`) that dynamically loads and natively renders deep-dive architectural specifications directly from project markdown repositories.
+- **Embedded Technical Specifications**: Authored and integrated uncompressed, high-density mathematical engineering documents under `documentation/features/` covering the Bayesian TDEE Estimator, Hybrid BYOK AI Verification, and the newly formulated Muscle Recovery Model.
+- **Dynamic Hydration Scaling**: Replaced the legacy static 3000 ml water intake default with a personalized, weight-dependent metabolic formula:
+  $$\text{Daily Water (ml)} = \left(\frac{\text{Body Weight in kg}}{20}\right) \cdot 1000$$
+  Integrated seamlessly across onboarding tracking vectors and active asset dashboards (`OnboardingScreen`, `GoalsScreen`).
+- **Mathematical Rendering Pipeline**: Expanded dependencies in `pubspec.yaml` to include `flutter_markdown_plus_latex` and `markdown` to support native, on-device parsing of high-precision math inside modal views.
+- **Interactive Web Analytics Hub**: Deployed a massive responsive update to the `docs/` architecture, featuring a premium dark-glassmorphic, interactive KaTeX-powered calculator allowing users to live-simulate Bayesian TDEE decay and process noise variance expansions ($Q = 40$).
+- **Data Access Layer Extensions**: Added a specialized `getLatestWeight()` asynchronous retrieval routine within `lib/data/database_helper.dart` to safely supply active user metrics to dynamic calculation engines.
+
+### Changed
+- **Algorithmic Information Transparency**: Deployed educational info triggers (ℹ️) across four core interfaces: `RecoveryTrackerScreen`, `AiMealCaptureScreen`, `NutritionRecommendationCard`, and `SleepScoreCard` to grant users full mathematical visibility.
+- **Localization Architecture Hardening**: Expanded localized string dictionaries (`app_de.arb` and `app_en.arb`) by over 20 new high-density technical prose entries. Completely purged raw LaTeX syntax and legacy academic/clinical citations from translation assets to enforce bulletproof UI rendering.
+
+### Fixed
+- **Information Screen Layout Overflows**: Refactored the `ExpansionTile` headers inside `algorithm_info_sheet.dart` into a single text-wrapped flexible row, completely eliminating right-side pixel clipping and horizontal layout breaking on compact viewports.
 ## [0.9.13] - 2026-05-xx
 
 ### Added

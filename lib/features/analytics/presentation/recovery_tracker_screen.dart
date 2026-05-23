@@ -13,6 +13,7 @@ import 'widgets/analytics_chart_defaults.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../workout/presentation/widgets/muscle_radar_chart.dart';
 import '../../../widgets/common/summary_card.dart';
+import '../../../widgets/common/algorithm_info_sheet.dart';
 
 class RecoveryTrackerScreen extends StatefulWidget {
   const RecoveryTrackerScreen({super.key});
@@ -284,7 +285,20 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(title: l10n.recoveryTrackerTitle),
+      appBar: GlobalAppBar(
+        title: l10n.recoveryTrackerTitle,
+        actions: [
+          AlgorithmInfoButton(
+            title: l10n.infoRecoveryTitle,
+            explanation: l10n.infoRecoveryExplanation,
+            keyPoints: l10n.infoRecoveryKeyPoints.split('\n'),
+            technicalTitle: l10n.infoRecoveryTechnicalTitle,
+            technicalExplanation: l10n.infoRecoveryTechnicalExplanation,
+            markdownAssetPath: 'documentation/features/muscle_recovery_model.md',
+            iconColor: Theme.of(context).colorScheme.onSurface,
+          ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

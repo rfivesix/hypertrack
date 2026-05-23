@@ -4803,4 +4803,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sleepBannerDefaultPenalty =>
       'Clinical protective brake active: Your sleep volume was suboptimal (<6h) or circadian timing (sleep onset) was severely shifted. The total score has been limited.';
+
+  @override
+  String get infoTdeeTitle => 'Adaptive Calorie & TDEE Estimator';
+
+  @override
+  String get infoTdeeExplanation =>
+      'Estimates your Total Daily Energy Expenditure (TDEE) based on your profile, logged meals, and bodyweight changes.';
+
+  @override
+  String get infoTdeeKeyPoints =>
+      '• Smooths out daily weight fluctuations using a recursive trend model.\n• Uses a Bayesian-inspired approach to adapt weekly targets conservatively.\n• Alerts you if your logging consistency is too sparse for high-confidence updates.';
+
+  @override
+  String get infoTdeeTechnicalTitle =>
+      'Bayesian Recursive Filtering & Metabolic Smoothing';
+
+  @override
+  String get infoTdeeTechnicalExplanation =>
+      'Rather than relying on static formulas, Train Libre models your metabolism as a dynamic \'hidden state\' estimated recursively. Daily observed maintenance is computed by adjusting intake against body mass changes. A process noise coefficient is added on unlogged days to increase the estimation uncertainty, which dampens updates and prevents skewing from short-term water retention.';
+
+  @override
+  String get infoRecoveryTitle => 'Muscle Recovery Estimator';
+
+  @override
+  String get infoRecoveryExplanation =>
+      'Estimates muscle-specific readiness and recovery curves based on training volume, intensity, and proximity to failure.';
+
+  @override
+  String get infoRecoveryKeyPoints =>
+      '• Accounts for overlapping muscle stress (e.g., Bench Press counts for Chest, Triceps, and Shoulders).\n• Scales recovery speed based on RIR/RPE and extends the window for sets taken to failure.\n• Calibrates baseline recovery windows based on muscle group size and metabolic properties.';
+
+  @override
+  String get infoRecoveryTechnicalTitle =>
+      'Equivalent Set Fatigue & Piecewise Decay Model';
+
+  @override
+  String get infoRecoveryTechnicalExplanation =>
+      'Calculates dynamic readiness via non-linear decay curves. Volume tracking automatically distributes load between primary and secondary muscle groups. Recovery speed scales based on proximity to failure (RIR) and applies a strict timeline extension for sets taken to absolute failure.';
+
+  @override
+  String get infoAiMealTitle => 'AI Meal Capture Hub';
+
+  @override
+  String get infoAiMealExplanation =>
+      'Converts meal photos or text descriptions into structured diary entries and matches them against your private product database.';
+
+  @override
+  String get infoAiMealKeyPoints =>
+      '• Translates imprecise descriptions (e.g., \'a slice of bread\') into metric weight estimates.\n• Matches AI suggestions offline against the local product database on your device.\n• Computes nutrition locally instead of delegating calculations to external servers.';
+
+  @override
+  String get infoAiMealTechnicalTitle =>
+      'Hybrid BYOK AI & Jaro-Winkler Matching';
+
+  @override
+  String get infoAiMealTechnicalExplanation =>
+      'Uses a Bring-Your-Own-Key (BYOK) privacy model. The AI functions strictly as a suggestion layer. Matching is performed offline using a tokenized Jaro-Winkler filter against the local SQLite database. The AI provider is strictly prohibited from performing nutritional calculations via system prompts.';
+
+  @override
+  String get infoSleepTitle => 'Sleep Quality (SHS v3.5)';
+
+  @override
+  String get infoSleepExplanation =>
+      'Calculates a comprehensive sleep index from quantity, continuity, depth, timing, and daily regularity.';
+
+  @override
+  String get infoSleepKeyPoints =>
+      '• Aggregates five clinical dimensions using a weighted sum.\n• Automatically scales requirements if your wearable does not provide specific stages or efficiency data.\n• Protects you via soft-cap multipliers that limit the total score if a critical domain (like REM or Deep sleep) is compromised.';
+
+  @override
+  String get infoSleepTechnicalTitle =>
+      'Weighted Baseline & Continuous Soft-Caps';
+
+  @override
+  String get infoSleepTechnicalExplanation =>
+      'Aggregates five primary domains using a weighted linear sum: Duration (30%), Continuity (20%), Architecture (25%), Timing (15%), and Regularity (10%). To prevent misleading averages when a clinical domain is compromised, the final score is degraded if significant bottlenecks are detected in sleep stages or circadian timing.';
 }

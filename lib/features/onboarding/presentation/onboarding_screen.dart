@@ -206,11 +206,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _applyOnboardingRecommendationToGoals() {
     final recommendation = _onboardingRecommendation;
     if (recommendation == null) return;
+
+    final unitService = _unitService;
+    final weightInput = double.tryParse(
+      _weightController.text.replaceAll(',', '.'),
+    );
+    final weightKg = weightInput == null
+        ? null
+        : unitService.convertToMetric(weightInput, UnitDimension.weight);
+
     setState(() {
       _calController.text = recommendation.recommendedCalories.toString();
       _protController.text = recommendation.recommendedProteinGrams.toString();
       _carbController.text = recommendation.recommendedCarbsGrams.toString();
       _fatController.text = recommendation.recommendedFatGrams.toString();
+
+      if (weightKg != null) {
+        final waterMl = (weightKg / 20.0) * 1000.0;
+        final displayWater = unitService.convertDisplayValue(
+          waterMl,
+          UnitDimension.liquid,
+        );
+        _waterController.text = displayWater.round().toString();
+      }
     });
   }
 
@@ -298,9 +316,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final double? bodyFatPercent = double.tryParse(
       _bodyFatPercentController.text.replaceAll(',', '.'),
     );
-    final int water = waterInput == null
-        ? 3000
-        : unitService.convertToMetric(waterInput, UnitDimension.liquid).round();
     final int? height = heightInput == null
         ? null
         : unitService
@@ -309,6 +324,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final double? weight = weightInput == null
         ? null
         : unitService.convertToMetric(weightInput, UnitDimension.weight);
+
+    final int water = waterInput == null
+        ? (weight != null ? ((weight / 20.0) * 1000.0).round() : 3000)
+        : unitService.convertToMetric(waterInput, UnitDimension.liquid).round();
 
     final onboardingRecommendation = _onboardingRecommendation ??
         await _recommendationService.generateOnboardingRecommendation(

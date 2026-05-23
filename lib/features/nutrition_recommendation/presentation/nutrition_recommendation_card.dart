@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/summary_card.dart';
+import '../../../widgets/common/algorithm_info_sheet.dart';
 import '../domain/bayesian_tdee_estimator.dart';
 import '../domain/confidence_models.dart';
 import '../domain/goal_models.dart';
@@ -150,11 +151,24 @@ class _EmptyRecommendationContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          l10n.adaptiveRecommendationCardTitle,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.adaptiveRecommendationCardTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            AlgorithmInfoButton(
+              title: l10n.infoTdeeTitle,
+              explanation: l10n.infoTdeeExplanation,
+              keyPoints: l10n.infoTdeeKeyPoints.split('\n'),
+              technicalTitle: l10n.infoTdeeTechnicalTitle,
+              technicalExplanation: l10n.infoTdeeTechnicalExplanation,
+              markdownAssetPath: 'documentation/features/bayesian_tdee_estimator.md',
+            ),
+          ],
         ),
         const SizedBox(height: DesignConstants.spacingS),
         _SoftPanel(
@@ -354,6 +368,7 @@ class _RecommendationHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,11 +377,24 @@ class _RecommendationHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+              Row(
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: DesignConstants.spacingXS),
+                  AlgorithmInfoButton(
+                    title: l10n.infoTdeeTitle,
+                    explanation: l10n.infoTdeeExplanation,
+                    keyPoints: l10n.infoTdeeKeyPoints.split('\n'),
+                    technicalTitle: l10n.infoTdeeTechnicalTitle,
+                    technicalExplanation: l10n.infoTdeeTechnicalExplanation,
+                    markdownAssetPath: 'documentation/features/bayesian_tdee_estimator.md',
+                  ),
+                ],
               ),
               const SizedBox(height: DesignConstants.spacingXS),
               Text(
