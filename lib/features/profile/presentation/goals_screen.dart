@@ -99,7 +99,26 @@ class _GoalsScreenState extends State<GoalsScreen> {
         _proteinController.text = (settings?.targetProtein ?? 180).toString();
         _carbsController.text = (settings?.targetCarbs ?? 250).toString();
         _fatController.text = (settings?.targetFat ?? 80).toString();
-        _waterController.text = (settings?.targetWater ?? 3000).toString();
+
+        int targetWater = settings?.targetWater ?? 3000;
+        if (settings?.targetWater == null) {
+          _repository.getChartDataForTypeAndRange(
+            'weight',
+            DateTimeRange(
+              start: DateTime.now().subtract(const Duration(days: 365)),
+              end: DateTime.now(),
+            ),
+          ).then((weightData) {
+            if (weightData.isNotEmpty && mounted) {
+              final latestWeight = weightData.last.value;
+              setState(() {
+                _waterController.text =
+                    ((latestWeight / 20.0) * 1000.0).round().toString();
+              });
+            }
+          });
+        }
+        _waterController.text = targetWater.toString();
         _stepsController.text = targetSteps.toString();
 
         _sugarController.text = (prefs.getInt('targetSugar') ?? 50).toString();

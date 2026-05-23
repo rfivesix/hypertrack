@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+    content="Sleep Health Score v3.5 clinical engine. Offline-first, private sleep analytics. Learn how Train Libre evaluates your sleep.">
+  <meta name="theme-color" content="#000000">
+  <title>Sleep Health Score v3.5 | Train Libre</title>
+  <link rel="icon" href="../../web/favicon.png">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" defer onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError : false
+  });"></script>
+  <style>
+    /* Premium live calculator styles */
+    .calc-container {
+      background: var(--panel);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-l);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-top: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      margin-top: 16px;
+    }
+    
+    @media (max-width: 900px) {
+      .calc-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .input-label {
+      font-weight: 750;
+      font-size: 0.95rem;
+      color: var(--fg);
+    }
+    
+    .input-val-badge {
+      font-size: 0.85rem;
+      background: rgba(221, 255, 0, 0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    
+    [data-theme="light"] .input-val-badge {
+      background: rgba(141, 161, 0, 0.12);
+      color: #8da100;
+    }
+    
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .slider-row input[type="range"] {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--line);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    
+    .slider-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform 100ms ease;
+    }
+    
+    .slider-row input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    
+    .input-number-box {
+      width: 68px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--fg);
+      border-radius: 8px;
+      padding: 6px 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+    }
+    
+    .input-number-box:focus {
+      border-color: var(--accent);
+    }
+    
+    /* Result card styles */
+    .result-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .score-hero-card {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-m);
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+      position: relative;
+    }
+    
+    .circle-container {
+      position: relative;
+      width: 130px;
+      height: 130px;
+    }
+    
+    .circle-bg {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 8;
+    }
+    
+    .circle-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 350ms cubic-bezier(0.4, 0, 0.2, 1), stroke 300ms ease;
+    }
+    
+    .score-text-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--fg);
+    }
+    
+    .score-state-badge {
+      margin-top: 14px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .state-good { background: rgba(102, 200, 109, 0.14); color: var(--green); }
+    .state-average { background: rgba(255, 155, 5, 0.14); color: var(--orange); }
+    .state-poor { background: rgba(245, 83, 83, 0.14); color: var(--red); }
+    
+    .bottleneck-card {
+      background: rgba(245, 83, 83, 0.06);
+      border: 1px solid rgba(245, 83, 83, 0.22);
+      border-radius: var(--radius-m);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-top: 10px;
+    }
+    
+    .bottleneck-card.no-penalty {
+      background: rgba(102, 200, 109, 0.06);
+      border: 1px solid rgba(102, 200, 109, 0.15);
+    }
+    
+    .bottleneck-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+      margin-top: -2px;
+    }
+    
+    .bottleneck-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--fg);
+    }
+    
+    .bottleneck-copy {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    
+    .subscore-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    
+    .subscore-row:last-child {
+      border-bottom: 0;
+    }
+    
+    .subscore-label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 650;
+    }
+    
+    .subscore-val {
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: var(--fg);
+    }
+    
+    .switch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-s);
+      padding: 10px 14px;
+      margin-bottom: 8px;
+    }
+    
+    .switch-container {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    
+    .switch-container input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--line-strong);
+      transition: .2s;
+      border-radius: 34px;
+    }
+    
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--fg);
+      transition: .2s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .switch-slider {
+      background-color: var(--accent);
+    }
+    
+    input:checked + .switch-slider:before {
+      transform: translateX(20px);
+      background-color: var(--accent-ink);
+    }
+  </style>
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="page">
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="../#top" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <div class="nav-links">
+          <a href="#features" data-i18n="nav_overview">Overview</a>
+          <a href="#mathematics" data-i18n="nav_mathematics">Mathematics</a>
+          <a href="#calculator" data-i18n="nav_calculator">Calculator</a>
+          <a href="#evidence" data-i18n="nav_evidence">Evidence</a>
+          <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
+            rel="noreferrer">GitHub</a>
+        </div>
+        <div class="nav-controls">
+          <div class="dropdown" id="lang-dropdown">
+            <button class="control-btn" aria-label="Switch Language" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                </path>
+              </svg>
+            </button>
+            <div class="dropdown-menu">
+              <button class="dropdown-item" data-lang="en">
+                <span>English</span>
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+              <button class="dropdown-item" data-lang="de">
+                <span>Deutsch</span>
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+            </div>
+          </div>
+          <button id="theme-toggle" class="control-btn" aria-label="Toggle Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero-minimal">
+        <div class="hero-content reveal">
+          <h1 data-i18n="sleep_score_hero_t">Sleep Health Score v3.5</h1>
+          <p class="hero-copy" data-i18n="sleep_score_hero_c">A continuous, multi-domain soft-cap evaluation model mapped specifically to commercial smartwatch limitations and clinical boundaries.</p>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="feature-grid">
+          <article class="feature-card reveal delay-1" style="--feature: var(--blue); --feature-rgb: 133, 215, 244;">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </div>
+            <h3 data-i18n="sleep_score_what_t">What this system does</h3>
+            <ul class="feature-list">
+                <li data-i18n="sleep_score_what_l1">Evaluates sleep across 5 primary clinical domains simultaneously.</li>
+                <li data-i18n="sleep_score_what_l2">Applies continuous soft-cap multipliers to penalize severe physiological bottlenecks.</li>
+                <li data-i18n="sleep_score_what_l3">Bridges the gap between PSG stage categories and standard wearable compression streams.</li>
+                <li data-i18n="sleep_score_what_l4">Includes automatic architectural fallbacks for missing wearable continuity metrics.</li>
+            </ul>
+          </article>
+
+          <article class="feature-card reveal delay-2" style="--feature: var(--red); --feature-rgb: 245, 83, 83;">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+              </svg>
+            </div>
+            <h3 data-i18n="sleep_score_not_t">What it does NOT do</h3>
+            <ul class="feature-list">
+                <li data-i18n="sleep_score_not_l1">It is not a diagnostic device or a replacement for clinical sleep studies (PSG).</li>
+                <li data-i18n="sleep_score_not_l2">It does not utilize sudden, rigid binary thresholds that unfairly punish moderate fluctuations.</li>
+                <li data-i18n="sleep_score_not_l3">It does not assume high scores when a critical physiological domain is dangerously compromised.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="mathematics" class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="sleep_score_math_t">The Mathematical Spec: Weighted Base & Soft-Caps</h2>
+          <p class="section-copy" data-i18n="sleep_score_math_c">Traditional algorithms often map sleep quality using average values or strict binary cutoffs. If sleep efficiency drops to 89.9% instead of 90%, they may execute a harsh penalty. The Sleep Health Score v3.5 addresses this by combining a top-level **Weighted Base Aggregation** (normalized to handle missing metrics) with **Continuous Soft-Cap Multipliers** scaled via linear interpolation.</p>
+          
+          <h3 style="margin-top: 32px; margin-bottom: 16px; font-weight: 800; color: var(--fg);" data-i18n="sleep_math_deep_c">Mathematical Architecture (SHS v3.5)</h3>
+          
+          <div class="pipeline-flow">
+            <div class="pipeline-step">
+              <div class="pipeline-num">1</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="sleep_math_base_t">Top-Level Weighted Aggregation</div>
+                <div class="pipeline-desc" data-i18n="sleep_math_base_c">The base score $SHS_{base} \in [0, 100]$ aggregates 5 dimensions: Duration ($D$, 30%), Continuity ($C$, 20%), Architecture ($A$, 25%), Circadian Timing ($T_{circ}$, 15%), and Regularity ($R$, 10%). It automatically renormalizes to accommodate missing data streams:</div>
+                <div class="math-block" style="text-align: center; margin: 12px 0;">
+                  $$SHS_{base} = \left( \frac{\sum_{i \in \mathcal{A}} w_i \cdot S_i}{\sum_{i \in \mathcal{A}} w_i} \right) \cdot 100$$
+                </div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">2</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="sleep_math_mult_t">Continuous Soft-Cap Degradation</div>
+                <div class="pipeline-desc" data-i18n="sleep_math_mult_c">To prevent high scores when a critical physiological sleep domain is dangerously compromised, the final score applies the continuous `dynamicMultiplier` which represents the single worst sleep bottleneck:</div>
+                <div class="math-block" style="text-align: center; margin: 12px 0;">
+                  $$SHS_{final} = \text{clamp}\Big( SHS_{base} \cdot \text{dynamicMultiplier}, \; 0.0, \; 100.0 \Big)$$
+                  $$\text{dynamicMultiplier} = \min\Big( M_{REM}, \; M_{N3}, \; M_{TST}, \; M_{circ} \Big)$$
+                </div>
+              </div>
+            </div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">3</div>
+              <div class="pipeline-meta">
+                <div class="pipeline-title" data-i18n="sleep_math_lin_t">Linear Bounded Interpolation Helper</div>
+                <div class="pipeline-desc" data-i18n="sleep_math_lin_c">Each multiplier $M_i$ scales smoothly from normal operation ($M = 1.0$) down to pathological limits using a continuous linear mapping function:</div>
+                <div class="math-block" style="text-align: center; margin: 12px 0;">
+                  $$\_linear(v, x_{min}, x_{max}, y_{min}, y_{max}) = y_{min} + \left( \frac{\text{clamp}(v, x_{min}, x_{max}) - x_{min}}{x_{max} - x_{min}} \right) \cdot (y_{max} - y_{min})$$
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PREMIUM INTERACTIVE CALCULATOR -->
+      <section id="calculator" class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="sleep_calc_heading">Interactive live calculator (SHS v3.5)</h2>
+          <p class="section-copy" data-i18n="sleep_calc_copy">Adjust the inputs below to see how the scoring engine evaluates the sleep domains, handles wearable falls-backs, and applies soft-cap bottleneck penalties in real time.</p>
+          
+          <div class="calc-container">
+            <div class="calc-grid">
+              
+              <!-- Input Panel -->
+              <div class="input-section">
+                
+                <!-- Sleep Duration -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-duration" data-i18n="sleep_input_duration">Total sleep time</label>
+                    <span class="input-val-badge" id="val-duration">8.0 hrs (480m)</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-duration" min="180" max="720" value="480" step="5">
+                    <input type="number" class="input-number-box" id="num-duration" value="480">
+                  </div>
+                </div>
+
+                <!-- Fallback toggle -->
+                <div class="switch-row">
+                  <span class="input-label" data-i18n="sleep_input_fallback">Use Wearable Fallback (No WASO/Efficiency)</span>
+                  <label class="switch-container">
+                    <input type="checkbox" id="input-fallback">
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+                
+                <!-- Sleep Efficiency -->
+                <div class="input-group" id="group-efficiency">
+                  <div class="input-header">
+                    <label class="input-label" for="input-efficiency" data-i18n="sleep_input_efficiency">Sleep efficiency</label>
+                    <span class="input-val-badge" id="val-efficiency">95 %</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-efficiency" min="50" max="100" value="95" step="1">
+                    <input type="number" class="input-number-box" id="num-efficiency" value="95">
+                  </div>
+                </div>
+                
+                <!-- WASO -->
+                <div class="input-group" id="group-waso">
+                  <div class="input-header">
+                    <label class="input-label" for="input-waso" data-i18n="sleep_input_waso">Wake after sleep onset (WASO)</label>
+                    <span class="input-val-badge" id="val-waso">10 min</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-waso" min="0" max="180" value="10" step="1">
+                    <input type="number" class="input-number-box" id="num-waso" value="10">
+                  </div>
+                </div>
+
+                <!-- Deep Sleep (N3) -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-deep" data-i18n="sleep_input_deep">Deep sleep (N3) portion</label>
+                    <span class="input-val-badge" id="val-deep">20 % (96m)</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-deep" min="0" max="40" value="20" step="1">
+                    <input type="number" class="input-number-box" id="num-deep" value="20">
+                  </div>
+                </div>
+
+                <!-- REM Sleep -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-rem" data-i18n="sleep_input_rem">REM sleep portion</label>
+                    <span class="input-val-badge" id="val-rem">25 % (120m)</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-rem" min="0" max="40" value="25" step="1">
+                    <input type="number" class="input-number-box" id="num-rem" value="25">
+                  </div>
+                </div>
+
+                <!-- Light Sleep -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-light" data-i18n="sleep_input_light">Light sleep (N1+N2) portion</label>
+                    <span class="input-val-badge" id="val-light">55 % (264m)</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-light" min="10" max="90" value="55" step="1">
+                    <input type="number" class="input-number-box" id="num-light" value="55">
+                  </div>
+                </div>
+
+                <!-- Sleep Onset clock hour -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-onset" data-i18n="sleep_input_onset">Local onset time</label>
+                    <span class="input-val-badge" id="val-onset">23:00 (23.0)</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-onset" min="18.0" max="30.0" value="23.0" step="0.5">
+                    <input type="number" class="input-number-box" id="num-onset" value="23.0" step="0.5">
+                  </div>
+                </div>
+
+                <!-- Regularity SD -->
+                <div class="input-group">
+                  <div class="input-header">
+                    <label class="input-label" for="input-regularity" data-i18n="sleep_input_regularity">Mid-sleep rolling standard deviation</label>
+                    <span class="input-val-badge" id="val-regularity">0.4 hrs (24m)</span>
+                  </div>
+                  <div class="slider-row">
+                    <input type="range" id="input-regularity" min="0" max="4.0" value="0.4" step="0.1">
+                    <input type="number" class="input-number-box" id="num-regularity" value="0.4" step="0.1">
+                  </div>
+                </div>
+
+              </div>
+              
+              <!-- Result Display Panel -->
+              <div class="result-section">
+                
+                <!-- Score Display -->
+                <div class="score-hero-card">
+                  <div class="circle-container">
+                    <svg width="130" height="130" viewBox="0 0 100 100">
+                      <circle class="circle-bg" cx="50" cy="50" r="42"></circle>
+                      <circle class="circle-progress" id="score-meter" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="score-text-overlay" id="score-display">--</div>
+                  </div>
+                  
+                  <span class="score-state-badge" id="score-state">Good</span>
+                  <div style="font-size: 0.8rem; color: var(--muted); margin-top: 6px;" id="data-completeness">Completeness: 100%</div>
+                </div>
+
+                <!-- Bottleneck Penalty Warning Panel -->
+                <div class="bottleneck-card" id="penalty-card">
+                  <div class="bottleneck-icon" id="penalty-icon">ℹ️</div>
+                  <div>
+                    <div class="bottleneck-title" id="penalty-title">Optimal Sleep Quality</div>
+                    <div class="bottleneck-copy" id="penalty-copy">No dynamic soft-cap bottlenecks are active. Your composite sleep score represents full anabolic recovery.</div>
+                  </div>
+                </div>
+                
+                <!-- Sub-score Breakdown -->
+                <div style="background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px;">
+                  <h4 style="margin: 0 0 12px; font-weight: 800; font-size: 0.95rem;" data-i18n="sleep_breakdown_title">Subscore breakdown</h4>
+                  
+                  <div class="subscore-row">
+                    <span class="subscore-label" data-i18n="sleep_sub_duration">Sleep Duration (D)</span>
+                    <span class="subscore-val" id="sub-duration">--</span>
+                  </div>
+                  <div class="subscore-row">
+                    <span class="subscore-label" data-i18n="sleep_sub_continuity">Sleep Continuity (C)</span>
+                    <span class="subscore-val" id="sub-continuity">--</span>
+                  </div>
+                  <div class="subscore-row">
+                    <span class="subscore-label" data-i18n="sleep_sub_architecture">Sleep Stage Depth (A)</span>
+                    <span class="subscore-val" id="sub-architecture">--</span>
+                  </div>
+                  <div class="subscore-row">
+                    <span class="subscore-label" data-i18n="sleep_sub_timing">Circadian Timing (T)</span>
+                    <span class="subscore-val" id="sub-timing">--</span>
+                  </div>
+                  <div class="subscore-row">
+                    <span class="subscore-label" data-i18n="sleep_sub_regularity">Sleep Regularity (R)</span>
+                    <span class="subscore-val" id="sub-regularity">--</span>
+                  </div>
+                  <div class="subscore-row" style="margin-top: 6px; border-top: 1px dashed var(--line-strong); padding-top: 10px;">
+                    <span class="subscore-label" style="color: var(--accent); font-weight: 750;" data-i18n="sleep_sub_multiplier">Dynamic Multiplier Penalty</span>
+                    <span class="subscore-val" style="color: var(--accent);" id="sub-multiplier">1.00</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="evidence" class="section section-tight">
+        <div class="reveal">
+          <h2 class="section-heading" data-i18n="evidence_read_more">Evidence & further reading</h2>
+          <ul class="evidence-links">
+            <li>
+              <a href="https://doi.org/10.1016/j.sleh.2016.11.002" target="_blank" rel="noreferrer">Ohayon et al. (2017) - National Sleep Foundation's sleep quality recommendations</a>
+            </li>
+            <li>
+              <a href="https://doi.org/10.3389/fneur.2020.00762" target="_blank" rel="noreferrer">AASM (2020) - Consensus Statement on Sleep Duration for Healthy Adults</a>
+            </li>
+            <li>
+              <a href="https://doi.org/10.1093/sleep/zsab134" target="_blank" rel="noreferrer">Ruhr-Universität Bochum (RU-SATED) - Multi-domain continuous sleep tracking validation</a>
+            </li>
+            <li>
+              <a href="https://doi.org/10.1016/j.physbeh.2018.11.032" target="_blank" rel="noreferrer">SATED Index - Quantifying Sleep Health Beyond Subjective Inventories</a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand" href="../index.html" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <p class="fine-print" data-i18n="footer_medical">Fitness, nutrition, recovery, and pulse features are for
+          personal tracking and training
+          context, not medical diagnosis or treatment.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../ai-nutrition/" data-i18n="intel_c1_label">AI meal recognition</a>
+        <a href="../adaptive-nutrition/" data-i18n="intel_c2_label">Calorie estimation</a>
+        <a href="../recovery/" data-i18n="footer_recovery">Recovery Tracker</a>
+        <a href="../sleep-score/" data-i18n="sleep_score_hero_t">Sleep Health Score</a>
+        <a href="../privacy-policy/" data-i18n="footer_privacy">Privacy Policy</a>
+        <a href="../impressum.html" data-i18n="footer_imprint">Imprint</a>
+        <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="../script.js"></script>
+  
+  <!-- REAL-TIME INTERACTIVE JS CALCULATION ENGINE -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // -----------------------------------------------------------------------
+      // Slider/Number Box synchronization
+      // -----------------------------------------------------------------------
+      const syncInput = (sliderId, numberId, onUpdate) => {
+        const slider = document.getElementById(sliderId);
+        const number = document.getElementById(numberId);
+        
+        slider.addEventListener("input", () => {
+          number.value = slider.value;
+          onUpdate(parseFloat(slider.value));
+        });
+        
+        number.addEventListener("change", () => {
+          let val = parseFloat(number.value);
+          const min = parseFloat(slider.min);
+          const max = parseFloat(slider.max);
+          if (isNaN(val)) val = parseFloat(slider.value);
+          if (val < min) val = min;
+          if (val > max) val = max;
+          slider.value = val;
+          number.value = val;
+          onUpdate(val);
+        });
+      };
+
+      // Toggle Wearable Fallback
+      const fallbackCheckbox = document.getElementById("input-fallback");
+      const groupEfficiency = document.getElementById("group-efficiency");
+      const groupWaso = document.getElementById("group-waso");
+
+      fallbackCheckbox.addEventListener("change", () => {
+        const show = !fallbackCheckbox.checked;
+        groupEfficiency.style.display = show ? "flex" : "none";
+        groupWaso.style.display = show ? "flex" : "none";
+        recalculate();
+      });
+
+      // -----------------------------------------------------------------------
+      // Math & Calculation formulas
+      // -----------------------------------------------------------------------
+      const scoreDurationV3 = (durationMinutes) => {
+        const hours = durationMinutes / 60.0;
+        if (hours > 10.5) return 0.0;
+        if (hours >= 7.0 && hours <= 9.0) return 1.0;
+        const mu = hours < 7.0 ? 7.0 : 9.0;
+        return Math.exp(-Math.pow(hours - mu, 2) / 2.0);
+      };
+
+      const scoreSleepEfficiencyV3 = (sePct) => {
+        const fraction = sePct / 100.0;
+        return 1.0 / (1.0 + Math.exp(-50.0 * (fraction - 0.90)));
+      };
+
+      const scoreWasoV3 = (wasoMinutes) => {
+        const waso = Math.max(wasoMinutes - 20.0, 0.0);
+        return 1.0 / (1.0 + Math.pow(waso / 30.0, 2));
+      };
+
+      const _linear = (value, xMin, xMax, yMin, yMax) => {
+        if (xMin === xMax) return yMax;
+        const isIncreasing = xMin < xMax;
+        const clampedX = isIncreasing
+            ? Math.max(xMin, Math.min(xMax, value))
+            : Math.max(xMax, Math.min(xMin, value));
+        const t = (clampedX - xMin) / (xMax - xMin);
+        return yMin + t * (yMax - yMin);
+      };
+
+      const formatClockTime = (hoursFloat) => {
+        let normalized = hoursFloat % 24;
+        if (normalized < 0) normalized += 24;
+        const hh = Math.floor(normalized);
+        const mm = Math.round((normalized - hh) * 60);
+        const timeStr = `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
+        
+        const lang = localStorage.getItem("lang") || "en";
+        if (lang === "de") {
+          return `${timeStr} Uhr`;
+        } else {
+          let suffix = " AM";
+          let h12 = hh;
+          if (hh >= 12) {
+            suffix = " PM";
+            if (hh > 12) h12 = hh - 12;
+          } else if (hh === 0) {
+            h12 = 12;
+          }
+          return `${h12.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}${suffix}`;
+        }
+      };
+
+      const adjustSliders = (changedSliderId) => {
+        const deepSlider = document.getElementById("input-deep");
+        const remSlider = document.getElementById("input-rem");
+        const lightSlider = document.getElementById("input-light");
+        
+        const deepNum = document.getElementById("num-deep");
+        const remNum = document.getElementById("num-rem");
+        const lightNum = document.getElementById("num-light");
+        
+        let deepVal = parseFloat(deepSlider.value);
+        let remVal = parseFloat(remSlider.value);
+        let lightVal = parseFloat(lightSlider.value);
+        
+        if (changedSliderId === "deep") {
+          const targetSum = 100.0 - deepVal;
+          const currentSum = remVal + lightVal;
+          if (currentSum > 0) {
+            remVal = targetSum * (remVal / currentSum);
+            lightVal = targetSum - remVal;
+          } else {
+            remVal = targetSum / 2.0;
+            lightVal = targetSum - remVal;
+          }
+        } else if (changedSliderId === "rem") {
+          const targetSum = 100.0 - remVal;
+          const currentSum = deepVal + lightVal;
+          if (currentSum > 0) {
+            deepVal = targetSum * (deepVal / currentSum);
+            lightVal = targetSum - deepVal;
+          } else {
+            deepVal = targetSum / 2.0;
+            lightVal = targetSum - deepVal;
+          }
+        } else if (changedSliderId === "light") {
+          const targetSum = 100.0 - lightVal;
+          const currentSum = deepVal + remVal;
+          if (currentSum > 0) {
+            deepVal = targetSum * (deepVal / currentSum);
+            remVal = targetSum - deepVal;
+          } else {
+            deepVal = targetSum / 2.0;
+            remVal = targetSum - deepVal;
+          }
+        }
+        
+        // Enforce boundaries
+        if (deepVal > 40.0) {
+          const diff = deepVal - 40.0;
+          deepVal = 40.0;
+          lightVal += diff;
+        } else if (deepVal < 0.0) {
+          const diff = 0.0 - deepVal;
+          deepVal = 0.0;
+          lightVal -= diff;
+        }
+        
+        if (remVal > 40.0) {
+          const diff = remVal - 40.0;
+          remVal = 40.0;
+          lightVal += diff;
+        } else if (remVal < 0.0) {
+          const diff = 0.0 - remVal;
+          remVal = 0.0;
+          lightVal -= diff;
+        }
+        
+        if (lightVal > 90.0) {
+          const diff = lightVal - 90.0;
+          lightVal = 90.0;
+          const currentSum = deepVal + remVal;
+          if (currentSum > 0) {
+            deepVal -= diff * (deepVal / currentSum);
+            remVal = 100.0 - lightVal - deepVal;
+          } else {
+            deepVal -= diff / 2.0;
+            remVal = 100.0 - lightVal - deepVal;
+          }
+        } else if (lightVal < 10.0) {
+          const diff = 10.0 - lightVal;
+          lightVal = 10.0;
+          const currentSum = deepVal + remVal;
+          if (currentSum > 0) {
+            deepVal += diff * (deepVal / currentSum);
+            remVal = 100.0 - lightVal - deepVal;
+          } else {
+            deepVal += diff / 2.0;
+            remVal = 100.0 - lightVal - deepVal;
+          }
+        }
+        
+        lightVal = 100.0 - deepVal - remVal;
+        
+        deepSlider.value = deepVal.toFixed(1);
+        deepNum.value = deepVal.toFixed(1);
+        
+        remSlider.value = remVal.toFixed(1);
+        remNum.value = remVal.toFixed(1);
+        
+        lightSlider.value = lightVal.toFixed(1);
+        lightNum.value = lightVal.toFixed(1);
+      };
+
+      const calculateMidSleep = (onsetHourLocal, durationMinutes) => {
+        let onset = onsetHourLocal;
+        if (onset > 12.0) onset -= 24.0;
+        let ms = onset + ((durationMinutes / 60.0) / 2.0);
+        while (ms < 0) ms += 24.0;
+        while (ms >= 24.0) ms -= 24.0;
+        return ms;
+      };
+
+      const recalculate = () => {
+        const minutes = parseInt(document.getElementById("input-duration").value);
+        const hours = (minutes / 60).toFixed(1);
+        document.getElementById("val-duration").innerText = `${hours} hrs (${minutes}m)`;
+
+        const useFallback = fallbackCheckbox.checked;
+        const sePct = parseFloat(document.getElementById("input-efficiency").value);
+        document.getElementById("val-efficiency").innerText = `${sePct} %`;
+
+        const waso = parseInt(document.getElementById("input-waso").value);
+        document.getElementById("val-waso").innerText = `${waso} min`;
+
+        const deepPct = parseFloat(document.getElementById("input-deep").value);
+        const deepMin = Math.round((deepPct / 100) * minutes);
+        document.getElementById("val-deep").innerText = `${deepPct} % (${deepMin}m)`;
+
+        const remPct = parseFloat(document.getElementById("input-rem").value);
+        const remMin = Math.round((remPct / 100) * minutes);
+        document.getElementById("val-rem").innerText = `${remPct} % (${remMin}m)`;
+
+        const lightPct = parseFloat(document.getElementById("input-light").value);
+        const lightMin = Math.round((lightPct / 100) * minutes);
+        document.getElementById("val-light").innerText = `${lightPct} % (${lightMin}m)`;
+
+        const onset = parseFloat(document.getElementById("input-onset").value);
+        const formattedOnset = formatClockTime(onset);
+        document.getElementById("val-onset").innerText = `${formattedOnset} (${onset.toFixed(1)})`;
+
+        const regularitySd = parseFloat(document.getElementById("input-regularity").value);
+        const regularityMin = Math.round(regularitySd * 60);
+        document.getElementById("val-regularity").innerText = `${regularitySd.toFixed(1)} hrs (${regularityMin}m)`;
+
+        // --- Execute Calculations ---
+        const dScore = scoreDurationV3(minutes);
+
+        let cScore;
+        if (!useFallback) {
+          const seComponent = scoreSleepEfficiencyV3(sePct);
+          const wasoComponent = scoreWasoV3(waso);
+          cScore = 0.5 * seComponent + 0.5 * wasoComponent;
+        } else {
+          let pLight = 1.0;
+          if (lightPct > 65.0) {
+            pLight = Math.exp(-Math.pow(lightPct - 65.0, 2) / 98.0);
+          }
+          const lightPenalty = 1.0 - pLight;
+          cScore = 0.9 * (1.0 - lightPenalty) + 0.1 * dScore;
+        }
+
+        // Architecture Score (A)
+        const aN3 = Math.min(1.0, deepMin / 90.0) * Math.exp(-Math.pow(deepMin - 90.0, 2) / 3200.0);
+        const aRem = Math.min(1.0, remMin / 100.0) * Math.exp(-Math.pow(remMin - 100.0, 2) / 3200.0);
+        let pLightA = 1.0;
+        if (lightPct > 65.0) {
+          pLightA = Math.exp(-Math.pow(lightPct - 65.0, 2) / 98.0);
+        }
+        const aScore = Math.max(0.0, Math.min(1.0, (0.45 * aN3 + 0.45 * aRem) * pLightA + 0.10));
+
+        // Timing Score (T)
+        const ms = calculateMidSleep(onset, minutes);
+        let baseTiming = Math.exp(-Math.pow(ms - 3.5, 2) / 2.0);
+        if (ms > 5.5) {
+          baseTiming *= Math.exp(-Math.pow(ms - 5.5, 2) / 0.5);
+        }
+        const tScore = Math.max(0.0, Math.min(1.0, baseTiming));
+
+        // Regularity Score (R)
+        const rScore = 1.0 / (1.0 + Math.pow(regularitySd / 1.0, 2));
+
+        // Base aggregation (30/20/25/15/10 weights)
+        const components = [
+          { w: 0.30, val: dScore },
+          { w: 0.20, val: cScore },
+          { w: 0.25, val: aScore },
+          { w: 0.15, val: tScore },
+          { w: 0.10, val: rScore }
+        ];
+
+        let weightedSum = 0;
+        let activeWeight = 0;
+        components.forEach(c => {
+          if (c.val !== null) {
+            weightedSum += c.w * c.val;
+            activeWeight += c.w;
+          }
+        });
+
+        const baseScore = activeWeight > 0 ? (weightedSum / activeWeight) * 100 : 0;
+
+        // Dynamic soft-cap multipliers
+        let dynamicMultiplier = 1.0;
+        let bottleneck = "none";
+
+        // 1. REM multiplier
+        const remM = _linear(remMin, 40.0, 60.0, 0.65, 1.0);
+        if (remM < dynamicMultiplier) {
+          dynamicMultiplier = remM;
+          bottleneck = "rem";
+        }
+
+        // 2. Deep sleep N3 multiplier
+        const n3M = _linear(deepMin, 40.0, 70.0, 0.60, 1.0);
+        if (n3M < dynamicMultiplier) {
+          dynamicMultiplier = n3M;
+          bottleneck = "n3";
+        }
+
+        // 3. TST duration multiplier
+        const tstHours = minutes / 60.0;
+        const durationM = _linear(tstHours, 5.0, 6.5, 0.50, 1.0);
+        if (durationM < dynamicMultiplier) {
+          dynamicMultiplier = durationM;
+          bottleneck = "tst";
+        }
+
+        // 4. Circadian midpoint multiplier
+        const timingM = _linear(ms, 7.5, 5.5, 0.55, 1.0);
+        if (timingM < dynamicMultiplier) {
+          dynamicMultiplier = timingM;
+          bottleneck = "timing";
+        }
+
+        // Final Clamped Score
+        const finalScore = Math.max(0.0, Math.min(100.0, baseScore * dynamicMultiplier));
+
+        // Update UI Display Elements
+        document.getElementById("score-display").innerText = Math.round(finalScore);
+        
+        // Circular Gauge
+        const circle = document.getElementById("score-meter");
+        const radius = 42;
+        const circumference = 2 * Math.PI * radius; // 263.89
+        const offset = circumference - (finalScore / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+
+        // Dynamic Gauge Color
+        let strokeColor = "var(--green)";
+        let stateText = "Good";
+        let stateClass = "state-good";
+
+        if (finalScore < 60) {
+          strokeColor = "var(--red)";
+          stateText = "Poor";
+          stateClass = "state-poor";
+        } else if (finalScore < 80) {
+          strokeColor = "var(--orange)";
+          stateText = "Average";
+          stateClass = "state-average";
+        }
+        
+        circle.style.stroke = strokeColor;
+        
+        const stateBadge = document.getElementById("score-state");
+        stateBadge.innerText = stateText;
+        stateBadge.className = `score-state-badge ${stateClass}`;
+
+        document.getElementById("data-completeness").innerText = `Completeness: ${(activeWeight * 100).toFixed(0)}%`;
+
+        // Update Breakdown values
+        document.getElementById("sub-duration").innerText = `${Math.round(dScore * 100)} / 100`;
+        document.getElementById("sub-continuity").innerText = `${Math.round(cScore * 100)} / 100`;
+        document.getElementById("sub-architecture").innerText = `${Math.round(aScore * 100)} / 100`;
+        document.getElementById("sub-timing").innerText = `${Math.round(tScore * 100)} / 100`;
+        document.getElementById("sub-regularity").innerText = `${Math.round(rScore * 100)} / 100`;
+        document.getElementById("sub-multiplier").innerText = dynamicMultiplier.toFixed(2);
+
+        // Update Bottleneck Penalties
+        const card = document.getElementById("penalty-card");
+        const icon = document.getElementById("penalty-icon");
+        const title = document.getElementById("penalty-title");
+        const copy = document.getElementById("penalty-copy");
+
+        card.className = "bottleneck-card";
+
+        const lang = localStorage.getItem("lang") || "en";
+        if (dynamicMultiplier >= 1.0) {
+          card.classList.add("no-penalty");
+          icon.innerText = "ℹ️";
+          title.innerText = lang === "de" ? "Optimale Schlafregeneration" : "Optimal Sleep Recovery";
+          copy.innerText = lang === "de"
+            ? "Keine dynamischen Engpässe aktiv. Dein Schlafwert ist unbeeinträchtigt."
+            : "No dynamic soft-cap bottlenecks are active. Your sleep score is uncompromised.";
+        } else {
+          icon.innerText = "⚠️";
+          if (bottleneck === "rem") {
+            title.innerText = lang === "de" ? "REM-Schlaf-Engpass" : "REM Sleep Bottleneck";
+            copy.innerText = lang === "de"
+              ? `Der REM-Schlaf ist gefährlich niedrig (${remMin} Min., Schwelle < 60 Min.). Beeinträchtigt die Gedächtniskonsolidierung und emotionale Regulierung. Gesamtnote um ${(100 - remM * 100).toFixed(0)}% verringert.`
+              : `REM sleep is dangerously low (${remMin} min, < 60m threshold). Impairs memory consolidation, cellular recovery, and emotional regulation. Dynamic score degraded by ${(100 - remM * 100).toFixed(0)}%.`;
+          } else if (bottleneck === "n3") {
+            title.innerText = lang === "de" ? "Tiefschlaf-Engpass (N3)" : "Deep Sleep (N3) Bottleneck";
+            copy.innerText = lang === "de"
+              ? `Der Tiefschlaf ist gefährlich niedrig (${deepMin} Min., Schwelle < 70 Min.). Schränkt die körperliche Erholung und Gewebereparatur ein. Gesamtnote um ${(100 - n3M * 100).toFixed(0)}% verringert.`
+              : `Deep slow-wave sleep is dangerously low (${deepMin} min, < 70m threshold). Restricts physical recovery, growth hormone release, and tissue repair. Dynamic score degraded by ${(100 - n3M * 100).toFixed(0)}%.`;
+          } else if (bottleneck === "tst") {
+            title.innerText = lang === "de" ? "Schwerer Schlafmangel" : "Severe Sleep Deprivation";
+            copy.innerText = lang === "de"
+              ? `Die Gesamtschlafzeit ist gefährlich kurz (${hours} Std., Schwelle < 6,5 Std.). Stört die homöostatischen Prozesse. Gesamtnote um ${(100 - durationM * 100).toFixed(0)}% verringert.`
+              : `Total Sleep Time is dangerously short (${hours} hours, < 6.5h threshold). Disrupts core homeostatic processes and nervous system recovery. Dynamic score degraded by ${(100 - durationM * 100).toFixed(0)}%.`;
+          } else if (bottleneck === "timing") {
+            title.innerText = lang === "de" ? "Zirkadianer Phasenkonflikt" : "Circadian Phase Alignment Penalty";
+            const formattedMs = formatClockTime(ms);
+            copy.innerText = lang === "de"
+              ? `Der Schlafmittelpunkt ist extrem spät (${formattedMs}, Schwelle > 05:30), was zu einem Konflikt mit dem natürlichen Licht-Dunkel-Zyklus führt. Gesamtnote um ${(100 - timingM * 100).toFixed(0)}% verringert.`
+              : `Sleep mid-point is extremely late (${formattedMs}, > 05:30 threshold), causing synchronization conflict with light-dark cycles. Dynamic score degraded by ${(100 - timingM * 100).toFixed(0)}%.`;
+          }
+        }
+      };
+
+      // Attach Event Listeners
+      syncInput("input-duration", "num-duration", recalculate);
+      syncInput("input-efficiency", "num-efficiency", recalculate);
+      syncInput("input-waso", "num-waso", recalculate);
+
+      const setupPhaseSync = (sliderId, numberId, changedKey) => {
+        const slider = document.getElementById(sliderId);
+        const number = document.getElementById(numberId);
+
+        slider.addEventListener("input", () => {
+          adjustSliders(changedKey);
+          recalculate();
+        });
+
+        number.addEventListener("change", () => {
+          let val = parseFloat(number.value);
+          const min = parseFloat(slider.min);
+          const max = parseFloat(slider.max);
+          if (isNaN(val)) val = parseFloat(slider.value);
+          if (val < min) val = min;
+          if (val > max) val = max;
+          slider.value = val;
+          adjustSliders(changedKey);
+          recalculate();
+        });
+      };
+
+      setupPhaseSync("input-deep", "num-deep", "deep");
+      setupPhaseSync("input-rem", "num-rem", "rem");
+      setupPhaseSync("input-light", "num-light", "light");
+
+      syncInput("input-onset", "num-onset", recalculate);
+      syncInput("input-regularity", "num-regularity", recalculate);
+
+      // Listen for language changes to update dynamic warning copy
+      document.addEventListener("langChanged", () => {
+        recalculate();
+      });
+
+      // Run initial recalculation
+      recalculate();
+    });
+  </script>
+</body>
+
+</html>

@@ -8471,6 +8471,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clinical protective brake active: Your sleep volume was suboptimal (<6h) or circadian timing (sleep onset) was severely shifted. The total score has been limited.'**
   String get sleepBannerDefaultPenalty;
+
+  /// No description provided for @infoTdeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive Calorie & TDEE Estimator'**
+  String get infoTdeeTitle;
+
+  /// No description provided for @infoTdeeExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimates your Total Daily Energy Expenditure (TDEE) based on your profile, logged meals, and bodyweight changes.'**
+  String get infoTdeeExplanation;
+
+  /// No description provided for @infoTdeeKeyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'• Smooths out daily weight fluctuations using a recursive trend model.\n• Uses a Bayesian-inspired approach to adapt weekly targets conservatively.\n• Alerts you if your logging consistency is too sparse for high-confidence updates.'**
+  String get infoTdeeKeyPoints;
+
+  /// No description provided for @infoTdeeTechnicalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bayesian Recursive Filtering & Metabolic Smoothing'**
+  String get infoTdeeTechnicalTitle;
+
+  /// No description provided for @infoTdeeTechnicalExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Rather than relying on static formulas, Train Libre models your metabolism as a dynamic \'hidden state\' estimated recursively. Daily observed maintenance is computed by adjusting intake against body mass changes. A process noise coefficient is added on unlogged days to increase the estimation uncertainty, which dampens updates and prevents skewing from short-term water retention.'**
+  String get infoTdeeTechnicalExplanation;
+
+  /// No description provided for @infoRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Recovery Estimator'**
+  String get infoRecoveryTitle;
+
+  /// No description provided for @infoRecoveryExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimates muscle-specific readiness and recovery curves based on training volume, intensity, and proximity to failure.'**
+  String get infoRecoveryExplanation;
+
+  /// No description provided for @infoRecoveryKeyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'• Accounts for overlapping muscle stress (e.g., Bench Press counts for Chest, Triceps, and Shoulders).\n• Scales recovery speed based on RIR/RPE and extends the window for sets taken to failure.\n• Calibrates baseline recovery windows based on muscle group size and metabolic properties.'**
+  String get infoRecoveryKeyPoints;
+
+  /// No description provided for @infoRecoveryTechnicalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Equivalent Set Fatigue & Piecewise Decay Model'**
+  String get infoRecoveryTechnicalTitle;
+
+  /// No description provided for @infoRecoveryTechnicalExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculates dynamic readiness via non-linear decay curves. Volume tracking automatically distributes load between primary and secondary muscle groups. Recovery speed scales based on proximity to failure (RIR) and applies a strict timeline extension for sets taken to absolute failure.'**
+  String get infoRecoveryTechnicalExplanation;
+
+  /// No description provided for @infoAiMealTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Meal Capture Hub'**
+  String get infoAiMealTitle;
+
+  /// No description provided for @infoAiMealExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Converts meal photos or text descriptions into structured diary entries and matches them against your private product database.'**
+  String get infoAiMealExplanation;
+
+  /// No description provided for @infoAiMealKeyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'• Translates imprecise descriptions (e.g., \'a slice of bread\') into metric weight estimates.\n• Matches AI suggestions offline against the local product database on your device.\n• Computes nutrition locally instead of delegating calculations to external servers.'**
+  String get infoAiMealKeyPoints;
+
+  /// No description provided for @infoAiMealTechnicalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hybrid BYOK AI & Jaro-Winkler Matching'**
+  String get infoAiMealTechnicalTitle;
+
+  /// No description provided for @infoAiMealTechnicalExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a Bring-Your-Own-Key (BYOK) privacy model. The AI functions strictly as a suggestion layer. Matching is performed offline using a tokenized Jaro-Winkler filter against the local SQLite database. The AI provider is strictly prohibited from performing nutritional calculations via system prompts.'**
+  String get infoAiMealTechnicalExplanation;
+
+  /// No description provided for @infoSleepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Quality (SHS v3.5)'**
+  String get infoSleepTitle;
+
+  /// No description provided for @infoSleepExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculates a comprehensive sleep index from quantity, continuity, depth, timing, and daily regularity.'**
+  String get infoSleepExplanation;
+
+  /// No description provided for @infoSleepKeyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'• Aggregates five clinical dimensions using a weighted sum.\n• Automatically scales requirements if your wearable does not provide specific stages or efficiency data.\n• Protects you via soft-cap multipliers that limit the total score if a critical domain (like REM or Deep sleep) is compromised.'**
+  String get infoSleepKeyPoints;
+
+  /// No description provided for @infoSleepTechnicalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted Baseline & Continuous Soft-Caps'**
+  String get infoSleepTechnicalTitle;
+
+  /// No description provided for @infoSleepTechnicalExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Aggregates five primary domains using a weighted linear sum: Duration (30%), Continuity (20%), Architecture (25%), Timing (15%), and Regularity (10%). To prevent misleading averages when a clinical domain is compromised, the final score is degraded if significant bottlenecks are detected in sleep stages or circadian timing.'**
+  String get infoSleepTechnicalExplanation;
 }
 
 class _AppLocalizationsDelegate

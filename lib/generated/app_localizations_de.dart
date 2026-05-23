@@ -4845,5 +4845,80 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sleepBannerDefaultPenalty =>
-      'Klinische Schutzbremse aktiv: Dein Schlafvolumen was suboptimal (<6h) oder das zirkadiane Timing (Einschlafzeitpunkt) war stark verschoben. Der Gesamtwert wurde limitiert.';
+      'Klinische Schutzbremse aktiv: Dein Schlafvolumen war suboptimal (<6h) oder das zirkadiane Timing (Einschlafzeitpunkt) war stark verschoben. Der Gesamtwert wurde limitiert.';
+
+  @override
+  String get infoTdeeTitle => 'Adaptiver Kalorien- & TDEE-Schätzer';
+
+  @override
+  String get infoTdeeExplanation =>
+      'Schätzt deine täglichen Erhaltungskalorien (TDEE) basierend auf deinem Profil, deinen protokollierten Mahlzeiten und deinen Körpergewichtsänderungen.';
+
+  @override
+  String get infoTdeeKeyPoints =>
+      '• Gleicht tägliche Gewichtsschwankungen (Wasser, Glykogen) mithilfe eines gleitenden Durchschnitts aus.\n• Verwendet ein Bayes-inspiriertes rekursives Modell, das wöchentliche Ziele konservativ anpasst, um Überreaktionen zu vermeiden.\n• Warnt dich, wenn deine Protokolle unvollständig oder unregelmäßig sind.';
+
+  @override
+  String get infoTdeeTechnicalTitle => 'Bayes-Filter & metabolisches Smoothing';
+
+  @override
+  String get infoTdeeTechnicalExplanation =>
+      'Train Libre modelliert deinen Stoffwechsel rekursiv als dynamischen Zustand über eine Bayes-Filter-Schleife. Der beobachtete tägliche Erhaltungsbedarf wird über die Kernroutine berechnet, wobei Änderungen des gleitenden Gewichtstrends berücksichtigt werden. An unprotokollierten Tagen wird ein Prozessrauschen-Koeffizient injiziert, um die Vertrauensgrenzen aufzuweiten. Dies dämpft nachfolgende Filter-Updates und verhindert eine Verzerrung der Stoffwechselberechnung durch kurzzeitige Wassereinlagerungen.';
+
+  @override
+  String get infoRecoveryTitle => 'Muskelregenerations-Rechner';
+
+  @override
+  String get infoRecoveryExplanation =>
+      'Schätzt die muskelspezifische Bereitschaft und deine Regenerationskurven basierend auf deinem Trainingsvolumen, der Intensität und der Nähe zum Muskelversagen.';
+
+  @override
+  String get infoRecoveryKeyPoints =>
+      '• Berücksichtigt überlappende Muskelbelastungen (z. B. wird Bankdrücken der Brust, dem Trizeps und der vorderen Schulter angerechnet).\n• Skaliert die Regenerationsgeschwindigkeit basierend auf RIR/RPE und verlängert das Fenster bei Sätzen bis zum Muskelversagen.\n• Kalibriert die Basis-Erholungszeit je nach Größe der Muskelgruppe.';
+
+  @override
+  String get infoRecoveryTechnicalTitle =>
+      'Equivalent Set Fatigue & Piecewise Decay Model';
+
+  @override
+  String get infoRecoveryTechnicalExplanation =>
+      'Berechnet die dynamische Muskelbereitschaft über nicht-lineare Abklingskurven. Das Volumen-Tracking ordnet Sätze automatisch primären und sekundären Zielmuskeln zu, wodurch die Belastung bei Verbundübungen auf synergistische Fasern verteilt wird. Die Erholungsgeschwindigkeit skaliert basierend auf der Nähe zum Muskelversagen (RIR) und verhängt eine strikte Verlängerung für Sätze bis zum absoluten Versagen.';
+
+  @override
+  String get infoAiMealTitle => 'KI-Mahlzeitenerkennung Hub';
+
+  @override
+  String get infoAiMealExplanation =>
+      'Trägt Mahlzeitenfotos oder Freitexte in strukturierte Tagebucheinträge ein und gleicht diese mit deiner privaten Produktdatenbank ab.';
+
+  @override
+  String get infoAiMealKeyPoints =>
+      '• Übersetzt ungenaue Beschreibungen (z. B. \'eine Scheibe Brot\') in metrische Gewichtsschätzungen.\n• Gleicht KI-Vorschläge offline mit der lokalen Produktdatenbank du deinem Gerät ab.\n• Berechnet Nährwerte lokal auf deinem Gerät, anstatt Berechnungen an externe Server zu delegieren.';
+
+  @override
+  String get infoAiMealTechnicalTitle =>
+      'Hybrid BYOK KI & Jaro-Winkler-Matching';
+
+  @override
+  String get infoAiMealTechnicalExplanation =>
+      'Nutzt ein Bring-Your-Own-Key (BYOK) Datenschutzmodell. Die KI fungiert ausschließlich als Vorschlagsebene. Der Abgleich erfolgt offline über einen tokenbasierten Jaro-Winkler-Filter (Ähnlichkeit >= 0,82) gegen die SQLite-Datenbank. Dem KI-Anbieter wird die Nährwertberechnung per System-Prompt strikt untersagt.';
+
+  @override
+  String get infoSleepTitle => 'Schlafqualität (SHS v3.5)';
+
+  @override
+  String get infoSleepExplanation =>
+      'Berechnet einen umfassenden Schlafindex aus Schlafmenge, Kontinuität, Schlafphasen-Tiefe, Timing und der täglichen Regelmäßigkeit.';
+
+  @override
+  String get infoSleepKeyPoints =>
+      '• Aggregiert fünf klinische Dimensionen über eine gewichtete Summe.\n• Reduziert automatisch die Anforderungen, wenn dein Wearable keine Wachphasen (WASO) oder Effizienz aufzeichnet.\n• Schützt dich durch stufenlose Soft-Cap-Multiplikatoren, die die Gesamtnote begrenzen, wenn ein wichtiger Wert (wie REM oder Tiefschlaf) gefährlich niedrig ist.';
+
+  @override
+  String get infoSleepTechnicalTitle =>
+      'Gewichtete Basis & Kontinuierliche Soft-Caps';
+
+  @override
+  String get infoSleepTechnicalExplanation =>
+      'Aggregiert fünf Primärbereiche über eine gewichtete lineare Summe: Schlafdauer (30%), Kontinuität (20%), Architektur (25%), Timing (15%) und Regelmäßigkeit (10%) mit dynamischer Matrix-Normalisierung bei fehlenden Datenströmen. Zum Schutz vor verzerrenden Durchschnittswerten bei fatalen Einbrüchen wird der Endwert abgewertet, wenn klinische Engpässe in den Schlafphasen oder im Timing erkannt werden.';
 }

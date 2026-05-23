@@ -5,6 +5,7 @@ import '../../../../generated/app_localizations.dart';
 import '../../../../util/design_constants.dart';
 import '../../../../widgets/common/common.dart';
 import '../../../../widgets/common/global_app_bar.dart';
+import '../../../../widgets/common/algorithm_info_sheet.dart';
 
 enum SleepPeriodScope { day, week, month }
 
@@ -33,7 +34,20 @@ class SleepPeriodScopeLayout extends StatelessWidget {
     final localeCode = Localizations.localeOf(context).languageCode;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(title: appBarTitle),
+      appBar: GlobalAppBar(
+        title: appBarTitle,
+        actions: [
+          AlgorithmInfoButton(
+            title: l10n.infoSleepTitle,
+            explanation: l10n.infoSleepExplanation,
+            keyPoints: l10n.infoSleepKeyPoints.split('\n'),
+            technicalTitle: l10n.infoSleepTechnicalTitle,
+            technicalExplanation: l10n.infoSleepTechnicalExplanation,
+            markdownAssetPath: 'documentation/features/sleep_scoring_engine.md',
+            iconColor: Theme.of(context).colorScheme.onSurface,
+          ),
+        ],
+      ),
       body: ListView(
         padding: DesignConstants.cardPadding.copyWith(
           top: DesignConstants.cardPadding.top + topPadding + 16,
