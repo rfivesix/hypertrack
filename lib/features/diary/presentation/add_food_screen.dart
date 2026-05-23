@@ -403,7 +403,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
-              vertical: 12.0,
+              vertical: 4.0,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -739,7 +739,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
     if (q.isEmpty) {
       return Column(
         children: [
-          const SizedBox(height: 12),
+          //const SizedBox(height: 4),
           searchRow,
           const SizedBox(height: 8),
           if (_baseCategories.isEmpty)
@@ -810,9 +810,9 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
     return Column(
       children: [
-        const SizedBox(height: 12),
+        //const SizedBox(height: 4),
         searchRow,
-        const SizedBox(height: 12),
+        //const SizedBox(height: 12),
         Expanded(
           child: _isLoadingSearch
               ? const Center(child: CircularProgressIndicator())
@@ -990,7 +990,8 @@ class _AddFoodScreenState extends State<AddFoodScreen>
               final bc = it['barcode'] as String;
               final qty = quantities[bc] ?? (it['quantity_in_grams'] as int);
 
-              final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+              final newFoodEntryId =
+                  await DatabaseHelper.instance.insertFoodEntry(
                 FoodEntry(
                   barcode: bc,
                   timestamp: date,
