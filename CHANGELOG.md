@@ -6,18 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.9.14] - 2026-05-23
 
-### Changed
-- **Clean Design Overhaul (#402)**: Completely overhauled the **Meals** and **Meal** detail screens to follow the premium, modern visual guidelines established across the rest of the application:
-  - Extended the body behind the app bar and replaced default `AppBar` components with the frosted-glass `GlobalAppBar` for a sleek, cohesive look.
-  - Replaced the outdated basic list on `MealsScreen` with the standardized `MealItemCard`s featuring async pre-computed nutrition totals (macros and calories) and quick actions (Add to Diary, Edit, Delete).
-  - Integrated `GlassFab` for creating new meals in `MealsScreen` cleanly.
-  - Fixed duplicate padding visual bugs in `MealScreen` by utilizing the decoupled `AppCardContainer` wrapper directly.
-  - Eliminated the database `FutureBuilder` performance loop inside the `build()` method of `MealScreen` that executed redundant SQLite lookups on every frame update, substituting it with direct, reactive state variable reads.
-  - Upgraded individual ingredient cards by removing the generic leading icon and adding support for settings-dependent colorful macro badge pills (`MacroBadgeRow`), falling back elegantly to the standard plain-text metadata row based on user settings.
-  - Reactively display calories and colorful macro badges in both view and edit modes, updating values in real-time as quantities are modified in the text field.
-  - Enhanced the text color contrast of the notes/descriptions block in view mode to match the theme-aware `onSurfaceVariant` color for comfortable dark-theme readability.
-  - Unified the add-ingredient workflow to navigate to the lightweight, general-purpose `GeneralFoodSelectionScreen` picker instead of a custom bottom sheet search.
+### Added
+- **Clinical Algorithm Disclosure Engine**: Implemented a reusable, asynchronous asset-backed disclosure system (`AlgorithmInfoButton`) that dynamically loads and natively renders deep-dive architectural specifications directly from project markdown repositories.
+- **Embedded Technical Specifications**: Authored and integrated uncompressed, high-density mathematical engineering documents under `documentation/features/` covering the Bayesian TDEE Estimator, Hybrid BYOK AI Verification, and the newly formulated Muscle Recovery Model.
+- **Dynamic Hydration Scaling**: Replaced the legacy static 3000 ml water intake default with a personalized, weight-dependent metabolic formula:
+  $$\text{Daily Water (ml)} = \left(\frac{\text{Body Weight in kg}}{20}\right) \cdot 1000$$
+  Integrated seamlessly across onboarding tracking vectors and active asset dashboards (`OnboardingScreen`, `GoalsScreen`).
+- **Mathematical Rendering Pipeline**: Expanded dependencies in `pubspec.yaml` to include `flutter_markdown_plus_latex` and `markdown` to support native, on-device parsing of high-precision math inside modal views.
+- **Interactive Web Analytics Hub**: Deployed a massive responsive update to the `docs/` architecture, featuring a premium dark-glassmorphic, interactive KaTeX-powered calculator allowing users to live-simulate Bayesian TDEE decay and process noise variance expansions ($Q = 40$).
+- **Data Access Layer Extensions**: Added a specialized `getLatestWeight()` asynchronous retrieval routine within `lib/data/database_helper.dart` to safely supply active user metrics to dynamic calculation engines.
 
+### Changed
+- **Algorithmic Information Transparency**: Deployed educational info triggers (ℹ️) across four core interfaces: `RecoveryTrackerScreen`, `AiMealCaptureScreen`, `NutritionRecommendationCard`, and `SleepScoreCard` to grant users full mathematical visibility.
+- **Localization Architecture Hardening**: Expanded localized string dictionaries (`app_de.arb` and `app_en.arb`) by over 20 new high-density technical prose entries. Completely purged raw LaTeX syntax and legacy academic/clinical citations from translation assets to enforce bulletproof UI rendering.
+
+### Fixed
+- **Information Screen Layout Overflows**: Refactored the `ExpansionTile` headers inside `algorithm_info_sheet.dart` into a single text-wrapped flexible row, completely eliminating right-side pixel clipping and horizontal layout breaking on compact viewports.
 ## [0.9.13] - 2026-05-xx
 
 ### Added
