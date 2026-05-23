@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.14] - 2026-05-23
+
+### Changed
+- **Clean Design Overhaul (#402)**: Completely overhauled the **Meals** and **Meal** detail screens to follow the premium, modern visual guidelines established across the rest of the application:
+  - Extended the body behind the app bar and replaced default `AppBar` components with the frosted-glass `GlobalAppBar` for a sleek, cohesive look.
+  - Replaced the outdated basic list on `MealsScreen` with the standardized `MealItemCard`s featuring async pre-computed nutrition totals (macros and calories) and quick actions (Add to Diary, Edit, Delete).
+  - Integrated `GlassFab` for creating new meals in `MealsScreen` cleanly.
+  - Fixed duplicate padding visual bugs in `MealScreen` by utilizing the decoupled `AppCardContainer` wrapper directly.
+  - Eliminated the database `FutureBuilder` performance loop inside the `build()` method of `MealScreen` that executed redundant SQLite lookups on every frame update, substituting it with direct, reactive state variable reads.
+  - Upgraded individual ingredient cards by removing the generic leading icon and adding support for settings-dependent colorful macro badge pills (`MacroBadgeRow`), falling back elegantly to the standard plain-text metadata row based on user settings.
+  - Reactively display calories and colorful macro badges in both view and edit modes, updating values in real-time as quantities are modified in the text field.
+  - Enhanced the text color contrast of the notes/descriptions block in view mode to match the theme-aware `onSurfaceVariant` color for comfortable dark-theme readability.
+  - Unified the add-ingredient workflow to navigate to the lightweight, general-purpose `GeneralFoodSelectionScreen` picker instead of a custom bottom sheet search.
+
 ## [0.9.13] - 2026-05-xx
 
 ### Added
