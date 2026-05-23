@@ -73,4 +73,14 @@ class SupplementRepositoryImpl implements SupplementRepository {
   Future<void> deleteSupplementLog(int id) {
     return _localDataSource.deleteSupplementLog(id);
   }
+
+  @override
+  Future<void> deleteCaffeineLogByFoodEntryId(int foodEntryId) {
+    return _localDataSource.deleteCaffeineLogByFoodEntryId(foodEntryId);
+  }
+
+  @override
+  Future<void> deleteCaffeineLogByFluidEntryId(int fluidEntryId) {
+    return _localDataSource.deleteCaffeineLogByFluidEntryId(fluidEntryId);
+  }
 }

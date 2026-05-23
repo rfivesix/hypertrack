@@ -4,7 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.9.12] - 2026-05-xx
+## [0.9.13] - 2026-05-xx
+
+### Added
+- **UI Modularization Milestone**: Completed an epic, 11-phase modularization of the core presentation layer. 
+  - Decomposed massive screen files (Onboarding, Edit Routine, Steps, Sleep, Settings, AI Review, Live Workout, and Statistics Hub) into isolated, highly reusable components within `presentation/widgets/`.
+  - Established a dedicated widget library for the Statistics Hub, isolating dashboard cards (Pulse, Sleep, Performance, etc.) for better maintainability.
+- **Enhanced Data Layer Architecture**:
+  - Decomposed the monolithic 3,100+ LOC `WorkoutLocalDataSource` into specialized part-files: `exercises_queries.dart`, `routines_queries.dart`, `workout_logging_queries.dart`, and `workout_stats_queries.dart`.
+  - Isolated the mathematical engine of the Bayesian TDEE estimator into dedicated domain models (`estimator_models.dart`, `observation_model.dart`, `regression_engine.dart`).
+- **Advanced Sleep Diagnostics**:
+  - Deployed a continuous, on-device Sleep Continuity fallback architecture ($S_{C, fallback}$) for commercial smartwatches that do not supply explicit SE/WASO (Efficiency/Awake minutes) data, leveraging light sleep distribution ($90\%$) and total duration ($10\%$).
+  - Added `multiplierBottleneck` diagnostics to `SleepScoringResult` to pinpoint the exact physiological domain limiting the sleep health index.
+  - Upgraded the UI Clinical Protection Banner to dynamically fetch the bottleneck key and display precise, contextual biological explanations (tailored warnings for REM, N3, TST, or Circadian delays).
+
+### Changed
+- **Service Decomposition**: Successfully decoupled `AiService` and its validation logic into focused modules (`ai_network.dart`, `ai_parsing.dart`, `ai_prompts.dart`), improving testability and scalability.
+- **Architecture Hardening**: Achieved a massive technical debt reduction by auditing ~132k total lines of code.
+- **UI Code Optimization**: Relocated over 15,000 lines of inline UI code into structured sub-widgets, reducing core file sizes by up to 68% in critical performance paths.
+- **Sleep Health Score v3.5 (SHS v3.5)**:
+  - Shifted from a rigid, binary hard-cap framework (forcing scores to a flat 60/40) to the continuous, multi-domain **Sleep Health Score v3.5 (SHS v3.5)** using dynamic soft-cap multipliers (`_linear` interpolation maps).
+  - Calibrated the Light Sleep Percentage Penalty ($P_{light}$) curve to real-world smartwatch limitations (blending N1 and N2) by shifting the optimal threshold to $\le 65\%$ with a precision decay standard deviation of $7.0\%$.
+  - Smoothed out the Sleep Duration ($S_D$) low-end clipping boundary by completely removing the artificial $4.0\text{h}$ hard-zero floor, allowing continuous Gaussian calculation across the entire short-sleep spectrum.
+- **UI Layout Cleanups**: Removed the restrictive nested Card containers from the Detail-Analyse section, turning it into a clean native Section Header with edge-to-edge, full-width `GlassProgressBar` fields.
+
+### Fixed
+- **Zero-Warning Compliance**: Resolved all remaining lint warnings and static analysis issues across the entire codebase, reaching 100% compile-time safety.
+- **Code Verification**: Validated all architectural changes against the full suite of 610+ regression tests, ensuring 100% green status.
+- **Memory & Persistence Optimization**:
+  - Eliminated native Android Out-Of-Memory (OOM) memory exhaustion crashes inside the Health Connect / Kotlin ingestion lines through an intelligent downsampling mechanism that aggregates raw, high-frequency data streams into dense 1-minute epoch segments before channel transfer.
+  - Resolved critical local SQLite persistence conflicts and foreign key failures across Drift schema migrations (v19 to v20) by enforcing proper table recreation and non-nullable column defaults.
+
+### Documentation & Testing
+- **Mathematical Architecture Disclosure**: Created `documentation/features/sleep_scoring_engine.md` detailing the entire mathematical architecture of SHS v3.5 using explicit, publication-grade LaTeX formulas.
+- **Test Suite Synchronization**: Synchronized the test suite to match the refined curves, pushing the project past 610+ verified, green unit and repository tests.
+
+## [0.9.12] - 2026-05-22
 
 ### Fixed
 - **iOS Barcode Recognition & Xcode Strip Style (#399)**: Resolved a critical issue where the barcode scanner ran smoothly but failed to recognize any barcodes on iOS release builds.

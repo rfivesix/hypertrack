@@ -8405,6 +8405,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lower Back'**
   String get muscleLowerBack;
+
+  /// No description provided for @sleepDetailAnalysisHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Analysis'**
+  String get sleepDetailAnalysisHeader;
+
+  /// No description provided for @sleepMetricDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Duration'**
+  String get sleepMetricDurationLabel;
+
+  /// No description provided for @sleepMetricContinuityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continuity (WASO/SE)'**
+  String get sleepMetricContinuityLabel;
+
+  /// No description provided for @sleepMetricDepthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Stage Depth'**
+  String get sleepMetricDepthLabel;
+
+  /// No description provided for @sleepMetricTimingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian Timing'**
+  String get sleepMetricTimingLabel;
+
+  /// No description provided for @sleepMetricRegularityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity'**
+  String get sleepMetricRegularityLabel;
+
+  /// No description provided for @sleepBannerTstBottleneck.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep duration penalty active: Your total sleep volume was below the regenerative optimum of 6.5 hours, which restricts anabolic hormone release.'**
+  String get sleepBannerTstBottleneck;
+
+  /// No description provided for @sleepBannerRemBottleneck.
+  ///
+  /// In en, this message translates to:
+  /// **'REM sleep deficiency penalty: Your REM sleep was below 60 minutes. This impairs neuronal recovery and mental freshness.'**
+  String get sleepBannerRemBottleneck;
+
+  /// No description provided for @sleepBannerN3Bottleneck.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep sleep deficiency penalty: Critical lack of N3 deep sleep (<70 min). Physical muscle tissue repair is suboptimal.'**
+  String get sleepBannerN3Bottleneck;
+
+  /// No description provided for @sleepBannerTimingBottleneck.
+  ///
+  /// In en, this message translates to:
+  /// **'Circadian phase shift penalty: Your mid-sleep was after 05:30 AM. Sleeping against the inner clock reduces sleep quality and insulin sensitivity.'**
+  String get sleepBannerTimingBottleneck;
+
+  /// No description provided for @sleepBannerDefaultPenalty.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinical protective brake active: Your sleep volume was suboptimal (<6h) or circadian timing (sleep onset) was severely shifted. The total score has been limited.'**
+  String get sleepBannerDefaultPenalty;
 }
 
 class _AppLocalizationsDelegate

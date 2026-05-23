@@ -4808,4 +4808,42 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get muscleLowerBack => 'Unterer Rücken';
+
+  @override
+  String get sleepDetailAnalysisHeader => 'Detail-Analyse';
+
+  @override
+  String get sleepMetricDurationLabel => 'Schlafdauer';
+
+  @override
+  String get sleepMetricContinuityLabel => 'Kontinuität (WASO/SE)';
+
+  @override
+  String get sleepMetricDepthLabel => 'Schlafphasen-Tiefe';
+
+  @override
+  String get sleepMetricTimingLabel => 'Zirkadianes Timing';
+
+  @override
+  String get sleepMetricRegularityLabel => 'Regelmäßigkeit';
+
+  @override
+  String get sleepBannerTstBottleneck =>
+      'Abzug für Schlafdauer active: Dein Gesamtschlafvolumen lag unter dem regenerativen Optimum von 6.5 Stunden, was den anabolen Hormonausstoß einschränkt.';
+
+  @override
+  String get sleepBannerRemBottleneck =>
+      'Abzug für REM-Phasen-Mangel: Dein REM-Schlaf lag unter 60 Minuten. Dies beeinträchtigt die neuronale Erholung und mentale Frische.';
+
+  @override
+  String get sleepBannerN3Bottleneck =>
+      'Abzug für Tiefschlaf-Mangel: Kritischer Mangel an N3-Tiefschlaf (<70 Min). Die physische Muskelgewebe-Reparatur ist suboptimal.';
+
+  @override
+  String get sleepBannerTimingBottleneck =>
+      'Abzug für zirkadiane Phasenverschiebung: Deine Schlafmitte lag nach 05:30 Uhr morgens. Schlaf gegen die innere Uhr vermindert die Schlafqualität und Insulinsensitivität.';
+
+  @override
+  String get sleepBannerDefaultPenalty =>
+      'Klinische Schutzbremse aktiv: Dein Schlafvolumen was suboptimal (<6h) oder das zirkadiane Timing (Einschlafzeitpunkt) war stark verschoben. Der Gesamtwert wurde limitiert.';
 }

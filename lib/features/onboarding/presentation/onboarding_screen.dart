@@ -9,15 +9,21 @@ import '../../../generated/app_localizations.dart';
 import '../../../services/health/steps_sync_service.dart';
 import '../../app/presentation/main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 import '../../nutrition_recommendation/data/recommendation_service.dart';
 import '../../nutrition_recommendation/presentation/body_fat_guidance_sheet.dart';
-import '../../nutrition_recommendation/presentation/prior_activity_help_block.dart';
 import '../../nutrition_recommendation/domain/goal_models.dart';
 import '../../nutrition_recommendation/domain/recommendation_models.dart';
 import '../../../services/app_tour_service.dart';
 import '../../../services/unit_service.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
+import 'widgets/welcome_slide.dart';
+import 'widgets/unit_system_slide.dart';
+import 'widgets/profile_slide.dart';
+import 'widgets/weight_slide.dart';
+import 'widgets/body_fat_slide.dart';
+import 'widgets/adaptive_goal_slide.dart';
+import 'widgets/macro_slide.dart';
+import 'widgets/water_slide.dart';
 
 /// The initial setup flow for new users.
 ///
@@ -539,15 +545,85 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   }
                 },
                 children: [
-                  _buildWelcomePage(l10n),
-                  _buildUnitSystemPage(l10n),
-                  _buildProfilePage(l10n),
-                  _buildWeightPage(l10n),
-                  _buildBodyFatPage(l10n),
-                  _buildAdaptiveGoalPage(l10n),
-                  _buildCaloriesPage(l10n),
-                  _buildMacrosPage(l10n),
-                  _buildWaterPage(l10n),
+                  WelcomeSlide(
+                    isRestoring: _isRestoring,
+                    onContinue: _nextPage,
+                    onRestore: _restoreFromBackup,
+                  ),
+                  UnitSystemSlide(
+                    selectedSystem: _selectedUnitSystem ?? context.read<UnitService>().unitSystem,
+                    onSelectSystem: _selectUnitSystem,
+                  ),
+                  ProfileSlide(
+                    nameController: _nameController,
+                    selectedDate: _selectedDate,
+                    heightController: _heightController,
+                    selectedGender: _selectedGender,
+                    onSelectDate: (picked) {
+                      setState(() => _selectedDate = picked);
+                      if (_currentPage >= _adaptiveGoalPageIndex) {
+                        _refreshOnboardingRecommendationPreview();
+                      }
+                    },
+                    onSelectGender: (val) {
+                      setState(() => _selectedGender = val);
+                    },
+                  ),
+                  WeightSlide(
+                    weightController: _weightController,
+                  ),
+                  BodyFatSlide(
+                    bodyFatPercentController: _bodyFatPercentController,
+                    onChanged: (_) {
+                      if (_currentPage >= _adaptiveGoalPageIndex) {
+                        _refreshOnboardingRecommendationPreview();
+                      }
+                    },
+                    onOpenHelp: _openBodyFatHelperEntryPoint,
+                  ),
+                  AdaptiveGoalSlide(
+                    selectedGoal: _selectedGoal,
+                    selectedPriorActivityLevel: _selectedPriorActivityLevel,
+                    selectedExtraCardioHoursOption: _selectedExtraCardioHoursOption,
+                    selectedTargetRateKgPerWeek: _selectedTargetRateKgPerWeek,
+                    onGoalChanged: (goal) {
+                      setState(() {
+                        _selectedGoal = goal;
+                        _selectedTargetRateKgPerWeek =
+                            WeeklyTargetRateCatalog.defaultForGoal(goal).kgPerWeek;
+                      });
+                      _refreshOnboardingRecommendationPreview();
+                    },
+                    onPriorActivityLevelChanged: (level) {
+                      setState(() {
+                        _selectedPriorActivityLevel = level;
+                      });
+                      _refreshOnboardingRecommendationPreview();
+                    },
+                    onExtraCardioHoursOptionChanged: (option) {
+                      setState(() {
+                        _selectedExtraCardioHoursOption = option;
+                      });
+                      _refreshOnboardingRecommendationPreview();
+                    },
+                    onTargetRateKgPerWeekChanged: (rate) {
+                      setState(() {
+                        _selectedTargetRateKgPerWeek = rate;
+                      });
+                      _refreshOnboardingRecommendationPreview();
+                    },
+                  ),
+                  OnboardingCaloriesSlide(
+                    calController: _calController,
+                  ),
+                  OnboardingMacrosSlide(
+                    protController: _protController,
+                    carbController: _carbController,
+                    fatController: _fatController,
+                  ),
+                  WaterSlide(
+                    waterController: _waterController,
+                  ),
                 ],
               ),
             ),
@@ -602,82 +678,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildWelcomePage(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.waving_hand_rounded,
-            size: 80,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(height: 32),
-          Text(
-            l10n.onboardingWelcomeTitle,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.onboardingWelcomeSubtitle,
-            style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 48),
-          // Primary CTA — continue with profile setup
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              key: const Key('onboarding_continue_setup_button'),
-              onPressed: _isRestoring ? null : _nextPage,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(
-                l10n.onboardingContinueSetup.toUpperCase(),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Secondary CTA — restore from backup
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _isRestoring ? null : _restoreFromBackup,
-              icon: _isRestoring
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.restore),
-              label: Text(
-                _isRestoring
-                    ? l10n.onboardingRestoreImporting
-                    : l10n.onboardingRestoreFromBackup,
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _selectUnitSystem(UnitSystem system) async {
     setState(() => _selectedUnitSystem = system);
     await _unitService.setUnitSystem(system);
@@ -701,697 +701,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildUnitSystemPage(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final unitService = context.watch<UnitService>();
-    final selected = _selectedUnitSystem ?? unitService.unitSystem;
-
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _StepTitle(
-            title: l10n.onboardingUnitSystemTitle,
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.onboardingUnitSystemSubtitle,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 28),
-          _UnitSystemChoiceCard(
-            title: l10n.onboardingUnitMetric,
-            subtitle: l10n.onboardingUnitMetricSubtitle,
-            icon: Icons.straighten_rounded,
-            selected: selected == UnitSystem.metric,
-            onTap: () => _selectUnitSystem(UnitSystem.metric),
-          ),
-          const SizedBox(height: 16),
-          _UnitSystemChoiceCard(
-            title: l10n.onboardingUnitImperial,
-            subtitle: l10n.onboardingUnitImperialSubtitle,
-            icon: Icons.public_rounded,
-            selected: selected == UnitSystem.imperial,
-            onTap: () => _selectUnitSystem(UnitSystem.imperial),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfilePage(AppLocalizations l10n) {
-    final unitService = context.watch<UnitService>();
-    return SingleChildScrollView(
-      key: const Key('onboarding_profile_page'),
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 24),
-          _StepTitle(title: l10n.onboardingNameTitle),
-          const SizedBox(height: 16),
-          TextField(
-            key: const Key('onboarding_name_text_field'),
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: l10n.onboardingNameLabel,
-              prefixIcon: const Icon(Icons.person_outline),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: 32),
-          _StepTitle(title: l10n.onboardingDobTitle),
-          const SizedBox(height: 16),
-          InkWell(
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: DateTime(2000),
-                firstDate: DateTime(1900),
-                lastDate: DateTime.now(),
-              );
-              if (picked != null) {
-                setState(() => _selectedDate = picked);
-                if (_currentPage >= _adaptiveGoalPageIndex) {
-                  _refreshOnboardingRecommendationPreview();
-                }
-              }
-            },
-            child: InputDecorator(
-              decoration: InputDecoration(
-                labelText: l10n.onboardingDobLabel,
-                prefixIcon: const Icon(Icons.cake_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                _selectedDate == null
-                    ? 'DD.MM.YYYY'
-                    : DateFormat.yMMMd(
-                        Localizations.localeOf(context).toString(),
-                      ).format(_selectedDate!),
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _StepTitle(
-                      title: l10n.onboardingHeightLabel,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      key: const Key('onboarding_height_text_field'),
-                      controller: _heightController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: InputDecoration(
-                        labelText:
-                            '${l10n.onboardingHeightLabel} (${unitService.suffixFor(UnitDimension.height)})',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _StepTitle(
-                      title: l10n.onboardingGenderLabel,
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      key: const Key('onboarding_gender_dropdown'),
-                      initialValue: _selectedGender,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 16,
-                        ),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 'male',
-                          child: Text(l10n.genderMale),
-                        ),
-                        DropdownMenuItem(
-                          value: 'female',
-                          child: Text(l10n.genderFemale),
-                        ),
-                        DropdownMenuItem(
-                          value: 'diverse',
-                          child: Text(l10n.genderDiverse),
-                        ),
-                      ],
-                      onChanged: (val) => setState(() {
-                        _selectedGender = val;
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeightPage(AppLocalizations l10n) {
-    final unitService = context.watch<UnitService>();
-    final suffix = unitService.suffixFor(UnitDimension.weight);
-    return Padding(
-      key: const Key('onboarding_weight_page'),
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _StepTitle(
-            title: '${l10n.onboardingWeightTitle} ($suffix)',
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          TextField(
-            controller: _weightController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-            decoration: InputDecoration(
-              hintText: '0.0',
-              suffixText: suffix,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 24),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBodyFatPage(AppLocalizations l10n) {
-    return SingleChildScrollView(
-      key: const Key('onboarding_body_fat_page'),
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 24),
-          _StepTitle(
-            title: l10n.onboardingBodyFatPageTitle,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingBodyFatPageSubtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            key: const Key('onboarding_body_fat_text_field'),
-            controller: _bodyFatPercentController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) {
-              if (_currentPage >= _adaptiveGoalPageIndex) {
-                _refreshOnboardingRecommendationPreview();
-              }
-            },
-            decoration: InputDecoration(
-              labelText: l10n.onboardingBodyFatOptionalLabel,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingBodyFatOptionalHelper,
-            key: const Key('onboarding_body_fat_helper_text'),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              key: const Key('onboarding_body_fat_help_button'),
-              onPressed: _openBodyFatHelperEntryPoint,
-              child: Text(l10n.onboardingBodyFatHelpAction),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAdaptiveGoalPage(AppLocalizations l10n) {
-    return SingleChildScrollView(
-      key: const Key('onboarding_adaptive_goal_page'),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          _StepTitle(
-            title: l10n.onboardingAdaptiveGoalTitle,
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingAdaptiveGoalSubtitle,
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-          ),
-          const SizedBox(height: 20),
-          DropdownButtonFormField<BodyweightGoal>(
-            initialValue: _selectedGoal,
-            decoration: InputDecoration(
-              labelText: l10n.adaptiveGoalDirectionLabel,
-            ),
-            items: BodyweightGoal.values
-                .map(
-                  (goal) => DropdownMenuItem<BodyweightGoal>(
-                    value: goal,
-                    child: Text(_goalLabel(l10n, goal)),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: (goal) {
-              if (goal == null) return;
-              setState(() {
-                _selectedGoal = goal;
-                _selectedTargetRateKgPerWeek =
-                    WeeklyTargetRateCatalog.defaultForGoal(goal).kgPerWeek;
-              });
-              _refreshOnboardingRecommendationPreview();
-            },
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<PriorActivityLevel>(
-            key: const Key('onboarding_prior_activity_dropdown'),
-            initialValue: _selectedPriorActivityLevel,
-            decoration: InputDecoration(
-              labelText: l10n.adaptivePriorActivityLabel,
-            ),
-            items: PriorActivityLevel.values
-                .map(
-                  (level) => DropdownMenuItem<PriorActivityLevel>(
-                    value: level,
-                    child: Text(_priorActivityLabel(l10n, level)),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: (level) {
-              if (level == null) return;
-              setState(() {
-                _selectedPriorActivityLevel = level;
-              });
-              _refreshOnboardingRecommendationPreview();
-            },
-          ),
-          const SizedBox(height: 12),
-          PriorActivityHelpBlock(
-            key: const Key('onboarding_prior_activity_help_block'),
-            l10n: l10n,
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<ExtraCardioHoursOption>(
-            key: const Key('onboarding_extra_cardio_dropdown'),
-            initialValue: _selectedExtraCardioHoursOption,
-            decoration: InputDecoration(
-              labelText: l10n.adaptiveExtraCardioLabel,
-            ),
-            items: ExtraCardioHoursCatalog.supportedOptions
-                .map(
-                  (option) => DropdownMenuItem<ExtraCardioHoursOption>(
-                    value: option,
-                    child: Text(_extraCardioLabel(l10n, option)),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: (option) {
-              if (option == null) return;
-              setState(() {
-                _selectedExtraCardioHoursOption = option;
-              });
-              _refreshOnboardingRecommendationPreview();
-            },
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.adaptiveExtraCardioHelp,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: WeeklyTargetRateCatalog.optionsForGoal(_selectedGoal)
-                .map((option) {
-              final isSelected =
-                  option.kgPerWeek == _selectedTargetRateKgPerWeek;
-              return ChoiceChip(
-                label: Text(
-                  _rateLabel(l10n, option.kgPerWeek),
-                ),
-                selected: isSelected,
-                onSelected: (_) {
-                  setState(() {
-                    _selectedTargetRateKgPerWeek = option.kgPerWeek;
-                  });
-                  _refreshOnboardingRecommendationPreview();
-                },
-              );
-            }).toList(growable: false),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
   Future<void> _openBodyFatHelperEntryPoint() async {
     await showBodyFatGuidanceSheet(context);
-  }
-
-  String _goalLabel(AppLocalizations l10n, BodyweightGoal goal) {
-    switch (goal) {
-      case BodyweightGoal.loseWeight:
-        return l10n.adaptiveGoalLose;
-      case BodyweightGoal.maintainWeight:
-        return l10n.adaptiveGoalMaintain;
-      case BodyweightGoal.gainWeight:
-        return l10n.adaptiveGoalGain;
-    }
-  }
-
-  String _rateLabel(AppLocalizations l10n, double kgPerWeek) {
-    final sign = kgPerWeek > 0 ? '+' : '';
-    return l10n.adaptiveRatePerWeek('$sign${kgPerWeek.toStringAsFixed(2)}');
-  }
-
-  String _priorActivityLabel(
-    AppLocalizations l10n,
-    PriorActivityLevel level,
-  ) {
-    switch (level) {
-      case PriorActivityLevel.low:
-        return l10n.adaptivePriorActivityLow;
-      case PriorActivityLevel.moderate:
-        return l10n.adaptivePriorActivityModerate;
-      case PriorActivityLevel.high:
-        return l10n.adaptivePriorActivityHigh;
-      case PriorActivityLevel.veryHigh:
-        return l10n.adaptivePriorActivityVeryHigh;
-    }
-  }
-
-  String _extraCardioLabel(
-    AppLocalizations l10n,
-    ExtraCardioHoursOption option,
-  ) {
-    switch (option) {
-      case ExtraCardioHoursOption.h0:
-        return l10n.adaptiveExtraCardioOption0;
-      case ExtraCardioHoursOption.h1:
-        return l10n.adaptiveExtraCardioOption1;
-      case ExtraCardioHoursOption.h2:
-        return l10n.adaptiveExtraCardioOption2;
-      case ExtraCardioHoursOption.h3:
-        return l10n.adaptiveExtraCardioOption3;
-      case ExtraCardioHoursOption.h5:
-        return l10n.adaptiveExtraCardioOption5;
-      case ExtraCardioHoursOption.h7Plus:
-        return l10n.adaptiveExtraCardioOption7Plus;
-    }
-  }
-
-  Widget _buildCaloriesPage(AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _StepTitle(title: l10n.onboardingGoalsTitle, align: TextAlign.center),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingGoalCalories,
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-          ),
-          const SizedBox(height: 32),
-          TextField(
-            controller: _calController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: Colors.orange,
-            ),
-            decoration: InputDecoration(
-              suffixText: l10n.unit_kcal,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 24),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMacrosPage(AppLocalizations l10n) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _StepTitle(title: l10n.onboardingMacrosStepTitle),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingMacrosStepSubtitle,
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-          ),
-          const SizedBox(height: 32),
-          _MacroInput(
-            controller: _protController,
-            label: l10n.onboardingGoalProtein,
-            color: Colors.redAccent,
-          ),
-          const SizedBox(height: 16),
-          _MacroInput(
-            controller: _carbController,
-            label: l10n.onboardingGoalCarbs,
-            color: Colors.green,
-          ),
-          const SizedBox(height: 16),
-          _MacroInput(
-            controller: _fatController,
-            label: l10n.onboardingGoalFat,
-            color: Colors.blueAccent,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWaterPage(AppLocalizations l10n) {
-    final unitService = context.watch<UnitService>();
-    final suffix = unitService.suffixFor(UnitDimension.liquid);
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _StepTitle(
-            title: '${l10n.onboardingGoalWater} ($suffix)',
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          TextField(
-            controller: _waterController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-            ),
-            decoration: InputDecoration(
-              suffixText: suffix,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 24),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepTitle extends StatelessWidget {
-  final String title;
-  final TextAlign align;
-  const _StepTitle({required this.title, this.align = TextAlign.left});
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      textAlign: align,
-      style: Theme.of(
-        context,
-      ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-    );
-  }
-}
-
-class _MacroInput extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final Color color;
-  const _MacroInput({
-    required this.controller,
-    required this.label,
-    required this.color,
-  });
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-        Expanded(
-          flex: 1,
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.end,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-            decoration: InputDecoration(
-              suffixText: l10n.unit_grams,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _UnitSystemChoiceCard extends StatelessWidget {
-  const _UnitSystemChoiceCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            color: cs.surface.withValues(alpha: selected ? 0.96 : 0.82),
-            border: Border.all(
-              color:
-                  selected ? cs.primary : cs.onSurface.withValues(alpha: 0.10),
-              width: selected ? 2 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-                color: cs.shadow.withValues(alpha: 0.14),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 34, color: selected ? cs.primary : cs.onSurface),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                selected ? Icons.check_circle : Icons.circle_outlined,
-                color: selected ? cs.primary : cs.onSurfaceVariant,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

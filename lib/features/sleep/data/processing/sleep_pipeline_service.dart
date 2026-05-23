@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
@@ -86,7 +87,7 @@ class SleepPipelineService {
   Future<SleepPipelineRunResult> runImport({
     required SleepRawIngestionBatch batch,
     String normalizationVersion = 'sleep-import-v1',
-    String analysisVersion = 'sleep-health-score-v2',
+    String analysisVersion = 'sleep-health-score-v3',
     bool forceRecompute = false,
     DateTime? recomputeFromInclusive,
     DateTime? recomputeToExclusive,
@@ -308,6 +309,11 @@ class SleepPipelineService {
       currentBatchSegments: mapped.stageSegments,
     );
 
+    final rollingMidSleepSdByNight = _buildRollingMidSleepSdByNight(
+      targetSessions: mapped.sessions,
+      lookbackSessions: params.lookbackSessions,
+    );
+
     final analysisRows = <SleepNightlyAnalysisCompanion>[];
     for (final session in mapped.sessions) {
       final repaired = repairSleepTimeline(
@@ -322,6 +328,10 @@ class SleepPipelineService {
       final avgHr = hr.isEmpty
           ? null
           : hr.fold<double>(0, (sum, item) => sum + item.bpm) / hr.length;
+          
+      final localStart = session.startAtUtc.toLocal();
+      final sleepOnsetHourLocal = localStart.hour + (localStart.minute / 60.0);
+
       final score = calculateSleepScore(
         SleepScoringInput(
           durationMinutes: metrics.totalSleepTime.inMinutes,
@@ -341,6 +351,8 @@ class SleepPipelineService {
           stageDataConfidence: _timelineConfidence(repaired),
           sourcePlatform: session.sourcePlatform,
           sourceAppId: session.sourceAppId,
+          sleepOnsetHourLocal: sleepOnsetHourLocal,
+          rollingMidSleepSd: rollingMidSleepSdByNight[_nightKey(session.endAtUtc)],
         ),
         config: SleepScoringConfig(analysisVersion: analysisVersion),
       );
@@ -367,6 +379,7 @@ class SleepPipelineService {
           regularitySri: score.regularityScore,
           regularityValidDays: score.regularityValidDays,
           regularityIsStable: score.regularityStable,
+          scoreBreakdownJson: jsonEncode(score.toJson()),
           analyzedAt: importedAt,
         ),
       );
@@ -476,6 +489,74 @@ class SleepPipelineService {
       final sri = calculateSleepRegularityIndex(dailyStates: history);
       byNight[_nightKey(night)] = sri;
     }
+    return byNight;
+  }
+
+  static Map<String, double> _buildRollingMidSleepSdByNight({
+    required List<SleepSession> targetSessions,
+    required List<SleepCanonicalSessionRecord> lookbackSessions,
+  }) {
+    if (targetSessions.isEmpty) return const {};
+    
+    final targetNights = targetSessions
+        .map((session) => _normalizeDay(session.endAtUtc))
+        .toSet()
+        .toList(growable: false)
+      ..sort();
+
+    final allSessions = <String, SleepSession>{};
+    for (final row in lookbackSessions) {
+      allSessions[row.id] = _toDomainSession(row);
+    }
+    for (final session in targetSessions) {
+      allSessions[session.id] = session;
+    }
+
+    final sessionsList = allSessions.values.toList()
+      ..sort((a, b) => a.endAtUtc.compareTo(b.endAtUtc));
+
+    final byNight = <String, double>{};
+
+    for (final night in targetNights) {
+      final windowStart = night.subtract(const Duration(days: 14));
+      
+      final windowSessions = sessionsList.where((s) {
+        final d = _normalizeDay(s.endAtUtc);
+        return !d.isBefore(windowStart) && !d.isAfter(night);
+      }).toList();
+
+      if (windowSessions.isEmpty) {
+        byNight[_nightKey(night)] = 0.0;
+        continue;
+      }
+
+      final midSleeps = windowSessions.map((s) {
+        final localStart = s.startAtUtc.toLocal();
+        double onset = localStart.hour + (localStart.minute / 60.0);
+        if (onset > 12.0) {
+          onset -= 24.0;
+        }
+        final durationMinutes = s.endAtUtc.difference(s.startAtUtc).inMinutes;
+        double ms = onset + ((durationMinutes / 60.0) / 2.0);
+        while (ms < 0) {
+          ms += 24.0;
+        }
+        while (ms >= 24.0) {
+          ms -= 24.0;
+        }
+        return ms;
+      }).toList();
+
+      if (midSleeps.length < 2) {
+        byNight[_nightKey(night)] = 0.0;
+        continue;
+      }
+
+      final mean = midSleeps.reduce((a, b) => a + b) / midSleeps.length;
+      final variance = midSleeps.map((ms) => math.pow(ms - mean, 2)).reduce((a, b) => a + b) / (midSleeps.length - 1);
+      byNight[_nightKey(night)] = math.sqrt(variance);
+    }
+
     return byNight;
   }
 

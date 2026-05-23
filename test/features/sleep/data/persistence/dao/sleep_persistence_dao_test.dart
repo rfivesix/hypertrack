@@ -65,6 +65,7 @@ void main() {
     expect(names, contains('regularity_sri'));
     expect(names, contains('regularity_valid_days'));
     expect(names, contains('regularity_is_stable'));
+    expect(names, contains('score_breakdown_json'));
   });
 
   test('raw dao insert and query by status/hash works', () async {

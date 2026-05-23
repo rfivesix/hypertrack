@@ -125,7 +125,9 @@ class _ManageSupplementsScreenState extends State<ManageSupplementsScreen> {
   }
 
   Widget _tile(Supplement s, AppLocalizations l10n) {
-    final isBuiltin = s.isBuiltin || s.code == 'caffeine';
+    final isBuiltin = s.isBuiltin ||
+        s.code == 'caffeine' ||
+        s.name.toLowerCase() == 'caffeine';
     final title = localizeSupplementName(s, l10n);
 
     final content = SummaryCard(

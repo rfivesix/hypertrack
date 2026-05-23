@@ -715,7 +715,7 @@ class _MealScreenState extends State<MealScreen> {
       final qty =
           int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
 
-      await DatabaseHelper.instance.insertFoodEntry(
+      final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
         FoodEntry(
           barcode: bc,
           timestamp: ts,
@@ -731,7 +731,11 @@ class _MealScreenState extends State<MealScreen> {
         }
         final c100 = fi.caffeineMgPer100ml;
         if (fi.isLiquid == true && c100 != null && c100 > 0) {
-          await _logCaffeineDose(c100 * (qty / 100.0), ts);
+          await _logCaffeineDose(
+            c100 * (qty / 100.0),
+            ts,
+            foodEntryId: newFoodEntryId,
+          );
         }
       }
     }
@@ -744,7 +748,11 @@ class _MealScreenState extends State<MealScreen> {
     }
   }
 
-  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp) async {
+  Future<void> _logCaffeineDose(
+    double doseMg,
+    DateTime timestamp, {
+    int? foodEntryId,
+  }) async {
     if (doseMg <= 0) return;
 
     final supplements = await DatabaseHelper.instance.getAllSupplements();
@@ -769,6 +777,7 @@ class _MealScreenState extends State<MealScreen> {
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
+        sourceFoodEntryId: foodEntryId,
       ),
     );
   }

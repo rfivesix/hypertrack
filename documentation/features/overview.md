@@ -29,3 +29,8 @@ An image and text analysis capture engine that translates photo logs or food des
 ### 3. One-Way Health Export
 A local synchronization pipe that bridges local wellness data with native system platforms (Apple HealthKit and Google Health Connect). The export pipelines emphasize absolute idempotency. Using a local SQLite single source of truth (`health_export_records`), the application logs a custom hash of the data payload and date, ensuring that repeated synchronizations never write duplicate segments.
 *   *Learn more in the [**One-Way Native Health Export Documentation**](health_sync_export.md).*
+
+### 4. Sleep Health Score Engine (SHS v3.5)
+A clinical-grade sleep analysis engine that evaluates overnight recovery across 5 domains (Sleep Duration, Sleep Continuity, Sleep Stage Depth / Architecture, Circadian Timing, and Sleep Regularity). Shifting from rigid binary limits to a continuous soft-cap multiplier model, the engine dynamically applies penalty factors based on the single worst-performing biological bottleneck (such as severe REM or N3 deep sleep deprivation, insufficient TST, or late circadian mid-sleep delays) to guide users with precise, contextual biological feedback.
+*   *Learn more in the [**Sleep Health Score Engine Documentation**](sleep_scoring_engine.md).*
+

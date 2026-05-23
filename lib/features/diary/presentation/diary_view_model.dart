@@ -311,12 +311,22 @@ class DiaryViewModel extends ChangeNotifier {
     int? foodEntryId,
     int? fluidEntryId,
   }) async {
+    // Delete existing caffeine logs associated with these ids first, even if the new doseMg is 0.
+    if (foodEntryId != null) {
+      await _supplementRepo.deleteCaffeineLogByFoodEntryId(foodEntryId);
+    }
+    if (fluidEntryId != null) {
+      await _supplementRepo.deleteCaffeineLogByFluidEntryId(fluidEntryId);
+    }
+
     if (doseMg <= 0) return;
 
     final supplements = await _supplementRepo.getAllSupplements();
     Supplement? caffeineSupplement;
     try {
-      caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
+      caffeineSupplement = supplements.firstWhere(
+        (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
+      );
     } catch (e) {
       return;
     }
@@ -329,6 +339,8 @@ class DiaryViewModel extends ChangeNotifier {
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
+        sourceFoodEntryId: foodEntryId,
+        sourceFluidEntryId: fluidEntryId,
       ),
     );
   }

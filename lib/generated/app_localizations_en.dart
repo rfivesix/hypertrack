@@ -4765,4 +4765,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muscleLowerBack => 'Lower Back';
+
+  @override
+  String get sleepDetailAnalysisHeader => 'Detailed Analysis';
+
+  @override
+  String get sleepMetricDurationLabel => 'Sleep Duration';
+
+  @override
+  String get sleepMetricContinuityLabel => 'Continuity (WASO/SE)';
+
+  @override
+  String get sleepMetricDepthLabel => 'Sleep Stage Depth';
+
+  @override
+  String get sleepMetricTimingLabel => 'Circadian Timing';
+
+  @override
+  String get sleepMetricRegularityLabel => 'Regularity';
+
+  @override
+  String get sleepBannerTstBottleneck =>
+      'Sleep duration penalty active: Your total sleep volume was below the regenerative optimum of 6.5 hours, which restricts anabolic hormone release.';
+
+  @override
+  String get sleepBannerRemBottleneck =>
+      'REM sleep deficiency penalty: Your REM sleep was below 60 minutes. This impairs neuronal recovery and mental freshness.';
+
+  @override
+  String get sleepBannerN3Bottleneck =>
+      'Deep sleep deficiency penalty: Critical lack of N3 deep sleep (<70 min). Physical muscle tissue repair is suboptimal.';
+
+  @override
+  String get sleepBannerTimingBottleneck =>
+      'Circadian phase shift penalty: Your mid-sleep was after 05:30 AM. Sleeping against the inner clock reduces sleep quality and insulin sensitivity.';
+
+  @override
+  String get sleepBannerDefaultPenalty =>
+      'Clinical protective brake active: Your sleep volume was suboptimal (<6h) or circadian timing (sleep onset) was severely shifted. The total score has been limited.';
 }

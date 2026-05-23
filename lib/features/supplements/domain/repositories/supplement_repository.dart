@@ -24,4 +24,6 @@ abstract class SupplementRepository {
   Future<void> insertSupplementLog(SupplementLog log);
   Future<void> updateSupplementLog(SupplementLog log);
   Future<void> deleteSupplementLog(int id);
+  Future<void> deleteCaffeineLogByFoodEntryId(int foodEntryId);
+  Future<void> deleteCaffeineLogByFluidEntryId(int fluidEntryId);
 }

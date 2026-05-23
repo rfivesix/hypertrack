@@ -36,9 +36,10 @@ class SleepNightlyAnalysesDao {
         regularity_sri,
         regularity_valid_days,
         regularity_is_stable,
+        score_breakdown_json,
         analyzed_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ''',
       <Object?>[
         row.id,
@@ -62,6 +63,7 @@ class SleepNightlyAnalysesDao {
         row.regularityIsStable == null
             ? null
             : (row.regularityIsStable! ? 1 : 0),
+        row.scoreBreakdownJson,
         _toEpochMillis(row.analyzedAt),
         _toEpochMillis(DateTime.now()),
       ],
@@ -154,6 +156,7 @@ class SleepNightlyAnalysesDao {
         0 => false,
         _ => null,
       },
+      scoreBreakdownJson: row.readNullable<String>('score_breakdown_json'),
       analyzedAt: _fromEpochMillis(row.read<int>('analyzed_at')),
       createdAt: _fromEpochMillis(row.read<int>('created_at')),
       updatedAt: _fromEpochMillis(row.read<int>('updated_at')),

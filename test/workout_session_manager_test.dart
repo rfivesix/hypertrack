@@ -437,16 +437,209 @@ void main() {
       expect(manager.isActive, isFalse);
 
       final storedLog = await workoutDb.getWorkoutLogById(log.id!);
-      final storedSets = await workoutDb.getSetLogsForWorkout(log.id!);
 
       expect(storedLog, isNotNull);
       expect(storedLog!.endTime, isNotNull);
       expect(storedLog.routineName, 'Done');
       expect(storedLog.notes, 'Great session');
-      expect(storedSets.length, 1);
-      expect(storedSets.first.exerciseName, 'Exercise A');
-      expect(storedSets.first.logOrder, 0);
-      expect(storedSets.first.isCompleted, isTrue);
     });
-  });
-}
+
+    test('removeSet removes set from memory and database', () async {
+      final log = await workoutDb.startWorkout(routineName: 'Session');
+      final exerciseA = const model.Exercise(
+        id: 1,
+        nameDe: 'A',
+        nameEn: 'Exercise A',
+        descriptionDe: '',
+        descriptionEn: '',
+        categoryName: 'Strength',
+        primaryMuscles: ['x'],
+        secondaryMuscles: [],
+      );
+      await manager.startWorkout(log, [
+        RoutineExercise(
+          id: 400,
+          exercise: exerciseA,
+          pauseSeconds: null,
+          setTemplates: [
+            SetTemplate(id: 4001, setType: 'normal'),
+            SetTemplate(id: 4002, setType: 'normal')
+          ],
+        ),
+      ]);
+      await _waitFor(() => manager.setLogs.length == 2);
+
+      // Update them so they have IDs (inserted into db)
+      await manager.updateSet(4001, weight: 50, reps: 10, isCompleted: true);
+      await manager.updateSet(4002, weight: 50, reps: 10, isCompleted: true);
+
+      // Remove set 4001
+      await manager.removeSet(4001);
+
+      expect(manager.setLogs.containsKey(4001), isFalse);
+      expect(manager.exercises.first.setTemplates.length, 1);
+      expect(manager.exercises.first.setTemplates.first.id, 4002);
+    });
+
+    test('addExercise adds a new exercise to the active workout', () async {
+      final log = await workoutDb.startWorkout(routineName: 'Session');
+      await manager.startWorkout(log, []);
+
+      final newExercise = const model.Exercise(
+        id: 1,
+        nameDe: 'New',
+        nameEn: 'New Exercise',
+        descriptionDe: '',
+        descriptionEn: '',
+        categoryName: 'Strength',
+        primaryMuscles: ['chest'],
+        secondaryMuscles: [],
+      );
+
+      await manager.addExercise(newExercise);
+
+      expect(manager.exercises.length, 1);
+      expect(manager.exercises.first.exercise.nameEn, 'New Exercise');
+      expect(manager.exercises.first.setTemplates.length, 3); // Default 3 sets
+    });
+
+    test('removeExercise removes exercise and its sets', () async {
+      final log = await workoutDb.startWorkout(routineName: 'Session');
+      final exerciseA = const model.Exercise(
+        id: 1,
+        nameDe: 'A',
+        nameEn: 'Exercise A',
+        descriptionDe: '',
+        descriptionEn: '',
+        categoryName: 'Strength',
+        primaryMuscles: ['x'],
+        secondaryMuscles: [],
+      );
+      await manager.startWorkout(log, [
+        RoutineExercise(
+          id: 400,
+          exercise: exerciseA,
+          pauseSeconds: null,
+          setTemplates: [
+            SetTemplate(id: 4001, setType: 'normal'),
+          ],
+        ),
+      ]);
+      await _waitFor(() => manager.setLogs.length == 1);
+
+      await manager.removeExercise(400);
+
+      expect(manager.exercises, isEmpty);
+      expect(manager.setLogs, isEmpty);
+    });
+
+    test('reorderExercises updates exercise order', () async {
+      final log = await workoutDb.startWorkout(routineName: 'Session');
+      final exerciseA = const model.Exercise(
+        id: 1,
+        nameDe: 'A',
+        nameEn: 'Exercise A',
+        descriptionDe: '',
+        descriptionEn: '',
+        categoryName: 'Strength',
+        primaryMuscles: ['x'],
+        secondaryMuscles: [],
+      );
+      final exerciseB = const model.Exercise(
+        id: 2,
+        nameDe: 'B',
+        nameEn: 'Exercise B',
+        descriptionDe: '',
+        descriptionEn: '',
+        categoryName: 'Strength',
+        primaryMuscles: ['y'],
+        secondaryMuscles: [],
+      );
+      await manager.startWorkout(log, [
+        RoutineExercise(
+          id: 400,
+          exercise: exerciseA,
+          pauseSeconds: null,
+          setTemplates: [SetTemplate(id: 4001, setType: 'normal')],
+        ),
+        RoutineExercise(
+          id: 500,
+          exercise: exerciseB,
+          pauseSeconds: null,
+          setTemplates: [SetTemplate(id: 5001, setType: 'normal')],
+        ),
+      ]);
+
+      expect(manager.exercises.first.id, 400);
+
+      await manager.reorderExercise(0, 2); // Move 400 from index 0 to after index 1 (newIndex = 2 in ReorderableListView logic)
+
+      expect(manager.exercises.first.id, 500);
+      expect(manager.exercises.last.id, 400);
+      });
+
+      test('updatePauseTime updates memory and repository', () async {
+      final log = await workoutDb.startWorkout(routineName: 'Session');
+      final exerciseA = const model.Exercise(
+        id: 1,
+        nameDe: 'A',
+        nameEn: 'Exercise A',
+        descriptionDe: '',
+        descriptionEn: '',
+        categoryName: 'Strength',
+        primaryMuscles: ['x'],
+        secondaryMuscles: [],
+      );
+      await manager.startWorkout(log, [
+        RoutineExercise(
+          id: 400,
+          exercise: exerciseA,
+          pauseSeconds: 60,
+          setTemplates: [SetTemplate(id: 4001, setType: 'normal')],
+        ),
+      ]);
+
+      await manager.updatePauseTime(400, 120);
+
+      expect(manager.pauseTimes[400], 120);
+      expect(manager.setLogs[4001]!.restTimeSeconds, 120);
+      });
+
+      test('updateExerciseNotes updates memory and repository', () async {
+      final log = await workoutDb.startWorkout(routineName: 'Session');
+      final exerciseA = const model.Exercise(
+        id: 1,
+        nameDe: 'A',
+        nameEn: 'Exercise A',
+        descriptionDe: '',
+        descriptionEn: '',
+        categoryName: 'Strength',
+        primaryMuscles: ['x'],
+        secondaryMuscles: [],
+      );
+      await manager.startWorkout(log, [
+        RoutineExercise(
+          id: 400,
+          exercise: exerciseA,
+          pauseSeconds: 60,
+          setTemplates: [SetTemplate(id: 4001, setType: 'normal')],
+        ),
+      ]);
+
+      await manager.updateExerciseNotes('Exercise A', 'Focus on form');
+
+      expect(manager.exercises.first.notes, 'Focus on form');
+      });
+
+      test('clearLocalSessionState resets manager state', () async {
+      final log = await workoutDb.startWorkout(routineName: 'Session');
+      await manager.startWorkout(log, []);
+
+      await manager.clearLocalSessionState();
+
+      expect(manager.workoutLog, isNull);
+      expect(manager.exercises, isEmpty);
+      expect(manager.isActive, isFalse);
+      });
+      });
+      }

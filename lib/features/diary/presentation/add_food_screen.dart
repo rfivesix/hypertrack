@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../data/database_helper.dart';
 import '../data/sources/product_local_data_source.dart';
 import '../../../generated/app_localizations.dart';
@@ -17,15 +16,16 @@ import 'food_detail_screen.dart';
 import 'meal_screen.dart';
 import 'scanner_screen.dart';
 import 'ai_meal_capture_screen.dart';
-import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/bottom_content_spacer.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import '../../../widgets/common/glass_fab.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import 'widgets/off_attribution_widget.dart';
-import '../../../widgets/common/macro_badge_row.dart';
-import '../../../widgets/common/summary_card.dart';
+import 'widgets/food_item_search_tile.dart';
+import 'widgets/meal_item_card.dart';
+import 'widgets/catalog_category_tile.dart';
+import 'widgets/confirm_log_meal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import '../../../services/haptic_feedback_service.dart';
 import '../../../services/theme_service.dart';
@@ -562,69 +562,24 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Widget _buildFoodListItem(FoodItem item) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
-    final themeService = Provider.of<ThemeService>(context);
-    final baseFoodLang = BaseFoodLanguageService.resolveLanguageCode(
-      choice: themeService.baseFoodLanguage,
-      context: context,
-    );
-
-    IconData sourceIcon;
-    switch (item.source) {
-      case FoodItemSource.base:
-        sourceIcon = Icons.star;
-        break;
-      case FoodItemSource.off:
-      case FoodItemSource.user:
-        sourceIcon = Icons.inventory_2;
-        break;
-    }
-
-    return SummaryCard(
-      child: ListTile(
-        leading: Icon(sourceIcon, color: colorScheme.primary),
-        // --- Change starts here ---
-        title: Text(
-          () {
-            final name = item.source == FoodItemSource.base
-                ? item.getLocalizedName(context, languageCode: baseFoodLang)
-                : item.getLocalizedName(context);
-            return name.isNotEmpty ? name : l10n.unknown;
-          }(),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        // --- Change ends here ---
-        subtitle: Text(
-          l10n.foodItemSubtitle(
-            item.brand.isNotEmpty ? item.brand : l10n.noBrand,
-            item.calories,
+    return FoodItemSearchTile(
+      item: item,
+      onAdd: () => Navigator.of(context).pop(item),
+      onTap: () async {
+        final result = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => FoodDetailScreen(foodItem: item),
           ),
-        ),
-        trailing: IconButton(
-          icon: Icon(
-            Icons.add_circle_outline,
-            color: colorScheme.primary,
-            size: 28,
-          ),
-          onPressed: () => Navigator.of(context).pop(item),
-        ),
-        onTap: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => FoodDetailScreen(foodItem: item),
-            ),
-          );
-          if (!mounted) return;
+        );
+        if (!mounted) return;
 
-          if (result is FoodItem) {
-            Navigator.of(context).pop(result);
-          } else {
-            _loadFavorites();
-            _loadRecentItems();
-          }
-        },
-      ),
+        if (result is FoodItem) {
+          Navigator.of(context).pop(result);
+        } else {
+          _loadFavorites();
+          _loadRecentItems();
+        }
+      },
     );
   }
 
@@ -826,46 +781,16 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                     }
                   }();
 
-                  final loading = _loadingCats.contains(key);
-                  final items = _catItems[key];
-
-                  return Theme(
-                    data: Theme.of(
-                      context,
-                    ).copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      leading: Text(
-                        emoji?.isNotEmpty == true ? emoji! : '🗂️',
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      title: Text(title),
-                      initiallyExpanded: false,
-                      onExpansionChanged: (expanded) {
-                        if (expanded) _loadCategoryItems(key);
-                      },
-                      children: [
-                        if (loading)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        else if (items == null || items.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Center(child: Text(l10n.emptyCategory)),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: DesignConstants.cardPadding.copyWith(
-                              top: 0,
-                            ),
-                            itemCount: items.length,
-                            itemBuilder: (_, i) => _buildFoodListItem(items[i]),
-                          ),
-                      ],
-                    ),
+                  return CatalogCategoryTile(
+                    categoryKey: key,
+                    title: title,
+                    emoji: emoji,
+                    isLoading: _loadingCats.contains(key),
+                    items: _catItems[key],
+                    onExpansionChanged: (expanded) {
+                      if (expanded) _loadCategoryItems(key);
+                    },
+                    itemTileBuilder: _buildFoodListItem,
                   );
                 },
               ),
@@ -986,80 +911,28 @@ class _AddFoodScreenState extends State<AddFoodScreen>
   }
 
   Widget _buildMealCard(Map<String, dynamic> meal, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme;
-    final themeService = Provider.of<ThemeService>(context);
     final mealId = meal['id'] as int;
 
-    return SummaryCard(
-      child: ListTile(
-        leading: Icon(Icons.restaurant, color: color.primary),
-        title: Text(meal['name'] as String),
-        subtitle: FutureBuilder<MealCardNutritionTotals>(
-          future: _getMealTotals(mealId),
-          builder: (_, snap) {
-            final totals = snap.data;
-            final count =
-                totals?.ingredientCount ?? _mealItemsCache[mealId]?.length ?? 0;
-
-            if (totals == null) {
-              return Text('${l10n.mealIngredientsTitle}: $count');
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${l10n.mealIngredientsTitle}: $count'),
-                const SizedBox(height: 2),
-                MacroBadgeRow(
-                  kcal: totals.kcal,
-                  protein: totals.protein,
-                  carbs: totals.carbs,
-                  fat: totals.fat,
-                  useBadges: themeService.useColorfulMacroBadges,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        trailing: Wrap(
-          spacing: 4,
-          children: [
-            IconButton(
-              tooltip: l10n.mealsAddToDiary,
-              icon: Icon(Icons.add_circle_outline, color: color.primary),
-              onPressed: () => _confirmAndLogMeal(meal, l10n),
-            ),
-            IconButton(
-              tooltip: l10n.mealsEdit,
-              icon: const Icon(Icons.edit),
-              onPressed: () async {
-                // Open new screen (view), then switch directly to edit.
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => MealScreen(meal: meal, startInEdit: true),
-                  ),
-                );
-                await _loadMeals();
-              },
-            ),
-            IconButton(
-              tooltip: l10n.mealsDelete,
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _deleteMeal(meal, l10n),
-            ),
-          ],
-        ),
-        onTap: () async {
-          // New detail screen (view)
-          await Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => MealScreen(meal: meal)));
-          await _loadMeals();
-        },
-      ),
+    return MealItemCard(
+      meal: meal,
+      mealTotalsFuture: _getMealTotals(mealId),
+      ingredientCount: _mealItemsCache[mealId]?.length ?? 0,
+      onAdd: () => _confirmAndLogMeal(meal, l10n),
+      onEdit: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => MealScreen(meal: meal, startInEdit: true),
+          ),
+        );
+        await _loadMeals();
+      },
+      onDelete: () => _deleteMeal(meal, l10n),
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => MealScreen(meal: meal)),
+        );
+        await _loadMeals();
+      },
     );
   }
 
@@ -1099,276 +972,63 @@ class _AddFoodScreenState extends State<AddFoodScreen>
 
     final products = await _getProductsForMealItems(rawItems);
 
-    final Map<String, TextEditingController> qtyCtrls = {
-      for (final it in rawItems)
-        (it['barcode'] as String): TextEditingController(
-          text: '${it['quantity_in_grams']}',
-        ),
-    };
-
-    const internalTypes = [
-      'mealtypeBreakfast',
-      'mealtypeLunch',
-      'mealtypeDinner',
-      'mealtypeSnack',
-    ];
-
-    // Initial values from widget parameters or defaults
-    String selectedMealType = widget.initialMealType ?? internalTypes.first;
-    if (!internalTypes.contains(selectedMealType)) {
-      selectedMealType = internalTypes.first;
-    }
-
-    DateTime selectedDate =
-        (widget.initialDate ?? DateTime.now()).withCurrentTime;
-
-    final Map<String, String> mealTypeLabel = {
-      'mealtypeBreakfast': l10n.mealtypeBreakfast,
-      'mealtypeLunch': l10n.mealtypeLunch,
-      'mealtypeDinner': l10n.mealtypeDinner,
-      'mealtypeSnack': l10n.mealtypeSnack,
-    };
     if (!mounted) return;
 
-    try {
-      final ok = await showGlassBottomMenu<bool>(
-            context: context,
-            title: l10n.mealsAddToDiary,
-            contentBuilder: (ctx, close) {
-              return StatefulBuilder(
-                builder: (ctx, modalSetState) {
-                  final locale = Localizations.localeOf(ctx).toString();
-                  final formattedDate = DateFormat.yMd(
-                    locale,
-                  ).format(selectedDate);
-                  final formattedTime = DateFormat.Hm(
-                    locale,
-                  ).format(selectedDate);
+    await showGlassBottomMenu<bool>(
+      context: context,
+      title: l10n.mealsAddToDiary,
+      contentBuilder: (ctx, close) {
+        return ConfirmLogMealBottomSheet(
+          mealName: meal['name'] as String,
+          rawItems: rawItems,
+          products: products,
+          initialDate: widget.initialDate ?? DateTime.now(),
+          initialMealType: widget.initialMealType ?? 'mealtypeBreakfast',
+          onClose: close,
+          onSave: (date, mealType, quantities) async {
+            for (final it in rawItems) {
+              final bc = it['barcode'] as String;
+              final qty = quantities[bc] ?? (it['quantity_in_grams'] as int);
 
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        meal['name'] as String,
-                        style: Theme.of(ctx).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Date & time selection
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton.icon(
-                            icon: const Icon(Icons.calendar_today, size: 18),
-                            label: Text(formattedDate),
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: ctx,
-                                initialDate: selectedDate,
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now().add(
-                                  const Duration(days: 365),
-                                ),
-                              );
-                              if (picked != null) {
-                                modalSetState(() {
-                                  selectedDate = DateTime(
-                                    picked.year,
-                                    picked.month,
-                                    picked.day,
-                                    selectedDate.hour,
-                                    selectedDate.minute,
-                                  );
-                                });
-                              }
-                            },
-                          ),
-                          TextButton.icon(
-                            icon: const Icon(Icons.access_time, size: 18),
-                            label: Text(formattedTime),
-                            onPressed: () async {
-                              final picked = await showTimePicker(
-                                context: ctx,
-                                initialTime:
-                                    TimeOfDay.fromDateTime(selectedDate),
-                              );
-                              if (picked != null) {
-                                modalSetState(() {
-                                  selectedDate = DateTime(
-                                    selectedDate.year,
-                                    selectedDate.month,
-                                    selectedDate.day,
-                                    picked.hour,
-                                    picked.minute,
-                                  );
-                                });
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedMealType,
-                        decoration: InputDecoration(
-                          labelText: l10n.mealTypeLabel,
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          filled: true,
-                          fillColor:
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.white.withValues(alpha: 0.05)
-                                  : Colors.black.withValues(alpha: 0.05),
-                        ),
-                        items: internalTypes
-                            .map(
-                              (key) => DropdownMenuItem(
-                                value: key,
-                                child: Text(mealTypeLabel[key] ?? key),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != null) {
-                            modalSetState(() => selectedMealType = v);
-                          }
-                        },
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 300),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: rawItems.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (_, i) {
-                            final it = rawItems[i];
-                            final bc = it['barcode'] as String;
-                            final fi = products[bc];
-                            final displayName =
-                                (fi?.name.isNotEmpty ?? false) ? fi!.name : bc;
-                            final unit = (fi?.isLiquid == true)
-                                ? l10n.unit_milliliters
-                                : l10n.unit_grams;
-
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 18),
-                                  child: Icon(Icons.lunch_dining, size: 20),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: qtyCtrls[bc],
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: displayName,
-                                      suffixText: unit,
-                                      filled: true,
-                                      fillColor: Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.white.withValues(alpha: 0.05)
-                                          : Colors.black
-                                              .withValues(alpha: 0.05),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                close();
-                                Navigator.of(ctx).pop(false);
-                              },
-                              child: Text(l10n.cancel),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () {
-                                close();
-                                Navigator.of(ctx).pop(true);
-                              },
-                              child: Text(l10n.save),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
+              final newFoodEntryId = await DatabaseHelper.instance.insertFoodEntry(
+                FoodEntry(
+                  barcode: bc,
+                  timestamp: date,
+                  quantityInGrams: qty,
+                  mealType: mealType,
+                ),
               );
-            },
-          ) ??
-          false;
 
-      if (!ok) return;
+              final fi = products[bc];
+              final c100 = fi?.caffeineMgPer100ml;
+              if (fi?.isLiquid == true && c100 != null && c100 > 0) {
+                await _logCaffeineDose(
+                  c100 * (qty / 100.0),
+                  date,
+                  foodEntryId: newFoodEntryId,
+                );
+              }
+            }
 
-      // Use the selected date (selectedDate) instead of DateTime.now().
-      for (final it in rawItems) {
-        final bc = it['barcode'] as String;
-        final ctrl = qtyCtrls[bc]!;
-        final qty =
-            int.tryParse(ctrl.text.trim()) ?? (it['quantity_in_grams'] as int);
-
-        await DatabaseHelper.instance.insertFoodEntry(
-          FoodEntry(
-            barcode: bc,
-            timestamp: selectedDate, // <--- Usage
-            quantityInGrams: qty,
-            mealType: selectedMealType,
-          ),
+            if (mounted) {
+              HapticFeedbackService.instance.confirmationFeedback();
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(
+                SnackBar(content: Text(l10n.mealAddedToDiarySuccess)),
+              );
+            }
+          },
         );
-
-        final fi = products[bc];
-        final c100 = fi?.caffeineMgPer100ml;
-        if (fi?.isLiquid == true && c100 != null && c100 > 0) {
-          await _logCaffeineDose(c100 * (qty / 100.0), selectedDate);
-        }
-      }
-
-      if (mounted) {
-        HapticFeedbackService.instance.confirmationFeedback();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.mealAddedToDiarySuccess)));
-      }
-    } finally {
-      for (final controller in qtyCtrls.values) {
-        controller.dispose();
-      }
-    }
+      },
+    );
   }
 
-  Future<void> _logCaffeineDose(double doseMg, DateTime timestamp) async {
+  Future<void> _logCaffeineDose(
+    double doseMg,
+    DateTime timestamp, {
+    int? foodEntryId,
+  }) async {
     if (doseMg <= 0) return;
 
     // Search/create caffeine supplement
@@ -1394,8 +1054,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         dose: doseMg,
         unit: 'mg',
         timestamp: timestamp,
-        // sourceFoodEntryId: link here if the new FoodEntry ID is available.
-        // This flow logs multiple entries; linking can be extended later.
+        sourceFoodEntryId: foodEntryId,
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../data/database_helper.dart';
 import '../../workout/data/sources/workout_local_data_source.dart';
@@ -30,15 +29,15 @@ import '../../steps/data/steps_aggregation_repository.dart';
 import '../../../services/haptic_feedback_service.dart';
 import '../../../services/theme_service.dart';
 import '../../workout/presentation/live_workout_view_model.dart';
-import '../../../theme/color_constants.dart';
 import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
 import 'widgets/glass_bottom_menu.dart';
 import 'widgets/glass_bottom_nav_bar.dart';
+import 'widgets/running_workout_overlay.dart';
+import 'widgets/speed_dial_menu_overlay.dart';
 import '../../../widgets/common/glass_fab.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/keep_alive_page.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:provider/provider.dart';
 import '../../../navigation/app_route_observer.dart';
 import '../../../services/app_tour_service.dart';
@@ -85,7 +84,6 @@ class _MainScreenState extends State<MainScreen>
   double get kNavBarHeight => isLiquid ? 65 : 72;
   double kBarFabGap = 12.0;
 
-  double _safe01(double v) => v.isNaN ? 0.0 : v.clamp(0.0, 1.0).toDouble();
   DateTime get _currentActiveDate {
     if (_currentIndex == 0 && _tagebuchKey.currentState != null) {
       return _tagebuchKey.currentState!.selectedDateNotifier.value.dateOnly;
@@ -647,7 +645,9 @@ class _MainScreenState extends State<MainScreen>
     final supplements = await DatabaseHelper.instance.getAllSupplements();
     Supplement? caffeineSupplement;
     try {
-      caffeineSupplement = supplements.firstWhere((s) => s.code == 'caffeine');
+      caffeineSupplement = supplements.firstWhere(
+        (s) => (s.code == 'caffeine') || s.name.toLowerCase() == 'caffeine',
+      );
     } catch (e) {
       return;
     }
@@ -1100,45 +1100,42 @@ class _MainScreenState extends State<MainScreen>
             bottom: 36 + kNavBarHeight,
             left: 16,
             right: 16,
-            child: _FrostedBar(
-              child: _RunningWorkoutRow(
-                timeText: elapsed,
-                onContinue: () {
-                  final log = context.read<LiveWorkoutViewModel>().workoutLog;
-                  if (log != null) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            LiveWorkoutScreen(workoutLog: log, routine: null),
-                      ),
+            child: RunningWorkoutOverlay(
+              elapsedDuration: elapsed,
+              onContinue: () {
+                final log = context.read<LiveWorkoutViewModel>().workoutLog;
+                if (log != null) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          LiveWorkoutScreen(workoutLog: log, routine: null),
+                    ),
+                  );
+                }
+              },
+              onDiscard: () async {
+                final l10n = AppLocalizations.of(context)!;
+                final wsm = context.read<LiveWorkoutViewModel>();
+                final logId = wsm.workoutLog?.id;
+
+                // FIX: showDeleteConfirmation instead of showDialog.
+                final confirmed = await showDeleteConfirmation(
+                  context,
+                  title: l10n.discard_button, // "Discard"
+                  content:
+                      l10n.deleteWorkoutConfirmContent, // "Really delete?"
+                  confirmLabel: l10n.discard_button, // Red button: "Discard"
+                );
+
+                if (confirmed) {
+                  if (logId != null) {
+                    await WorkoutLocalDataSource.instance.deleteWorkoutLog(
+                      logId,
                     );
                   }
-                },
-                onDiscard: () async {
-                  final l10n = AppLocalizations.of(context)!;
-                  final wsm = context.read<LiveWorkoutViewModel>();
-                  final logId = wsm.workoutLog?.id;
-
-                  // FIX: showDeleteConfirmation instead of showDialog.
-                  final confirmed = await showDeleteConfirmation(
-                    context,
-                    title: l10n.discard_button, // "Discard"
-                    content:
-                        l10n.deleteWorkoutConfirmContent, // "Really delete?"
-                    confirmLabel: l10n.discard_button, // Red button: "Discard"
-                  );
-
-                  if (confirmed) {
-                    if (logId != null) {
-                      await WorkoutLocalDataSource.instance.deleteWorkoutLog(
-                        logId,
-                      );
-                    }
-                    await wsm.finishWorkout();
-                  }
-                },
-                l10n: l10n,
-              ),
+                  await wsm.finishWorkout();
+                }
+              },
             ),
           ),
         // Bottom Nav Bar & FAB
@@ -1199,284 +1196,21 @@ class _MainScreenState extends State<MainScreen>
           ),
         ),
         // Speed Dial Menu Animation
-        AnimatedBuilder(
+        SpeedDialMenuOverlay(
           animation: _menuController,
-          builder: (context, _) {
-            final v = _safe01(_menuController.value);
-            final themeService = context.watch<ThemeService>();
-            final bool isDarkLocal =
-                Theme.of(context).brightness == Brightness.dark;
-            final Color bgLocal =
-                isDarkLocal ? summaryCardDarkMode : summaryCardWhiteMode;
-            final Color neutralTintLocal =
-                (isDarkLocal ? Colors.white : Colors.black).withValues(
-              alpha: isDarkLocal ? 0.10 : 0.10,
-            );
-            final Color effectiveGlassLocal = Color.alphaBlend(
-              neutralTintLocal,
-              bgLocal.withValues(alpha: isDarkLocal ? 0.22 : 0.16),
-            );
-
-            // Define liquid animation radius locally here or from a constant.
-            const double rLiquid = 99;
-
-            return Offstage(
-              offstage: v == 0.0,
-              child: IgnorePointer(
-                ignoring: v == 0.0,
-                child: Stack(
-                  children: [
-                    Opacity(
-                      opacity: v,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isAddMenuOpen = false;
-                            _menuController.reverse();
-                          });
-                        },
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(
-                            sigmaX: 6.0 * v,
-                            sigmaY: 6.0 * v,
-                          ),
-                          child: Container(
-                            color: Colors.black.withValues(alpha: 0.4 * v),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 100.0,
-                      right: 20.0,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children:
-                              _getSpeedDialActions(l10n).asMap().entries.map((
-                            entry,
-                          ) {
-                            final index = entry.key;
-                            final action = entry.value;
-                            final curved = CurvedAnimation(
-                              parent: _menuController,
-                              curve: Interval(
-                                (index * 0.12).clamp(0.0, 0.95),
-                                1.0,
-                                curve: Curves.easeOutBack,
-                              ),
-                            );
-                            final tv = _safe01(curved.value);
-                            final offsetY = 90.0 * (index + 1);
-                            return Transform.translate(
-                              offset: Offset(0, (1 - tv) * offsetY),
-                              child: Opacity(
-                                opacity: tv,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10.0,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        action['label'],
-                                        style: TextStyle(
-                                          color: Theme.of(context).brightness ==
-                                                  Brightness.light
-                                              ? Colors.black87
-                                              : Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTap: () {
-                                          setState(() {
-                                            _isAddMenuOpen = false;
-                                            _menuController.reverse();
-                                          });
-                                          _executeAddMenuAction(
-                                            action['action'],
-                                          );
-                                        },
-                                        child: themeService.visualStyle == 1
-                                            ? LiquidGlass.withOwnLayer(
-                                                settings: LiquidGlassSettings(
-                                                  thickness: 25,
-                                                  blur: 5,
-                                                  glassColor:
-                                                      effectiveGlassLocal,
-                                                  lightIntensity: 0.35,
-                                                  saturation: 1.10,
-                                                ),
-                                                shape:
-                                                    const LiquidRoundedSuperellipse(
-                                                  borderRadius: rLiquid,
-                                                ),
-                                                child: Container(
-                                                  width: 65.0,
-                                                  height: 65.0,
-                                                  decoration: BoxDecoration(
-                                                    color: neutralTintLocal,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                      rLiquid,
-                                                    ),
-                                                  ),
-                                                  foregroundDecoration:
-                                                      BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                      rLiquid,
-                                                    ),
-                                                    border: Border.all(
-                                                      color: isDarkLocal
-                                                          ? Colors.white
-                                                              .withValues(
-                                                              alpha: 0.20,
-                                                            )
-                                                          : Colors.black
-                                                              .withValues(
-                                                              alpha: 0.08,
-                                                            ),
-                                                      width: 1.2,
-                                                    ),
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: action['gradient'] ==
-                                                          true
-                                                      ? ShaderMask(
-                                                          blendMode:
-                                                              BlendMode.srcIn,
-                                                          shaderCallback:
-                                                              (bounds) =>
-                                                                  createAiGradientShader(
-                                                            bounds,
-                                                          ),
-                                                          child: Icon(
-                                                            action['icon'],
-                                                            size: 28,
-                                                          ),
-                                                        )
-                                                      : Icon(
-                                                          action['icon'],
-                                                          size: 28,
-                                                          color: isDarkLocal
-                                                              ? Colors.white
-                                                              : Colors.black,
-                                                        ),
-                                                ),
-                                              )
-                                            : ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(18),
-                                                child: BackdropFilter(
-                                                  filter: ImageFilter.blur(
-                                                    sigmaX: 12,
-                                                    sigmaY: 12,
-                                                  ),
-                                                  child: Container(
-                                                    width: 76,
-                                                    height: 76,
-                                                    decoration: BoxDecoration(
-                                                      color: bgLocal.withValues(
-                                                          alpha: 0.80),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                        18,
-                                                      ),
-                                                      border: Border.all(
-                                                        color: isDarkLocal
-                                                            ? Colors.white
-                                                                .withValues(
-                                                                alpha: 0.30,
-                                                              )
-                                                            : Colors.black
-                                                                .withValues(
-                                                                alpha: 0.10,
-                                                              ),
-                                                        width: 1.5,
-                                                      ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black
-                                                              .withValues(
-                                                            alpha: 0.25,
-                                                          ),
-                                                          blurRadius: 10,
-                                                          offset: const Offset(
-                                                            0,
-                                                            4,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    alignment: Alignment.center,
-                                                    child: action['gradient'] ==
-                                                            true
-                                                        ? ShaderMask(
-                                                            blendMode:
-                                                                BlendMode.srcIn,
-                                                            shaderCallback:
-                                                                (bounds) =>
-                                                                    const LinearGradient(
-                                                              colors: [
-                                                                Color(
-                                                                  0xFFE88DCC,
-                                                                ),
-                                                                Color(
-                                                                  0xFFF4A77A,
-                                                                ),
-                                                                Color(
-                                                                  0xFFF7D06B,
-                                                                ),
-                                                                Color(
-                                                                  0xFF7DDEAE,
-                                                                ),
-                                                                Color(
-                                                                  0xFF6DC8D9,
-                                                                ),
-                                                              ],
-                                                              begin: Alignment
-                                                                  .topLeft,
-                                                              end: Alignment
-                                                                  .bottomRight,
-                                                            ).createShader(
-                                                              bounds,
-                                                            ),
-                                                            child: Icon(
-                                                              action['icon'],
-                                                              size: 28,
-                                                            ),
-                                                          )
-                                                        : Icon(
-                                                            action['icon'],
-                                                            size: 28,
-                                                            color: isDarkLocal
-                                                                ? Colors.white
-                                                                : Colors.black,
-                                                          ),
-                                                  ),
-                                                ),
-                                              ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
+          actions: _getSpeedDialActions(l10n),
+          onClose: () {
+            setState(() {
+              _isAddMenuOpen = false;
+              _menuController.reverse();
+            });
+          },
+          onActionTap: (actionKey) {
+            setState(() {
+              _isAddMenuOpen = false;
+              _menuController.reverse();
+            });
+            _executeAddMenuAction(actionKey);
           },
         ),
         if (_isTourActive && activeTourStep != null)
@@ -1540,163 +1274,3 @@ class _AppTourStep {
   });
 }
 
-class _FrostedBar extends StatelessWidget {
-  final Widget child;
-  const _FrostedBar({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? summaryCardDarkMode : summaryCardWhiteMode;
-    final themeService = context.watch<ThemeService>();
-
-    final Color neutralTint = (isDark ? Colors.white : Colors.black)
-        .withValues(alpha: isDark ? 0.1 : 0.1);
-    final Color effectiveGlass = Color.alphaBlend(
-      neutralTint,
-      bg.withValues(alpha: isDark ? 0.8 : 0.5),
-    );
-
-    if (themeService.visualStyle == 1) {
-      double radius = 99;
-      return SizedBox(
-        height: 65.0,
-        child: LiquidStretch(
-          stretch: 0.2,
-          interactionScale: 1.04,
-          child: LiquidGlass.withOwnLayer(
-            settings: LiquidGlassSettings(
-              thickness: 30,
-              blur: 0.75,
-              glassColor: effectiveGlass,
-              lightIntensity: 0.35,
-              saturation: 1.10,
-            ),
-            shape: LiquidRoundedSuperellipse(borderRadius: radius),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: neutralTint),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radius.toDouble()),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.20)
-                          : Colors.black.withValues(alpha: 0.08),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: child,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    double radius = 20;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius.toDouble()),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: bg.withValues(alpha: 0.80),
-            borderRadius: BorderRadius.circular(radius.toDouble()),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.30)
-                  : Colors.black.withValues(alpha: 0.10),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-                color: Colors.black.withValues(alpha: 0.3),
-              ),
-            ],
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _RunningWorkoutRow extends StatelessWidget {
-  final String timeText;
-  final VoidCallback onContinue;
-  final VoidCallback onDiscard;
-  final AppLocalizations l10n;
-
-  const _RunningWorkoutRow({
-    required this.timeText,
-    required this.onContinue,
-    required this.onDiscard,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Row(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              const Icon(Icons.timer_outlined, size: 20),
-              const SizedBox(width: 6),
-              Text(
-                timeText,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.9),
-                  decoration: TextDecoration.none,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-        ),
-        FilledButton(
-          onPressed: onContinue,
-          style: FilledButton.styleFrom(
-            backgroundColor: cs.primary,
-            foregroundColor: cs.onPrimary,
-            minimumSize: const Size(0, 28),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: Text(l10n.continue_workout_button),
-        ),
-        const SizedBox(width: 8),
-        FilledButton(
-          onPressed: onDiscard,
-          style: FilledButton.styleFrom(
-            backgroundColor: cs.error,
-            foregroundColor: cs.onError,
-            minimumSize: const Size(0, 28),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: Text(l10n.discard_button),
-        ),
-      ],
-    );
-  }
-}

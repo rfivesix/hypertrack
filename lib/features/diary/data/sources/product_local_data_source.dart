@@ -50,6 +50,8 @@ class ProductLocalDataSource {
     return db.ProductsCompanion(
       barcode: Value(item.barcode),
       name: Value(item.name),
+      nameDe: Value(item.nameDe),
+      nameEn: Value(item.nameEn),
       brand: Value(item.brand),
       calories: Value(item.calories),
       protein: Value(item.protein),
@@ -68,6 +70,7 @@ class ProductLocalDataSource {
       isFluid: Value(item.isFluid),
       isLiquid: Value(item.isLiquid ?? false),
       source: Value(_sourceToString(item.source)),
+      category: Value(item.category),
     );
   }
 

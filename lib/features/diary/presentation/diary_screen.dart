@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/unit_service.dart';
 import 'package:intl/intl.dart';
 import '../../../data/database_helper.dart';
 import 'dialogs/fluid_dialog_content.dart';
@@ -17,31 +16,25 @@ import '../domain/models/food_item.dart';
 import '../domain/models/tracked_food_item.dart';
 import 'add_food_screen.dart';
 import 'add_food_navigation_result.dart';
-import 'food_detail_screen.dart';
 import '../../supplements/presentation/supplement_track_screen.dart';
 import '../../../util/date_util.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/common.dart';
 import '../../../widgets/common/bottom_content_spacer.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
-import '../../profile/presentation/widgets/measurement_chart_widget.dart';
 import 'widgets/nutrition_summary_widget.dart';
 import '../../supplements/presentation/widgets/supplement_summary_widget.dart';
-import '../../../widgets/common/swipe_action_background.dart';
 import '../../../widgets/common/macro_badge_row.dart';
-import '../../../widgets/common/summary_card.dart';
-import '../../../widgets/common/glass_progress_bar.dart';
 import 'diary_view_model.dart';
 import '../../../services/theme_service.dart';
-import '../../../services/base_food_language_service.dart';
-import '../../../services/health/steps_sync_service.dart';
-import '../../steps/domain/steps_models.dart';
-import '../../steps/presentation/steps_module_screen.dart';
-import '../../sleep/presentation/sleep_navigation.dart';
-import '../../pulse/presentation/pulse_analysis_screen.dart';
-import '../../sleep/presentation/widgets/sleep_period_scope_layout.dart';
 import '../../workout/presentation/workout_history_screen.dart';
 import '../../workout/presentation/widgets/todays_workout_summary_card.dart';
+import 'widgets/weight_chart_card.dart';
+import 'widgets/steps_summary_card.dart';
+import 'widgets/sleep_summary_card.dart';
+import 'widgets/pulse_summary_card.dart';
+import 'widgets/food_entry_tile.dart';
+import 'widgets/fluid_entry_tile.dart';
 
 /// The central hub for tracking and viewing daily nutritional and activity data.
 ///
@@ -99,7 +92,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     }
   }
 
-  String _selectedChartRangeKey = '30D';
   final Map<String, bool> _mealExpanded = {
     "mealtypeBreakfast": false,
     "mealtypeLunch": false,
@@ -528,102 +520,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     context.read<DiaryViewModel>().navigateDay(forward);
   }
 
-  Widget _buildWeightChartCard(
-    BuildContext context,
-    ColorScheme colorScheme,
-    AppLocalizations l10n,
-  ) {
-    return SummaryCard(
-      padding: DesignConstants.cardPadding,
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.weightHistoryTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              Wrap(
-                spacing: 8.0,
-                children: [
-                  '30D',
-                  '90D',
-                  'All',
-                ].map((key) => _buildFilterButton(key, key)).toList(),
-              ),
-            ],
-          ),
-          const SizedBox(height: DesignConstants.spacingS),
-          MeasurementChartWidget(
-            chartType: 'weight',
-            dateRange: _calculateDateRange(),
-            unit: context.read<UnitService>().suffixFor(UnitDimension.weight),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterButton(String label, String key) {
-    final theme = Theme.of(context);
-    final isSelected = _selectedChartRangeKey == key;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedChartRangeKey = key;
-        });
-        // Chart is reloaded through setState in MeasurementChartWidget.
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-
-  DateTimeRange _calculateDateRange() {
-    final now = DateTime.now();
-    final end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
-    DateTime start;
-    switch (_selectedChartRangeKey) {
-      case '90D':
-        start = DateTime(
-          now.year,
-          now.month,
-          now.day,
-        ).subtract(const Duration(days: 89));
-        break;
-      case 'All':
-        // For "All", set a very early date
-        // so the chart loads the data accordingly.
-        start = DateTime(2020);
-        break;
-      case '30D':
-      default:
-        start = DateTime(
-          now.year,
-          now.month,
-          now.day,
-        ).subtract(const Duration(days: 29));
-    }
-    return DateTimeRange(start: start, end: end);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -671,13 +567,13 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                   ),
                 ),
                 if (viewModel.stepsTrackingEnabled) ...[
-                  _buildStepsSummaryCard()
+                  const StepsSummaryCard()
                 ],
                 if (viewModel.sleepTrackingEnabled) ...[
-                  _buildSleepSummaryCard()
+                  const SleepSummaryCard()
                 ],
                 if (viewModel.pulseTrackingEnabled) ...[
-                  _buildPulseSummaryCard()
+                  const PulseSummaryCard()
                 ],
                 // New section: insert workout summary here.
                 if (viewModel.workoutSummary != null) ...[
@@ -700,268 +596,13 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                 _buildTodaysLog(l10n),
                 const SizedBox(height: DesignConstants.spacingXL),
                 AppSectionHeader(title: l10n.measurementWeightCapslock),
-                _buildWeightChartCard(
-                  context,
-                  Theme.of(context).colorScheme,
-                  l10n,
-                ),
+                const WeightChartCard(),
                 const BottomContentSpacer(),
               ],
             ),
           );
   }
 
-  Widget _buildStepsSummaryCard() {
-    if (viewModel.isStepsWidgetLoading) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: SummaryCard(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              children: [
-                const SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 12),
-                Text(AppLocalizations.of(context)!.diarySyncingSteps),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    if ((viewModel.stepsForSelectedDay ?? 0) <= 0) {
-      return const SizedBox.shrink();
-    }
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => StepsModuleScreen(
-                initialScope: StepsScope.day,
-                initialDate: viewModel.selectedDate,
-              ),
-            ),
-          );
-        },
-        child: GlassProgressBar(
-          label: AppLocalizations.of(context)!.steps,
-          unit: 'steps',
-          value: (viewModel.stepsForSelectedDay ?? 0).toDouble(),
-          target: (viewModel.targetSteps > 0
-                  ? viewModel.targetSteps
-                  : StepsSyncService.defaultStepsGoal)
-              .toDouble(),
-          color: theme.colorScheme.primary,
-          height: 54,
-          borderRadius: DesignConstants.borderRadiusL,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSleepSummaryCard() {
-    final theme = Theme.of(context);
-    if (viewModel.isSleepWidgetLoading) {
-      return SummaryCard(
-        padding: EdgeInsets.zero,
-        margin: const EdgeInsets.symmetric(vertical: 4.0),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 8.0,
-            horizontal: 16.0,
-          ),
-          title: Text(
-            AppLocalizations.of(context)!.sleepSectionTitle,
-            style: theme.textTheme.titleMedium,
-          ),
-          subtitle: Text(
-            AppLocalizations.of(context)!.diaryLoadingSleep,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              //color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      );
-    }
-    final overview = viewModel.sleepOverview;
-    if (overview == null) {
-      return const SizedBox.shrink();
-    }
-    final durationText = _formatSleepDuration(overview.totalSleepDuration);
-    final score = overview.analysis.score;
-    final scoreText = score == null ? '--' : score.round().toString();
-    return SummaryCard(
-      padding: EdgeInsets.zero,
-      margin: const EdgeInsets.symmetric(vertical: 4.0),
-      child: ListTile(
-        onTap: () =>
-            SleepNavigation.openDayForDate(context, viewModel.selectedDate),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 8.0,
-          horizontal: 16.0,
-        ),
-        title: Text(
-          AppLocalizations.of(context)!.sleepSectionTitle,
-          style: theme.textTheme.titleMedium,
-        ),
-        subtitle: Text(
-          '${AppLocalizations.of(context)!.durationLabel}: $durationText',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.sleepHubScoreLabel,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  scoreText,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.onSurface,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPulseSummaryCard() {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    if (viewModel.isPulseWidgetLoading) {
-      return SummaryCard(
-        padding: EdgeInsets.zero,
-        margin: const EdgeInsets.symmetric(vertical: 4.0),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 8.0,
-            horizontal: 16.0,
-          ),
-          title: Text(
-            l10n.pulseTitle,
-            style: theme.textTheme.titleMedium,
-          ),
-          subtitle: Text(
-            l10n.load_dots,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      );
-    }
-    final summary = viewModel.pulseSummary;
-    if (summary == null || !summary.hasData) {
-      return const SizedBox.shrink();
-    }
-    final rangeText = summary.hasCoreMetrics
-        ? '${summary.minBpm!.round()}-${summary.maxBpm!.round()} ${l10n.sleepBpmUnit}'
-        : '--';
-    final restingText = summary.restingBpm != null
-        ? '${summary.restingBpm!.round()} ${l10n.sleepBpmUnit}'
-        : '--';
-
-    return SummaryCard(
-      padding: EdgeInsets.zero,
-      margin: const EdgeInsets.symmetric(vertical: 4.0),
-      child: ListTile(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => PulseAnalysisScreen(
-                initialDate: viewModel.selectedDate,
-                initialScope: SleepPeriodScope.day,
-              ),
-            ),
-          );
-        },
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 8.0,
-          horizontal: 16.0,
-        ),
-        title: Text(
-          l10n.pulseTitle,
-          style: theme.textTheme.titleMedium,
-        ),
-        subtitle: Text(
-          '${l10n.pulseRangeLabel}: $rangeText',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  l10n.pulseRestingLabel,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  restingText,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.onSurface,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatSleepDuration(Duration value) {
-    final hours = value.inHours;
-    final minutes = value.inMinutes.remainder(60);
-    return '${hours}h ${minutes}m';
-  }
 
   // Section headers now use the centralized AppSectionHeader widget.
 
@@ -1024,7 +665,13 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
             firstChild: Column(
               children: [
                 if (items.isNotEmpty) const Divider(height: 16),
-                ...items.map((item) => _buildFoodEntryTile(l10n, item)),
+                ...items.map(
+                  (item) => FoodEntryTile(
+                    trackedItem: item,
+                    onEdit: _editFoodEntry,
+                    onDelete: _deleteFoodEntry,
+                  ),
+                ),
               ],
             ),
             secondChild: const SizedBox.shrink(),
@@ -1247,7 +894,11 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
                 if (viewModel.fluidEntries.isNotEmpty)
                   const Divider(height: 16),
                 ...viewModel.fluidEntries.map(
-                  (entry) => _buildFluidEntryTile(l10n, entry),
+                  (entry) => FluidEntryTile(
+                    entry: entry,
+                    onEdit: _editFluidEntry,
+                    onDelete: _deleteFluidEntry,
+                  ),
                 ),
               ],
             ),
@@ -1258,143 +909,6 @@ class DiaryScreenState extends State<_DiaryScreenContent> {
     );
   }
 
-  Widget _buildFluidEntryTile(AppLocalizations l10n, FluidEntry entry) {
-    final theme = Theme.of(context);
-    final totalSugar = (entry.sugarPer100ml != null)
-        ? (entry.sugarPer100ml! / 100 * entry.quantityInMl).toStringAsFixed(1)
-        : '0';
-    final totalCaffeine = (entry.caffeinePer100ml != null)
-        ? (entry.caffeinePer100ml! / 100 * entry.quantityInMl).toStringAsFixed(
-            1,
-          )
-        : '0';
-
-    return Dismissible(
-      key: Key('fluid_entry_${entry.id}'),
-      background: const SwipeActionBackground(
-        color: Colors.blueAccent,
-        icon: Icons.edit,
-        alignment: Alignment.centerLeft,
-      ),
-      secondaryBackground: const SwipeActionBackground(
-        color: Colors.redAccent,
-        icon: Icons.delete,
-        alignment: Alignment.centerRight,
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          _editFluidEntry(entry);
-          return false;
-        } else {
-          // New helper
-          return await showDeleteConfirmation(context);
-        }
-      },
-      onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart) {
-          _deleteFluidEntry(entry.id!);
-        }
-      },
-      child: SummaryCard(
-        child: ListTile(
-          title: Text(entry.name, style: theme.textTheme.titleMedium),
-          subtitle: Builder(
-            builder: (ctx) {
-              final l10n = AppLocalizations.of(ctx)!;
-              return Text(
-                '${entry.quantityInMl}${l10n.unit_milliliters} • ${l10n.sugar}: $totalSugar${l10n.unit_grams} • ${l10n.supplement_caffeine}: $totalCaffeine${l10n.unit_milligrams}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.textTheme.bodySmall?.color,
-                ),
-              );
-            },
-          ),
-          trailing: Text(
-            '${entry.kcal ?? 0} ${l10n.unit_kcal}',
-            style: theme.textTheme.labelLarge,
-          ),
-          onTap: () => _editFluidEntry(entry),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFoodEntryTile(
-    AppLocalizations l10n,
-    TrackedFoodItem trackedItem,
-  ) {
-    final themeService = Provider.of<ThemeService>(context);
-    final baseFoodLang = BaseFoodLanguageService.resolveLanguageCode(
-      choice: themeService.baseFoodLanguage,
-      context: context,
-    );
-
-    return Dismissible(
-      key: Key('food_hub_entry_${trackedItem.entry.id}'),
-      background: const SwipeActionBackground(
-        color: Colors.blueAccent,
-        icon: Icons.edit,
-        alignment: Alignment.centerLeft,
-      ),
-      secondaryBackground: const SwipeActionBackground(
-        color: Colors.redAccent,
-        icon: Icons.delete,
-        alignment: Alignment.centerRight,
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          _editFoodEntry(trackedItem);
-          return false;
-        } else {
-          // New helper
-          return await showDeleteConfirmation(context);
-        }
-      },
-      onDismissed: (direction) {
-        if (direction == DismissDirection.endToStart) {
-          _deleteFoodEntry(trackedItem.entry.id!);
-        }
-      },
-      child: SummaryCard(
-        child: ListTile(
-          title: Text(
-            trackedItem.item.source == FoodItemSource.base
-                ? trackedItem.item.getLocalizedName(
-                    context,
-                    languageCode: baseFoodLang,
-                  )
-                : trackedItem.item.getLocalizedName(context),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          subtitle: Text(
-            '${trackedItem.entry.quantityInGrams}${l10n.unit_grams}',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-          ),
-          trailing: Text(
-            '${trackedItem.calculatedCalories} ${l10n.unit_kcal}',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          onTap: () {
-            Navigator.of(context)
-                .push(
-              MaterialPageRoute(
-                builder: (context) =>
-                    FoodDetailScreen(trackedItem: trackedItem),
-              ),
-            )
-                .then((_) {
-              if (!mounted) return;
-              context
-                  .read<DiaryViewModel>()
-                  .loadDataForDate(context.read<DiaryViewModel>().selectedDate);
-            });
-          },
-        ),
-      ),
-    );
-  }
 
   String _getLocalizedMealName(AppLocalizations l10n, String key) {
     switch (key) {
