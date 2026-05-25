@@ -2,6 +2,40 @@
 
 **Private workout and nutrition tracking for Android and iOS.**
 
+<p align="center">
+  <a href="https://github.com/rfivesix/train-libre/stargazers">
+    <img src="https://img.shields.io/github/stars/rfivesix/train-libre?style=for-the-badge&color=F5B301" alt="Stars">
+  </a>
+  <a href="https://github.com/rfivesix/train-libre/network/members">
+    <img src="https://img.shields.io/github/forks/rfivesix/train-libre?style=for-the-badge&color=4C9BE8" alt="Forks">
+  </a>
+  <a href="https://github.com/rfivesix/train-libre/issues">
+    <img src="https://img.shields.io/github/issues/rfivesix/train-libre?style=for-the-badge&color=E05D44" alt="Open Issues">
+  </a>
+  <a href="https://github.com/rfivesix/train-libre/releases">
+    <img src="https://img.shields.io/github/v/release/rfivesix/train-libre?style=for-the-badge&color=34C759" alt="Latest Release">
+  </a>
+  <a href="https://github.com/rfivesix/train-libre/watchers">
+    <img src="https://img.shields.io/github/watchers/rfivesix/train-libre?style=for-the-badge&color=7A3EF0" alt="Watchers">
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-App-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter">
+  <img src="https://img.shields.io/badge/Drift-Local%20Database-0175C2?style=for-the-badge&logo=sqlite&logoColor=white" alt="Drift">
+  <img src="https://img.shields.io/badge/Offline%20First-Architecture-2E8B57?style=for-the-badge" alt="Offline First">
+  <img src="https://img.shields.io/badge/Android%20%26%20iOS-Supported-111827?style=for-the-badge" alt="Android and iOS">
+</p>
+
+<br />
+
+<p align="center">
+  <a href="https://star-history.com/#rfivesix/train-libre&dark">
+    <img src="https://api.star-history.com/svg?repos=rfivesix/train-libre&theme=dark" alt="Star History Chart" width="100%" max-width="600px">
+  </a>
+</p>
+
+
 Train Libre is an open-source, offline-first fitness app for logging workouts, calories, macros, bodyweight, and recovery — without ads, mandatory accounts, or analytics SDKs.
 
 Designed for people who want serious tracking without social feeds, gamification, or subscription pressure, Train Libre prioritizes **privacy**, **local data ownership**, and **transparent analytics**.
