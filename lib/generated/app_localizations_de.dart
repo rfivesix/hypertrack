@@ -1761,6 +1761,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noMusclesSpecified => 'Keine Muskeln angegeben.';
 
   @override
+  String get frontLabel => 'Vorne';
+
+  @override
+  String get backLabel => 'Hinten';
+
+  @override
   String get noSelection => 'Keine Auswahl';
 
   @override

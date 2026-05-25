@@ -754,6 +754,8 @@
   "primaryLabel": "Primär:",
   "secondaryLabel": "Sekundär:",
   "noMusclesSpecified": "Keine Muskeln angegeben.",
+  "frontLabel": "Vorne",
+  "backLabel": "Hinten",
   "noSelection": "Keine Auswahl",
   "selectButton": "Auswählen",
   "applyingChanges": "Wird angewendet...",

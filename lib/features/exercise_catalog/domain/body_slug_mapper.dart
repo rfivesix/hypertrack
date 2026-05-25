@@ -1,0 +1,168 @@
+// lib/features/exercise_catalog/domain/body_slug_mapper.dart
+
+import 'package:flutter_body_highlighter/flutter_body_highlighter.dart';
+import '../../statistics/domain/recovery_domain_service.dart';
+
+/// Maps raw muscle name strings (as stored in the wger exercise database)
+/// to one or more [BodyPartSlug] values suitable for the [BodyHighlighter]
+/// widget.
+///
+/// Resolution order:
+///   1. Direct [BodyPartSlug.fromString] lookup (handles most single-muscle
+///      names like "biceps", "quads", "hamstrings", "chest", "triceps", …).
+///   2. Canonical major-group lookup via [RecoveryDomainService.majorMuscleGroupFor],
+///      which normalises aliases like "traps", "lats", "pecs" first.
+///   3. Manual canonical-group → slug(s) mapping for aggregate groups
+///      (e.g. "back" → trapezius + upperBack, "shoulders" → front + rear delts).
+///
+/// For the "shoulders" canonical group the split is anatomically correct:
+///   * [BodyPartSlug.frontDeltoids] — appears on the **front** view only.
+///   * [BodyPartSlug.backDeltoids] — appears on the **back** view only.
+/// Callers that render a single view should filter by [BodySide].
+class BodySlugMapper {
+  const BodySlugMapper._();
+
+  /// Resolved slugs for each canonical major-group key.
+  ///
+  /// "shoulders" deliberately returns both front and back deltoid slugs so
+  /// each view highlights the anatomically correct region.
+  static const Map<String, List<BodyPartSlug>> _canonicalToSlugs = {
+    'chest': [BodyPartSlug.chest],
+    'back': [BodyPartSlug.trapezius, BodyPartSlug.upperBack],
+    'shoulders': [BodyPartSlug.frontDeltoids, BodyPartSlug.backDeltoids],
+    'biceps': [BodyPartSlug.biceps],
+    'triceps': [BodyPartSlug.triceps],
+    'quads': [BodyPartSlug.quadriceps],
+    'hamstrings': [BodyPartSlug.hamstring],
+    'glutes': [BodyPartSlug.gluteal],
+    'calves': [BodyPartSlug.calves],
+    'lower back': [BodyPartSlug.lowerBack],
+  };
+
+  /// Which side of the body each slug is visible on.
+  ///
+  /// Used by [forSide] to filter slugs to only those relevant for a given
+  /// [BodySide] when rendering a single view.
+  static const Map<BodyPartSlug, BodySide> _slugSide = {
+    // Front-only slugs
+    BodyPartSlug.chest: BodySide.front,
+    BodyPartSlug.abs: BodySide.front,
+    BodyPartSlug.obliques: BodySide.front,
+    BodyPartSlug.frontDeltoids: BodySide.front,
+    BodyPartSlug.biceps: BodySide.front,
+    BodyPartSlug.quadriceps: BodySide.front,
+    BodyPartSlug.adductor: BodySide.front,
+    BodyPartSlug.abductors: BodySide.front,
+    // Back-only slugs
+    BodyPartSlug.trapezius: BodySide.back,
+    BodyPartSlug.upperBack: BodySide.back,
+    BodyPartSlug.lowerBack: BodySide.back,
+    BodyPartSlug.backDeltoids: BodySide.back,
+    BodyPartSlug.triceps: BodySide.back,
+    BodyPartSlug.gluteal: BodySide.back,
+    BodyPartSlug.hamstring: BodySide.back,
+    // Visible on both sides
+    BodyPartSlug.neck: BodySide.front, // treat as front
+    BodyPartSlug.forearm: BodySide.front, // treat as front
+    BodyPartSlug.calves: BodySide.back, // gastrocnemius faces back
+  };
+
+  /// Maps a single raw muscle name (e.g. `"chest"`, `"front delts"`,
+  /// `"latissimus"`) to the corresponding [BodyPartSlug] values.
+  ///
+  /// Returns an empty list when no mapping can be determined.
+  static List<BodyPartSlug> fromRawName(String rawName) {
+    // 1. Try direct fromString (normalises underscores → dashes, trims, lowercases)
+    final direct = BodyPartSlug.fromString(rawName);
+    if (direct != null) return [direct];
+
+    // 2. Resolve via canonical group, then map group → slug list
+    final canonical = RecoveryDomainService.majorMuscleGroupFor(rawName);
+    if (canonical != null) {
+      return _canonicalToSlugs[canonical] ?? const [];
+    }
+
+    return const [];
+  }
+
+  /// Converts a full list of raw muscle names to [BodyPartHighlightData]
+  /// entries.
+  ///
+  /// Duplicate slugs are deduplicated — the first occurrence wins (earlier
+  /// muscles in the list take precedence, so primary muscles beat secondary
+  /// ones when this helper is called separately for each list).
+  ///
+  /// [intensity] is applied to every resulting slug (1–5).
+  static List<BodyPartHighlightData> toHighlightData(
+    List<String> muscleNames, {
+    required int intensity,
+  }) {
+    final seen = <BodyPartSlug>{};
+    final result = <BodyPartHighlightData>[];
+
+    for (final name in muscleNames) {
+      for (final slug in fromRawName(name)) {
+        if (seen.add(slug)) {
+          result.add(BodyPartHighlightData(slug: slug, intensity: intensity));
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /// Merges primary and secondary muscle highlight lists, ensuring primary
+  /// muscles always win when the same slug appears in both lists.
+  ///
+  /// Primary muscles → [primaryIntensity] (default 5).
+  /// Secondary muscles → [secondaryIntensity] (default 2).
+  static List<BodyPartHighlightData> mergedHighlights({
+    required List<String> primaryMuscles,
+    required List<String> secondaryMuscles,
+    int primaryIntensity = 5,
+    int secondaryIntensity = 2,
+  }) {
+    final seen = <BodyPartSlug>{};
+    final result = <BodyPartHighlightData>[];
+
+    // Primary muscles first — they own the slug
+    for (final name in primaryMuscles) {
+      for (final slug in fromRawName(name)) {
+        if (seen.add(slug)) {
+          result.add(
+            BodyPartHighlightData(slug: slug, intensity: primaryIntensity),
+          );
+        }
+      }
+    }
+
+    // Secondary muscles — only add slugs not already claimed
+    for (final name in secondaryMuscles) {
+      for (final slug in fromRawName(name)) {
+        if (seen.add(slug)) {
+          result.add(
+            BodyPartHighlightData(slug: slug, intensity: secondaryIntensity),
+          );
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /// Returns only those highlights that are visible on [side].
+  ///
+  /// Use this when rendering a single [BodySide] view so that e.g.
+  /// [BodyPartSlug.frontDeltoids] is not passed to a back-view widget
+  /// (where it would render on an invisible region).
+  static List<BodyPartHighlightData> forSide(
+    List<BodyPartHighlightData> highlights,
+    BodySide side,
+  ) {
+    return highlights.where((h) {
+      final slugSide = _slugSide[h.slug];
+      // If slug has no side mapping, show it on both views
+      return slugSide == null || slugSide == side;
+    }).toList(growable: false);
+  }
+}

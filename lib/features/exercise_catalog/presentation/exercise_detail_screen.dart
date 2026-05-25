@@ -1,6 +1,8 @@
 // lib/features/exercise_catalog/presentation/exercise_detail_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_body_highlighter/flutter_body_highlighter.dart';
 import '../../../generated/app_localizations.dart';
+import '../domain/body_slug_mapper.dart';
 import '../domain/models/exercise.dart';
 import '../../workout/domain/models/set_log.dart';
 import '../../analytics/domain/models/chart_data_point.dart';
@@ -184,26 +186,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
             ),
             const SizedBox(height: DesignConstants.spacingXL),
             AppSectionHeader(title: l10n.involvedMuscles),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _MuscleGroupCard(
-                    title: l10n.primaryLabel,
-                    muscles: widget.exercise.primaryMuscles,
-                    fallback: l10n.noMusclesSpecified,
-                  ),
-                ),
-                const SizedBox(width: DesignConstants.spacingM),
-                Expanded(
-                  child: _MuscleGroupCard(
-                    title: l10n.secondaryLabel,
-                    muscles: widget.exercise.secondaryMuscles,
-                    fallback: l10n.noMusclesSpecified,
-                  ),
-                ),
-              ],
-            ),
+            _ExerciseMuscleBodyView(exercise: widget.exercise),
             const SizedBox(height: DesignConstants.spacingXL),
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
@@ -514,58 +497,183 @@ class _CategoryBadge extends StatelessWidget {
   }
 }
 
-class _MuscleGroupCard extends StatelessWidget {
-  final String title;
-  final List<String> muscles;
-  final String fallback;
+/// Displays front + back [BodyHighlighter] views side by side, plus a compact
+/// chip legend listing primary and secondary muscle names.
+class _ExerciseMuscleBodyView extends StatelessWidget {
+  final Exercise exercise;
 
-  const _MuscleGroupCard({
-    required this.title,
+  const _ExerciseMuscleBodyView({required this.exercise});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final hasMuscles = exercise.primaryMuscles.isNotEmpty ||
+        exercise.secondaryMuscles.isNotEmpty;
+
+    if (!hasMuscles) {
+      return SummaryCard(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Text(
+            l10n.noMusclesSpecified,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final allHighlights = BodySlugMapper.mergedHighlights(
+      primaryMuscles: exercise.primaryMuscles,
+      secondaryMuscles: exercise.secondaryMuscles,
+    );
+
+    final frontHighlights = BodySlugMapper.forSide(allHighlights, BodySide.front);
+    final backHighlights  = BodySlugMapper.forSide(allHighlights, BodySide.back);
+
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Body diagrams ──────────────────────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.frontLabel,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        height: 200,
+                        child: BodyHighlighter(
+                          highlightedParts: frontHighlights,
+                          side: BodySide.front,
+                          outlineWidth: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.backLabel,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        height: 200,
+                        child: BodyHighlighter(
+                          highlightedParts: backHighlights,
+                          side: BodySide.back,
+                          outlineWidth: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            // ── Legend ─────────────────────────────────────────────────────
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 10),
+            _MuscleChipRow(
+              label: l10n.primaryLabel,
+              muscles: exercise.primaryMuscles,
+              color: theme.colorScheme.primary,
+            ),
+            if (exercise.secondaryMuscles.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              _MuscleChipRow(
+                label: l10n.secondaryLabel,
+                muscles: exercise.secondaryMuscles,
+                color: theme.colorScheme.primary.withValues(alpha: 0.45),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A labelled row of compact muscle-name chips used as a text legend.
+class _MuscleChipRow extends StatelessWidget {
+  final String label;
+  final List<String> muscles;
+  final Color color;
+
+  const _MuscleChipRow({
+    required this.label,
     required this.muscles,
-    required this.fallback,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          if (muscles.isEmpty)
-            Text(
-              fallback,
-              style: textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade600,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 68,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.outline,
+                fontWeight: FontWeight.w600,
               ),
-            )
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: muscles
-                  .map(
-                    (m) => Chip(
-                      label: Text(m),
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  )
-                  .toList(growable: false),
             ),
-        ],
-      ),
+          ),
+        ),
+        Expanded(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: muscles
+                .map(
+                  (m) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Text(
+                      m,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: color.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -699,6 +699,8 @@
   "primaryLabel": "Primary:",
   "secondaryLabel": "Secondary:",
   "noMusclesSpecified": "No muscles specified.",
+  "frontLabel": "Front",
+  "backLabel": "Back",
   "noSelection": "No selection",
   "selectButton": "Select",
   "applyingChanges": "Applying changes...",

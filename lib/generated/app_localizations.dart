@@ -3146,6 +3146,18 @@ abstract class AppLocalizations {
   /// **'No muscles specified.'**
   String get noMusclesSpecified;
 
+  /// No description provided for @frontLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Front'**
+  String get frontLabel;
+
+  /// No description provided for @backLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get backLabel;
+
   /// No description provided for @noSelection.
   ///
   /// In en, this message translates to:

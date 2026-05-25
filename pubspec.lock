@@ -422,6 +422,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_body_highlighter:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: "49592d1a93924a4f3e2813569113a06e20b10e93"
+      url: "https://github.com/rfivesix/flutter_body_highlighter"
+    source: git
+    version: "1.0.0"
   flutter_gen:
     dependency: "direct main"
     description:
