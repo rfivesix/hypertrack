@@ -49,19 +49,19 @@ Before evaluating database matches, the engine normalizes all text tokens and ch
 
 ### Database Matching & Quality Classification
 The engine matches ingredients against the local SQLite database using fuzzy string matching and barcodes:
-*   **Exact Match (Score $\ge 0.95$)**: Perfect textual alignment or matching barcode.
-*   **Strong Match (Score $\ge 0.78$)**: Excellent alignment (e.g., token overlaps).
-*   **Partial Match (Score $\ge 0.55$)**: Moderate overlap (triggers an information warning).
-*   **Weak Match (Score $\ge 0.35$)**: Weak overlap (triggers a warning or error based on the application mode).
-*   **Unmatched (Score $< 0.35$)**: Results in an `unmatched_item` error. The item must be manually matched before saving.
+*   **Exact Match (Score ≥ 0.95)**: Perfect textual alignment or matching barcode.
+*   **Strong Match (Score ≥ 0.78)**: Excellent alignment (e.g., token overlaps).
+*   **Partial Match (Score ≥ 0.55)**: Moderate overlap (triggers an information warning).
+*   **Weak Match (Score ≥ 0.35)**: Weak overlap (triggers a warning or error based on the application mode).
+*   **Unmatched (Score < 0.35)**: Results in an `unmatched_item` error. The item must be manually matched before saving.
 
 ### Validation Rules & Plausibility Checks
 The engine raises warnings or errors if the suggested portions violate physiological plausibility:
-*   **Grams $\le 0$**: Triggers a critical `invalid_quantity` error.
-*   **Grams $> 3000$g**: Triggers a critical `extreme_quantity` error.
-*   **Grams $\le 5$g**: Triggers a `tiny_quantity` warning.
-*   **Grams $> 1200$g**: Triggers a `large_quantity` warning.
-*   **Confidence $< 0.5$**: Triggers a `low_ai_confidence` warning.
+*   **Grams ≤ 0**: Triggers a critical `invalid_quantity` error.
+*   **Grams > 3000g**: Triggers a critical `extreme_quantity` error.
+*   **Grams ≤ 5g**: Triggers a `tiny_quantity` warning.
+*   **Grams > 1200g**: Triggers a `large_quantity` warning.
+*   **Confidence < 0.5**: Triggers a `low_ai_confidence` warning.
 
 ---
 
@@ -71,21 +71,21 @@ To prevent erroneous database matching and portion estimation, Train Libre imple
 
 ### C1: expected Kcal Range Check
 Verifies whether the sum of the calories of all matched database ingredients is within the expected total meal calorie range from the culinary anchor:
-*   **Warning (`anchor_kcal_deviation`)**: Raised if the total matched calories deviate by $>25\%$ from the nearest boundary of the expected range.
-*   **Error (`anchor_kcal_extreme`)**: Raised if the total matched calories deviate by $>50\%$ from the nearest boundary, escalating to a hard validation failure.
+*   **Warning (`anchor_kcal_deviation`)**: Raised if the total matched calories deviate by > 25% from the nearest boundary of the expected range.
+*   **Error (`anchor_kcal_extreme`)**: Raised if the total matched calories deviate by > 50% from the nearest boundary, escalating to a hard validation failure.
 
 ### C2: Expected Macro Profile Check
 Compares the matched database macronutrient distribution against the expected macro percentage profile in the culinary anchor:
-*   **Warning (`anchor_macro_profile_deviation`)**: Raised if the actual protein, carbs, or fat percentage deviates by $>15\%$ from the anchor profile.
+*   **Warning (`anchor_macro_profile_deviation`)**: Raised if the actual protein, carbs, or fat percentage deviates by > 15% from the anchor profile.
 
 ### C3: Cooking State Mismatch Check
 Detects preparation state discrepancies between the AI's parsed item and the matched database entry (e.g., a "raw chicken breast" matched to "cooked chicken breast"):
 *   **Warning (`state_mismatch`)**: Raised when a text state hint mismatch is detected.
-*   **Error (`state_mismatch_extreme`)**: Escalates to a critical validation error if the caloric density delta between the matched raw item and its correct state variant exceeds $30\%$, indicating a serious portion-logging discrepancy.
+*   **Error (`state_mismatch_extreme`)**: Escalates to a critical validation error if the caloric density delta between the matched raw item and its correct state variant exceeds 30%, indicating a serious portion-logging discrepancy.
 
 ### C4: Portion Density Anomaly Detection
 Checks for implausible ingredient quantities based on standard portion densities:
-*   **Warning (`implausible_portion_density`)**: Raised if the matched database product density deviates significantly, meaning the effective portion density is $>2\times$ or $<0.5\times$ of the default database product density, indicating potential gram calculation anomalies.
+*   **Warning (`implausible_portion_density`)**: Raised if the matched database product density deviates significantly, meaning the effective portion density is > 2x or < 0.5x of the default database product density, indicating potential gram calculation anomalies.
 
 ---
 
@@ -127,13 +127,13 @@ To recover from invalid JSON formats, incorrect ingredient portions, or missing 
 
 ### 1. Scoring Formula
 The engine computes an overall quality score starting at 100, subtracting points based on issue severity:
-*   **Info Issue**: $-2$ points.
-*   **Warning Issue**: $-8$ points.
-*   **Error Issue**: $-24$ points.
+*   **Info Issue**: -2 points.
+*   **Warning Issue**: -8 points.
+*   **Error Issue**: -24 points.
 
 ### 2. Validation Threshold
 A candidate only passes validation if:
-*   The overall score is **$\ge 70$**.
+*   The overall score is **≥ 70**.
 *   There are **zero critical errors** (e.g., no unmatched items, no extreme kcal deviations, no invalid quantities).
 
 ### 3. Repair Feedback Generation

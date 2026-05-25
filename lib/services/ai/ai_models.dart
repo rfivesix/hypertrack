@@ -7,6 +7,8 @@ enum AiProvider {
   anthropic,
   mistral,
   xai,
+  ollama,
+  custom,
 }
 
 /// Provider registry metadata.

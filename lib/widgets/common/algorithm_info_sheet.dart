@@ -43,22 +43,36 @@ class AlgorithmInfoButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return IconButton(
-      icon: const Icon(Icons.info_outline),
-      color: iconColor ?? theme.colorScheme.primary,
-      iconSize: DesignConstants.iconSizeM,
-      onPressed: () {
-        showAlgorithmInfoBottomSheet(
-          context,
-          title: title,
-          explanation: explanation,
-          keyPoints: keyPoints,
-          technicalTitle: technicalTitle,
-          technicalExplanation: technicalExplanation,
-          markdownAssetPath: markdownAssetPath,
-        );
-      },
-      tooltip: title,
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () {
+            showAlgorithmInfoBottomSheet(
+              context,
+              title: title,
+              explanation: explanation,
+              keyPoints: keyPoints,
+              technicalTitle: technicalTitle,
+              technicalExplanation: technicalExplanation,
+              markdownAssetPath: markdownAssetPath,
+            );
+          },
+          child: Tooltip(
+            message: title,
+            child: Center(
+              child: Icon(
+                Icons.info_outline,
+                color: iconColor ?? theme.colorScheme.primary,
+                size: DesignConstants.iconSizeM,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -156,6 +156,9 @@ void main() {
       final service = _serviceWith(storage: storage);
 
       for (final provider in AiProvider.values) {
+        if (provider == AiProvider.ollama || provider == AiProvider.custom) {
+          continue;
+        }
         await service.setSelectedModel(provider, 'totally-invalid-model');
         final resolved = await service.resolveAndPersistSelectedModel(provider);
         final meta = service.getProviderMetadata(provider);

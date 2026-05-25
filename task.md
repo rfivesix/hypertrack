@@ -38,6 +38,15 @@ Strictly follow the mathematical specifications:
 ### 4. Verification
 - [x] Run `flutter analyze` to ensure type safety.
 - [x] Check signatures and verify mathematical transformations are well commented.
+  - [x] Systematic purge of all inline math dollar sign (`$`) delimiters from all markdown files:
+    - [x] [sleep_scoring_engine.md](file:///Users/richardgeorgschotte/Projekte/train-libre/documentation/features/sleep_scoring_engine.md) (converted all `$ ... $` to standard Markdown/HTML).
+    - [x] [bayesian_tdee_estimator.md](file:///Users/richardgeorgschotte/Projekte/train-libre/documentation/features/bayesian_tdee_estimator.md) (converted all `$ ... $` to standard Markdown/HTML).
+    - [x] [muscle_recovery_model.md](file:///Users/richardgeorgschotte/Projekte/train-libre/documentation/features/muscle_recovery_model.md) (converted all `$ ... $` to standard Markdown/HTML).
+    - [x] [byok_ai_validation.md](file:///Users/richardgeorgschotte/Projekte/train-libre/documentation/features/byok_ai_validation.md) (converted all `$ ... $` to standard Markdown/HTML).
+  - [x] Systematic conversion of all HTML subscript (`<sub>` and `</sub>`) tags to clean, robust Markdown underscore notation in all files (e.g. `*R_t*`, `*M_qual*`, `*V_ref*`).
+  - [x] Systematic conversion of all multi-line LaTeX cases equations (like `S_D(h)`, `P_light(p_light)`, and `S_circ(MS)` in the sleep engine document) to single-line display math blocks (`$$ ... $$`), satisfying the on-device parser and rendering them as premium green equations.
+  - [x] Audit iOS app icon tree under [AppIcon.appiconset/](file:///Users/richardgeorgschotte/Projekte/train-libre/ios/Runner/Assets.xcassets/AppIcon.appiconset/) and verify all device/resolution files are present and match standard Apple slots in [Contents.json](file:///Users/richardgeorgschotte/Projekte/train-libre/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json).
+  - [x] Run `flutter gen-l10n` and `flutter analyze` to ensure a warning-free clean build.
 
 ## Phase 5: Sleep Dashboard UI Upgrade
 

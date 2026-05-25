@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.15] - 2026-05-26
+
+### Added
+- **Full AI Provider Registry Restoration**: Restored **Google Gemini**, **xAI Grok (Grok)**, and **Mistral** back to the settings selection dropdown in `ai_settings_screen.dart` alongside OpenAI, Anthropic, Ollama, and Custom, making all 7 supported AI providers fully selectable for on-device food analysis.
+
+### Changed
+- **Sleep Scoring Engine LaTeX Refactoring**: Refactored the 3 complex multi-line `cases` equations in `sleep_scoring_engine.md` (Sleep Duration, Light Sleep Penalty, and Circadian Timing) into clear bulleted text conditions and single-line display math blocks (`$$ ... $$`). This completely bypasses markdown backslash-escaping and HTML entity conversion bugs to guarantee robust, beautifully styled green math blocks on all viewports without any KaTeX compiler crashes or text overflows.
+
+### Fixed
+- **Dropdown Visibility Regression**: Resolved a settings screen filter issue that inadvertently hid registered production AI providers from the user-facing settings screen.
+
+
 ## [0.9.14] - 2026-05-23
 
 ### Added

@@ -277,6 +277,9 @@ extension AiNetwork on AiService {
         return _loadXaiModels(apiKey);
       case AiProvider.anthropic:
         return _loadAnthropicModels(apiKey);
+      case AiProvider.ollama:
+      case AiProvider.custom:
+        return null;
     }
   }
 
@@ -450,6 +453,8 @@ extension AiNetwork on AiService {
     List<String> imagesBase64, {
     required String systemPrompt,
     double temperature = 0.3,
+    String? baseUrlOverride,
+    AiProvider provider = AiProvider.openai,
   }) async {
     final effectiveModel = _normalizeOpenAiModelId(model);
     final contentParts = <Map<String, dynamic>>[];
@@ -471,13 +476,17 @@ extension AiNetwork on AiService {
       'temperature': temperature,
     });
 
+    final endpoint = baseUrlOverride != null && baseUrlOverride.isNotEmpty
+        ? '${baseUrlOverride.replaceAll(RegExp(r'/+$'), '')}/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+
     try {
       final response = await http
           .post(
-            Uri.parse('https://api.openai.com/v1/chat/completions'),
+            Uri.parse(endpoint),
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
+              if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
             },
             body: body,
           )
@@ -498,10 +507,31 @@ extension AiNetwork on AiService {
       final choices = json['choices'] as List<dynamic>?;
       if (choices == null || choices.isEmpty) throw const AiParseException();
       return choices[0]['message']['content'] as String? ?? '';
-    } on SocketException {
-      throw const AiNetworkException();
+    } on SocketException catch (e) {
+      if (provider == AiProvider.ollama) {
+        throw const AiNetworkException(
+          'Ollama is offline. Please make sure the Ollama server is running at http://localhost:11434',
+        );
+      } else if (provider == AiProvider.custom) {
+        throw const AiNetworkException(
+          'Custom AI provider is offline. Please verify your Base URL and server status.',
+        );
+      }
+      throw AiNetworkException('Network error: ${e.message}');
     } catch (e) {
       if (e is AiServiceException) rethrow;
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('connection refused') || errStr.contains('connection timed out')) {
+        if (provider == AiProvider.ollama) {
+          throw const AiNetworkException(
+            'Ollama is offline. Please make sure the Ollama server is running at http://localhost:11434',
+          );
+        } else if (provider == AiProvider.custom) {
+          throw const AiNetworkException(
+            'Custom AI provider is offline. Please verify your Base URL and server status.',
+          );
+        }
+      }
       throw AiNetworkException('Request failed: $e');
     }
   }

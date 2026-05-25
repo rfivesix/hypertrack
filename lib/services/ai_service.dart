@@ -58,6 +58,8 @@ class AiService {
   static const _keyPrefix = 'ai_api_key_';
   static const _providerKey = 'ai_selected_provider';
   static const _modelPrefix = 'ai_selected_model_';
+  static const _customBaseUrlKey = 'ai_custom_base_url';
+  static const _customModelKey = 'ai_custom_model';
 
   static const selectedProviderStorageKey = _providerKey;
 
@@ -167,7 +169,69 @@ class AiService {
       supportsVision: true,
       supportsDynamicModelLoading: true,
     ),
+    AiProvider.ollama: AiProviderMetadata(
+      provider: AiProvider.ollama,
+      displayName: 'Ollama',
+      keyHint: 'Not required',
+      defaultModel: 'llama3',
+      rankingHints: [
+        'llama3',
+        'llava',
+        'mistral',
+        'phi3',
+      ],
+      emergencyFallbackModels: [
+        'llama3',
+        'llava',
+      ],
+      supportsVision: true,
+      supportsDynamicModelLoading: false,
+    ),
+    AiProvider.custom: AiProviderMetadata(
+      provider: AiProvider.custom,
+      displayName: 'Custom OpenAI Compatible',
+      keyHint: 'API Key (if required)',
+      defaultModel: 'custom-model',
+      rankingHints: [],
+      emergencyFallbackModels: [
+        'custom-model',
+      ],
+      supportsVision: true,
+      supportsDynamicModelLoading: false,
+    ),
   };
+
+  // ---------------------------------------------------------------------------
+  // Custom Provider Fields (Ollama & Custom BaseURL / Custom Model)
+  // ---------------------------------------------------------------------------
+
+  /// Reads the custom base URL.
+  Future<String?> getCustomBaseUrl() async {
+    return _secureStorage.read(key: _customBaseUrlKey);
+  }
+
+  /// Stores the custom base URL.
+  Future<void> setCustomBaseUrl(String? url) async {
+    if (url == null) {
+      await _secureStorage.delete(key: _customBaseUrlKey);
+    } else {
+      await _secureStorage.write(key: _customBaseUrlKey, value: url);
+    }
+  }
+
+  /// Reads the custom model name.
+  Future<String?> getCustomModel() async {
+    return _secureStorage.read(key: _customModelKey);
+  }
+
+  /// Stores the custom model name.
+  Future<void> setCustomModel(String? model) async {
+    if (model == null) {
+      await _secureStorage.delete(key: _customModelKey);
+    } else {
+      await _secureStorage.write(key: _customModelKey, value: model);
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Key Management
@@ -210,6 +274,11 @@ class AiService {
   }
 
   Future<String> getSelectedModel(AiProvider provider) async {
+    if (provider == AiProvider.ollama || provider == AiProvider.custom) {
+      final customModel = await getCustomModel();
+      if (customModel != null && customModel.isNotEmpty) return customModel;
+      return getProviderMetadata(provider).defaultModel;
+    }
     final selected = await _secureStorage.read(
       key: selectedModelStorageKeyFor(provider),
     );
@@ -219,6 +288,10 @@ class AiService {
   }
 
   Future<void> setSelectedModel(AiProvider provider, String model) async {
+    if (provider == AiProvider.ollama || provider == AiProvider.custom) {
+      await setCustomModel(model);
+      return;
+    }
     final resolvedModel = switch (provider) {
       AiProvider.openai => _normalizeOpenAiModelId(model),
       AiProvider.gemini => _normalizeGeminiModelId(model),
@@ -263,6 +336,9 @@ class AiService {
   /// Resolves persisted model selection against the final allowed model list
   /// (dynamic if available, otherwise emergency fallback) and auto-heals storage.
   Future<String> resolveAndPersistSelectedModel(AiProvider provider) async {
+    if (provider == AiProvider.ollama || provider == AiProvider.custom) {
+      return getSelectedModel(provider);
+    }
     final options = await getModelOptions(provider);
     final selected = await getSelectedModel(provider);
     if (options.isNotEmpty && options.any((m) => m.id == selected)) {
@@ -351,6 +427,9 @@ class AiService {
         if (id.contains('-reasoning')) score += 920;
         if (id.contains('-non-reasoning')) score += 860;
         if (id.contains('-latest')) score += 120;
+        break;
+      case AiProvider.ollama:
+      case AiProvider.custom:
         break;
     }
 
@@ -519,8 +598,13 @@ Repair the candidate. When database candidates are listed, pick the EXACT name f
     double temperature = 0.3,
   }) async {
     final provider = await getSelectedProvider();
-    final apiKey = await getApiKey(provider);
-    if (apiKey == null || apiKey.isEmpty) throw const AiKeyMissingException();
+    String? apiKey;
+    if (provider != AiProvider.ollama) {
+      apiKey = await getApiKey(provider);
+      if (provider != AiProvider.custom && (apiKey == null || apiKey.isEmpty)) {
+        throw const AiKeyMissingException();
+      }
+    }
     final model = await resolveAndPersistSelectedModel(provider);
 
     final imageDataList = <String>[];
@@ -534,16 +618,39 @@ Repair the candidate. When database candidates are listed, pick the EXACT name f
     switch (provider) {
       case AiProvider.openai:
         return _callOpenAiRaw(
-          apiKey,
+          apiKey!,
           model,
           userContent,
           imageDataList,
           systemPrompt: systemPrompt,
           temperature: temperature,
         );
+      case AiProvider.ollama:
+        return _callOpenAiRaw(
+          '',
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: systemPrompt,
+          temperature: temperature,
+          baseUrlOverride: 'http://localhost:11434/v1',
+          provider: provider,
+        );
+      case AiProvider.custom:
+        final customUrl = await getCustomBaseUrl();
+        return _callOpenAiRaw(
+          apiKey ?? '',
+          model,
+          userContent,
+          imageDataList,
+          systemPrompt: systemPrompt,
+          temperature: temperature,
+          baseUrlOverride: customUrl,
+          provider: provider,
+        );
       case AiProvider.gemini:
         return _callGeminiRaw(
-          apiKey,
+          apiKey!,
           model,
           userContent,
           imageDataList,
@@ -552,7 +659,7 @@ Repair the candidate. When database candidates are listed, pick the EXACT name f
         );
       case AiProvider.anthropic:
         return _callAnthropicRaw(
-          apiKey,
+          apiKey!,
           model,
           userContent,
           imageDataList,
@@ -561,7 +668,7 @@ Repair the candidate. When database candidates are listed, pick the EXACT name f
         );
       case AiProvider.mistral:
         return _callMistralRaw(
-          apiKey,
+          apiKey!,
           model,
           userContent,
           imageDataList,
@@ -570,7 +677,7 @@ Repair the candidate. When database candidates are listed, pick the EXACT name f
         );
       case AiProvider.xai:
         return _callXaiRaw(
-          apiKey,
+          apiKey!,
           model,
           userContent,
           imageDataList,
