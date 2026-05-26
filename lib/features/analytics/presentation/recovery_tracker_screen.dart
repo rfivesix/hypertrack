@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_body_highlighter/flutter_body_highlighter.dart';
 
+import '../../../services/profile_service.dart';
 import '../../workout/data/sources/workout_local_data_source.dart';
 import '../../statistics/domain/analytics_state.dart';
 import '../../statistics/domain/recovery_domain_service.dart';
@@ -14,6 +17,7 @@ import '../../../widgets/common/global_app_bar.dart';
 import '../../workout/presentation/widgets/muscle_radar_chart.dart';
 import '../../../widgets/common/summary_card.dart';
 import '../../../widgets/common/algorithm_info_sheet.dart';
+import '../../exercise_catalog/domain/body_slug_mapper.dart';
 
 class RecoveryTrackerScreen extends StatefulWidget {
   const RecoveryTrackerScreen({super.key});
@@ -29,6 +33,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   static const List<String> _canonicalRadarOrder = [
     'chest',
     'shoulders',
+    'abs',
     'triceps',
     'back',
     'biceps',
@@ -38,6 +43,9 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     'quads',
     'calves',
   ];
+
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _muscleKeys = {};
 
   bool _isLoading = true;
   RecoveryAnalyticsPayload _recovery = const RecoveryAnalyticsPayload(
@@ -56,6 +64,12 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
   void initState() {
     super.initState();
     _loadRecovery();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRecovery() async {
@@ -259,9 +273,58 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     }).toList();
   }
 
+  void _scrollToMuscle(String muscleGroup) {
+    final key = _muscleKeys[muscleGroup];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.1,
+      );
+    }
+  }
+
+  Widget _buildBodyView(
+    BuildContext context,
+    List<RecoveryMusclePayload> muscles,
+    BodySide side,
+  ) {
+    final List<BodyPartHighlightData> highlights = [];
+
+    for (final muscle in muscles) {
+      final slugs = BodySlugMapper.fromRawName(muscle.muscleGroup);
+      final color = _stateColor(context, muscle.state);
+
+      for (final slug in slugs) {
+        highlights.add(
+          BodyPartHighlightData(
+            slug: slug,
+            color: color,
+            payload: muscle.muscleGroup,
+          ),
+        );
+      }
+    }
+
+    final filteredHighlights = BodySlugMapper.forSide(highlights, side);
+
+    return BodyHighlighter(
+      gender: context.watch<ProfileService>().gender.toBodyGender(),
+      side: side,
+      highlightedParts: filteredHighlights,
+      onBodyPartTap: (slug, data) {
+        if (data.payload is String) {
+          _scrollToMuscle(data.payload as String);
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final recovering = _recovery.totals.recovering;
     final ready = _recovery.totals.ready;
@@ -283,32 +346,36 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
     final double topPadding =
         MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: GlobalAppBar(
-        title: l10n.recoveryTrackerTitle,
-        actions: [
-          AlgorithmInfoButton(
-            title: l10n.infoRecoveryTitle,
-            explanation: l10n.infoRecoveryExplanation,
-            keyPoints: l10n.infoRecoveryKeyPoints.split('\n'),
-            technicalTitle: l10n.infoRecoveryTechnicalTitle,
-            technicalExplanation: l10n.infoRecoveryTechnicalExplanation,
-            markdownAssetPath: 'documentation/features/muscle_recovery_model.md',
-            iconColor: Theme.of(context).colorScheme.onSurface,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: DesignConstants.screenPadding.copyWith(
-                top: DesignConstants.screenPadding.top + topPadding,
-                bottom: DesignConstants.bottomContentSpacer,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: GlobalAppBar(
+          title: l10n.recoveryTrackerTitle,
+          actions: [
+            AlgorithmInfoButton(
+              title: l10n.infoRecoveryTitle,
+              explanation: l10n.infoRecoveryExplanation,
+              keyPoints: l10n.infoRecoveryKeyPoints.split('\n'),
+              technicalTitle: l10n.infoRecoveryTechnicalTitle,
+              technicalExplanation: l10n.infoRecoveryTechnicalExplanation,
+              markdownAssetPath:
+                  'documentation/features/muscle_recovery_model.md',
+              iconColor: Theme.of(context).colorScheme.onSurface,
+            ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                controller: _scrollController,
+                padding: DesignConstants.screenPadding.copyWith(
+                  top: DesignConstants.screenPadding.top + topPadding,
+                  bottom: DesignConstants.bottomContentSpacer,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   AppSectionHeader(
                     title: l10n.metricsMuscleReadiness,
                     padding: const EdgeInsets.only(left: 4, bottom: 6),
@@ -446,14 +513,59 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                               status: AnalyticsStatus.empty,
                               emptyLabel: l10n.recoveryNoDataBody,
                             )
-                          else
-                            Center(
-                              child: MuscleRadarChart(
-                                data: radarData,
-                                maxValue: 100,
-                                centerLabel: l10n.metricsMuscleReadiness,
+                          else ...[
+                            TabBar(
+                              tabs: [
+                                Tab(
+                                  icon: const Icon(Icons.accessibility_new),
+                                  text: l10n.involvedMuscles,
+                                ),
+                                Tab(
+                                  icon: const Icon(Icons.radar),
+                                  text: l10n.analysis,
+                                ),
+                              ],
+                              indicatorSize: TabBarIndicatorSize.tab,
+                              dividerColor: Colors.transparent,
+                              labelColor: colorScheme.primary,
+                              unselectedLabelColor: colorScheme.onSurfaceVariant,
+                              indicatorColor: colorScheme.primary,
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 320,
+                              child: TabBarView(
+                                physics: const NeverScrollableScrollPhysics(),
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildBodyView(
+                                          context,
+                                          visibleMuscles,
+                                          BodySide.front,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: _buildBodyView(
+                                          context,
+                                          visibleMuscles,
+                                          BodySide.back,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Center(
+                                    child: MuscleRadarChart(
+                                      data: radarData,
+                                      maxValue: 100,
+                                      centerLabel: l10n.metricsMuscleReadiness,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+                          ],
                           const SizedBox(height: 8),
                           Text(
                             l10n.recoveryRadarHeuristicCaption,
@@ -500,12 +612,19 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                       final readinessScore = _readinessScore(muscle);
                       final readinessColor = stateColor;
 
+                      final key = _muscleKeys.putIfAbsent(
+                        rawName,
+                        () => GlobalKey(),
+                      );
+
                       return Padding(
+                        key: key,
                         padding: const EdgeInsets.only(
                           bottom: DesignConstants.spacingS,
                         ),
                         child: SummaryCard(
                           child: Padding(
+
                             padding: const EdgeInsets.all(12.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,6 +783,7 @@ class _RecoveryTrackerScreenState extends State<RecoveryTrackerScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 }

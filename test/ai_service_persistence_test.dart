@@ -98,6 +98,34 @@ void main() {
     });
   });
 
+  group('AiService timeout persistence', () {
+    test('getAiTimeoutSeconds returns default of 60', () async {
+      final storage = _InMemorySecureStorage();
+      final service = _serviceWith(storage: storage);
+
+      expect(await service.getAiTimeoutSeconds(), 60);
+    });
+
+    test('setAiTimeoutSeconds persists and loads custom timeout', () async {
+      final storage = _InMemorySecureStorage();
+      final service = _serviceWith(storage: storage);
+
+      await service.setAiTimeoutSeconds(120);
+      expect(await service.getAiTimeoutSeconds(), 120);
+
+      await service.setAiTimeoutSeconds(300);
+      expect(await service.getAiTimeoutSeconds(), 300);
+    });
+
+    test('invalid timeout in storage falls back to 60', () async {
+      final storage = _InMemorySecureStorage();
+      final service = _serviceWith(storage: storage);
+      await storage.write(key: 'ai_timeout_seconds', value: 'not_a_number');
+
+      expect(await service.getAiTimeoutSeconds(), 60);
+    });
+  });
+
   group('AiService model persistence and healing', () {
     test('missing saved model falls back to each provider default', () async {
       final storage = _InMemorySecureStorage();

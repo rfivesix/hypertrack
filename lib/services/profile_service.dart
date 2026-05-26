@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../features/profile/domain/models/user_gender.dart';
+import '../features/profile/domain/repositories/profile_repository.dart';
 
-/// Service responsible for managing user profile information, such as the profile picture.
+/// Service responsible for managing user profile information, such as the profile picture and gender.
 ///
 /// Implements [ChangeNotifier] to allow UI components to react to profile changes.
 class ProfileService extends ChangeNotifier {
@@ -17,9 +19,13 @@ class ProfileService extends ChangeNotifier {
   ProfileService._internal();
 
   String? _profileImagePath;
+  UserGender _gender = UserGender.male;
 
   /// The local file path to the user's profile image.
   String? get profileImagePath => _profileImagePath;
+
+  /// The user's biological gender preference.
+  UserGender get gender => _gender;
 
   /// A counter that increments whenever the profile image is updated.
   ///
@@ -29,8 +35,8 @@ class ProfileService extends ChangeNotifier {
   bool _isPickerActive = false;
   static const String _profileImageKey = 'profileImagePath';
 
-  /// Initializes the service by loading the saved profile image path from storage.
-  Future<void> initialize() async {
+  /// Initializes the service by loading the saved profile image path and gender from storage.
+  Future<void> initialize(IProfileRepository repository) async {
     final prefs = await SharedPreferences.getInstance();
     _profileImagePath = prefs.getString(_profileImageKey);
 
@@ -42,6 +48,27 @@ class ProfileService extends ChangeNotifier {
         await prefs.remove(_profileImageKey);
       }
     }
+
+    final profile = await repository.getUserProfile();
+    _gender = UserGender.fromString(profile?.gender);
+
+    notifyListeners();
+  }
+
+  /// Updates the user's gender and persists it to the database.
+  Future<void> updateGender(UserGender newGender, IProfileRepository repository) async {
+    if (_gender == newGender) return;
+
+    _gender = newGender;
+    final profile = await repository.getUserProfile();
+    
+    await repository.saveUserProfile(
+      name: profile?.username ?? 'User',
+      birthday: profile?.birthday,
+      height: profile?.height,
+      gender: newGender.name,
+    );
+
     notifyListeners();
   }
 

@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_body_highlighter/flutter_body_highlighter.dart';
+
 import '../domain/repositories/workout_repository.dart';
 import '../data/sources/workout_local_data_source.dart';
 import '../../sharing/share_service.dart';
@@ -11,6 +13,7 @@ import '../../../generated/app_localizations.dart';
 import '../../exercise_catalog/domain/models/exercise.dart';
 import '../domain/models/set_log.dart';
 import '../domain/models/workout_log.dart';
+import '../../../services/profile_service.dart';
 import '../../../services/health/workout_heart_rate_models.dart';
 import '../../../services/health/workout_heart_rate_service.dart';
 import '../../../services/haptic_feedback_service.dart';
@@ -25,6 +28,7 @@ import 'widgets/workout_summary_bar.dart';
 import 'widgets/workout_heart_rate_section.dart';
 import 'widgets/workout_exercise_log_card.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
+import '../../exercise_catalog/domain/body_slug_mapper.dart';
 
 /// A detailed view for a single completed [WorkoutLog].
 ///
@@ -60,7 +64,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
 
   bool _pulseTrackingEnabled = false;
   DateTime? _editedStartTime;
-  Map<String, double> _categoryVolume = {};
   static const ShareService _shareService = ShareService();
 
   StreamSubscription<List<SetLog>>? _setLogsSubscription;
@@ -92,27 +95,19 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     await _calculateHistoricalPRs(mutableSets, beforeTimestamp: _log!.startTime);
 
     final updatedGroups = <String, List<SetLog>>{};
+    final updatedDetails = <String, Exercise>{};
+
     for (var set in mutableSets) {
       updatedGroups.putIfAbsent(set.exerciseName, () => []).add(set);
-    }
-
-    // Resolve any newly added exercises not in _exerciseDetails
-    for (final set in mutableSets) {
-      if (!_exerciseDetails.containsKey(set.exerciseName)) {
+      
+      final existing = _exerciseDetails[set.exerciseName];
+      if (existing != null) {
+        updatedDetails[set.exerciseName] = existing;
+      } else {
         final ex = await repo.resolveExerciseForSetLog(set);
         if (ex != null) {
-          _exerciseDetails[set.exerciseName] = ex;
+          updatedDetails[set.exerciseName] = ex;
         }
-      }
-    }
-
-    // Recalculate volume based on the resolved map
-    final catVol = <String, double>{};
-    for (var set in mutableSets) {
-      final v = (set.weightKg ?? 0) * (set.reps ?? 0);
-      if (v > 0) {
-        final cat = _exerciseDetails[set.exerciseName]?.categoryName ?? 'Other';
-        catVol.update(cat, (val) => val + v, ifAbsent: () => v);
       }
     }
 
@@ -130,7 +125,7 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
         sets: mutableSets,
       );
       _groupedSets = updatedGroups;
-      _categoryVolume = catVol;
+      _exerciseDetails = updatedDetails;
     });
   }
 
@@ -201,19 +196,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       }
     }
 
-    // Volume for the header (strength only)
-    final catVol = <String, double>{};
-    for (var set in data.sets) {
-      // Count toward volume only when not cardio?
-      // Simplified: count anything that has weight * reps.
-      // Cardio has weight=0/null in the log because it is stored in distanceKm, so it is automatically 0.
-      final v = (set.weightKg ?? 0) * (set.reps ?? 0);
-      if (v > 0) {
-        final cat = details[set.exerciseName]?.categoryName ?? 'Other';
-        catVol.update(cat, (val) => val + v, ifAbsent: () => v);
-      }
-    }
-
     _notesController.text = data.notes ?? '';
     _editedStartTime = data.startTime;
 
@@ -268,7 +250,6 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
       _groupedSets = updatedGroups;
       _exerciseDetails = details;
       _exerciseNotes = savedExerciseNotes;
-      _categoryVolume = catVol;
       _heartRateSummary = heartRateSummary;
       _pulseTrackingEnabled = pulseTrackingEnabled;
       if (!preserveEditState) {
@@ -698,16 +679,16 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
                                                   ),
                                                 )
                                               : const SizedBox.shrink()),
-                                      if (_categoryVolume.isNotEmpty) ...[
+                                      if (_exerciseDetails.isNotEmpty) ...[
                                         const Divider(height: 24),
                                         Text(
-                                          l10n.muscleSplitLabel,
+                                          l10n.analyticsRecentDistributionHeatmap,
                                           style: textTheme.titleMedium,
                                         ),
                                         const SizedBox(
                                           height: DesignConstants.spacingS,
                                         ),
-                                        ..._buildCategoryBars(context),
+                                        _buildMuscleHeatmap(l10n),
                                       ],
                                     ],
                                   ),
@@ -915,35 +896,81 @@ class _WorkoutLogDetailScreenState extends State<WorkoutLogDetailScreen> {
     );
   }
 
-  List<Widget> _buildCategoryBars(BuildContext context) {
-    final total = _categoryVolume.values.fold<double>(0, (a, b) => a + b);
-    return _categoryVolume.entries.map((entry) {
-      final fraction = total > 0 ? entry.value / total : 0.0;
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(entry.key, style: const TextStyle(fontSize: 12)),
-            ),
-            Expanded(
-              flex: 5,
-              child: LinearProgressIndicator(
-                value: fraction,
-                backgroundColor: Colors.grey.shade300,
-                color: Theme.of(context).colorScheme.primary,
-                minHeight: 12,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text("${(fraction * 100).toStringAsFixed(0)}%"),
-          ],
-        ),
+  Widget _buildMuscleHeatmap(AppLocalizations l10n) {
+    final muscleCounts = <BodyPartSlug, int>{};
+    
+    for (final name in _groupedSets.keys) {
+      final ex = _exerciseDetails[name];
+      if (ex == null) continue;
+
+      final exerciseSlugs = <BodyPartSlug>{};
+      for (final muscleName in ex.primaryMuscles) {
+        exerciseSlugs.addAll(BodySlugMapper.fromRawName(muscleName));
+      }
+
+      for (final slug in exerciseSlugs) {
+        muscleCounts[slug] = (muscleCounts[slug] ?? 0) + 1;
+      }
+    }
+
+    // Find max count for normalization to ensure vibrant colors
+    int maxCount = 0;
+    for (final count in muscleCounts.values) {
+      if (count > maxCount) maxCount = count;
+    }
+
+    final highlights = muscleCounts.entries.map((e) {
+      // Relative intensity: scale to 1-5 based on session max
+      final intensity = maxCount > 0
+          ? (e.value / maxCount * 5).ceil().clamp(1, 5)
+          : 1;
+
+      return BodyPartHighlightData(
+        slug: e.key,
+        intensity: intensity,
       );
     }).toList();
-  }
 
+    if (highlights.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 180,
+      child: Row(
+        children: [
+          Expanded(
+            child: BodyHighlighter(
+              gender: context.watch<ProfileService>().gender.toBodyGender(),
+              side: BodySide.front,
+              intensityColors: const [
+                Color(0xFFFFF176), // Light Yellow
+                Color(0xFFFFEE58), // Yellow
+                Color(0xFFFFB74D), // Orange
+                Color(0xFFFF7043), // Deep Orange
+                Color(0xFFE53935), // Red
+              ],
+              highlightedParts:
+                  BodySlugMapper.forSide(highlights, BodySide.front),
+            ),
+          ),
+          Expanded(
+            child: BodyHighlighter(
+              gender: context.watch<ProfileService>().gender.toBodyGender(),
+              side: BodySide.back,
+              intensityColors: const [
+                Color(0xFFFFF176), // Light Yellow
+                Color(0xFFFFEE58), // Yellow
+                Color(0xFFFFB74D), // Orange
+                Color(0xFFFF7043), // Deep Orange
+                Color(0xFFE53935), // Red
+              ],
+              highlightedParts:
+                  BodySlugMapper.forSide(highlights, BodySide.back),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _changeSetType(int setLogId, String newType) {
     setState(() {

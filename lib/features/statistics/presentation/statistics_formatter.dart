@@ -173,6 +173,8 @@ class StatisticsPresentationFormatter implements StatisticsFormatter {
         return l10n.muscleCalves;
       case 'lower back':
         return l10n.muscleLowerBack;
+      case 'abs':
+        return l10n.muscleAbs;
       default:
         return _capitaliseLabel(muscleGroup); // Fallback
     }

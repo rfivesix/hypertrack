@@ -1753,6 +1753,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMusclesSpecified => 'No muscles specified.';
 
   @override
+  String get frontLabel => 'Front';
+
+  @override
+  String get backLabel => 'Back';
+
+  @override
   String get noSelection => 'No selection';
 
   @override
@@ -4765,6 +4771,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muscleLowerBack => 'Lower Back';
+
+  @override
+  String get muscleAbs => 'Abs';
 
   @override
   String get sleepDetailAnalysisHeader => 'Detailed Analysis';
