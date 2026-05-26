@@ -35,8 +35,9 @@ class BodySlugMapper {
     'quads': [BodyPartSlug.quadriceps],
     'hamstrings': [BodyPartSlug.hamstring],
     'glutes': [BodyPartSlug.gluteal],
-    'calves': [BodyPartSlug.calves],
+    'calves': [BodyPartSlug.calves, BodyPartSlug.tibialis],
     'lower back': [BodyPartSlug.lowerBack],
+    'abs': [BodyPartSlug.abs, BodyPartSlug.obliques],
   };
 
   /// Which side of the body each slug is visible on.
@@ -53,6 +54,7 @@ class BodySlugMapper {
     BodyPartSlug.quadriceps: BodySide.front,
     BodyPartSlug.adductor: BodySide.front,
     BodyPartSlug.abductors: BodySide.front,
+    BodyPartSlug.tibialis: BodySide.front,
     // Back-only slugs
     BodyPartSlug.trapezius: BodySide.back,
     BodyPartSlug.upperBack: BodySide.back,
@@ -64,7 +66,6 @@ class BodySlugMapper {
     // Visible on both sides
     BodyPartSlug.neck: BodySide.front, // treat as front
     BodyPartSlug.forearm: BodySide.front, // treat as front
-    BodyPartSlug.calves: BodySide.back, // gastrocnemius faces back
   };
 
   /// Maps a single raw muscle name (e.g. `"chest"`, `"front delts"`,
@@ -72,15 +73,16 @@ class BodySlugMapper {
   ///
   /// Returns an empty list when no mapping can be determined.
   static List<BodyPartSlug> fromRawName(String rawName) {
-    // 1. Try direct fromString (normalises underscores → dashes, trims, lowercases)
-    final direct = BodyPartSlug.fromString(rawName);
-    if (direct != null) return [direct];
-
-    // 2. Resolve via canonical group, then map group → slug list
+    // 1. Resolve via canonical group, then map group → slug list
+    // This handles aggregate groups like "Shoulders" -> [frontDeltoids, backDeltoids]
     final canonical = RecoveryDomainService.majorMuscleGroupFor(rawName);
     if (canonical != null) {
       return _canonicalToSlugs[canonical] ?? const [];
     }
+
+    // 2. Try direct fromString (normalises underscores → dashes, trims, lowercases)
+    final direct = BodyPartSlug.fromString(rawName);
+    if (direct != null) return [direct];
 
     return const [];
   }

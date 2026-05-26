@@ -102,7 +102,8 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) {
             final profileService = ProfileService();
-            profileService.initialize();
+            final repository = context.read<IProfileRepository>();
+            profileService.initialize(repository);
             return profileService;
           },
         ),

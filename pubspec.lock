@@ -427,7 +427,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "49592d1a93924a4f3e2813569113a06e20b10e93"
+      resolved-ref: b0646440478819d9bc7366ec041a2f86a5621863
       url: "https://github.com/rfivesix/flutter_body_highlighter"
     source: git
     version: "1.0.0"

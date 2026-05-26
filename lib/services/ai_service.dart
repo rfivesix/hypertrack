@@ -60,6 +60,7 @@ class AiService {
   static const _modelPrefix = 'ai_selected_model_';
   static const _customBaseUrlKey = 'ai_custom_base_url';
   static const _customModelKey = 'ai_custom_model';
+  static const _timeoutKey = 'ai_timeout_seconds';
 
   static const selectedProviderStorageKey = _providerKey;
 
@@ -231,6 +232,18 @@ class AiService {
     } else {
       await _secureStorage.write(key: _customModelKey, value: model);
     }
+  }
+
+  /// Reads the AI request timeout in seconds.
+  Future<int> getAiTimeoutSeconds() async {
+    final value = await _secureStorage.read(key: _timeoutKey);
+    if (value == null || value.isEmpty) return 60;
+    return int.tryParse(value) ?? 60;
+  }
+
+  /// Stores the AI request timeout in seconds.
+  Future<void> setAiTimeoutSeconds(int seconds) async {
+    await _secureStorage.write(key: _timeoutKey, value: seconds.toString());
   }
 
   // ---------------------------------------------------------------------------

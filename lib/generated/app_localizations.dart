@@ -8418,6 +8418,12 @@ abstract class AppLocalizations {
   /// **'Lower Back'**
   String get muscleLowerBack;
 
+  /// No description provided for @muscleAbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Abs'**
+  String get muscleAbs;
+
   /// No description provided for @sleepDetailAnalysisHeader.
   ///
   /// In en, this message translates to:

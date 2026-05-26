@@ -70,13 +70,14 @@ extension AiNetwork on AiService {
         final uri = Uri.parse(
           'https://generativelanguage.googleapis.com/$version/models/$candidate:generateContent?key=$apiKey',
         );
+        final timeoutSeconds = await getAiTimeoutSeconds();
         final response = await http
             .post(
               uri,
               headers: {'Content-Type': 'application/json'},
               body: body,
             )
-            .timeout(const Duration(seconds: 60));
+            .timeout(Duration(seconds: timeoutSeconds));
 
         if (response.statusCode == 200) return response;
         lastResponse = response;
@@ -124,6 +125,7 @@ extension AiNetwork on AiService {
     });
 
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await http
           .post(
             Uri.parse('https://api.anthropic.com/v1/messages'),
@@ -134,7 +136,7 @@ extension AiNetwork on AiService {
             },
             body: body,
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw const AiAuthException();
       }
@@ -228,6 +230,7 @@ extension AiNetwork on AiService {
     });
 
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await http
           .post(
             Uri.parse(endpoint),
@@ -237,7 +240,7 @@ extension AiNetwork on AiService {
             },
             body: body,
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw const AiAuthException();
       }
@@ -285,10 +288,11 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadOpenAiModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.openai.com/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -319,11 +323,12 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadGeminiModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse(
           'https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey',
         ),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['models'] as List<dynamic>? ?? const [];
@@ -356,10 +361,11 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadMistralModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.mistral.ai/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -392,10 +398,11 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadXaiModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.x.ai/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -418,13 +425,14 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadAnthropicModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.anthropic.com/v1/models'),
         headers: {
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
         },
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -481,6 +489,7 @@ extension AiNetwork on AiService {
         : 'https://api.openai.com/v1/chat/completions';
 
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await http
           .post(
             Uri.parse(endpoint),
@@ -490,7 +499,7 @@ extension AiNetwork on AiService {
             },
             body: body,
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(Duration(seconds: timeoutSeconds));
 
       if (response.statusCode == 401) throw const AiAuthException();
       if (response.statusCode == 429) throw const AiRateLimitException();

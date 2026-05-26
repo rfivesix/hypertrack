@@ -4773,6 +4773,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muscleLowerBack => 'Lower Back';
 
   @override
+  String get muscleAbs => 'Abs';
+
+  @override
   String get sleepDetailAnalysisHeader => 'Detailed Analysis';
 
   @override

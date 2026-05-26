@@ -37,6 +37,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   bool _isTesting = false;
   bool _obscureKey = true;
   bool _hasKey = false;
+  int _timeoutSeconds = 60;
   AiMatchingLanguage _aiMatchingLanguage = AiMatchingLanguage.auto;
 
   @override
@@ -63,6 +64,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     final resolvedModel = _resolveModelSelection(model, models, provider);
     final customBaseUrl = await AiService.instance.getCustomBaseUrl();
     final customModel = await AiService.instance.getCustomModel();
+    final timeout = await AiService.instance.getAiTimeoutSeconds();
 
     if (mounted) {
       setState(() {
@@ -75,6 +77,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
         );
         _hasKey = key != null && key.isNotEmpty;
         _aiMatchingLanguage = aiMatchLang;
+        _timeoutSeconds = timeout;
         if (_hasKey) {
           // Show masked placeholder — never display the real key
           _keyController.text = '••••••••••••••••••••';
@@ -462,6 +465,47 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                               setState(() => _aiMatchingLanguage = v);
                               await AiMatchingLanguageService.writeChoice(v);
                             },
+                          ),
+                          const SizedBox(height: 10),
+                          // Request Timeout Slider
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Request Timeout',
+                                      style: theme.textTheme.labelLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      '$_timeoutSeconds seconds',
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Slider(
+                                value: _timeoutSeconds.toDouble(),
+                                min: 10,
+                                max: 300,
+                                divisions: 29, // 10s steps: (300-10)/10 = 29
+                                label: '$_timeoutSeconds seconds',
+                                activeColor: theme.colorScheme.primary,
+                                onChanged: (value) async {
+                                  final seconds = value.round();
+                                  setState(() => _timeoutSeconds = seconds);
+                                  await AiService.instance.setAiTimeoutSeconds(seconds);
+                                },
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 10),
                           if (_selectedProvider != AiProvider.ollama) ...[

@@ -15,6 +15,7 @@ import '../../../widgets/common/global_app_bar.dart';
 import '../../profile/presentation/widgets/measurement_chart_widget.dart';
 import 'package:provider/provider.dart';
 import '../../../services/unit_service.dart';
+import '../../../services/profile_service.dart';
 
 enum ExerciseMetric { maxWeight, volume, est1rm }
 
@@ -556,6 +557,7 @@ class _ExerciseMuscleBodyView extends StatelessWidget {
                       SizedBox(
                         height: 200,
                         child: BodyHighlighter(
+                          gender: context.watch<ProfileService>().gender.toBodyGender(),
                           highlightedParts: frontHighlights,
                           side: BodySide.front,
                           outlineWidth: 0.8,
@@ -578,6 +580,7 @@ class _ExerciseMuscleBodyView extends StatelessWidget {
                       SizedBox(
                         height: 200,
                         child: BodyHighlighter(
+                          gender: context.watch<ProfileService>().gender.toBodyGender(),
                           highlightedParts: backHighlights,
                           side: BodySide.back,
                           outlineWidth: 0.8,

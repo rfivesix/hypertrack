@@ -4816,6 +4816,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get muscleLowerBack => 'Unterer Rücken';
 
   @override
+  String get muscleAbs => 'Bauch';
+
+  @override
   String get sleepDetailAnalysisHeader => 'Detail-Analyse';
 
   @override

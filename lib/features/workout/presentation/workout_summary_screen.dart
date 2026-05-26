@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_body_highlighter/flutter_body_highlighter.dart';
+
 import '../data/sources/workout_local_data_source.dart';
+import '../../exercise_catalog/domain/models/exercise.dart';
 import '../../sharing/share_service.dart';
 import '../../../generated/app_localizations.dart';
 import '../domain/models/set_log.dart';
@@ -10,10 +13,12 @@ import '../domain/models/workout_log.dart';
 import '../../../services/health/workout_heart_rate_models.dart';
 import '../../../services/health/workout_heart_rate_service.dart';
 import '../../../services/unit_service.dart';
+import '../../../services/profile_service.dart';
 import '../../../util/design_constants.dart';
 import '../../../widgets/common/global_app_bar.dart';
 import '../../../widgets/common/summary_card.dart';
 import 'widgets/workout_summary_bar.dart';
+import '../../exercise_catalog/domain/body_slug_mapper.dart';
 
 /// A screen providing a summary of a recently finished workout session.
 ///
@@ -43,6 +48,8 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   /// Stores new records achieved in this session per exercise.
   Map<String, List<_ExerciseRecordData>> _newRecordsPerExercise = {};
 
+  Map<String, Exercise> _exerciseDetails = {};
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +70,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
       );
       final Map<String, _ExerciseSummaryData> summaryMap = {};
       final Map<String, List<_ExerciseRecordData>> newRecordsMap = {};
+      final Map<String, Exercise> detailsMap = {};
 
       final groupedSets = <String, List<SetLog>>{};
       for (var set in data.sets) {
@@ -74,6 +82,11 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
         final sets = entry.value;
 
         final exercise = await db.resolveExerciseForSetLog(sets.first);
+
+        if (exercise != null) {
+          detailsMap[name] = exercise;
+        }
+
         final isCardio = exercise?.categoryName.toLowerCase() == 'cardio';
 
         if (isCardio) {
@@ -167,6 +180,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
           _log = data;
           _summaryPerExercise = summaryMap;
           _newRecordsPerExercise = newRecordsMap;
+          _exerciseDetails = detailsMap;
           _heartRateSummary = heartRate;
           _isLoading = false;
         });
@@ -217,23 +231,28 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                   padding: DesignConstants.cardPadding,
                   child: Column(
                     children: [
-                      // Overall statistics
-                      WorkoutSummaryBar(
-                        duration: _log!.endTime?.difference(_log!.startTime),
-                        volume: globalVolume,
-                        sets: _log!.sets.length,
-                        progress: null,
-                      ),
-                      const SizedBox(height: DesignConstants.spacingXL),
-                      if (_heartRateSummary != null) ...[
-                        _buildHeartRateCard(l10n, _heartRateSummary!),
-                        const SizedBox(height: DesignConstants.spacingL),
-                      ],
-
-                      // Exercise list
+                      // Exercise list and all summary content
                       Expanded(
                         child: ListView(
                           children: [
+                            // Overall statistics
+                            WorkoutSummaryBar(
+                              duration:
+                                  _log!.endTime?.difference(_log!.startTime),
+                              volume: globalVolume,
+                              sets: _log!.sets.length,
+                              progress: null,
+                            ),
+                            const SizedBox(height: DesignConstants.spacingL),
+                            if (_exerciseDetails.isNotEmpty) ...[
+                              _buildMuscleHeatmap(l10n),
+                              const SizedBox(height: DesignConstants.spacingL),
+                            ],
+                            if (_heartRateSummary != null) ...[
+                              _buildHeartRateCard(l10n, _heartRateSummary!),
+                              const SizedBox(height: DesignConstants.spacingL),
+                            ],
+
                             if (_log!.routineName != null &&
                                 _log!.routineName!.isNotEmpty) ...[
                               Text(
@@ -442,6 +461,94 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
         l10n.workoutHeartRateQualityInsufficient,
       WorkoutHeartRateDataQuality.noData => l10n.workoutHeartRateQualityNoData,
     };
+  }
+
+  Widget _buildMuscleHeatmap(AppLocalizations l10n) {
+    final muscleCounts = <BodyPartSlug, int>{};
+    
+    for (final ex in _exerciseDetails.values) {
+      final exerciseSlugs = <BodyPartSlug>{};
+      for (final name in ex.primaryMuscles) {
+        exerciseSlugs.addAll(BodySlugMapper.fromRawName(name));
+      }
+
+      for (final slug in exerciseSlugs) {
+        muscleCounts[slug] = (muscleCounts[slug] ?? 0) + 1;
+      }
+    }
+
+    // Find max count for normalization to ensure vibrant colors
+    int maxCount = 0;
+    for (final count in muscleCounts.values) {
+      if (count > maxCount) maxCount = count;
+    }
+
+    final highlights = muscleCounts.entries.map((e) {
+      // Relative intensity: scale to 1-5 based on session max
+      final intensity = maxCount > 0
+          ? (e.value / maxCount * 5).ceil().clamp(1, 5)
+          : 1;
+
+      return BodyPartHighlightData(
+        slug: e.key,
+        intensity: intensity,
+      );
+    }).toList();
+
+    return SummaryCard(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.analyticsRecentDistributionHeatmap,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 180,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: BodyHighlighter(
+                      gender: context.watch<ProfileService>().gender.toBodyGender(),
+                      side: BodySide.front,
+                      intensityColors: const [
+                        Color(0xFFFFF176), // Light Yellow
+                        Color(0xFFFFEE58), // Yellow
+                        Color(0xFFFFB74D), // Orange
+                        Color(0xFFFF7043), // Deep Orange
+                        Color(0xFFE53935), // Red
+                      ],
+                      highlightedParts:
+                          BodySlugMapper.forSide(highlights, BodySide.front),
+                    ),
+                  ),
+                  Expanded(
+                    child: BodyHighlighter(
+                      gender: context.watch<ProfileService>().gender.toBodyGender(),
+                      side: BodySide.back,
+                      intensityColors: const [
+                        Color(0xFFFFF176), // Light Yellow
+                        Color(0xFFFFEE58), // Yellow
+                        Color(0xFFFFB74D), // Orange
+                        Color(0xFFFF7043), // Deep Orange
+                        Color(0xFFE53935), // Red
+                      ],
+                      highlightedParts:
+                          BodySlugMapper.forSide(highlights, BodySide.back),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String _noDataMessage(
