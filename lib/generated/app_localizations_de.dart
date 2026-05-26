@@ -4707,6 +4707,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get privacy_policy => 'Datenschutzerklärung';
 
   @override
+  String get terms_of_service => 'Nutzungsbedingungen';
+
+  @override
   String get view_in_browser => 'Im Browser ansehen';
 
   @override
@@ -4751,6 +4754,12 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get i_agree_to_privacy_policy =>
       'Ich habe die Datenschutzerklärung gelesen und stimme der Verarbeitung meiner Gesundheitsdaten zu.';
+
+  @override
+  String get acceptTermsPrompt => 'Ich akzeptiere die Nutzungsbedingungen';
+
+  @override
+  String get viewTermsInline => 'Nutzungsbedingungen';
 
   @override
   String get accept_and_get_started => 'Akzeptieren & Loslegen';

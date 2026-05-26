@@ -8214,6 +8214,12 @@ abstract class AppLocalizations {
   /// **'Privacy Policy'**
   String get privacy_policy;
 
+  /// No description provided for @terms_of_service.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get terms_of_service;
+
   /// No description provided for @view_in_browser.
   ///
   /// In en, this message translates to:
@@ -8297,6 +8303,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I have read and agree to the processing of my health data as described in the Privacy Policy.'**
   String get i_agree_to_privacy_policy;
+
+  /// No description provided for @acceptTermsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Terms of Service'**
+  String get acceptTermsPrompt;
+
+  /// No description provided for @viewTermsInline.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get viewTermsInline;
 
   /// No description provided for @accept_and_get_started.
   ///

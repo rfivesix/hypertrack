@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.16] - 2026-05-26
+
+### Added
+- **Onboarding Legal Double-Lock**: Upgraded the initial consent screen to require explicit, separate acceptance of both the Privacy Policy and the Terms of Service before entering the application.
+- **Interactive Legal Navigation**: Integrated an active inline hyperlink framework within the onboarding checkboxes, allowing users to review the localized Terms of Service completely offline via the internal Markdown viewer.
+
+### Fixed
+- **Compliance Enforcement Gaps**: Fixed a verification vulnerability by ensuring the "Continue" button remains strictly disabled until active cryptographic acceptance tokens are verified for both distinct legal frameworks.
+
 ## [0.9.15] - 2026-05-26
 
 ### Added

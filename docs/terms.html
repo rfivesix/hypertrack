@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+    content="Train Libre Terms of Service. Minimalist, local-first, and open source. No subscriptions. No accounts.">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:title" content="Train Libre Terms of Service">
+  <meta property="og:description"
+    content="Terms governing the use of the Train Libre compiled binary application.">
+  <meta property="og:type" content="website">
+  <title>Terms of Service | Train Libre</title>
+  <link rel="icon" href="../web/favicon.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="katex.min.css">
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="page">
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="index.html" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <div class="nav-links">
+          <a href="#section1" data-i18n="tos_toc_1">1. No Medical Advice</a>
+          <a href="#section2" data-i18n="tos_toc_2">2. As-Is Disclaimer</a>
+          <a href="#section3" data-i18n="tos_toc_3">3. Data Autonomy</a>
+          <a href="#section4" data-i18n="tos_toc_4">4. Open Source</a>
+          <a class="nav-priority" href="https://github.com/rfivesix/train-libre" target="_blank"
+            rel="noreferrer">GitHub</a>
+        </div>
+        <div class="nav-controls">
+          <div class="dropdown" id="lang-dropdown">
+            <button class="control-btn" aria-label="Switch Language" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                </path>
+              </svg>
+            </button>
+            <div class="dropdown-menu">
+              <button class="dropdown-item" data-lang="en">
+                <span>English</span>
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+              <button class="dropdown-item" data-lang="de">
+                <span>Deutsch</span>
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+            </div>
+          </div>
+          <button id="theme-toggle" class="control-btn" aria-label="Toggle Theme">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero hero-compact" aria-labelledby="tos-title">
+        <div class="hero-content reveal">
+          <h1 id="tos-title" data-i18n="tos_hero_title">Version 1.0 Terms of Service</h1>
+          <p class="hero-copy" data-i18n="tos_hero_copy">Minimalist Terms of Service for Train Libre. Local-first, open source, and privacy-respecting.</p>
+          <div class="hero-actions">
+            <a href="index.html" class="button button-primary">← Back to home</a>
+            <a class="button button-secondary" href="https://github.com/rfivesix/train-libre" target="_blank"
+              rel="noreferrer">View on GitHub</a>
+          </div>
+        </div>
+      </section>
+
+      <div class="policy-shell">
+        <aside class="toc reveal" aria-label="Terms of Service sections">
+          <p class="toc-title" data-i18n="tos_toc_title">Pillars</p>
+          <nav>
+            <a href="#section1" data-i18n="tos_toc_1">1. No Medical Advice</a>
+            <a href="#section2" data-i18n="tos_toc_2">2. As-Is Disclaimer</a>
+            <a href="#section3" data-i18n="tos_toc_3">3. Data Autonomy</a>
+            <a href="#section4" data-i18n="tos_toc_4">4. Open Source</a>
+          </nav>
+        </aside>
+
+        <article class="policy-card">
+          <div class="policy-section reveal">
+            <div class="last-updated-box">
+              <span data-i18n="legal_version">Version 1.0</span> (<span data-i18n="legal_date">26. Mai 2026 / May 26, 2026</span>)
+            </div>
+          </div>
+
+          <section class="policy-section reveal" id="section1">
+            <h2 data-i18n="tos_p1_t">1. No Medical Advice</h2>
+            <p data-i18n="tos_p1_c">
+              All health-related estimations, bodyweight targets, macronutrient targets, Total Daily Energy Expenditure (TDEE) calculations, muscle recovery scores, and other health-related approximations provided by Train Libre are statistical estimates based on general population mathematical models (such as Mifflin-St Jeor and Katch-McArdle). They do not constitute medical, nutritional, or athletic advice and must never replace consultation with a qualified professional or physician. Use of these features is strictly at your own risk.
+            </p>
+          </section>
+
+          <section class="policy-section reveal" id="section2">
+            <h2 data-i18n="tos_p2_t">2. As-Is / MIT Warranty Disclaimer</h2>
+            <p data-i18n="tos_p2_c">
+              Train Libre is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. The developer is not liable for any data loss, device anomalies, interrupted functionality, or any direct, indirect, incidental, or consequential damages arising from the use of the compiled binary application or the source code.
+            </p>
+          </section>
+
+          <section class="policy-section reveal" id="section3">
+            <h2 data-i18n="tos_p3_t">3. Data Autonomy</h2>
+            <p data-i18n="tos_p3_c">
+              All user-generated data, profile parameters, workout logs, nutrition history, and local database records (Drift/SQLite) reside exclusively within your local device's sandbox. The developer has no remote access to this data, does not operate any backend servers to collect it, and bears no responsibility for data recovery, backup, migration, or loss. You are solely responsible for securing your device and managing your manual or automatic data exports.
+            </p>
+          </section>
+
+          <section class="policy-section reveal" id="section4">
+            <h2 data-i18n="tos_p4_t">4. Open Source Governing</h2>
+            <p data-i18n="tos_p4_c">
+              The source code for Train Libre is distributed under the GNU General Public License v3.0 (GPL-3.0) as published in the project's repository. These Terms of Service govern the use of the compiled binary application only and do not restrict, override, or limit any rights granted to you by the GPL-3.0, including the right to access, modify, and redistribute the source code under the same license terms.
+            </p>
+          </section>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand" href="index.html" aria-label="Train Libre home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 270.933 270.933" role="img">
+              <path fill="#ddff00"
+                d="M47.621 39.688c-4.385 0-7.939 3.554-7.939 7.939v116.172c0 37.238 30.188 67.472 67.426 67.459l13.482-.006c.15.003.3.005.451.005h89.722c11.367 0 20.518-9.154 20.518-20.525s-9.151-20.525-20.518-20.525h-42.739a7.937 7.937 0 0 1-7.937-7.937v-25.174a7.937 7.937 0 0 1 7.937-7.937l41.159-.001c12.244 0 22.101-9.154 22.1-20.525-.001-11.371-9.859-20.525-22.103-20.525l-41.156.001a7.937 7.937 0 0 1-7.937-7.937V47.627c0-4.385-3.555-7.939-7.939-7.939z" />
+            </svg>
+          </span>
+          <span>Train Libre</span>
+        </a>
+        <p class="fine-print" data-i18n="footer_medical">Fitness, nutrition, recovery, and pulse features are for
+          personal tracking and training
+          context, not medical diagnosis or treatment.</p>
+      </div>
+      <div class="footer-links">
+        <a href="ai-nutrition/" data-i18n="intel_c1_label">AI meal recognition</a>
+        <a href="adaptive-nutrition/" data-i18n="intel_c2_label">Calorie estimation</a>
+        <a href="recovery/" data-i18n="footer_recovery">Recovery Tracker</a>
+        <a href="sleep-score/" data-i18n="sleep_score_hero_t">Sleep Health Score</a>
+        <a href="privacy.html" data-i18n="footer_privacy">Privacy Policy</a>
+        <a href="terms.html" data-i18n="footer_terms">Terms of Service</a>
+        <a href="impressum.html" data-i18n="footer_imprint">Imprint</a>
+        <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

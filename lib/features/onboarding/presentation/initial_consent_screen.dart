@@ -1,11 +1,13 @@
 // lib/screens/initial_consent_screen.dart
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../generated/app_localizations.dart';
 import '../../../widgets/common/summary_card.dart';
 import '../../app/presentation/legal_screen.dart';
+import '../../app/presentation/terms_of_service_screen.dart';
 
 class InitialConsentScreen extends StatefulWidget {
   final Widget nextScreen;
@@ -17,7 +19,27 @@ class InitialConsentScreen extends StatefulWidget {
 }
 
 class _InitialConsentScreenState extends State<InitialConsentScreen> {
-  bool _isAgreed = false;
+  bool _privacyAccepted = false;
+  bool _termsAccepted = false;
+  late TapGestureRecognizer _termsRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()..onTap = _navigateToTerms;
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    super.dispose();
+  }
+
+  void _navigateToTerms() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TermsOfServiceScreen()),
+    );
+  }
 
   Future<void> _acceptAndProceed() async {
     final prefs = await SharedPreferences.getInstance();
@@ -102,12 +124,43 @@ class _InitialConsentScreenState extends State<InitialConsentScreen> {
                     ),
                     const Divider(),
                     CheckboxListTile(
-                      value: _isAgreed,
+                      value: _privacyAccepted,
                       onChanged: (val) =>
-                          setState(() => _isAgreed = val ?? false),
+                          setState(() => _privacyAccepted = val ?? false),
                       title: Text(
                         l10n.i_agree_to_privacy_policy,
                         style: theme.textTheme.bodySmall,
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 8),
+                    CheckboxListTile(
+                      value: _termsAccepted,
+                      onChanged: (val) =>
+                          setState(() => _termsAccepted = val ?? false),
+                      title: Text.rich(
+                        TextSpan(
+                          text: l10n.acceptTermsPrompt.split(l10n.viewTermsInline).first,
+                          style: theme.textTheme.bodySmall,
+                          children: [
+                            TextSpan(
+                              text: l10n.viewTermsInline,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: _termsRecognizer,
+                            ),
+                            TextSpan(
+                              text: l10n.acceptTermsPrompt.split(l10n.viewTermsInline).length > 1
+                                  ? l10n.acceptTermsPrompt.split(l10n.viewTermsInline)[1]
+                                  : '',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
@@ -116,7 +169,9 @@ class _InitialConsentScreenState extends State<InitialConsentScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: _isAgreed ? _acceptAndProceed : null,
+                        onPressed: (_privacyAccepted && _termsAccepted)
+                            ? _acceptAndProceed
+                            : null,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(56),
                           shape: RoundedRectangleBorder(
