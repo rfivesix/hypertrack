@@ -213,11 +213,12 @@ class RecoveryDomainService {
     'spinal erectors': 'lower back',
     'erectors': 'lower back',
     'erector spinae': 'lower back',
-    // Discarded — not tracked as major training groups
-    'abs': null,
-    'abdominals': null,
-    'core': null,
-    'obliques': null,
+    // Core
+    'abs': 'abs',
+    'abdominals': 'abs',
+    'core': 'abs',
+    'obliques': 'abs',
+    // Discarded
     'forearms': null,
   };
 

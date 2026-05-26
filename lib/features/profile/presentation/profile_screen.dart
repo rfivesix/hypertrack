@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../domain/repositories/profile_repository.dart';
+import '../domain/models/user_gender.dart';
 import '../../../data/drift_database.dart' as db; // Access to Profile class
 import '../../../generated/app_localizations.dart';
 import 'goals_screen.dart';
@@ -227,12 +228,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   )
                                   .round();
 
+                          final profileService = context.read<ProfileService>();
                           await _repository.saveUserProfile(
                             name: nameCtrl.text.trim(),
                             birthday: selectedDate,
                             height: heightMetric,
                             gender: selectedGender,
                           );
+                          if (selectedGender != null) {
+                            await profileService.updateGender(
+                                  UserGender.fromString(selectedGender),
+                                  _repository,
+                                );
+                          }
                           if (!ctx.mounted) return;
                           close();
                           Navigator.of(ctx).pop();

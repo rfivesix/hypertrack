@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.15] - 2026-05-26
+
+### Added
+- **Interactive Anatomical Visualization**: Integrated the `flutter_body_highlighter` package across all training vectors (`RecoveryTrackerScreen`, `WorkoutSummaryScreen`, `WorkoutLogDetailScreen`, and `MuscleGroupAnalyticsScreen`).
+- **Dynamic Gender Mapping**: Implemented a reactive mapping layer that automatically adapts the anatomical silhouette (Male/Female) to the user's biological preference saved in their profile.
+- **Configurable AI Timeout**: Added a user-facing slider in AI Settings allowing manual adjustment of the request timeout (10s to 300s) to support variable hardware performance during local model validation.
+- **Anatomical Lower Leg Tracking**: Added official support for the **Tibialis Anterior** muscle to the highlighter library and mapped it to calf training for a more accurate front-view leg highlight.
+- **Full AI Provider Registry Restoration**: Restored **Google Gemini**, **xAI Grok (Grok)**, and **Mistral** back to the settings selection dropdown in `ai_settings_screen.dart` alongside OpenAI, Anthropic, Ollama, and Custom, making all 7 supported AI providers fully selectable for on-device food analysis.
+
+### Changed
+- **Relative Heatmap Intensity**: Refactored workout heatmaps to use session-normalized intensity (1-5). The most-trained muscle in a session now always displays at maximum vibrancy, regardless of total volume.
+- **Vibrant Visualization Palette**: Deployed a custom "Heat" color ramp (Yellow → Orange → Red) for workout sessions and high-contrast accents (Cyan/Green) for recovery states to maximize readability.
+- **Standardized Analytics UI**: Unified the `TabBar` design across all analytics screens with consistent icons and localized labels (**Involved Muscles** and **Analysis**).
+- **Sleep Scoring Engine LaTeX Refactoring**: Refactored the 3 complex multi-line `cases` equations in `sleep_scoring_engine.md` (Sleep Duration, Light Sleep Penalty, and Circadian Timing) into clear bulleted text conditions and single-line display math blocks (`$$ ... $$`). This completely bypasses markdown backslash-escaping and HTML entity conversion bugs to guarantee robust, beautifully styled green math blocks on all viewports without any KaTeX compiler crashes or text overflows.
+
+### Fixed
+- **Shoulder Highlight Bug**: Resolved a library-level mismatch between SVG path keys and enum mappings, restoring correct anterior/posterior deltoid highlights.
+- **Core Tracking Gaps**: Re-enabled **Abs**, **Obliques**, and **Core** in the recovery tracking engine. Tapping "Abs" now correctly highlights the entire core region on the body model.
+- **Workout Summary Scroll Lock**: Moved all summary elements into a unified `ListView`, eliminating the "tiny window" scrolling limitation on compact viewports.
+- **Stale Muscle Mapping**: Fixed a state-leak bug in `WorkoutLogDetailScreen` where deleted exercises would leave "ghost" highlights on the body model.
+- **Dropdown Visibility Regression**: Resolved a settings screen filter issue that inadvertently hid registered production AI providers from the user-facing settings screen.
+
+
 ## [0.9.14] - 2026-05-23
 
 ### Added

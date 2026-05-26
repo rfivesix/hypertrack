@@ -377,24 +377,11 @@ class _RecommendationHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(width: DesignConstants.spacingXS),
-                  AlgorithmInfoButton(
-                    title: l10n.infoTdeeTitle,
-                    explanation: l10n.infoTdeeExplanation,
-                    keyPoints: l10n.infoTdeeKeyPoints.split('\n'),
-                    technicalTitle: l10n.infoTdeeTechnicalTitle,
-                    technicalExplanation: l10n.infoTdeeTechnicalExplanation,
-                    markdownAssetPath: 'documentation/features/bayesian_tdee_estimator.md',
-                  ),
-                ],
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: DesignConstants.spacingXS),
               Text(
@@ -408,7 +395,22 @@ class _RecommendationHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: DesignConstants.spacingS),
-        _StatusPill(text: statusText, emphasized: isDueNow),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _StatusPill(text: statusText, emphasized: isDueNow),
+            const SizedBox(width: DesignConstants.spacingXS),
+            AlgorithmInfoButton(
+              title: l10n.infoTdeeTitle,
+              explanation: l10n.infoTdeeExplanation,
+              keyPoints: l10n.infoTdeeKeyPoints.split('\n'),
+              technicalTitle: l10n.infoTdeeTechnicalTitle,
+              technicalExplanation: l10n.infoTdeeTechnicalExplanation,
+              markdownAssetPath: 'documentation/features/bayesian_tdee_estimator.md',
+            ),
+          ],
+        ),
       ],
     );
   }

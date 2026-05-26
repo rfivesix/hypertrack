@@ -70,13 +70,14 @@ extension AiNetwork on AiService {
         final uri = Uri.parse(
           'https://generativelanguage.googleapis.com/$version/models/$candidate:generateContent?key=$apiKey',
         );
+        final timeoutSeconds = await getAiTimeoutSeconds();
         final response = await http
             .post(
               uri,
               headers: {'Content-Type': 'application/json'},
               body: body,
             )
-            .timeout(const Duration(seconds: 60));
+            .timeout(Duration(seconds: timeoutSeconds));
 
         if (response.statusCode == 200) return response;
         lastResponse = response;
@@ -124,6 +125,7 @@ extension AiNetwork on AiService {
     });
 
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await http
           .post(
             Uri.parse('https://api.anthropic.com/v1/messages'),
@@ -134,7 +136,7 @@ extension AiNetwork on AiService {
             },
             body: body,
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw const AiAuthException();
       }
@@ -228,6 +230,7 @@ extension AiNetwork on AiService {
     });
 
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await http
           .post(
             Uri.parse(endpoint),
@@ -237,7 +240,7 @@ extension AiNetwork on AiService {
             },
             body: body,
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw const AiAuthException();
       }
@@ -277,15 +280,19 @@ extension AiNetwork on AiService {
         return _loadXaiModels(apiKey);
       case AiProvider.anthropic:
         return _loadAnthropicModels(apiKey);
+      case AiProvider.ollama:
+      case AiProvider.custom:
+        return null;
     }
   }
 
   Future<Set<String>?> _loadOpenAiModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.openai.com/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -316,11 +323,12 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadGeminiModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse(
           'https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey',
         ),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['models'] as List<dynamic>? ?? const [];
@@ -353,10 +361,11 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadMistralModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.mistral.ai/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -389,10 +398,11 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadXaiModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.x.ai/v1/models'),
         headers: {'Authorization': 'Bearer $apiKey'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -415,13 +425,14 @@ extension AiNetwork on AiService {
 
   Future<Set<String>?> _loadAnthropicModels(String apiKey) async {
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await _httpGet(
         Uri.parse('https://api.anthropic.com/v1/models'),
         headers: {
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
         },
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(Duration(seconds: timeoutSeconds));
       if (response.statusCode != 200) return null;
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as List<dynamic>? ?? const [];
@@ -450,6 +461,8 @@ extension AiNetwork on AiService {
     List<String> imagesBase64, {
     required String systemPrompt,
     double temperature = 0.3,
+    String? baseUrlOverride,
+    AiProvider provider = AiProvider.openai,
   }) async {
     final effectiveModel = _normalizeOpenAiModelId(model);
     final contentParts = <Map<String, dynamic>>[];
@@ -471,17 +484,22 @@ extension AiNetwork on AiService {
       'temperature': temperature,
     });
 
+    final endpoint = baseUrlOverride != null && baseUrlOverride.isNotEmpty
+        ? '${baseUrlOverride.replaceAll(RegExp(r'/+$'), '')}/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+
     try {
+      final timeoutSeconds = await getAiTimeoutSeconds();
       final response = await http
           .post(
-            Uri.parse('https://api.openai.com/v1/chat/completions'),
+            Uri.parse(endpoint),
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
+              if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
             },
             body: body,
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(Duration(seconds: timeoutSeconds));
 
       if (response.statusCode == 401) throw const AiAuthException();
       if (response.statusCode == 429) throw const AiRateLimitException();
@@ -498,10 +516,31 @@ extension AiNetwork on AiService {
       final choices = json['choices'] as List<dynamic>?;
       if (choices == null || choices.isEmpty) throw const AiParseException();
       return choices[0]['message']['content'] as String? ?? '';
-    } on SocketException {
-      throw const AiNetworkException();
+    } on SocketException catch (e) {
+      if (provider == AiProvider.ollama) {
+        throw const AiNetworkException(
+          'Ollama is offline. Please make sure the Ollama server is running at http://localhost:11434',
+        );
+      } else if (provider == AiProvider.custom) {
+        throw const AiNetworkException(
+          'Custom AI provider is offline. Please verify your Base URL and server status.',
+        );
+      }
+      throw AiNetworkException('Network error: ${e.message}');
     } catch (e) {
       if (e is AiServiceException) rethrow;
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('connection refused') || errStr.contains('connection timed out')) {
+        if (provider == AiProvider.ollama) {
+          throw const AiNetworkException(
+            'Ollama is offline. Please make sure the Ollama server is running at http://localhost:11434',
+          );
+        } else if (provider == AiProvider.custom) {
+          throw const AiNetworkException(
+            'Custom AI provider is offline. Please verify your Base URL and server status.',
+          );
+        }
+      }
       throw AiNetworkException('Request failed: $e');
     }
   }

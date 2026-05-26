@@ -15,6 +15,9 @@ import '../../nutrition_recommendation/domain/goal_models.dart';
 import '../../nutrition_recommendation/domain/recommendation_models.dart';
 import '../../../services/app_tour_service.dart';
 import '../../../services/unit_service.dart';
+import '../../../services/profile_service.dart';
+import '../../profile/domain/repositories/profile_repository.dart';
+import '../../profile/domain/models/user_gender.dart';
 import '../../app/presentation/widgets/glass_bottom_menu.dart';
 import 'widgets/welcome_slide.dart';
 import 'widgets/unit_system_slide.dart';
@@ -353,6 +356,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: height,
       gender: _selectedGender,
     );
+
+    if (_selectedGender != null && mounted) {
+      await context.read<ProfileService>().updateGender(
+            UserGender.fromString(_selectedGender),
+            context.read<IProfileRepository>(),
+          );
+    }
 
     // Also cache height briefly in prefs for GoalsScreen fallback (optional).
     if (height != null) await prefs.setInt('userHeight', height);

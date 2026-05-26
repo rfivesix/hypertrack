@@ -27,6 +27,8 @@ class AiSettingsScreen extends StatefulWidget {
 
 class _AiSettingsScreenState extends State<AiSettingsScreen> {
   final _keyController = TextEditingController();
+  final _baseUrlController = TextEditingController();
+  final _customModelController = TextEditingController();
   AiProvider _selectedProvider = AiProvider.openai;
   String _selectedModel = '';
   List<AiModelOption> _modelOptions = const [];
@@ -35,6 +37,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   bool _isTesting = false;
   bool _obscureKey = true;
   bool _hasKey = false;
+  int _timeoutSeconds = 60;
   AiMatchingLanguage _aiMatchingLanguage = AiMatchingLanguage.auto;
 
   @override
@@ -46,6 +49,8 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   @override
   void dispose() {
     _keyController.dispose();
+    _baseUrlController.dispose();
+    _customModelController.dispose();
     super.dispose();
   }
 
@@ -57,6 +62,10 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     final models = await AiService.instance.getModelOptions(provider);
     final aiMatchLang = await AiMatchingLanguageService.readChoice();
     final resolvedModel = _resolveModelSelection(model, models, provider);
+    final customBaseUrl = await AiService.instance.getCustomBaseUrl();
+    final customModel = await AiService.instance.getCustomModel();
+    final timeout = await AiService.instance.getAiTimeoutSeconds();
+
     if (mounted) {
       setState(() {
         _selectedProvider = provider;
@@ -68,10 +77,13 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
         );
         _hasKey = key != null && key.isNotEmpty;
         _aiMatchingLanguage = aiMatchLang;
+        _timeoutSeconds = timeout;
         if (_hasKey) {
           // Show masked placeholder — never display the real key
           _keyController.text = '••••••••••••••••••••';
         }
+        _baseUrlController.text = customBaseUrl ?? '';
+        _customModelController.text = customModel ?? '';
         _isLoading = false;
       });
     }
@@ -88,6 +100,9 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
         _resolveModelSelection(selectedModel, models, provider);
     await AiService.instance.setSelectedModel(provider, resolvedModel);
     final key = await AiService.instance.getApiKey(provider);
+    final customBaseUrl = await AiService.instance.getCustomBaseUrl();
+    final customModel = await AiService.instance.getCustomModel();
+
     if (mounted) {
       setState(() {
         _selectedProvider = provider;
@@ -99,6 +114,8 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
         );
         _hasKey = key != null && key.isNotEmpty;
         _keyController.text = _hasKey ? '••••••••••••••••••••' : '';
+        _baseUrlController.text = customBaseUrl ?? '';
+        _customModelController.text = customModel ?? '';
         _isLoading = false;
       });
     }
@@ -114,15 +131,27 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
 
   Future<void> _saveApiKey() async {
     final key = _keyController.text.trim();
-    // Don't save the masked placeholder
-    if (key.isEmpty || key.startsWith('••')) return;
 
-    await AiService.instance.setApiKey(_selectedProvider, key);
+    if (_selectedProvider == AiProvider.custom || _selectedProvider == AiProvider.ollama) {
+      final baseUrl = _baseUrlController.text.trim();
+      final customModel = _customModelController.text.trim();
+      await AiService.instance.setCustomBaseUrl(baseUrl.isNotEmpty ? baseUrl : null);
+      await AiService.instance.setCustomModel(customModel.isNotEmpty ? customModel : null);
+    }
+
+    // Don't save the masked placeholder
+    final isNewKey = key.isNotEmpty && !key.startsWith('••');
+    if (isNewKey) {
+      await AiService.instance.setApiKey(_selectedProvider, key);
+    }
+
     await _refreshModels();
     if (mounted) {
       setState(() {
-        _hasKey = true;
-        _keyController.text = '••••••••••••••••••••';
+        _hasKey = isNewKey || _hasKey;
+        if (_hasKey && _selectedProvider != AiProvider.ollama) {
+          _keyController.text = '••••••••••••••••••••';
+        }
         _obscureKey = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -147,6 +176,14 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
 
   Future<void> _refreshModels() async {
     if (!mounted) return;
+    if (_selectedProvider == AiProvider.ollama || _selectedProvider == AiProvider.custom) {
+      final selectedModel = await AiService.instance.getSelectedModel(_selectedProvider);
+      if (!mounted) return;
+      setState(() {
+        _selectedModel = selectedModel;
+      });
+      return;
+    }
     setState(() => _isLoadingModels = true);
     final models = await AiService.instance.getModelOptions(_selectedProvider);
     final selectedModel =
@@ -318,41 +355,86 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                                 vertical: 8,
                               ),
                             ),
-                            items: AiService.instance
-                                .getSupportedProviders()
-                                .map(
-                                  (providerMeta) => DropdownMenuItem(
-                                    value: providerMeta.provider,
-                                    child: Text(providerMeta.displayName),
-                                  ),
-                                )
-                                .toList(),
+                             items: AiService.instance
+                                 .getSupportedProviders()
+                                 .map(
+                                   (providerMeta) => DropdownMenuItem(
+                                     value: providerMeta.provider,
+                                     child: Text(providerMeta.displayName),
+                                   ),
+                                 )
+                                 .toList(),
                             onChanged: _onProviderChanged,
                           ),
                           const SizedBox(height: 10),
-                          _isLoadingModels
-                              ? const Center(child: CircularProgressIndicator())
-                              : DropdownButtonFormField<String>(
-                                  initialValue: _selectedModel,
-                                  decoration: InputDecoration(
-                                    labelText: l10n.aiModelLabel,
-                                    border: OutlineInputBorder(),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
+                          if (_selectedProvider != AiProvider.ollama && _selectedProvider != AiProvider.custom) ...[
+                            _isLoadingModels
+                                ? const Center(child: CircularProgressIndicator())
+                                : DropdownButtonFormField<String>(
+                                    initialValue: _selectedModel,
+                                    decoration: InputDecoration(
+                                      labelText: l10n.aiModelLabel,
+                                      border: const OutlineInputBorder(),
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
                                     ),
+                                    items: _modelOptions
+                                        .map(
+                                          (model) => DropdownMenuItem(
+                                            value: model.id,
+                                            child: Text(model.label),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: _onModelChanged,
                                   ),
-                                  items: _modelOptions
-                                      .map(
-                                        (model) => DropdownMenuItem(
-                                          value: model.id,
-                                          child: Text(model.label),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: _onModelChanged,
+                            const SizedBox(height: 10),
+                          ],
+                          if (_selectedProvider == AiProvider.ollama) ...[
+                            TextField(
+                              controller: _customModelController,
+                              decoration: const InputDecoration(
+                                labelText: 'Local Model Name',
+                                hintText: 'llama3',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
                                 ),
-                          const SizedBox(height: 10),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          if (_selectedProvider == AiProvider.custom) ...[
+                            TextField(
+                              controller: _baseUrlController,
+                              decoration: const InputDecoration(
+                                labelText: 'Custom Base URL',
+                                hintText: 'http://localhost:8080/v1',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: _customModelController,
+                              decoration: const InputDecoration(
+                                labelText: 'Custom Model Name',
+                                hintText: 'custom-model',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
                           // AI Matching Language
                           DropdownButtonFormField<AiMatchingLanguage>(
                             initialValue: _aiMatchingLanguage,
@@ -385,61 +467,106 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                             },
                           ),
                           const SizedBox(height: 10),
-                          TextField(
-                            controller: _keyController,
-                            obscureText: _obscureKey,
-                            onTap: () {
-                              if (_keyController.text.startsWith('••')) {
-                                _keyController.clear();
-                                setState(() => _obscureKey = false);
-                              }
-                            },
-                            decoration: InputDecoration(
-                              labelText: l10n.aiApiKeyLabel,
-                              hintText: AiService.instance
-                                  .getProviderMetadata(_selectedProvider)
-                                  .keyHint,
-                              border: const OutlineInputBorder(),
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      _obscureKey
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                    onPressed: () {
-                                      setState(
-                                          () => _obscureKey = !_obscureKey);
-                                    },
-                                  ),
-                                  if (_hasKey)
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        color: Colors.red,
+                          // Request Timeout Slider
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Request Timeout',
+                                      style: theme.textTheme.labelLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      onPressed: _deleteApiKey,
                                     ),
-                                ],
+                                    Text(
+                                      '$_timeoutSeconds seconds',
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
+                              Slider(
+                                value: _timeoutSeconds.toDouble(),
+                                min: 10,
+                                max: 300,
+                                divisions: 29, // 10s steps: (300-10)/10 = 29
+                                label: '$_timeoutSeconds seconds',
+                                activeColor: theme.colorScheme.primary,
+                                onChanged: (value) async {
+                                  final seconds = value.round();
+                                  setState(() => _timeoutSeconds = seconds);
+                                  await AiService.instance.setAiTimeoutSeconds(seconds);
+                                },
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 10),
+                          if (_selectedProvider != AiProvider.ollama) ...[
+                            TextField(
+                              controller: _keyController,
+                              obscureText: _obscureKey,
+                              onTap: () {
+                                if (_keyController.text.startsWith('••')) {
+                                  _keyController.clear();
+                                  setState(() => _obscureKey = false);
+                                }
+                              },
+                              decoration: InputDecoration(
+                                labelText: l10n.aiApiKeyLabel,
+                                hintText: AiService.instance
+                                    .getProviderMetadata(_selectedProvider)
+                                    .keyHint,
+                                border: const OutlineInputBorder(),
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        _obscureKey
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                      ),
+                                      onPressed: () {
+                                        setState(
+                                            () => _obscureKey = !_obscureKey);
+                                      },
+                                    ),
+                                    if (_hasKey)
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete_outline,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: _deleteApiKey,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
                           Row(
                             children: [
                               Expanded(
                                 child: FilledButton.icon(
                                   onPressed: _saveApiKey,
                                   icon: const Icon(Icons.save_outlined),
-                                  label: Text(l10n.aiSaveKey),
+                                  label: Text(_selectedProvider == AiProvider.ollama
+                                      ? 'Save Settings'
+                                      : l10n.aiSaveKey),
                                 ),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: (_hasKey && !_isTesting)
+                                  onPressed: ((_hasKey || _selectedProvider == AiProvider.ollama) && !_isTesting)
                                       ? _testConnection
                                       : null,
                                   icon: _isTesting
