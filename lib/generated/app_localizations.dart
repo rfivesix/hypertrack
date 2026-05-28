@@ -5618,7 +5618,7 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsEquivalentSetsExplainer.
   ///
   /// In en, this message translates to:
-  /// **'Equivalent hard sets use primary x1.0 and secondary x0.5 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.'**
+  /// **'Equivalent hard sets use primary x1.0 and secondary x0.3 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.'**
   String get analyticsEquivalentSetsExplainer;
 
   /// No description provided for @analyticsWeeklySetsByMuscle.
@@ -8214,6 +8214,12 @@ abstract class AppLocalizations {
   /// **'Privacy Policy'**
   String get privacy_policy;
 
+  /// No description provided for @terms_of_service.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get terms_of_service;
+
   /// No description provided for @view_in_browser.
   ///
   /// In en, this message translates to:
@@ -8297,6 +8303,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I have read and agree to the processing of my health data as described in the Privacy Policy.'**
   String get i_agree_to_privacy_policy;
+
+  /// No description provided for @acceptTermsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Terms of Service'**
+  String get acceptTermsPrompt;
+
+  /// No description provided for @viewTermsInline.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get viewTermsInline;
 
   /// No description provided for @accept_and_get_started.
   ///
@@ -8423,6 +8441,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Abs'**
   String get muscleAbs;
+
+  /// No description provided for @muscleAdductors.
+  ///
+  /// In en, this message translates to:
+  /// **'Adductors'**
+  String get muscleAdductors;
+
+  /// No description provided for @muscleForearms.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearms'**
+  String get muscleForearms;
 
   /// No description provided for @sleepDetailAnalysisHeader.
   ///

@@ -12,9 +12,9 @@
     content="How Train Libre handles local data, health integrations, backups, catalogs, and optional AI features.">
   <meta property="og:type" content="website">
   <title>Privacy Policy | Train Libre</title>
-  <link rel="icon" href="../../web/favicon.png">
-  <link rel="stylesheet" href="../style.css">
-  <link rel="stylesheet" href="../katex.min.css">
+  <link rel="icon" href="../web/favicon.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="katex.min.css">
   <script>
     (function () {
       const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? "light" : "dark");
@@ -27,7 +27,7 @@
   <div class="page">
     <header class="site-header">
       <nav class="nav" aria-label="Primary navigation">
-        <a class="brand" href="../index.html" aria-label="Train Libre home">
+        <a class="brand" href="index.html" aria-label="Train Libre home">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 270.933 270.933" role="img">
               <path fill="#ddff00"
@@ -95,7 +95,7 @@
           <p class="hero-copy" data-i18n="priv_hero_copy">Train Libre is offline-first. This policy explains how we
             handle your data locally and when optional features interact with third-party services.</p>
           <div class="hero-actions">
-            <a href="../index.html" class="button button-primary">← Back to home</a>
+            <a href="index.html" class="button button-primary">← Back to home</a>
             <a class="button button-secondary" href="https://github.com/rfivesix/train-libre" target="_blank"
               rel="noreferrer">View on GitHub</a>
           </div>
@@ -120,7 +120,7 @@
         <article class="policy-card">
           <div class="policy-section reveal">
             <div class="last-updated-box">
-              <span data-i18n="legal_version">Version 1.3</span> (<span data-i18n="legal_date">21. Mai 2026 / May 21, 2026</span>)
+              <span data-i18n="legal_version">Version 1.4</span> (<span data-i18n="legal_date">26. Mai 2026 / May 26, 2026</span>)
             </div>
             <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" data-i18n="legal_intro">
               This privacy policy informs you in accordance with Articles 13 and 14 of the General Data Protection Regulation (GDPR) about the processing of personal data and health-related data in the mobile application "Train Libre" and during a visit to this website.<br><br>Since Train Libre is designed as a local-first application, full control over your data remains directly with you at all times. We do not operate any central database or application servers to store your profiles, workouts, or nutrition logs.
@@ -191,13 +191,13 @@
                 Train Libre offers the option to analyze meals via photos or free-text descriptions using artificial intelligence. This function is based on the "Bring-Your-Own-Key" (BYOK) principle. You must store your own API key from a supported provider in the app to use this.
               </p>
               <ul>
-                <li data-i18n="p_4_a_l1"><strong>Supported Providers:</strong> OpenAI, Google Gemini, Anthropic Claude, Mistral AI, xAI Grok.</li>
-                <li data-i18n="p_4_a_l2"><strong>Secure Local Key Storage:</strong> The API key you enter is stored encrypted using the <code>flutter_secure_storage</code> package in the operating system's secured storage area (iOS Keychain or Android Keystore). The key remains exclusively local to your device and is never transmitted to us.</li>
+                <li data-i18n="p_4_a_l1"><strong>Supported Providers:</strong> OpenAI, Google Gemini, Anthropic Claude, Mistral AI, xAI Grok, Ollama, and custom OpenAI-compatible endpoints.</li>
+                <li data-i18n="p_4_a_l2"><strong>Secure Local Key Storage:</strong> The API key you enter is stored encrypted using AES-256 encryption via the <code>flutter_secure_storage</code> package in the operating system's secured storage area (iOS Keychain or Android Keystore). The key remains exclusively local to your device and is never transmitted to us.</li>
                 <li data-i18n="p_4_a_l3"><strong>Restricted Data Transmission:</strong> When using the AI analysis, your device sends the captured meal photo or entered text description directly via an encrypted HTTPS connection to the API of the selected AI provider. No personalized account data, user metadata, or historical profile information from Train Libre is attached to these external endpoint payloads.</li>
                 <li data-i18n="p_4_a_l4"><strong>Analytical AI Processing (No Generative Coaching):</strong> The AI analysis is used for the <strong>exclusive analytical purpose</strong> of decomposing meal photos or text descriptions into <strong>atomic ingredients</strong>. Train Libre does <strong>not</strong> use AI to dynamically generate or propose personalized recipes, meal plans, or automated health coaching.</li>
                 <li data-i18n="p_4_a_l5"><strong>Privacy Protection via System Prompt:</strong> To maximize your privacy, the app's globally stored system prompt is configured to instruct the AI provider to identify only food components and estimate their weight in grams. The AI provider is explicitly instructed <strong>not</strong> to perform any nutrient calculations (such as calories, protein, fat, or carbohydrates). The determination of nutrients is then performed via a <strong>hybrid approach</strong>: recognized food names are matched against your <strong>local offline database</strong> using a deterministic <strong>Jaro-Winkler-based matching engine</strong> (SQLite/Drift).</li>
                 <li data-i18n="p_4_a_l6"><strong>Local-First Alignment:</strong> Core macro calculations, user profiling, and history tracking remain <strong>strictly local-first</strong> on your device and are never transmitted to external providers or used to train global AI models.</li>
-                <li data-i18n="p_4_a_l7"><strong>Responsibility:</strong> Since you are using your personal API key, you enter into a direct user relationship with the respective AI provider. Data processing by the AI provider is subject to their respective privacy policies. Please check your provider's privacy policy (especially regarding the use of data for training purposes and server locations) before using the function. For transmissions to providers outside the European Union (especially the USA), this occurs on the basis of standard contractual clauses or adequacy decisions that you have agreed with the provider.</li>
+                <li data-i18n="p_4_a_l7"><strong>Responsibility:</strong> Since you are using your personal API key, you enter into a direct user relationship with the respective AI provider. Data processing by the AI provider is subject to their respective privacy policies. Please check your provider's privacy policy (especially regarding the use of data for training purposes and server locations) before using the function.<br><br><table class="policy-table"><thead><tr><th>Provider</th><th>Privacy Policy</th></tr></thead><tbody><tr><td>OpenAI</td><td><a href="https://openai.com/policies/privacy-policy" target="_blank">https://openai.com/policies/privacy-policy</a></td></tr><tr><td>Google Gemini</td><td><a href="https://policies.google.com/privacy" target="_blank">https://policies.google.com/privacy</a></td></tr><tr><td>Anthropic Claude</td><td><a href="https://www.anthropic.com/privacy" target="_blank">https://www.anthropic.com/privacy</a></td></tr><tr><td>Mistral AI</td><td><a href="https://mistral.ai/privacy-policy" target="_blank">https://mistral.ai/privacy-policy</a></td></tr><tr><td>xAI Grok</td><td><a href="https://x.ai/privacy-policy" target="_blank">https://x.ai/privacy-policy</a></td></tr><tr><td>Ollama</td><td><a href="https://ollama.com/privacy" target="_blank">https://ollama.com/privacy</a></td></tr></tbody></table><br>For transmissions to providers outside the European Union (especially the USA), this occurs on the basis of standard contractual clauses or adequacy decisions that you have agreed with the provider.</li>
               </ul>
             </div>
             <div>
@@ -302,7 +302,7 @@
 
     <footer class="site-footer">
       <div>
-        <a class="brand" href="../index.html" aria-label="Train Libre home">
+        <a class="brand" href="index.html" aria-label="Train Libre home">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 270.933 270.933" role="img">
               <path fill="#ddff00"
@@ -316,19 +316,19 @@
           context, not medical diagnosis or treatment.</p>
       </div>
       <div class="footer-links">
-        <a href="../ai-nutrition/" data-i18n="intel_c1_label">AI meal recognition</a>
-        <a href="../adaptive-nutrition/" data-i18n="intel_c2_label">Calorie estimation</a>
-        <a href="../recovery/" data-i18n="footer_recovery">Recovery Tracker</a>
-        <a href="../sleep-score/" data-i18n="sleep_score_hero_t">Sleep Health Score</a>
-        <a href="../privacy.html" data-i18n="footer_privacy">Privacy Policy</a>
-        <a href="../terms.html" data-i18n="footer_terms">Terms of Service</a>
-        <a href="../impressum.html" data-i18n="footer_imprint">Imprint</a>
+        <a href="ai-nutrition/" data-i18n="intel_c1_label">AI meal recognition</a>
+        <a href="adaptive-nutrition/" data-i18n="intel_c2_label">Calorie estimation</a>
+        <a href="recovery/" data-i18n="footer_recovery">Recovery Tracker</a>
+        <a href="sleep-score/" data-i18n="sleep_score_hero_t">Sleep Health Score</a>
+        <a href="privacy.html" data-i18n="footer_privacy">Privacy Policy</a>
+        <a href="terms.html" data-i18n="footer_terms">Terms of Service</a>
+        <a href="impressum.html" data-i18n="footer_imprint">Imprint</a>
         <a href="https://github.com/rfivesix/train-libre" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </footer>
   </div>
 
-  <script src="../script.js"></script>
+  <script src="script.js"></script>
 </body>
 
 </html>

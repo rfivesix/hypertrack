@@ -3139,7 +3139,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsEquivalentSetsExplainer =>
-      'Equivalent hard sets use primary x1.0 and secondary x0.5 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.';
+      'Equivalent hard sets use primary x1.0 and secondary x0.3 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.';
 
   @override
   String get analyticsWeeklySetsByMuscle => 'Weekly Sets by Muscle';
@@ -4666,6 +4666,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacy_policy => 'Privacy Policy';
 
   @override
+  String get terms_of_service => 'Terms of Service';
+
+  @override
   String get view_in_browser => 'View in Browser';
 
   @override
@@ -4709,6 +4712,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get i_agree_to_privacy_policy =>
       'I have read and agree to the processing of my health data as described in the Privacy Policy.';
+
+  @override
+  String get acceptTermsPrompt => 'I accept the Terms of Service';
+
+  @override
+  String get viewTermsInline => 'Terms of Service';
 
   @override
   String get accept_and_get_started => 'Accept & Get Started';
@@ -4774,6 +4783,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muscleAbs => 'Abs';
+
+  @override
+  String get muscleAdductors => 'Adductors';
+
+  @override
+  String get muscleForearms => 'Forearms';
 
   @override
   String get sleepDetailAnalysisHeader => 'Detailed Analysis';

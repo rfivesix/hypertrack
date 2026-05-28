@@ -1,0 +1,4 @@
+• NEW: Legal Compliance Update – We updated our onboarding flow. New users can now review and explicitly accept our Privacy Policy and Terms of Service completely offline using our built-in viewer.
+• IMPROVED: Evidence-Based Muscle Volume – Recalibrated secondary muscle workload metrics down to an industry-standard 0.3x multiplier. Your fatigue accumulation and recovery stats are now more realistic than ever.
+• IMPROVED: Enhanced Muscle Mapping – Custom exercise creation now natively includes missing groups like Adductors and Forearms.
+• FIXED: Visual Highlighter Sync – Fixed a rendering bug where specific muscle regions (like both Biceps heads, Traps, and Inner Thighs) remained uncolored. Your anatomical heatmaps are now fully synchronized!

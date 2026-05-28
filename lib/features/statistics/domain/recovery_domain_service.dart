@@ -199,27 +199,36 @@ class RecoveryDomainService {
     // Glutes (includes hip muscles)
     'glutes': 'glutes',
     'gluteus': 'glutes',
-    'adductors': 'glutes',
     'hip flexors': 'glutes',
-    'hip adductors': 'glutes',
+    // Adductors
+    'adductor': 'adductors',
+    'adductors': 'adductors',
+    'hip adductor': 'adductors',
+    'hip adductors': 'adductors',
     // Calves
     'calves': 'calves',
     'calf': 'calves',
     'gastrocnemius': 'calves',
     'soleus': 'calves',
     'tibialis': 'calves',
+    'tibialis anterior': 'calves',
+    'tibialis_anterior': 'calves',
     // Lower Back
     'lower back': 'lower back',
     'spinal erectors': 'lower back',
     'erectors': 'lower back',
     'erector spinae': 'lower back',
-    // Core
+    // Core / Abs (includes muscles that have no wger name_en)
     'abs': 'abs',
     'abdominals': 'abs',
     'core': 'abs',
     'obliques': 'abs',
-    // Discarded
-    'forearms': null,
+    'obliquus externus abdominis': null, // discard — not a primary strength group
+    // Back (additional wger fallback names)
+    'serratus anterior': 'back',
+    // Forearms
+    'forearm': 'forearms',
+    'forearms': 'forearms',
   };
 
   static const List<_PressureAnchor> _loadPressureAnchors = [

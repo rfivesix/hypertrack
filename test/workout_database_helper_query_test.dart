@@ -215,8 +215,8 @@ void main() {
       // Primary muscle gets 1.0 contribution
       expect(chestEntry['equivalentSets'], 1.0);
 
-      // Secondary muscle gets 0.5 contribution
-      expect(tricepsEntry['equivalentSets'], 0.5);
+      // Secondary muscle gets 0.3 contribution
+      expect(tricepsEntry['equivalentSets'], 0.3);
     });
 
     test('searchExercises applies query + category filters and keeps name order',

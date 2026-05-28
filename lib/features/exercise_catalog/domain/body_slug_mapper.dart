@@ -30,7 +30,11 @@ class BodySlugMapper {
     'chest': [BodyPartSlug.chest],
     'back': [BodyPartSlug.trapezius, BodyPartSlug.upperBack],
     'shoulders': [BodyPartSlug.frontDeltoids, BodyPartSlug.backDeltoids],
-    'biceps': [BodyPartSlug.biceps],
+    'biceps': [
+      BodyPartSlug.biceps,
+      BodyPartSlug.biceps_long,
+      BodyPartSlug.biceps_short,
+    ],
     'triceps': [BodyPartSlug.triceps],
     'quads': [BodyPartSlug.quadriceps],
     'hamstrings': [BodyPartSlug.hamstring],
@@ -38,12 +42,16 @@ class BodySlugMapper {
     'calves': [BodyPartSlug.calves, BodyPartSlug.tibialis],
     'lower back': [BodyPartSlug.lowerBack],
     'abs': [BodyPartSlug.abs, BodyPartSlug.obliques],
+    'adductors': [BodyPartSlug.adductor],
+    'forearms': [BodyPartSlug.forearm],
   };
 
   /// Which side of the body each slug is visible on.
   ///
   /// Used by [forSide] to filter slugs to only those relevant for a given
   /// [BodySide] when rendering a single view.
+  ///
+  /// Slugs NOT listed here are shown on BOTH views (front and back).
   static const Map<BodyPartSlug, BodySide> _slugSide = {
     // Front-only slugs
     BodyPartSlug.chest: BodySide.front,
@@ -51,21 +59,24 @@ class BodySlugMapper {
     BodyPartSlug.obliques: BodySide.front,
     BodyPartSlug.frontDeltoids: BodySide.front,
     BodyPartSlug.biceps: BodySide.front,
+    BodyPartSlug.biceps_long: BodySide.front,
+    BodyPartSlug.biceps_short: BodySide.front,
     BodyPartSlug.quadriceps: BodySide.front,
-    BodyPartSlug.adductor: BodySide.front,
     BodyPartSlug.abductors: BodySide.front,
     BodyPartSlug.tibialis: BodySide.front,
+    BodyPartSlug.adductor: BodySide.front,
+    BodyPartSlug.neck: BodySide.front,
     // Back-only slugs
-    BodyPartSlug.trapezius: BodySide.back,
     BodyPartSlug.upperBack: BodySide.back,
     BodyPartSlug.lowerBack: BodySide.back,
     BodyPartSlug.backDeltoids: BodySide.back,
     BodyPartSlug.triceps: BodySide.back,
     BodyPartSlug.gluteal: BodySide.back,
     BodyPartSlug.hamstring: BodySide.back,
-    // Visible on both sides
-    BodyPartSlug.neck: BodySide.front, // treat as front
-    BodyPartSlug.forearm: BodySide.front, // treat as front
+    // Visible on both sides — no entry means shown on both
+    // BodyPartSlug.trapezius → both (front collar and back neck area)
+    // BodyPartSlug.calves → both (gastrocnemius has a rear silhouette entry)
+    // BodyPartSlug.forearm → both (SVG has paths on front + back views)
   };
 
   /// Maps a single raw muscle name (e.g. `"chest"`, `"front delts"`,
@@ -73,6 +84,41 @@ class BodySlugMapper {
   ///
   /// Returns an empty list when no mapping can be determined.
   static List<BodyPartSlug> fromRawName(String rawName) {
+    final cleaned = rawName.trim().toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ');
+
+    // Explicit manual mappings for specific muscle queries to bridge cleanly to visual slugs
+    if (cleaned == 'traps' || cleaned == 'trapezius') {
+      return [BodyPartSlug.trapezius];
+    }
+    if (cleaned == 'lower back' || cleaned == 'erector spinae' ||
+        cleaned == 'erectors' || cleaned == 'spinal erectors') {
+      return [BodyPartSlug.lowerBack];
+    }
+    if (cleaned == 'adductor' || cleaned == 'adductors' ||
+        cleaned == 'hip adductor' || cleaned == 'hip adductors') {
+      return [BodyPartSlug.adductor];
+    }
+    if (cleaned == 'forearm' || cleaned == 'forearms') {
+      return [BodyPartSlug.forearm];
+    }
+    if (cleaned.contains('biceps') || cleaned == 'brachialis') {
+      return [
+        BodyPartSlug.biceps,
+        BodyPartSlug.biceps_long,
+        BodyPartSlug.biceps_short,
+      ];
+    }
+    // Wger muscles that fall back to their Latin name (no name_en set)
+    if (cleaned == 'soleus') {
+      return [BodyPartSlug.calves];
+    }
+    if (cleaned == 'obliquus externus abdominis') {
+      return [BodyPartSlug.obliques];
+    }
+    if (cleaned == 'serratus anterior') {
+      return [BodyPartSlug.upperBack];
+    }
+
     // 1. Resolve via canonical group, then map group → slug list
     // This handles aggregate groups like "Shoulders" -> [frontDeltoids, backDeltoids]
     final canonical = RecoveryDomainService.majorMuscleGroupFor(rawName);

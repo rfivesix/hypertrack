@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.16] - 2026-05-28
+
+### Added
+- **Onboarding Legal Double-Lock**: Upgraded the initial consent screen to require explicit, separate acceptance of both the Privacy Policy and the Terms of Service before entering the application.
+- **Interactive Legal Navigation**: Integrated an active inline hyperlink framework within the onboarding checkboxes, allowing users to review the localized Terms of Service completely offline via the internal Markdown viewer.
+- **Adaptive Exercise Creation Framework**: Enhanced the custom exercise creation pipeline by dynamically merging a comprehensive, local muscle registry with database entities. This permanently ensures that essential muscle groups absent from external APIs (such as Adductors and Forearms) are always natively available as selection chips.
+- **Comprehensive Latin Nomenclature Mapping**: Integrated robust data-boundary translation wrappers to correctly map and preserve foreign API fallback nomenclature (including *Brachialis*, *Obliquus externus abdominis*, *Serratus anterior*, and *Soleus*), routing them into accurate core recovery calculations and visual coordinates.
+
+### Changed
+- **Evidence-Based Synergist Recalibration**: Adjusted the secondary/overlapping muscle workload coefficient from `0.5x` down to a sports-science-standard `0.3x` scaling multiplier within all background analytical queries, preventing artificial fatigue accumulation spikes in cumulative recovery tracking.
+- **Multi-Perspective Muscle Visibility**: Removed restrictive single-view viewport constraints from the visual rendering layer, allowing dual-aspect muscle groups like Adductors and Forearms to dynamically illuminate on both the anterior (front) and posterior (back) model silhouettes.
+
+### Fixed
+- **Compliance Enforcement Gaps**: Fixed a verification vulnerability by ensuring the "Continue" button remains strictly disabled until active cryptographic acceptance tokens are verified for both distinct legal frameworks.
+- **Biceps Brachii Visual Disconnect**: Resolved a structural pipeline mismatch within the local SVG template rendering framework by linking generic biceps inputs to target and color both the long-head and short-head anatomical path coordinates concurrently.
+- **Anatomical Dropout and Mappings**: Patched an ingestion leak where unmapped compound muscle components were either completely discarded or misattributed to parent groups, stabilizing long-term data integrity for core training logs.
+
 ## [0.9.15] - 2026-05-26
 
 ### Added

@@ -632,7 +632,7 @@ extension WorkoutStatsQueries on WorkoutLocalDataSource {
         contributions.add({
           'day': row.startTime,
           'muscleGroup': majorGroup,
-          'equivalentSets': 0.5,
+          'equivalentSets': 0.3,
         });
         anyMapped = true;
       }
@@ -761,7 +761,7 @@ extension WorkoutStatsQueries on WorkoutLocalDataSource {
           workoutLogId: logRow.id,
           startTime: logRow.startTime,
           muscle: muscle,
-          equivalentSets: 0.5,
+          equivalentSets: 0.3,
           rir: setRow.rir,
           rpe: setRow.rpe,
         );
