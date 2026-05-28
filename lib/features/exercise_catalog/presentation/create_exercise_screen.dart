@@ -37,19 +37,25 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     'Shoulders',
     'Cardio',
   ];
+  /// Canonical muscle list that is always available in the chip selector,
+  /// regardless of what the exercise DB contains. Muscles such as Adductors
+  /// and Forearms do not exist as wger muscle IDs, so they would never appear
+  /// via a pure DB query. This list is always merged with (and supplements)
+  /// the DB-sourced muscle groups.
   final List<String> _defaultMuscles = [
+    'Abs',
+    'Adductors',
+    'Back',
     'Biceps',
-    'Triceps',
-    'Quadriceps',
-    'Hamstrings',
     'Calves',
     'Chest',
-    'Back',
-    'Shoulders',
-    'Abs',
-    'Glutes',
     'Forearms',
+    'Glutes',
+    'Hamstrings',
+    'Quadriceps',
+    'Shoulders',
     'Traps',
+    'Triceps',
   ];
 
   List<String> _allCategories = [];
@@ -80,17 +86,22 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     setState(() => _isLoading = true);
     try {
       final categories = await _repository.getAllCategories();
-      // Muscle groups are not in catalog repository yet, but let's see how they are implemented in WorkoutLocalDataSource.
-      // WorkoutLocalDataSource has `getAllMuscleGroups`. Let's use `WorkoutLocalDataSource.instance.getAllMuscleGroups()` for muscle groups
-      // as muscles are shared. Or let's proxy muscle groups in ExerciseCatalogRepository too.
-      // Wait, is there any other place? Let's check. Yes, let's keep it robust.
-      final muscles = await _repository.getAllMuscleGroups();
+      final dbMuscles = await _repository.getAllMuscleGroups();
+
+      // Always merge DB muscles with the canonical default list.
+      // Muscles such as Adductors and Forearms are not exported by wger,
+      // so a pure DB query would never surface them — but they must always
+      // be available for custom exercise creation.
+      final mergedMuscles = <String>{
+        ..._defaultMuscles,
+        ...dbMuscles,
+      }.toList();
 
       if (mounted) {
         setState(() {
           _allCategories =
               categories.isNotEmpty ? categories : _defaultCategories;
-          _allMuscleGroups = muscles.isNotEmpty ? muscles : _defaultMuscles;
+          _allMuscleGroups = mergedMuscles;
 
           _allCategories.sort();
           _allMuscleGroups.sort();

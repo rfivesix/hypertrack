@@ -1,0 +1,4 @@
+• NEU: Rechtliches Update im Onboarding – Wir haben unseren Start-Flow überarbeitet. Du kannst unsere Datenschutzerklärung und Nutzungsbedingungen ab sofort komplett offline direkt in der App einsehen und separat bestätigen.
+• VERBESSERT: Wissenschaftliche Volumen-Berechnung – Die Belastung von Hilfsmuskeln wurde auf einen realistischeren Faktor von 0.3x angepasst. Deine Erholungs-Analyse ist jetzt präziser als je zuvor.
+• VERBESSERT: Erweitertes Muskel-Mapping – Beim Erstellen eigener Übungen stehen dir ab sofort auch bisher fehlende Muskelgruppen wie Adduktoren und Unterarme direkt als Auswahl zur Verfügung.
+• BEHOBEN: Visuelle Heatmap-Fehler – Ein Fehler im Körpermodell wurde behoben, durch den bestimmte Bereiche (wie beide Bizepsköpfe, Nacken und die Oberschenkel-Innenseiten) weiß blieben. Deine Muskel-Heatmap leuchtet jetzt absolut fehlerfrei auf!

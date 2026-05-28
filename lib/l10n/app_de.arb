@@ -1387,7 +1387,7 @@
     }
   },
   "analyticsPeriodLabel": "Zeitraum",
-  "analyticsEquivalentSetsExplainer": "Äquivalente Arbeitssätze nutzen Primär x1.0 und Sekundär x0.5. Frequenz zählt nur Tage mit >= 1.0 äquivalenten Sätzen.",
+  "analyticsEquivalentSetsExplainer": "Äquivalente Arbeitssätze nutzen Primär x1.0 und Sekundär x0.3. Frequenz zählt nur Tage mit >= 1.0 äquivalenten Sätzen.",
   "analyticsWeeklySetsByMuscle": "Wöchentliche Sätze je Muskel",
   "analyticsFrequencyByMuscle": "Frequenz je Muskel",
   "analyticsRecentDistributionHeatmap": "Aktuelle Verteilungs-Heatmap",
@@ -2169,6 +2169,8 @@
   "muscleCalves": "Waden",
   "muscleLowerBack": "Unterer Rücken",
   "muscleAbs": "Bauch",
+  "muscleAdductors": "Adduktoren",
+  "muscleForearms": "Unterarme",
   "sleepDetailAnalysisHeader": "Detail-Analyse",
   "sleepMetricDurationLabel": "Schlafdauer",
   "sleepMetricContinuityLabel": "Kontinuität (WASO/SE)",

@@ -5618,7 +5618,7 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsEquivalentSetsExplainer.
   ///
   /// In en, this message translates to:
-  /// **'Equivalent hard sets use primary x1.0 and secondary x0.5 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.'**
+  /// **'Equivalent hard sets use primary x1.0 and secondary x0.3 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.'**
   String get analyticsEquivalentSetsExplainer;
 
   /// No description provided for @analyticsWeeklySetsByMuscle.
@@ -8441,6 +8441,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Abs'**
   String get muscleAbs;
+
+  /// No description provided for @muscleAdductors.
+  ///
+  /// In en, this message translates to:
+  /// **'Adductors'**
+  String get muscleAdductors;
+
+  /// No description provided for @muscleForearms.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearms'**
+  String get muscleForearms;
 
   /// No description provided for @sleepDetailAnalysisHeader.
   ///

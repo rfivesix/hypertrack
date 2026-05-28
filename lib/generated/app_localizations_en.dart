@@ -3139,7 +3139,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsEquivalentSetsExplainer =>
-      'Equivalent hard sets use primary x1.0 and secondary x0.5 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.';
+      'Equivalent hard sets use primary x1.0 and secondary x0.3 weighting. Frequency counts only days reaching >= 1.0 equivalent sets.';
 
   @override
   String get analyticsWeeklySetsByMuscle => 'Weekly Sets by Muscle';
@@ -4783,6 +4783,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muscleAbs => 'Abs';
+
+  @override
+  String get muscleAdductors => 'Adductors';
+
+  @override
+  String get muscleForearms => 'Forearms';
 
   @override
   String get sleepDetailAnalysisHeader => 'Detailed Analysis';

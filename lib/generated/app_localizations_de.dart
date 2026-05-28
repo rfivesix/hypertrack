@@ -3162,7 +3162,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get analyticsEquivalentSetsExplainer =>
-      'Äquivalente Arbeitssätze nutzen Primär x1.0 und Sekundär x0.5. Frequenz zählt nur Tage mit >= 1.0 äquivalenten Sätzen.';
+      'Äquivalente Arbeitssätze nutzen Primär x1.0 und Sekundär x0.3. Frequenz zählt nur Tage mit >= 1.0 äquivalenten Sätzen.';
 
   @override
   String get analyticsWeeklySetsByMuscle => 'Wöchentliche Sätze je Muskel';
@@ -4826,6 +4826,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get muscleAbs => 'Bauch';
+
+  @override
+  String get muscleAdductors => 'Adduktoren';
+
+  @override
+  String get muscleForearms => 'Unterarme';
 
   @override
   String get sleepDetailAnalysisHeader => 'Detail-Analyse';
