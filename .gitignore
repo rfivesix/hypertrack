@@ -51,4 +51,8 @@ android/key.properties
 *.keystore
 
 # Other
-/docs/node_modules/
+docs/node_modules/
+
+# AI Agents & Preflight Skills
+.agents/
+skills-lock.json
