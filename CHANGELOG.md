@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### fixed
 - **Supplement Backup Serialization Mismatch (#418)**: Fixed a data loss vulnerability within the data management engine where the `is_tracked` boolean attribute for supplements was dropped during export serialization. Restoring from a backup now perfectly retains the original tracking configurations across all custom supplement entries.
-- **Health Connect Delayed Sleep Correction (#419)**: Overhauled the wearable data synchronization pipeline to support non-destructive upserts for modified records. Delayed sleep session adjustments and retroactive accuracy updates from Apple Health/Health Connect are now correctly captured and refreshed within a rolling synchronization window instead of being permanently blocked by stale local database caches.
+- **Health Connect Delayed Sleep Correction (#419)**: Overhauled the wearable data synchronization pipeline to support non-destructive upserts for modified records. Delayed sleep session adjustments and retroactive accuracy updates from Apple Health/Health Connect are now correctly captured and refreshed within a rolling 72-hour synchronization window instead of being permanently blocked by stale local database caches.
 
 ## [0.9.16] - 2026-05-28
 
