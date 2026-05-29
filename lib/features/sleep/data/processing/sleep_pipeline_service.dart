@@ -178,6 +178,14 @@ class SleepPipelineService {
     );
 
     await _database.transaction(() async {
+      for (final session in batch.sessions) {
+        await _sessionsDao.deleteById(session.recordId);
+        await _sessionsDao.deleteByDateRange(
+          fromInclusive: session.startAtUtc,
+          toExclusive: session.endAtUtc.add(const Duration(seconds: 1)),
+        );
+      }
+
       await _rawDao.upsertBatch(result.rawRows);
       await _sessionsDao.upsertBatch(result.sessionRows);
       await _segmentsDao.upsertBatch(result.segmentRows);

@@ -130,6 +130,13 @@ class SleepCanonicalSessionsDao {
     );
   }
 
+  Future<void> deleteById(String id) async {
+    await _db.customStatement(
+      'DELETE FROM sleep_canonical_sessions WHERE id = ?',
+      <Object?>[id],
+    );
+  }
+
   SleepCanonicalSessionRecord _mapSession(QueryRow row) {
     return SleepCanonicalSessionRecord(
       id: row.read<String>('id'),

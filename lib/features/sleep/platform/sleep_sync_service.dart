@@ -165,12 +165,14 @@ class SleepSyncService implements SleepSettingsService {
     final nowUtc = DateTime.now().toUtc();
     final latestEndedAt = await _sessionsDao!.findLatestEndedAt();
 
-    // Delta-Sync: Use latest endedAt if available, otherwise fallback to lookback window.
-    // We add a small overlap (1 minute) to ensure we don't miss anything near the boundary,
-    // though the pipeline handles deduplication by hash.
-    final fromUtc = latestEndedAt != null
-        ? latestEndedAt.subtract(const Duration(minutes: 5))
+    // Delta-Sync: Use a rolling delta window (72 hours) behind latestEndedAt if available,
+    // to capture any updated or corrected sessions. Otherwise, fallback to the full lookback window.
+    var fromUtc = latestEndedAt != null
+        ? latestEndedAt.subtract(const Duration(hours: 72))
         : nowUtc.subtract(Duration(days: lookbackDays));
+    if (fromUtc.isAfter(nowUtc)) {
+      fromUtc = nowUtc.subtract(const Duration(hours: 72));
+    }
 
     final result = Platform.isIOS
         ? await _importWithHealthKit(fromUtc: fromUtc, toUtc: nowUtc)
