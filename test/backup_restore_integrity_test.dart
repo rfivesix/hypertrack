@@ -13,6 +13,7 @@ import 'package:train_libre/features/profile/domain/models/measurement.dart';
 import 'package:train_libre/features/profile/domain/models/measurement_session.dart';
 import 'package:train_libre/features/workout/domain/models/set_log.dart';
 import 'package:train_libre/features/workout/domain/models/workout_log.dart';
+import 'package:train_libre/features/supplements/domain/models/supplement.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -778,6 +779,138 @@ void main() {
       final segments = await db.select(db.healthStepSegments).get();
       expect(segments.length, 1);
       expect(segments.first.externalKey, 'valid-1');
+    });
+
+    test('supplements is_tracked states (true/false) survive backup and restore', () async {
+      // 1. Insert initial supplements with mixed isTracked states
+      await dbHelper.insertSupplement(
+        'Creatine Gold',
+        5.0,
+        'g',
+        10.0,
+      );
+      // Wait, let's insert using domain model
+      final customSupplement = Supplement(
+        id: 101,
+        name: 'Untracked Beta-Alanine',
+        defaultDose: 3.2,
+        unit: 'g',
+        isTracked: false,
+      );
+      final customTrackedSupplement = Supplement(
+        id: 102,
+        name: 'Tracked Citrulline',
+        defaultDose: 8.0,
+        unit: 'g',
+        isTracked: true,
+      );
+
+      await dbHelper.importUserData(
+        foodEntries: [],
+        fluidEntries: [],
+        favoriteBarcodes: [],
+        measurementSessions: [],
+        supplements: [customSupplement, customTrackedSupplement],
+        supplementLogs: [],
+      );
+
+      // Verify they are initially stored correctly
+      var currentSupps = await dbHelper.getAllSupplements();
+      final untrackedInDb = currentSupps.firstWhere((s) => s.name == 'Untracked Beta-Alanine');
+      final trackedInDb = currentSupps.firstWhere((s) => s.name == 'Tracked Citrulline');
+      expect(untrackedInDb.isTracked, isFalse);
+      expect(trackedInDb.isTracked, isTrue);
+
+      // 2. Generate backup
+      final payload = await backupManager.generateBackupPayloadForTesting();
+
+      // Verify the JSON backup payload contains the correct attributes
+      final suppList = payload['supplements'] as List<dynamic>;
+      final rawUntracked = suppList.firstWhere((s) => s['name'] == 'Untracked Beta-Alanine');
+      final rawTracked = suppList.firstWhere((s) => s['name'] == 'Tracked Citrulline');
+      expect(rawUntracked['is_tracked'], 0);
+      expect(rawTracked['is_tracked'], 1);
+
+      // 3. Clear database and restore
+      await dbHelper.clearAllUserData();
+      final imported = await backupManager.importBackupPayloadForTesting(payload);
+      expect(imported, isTrue);
+
+      // 4. Verify post-restoration states match original values
+      final restoredSupps = await dbHelper.getAllSupplements();
+      final restoredUntracked = restoredSupps.firstWhere((s) => s.name == 'Untracked Beta-Alanine');
+      final restoredTracked = restoredSupps.firstWhere((s) => s.name == 'Tracked Citrulline');
+      expect(restoredUntracked.isTracked, isFalse);
+      expect(restoredTracked.isTracked, isTrue);
+
+      // 5. Test compatibility with legacy/boolean/null formats
+      final compatPayload = <String, dynamic>{
+        'schemaVersion': BackupManager.currentSchemaVersion,
+        'foodEntries': const <dynamic>[],
+        'mealTemplates': const <dynamic>[],
+        'fluidEntries': const <dynamic>[],
+        'favoriteBarcodes': const <dynamic>[],
+        'customFoodItems': const <dynamic>[],
+        'measurementSessions': const <dynamic>[],
+        'routines': const <dynamic>[],
+        'workoutLogs': const <dynamic>[],
+        'userPreferences': const <String, dynamic>{},
+        'supplements': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 201,
+            'name': 'Legacy Int Tracked',
+            'default_dose': 1.0,
+            'unit': 'pill',
+            'is_tracked': 1,
+          },
+          <String, dynamic>{
+            'id': 202,
+            'name': 'Legacy Int Untracked',
+            'default_dose': 1.0,
+            'unit': 'pill',
+            'is_tracked': 0,
+          },
+          <String, dynamic>{
+            'id': 203,
+            'name': 'Boolean Tracked',
+            'default_dose': 1.0,
+            'unit': 'pill',
+            'is_tracked': true,
+          },
+          <String, dynamic>{
+            'id': 204,
+            'name': 'Boolean Untracked',
+            'default_dose': 1.0,
+            'unit': 'pill',
+            'is_tracked': false,
+          },
+          <String, dynamic>{
+            'id': 205,
+            'name': 'Null Fallback Tracked',
+            'default_dose': 1.0,
+            'unit': 'pill',
+            'is_tracked': null,
+          },
+        ],
+        'supplementLogs': const <dynamic>[],
+        'customExercises': const <dynamic>[],
+        'dailyGoalsHistory': const <dynamic>[],
+        'supplementSettingsHistory': const <dynamic>[],
+        'appSettings': null,
+        'profile': null,
+        'healthStepSegments': const <dynamic>[],
+      };
+
+      await dbHelper.clearAllUserData();
+      final compatImported = await backupManager.importBackupPayloadForTesting(compatPayload);
+      expect(compatImported, isTrue);
+
+      final restoredCompat = await dbHelper.getAllSupplements();
+      expect(restoredCompat.firstWhere((s) => s.name == 'Legacy Int Tracked').isTracked, isTrue);
+      expect(restoredCompat.firstWhere((s) => s.name == 'Legacy Int Untracked').isTracked, isFalse);
+      expect(restoredCompat.firstWhere((s) => s.name == 'Boolean Tracked').isTracked, isTrue);
+      expect(restoredCompat.firstWhere((s) => s.name == 'Boolean Untracked').isTracked, isFalse);
+      expect(restoredCompat.firstWhere((s) => s.name == 'Null Fallback Tracked').isTracked, isTrue);
     });
   });
 }

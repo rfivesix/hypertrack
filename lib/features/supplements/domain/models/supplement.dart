@@ -72,6 +72,11 @@ class Supplement {
 
   /// Creates a [Supplement] instance from a Map, typically from a database row.
   factory Supplement.fromMap(Map<String, dynamic> map) {
+    final rawTracked = map['is_tracked'];
+    final isTracked = rawTracked is bool
+        ? rawTracked
+        : (rawTracked is num ? rawTracked.toInt() == 1 : true);
+
     return Supplement(
       id: map['id'] as int?,
       code: map['code'] as String?, // New
@@ -82,7 +87,7 @@ class Supplement {
       dailyLimit: (map['daily_limit'] as num?)?.toDouble(),
       notes: map['notes'] as String?,
       isBuiltin: (map['is_builtin'] as int? ?? 0) == 1,
-      isTracked: (map['is_tracked'] as int? ?? 1) == 1,
+      isTracked: isTracked,
     );
   }
 

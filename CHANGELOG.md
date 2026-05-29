@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.9.17] -2026-05-2x
 
+### fixed
+- **Supplement Backup Serialization Mismatch (#418)**: Fixed a data loss vulnerability within the data management engine where the `is_tracked` boolean attribute for supplements was dropped during export serialization. Restoring from a backup now perfectly retains the original tracking configurations across all custom supplement entries.
 
 ## [0.9.16] - 2026-05-28
 

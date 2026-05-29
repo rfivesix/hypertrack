@@ -96,6 +96,7 @@ class DatabaseHelper {
             unit: drift.Value(s.unit),
             dailyGoal: drift.Value(s.dailyGoal),
             dailyLimit: drift.Value(s.dailyLimit),
+            isTracked: drift.Value(s.isTracked),
             createdAt: drift.Value(DateTime.now()),
             updatedAt: drift.Value(DateTime.now()),
             id: s.id != null
