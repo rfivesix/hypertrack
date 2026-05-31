@@ -647,6 +647,11 @@ class BasisDataManager {
     );
   }
 
+  @visibleForTesting
+  dynamic mapProductRowForTesting(Map<String, dynamic> row, {required String sourceLabel, String? preferredLanguage}) {
+    return _mapProductRow(row, sourceLabel: sourceLabel, preferredLanguage: preferredLanguage);
+  }
+
   // --- Mapping functions (unchanged) ---
 
   dynamic _mapProductRow(
@@ -681,6 +686,38 @@ class BasisDataManager {
       displayName = _parseString(rawNameDe ?? rawNameEn ?? rawName);
     }
 
+    bool isFluidVal = false;
+    final isFluidRaw = row['is_fluid'];
+    if (isFluidRaw != null) {
+      isFluidVal = _parseInt(isFluidRaw) == 1;
+    }
+
+    final nutritionPer = (row['nutrition_data_prepared_per'] ??
+            row['nutrition_data_per'] ??
+            row['nutrition_baseline'] ??
+            row['nutrition_baseline_key'])
+        ?.toString()
+        .toLowerCase()
+        .trim();
+    if (nutritionPer != null) {
+      if (nutritionPer.contains('100g')) {
+        isFluidVal = false;
+      } else if (nutritionPer.contains('100ml')) {
+        isFluidVal = true;
+      }
+    }
+
+    final rawCategory =
+        row['category'] ?? row['categories'] ?? row['categories_tags'];
+    if (rawCategory != null) {
+      final categoryStr = rawCategory.toString().toLowerCase();
+      if (categoryStr.contains('en:beverages') ||
+          categoryStr.contains('en:drinks') ||
+          categoryStr.contains('en:waters')) {
+        isFluidVal = true;
+      }
+    }
+
     return ProductsCompanion(
       id: drift.Value(id),
       barcode: drift.Value(barcode),
@@ -706,7 +743,7 @@ class BasisDataManager {
       productQuantity: drift.Value(_parseDouble(row['product_quantity'])),
       productQuantityUnit:
           drift.Value(row['product_quantity_unit']?.toString()),
-      isFluid: drift.Value(_parseInt(row['is_fluid']) == 1),
+      isFluid: drift.Value(isFluidVal),
       source: drift.Value(sourceLabel),
       isLiquid: drift.Value(_parseInt(row['is_liquid']) == 1),
       category: drift.Value(row['category']?.toString()),

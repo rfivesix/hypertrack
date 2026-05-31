@@ -14620,6 +14620,1223 @@ class WorkoutExerciseLogsCompanion extends UpdateCompanion<WorkoutExerciseLog> {
   }
 }
 
+class $UserFoodOverridesTable extends UserFoodOverrides
+    with TableInfo<$UserFoodOverridesTable, UserFoodOverride> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserFoodOverridesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localIdMeta =
+      const VerificationMeta('localId');
+  @override
+  late final GeneratedColumn<int> localId = GeneratedColumn<int>(
+      'local_id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+      clientDefault: () => const Uuid().v4());
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _barcodeMeta =
+      const VerificationMeta('barcode');
+  @override
+  late final GeneratedColumn<String> barcode = GeneratedColumn<String>(
+      'barcode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameDeMeta = const VerificationMeta('nameDe');
+  @override
+  late final GeneratedColumn<String> nameDe = GeneratedColumn<String>(
+      'name_de', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _nameEnMeta = const VerificationMeta('nameEn');
+  @override
+  late final GeneratedColumn<String> nameEn = GeneratedColumn<String>(
+      'name_en', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _brandMeta = const VerificationMeta('brand');
+  @override
+  late final GeneratedColumn<String> brand = GeneratedColumn<String>(
+      'brand', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _caloriesMeta =
+      const VerificationMeta('calories');
+  @override
+  late final GeneratedColumn<int> calories = GeneratedColumn<int>(
+      'calories', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _proteinMeta =
+      const VerificationMeta('protein');
+  @override
+  late final GeneratedColumn<double> protein = GeneratedColumn<double>(
+      'protein', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _carbsMeta = const VerificationMeta('carbs');
+  @override
+  late final GeneratedColumn<double> carbs = GeneratedColumn<double>(
+      'carbs', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _fatMeta = const VerificationMeta('fat');
+  @override
+  late final GeneratedColumn<double> fat = GeneratedColumn<double>(
+      'fat', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _sugarMeta = const VerificationMeta('sugar');
+  @override
+  late final GeneratedColumn<double> sugar = GeneratedColumn<double>(
+      'sugar', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _fiberMeta = const VerificationMeta('fiber');
+  @override
+  late final GeneratedColumn<double> fiber = GeneratedColumn<double>(
+      'fiber', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _saltMeta = const VerificationMeta('salt');
+  @override
+  late final GeneratedColumn<double> salt = GeneratedColumn<double>(
+      'salt', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _caffeineMeta =
+      const VerificationMeta('caffeine');
+  @override
+  late final GeneratedColumn<double> caffeine = GeneratedColumn<double>(
+      'caffeine', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _caffeineMgPer100gMeta =
+      const VerificationMeta('caffeineMgPer100g');
+  @override
+  late final GeneratedColumn<double> caffeineMgPer100g =
+      GeneratedColumn<double>('caffeine_mg_per_100g', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _ingredientsTextMeta =
+      const VerificationMeta('ingredientsText');
+  @override
+  late final GeneratedColumn<String> ingredientsText = GeneratedColumn<String>(
+      'ingredients_text', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _ingredientsAnalysisTagsMeta =
+      const VerificationMeta('ingredientsAnalysisTags');
+  @override
+  late final GeneratedColumn<String> ingredientsAnalysisTags =
+      GeneratedColumn<String>('ingredients_analysis_tags', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _additivesTagsMeta =
+      const VerificationMeta('additivesTags');
+  @override
+  late final GeneratedColumn<String> additivesTags = GeneratedColumn<String>(
+      'additives_tags', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _productQuantityMeta =
+      const VerificationMeta('productQuantity');
+  @override
+  late final GeneratedColumn<double> productQuantity = GeneratedColumn<double>(
+      'product_quantity', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _productQuantityUnitMeta =
+      const VerificationMeta('productQuantityUnit');
+  @override
+  late final GeneratedColumn<String> productQuantityUnit =
+      GeneratedColumn<String>('product_quantity_unit', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isFluidMeta =
+      const VerificationMeta('isFluid');
+  @override
+  late final GeneratedColumn<bool> isFluid = GeneratedColumn<bool>(
+      'is_fluid', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_fluid" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isLiquidMeta =
+      const VerificationMeta('isLiquid');
+  @override
+  late final GeneratedColumn<bool> isLiquid = GeneratedColumn<bool>(
+      'is_liquid', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_liquid" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _categoryMeta =
+      const VerificationMeta('category');
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+      'category', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        localId,
+        id,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        barcode,
+        name,
+        nameDe,
+        nameEn,
+        brand,
+        calories,
+        protein,
+        carbs,
+        fat,
+        sugar,
+        fiber,
+        salt,
+        caffeine,
+        caffeineMgPer100g,
+        ingredientsText,
+        ingredientsAnalysisTags,
+        additivesTags,
+        productQuantity,
+        productQuantityUnit,
+        isFluid,
+        isLiquid,
+        category
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_food_overrides';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserFoodOverride> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_id')) {
+      context.handle(_localIdMeta,
+          localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta));
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('barcode')) {
+      context.handle(_barcodeMeta,
+          barcode.isAcceptableOrUnknown(data['barcode']!, _barcodeMeta));
+    } else if (isInserting) {
+      context.missing(_barcodeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_de')) {
+      context.handle(_nameDeMeta,
+          nameDe.isAcceptableOrUnknown(data['name_de']!, _nameDeMeta));
+    }
+    if (data.containsKey('name_en')) {
+      context.handle(_nameEnMeta,
+          nameEn.isAcceptableOrUnknown(data['name_en']!, _nameEnMeta));
+    }
+    if (data.containsKey('brand')) {
+      context.handle(
+          _brandMeta, brand.isAcceptableOrUnknown(data['brand']!, _brandMeta));
+    }
+    if (data.containsKey('calories')) {
+      context.handle(_caloriesMeta,
+          calories.isAcceptableOrUnknown(data['calories']!, _caloriesMeta));
+    } else if (isInserting) {
+      context.missing(_caloriesMeta);
+    }
+    if (data.containsKey('protein')) {
+      context.handle(_proteinMeta,
+          protein.isAcceptableOrUnknown(data['protein']!, _proteinMeta));
+    } else if (isInserting) {
+      context.missing(_proteinMeta);
+    }
+    if (data.containsKey('carbs')) {
+      context.handle(
+          _carbsMeta, carbs.isAcceptableOrUnknown(data['carbs']!, _carbsMeta));
+    } else if (isInserting) {
+      context.missing(_carbsMeta);
+    }
+    if (data.containsKey('fat')) {
+      context.handle(
+          _fatMeta, fat.isAcceptableOrUnknown(data['fat']!, _fatMeta));
+    } else if (isInserting) {
+      context.missing(_fatMeta);
+    }
+    if (data.containsKey('sugar')) {
+      context.handle(
+          _sugarMeta, sugar.isAcceptableOrUnknown(data['sugar']!, _sugarMeta));
+    }
+    if (data.containsKey('fiber')) {
+      context.handle(
+          _fiberMeta, fiber.isAcceptableOrUnknown(data['fiber']!, _fiberMeta));
+    }
+    if (data.containsKey('salt')) {
+      context.handle(
+          _saltMeta, salt.isAcceptableOrUnknown(data['salt']!, _saltMeta));
+    }
+    if (data.containsKey('caffeine')) {
+      context.handle(_caffeineMeta,
+          caffeine.isAcceptableOrUnknown(data['caffeine']!, _caffeineMeta));
+    }
+    if (data.containsKey('caffeine_mg_per_100g')) {
+      context.handle(
+          _caffeineMgPer100gMeta,
+          caffeineMgPer100g.isAcceptableOrUnknown(
+              data['caffeine_mg_per_100g']!, _caffeineMgPer100gMeta));
+    }
+    if (data.containsKey('ingredients_text')) {
+      context.handle(
+          _ingredientsTextMeta,
+          ingredientsText.isAcceptableOrUnknown(
+              data['ingredients_text']!, _ingredientsTextMeta));
+    }
+    if (data.containsKey('ingredients_analysis_tags')) {
+      context.handle(
+          _ingredientsAnalysisTagsMeta,
+          ingredientsAnalysisTags.isAcceptableOrUnknown(
+              data['ingredients_analysis_tags']!,
+              _ingredientsAnalysisTagsMeta));
+    }
+    if (data.containsKey('additives_tags')) {
+      context.handle(
+          _additivesTagsMeta,
+          additivesTags.isAcceptableOrUnknown(
+              data['additives_tags']!, _additivesTagsMeta));
+    }
+    if (data.containsKey('product_quantity')) {
+      context.handle(
+          _productQuantityMeta,
+          productQuantity.isAcceptableOrUnknown(
+              data['product_quantity']!, _productQuantityMeta));
+    }
+    if (data.containsKey('product_quantity_unit')) {
+      context.handle(
+          _productQuantityUnitMeta,
+          productQuantityUnit.isAcceptableOrUnknown(
+              data['product_quantity_unit']!, _productQuantityUnitMeta));
+    }
+    if (data.containsKey('is_fluid')) {
+      context.handle(_isFluidMeta,
+          isFluid.isAcceptableOrUnknown(data['is_fluid']!, _isFluidMeta));
+    }
+    if (data.containsKey('is_liquid')) {
+      context.handle(_isLiquidMeta,
+          isLiquid.isAcceptableOrUnknown(data['is_liquid']!, _isLiquidMeta));
+    }
+    if (data.containsKey('category')) {
+      context.handle(_categoryMeta,
+          category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localId};
+  @override
+  UserFoodOverride map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserFoodOverride(
+      localId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}local_id'])!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
+      barcode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}barcode'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      nameDe: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name_de']),
+      nameEn: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name_en']),
+      brand: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}brand']),
+      calories: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}calories'])!,
+      protein: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}protein'])!,
+      carbs: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}carbs'])!,
+      fat: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}fat'])!,
+      sugar: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}sugar']),
+      fiber: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}fiber']),
+      salt: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}salt']),
+      caffeine: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}caffeine']),
+      caffeineMgPer100g: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}caffeine_mg_per_100g']),
+      ingredientsText: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}ingredients_text']),
+      ingredientsAnalysisTags: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}ingredients_analysis_tags']),
+      additivesTags: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}additives_tags']),
+      productQuantity: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}product_quantity']),
+      productQuantityUnit: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}product_quantity_unit']),
+      isFluid: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_fluid'])!,
+      isLiquid: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_liquid'])!,
+      category: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category']),
+    );
+  }
+
+  @override
+  $UserFoodOverridesTable createAlias(String alias) {
+    return $UserFoodOverridesTable(attachedDatabase, alias);
+  }
+}
+
+class UserFoodOverride extends DataClass
+    implements Insertable<UserFoodOverride> {
+  final int localId;
+  final String id;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String barcode;
+  final String name;
+  final String? nameDe;
+  final String? nameEn;
+  final String? brand;
+  final int calories;
+  final double protein;
+  final double carbs;
+  final double fat;
+  final double? sugar;
+  final double? fiber;
+  final double? salt;
+  final double? caffeine;
+  final double? caffeineMgPer100g;
+  final String? ingredientsText;
+  final String? ingredientsAnalysisTags;
+  final String? additivesTags;
+  final double? productQuantity;
+  final String? productQuantityUnit;
+  final bool isFluid;
+  final bool isLiquid;
+  final String? category;
+  const UserFoodOverride(
+      {required this.localId,
+      required this.id,
+      required this.createdAt,
+      required this.updatedAt,
+      this.deletedAt,
+      required this.barcode,
+      required this.name,
+      this.nameDe,
+      this.nameEn,
+      this.brand,
+      required this.calories,
+      required this.protein,
+      required this.carbs,
+      required this.fat,
+      this.sugar,
+      this.fiber,
+      this.salt,
+      this.caffeine,
+      this.caffeineMgPer100g,
+      this.ingredientsText,
+      this.ingredientsAnalysisTags,
+      this.additivesTags,
+      this.productQuantity,
+      this.productQuantityUnit,
+      required this.isFluid,
+      required this.isLiquid,
+      this.category});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_id'] = Variable<int>(localId);
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['barcode'] = Variable<String>(barcode);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || nameDe != null) {
+      map['name_de'] = Variable<String>(nameDe);
+    }
+    if (!nullToAbsent || nameEn != null) {
+      map['name_en'] = Variable<String>(nameEn);
+    }
+    if (!nullToAbsent || brand != null) {
+      map['brand'] = Variable<String>(brand);
+    }
+    map['calories'] = Variable<int>(calories);
+    map['protein'] = Variable<double>(protein);
+    map['carbs'] = Variable<double>(carbs);
+    map['fat'] = Variable<double>(fat);
+    if (!nullToAbsent || sugar != null) {
+      map['sugar'] = Variable<double>(sugar);
+    }
+    if (!nullToAbsent || fiber != null) {
+      map['fiber'] = Variable<double>(fiber);
+    }
+    if (!nullToAbsent || salt != null) {
+      map['salt'] = Variable<double>(salt);
+    }
+    if (!nullToAbsent || caffeine != null) {
+      map['caffeine'] = Variable<double>(caffeine);
+    }
+    if (!nullToAbsent || caffeineMgPer100g != null) {
+      map['caffeine_mg_per_100g'] = Variable<double>(caffeineMgPer100g);
+    }
+    if (!nullToAbsent || ingredientsText != null) {
+      map['ingredients_text'] = Variable<String>(ingredientsText);
+    }
+    if (!nullToAbsent || ingredientsAnalysisTags != null) {
+      map['ingredients_analysis_tags'] =
+          Variable<String>(ingredientsAnalysisTags);
+    }
+    if (!nullToAbsent || additivesTags != null) {
+      map['additives_tags'] = Variable<String>(additivesTags);
+    }
+    if (!nullToAbsent || productQuantity != null) {
+      map['product_quantity'] = Variable<double>(productQuantity);
+    }
+    if (!nullToAbsent || productQuantityUnit != null) {
+      map['product_quantity_unit'] = Variable<String>(productQuantityUnit);
+    }
+    map['is_fluid'] = Variable<bool>(isFluid);
+    map['is_liquid'] = Variable<bool>(isLiquid);
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
+    return map;
+  }
+
+  UserFoodOverridesCompanion toCompanion(bool nullToAbsent) {
+    return UserFoodOverridesCompanion(
+      localId: Value(localId),
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      barcode: Value(barcode),
+      name: Value(name),
+      nameDe:
+          nameDe == null && nullToAbsent ? const Value.absent() : Value(nameDe),
+      nameEn:
+          nameEn == null && nullToAbsent ? const Value.absent() : Value(nameEn),
+      brand:
+          brand == null && nullToAbsent ? const Value.absent() : Value(brand),
+      calories: Value(calories),
+      protein: Value(protein),
+      carbs: Value(carbs),
+      fat: Value(fat),
+      sugar:
+          sugar == null && nullToAbsent ? const Value.absent() : Value(sugar),
+      fiber:
+          fiber == null && nullToAbsent ? const Value.absent() : Value(fiber),
+      salt: salt == null && nullToAbsent ? const Value.absent() : Value(salt),
+      caffeine: caffeine == null && nullToAbsent
+          ? const Value.absent()
+          : Value(caffeine),
+      caffeineMgPer100g: caffeineMgPer100g == null && nullToAbsent
+          ? const Value.absent()
+          : Value(caffeineMgPer100g),
+      ingredientsText: ingredientsText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ingredientsText),
+      ingredientsAnalysisTags: ingredientsAnalysisTags == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ingredientsAnalysisTags),
+      additivesTags: additivesTags == null && nullToAbsent
+          ? const Value.absent()
+          : Value(additivesTags),
+      productQuantity: productQuantity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productQuantity),
+      productQuantityUnit: productQuantityUnit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productQuantityUnit),
+      isFluid: Value(isFluid),
+      isLiquid: Value(isLiquid),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
+    );
+  }
+
+  factory UserFoodOverride.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserFoodOverride(
+      localId: serializer.fromJson<int>(json['localId']),
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      barcode: serializer.fromJson<String>(json['barcode']),
+      name: serializer.fromJson<String>(json['name']),
+      nameDe: serializer.fromJson<String?>(json['nameDe']),
+      nameEn: serializer.fromJson<String?>(json['nameEn']),
+      brand: serializer.fromJson<String?>(json['brand']),
+      calories: serializer.fromJson<int>(json['calories']),
+      protein: serializer.fromJson<double>(json['protein']),
+      carbs: serializer.fromJson<double>(json['carbs']),
+      fat: serializer.fromJson<double>(json['fat']),
+      sugar: serializer.fromJson<double?>(json['sugar']),
+      fiber: serializer.fromJson<double?>(json['fiber']),
+      salt: serializer.fromJson<double?>(json['salt']),
+      caffeine: serializer.fromJson<double?>(json['caffeine']),
+      caffeineMgPer100g:
+          serializer.fromJson<double?>(json['caffeineMgPer100g']),
+      ingredientsText: serializer.fromJson<String?>(json['ingredientsText']),
+      ingredientsAnalysisTags:
+          serializer.fromJson<String?>(json['ingredientsAnalysisTags']),
+      additivesTags: serializer.fromJson<String?>(json['additivesTags']),
+      productQuantity: serializer.fromJson<double?>(json['productQuantity']),
+      productQuantityUnit:
+          serializer.fromJson<String?>(json['productQuantityUnit']),
+      isFluid: serializer.fromJson<bool>(json['isFluid']),
+      isLiquid: serializer.fromJson<bool>(json['isLiquid']),
+      category: serializer.fromJson<String?>(json['category']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localId': serializer.toJson<int>(localId),
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'barcode': serializer.toJson<String>(barcode),
+      'name': serializer.toJson<String>(name),
+      'nameDe': serializer.toJson<String?>(nameDe),
+      'nameEn': serializer.toJson<String?>(nameEn),
+      'brand': serializer.toJson<String?>(brand),
+      'calories': serializer.toJson<int>(calories),
+      'protein': serializer.toJson<double>(protein),
+      'carbs': serializer.toJson<double>(carbs),
+      'fat': serializer.toJson<double>(fat),
+      'sugar': serializer.toJson<double?>(sugar),
+      'fiber': serializer.toJson<double?>(fiber),
+      'salt': serializer.toJson<double?>(salt),
+      'caffeine': serializer.toJson<double?>(caffeine),
+      'caffeineMgPer100g': serializer.toJson<double?>(caffeineMgPer100g),
+      'ingredientsText': serializer.toJson<String?>(ingredientsText),
+      'ingredientsAnalysisTags':
+          serializer.toJson<String?>(ingredientsAnalysisTags),
+      'additivesTags': serializer.toJson<String?>(additivesTags),
+      'productQuantity': serializer.toJson<double?>(productQuantity),
+      'productQuantityUnit': serializer.toJson<String?>(productQuantityUnit),
+      'isFluid': serializer.toJson<bool>(isFluid),
+      'isLiquid': serializer.toJson<bool>(isLiquid),
+      'category': serializer.toJson<String?>(category),
+    };
+  }
+
+  UserFoodOverride copyWith(
+          {int? localId,
+          String? id,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          Value<DateTime?> deletedAt = const Value.absent(),
+          String? barcode,
+          String? name,
+          Value<String?> nameDe = const Value.absent(),
+          Value<String?> nameEn = const Value.absent(),
+          Value<String?> brand = const Value.absent(),
+          int? calories,
+          double? protein,
+          double? carbs,
+          double? fat,
+          Value<double?> sugar = const Value.absent(),
+          Value<double?> fiber = const Value.absent(),
+          Value<double?> salt = const Value.absent(),
+          Value<double?> caffeine = const Value.absent(),
+          Value<double?> caffeineMgPer100g = const Value.absent(),
+          Value<String?> ingredientsText = const Value.absent(),
+          Value<String?> ingredientsAnalysisTags = const Value.absent(),
+          Value<String?> additivesTags = const Value.absent(),
+          Value<double?> productQuantity = const Value.absent(),
+          Value<String?> productQuantityUnit = const Value.absent(),
+          bool? isFluid,
+          bool? isLiquid,
+          Value<String?> category = const Value.absent()}) =>
+      UserFoodOverride(
+        localId: localId ?? this.localId,
+        id: id ?? this.id,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        barcode: barcode ?? this.barcode,
+        name: name ?? this.name,
+        nameDe: nameDe.present ? nameDe.value : this.nameDe,
+        nameEn: nameEn.present ? nameEn.value : this.nameEn,
+        brand: brand.present ? brand.value : this.brand,
+        calories: calories ?? this.calories,
+        protein: protein ?? this.protein,
+        carbs: carbs ?? this.carbs,
+        fat: fat ?? this.fat,
+        sugar: sugar.present ? sugar.value : this.sugar,
+        fiber: fiber.present ? fiber.value : this.fiber,
+        salt: salt.present ? salt.value : this.salt,
+        caffeine: caffeine.present ? caffeine.value : this.caffeine,
+        caffeineMgPer100g: caffeineMgPer100g.present
+            ? caffeineMgPer100g.value
+            : this.caffeineMgPer100g,
+        ingredientsText: ingredientsText.present
+            ? ingredientsText.value
+            : this.ingredientsText,
+        ingredientsAnalysisTags: ingredientsAnalysisTags.present
+            ? ingredientsAnalysisTags.value
+            : this.ingredientsAnalysisTags,
+        additivesTags:
+            additivesTags.present ? additivesTags.value : this.additivesTags,
+        productQuantity: productQuantity.present
+            ? productQuantity.value
+            : this.productQuantity,
+        productQuantityUnit: productQuantityUnit.present
+            ? productQuantityUnit.value
+            : this.productQuantityUnit,
+        isFluid: isFluid ?? this.isFluid,
+        isLiquid: isLiquid ?? this.isLiquid,
+        category: category.present ? category.value : this.category,
+      );
+  UserFoodOverride copyWithCompanion(UserFoodOverridesCompanion data) {
+    return UserFoodOverride(
+      localId: data.localId.present ? data.localId.value : this.localId,
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      barcode: data.barcode.present ? data.barcode.value : this.barcode,
+      name: data.name.present ? data.name.value : this.name,
+      nameDe: data.nameDe.present ? data.nameDe.value : this.nameDe,
+      nameEn: data.nameEn.present ? data.nameEn.value : this.nameEn,
+      brand: data.brand.present ? data.brand.value : this.brand,
+      calories: data.calories.present ? data.calories.value : this.calories,
+      protein: data.protein.present ? data.protein.value : this.protein,
+      carbs: data.carbs.present ? data.carbs.value : this.carbs,
+      fat: data.fat.present ? data.fat.value : this.fat,
+      sugar: data.sugar.present ? data.sugar.value : this.sugar,
+      fiber: data.fiber.present ? data.fiber.value : this.fiber,
+      salt: data.salt.present ? data.salt.value : this.salt,
+      caffeine: data.caffeine.present ? data.caffeine.value : this.caffeine,
+      caffeineMgPer100g: data.caffeineMgPer100g.present
+          ? data.caffeineMgPer100g.value
+          : this.caffeineMgPer100g,
+      ingredientsText: data.ingredientsText.present
+          ? data.ingredientsText.value
+          : this.ingredientsText,
+      ingredientsAnalysisTags: data.ingredientsAnalysisTags.present
+          ? data.ingredientsAnalysisTags.value
+          : this.ingredientsAnalysisTags,
+      additivesTags: data.additivesTags.present
+          ? data.additivesTags.value
+          : this.additivesTags,
+      productQuantity: data.productQuantity.present
+          ? data.productQuantity.value
+          : this.productQuantity,
+      productQuantityUnit: data.productQuantityUnit.present
+          ? data.productQuantityUnit.value
+          : this.productQuantityUnit,
+      isFluid: data.isFluid.present ? data.isFluid.value : this.isFluid,
+      isLiquid: data.isLiquid.present ? data.isLiquid.value : this.isLiquid,
+      category: data.category.present ? data.category.value : this.category,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserFoodOverride(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('barcode: $barcode, ')
+          ..write('name: $name, ')
+          ..write('nameDe: $nameDe, ')
+          ..write('nameEn: $nameEn, ')
+          ..write('brand: $brand, ')
+          ..write('calories: $calories, ')
+          ..write('protein: $protein, ')
+          ..write('carbs: $carbs, ')
+          ..write('fat: $fat, ')
+          ..write('sugar: $sugar, ')
+          ..write('fiber: $fiber, ')
+          ..write('salt: $salt, ')
+          ..write('caffeine: $caffeine, ')
+          ..write('caffeineMgPer100g: $caffeineMgPer100g, ')
+          ..write('ingredientsText: $ingredientsText, ')
+          ..write('ingredientsAnalysisTags: $ingredientsAnalysisTags, ')
+          ..write('additivesTags: $additivesTags, ')
+          ..write('productQuantity: $productQuantity, ')
+          ..write('productQuantityUnit: $productQuantityUnit, ')
+          ..write('isFluid: $isFluid, ')
+          ..write('isLiquid: $isLiquid, ')
+          ..write('category: $category')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        localId,
+        id,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        barcode,
+        name,
+        nameDe,
+        nameEn,
+        brand,
+        calories,
+        protein,
+        carbs,
+        fat,
+        sugar,
+        fiber,
+        salt,
+        caffeine,
+        caffeineMgPer100g,
+        ingredientsText,
+        ingredientsAnalysisTags,
+        additivesTags,
+        productQuantity,
+        productQuantityUnit,
+        isFluid,
+        isLiquid,
+        category
+      ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserFoodOverride &&
+          other.localId == this.localId &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.barcode == this.barcode &&
+          other.name == this.name &&
+          other.nameDe == this.nameDe &&
+          other.nameEn == this.nameEn &&
+          other.brand == this.brand &&
+          other.calories == this.calories &&
+          other.protein == this.protein &&
+          other.carbs == this.carbs &&
+          other.fat == this.fat &&
+          other.sugar == this.sugar &&
+          other.fiber == this.fiber &&
+          other.salt == this.salt &&
+          other.caffeine == this.caffeine &&
+          other.caffeineMgPer100g == this.caffeineMgPer100g &&
+          other.ingredientsText == this.ingredientsText &&
+          other.ingredientsAnalysisTags == this.ingredientsAnalysisTags &&
+          other.additivesTags == this.additivesTags &&
+          other.productQuantity == this.productQuantity &&
+          other.productQuantityUnit == this.productQuantityUnit &&
+          other.isFluid == this.isFluid &&
+          other.isLiquid == this.isLiquid &&
+          other.category == this.category);
+}
+
+class UserFoodOverridesCompanion extends UpdateCompanion<UserFoodOverride> {
+  final Value<int> localId;
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> barcode;
+  final Value<String> name;
+  final Value<String?> nameDe;
+  final Value<String?> nameEn;
+  final Value<String?> brand;
+  final Value<int> calories;
+  final Value<double> protein;
+  final Value<double> carbs;
+  final Value<double> fat;
+  final Value<double?> sugar;
+  final Value<double?> fiber;
+  final Value<double?> salt;
+  final Value<double?> caffeine;
+  final Value<double?> caffeineMgPer100g;
+  final Value<String?> ingredientsText;
+  final Value<String?> ingredientsAnalysisTags;
+  final Value<String?> additivesTags;
+  final Value<double?> productQuantity;
+  final Value<String?> productQuantityUnit;
+  final Value<bool> isFluid;
+  final Value<bool> isLiquid;
+  final Value<String?> category;
+  const UserFoodOverridesCompanion({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.barcode = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameDe = const Value.absent(),
+    this.nameEn = const Value.absent(),
+    this.brand = const Value.absent(),
+    this.calories = const Value.absent(),
+    this.protein = const Value.absent(),
+    this.carbs = const Value.absent(),
+    this.fat = const Value.absent(),
+    this.sugar = const Value.absent(),
+    this.fiber = const Value.absent(),
+    this.salt = const Value.absent(),
+    this.caffeine = const Value.absent(),
+    this.caffeineMgPer100g = const Value.absent(),
+    this.ingredientsText = const Value.absent(),
+    this.ingredientsAnalysisTags = const Value.absent(),
+    this.additivesTags = const Value.absent(),
+    this.productQuantity = const Value.absent(),
+    this.productQuantityUnit = const Value.absent(),
+    this.isFluid = const Value.absent(),
+    this.isLiquid = const Value.absent(),
+    this.category = const Value.absent(),
+  });
+  UserFoodOverridesCompanion.insert({
+    this.localId = const Value.absent(),
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String barcode,
+    required String name,
+    this.nameDe = const Value.absent(),
+    this.nameEn = const Value.absent(),
+    this.brand = const Value.absent(),
+    required int calories,
+    required double protein,
+    required double carbs,
+    required double fat,
+    this.sugar = const Value.absent(),
+    this.fiber = const Value.absent(),
+    this.salt = const Value.absent(),
+    this.caffeine = const Value.absent(),
+    this.caffeineMgPer100g = const Value.absent(),
+    this.ingredientsText = const Value.absent(),
+    this.ingredientsAnalysisTags = const Value.absent(),
+    this.additivesTags = const Value.absent(),
+    this.productQuantity = const Value.absent(),
+    this.productQuantityUnit = const Value.absent(),
+    this.isFluid = const Value.absent(),
+    this.isLiquid = const Value.absent(),
+    this.category = const Value.absent(),
+  })  : barcode = Value(barcode),
+        name = Value(name),
+        calories = Value(calories),
+        protein = Value(protein),
+        carbs = Value(carbs),
+        fat = Value(fat);
+  static Insertable<UserFoodOverride> custom({
+    Expression<int>? localId,
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? barcode,
+    Expression<String>? name,
+    Expression<String>? nameDe,
+    Expression<String>? nameEn,
+    Expression<String>? brand,
+    Expression<int>? calories,
+    Expression<double>? protein,
+    Expression<double>? carbs,
+    Expression<double>? fat,
+    Expression<double>? sugar,
+    Expression<double>? fiber,
+    Expression<double>? salt,
+    Expression<double>? caffeine,
+    Expression<double>? caffeineMgPer100g,
+    Expression<String>? ingredientsText,
+    Expression<String>? ingredientsAnalysisTags,
+    Expression<String>? additivesTags,
+    Expression<double>? productQuantity,
+    Expression<String>? productQuantityUnit,
+    Expression<bool>? isFluid,
+    Expression<bool>? isLiquid,
+    Expression<String>? category,
+  }) {
+    return RawValuesInsertable({
+      if (localId != null) 'local_id': localId,
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (barcode != null) 'barcode': barcode,
+      if (name != null) 'name': name,
+      if (nameDe != null) 'name_de': nameDe,
+      if (nameEn != null) 'name_en': nameEn,
+      if (brand != null) 'brand': brand,
+      if (calories != null) 'calories': calories,
+      if (protein != null) 'protein': protein,
+      if (carbs != null) 'carbs': carbs,
+      if (fat != null) 'fat': fat,
+      if (sugar != null) 'sugar': sugar,
+      if (fiber != null) 'fiber': fiber,
+      if (salt != null) 'salt': salt,
+      if (caffeine != null) 'caffeine': caffeine,
+      if (caffeineMgPer100g != null) 'caffeine_mg_per_100g': caffeineMgPer100g,
+      if (ingredientsText != null) 'ingredients_text': ingredientsText,
+      if (ingredientsAnalysisTags != null)
+        'ingredients_analysis_tags': ingredientsAnalysisTags,
+      if (additivesTags != null) 'additives_tags': additivesTags,
+      if (productQuantity != null) 'product_quantity': productQuantity,
+      if (productQuantityUnit != null)
+        'product_quantity_unit': productQuantityUnit,
+      if (isFluid != null) 'is_fluid': isFluid,
+      if (isLiquid != null) 'is_liquid': isLiquid,
+      if (category != null) 'category': category,
+    });
+  }
+
+  UserFoodOverridesCompanion copyWith(
+      {Value<int>? localId,
+      Value<String>? id,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime?>? deletedAt,
+      Value<String>? barcode,
+      Value<String>? name,
+      Value<String?>? nameDe,
+      Value<String?>? nameEn,
+      Value<String?>? brand,
+      Value<int>? calories,
+      Value<double>? protein,
+      Value<double>? carbs,
+      Value<double>? fat,
+      Value<double?>? sugar,
+      Value<double?>? fiber,
+      Value<double?>? salt,
+      Value<double?>? caffeine,
+      Value<double?>? caffeineMgPer100g,
+      Value<String?>? ingredientsText,
+      Value<String?>? ingredientsAnalysisTags,
+      Value<String?>? additivesTags,
+      Value<double?>? productQuantity,
+      Value<String?>? productQuantityUnit,
+      Value<bool>? isFluid,
+      Value<bool>? isLiquid,
+      Value<String?>? category}) {
+    return UserFoodOverridesCompanion(
+      localId: localId ?? this.localId,
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      barcode: barcode ?? this.barcode,
+      name: name ?? this.name,
+      nameDe: nameDe ?? this.nameDe,
+      nameEn: nameEn ?? this.nameEn,
+      brand: brand ?? this.brand,
+      calories: calories ?? this.calories,
+      protein: protein ?? this.protein,
+      carbs: carbs ?? this.carbs,
+      fat: fat ?? this.fat,
+      sugar: sugar ?? this.sugar,
+      fiber: fiber ?? this.fiber,
+      salt: salt ?? this.salt,
+      caffeine: caffeine ?? this.caffeine,
+      caffeineMgPer100g: caffeineMgPer100g ?? this.caffeineMgPer100g,
+      ingredientsText: ingredientsText ?? this.ingredientsText,
+      ingredientsAnalysisTags:
+          ingredientsAnalysisTags ?? this.ingredientsAnalysisTags,
+      additivesTags: additivesTags ?? this.additivesTags,
+      productQuantity: productQuantity ?? this.productQuantity,
+      productQuantityUnit: productQuantityUnit ?? this.productQuantityUnit,
+      isFluid: isFluid ?? this.isFluid,
+      isLiquid: isLiquid ?? this.isLiquid,
+      category: category ?? this.category,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localId.present) {
+      map['local_id'] = Variable<int>(localId.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (barcode.present) {
+      map['barcode'] = Variable<String>(barcode.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameDe.present) {
+      map['name_de'] = Variable<String>(nameDe.value);
+    }
+    if (nameEn.present) {
+      map['name_en'] = Variable<String>(nameEn.value);
+    }
+    if (brand.present) {
+      map['brand'] = Variable<String>(brand.value);
+    }
+    if (calories.present) {
+      map['calories'] = Variable<int>(calories.value);
+    }
+    if (protein.present) {
+      map['protein'] = Variable<double>(protein.value);
+    }
+    if (carbs.present) {
+      map['carbs'] = Variable<double>(carbs.value);
+    }
+    if (fat.present) {
+      map['fat'] = Variable<double>(fat.value);
+    }
+    if (sugar.present) {
+      map['sugar'] = Variable<double>(sugar.value);
+    }
+    if (fiber.present) {
+      map['fiber'] = Variable<double>(fiber.value);
+    }
+    if (salt.present) {
+      map['salt'] = Variable<double>(salt.value);
+    }
+    if (caffeine.present) {
+      map['caffeine'] = Variable<double>(caffeine.value);
+    }
+    if (caffeineMgPer100g.present) {
+      map['caffeine_mg_per_100g'] = Variable<double>(caffeineMgPer100g.value);
+    }
+    if (ingredientsText.present) {
+      map['ingredients_text'] = Variable<String>(ingredientsText.value);
+    }
+    if (ingredientsAnalysisTags.present) {
+      map['ingredients_analysis_tags'] =
+          Variable<String>(ingredientsAnalysisTags.value);
+    }
+    if (additivesTags.present) {
+      map['additives_tags'] = Variable<String>(additivesTags.value);
+    }
+    if (productQuantity.present) {
+      map['product_quantity'] = Variable<double>(productQuantity.value);
+    }
+    if (productQuantityUnit.present) {
+      map['product_quantity_unit'] =
+          Variable<String>(productQuantityUnit.value);
+    }
+    if (isFluid.present) {
+      map['is_fluid'] = Variable<bool>(isFluid.value);
+    }
+    if (isLiquid.present) {
+      map['is_liquid'] = Variable<bool>(isLiquid.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserFoodOverridesCompanion(')
+          ..write('localId: $localId, ')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('barcode: $barcode, ')
+          ..write('name: $name, ')
+          ..write('nameDe: $nameDe, ')
+          ..write('nameEn: $nameEn, ')
+          ..write('brand: $brand, ')
+          ..write('calories: $calories, ')
+          ..write('protein: $protein, ')
+          ..write('carbs: $carbs, ')
+          ..write('fat: $fat, ')
+          ..write('sugar: $sugar, ')
+          ..write('fiber: $fiber, ')
+          ..write('salt: $salt, ')
+          ..write('caffeine: $caffeine, ')
+          ..write('caffeineMgPer100g: $caffeineMgPer100g, ')
+          ..write('ingredientsText: $ingredientsText, ')
+          ..write('ingredientsAnalysisTags: $ingredientsAnalysisTags, ')
+          ..write('additivesTags: $additivesTags, ')
+          ..write('productQuantity: $productQuantity, ')
+          ..write('productQuantityUnit: $productQuantityUnit, ')
+          ..write('isFluid: $isFluid, ')
+          ..write('isLiquid: $isLiquid, ')
+          ..write('category: $category')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -14657,6 +15874,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $HealthStepSegmentsTable(this);
   late final $WorkoutExerciseLogsTable workoutExerciseLogs =
       $WorkoutExerciseLogsTable(this);
+  late final $UserFoodOverridesTable userFoodOverrides =
+      $UserFoodOverridesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -14687,7 +15906,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         dailyGoalsHistory,
         supplementSettingsHistory,
         healthStepSegments,
-        workoutExerciseLogs
+        workoutExerciseLogs,
+        userFoodOverrides
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -24983,6 +26203,516 @@ typedef $$WorkoutExerciseLogsTableProcessedTableManager = ProcessedTableManager<
     (WorkoutExerciseLog, $$WorkoutExerciseLogsTableReferences),
     WorkoutExerciseLog,
     PrefetchHooks Function({bool workoutLogId, bool exerciseId})>;
+typedef $$UserFoodOverridesTableCreateCompanionBuilder
+    = UserFoodOverridesCompanion Function({
+  Value<int> localId,
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String barcode,
+  required String name,
+  Value<String?> nameDe,
+  Value<String?> nameEn,
+  Value<String?> brand,
+  required int calories,
+  required double protein,
+  required double carbs,
+  required double fat,
+  Value<double?> sugar,
+  Value<double?> fiber,
+  Value<double?> salt,
+  Value<double?> caffeine,
+  Value<double?> caffeineMgPer100g,
+  Value<String?> ingredientsText,
+  Value<String?> ingredientsAnalysisTags,
+  Value<String?> additivesTags,
+  Value<double?> productQuantity,
+  Value<String?> productQuantityUnit,
+  Value<bool> isFluid,
+  Value<bool> isLiquid,
+  Value<String?> category,
+});
+typedef $$UserFoodOverridesTableUpdateCompanionBuilder
+    = UserFoodOverridesCompanion Function({
+  Value<int> localId,
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> barcode,
+  Value<String> name,
+  Value<String?> nameDe,
+  Value<String?> nameEn,
+  Value<String?> brand,
+  Value<int> calories,
+  Value<double> protein,
+  Value<double> carbs,
+  Value<double> fat,
+  Value<double?> sugar,
+  Value<double?> fiber,
+  Value<double?> salt,
+  Value<double?> caffeine,
+  Value<double?> caffeineMgPer100g,
+  Value<String?> ingredientsText,
+  Value<String?> ingredientsAnalysisTags,
+  Value<String?> additivesTags,
+  Value<double?> productQuantity,
+  Value<String?> productQuantityUnit,
+  Value<bool> isFluid,
+  Value<bool> isLiquid,
+  Value<String?> category,
+});
+
+class $$UserFoodOverridesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserFoodOverridesTable> {
+  $$UserFoodOverridesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get localId => $composableBuilder(
+      column: $table.localId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get barcode => $composableBuilder(
+      column: $table.barcode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nameDe => $composableBuilder(
+      column: $table.nameDe, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nameEn => $composableBuilder(
+      column: $table.nameEn, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get brand => $composableBuilder(
+      column: $table.brand, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get calories => $composableBuilder(
+      column: $table.calories, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get protein => $composableBuilder(
+      column: $table.protein, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get carbs => $composableBuilder(
+      column: $table.carbs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get fat => $composableBuilder(
+      column: $table.fat, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get sugar => $composableBuilder(
+      column: $table.sugar, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get fiber => $composableBuilder(
+      column: $table.fiber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get salt => $composableBuilder(
+      column: $table.salt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get caffeine => $composableBuilder(
+      column: $table.caffeine, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get caffeineMgPer100g => $composableBuilder(
+      column: $table.caffeineMgPer100g,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ingredientsText => $composableBuilder(
+      column: $table.ingredientsText,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ingredientsAnalysisTags => $composableBuilder(
+      column: $table.ingredientsAnalysisTags,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get additivesTags => $composableBuilder(
+      column: $table.additivesTags, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get productQuantity => $composableBuilder(
+      column: $table.productQuantity,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productQuantityUnit => $composableBuilder(
+      column: $table.productQuantityUnit,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isFluid => $composableBuilder(
+      column: $table.isFluid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isLiquid => $composableBuilder(
+      column: $table.isLiquid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnFilters(column));
+}
+
+class $$UserFoodOverridesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserFoodOverridesTable> {
+  $$UserFoodOverridesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get localId => $composableBuilder(
+      column: $table.localId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get barcode => $composableBuilder(
+      column: $table.barcode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nameDe => $composableBuilder(
+      column: $table.nameDe, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nameEn => $composableBuilder(
+      column: $table.nameEn, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get brand => $composableBuilder(
+      column: $table.brand, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get calories => $composableBuilder(
+      column: $table.calories, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get protein => $composableBuilder(
+      column: $table.protein, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get carbs => $composableBuilder(
+      column: $table.carbs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get fat => $composableBuilder(
+      column: $table.fat, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get sugar => $composableBuilder(
+      column: $table.sugar, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get fiber => $composableBuilder(
+      column: $table.fiber, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get salt => $composableBuilder(
+      column: $table.salt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get caffeine => $composableBuilder(
+      column: $table.caffeine, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get caffeineMgPer100g => $composableBuilder(
+      column: $table.caffeineMgPer100g,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ingredientsText => $composableBuilder(
+      column: $table.ingredientsText,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ingredientsAnalysisTags => $composableBuilder(
+      column: $table.ingredientsAnalysisTags,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get additivesTags => $composableBuilder(
+      column: $table.additivesTags,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get productQuantity => $composableBuilder(
+      column: $table.productQuantity,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productQuantityUnit => $composableBuilder(
+      column: $table.productQuantityUnit,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isFluid => $composableBuilder(
+      column: $table.isFluid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isLiquid => $composableBuilder(
+      column: $table.isLiquid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnOrderings(column));
+}
+
+class $$UserFoodOverridesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserFoodOverridesTable> {
+  $$UserFoodOverridesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get barcode =>
+      $composableBuilder(column: $table.barcode, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameDe =>
+      $composableBuilder(column: $table.nameDe, builder: (column) => column);
+
+  GeneratedColumn<String> get nameEn =>
+      $composableBuilder(column: $table.nameEn, builder: (column) => column);
+
+  GeneratedColumn<String> get brand =>
+      $composableBuilder(column: $table.brand, builder: (column) => column);
+
+  GeneratedColumn<int> get calories =>
+      $composableBuilder(column: $table.calories, builder: (column) => column);
+
+  GeneratedColumn<double> get protein =>
+      $composableBuilder(column: $table.protein, builder: (column) => column);
+
+  GeneratedColumn<double> get carbs =>
+      $composableBuilder(column: $table.carbs, builder: (column) => column);
+
+  GeneratedColumn<double> get fat =>
+      $composableBuilder(column: $table.fat, builder: (column) => column);
+
+  GeneratedColumn<double> get sugar =>
+      $composableBuilder(column: $table.sugar, builder: (column) => column);
+
+  GeneratedColumn<double> get fiber =>
+      $composableBuilder(column: $table.fiber, builder: (column) => column);
+
+  GeneratedColumn<double> get salt =>
+      $composableBuilder(column: $table.salt, builder: (column) => column);
+
+  GeneratedColumn<double> get caffeine =>
+      $composableBuilder(column: $table.caffeine, builder: (column) => column);
+
+  GeneratedColumn<double> get caffeineMgPer100g => $composableBuilder(
+      column: $table.caffeineMgPer100g, builder: (column) => column);
+
+  GeneratedColumn<String> get ingredientsText => $composableBuilder(
+      column: $table.ingredientsText, builder: (column) => column);
+
+  GeneratedColumn<String> get ingredientsAnalysisTags => $composableBuilder(
+      column: $table.ingredientsAnalysisTags, builder: (column) => column);
+
+  GeneratedColumn<String> get additivesTags => $composableBuilder(
+      column: $table.additivesTags, builder: (column) => column);
+
+  GeneratedColumn<double> get productQuantity => $composableBuilder(
+      column: $table.productQuantity, builder: (column) => column);
+
+  GeneratedColumn<String> get productQuantityUnit => $composableBuilder(
+      column: $table.productQuantityUnit, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFluid =>
+      $composableBuilder(column: $table.isFluid, builder: (column) => column);
+
+  GeneratedColumn<bool> get isLiquid =>
+      $composableBuilder(column: $table.isLiquid, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+}
+
+class $$UserFoodOverridesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $UserFoodOverridesTable,
+    UserFoodOverride,
+    $$UserFoodOverridesTableFilterComposer,
+    $$UserFoodOverridesTableOrderingComposer,
+    $$UserFoodOverridesTableAnnotationComposer,
+    $$UserFoodOverridesTableCreateCompanionBuilder,
+    $$UserFoodOverridesTableUpdateCompanionBuilder,
+    (
+      UserFoodOverride,
+      BaseReferences<_$AppDatabase, $UserFoodOverridesTable, UserFoodOverride>
+    ),
+    UserFoodOverride,
+    PrefetchHooks Function()> {
+  $$UserFoodOverridesTableTableManager(
+      _$AppDatabase db, $UserFoodOverridesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserFoodOverridesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserFoodOverridesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserFoodOverridesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            Value<String> id = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
+            Value<String> barcode = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> nameDe = const Value.absent(),
+            Value<String?> nameEn = const Value.absent(),
+            Value<String?> brand = const Value.absent(),
+            Value<int> calories = const Value.absent(),
+            Value<double> protein = const Value.absent(),
+            Value<double> carbs = const Value.absent(),
+            Value<double> fat = const Value.absent(),
+            Value<double?> sugar = const Value.absent(),
+            Value<double?> fiber = const Value.absent(),
+            Value<double?> salt = const Value.absent(),
+            Value<double?> caffeine = const Value.absent(),
+            Value<double?> caffeineMgPer100g = const Value.absent(),
+            Value<String?> ingredientsText = const Value.absent(),
+            Value<String?> ingredientsAnalysisTags = const Value.absent(),
+            Value<String?> additivesTags = const Value.absent(),
+            Value<double?> productQuantity = const Value.absent(),
+            Value<String?> productQuantityUnit = const Value.absent(),
+            Value<bool> isFluid = const Value.absent(),
+            Value<bool> isLiquid = const Value.absent(),
+            Value<String?> category = const Value.absent(),
+          }) =>
+              UserFoodOverridesCompanion(
+            localId: localId,
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            barcode: barcode,
+            name: name,
+            nameDe: nameDe,
+            nameEn: nameEn,
+            brand: brand,
+            calories: calories,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
+            sugar: sugar,
+            fiber: fiber,
+            salt: salt,
+            caffeine: caffeine,
+            caffeineMgPer100g: caffeineMgPer100g,
+            ingredientsText: ingredientsText,
+            ingredientsAnalysisTags: ingredientsAnalysisTags,
+            additivesTags: additivesTags,
+            productQuantity: productQuantity,
+            productQuantityUnit: productQuantityUnit,
+            isFluid: isFluid,
+            isLiquid: isLiquid,
+            category: category,
+          ),
+          createCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            Value<String> id = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
+            required String barcode,
+            required String name,
+            Value<String?> nameDe = const Value.absent(),
+            Value<String?> nameEn = const Value.absent(),
+            Value<String?> brand = const Value.absent(),
+            required int calories,
+            required double protein,
+            required double carbs,
+            required double fat,
+            Value<double?> sugar = const Value.absent(),
+            Value<double?> fiber = const Value.absent(),
+            Value<double?> salt = const Value.absent(),
+            Value<double?> caffeine = const Value.absent(),
+            Value<double?> caffeineMgPer100g = const Value.absent(),
+            Value<String?> ingredientsText = const Value.absent(),
+            Value<String?> ingredientsAnalysisTags = const Value.absent(),
+            Value<String?> additivesTags = const Value.absent(),
+            Value<double?> productQuantity = const Value.absent(),
+            Value<String?> productQuantityUnit = const Value.absent(),
+            Value<bool> isFluid = const Value.absent(),
+            Value<bool> isLiquid = const Value.absent(),
+            Value<String?> category = const Value.absent(),
+          }) =>
+              UserFoodOverridesCompanion.insert(
+            localId: localId,
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            barcode: barcode,
+            name: name,
+            nameDe: nameDe,
+            nameEn: nameEn,
+            brand: brand,
+            calories: calories,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
+            sugar: sugar,
+            fiber: fiber,
+            salt: salt,
+            caffeine: caffeine,
+            caffeineMgPer100g: caffeineMgPer100g,
+            ingredientsText: ingredientsText,
+            ingredientsAnalysisTags: ingredientsAnalysisTags,
+            additivesTags: additivesTags,
+            productQuantity: productQuantity,
+            productQuantityUnit: productQuantityUnit,
+            isFluid: isFluid,
+            isLiquid: isLiquid,
+            category: category,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$UserFoodOverridesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $UserFoodOverridesTable,
+    UserFoodOverride,
+    $$UserFoodOverridesTableFilterComposer,
+    $$UserFoodOverridesTableOrderingComposer,
+    $$UserFoodOverridesTableAnnotationComposer,
+    $$UserFoodOverridesTableCreateCompanionBuilder,
+    $$UserFoodOverridesTableUpdateCompanionBuilder,
+    (
+      UserFoodOverride,
+      BaseReferences<_$AppDatabase, $UserFoodOverridesTable, UserFoodOverride>
+    ),
+    UserFoodOverride,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -25040,4 +26770,6 @@ class $AppDatabaseManager {
       $$HealthStepSegmentsTableTableManager(_db, _db.healthStepSegments);
   $$WorkoutExerciseLogsTableTableManager get workoutExerciseLogs =>
       $$WorkoutExerciseLogsTableTableManager(_db, _db.workoutExerciseLogs);
+  $$UserFoodOverridesTableTableManager get userFoodOverrides =>
+      $$UserFoodOverridesTableTableManager(_db, _db.userFoodOverrides);
 }

@@ -92,7 +92,8 @@ class SleepPipelineService {
     DateTime? recomputeFromInclusive,
     DateTime? recomputeToExclusive,
   }) async {
-    if (batch.sessions.isEmpty) {
+    final normalizedBatch = _dedupeProgressiveSessions(batch);
+    if (normalizedBatch.sessions.isEmpty) {
       return const SleepPipelineRunResult(
         importedSessions: 0,
         analyzedNights: 0,
@@ -101,11 +102,11 @@ class SleepPipelineService {
 
     final importedAt = DateTime.now().toUtc();
     final from = recomputeFromInclusive ??
-        batch.sessions
+        normalizedBatch.sessions
             .map((s) => s.startAtUtc)
             .reduce((a, b) => a.isBefore(b) ? a : b);
     final to = recomputeToExclusive ??
-        batch.sessions
+        normalizedBatch.sessions
             .map((s) => s.endAtUtc)
             .reduce((a, b) => a.isAfter(b) ? a : b)
             .add(const Duration(seconds: 1));
@@ -145,7 +146,7 @@ class SleepPipelineService {
     }
 
     // Pre-fetch lookback data for regularity calculation
-    final targetNights = batch.sessions
+    final targetNights = normalizedBatch.sessions
         .map((session) => _normalizeDay(session.endAtUtc))
         .toSet()
         .toList(growable: false)
@@ -168,7 +169,7 @@ class SleepPipelineService {
     final result = await compute(
       _runSleepPipelineBackground,
       SleepPipelineBackgroundTaskParams(
-        batch: batch,
+        batch: normalizedBatch,
         normalizationVersion: normalizationVersion,
         analysisVersion: analysisVersion,
         importedAt: importedAt,
@@ -177,20 +178,83 @@ class SleepPipelineService {
       ),
     );
 
+    var insertedSessions = 0;
     await _database.transaction(() async {
-      for (final session in batch.sessions) {
-        await _sessionsDao.deleteById(session.recordId);
-        await _sessionsDao.deleteByDateRange(
-          fromInclusive: session.startAtUtc,
-          toExclusive: session.endAtUtc.add(const Duration(seconds: 1)),
+      final skipSessionIds = <String>{};
+      final rawImportIdsToDelete = <String>[];
+      for (final session in normalizedBatch.sessions) {
+        final existingSameStart = await _sessionsDao.findByStartAndSource(
+          startAtUtc: session.startAtUtc,
+          sourcePlatform: session.sourcePlatform,
+          sourceAppId: session.sourceAppId,
         );
+        final hasLongerOrEqualExisting = existingSameStart.any((existing) {
+          return existing.id != session.recordId &&
+              !existing.endedAt.isBefore(session.endAtUtc);
+        });
+        if (hasLongerOrEqualExisting) {
+          skipSessionIds.add(session.recordId);
+          continue;
+        }
+
+        final shorterExisting = existingSameStart.where((existing) {
+          return existing.id != session.recordId &&
+              existing.endedAt.isBefore(session.endAtUtc);
+        });
+        for (final existing in shorterExisting) {
+          await _sessionsDao.deleteById(existing.id);
+          rawImportIdsToDelete.add('raw:${existing.id}');
+        }
+
+        final sourceRecordHash = _resolveSourceRecordHash(session);
+        final matchingExternal = await _sessionsDao.findBySourceHash(
+          sourceRecordHash,
+        );
+        final hasExternalOverlap = matchingExternal.any((existing) {
+          return existing.id != session.recordId &&
+              _rangesOverlap(
+                session.startAtUtc,
+                session.endAtUtc,
+                existing.startedAt,
+                existing.endedAt,
+              );
+        });
+
+        await _sessionsDao.deleteById(session.recordId);
+        if (_shouldCascadeDelete(session, hasExternalOverlap)) {
+          await _sessionsDao.deleteByDateRange(
+            fromInclusive: session.startAtUtc,
+            toExclusive: session.endAtUtc.add(const Duration(seconds: 1)),
+          );
+        }
       }
 
-      await _rawDao.upsertBatch(result.rawRows);
-      await _sessionsDao.upsertBatch(result.sessionRows);
-      await _segmentsDao.upsertBatch(result.segmentRows);
-      await _hrDao.upsertBatch(result.hrRows);
-      await _analysesDao.upsertBatch(result.analysisRows);
+      if (rawImportIdsToDelete.isNotEmpty) {
+        await _rawDao.deleteByIds(rawImportIdsToDelete);
+      }
+
+      final filteredRawRows = result.rawRows.where((row) {
+        return !skipSessionIds.contains(_rawImportSessionId(row.id));
+      }).toList(growable: false);
+      final filteredSessionRows = result.sessionRows
+          .where((row) => !skipSessionIds.contains(row.id))
+          .toList(growable: false);
+      final filteredSegmentRows = result.segmentRows
+          .where((row) => !skipSessionIds.contains(row.sessionId))
+          .toList(growable: false);
+      final filteredHrRows = result.hrRows
+          .where((row) => !skipSessionIds.contains(row.sessionId))
+          .toList(growable: false);
+      final filteredAnalysisRows = result.analysisRows
+          .where((row) => !skipSessionIds.contains(row.sessionId))
+          .toList(growable: false);
+
+      await _rawDao.upsertBatch(filteredRawRows);
+      await _sessionsDao.upsertBatch(filteredSessionRows);
+      await _segmentsDao.upsertBatch(filteredSegmentRows);
+      await _hrDao.upsertBatch(filteredHrRows);
+      await _analysesDao.upsertBatch(filteredAnalysisRows);
+      insertedSessions = filteredSessionRows.length;
     });
 
     _database.notifyUpdates({
@@ -202,8 +266,8 @@ class SleepPipelineService {
     });
 
     return SleepPipelineRunResult(
-      importedSessions: result.sessionRows.length,
-      analyzedNights: result.sessionRows.length,
+      importedSessions: insertedSessions,
+      analyzedNights: insertedSessions,
     );
   }
 
@@ -425,6 +489,93 @@ class SleepPipelineService {
     final month = normalized.month.toString().padLeft(2, '0');
     final day = normalized.day.toString().padLeft(2, '0');
     return '${normalized.year}-$month-$day';
+  }
+
+  // Nocturnal window spans 20:00-12:00 local (overnight wrap; end is noon).
+  static const int _nightWindowStartMinutes = 20 * 60;
+  static const int _nightWindowEndMinutes = 12 * 60;
+  static const String _unknownSourceAppId = 'unknown_source';
+
+  static SleepRawIngestionBatch _dedupeProgressiveSessions(
+    SleepRawIngestionBatch batch,
+  ) {
+    if (batch.sessions.length <= 1) return batch;
+    final winners = <String, SleepIngestionSession>{};
+    for (final session in batch.sessions) {
+      final key = _sessionDedupKey(session);
+      final existing = winners[key];
+      if (existing == null || session.endAtUtc.isAfter(existing.endAtUtc)) {
+        winners[key] = session;
+      }
+    }
+    if (winners.length == batch.sessions.length) return batch;
+    final sessions = winners.values.toList(growable: false)
+      ..sort((a, b) => a.startAtUtc.compareTo(b.startAtUtc));
+    final sessionIds = sessions.map((session) => session.recordId).toSet();
+    return SleepRawIngestionBatch(
+      sessions: sessions,
+      stageSegments: batch.stageSegments
+          .where((segment) => sessionIds.contains(segment.sessionRecordId))
+          .toList(growable: false),
+      heartRateSamples: batch.heartRateSamples
+          .where((sample) => sessionIds.contains(sample.sessionRecordId))
+          .toList(growable: false),
+    );
+  }
+
+  static String _sessionDedupKey(SleepIngestionSession session) {
+    final sourceKey = session.sourceAppId ?? _unknownSourceAppId;
+    return '${session.startAtUtc.toIso8601String()}|${session.sourcePlatform}|$sourceKey';
+  }
+
+  static String _resolveSourceRecordHash(SleepIngestionSession session) {
+    final raw = session.sourceRecordHash;
+    if (raw != null && raw.isNotEmpty) return raw;
+    return _hashRecord('session:${session.recordId}');
+  }
+
+  static String _rawImportSessionId(String rawImportId) {
+    if (rawImportId.startsWith('raw:')) {
+      return rawImportId.substring(4);
+    }
+    return rawImportId;
+  }
+
+  static bool _rangesOverlap(
+    DateTime start,
+    DateTime end,
+    DateTime otherStart,
+    DateTime otherEnd,
+  ) {
+    return start.isBefore(otherEnd) && end.isAfter(otherStart);
+  }
+
+  static bool _shouldCascadeDelete(
+    SleepIngestionSession session,
+    bool hasExternalOverlap,
+  ) {
+    return _isNocturnalWindow(session.startAtUtc, session.endAtUtc) ||
+        hasExternalOverlap;
+  }
+
+  static bool _isNocturnalWindow(DateTime startUtc, DateTime endUtc) {
+    // Uses device local time to align with on-device sleep windows.
+    final startLocal = startUtc.toLocal();
+    final endLocal = endUtc.toLocal();
+    final startDay = DateTime(startLocal.year, startLocal.month, startLocal.day);
+    final endDay = DateTime(endLocal.year, endLocal.month, endLocal.day);
+    // Sessions spanning multiple local dates necessarily cross the overnight window.
+    if (endDay.isAfter(startDay)) {
+      return true;
+    }
+    final startMinutes = startLocal.hour * 60 + startLocal.minute;
+    final endMinutes = endLocal.hour * 60 + endLocal.minute;
+    // Any session starting or ending inside the overnight window is treated as nocturnal.
+    final inNightStart = startMinutes >= _nightWindowStartMinutes ||
+        startMinutes < _nightWindowEndMinutes;
+    final inNightEnd = endMinutes >= _nightWindowStartMinutes ||
+        endMinutes < _nightWindowEndMinutes;
+    return inNightStart || inNightEnd;
   }
 
   static String _hashRecord(String value) =>

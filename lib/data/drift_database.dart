@@ -384,6 +384,32 @@ class WorkoutExerciseLogs extends Table with HybridId, MetaColumns {
   TextColumn get notes => text().nullable()();
 }
 
+// 21. UserFoodOverrides
+class UserFoodOverrides extends Table with HybridId, MetaColumns {
+  TextColumn get barcode => text().unique()();
+  TextColumn get name => text()();
+  TextColumn get nameDe => text().nullable()();
+  TextColumn get nameEn => text().nullable()();
+  TextColumn get brand => text().nullable()();
+  IntColumn get calories => integer()();
+  RealColumn get protein => real()();
+  RealColumn get carbs => real()();
+  RealColumn get fat => real()();
+  RealColumn get sugar => real().nullable()();
+  RealColumn get fiber => real().nullable()();
+  RealColumn get salt => real().nullable()();
+  RealColumn get caffeine => real().nullable()();
+  RealColumn get caffeineMgPer100g => real().named('caffeine_mg_per_100g').nullable()();
+  TextColumn get ingredientsText => text().nullable()();
+  TextColumn get ingredientsAnalysisTags => text().nullable()();
+  TextColumn get additivesTags => text().nullable()();
+  RealColumn get productQuantity => real().nullable()();
+  TextColumn get productQuantityUnit => text().nullable()();
+  BoolColumn get isFluid => boolean().withDefault(const Constant(false))();
+  BoolColumn get isLiquid => boolean().withDefault(const Constant(false))();
+  TextColumn get category => text().nullable()();
+}
+
 @DriftDatabase(
   tables: [
     Profiles,
@@ -412,6 +438,7 @@ class WorkoutExerciseLogs extends Table with HybridId, MetaColumns {
     SupplementSettingsHistory,
     HealthStepSegments,
     WorkoutExerciseLogs,
+    UserFoodOverrides,
   ],
 )
 
@@ -420,7 +447,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -622,6 +649,9 @@ class AppDatabase extends _$AppDatabase {
                 'ALTER TABLE sleep_nightly_analyses ADD COLUMN score_breakdown_json TEXT NULL',
               );
             }
+          }
+          if (from < 21) {
+            await m.createTable(userFoodOverrides);
           }
         },
       );

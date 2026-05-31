@@ -90,7 +90,9 @@ class ProductLocalDataSource {
     }
   }
 
-  FoodItem _mapRowToFoodItem(db.Product row) {
+
+
+  FoodItem _mapRowAndOverrideToFoodItem(db.Product row, db.UserFoodOverride? overrideRow) {
     FoodItemSource source;
     switch (row.source) {
       case 'base':
@@ -104,39 +106,51 @@ class ProductLocalDataSource {
         source = FoodItemSource.user;
     }
 
-    final item = FoodItem(
+    return FoodItem(
       barcode: row.barcode,
-      name: row.name,
-      nameDe: row.nameDe ?? row.name,
-      nameEn: row.nameEn ?? row.name,
-      brand: row.brand ?? '',
-      calories: row.calories,
-      protein: row.protein,
-      carbs: row.carbs,
-      fat: row.fat,
+      name: overrideRow?.name ?? row.name,
+      nameDe: overrideRow?.nameDe ?? row.nameDe ?? row.name,
+      nameEn: overrideRow?.nameEn ?? row.nameEn ?? row.name,
+      brand: overrideRow?.brand ?? row.brand ?? '',
+      calories: overrideRow?.calories ?? row.calories,
+      protein: overrideRow?.protein ?? row.protein,
+      carbs: overrideRow?.carbs ?? row.carbs,
+      fat: overrideRow?.fat ?? row.fat,
       source: source,
-      category: row.category,
-      sugar: row.sugar,
-      fiber: row.fiber,
-      salt: row.salt,
-      // Sodium is not in the Drift schema; estimate it from salt or leave it null.
-      sodium: row.salt != null ? row.salt! / 2.5 : null,
-      // kJ is not in the schema, calculate it:
-      kj: (row.calories * 4.184),
-      // Calcium is not in the schema:
+      category: overrideRow?.category ?? row.category,
+      sugar: overrideRow?.sugar ?? row.sugar,
+      fiber: overrideRow?.fiber ?? row.fiber,
+      salt: overrideRow?.salt ?? row.salt,
+      sodium: (overrideRow?.salt ?? row.salt) != null ? (overrideRow?.salt ?? row.salt)! / 2.5 : null,
+      kj: ((overrideRow?.calories ?? row.calories) * 4.184),
       calcium: null,
-      isLiquid: row.isLiquid,
-      isFluid: row.isFluid,
-      caffeineMgPer100ml: row.caffeine,
-      caffeineMgPer100g: row.caffeineMgPer100g,
-      ingredientsText: row.ingredientsText,
-      ingredientsAnalysisTags: _parseJsonList(row.ingredientsAnalysisTags),
-      additivesTags: _parseJsonList(row.additivesTags),
-      productQuantity: row.productQuantity,
-      productQuantityUnit: row.productQuantityUnit,
+      isLiquid: overrideRow?.isLiquid ?? row.isLiquid,
+      isFluid: overrideRow?.isFluid ?? row.isFluid,
+      caffeineMgPer100ml: overrideRow?.caffeine ?? row.caffeine,
+      caffeineMgPer100g: overrideRow?.caffeineMgPer100g ?? row.caffeineMgPer100g,
+      ingredientsText: overrideRow?.ingredientsText ?? row.ingredientsText,
+      ingredientsAnalysisTags: _parseJsonList(overrideRow?.ingredientsAnalysisTags ?? row.ingredientsAnalysisTags),
+      additivesTags: _parseJsonList(overrideRow?.additivesTags ?? row.additivesTags),
+      productQuantity: overrideRow?.productQuantity ?? row.productQuantity,
+      productQuantityUnit: overrideRow?.productQuantityUnit ?? row.productQuantityUnit,
     );
+  }
 
-    return item;
+  Future<List<FoodItem>> _enrichProductsWithOverrides(List<db.Product> rows) async {
+    if (rows.isEmpty) return [];
+    final dbInstance = await database;
+    final barcodes = rows.map((r) => r.barcode).toList();
+
+    final overrides = await (dbInstance.select(dbInstance.userFoodOverrides)
+          ..where((tbl) => tbl.barcode.isIn(barcodes)))
+        .get();
+
+    final overrideMap = {for (final o in overrides) o.barcode: o};
+
+    return rows.map((row) {
+      final o = overrideMap[row.barcode];
+      return _mapRowAndOverrideToFoodItem(row, o);
+    }).toList();
   }
 
   // --- PUBLIC API ---
@@ -155,6 +169,35 @@ class ProductLocalDataSource {
     await (dbInstance.update(dbInstance.products)
           ..where((tbl) => tbl.barcode.equals(item.barcode)))
         .write(_mapModelToCompanion(item));
+
+    final overrideCompanion = db.UserFoodOverridesCompanion(
+      barcode: Value(item.barcode),
+      name: Value(item.name),
+      nameDe: Value(item.nameDe),
+      nameEn: Value(item.nameEn),
+      brand: Value(item.brand),
+      calories: Value(item.calories),
+      protein: Value(item.protein),
+      carbs: Value(item.carbs),
+      fat: Value(item.fat),
+      sugar: Value(item.sugar),
+      fiber: Value(item.fiber),
+      salt: Value(item.salt),
+      caffeine: Value(item.caffeineMgPer100ml),
+      caffeineMgPer100g: Value(item.caffeineMgPer100g),
+      ingredientsText: Value(item.ingredientsText),
+      ingredientsAnalysisTags: Value(_listToJson(item.ingredientsAnalysisTags)),
+      additivesTags: Value(_listToJson(item.additivesTags)),
+      productQuantity: Value(item.productQuantity),
+      productQuantityUnit: Value(item.productQuantityUnit),
+      isFluid: Value(item.isFluid),
+      isLiquid: Value(item.isLiquid ?? false),
+      category: Value(item.category),
+    );
+
+    await dbInstance
+        .into(dbInstance.userFoodOverrides)
+        .insertOnConflictUpdate(overrideCompanion);
   }
 
   /// Retrieves a list of [FoodItem]s matching the provided [barcodes].
@@ -168,7 +211,7 @@ class ProductLocalDataSource {
     )..where((tbl) => tbl.barcode.isIn(barcodes)))
         .get();
 
-    final result = rows.map(_mapRowToFoodItem).toList();
+    final result = await _enrichProductsWithOverrides(rows);
     PerfDebugTimer.logDuration(
       area: 'db',
       label: 'getProductsByBarcodes',
@@ -294,7 +337,7 @@ class ProductLocalDataSource {
     }
 
     final rows = await query.get();
-    return rows.map(_mapRowToFoodItem).toList();
+    return _enrichProductsWithOverrides(rows);
   }
 
   /// Performs a global search across user-created, base, and Open Food Facts products.
@@ -342,7 +385,7 @@ class ProductLocalDataSource {
           ..limit(limit))
         .get();
 
-    final List<FoodItem> results = priorityRows.map(_mapRowToFoodItem).toList();
+    final List<FoodItem> results = await _enrichProductsWithOverrides(priorityRows);
 
     if (results.length < limit) {
       final int remaining = limit - results.length;
@@ -366,7 +409,7 @@ class ProductLocalDataSource {
             ..limit(remaining))
           .get();
 
-      results.addAll(offRows.map(_mapRowToFoodItem));
+      results.addAll(await _enrichProductsWithOverrides(offRows));
     }
 
     return results;
@@ -381,7 +424,8 @@ class ProductLocalDataSource {
         .getSingleOrNull();
 
     if (row == null) return null;
-    return _mapRowToFoodItem(row);
+    final enriched = await _enrichProductsWithOverrides([row]);
+    return enriched.first;
   }
 
   /// Retrieves all products marked as favorites by the user.
@@ -395,10 +439,8 @@ class ProductLocalDataSource {
     ]);
 
     final result = await query.get();
-    return result.map((row) {
-      final product = row.readTable(db.products);
-      return _mapRowToFoodItem(product);
-    }).toList();
+    final products = result.map((row) => row.readTable(db.products)).toList();
+    return _enrichProductsWithOverrides(products);
   }
 
   /// Fuzzy-matches an AI-detected food name against the products table.
@@ -459,7 +501,7 @@ class ProductLocalDataSource {
 
     if (rows.isEmpty) return [];
 
-    final items = rows.map(_mapRowToFoodItem).toList();
+    final items = await _enrichProductsWithOverrides(rows);
     return const EvaluateFoodSourceUseCase().execute(
       candidates: items,
       searchTerm: aiName,
@@ -533,7 +575,7 @@ class ProductLocalDataSource {
 
     if (rows.isEmpty) return [];
 
-    final items = rows.map(_mapRowToFoodItem).toList();
+    final items = await _enrichProductsWithOverrides(rows);
 
     // Re-rank items incorporating stateHint
     items.sort((a, b) {
