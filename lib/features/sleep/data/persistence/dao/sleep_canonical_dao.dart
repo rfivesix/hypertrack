@@ -104,8 +104,8 @@ class SleepCanonicalSessionsDao {
       variables: [
         Variable<int>(_toEpochMillis(startAtUtc)),
         Variable<String>(sourcePlatform),
-        Variable<String?>(sourceAppId),
-        Variable<String?>(sourceAppId),
+        Variable<String>(sourceAppId),
+        Variable<String>(sourceAppId),
       ],
     ).get();
     return result.map(_mapSession).toList(growable: false);
