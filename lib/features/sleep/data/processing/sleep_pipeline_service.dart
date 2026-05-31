@@ -494,7 +494,7 @@ class SleepPipelineService {
   // Nocturnal window spans 20:00-12:00 local (overnight wrap; end is noon).
   static const int _nightWindowStartMinutes = 20 * 60;
   static const int _nightWindowEndMinutes = 12 * 60;
-  static const String _unknownSourceAppId = '__unknown__';
+  static const String _unknownSourceAppId = 'unknown_source';
 
   static SleepRawIngestionBatch _dedupeProgressiveSessions(
     SleepRawIngestionBatch batch,
@@ -564,6 +564,7 @@ class SleepPipelineService {
     final endLocal = endUtc.toLocal();
     final startDay = DateTime(startLocal.year, startLocal.month, startLocal.day);
     final endDay = DateTime(endLocal.year, endLocal.month, endLocal.day);
+    // Sessions spanning multiple local dates necessarily cross the overnight window.
     if (endDay.isAfter(startDay)) {
       return true;
     }

@@ -1111,7 +1111,9 @@ class MainActivity : FlutterFragmentActivity() {
         }?.key
     }
 
-    private fun dedupeStepRecords(records: List<StepsRecord>): List<StepsRecord> {
+    private fun consolidateStepRecords(
+        records: List<StepsRecord>,
+    ): List<StepsRecord> {
         if (records.isEmpty()) return records
         return records
             .groupBy {
@@ -1176,7 +1178,7 @@ class MainActivity : FlutterFragmentActivity() {
                         it.metadata.dataOrigin.packageName == resolvedSource
                     }
                 }
-                val payload = dedupeStepRecords(filteredRecords).map { record ->
+                val payload = consolidateStepRecords(filteredRecords).map { record ->
                     mapOf(
                         "startAtUtcIso" to record.startTime.toString(),
                         "endAtUtcIso" to record.endTime.toString(),
