@@ -92,6 +92,7 @@ class SleepCanonicalSessionsDao {
     required String sourcePlatform,
     required String? sourceAppId,
   }) async {
+    // Match null source_app_id when incoming sourceAppId is null.
     final result = await _db.customSelect(
       '''
       SELECT * FROM sleep_canonical_sessions

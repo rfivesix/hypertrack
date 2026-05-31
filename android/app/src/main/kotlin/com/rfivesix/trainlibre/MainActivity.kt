@@ -1167,11 +1167,12 @@ class MainActivity : FlutterFragmentActivity() {
                 } while (pageToken != null)
 
                 val primarySource = resolvePrimaryStepsSource(allRecords)
-                val filteredRecords = if (primarySource.isNullOrBlank()) {
+                val resolvedSource = primarySource?.takeIf { it.isNotBlank() }
+                val filteredRecords = if (resolvedSource == null) {
                     allRecords
                 } else {
                     allRecords.filter {
-                        it.metadata.dataOrigin.packageName == primarySource
+                        it.metadata.dataOrigin.packageName == resolvedSource
                     }
                 }
                 val payload = dedupeStepRecords(filteredRecords).map { record ->

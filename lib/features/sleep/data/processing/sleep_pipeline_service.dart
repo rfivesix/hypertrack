@@ -491,7 +491,7 @@ class SleepPipelineService {
     return '${normalized.year}-$month-$day';
   }
 
-  // Nocturnal window spans 20:00-12:00 local (overnight wrap across midnight).
+  // Nocturnal window spans 20:00-12:00 local (overnight wrap; end is noon).
   static const int _nightWindowStartMinutes = 20 * 60;
   static const int _nightWindowEndMinutes = 12 * 60;
   static const String _unknownSourceAppId = '__unknown__';
@@ -563,6 +563,7 @@ class SleepPipelineService {
     final endLocal = endUtc.toLocal();
     final startMinutes = startLocal.hour * 60 + startLocal.minute;
     final endMinutes = endLocal.hour * 60 + endLocal.minute;
+    // Any session starting or ending inside the overnight window is treated as nocturnal.
     final inNightStart = startMinutes >= _nightWindowStartMinutes ||
         startMinutes < _nightWindowEndMinutes;
     final inNightEnd = endMinutes >= _nightWindowStartMinutes ||
