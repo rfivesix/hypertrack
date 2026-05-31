@@ -8196,6 +8196,12 @@ abstract class AppLocalizations {
   /// **'Grant Permission'**
   String get scannerGrantPermission;
 
+  /// No description provided for @scannerAlignInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align barcode horizontally inside the red laser line'**
+  String get scannerAlignInstruction;
+
   /// No description provided for @about_train_libre.
   ///
   /// In en, this message translates to:

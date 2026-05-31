@@ -1946,6 +1946,7 @@
   "scannerPermissionPermanentlyDenied": "Camera access is permanently denied. Please enable it in settings to scan barcodes.",
   "scannerOpenSettings": "Open Settings",
   "scannerGrantPermission": "Grant Permission",
+  "scannerAlignInstruction": "Align barcode horizontally inside the red laser line",
   "about_train_libre": "About Train Libre",
   "legal_notice": "Legal Notice",
   "privacy_policy": "Privacy Policy",

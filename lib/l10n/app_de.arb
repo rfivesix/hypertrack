@@ -2127,6 +2127,7 @@
   "scannerPermissionPermanentlyDenied": "Der Kamerazugriff wurde dauerhaft verweigert. Bitte aktiviere ihn in den Einstellungen, um Barcodes zu scannen.",
   "scannerOpenSettings": "Einstellungen öffnen",
   "scannerGrantPermission": "Berechtigung erteilen",
+  "scannerAlignInstruction": "Barcode horizontal an der roten Laserlinie ausrichten",
   "about_train_libre": "Über Train Libre",
   "legal_notice": "Impressum",
   "privacy_policy": "Datenschutzerklärung",

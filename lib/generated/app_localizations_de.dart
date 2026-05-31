@@ -4698,6 +4698,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get scannerGrantPermission => 'Berechtigung erteilen';
 
   @override
+  String get scannerAlignInstruction =>
+      'Barcode horizontal an der roten Laserlinie ausrichten';
+
+  @override
   String get about_train_libre => 'Über Train Libre';
 
   @override

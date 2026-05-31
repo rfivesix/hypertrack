@@ -1,10 +1,12 @@
 // lib/screens/scanner_screen.dart
 
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../generated/app_localizations.dart';
-import 'package:flutter_zxing/flutter_zxing.dart';
+import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'dart:developer' as developer;
 import '../../../services/haptic_feedback_service.dart';
 
@@ -20,12 +22,25 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen>
-    with WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool _isDone = false;
   PermissionStatus _cameraPermissionStatus = PermissionStatus.denied;
   bool _isCheckingPermission = true;
-  bool _tryHarder = false;
-  Timer? _tryHarderTimer;
+  late final AnimationController _animationController;
+  late final Animation<double> _animation;
+
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  QRViewController? controller;
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller?.pauseCamera();
+    } else if (Platform.isIOS) {
+      controller?.resumeCamera();
+    }
+  }
 
   @override
   void initState() {
@@ -33,21 +48,51 @@ class _ScannerScreenState extends State<ScannerScreen>
     WidgetsBinding.instance.addObserver(this);
     _checkPermission(initial: true);
 
-    // Fallback: If no barcode is found quickly, enable tryHarder to handle poor conditions
-    _tryHarderTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _tryHarder = true;
-        });
-      }
-    });
+    // Lock viewfinder strictly to Portrait mode
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+
+    // Initialize looping laser sweep animation
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 2500),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _animationController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _tryHarderTimer?.cancel();
+    _animationController.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    // Restore default app orientations
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     super.dispose();
+  }
+
+  void _onQRViewCreated(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((scanData) {
+      if (scanData.code != null && !_isDone) {
+        developer.log('Barcode detected: ${scanData.code} (${scanData.format})');
+        HapticFeedbackService.instance.confirmationFeedback();
+        if (mounted) {
+          setState(() {
+            _isDone = true;
+          });
+          Navigator.of(context).pop(scanData.code);
+        }
+      }
+    });
   }
 
   @override
@@ -112,49 +157,99 @@ class _ScannerScreenState extends State<ScannerScreen>
     }
 
     if (_cameraPermissionStatus.isGranted) {
-      return ReaderWidget(
-        onScan: (Code result) {
-          if (result.isValid && result.text != null) {
-            developer
-                .log('Barcode detected: ${result.text} (${result.format})');
-            if (!_isDone) {
-              // Trigger haptic feedback if enabled in settings
-              HapticFeedbackService.instance.confirmationFeedback();
-              setState(() {
-                _isDone = true;
-              });
-              Navigator.of(context).pop(result.text);
-            }
-          }
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = constraints.maxWidth;
+          final screenHeight = constraints.maxHeight;
+
+          // Compute scan target box size and position dynamically
+          final boxWidth = screenWidth * 0.8;
+          final boxHeight = boxWidth * 0.45; // Optimal aspect ratio for barcodes
+          final left = (screenWidth - boxWidth) / 2;
+          final top = (screenHeight - boxHeight) / 2.2; // Optically balanced slightly above center
+
+          final scanBox = Rect.fromLTWH(left, top, boxWidth, boxHeight);
+
+          return Stack(
+            children: [
+              // 1. Scanner Camera View
+              Positioned.fill(
+                child: QRView(
+                  key: qrKey,
+                  onQRViewCreated: _onQRViewCreated,
+                  formatsAllowed: const [BarcodeFormat.ean8, BarcodeFormat.ean13],
+                ),
+              ),
+
+              // 2. Custom Translucent Mask Overlay with transparent cutout
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: ScannerOverlayPainter(
+                    scanBox: scanBox,
+                    barrierColor: Colors.black.withValues(alpha: 0.65),
+                    borderColor: Theme.of(context).colorScheme.primary, // Sleek primary brand border
+                    borderRadius: 16.0,
+                    borderWidth: 2.5,
+                  ),
+                ),
+              ),
+
+              // 3. Sweeping red laser line
+              AnimatedBuilder(
+                animation: _animation,
+                builder: (context, child) {
+                  final currentTop = top + (boxHeight * _animation.value);
+                  return Positioned(
+                    top: currentTop,
+                    left: left + 12,
+                    width: boxWidth - 24,
+                    height: 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.redAccent.withValues(alpha: 0.8),
+                            blurRadius: 6,
+                            spreadRadius: 1.5,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // 4. Guided instructions at the bottom of the scan frame
+              Positioned(
+                top: top + boxHeight + 36,
+                left: 24,
+                right: 24,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.scann_barcode_capslock,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.scannerAlignInstruction,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
         },
-        onControllerCreated: (controller, error) {
-          if (error != null) {
-            developer.log('Scanner controller error: $error', error: error);
-          }
-        },
-        codeFormat: Format.ean8 |
-            Format.ean13 |
-            Format.upca |
-            Format.upce |
-            Format.code39 |
-            Format.code128,
-        showFlashlight: false, // Hidden to match app design
-        showGallery: false,
-        showToggleCamera: false,
-        showScannerOverlay: true,
-        tryHarder: _tryHarder,
-        tryRotate: true,
-        tryDownscale: true,
-        tryInverted: false, //just for testing with front camera
-        // Optimized cropPercent to reduce FFI frame footprint while keeping 
-        // barcodes easily targetable within the viewfinder.
-        cropPercent: 0.55,
-        // Throttle frames to balance processing power and detection accuracy
-        scanDelay: const Duration(milliseconds: 300),
-        scanDelaySuccess: const Duration(milliseconds: 800),
-        // High resolution provides the perfect balance between sharp barcodes 
-        // and low CPU/FFI buffer decoding overhead on iOS.
-        resolution: ResolutionPreset.high,
       );
     }
 
@@ -188,5 +283,57 @@ class _ScannerScreenState extends State<ScannerScreen>
         ),
       ),
     );
+  }
+}
+
+/// A custom painter that draws a dark semi-transparent mask with a cleared centered cutout.
+class ScannerOverlayPainter extends CustomPainter {
+  final Rect scanBox;
+  final Color barrierColor;
+  final Color borderColor;
+  final double borderRadius;
+  final double borderWidth;
+
+  ScannerOverlayPainter({
+    required this.scanBox,
+    required this.barrierColor,
+    required this.borderColor,
+    required this.borderRadius,
+    required this.borderWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = barrierColor
+      ..style = PaintingStyle.fill;
+
+    // Use Path.combine to cut out the scanBox from the full screen mask
+    final outerPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final innerPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(scanBox, Radius.circular(borderRadius)));
+    final maskPath = Path.combine(PathOperation.difference, outerPath, innerPath);
+
+    canvas.drawPath(maskPath, paint);
+
+    // Draw the rounded border around the transparent cutout
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(scanBox, Radius.circular(borderRadius)),
+      borderPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant ScannerOverlayPainter oldDelegate) {
+    return oldDelegate.scanBox != scanBox ||
+        oldDelegate.barrierColor != barrierColor ||
+        oldDelegate.borderColor != borderColor ||
+        oldDelegate.borderRadius != borderRadius ||
+        oldDelegate.borderWidth != borderWidth;
   }
 }

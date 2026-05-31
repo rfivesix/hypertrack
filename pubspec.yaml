@@ -56,7 +56,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   uuid: ^4.3.3
   json_annotation: ^4.12.0
-  flutter_zxing: ^2.3.0
+  qr_code_scanner_plus: ^2.1.0
   permission_handler: ^12.0.1
   flutter_markdown_plus: ^1.0.7
   flutter_markdown_plus_latex: ^1.0.5
