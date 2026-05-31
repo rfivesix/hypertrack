@@ -1122,6 +1122,7 @@ class MainActivity : FlutterFragmentActivity() {
                 )
             }
             .mapNotNull { entry -> entry.value.maxByOrNull { it.count } }
+            .sortedBy { it.startTime }
     }
 
     private fun handleReadSegments(call: MethodCall, result: MethodChannel.Result) {

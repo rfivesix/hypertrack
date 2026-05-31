@@ -559,8 +559,14 @@ class SleepPipelineService {
   }
 
   static bool _isNocturnalWindow(DateTime startUtc, DateTime endUtc) {
+    // Uses device local time to align with on-device sleep windows.
     final startLocal = startUtc.toLocal();
     final endLocal = endUtc.toLocal();
+    final startDay = DateTime(startLocal.year, startLocal.month, startLocal.day);
+    final endDay = DateTime(endLocal.year, endLocal.month, endLocal.day);
+    if (endDay.isAfter(startDay)) {
+      return true;
+    }
     final startMinutes = startLocal.hour * 60 + startLocal.minute;
     final endMinutes = endLocal.hour * 60 + endLocal.minute;
     // Any session starting or ending inside the overnight window is treated as nocturnal.
