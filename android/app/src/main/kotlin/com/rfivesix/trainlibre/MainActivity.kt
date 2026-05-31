@@ -1121,9 +1121,7 @@ class MainActivity : FlutterFragmentActivity() {
                     it.metadata.dataOrigin.packageName,
                 )
             }
-            .map { entry ->
-                entry.value.maxByOrNull { it.count }!!
-            }
+            .mapNotNull { entry -> entry.value.maxByOrNull { it.count } }
     }
 
     private fun handleReadSegments(call: MethodCall, result: MethodChannel.Result) {
