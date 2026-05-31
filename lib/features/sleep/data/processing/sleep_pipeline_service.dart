@@ -491,10 +491,10 @@ class SleepPipelineService {
     return '${normalized.year}-$month-$day';
   }
 
-  // Nocturnal window spans 20:00-12:00 local to keep daytime naps intact.
+  // Nocturnal window spans 20:00-12:00 local (overnight wrap across midnight).
   static const int _nightWindowStartMinutes = 20 * 60;
   static const int _nightWindowEndMinutes = 12 * 60;
-  static const String _unknownSourceAppId = 'unknown';
+  static const String _unknownSourceAppId = '__unknown__';
 
   static SleepRawIngestionBatch _dedupeProgressiveSessions(
     SleepRawIngestionBatch batch,
