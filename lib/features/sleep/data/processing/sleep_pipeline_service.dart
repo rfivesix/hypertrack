@@ -491,8 +491,10 @@ class SleepPipelineService {
     return '${normalized.year}-$month-$day';
   }
 
+  // Nocturnal window spans 20:00-12:00 local to keep daytime naps intact.
   static const int _nightWindowStartMinutes = 20 * 60;
   static const int _nightWindowEndMinutes = 12 * 60;
+  static const String _unknownSourceAppId = 'unknown';
 
   static SleepRawIngestionBatch _dedupeProgressiveSessions(
     SleepRawIngestionBatch batch,
@@ -522,7 +524,7 @@ class SleepPipelineService {
   }
 
   static String _sessionDedupKey(SleepIngestionSession session) {
-    final sourceKey = session.sourceAppId ?? 'unknown';
+    final sourceKey = session.sourceAppId ?? _unknownSourceAppId;
     return '${session.startAtUtc.toIso8601String()}|${session.sourcePlatform}|$sourceKey';
   }
 
