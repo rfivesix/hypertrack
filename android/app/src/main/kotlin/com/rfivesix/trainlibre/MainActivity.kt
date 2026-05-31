@@ -72,6 +72,10 @@ class MainActivity : FlutterFragmentActivity() {
         HealthPermission.getWritePermission(HydrationRecord::class),
         HealthPermission.getWritePermission(ExerciseSessionRecord::class),
     )
+    private val preferredStepsSources = listOf(
+        "com.google.android.apps.fitness",
+        "com.samsung.android.app.health",
+    )
 
     private val permissionLauncher = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract(),
@@ -1096,6 +1100,32 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    private fun resolvePrimaryStepsSource(records: List<StepsRecord>): String? {
+        if (records.isEmpty()) return null
+        val recordsBySource = records.groupBy { it.metadata.dataOrigin.packageName }
+        val prioritized =
+            preferredStepsSources.firstOrNull { recordsBySource.containsKey(it) }
+        if (prioritized != null) return prioritized
+        return recordsBySource.maxByOrNull { entry ->
+            entry.value.sumOf { it.count }
+        }?.key
+    }
+
+    private fun dedupeStepRecords(records: List<StepsRecord>): List<StepsRecord> {
+        if (records.isEmpty()) return records
+        return records
+            .groupBy {
+                Triple(
+                    it.startTime,
+                    it.endTime,
+                    it.metadata.dataOrigin.packageName,
+                )
+            }
+            .map { entry ->
+                entry.value.maxByOrNull { it.count }!!
+            }
+    }
+
     private fun handleReadSegments(call: MethodCall, result: MethodChannel.Result) {
         val status = HealthConnectClient.getSdkStatus(this)
         if (status != HealthConnectClient.SDK_AVAILABLE) {
@@ -1138,7 +1168,15 @@ class MainActivity : FlutterFragmentActivity() {
                     pageToken = response.pageToken
                 } while (pageToken != null)
 
-                val payload = allRecords.map { record ->
+                val primarySource = resolvePrimaryStepsSource(allRecords)
+                val filteredRecords = if (primarySource.isNullOrBlank()) {
+                    allRecords
+                } else {
+                    allRecords.filter {
+                        it.metadata.dataOrigin.packageName == primarySource
+                    }
+                }
+                val payload = dedupeStepRecords(filteredRecords).map { record ->
                     mapOf(
                         "startAtUtcIso" to record.startTime.toString(),
                         "endAtUtcIso" to record.endTime.toString(),

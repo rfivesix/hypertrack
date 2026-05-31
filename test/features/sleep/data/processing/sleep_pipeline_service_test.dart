@@ -316,4 +316,134 @@ void main() {
       await db.close();
     },
   );
+
+  test(
+    'pipeline keeps the longest session for identical starts from the same source',
+    () async {
+      final db = AppDatabase(
+        NativeDatabase.memory(
+          setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+        ),
+      );
+      final service = SleepPipelineService(database: db);
+
+      final start = DateTime.utc(2026, 3, 1, 23);
+      final shortEnd = DateTime.utc(2026, 3, 2, 1);
+      final longEnd = DateTime.utc(2026, 3, 2, 5, 30);
+      final batch = SleepRawIngestionBatch(
+        sessions: [
+          SleepIngestionSession(
+            recordId: 'session-short',
+            startAtUtc: start,
+            endAtUtc: shortEnd,
+            platformSessionType: 'sleep',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+          SleepIngestionSession(
+            recordId: 'session-long',
+            startAtUtc: start,
+            endAtUtc: longEnd,
+            platformSessionType: 'sleep',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+        ],
+        stageSegments: [
+          SleepIngestionStageSegment(
+            recordId: 'seg-short',
+            sessionRecordId: 'session-short',
+            startAtUtc: start,
+            endAtUtc: shortEnd,
+            platformStage: 'light',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+          SleepIngestionStageSegment(
+            recordId: 'seg-long',
+            sessionRecordId: 'session-long',
+            startAtUtc: start,
+            endAtUtc: longEnd,
+            platformStage: 'light',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+        ],
+        heartRateSamples: const [],
+      );
+
+      await service.runImport(batch: batch);
+
+      final sessions = await db
+          .customSelect(
+            'SELECT id, ended_at FROM sleep_canonical_sessions ORDER BY id',
+          )
+          .get();
+      expect(sessions.length, 1);
+      expect(sessions.first.read<String>('id'), 'session-long');
+      expect(
+        sessions.first.read<int>('ended_at'),
+        longEnd.millisecondsSinceEpoch,
+      );
+
+      final segments = await db
+          .customSelect('SELECT COUNT(*) c FROM sleep_canonical_stage_segments')
+          .getSingle();
+      expect(segments.read<int>('c'), 1);
+
+      await db.close();
+    },
+  );
+
+  test(
+    'pipeline preserves overlapping daytime naps from different records',
+    () async {
+      final db = AppDatabase(
+        NativeDatabase.memory(
+          setup: (rawDb) => rawDb.execute('PRAGMA foreign_keys = ON;'),
+        ),
+      );
+      final service = SleepPipelineService(database: db);
+
+      final napOne = SleepRawIngestionBatch(
+        sessions: [
+          SleepIngestionSession(
+            recordId: 'nap-1',
+            startAtUtc: DateTime.utc(2026, 3, 1, 14),
+            endAtUtc: DateTime.utc(2026, 3, 1, 14, 30),
+            platformSessionType: 'sleep',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+        ],
+        stageSegments: const [],
+        heartRateSamples: const [],
+      );
+
+      final napTwo = SleepRawIngestionBatch(
+        sessions: [
+          SleepIngestionSession(
+            recordId: 'nap-2',
+            startAtUtc: DateTime.utc(2026, 3, 1, 14, 15),
+            endAtUtc: DateTime.utc(2026, 3, 1, 14, 45),
+            platformSessionType: 'sleep',
+            sourcePlatform: 'health_connect',
+            sourceAppId: 'com.withings.mobile',
+          ),
+        ],
+        stageSegments: const [],
+        heartRateSamples: const [],
+      );
+
+      await service.runImport(batch: napOne);
+      await service.runImport(batch: napTwo);
+
+      final sessions = await db
+          .customSelect('SELECT COUNT(*) c FROM sleep_canonical_sessions')
+          .getSingle();
+      expect(sessions.read<int>('c'), 2);
+
+      await db.close();
+    },
+  );
 }

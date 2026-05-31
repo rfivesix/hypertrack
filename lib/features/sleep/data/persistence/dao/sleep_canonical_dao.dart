@@ -87,6 +87,29 @@ class SleepCanonicalSessionsDao {
     return _mapSession(row);
   }
 
+  Future<List<SleepCanonicalSessionRecord>> findByStartAndSource({
+    required DateTime startAtUtc,
+    required String sourcePlatform,
+    required String? sourceAppId,
+  }) async {
+    final result = await _db.customSelect(
+      '''
+      SELECT * FROM sleep_canonical_sessions
+      WHERE started_at = ?
+        AND source_platform = ?
+        AND ((source_app_id IS NULL AND ? IS NULL) OR source_app_id = ?)
+      ORDER BY started_at ASC
+      ''',
+      variables: [
+        Variable<int>(_toEpochMillis(startAtUtc)),
+        Variable<String>(sourcePlatform),
+        Variable<String?>(sourceAppId),
+        Variable<String?>(sourceAppId),
+      ],
+    ).get();
+    return result.map(_mapSession).toList(growable: false);
+  }
+
   Future<List<SleepCanonicalSessionRecord>> findBySourceHash(
     String sourceRecordHash,
   ) async {
