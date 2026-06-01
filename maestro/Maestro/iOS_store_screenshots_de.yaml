@@ -1,0 +1,113 @@
+appId: com.rfivesix.trainlibre
+---
+- launchApp:
+    clearState: true
+
+- tapOn: "0"
+- tapOn: "0"
+- tapOn: "Akzeptieren & Loslegen"
+- tapOn: "Erlauben"
+- extendedWaitUntil:
+    visible: "Aus Backup wiederherstellen"
+    timeout: 60000
+- tapOn: "Aus Backup wiederherstellen"
+- tapOn: "backup.json"
+- tapOn: "Öffnen"
+- extendedWaitUntil:
+    visible: "Vielleicht später" 
+    timeout: 60000
+- tapOn: 
+    text: "Vielleicht später"
+- tapOn: 
+    text: "Tagebuch"
+    optional: true
+    repeat: 2
+    delay: 10000
+- takeScreenshot: 01_diary
+- tapOn: "Ernährung"
+- takeScreenshot: 02_nutrition
+- tapOn:
+    point: 91%,13%
+- tapOn: "Einstellungen\nThema, Einheiten, Daten und mehr"
+- scrollUntilVisible:
+    element: "Datensicherung & Import\nBackups erstellen, wiederherstellen und Daten importieren."
+- tapOn: "Datensicherung & Import\nBackups erstellen, wiederherstellen und Daten importieren."
+- takeScreenshot: 03_data
+- tapOn: "Zurück"
+- tapOn: "Zurück"
+- tapOn: "Zurück"
+- tapOn:
+    text: "„Train Libre“ darf Daten lesen"
+    index: 1
+- tapOn: "Nicht erlauben"
+- tapOn: "Statistiken"
+- scrollUntilVisible:
+    element: "Körpermaße\nAlle Messwerte"
+- scroll
+- tapOn: "Körpermaße\nAlle Messwerte"
+- takeScreenshot: 04_measurements
+- tapOn: "Zurück"
+- scrollUntilVisible:
+    element: "Muskel-Bereitschaft\nAktuell\nMehrere Muskelgruppen sind noch in Erholung\nIn Erholung: 5  Bereit: 3  Frisch: 2"
+    direction: UP
+- tapOn: "Muskel-Bereitschaft\nAktuell\nMehrere Muskelgruppen sind noch in Erholung\nIn Erholung: 5  Bereit: 3  Frisch: 2"
+- takeScreenshot: 05_recovery
+- tapOn: "Zurück"
+- tapOn:
+    point: 91%,13%
+- tapOn: "Einstellungen\nThema, Einheiten, Daten und mehr"
+- scrollUntilVisible:
+    element: "KI-Mahlzeitenerkennung\nKI-basierte Mahlzeitenerkennung konfigurieren."
+- tapOn: "KI-Mahlzeitenerkennung\nKI-basierte Mahlzeitenerkennung konfigurieren."
+- tapOn: "0"
+- tapOn: "Zurück"
+- tapOn: "Zurück"
+- tapOn: "Zurück"
+- tapOn:
+    point: 80%,90%
+- tapOn:
+    point: 79%,80%
+- tapOn:
+    point: 44%,14%
+    optional: true
+    repeat: 2
+    delay: 5000
+- tapOn:
+    point: 88%,83%
+- tapOn: "Foto, 06. Mai, 00:12"
+- tapOn:
+    text: "Foto, 06. Mai, 00:12"
+    index: 1
+- tapOn: "Fertig"
+- takeScreenshot: 06_ai
+- tapOn: "Zurück"
+- tapOn:
+    point: 80%,90%
+- tapOn:
+    point: 79%,61%
+- tapOn: # Tap on Pull (intensity)
+    text: "Start"
+    index: 3
+- tapOn: "0"
+- inputText: "50"
+- tapOn: "10-20"
+- inputText: "15"
+- tapOn:
+    point: 91%,33%
+- tapOn: "88kg × 5"
+- tapOn: "88kg × 10"
+- tapOn: "88kg × 9"
+- tapOn: 
+    text: "1"
+    index: 0
+- inputText: "1"
+- tapOn: "Fertig"
+- tapOn:
+    point: 91%,54%
+- tapOn:
+    point: 91%,59%
+- takeScreenshot: 07_runnning_workout
+
+
+
+

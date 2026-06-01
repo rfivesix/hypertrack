@@ -300,6 +300,9 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) =>
+                        FocusManager.instance.primaryFocus?.unfocus(),
                     validator: (value) {
                       if (value != null &&
                           value.isNotEmpty &&

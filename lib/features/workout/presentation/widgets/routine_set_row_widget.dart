@@ -76,6 +76,7 @@ class RoutineSetRowWidget extends StatelessWidget {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -91,6 +92,7 @@ class RoutineSetRowWidget extends StatelessWidget {
                   controller: repsController,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -107,6 +109,9 @@ class RoutineSetRowWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -125,6 +130,7 @@ class RoutineSetRowWidget extends StatelessWidget {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -142,6 +148,7 @@ class RoutineSetRowWidget extends StatelessWidget {
                   controller: repsController,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -158,6 +165,9 @@ class RoutineSetRowWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,

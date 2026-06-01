@@ -100,6 +100,7 @@ class WorkoutLogSetRow extends StatelessWidget {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  textInputAction: TextInputAction.next,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -122,7 +123,7 @@ class WorkoutLogSetRow extends StatelessWidget {
                 ),
         ),
         const SizedBox(width: 8),
-
+ 
         // 3. INPUT 2: REPS / TIME
         Expanded(
           flex: 2,
@@ -131,6 +132,7 @@ class WorkoutLogSetRow extends StatelessWidget {
                   controller: repsController,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -152,7 +154,7 @@ class WorkoutLogSetRow extends StatelessWidget {
                 ),
         ),
         const SizedBox(width: 8),
-
+ 
         // 4. INPUT 3: RIR / INTENSITY
         Expanded(
           flex: 2,
@@ -162,6 +164,9 @@ class WorkoutLogSetRow extends StatelessWidget {
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

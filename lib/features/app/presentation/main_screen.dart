@@ -1236,24 +1236,28 @@ class _MainScreenState extends State<MainScreen>
       padding: const EdgeInsets.only(
         right: DesignConstants.screenPaddingHorizontal,
       ),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: () async {
-          await Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
-          // Refresh diary data when returning from profile/settings
-          _refreshHomeScreen();
-        },
-        child: CircleAvatar(
-          radius: 18,
-          backgroundColor: Colors.grey.shade300,
-          backgroundImage: (profileService.profileImagePath != null)
-              ? FileImage(File(profileService.profileImagePath!))
-              : null,
-          child: (profileService.profileImagePath == null)
-              ? const Icon(Icons.person, size: 20, color: Colors.black54)
-              : null,
+      child: Semantics(
+        label: 'Profile',
+        button: true,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () async {
+            await Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+            // Refresh diary data when returning from profile/settings
+            _refreshHomeScreen();
+          },
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.grey.shade300,
+            backgroundImage: (profileService.profileImagePath != null)
+                ? FileImage(File(profileService.profileImagePath!))
+                : null,
+            child: (profileService.profileImagePath == null)
+                ? const Icon(Icons.person, size: 20, color: Colors.black54)
+                : null,
+          ),
         ),
       ),
     );

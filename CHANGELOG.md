@@ -2,9 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [0.9.17] -2026-05-2x
+### Added
+- **iOS Keyboard Done Accessory Bar**: Implemented a custom keyboard accessory overlay bar for iOS numeric inputs, aligning a localized **"Done" / "Fertig"** button (`doneButtonLabel`) above the soft keyboard for quick dismissal.
+- **Global Keyboard Tap-to-Dismiss**: Wrapped the root of the app in a global translucent `GestureDetector` that automatically closes the keyboard on tapping any non-interactive empty background space.
+- **Smart Keyboard-Aware UI Hiding**: Automatically hides the "Add Exercise" floating action button (FAB) on workout tracking and routine builder screens while the keyboard is open to prevent overlapping layout issues.
 
 ### fixed
 - **Supplement Backup Serialization Mismatch (#418)**: Fixed a data loss vulnerability within the data management engine where the `is_tracked` boolean attribute for supplements was dropped during export serialization. Restoring from a backup now perfectly retains the original tracking configurations across all custom supplement entries.

@@ -136,6 +136,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
           controller: _nameController,
           decoration: InputDecoration(labelText: l10n.fluidNameLabel),
           autofocus: true,
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: DesignConstants.spacingL),
         TextField(
@@ -146,6 +147,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
             suffixText: unitService.suffixFor(UnitDimension.liquid),
           ),
           autofocus: true,
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: DesignConstants.spacingL),
         TextField(
@@ -155,6 +157,7 @@ class FluidDialogContentState extends State<FluidDialogContent> {
             labelText: l10n.sugarPer100mlLabel,
             suffixText: l10n.unit_grams,
           ),
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: DesignConstants.spacingL),
         TextField(
@@ -164,6 +167,8 @@ class FluidDialogContentState extends State<FluidDialogContent> {
             labelText: l10n.caffeinePrompt,
             suffixText: l10n.caffeineUnit,
           ),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => FocusManager.instance.primaryFocus?.unfocus(),
         ),
         const SizedBox(height: DesignConstants.spacingL),
         Row(

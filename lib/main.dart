@@ -597,7 +597,13 @@ class _MyAppState extends State<MyApp> {
           darkTheme: baseDarkTheme,
           themeMode: themeService.themeMode,
           onGenerateRoute: SleepNavigation.onGenerateRoute,
-          // FIX: The extracted screen is now used here.
+          builder: (context, child) {
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+              child: child,
+            );
+          },
           home: widget.home,
         );
       },

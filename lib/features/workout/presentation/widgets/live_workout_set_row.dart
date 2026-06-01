@@ -339,6 +339,7 @@ class LiveWorkoutSetRow extends StatelessWidget {
             controller: manager.weightControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textInputAction: TextInputAction.next,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
@@ -399,6 +400,7 @@ class LiveWorkoutSetRow extends StatelessWidget {
             controller: manager.repsControllers[templateId],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,
@@ -474,6 +476,9 @@ class LiveWorkoutSetRow extends StatelessWidget {
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               border: InputBorder.none,

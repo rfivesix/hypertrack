@@ -100,6 +100,7 @@ class _EditableSetRowState extends State<EditableSetRow> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
+              textInputAction: TextInputAction.next,
               validator: (value) => (value == null ||
                       value.trim().isEmpty ||
                       double.tryParse(value.replaceAll(',', '.')) == null)
@@ -118,6 +119,9 @@ class _EditableSetRowState extends State<EditableSetRow> {
                 isDense: true,
               ),
               keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               validator: (value) => (value == null ||
                       value.trim().isEmpty ||
                       int.tryParse(value) == null)

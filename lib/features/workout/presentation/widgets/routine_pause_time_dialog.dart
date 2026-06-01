@@ -46,6 +46,11 @@ class _RoutinePauseTimeDialogState extends State<RoutinePauseTimeDialog> {
           controller: _controller,
           keyboardType: TextInputType.number,
           autofocus: true,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            final seconds = int.tryParse(_controller.text);
+            widget.onSave(seconds);
+          },
           decoration: InputDecoration(
             labelText: l10n.pauseInSeconds,
             hintText: "z.B. 90",

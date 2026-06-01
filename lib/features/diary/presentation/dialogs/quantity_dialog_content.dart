@@ -166,6 +166,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
             suffixText: unit,
           ),
           autofocus: true,
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: DesignConstants.spacingL),
         DropdownButtonFormField<String>(
@@ -213,6 +214,7 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
               labelText: l10n.sugarPer100mlLabel,
               suffixText: l10n.unit_grams,
             ),
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: DesignConstants.spacingL),
           TextFormField(
@@ -222,6 +224,9 @@ class QuantityDialogContentState extends State<QuantityDialogContent> {
               labelText: l10n.caffeinePrompt,
               suffixText: l10n.caffeineUnit,
             ),
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
           ),
         ],
       ],

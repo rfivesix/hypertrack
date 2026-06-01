@@ -566,13 +566,16 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
       manager.syncControllers();
     }
 
-    return PopScope(
-        canPop: _canPop,
-        onPopInvokedWithResult: (didPop, _) async {
-          if (didPop) return;
-          // The system back swipe won't pop the route automatically because canPop is false.
-        },
-        child: Scaffold(
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: PopScope(
+          canPop: _canPop,
+          onPopInvokedWithResult: (didPop, _) async {
+            if (didPop) return;
+            // The system back swipe won't pop the route automatically because canPop is false.
+          },
+          child: Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
             automaticallyImplyLeading:
@@ -908,12 +911,59 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                       right: 0,
                       child: _buildPRCelebrationBanner(),
                     ),
+
+                    // --- Keyboard Done Accessory Bar ---
+                    if (MediaQuery.of(context).viewInsets.bottom > 0)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Material(
+                          elevation: 8.0,
+                          child: Container(
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFF1E1E1E)
+                                  : const Color(0xFFF5F5F7),
+                              border: Border(
+                                top: BorderSide(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white10
+                                      : Colors.black12,
+                                  width: 0.5,
+                                ),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: () =>
+                                      FocusManager.instance.primaryFocus?.unfocus(),
+                                  child: Text(
+                                    l10n.doneButtonLabel,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-          floatingActionButton: GlassFab(
-            label: l10n.fabAddExercise,
-            onPressed: _addExercise,
-          ),
+          floatingActionButton: MediaQuery.of(context).viewInsets.bottom > 0
+              ? null
+              : GlassFab(
+                  label: l10n.fabAddExercise,
+                  onPressed: _addExercise,
+                ),
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           bottomNavigationBar: Column(
             mainAxisSize: MainAxisSize.min,
@@ -937,7 +987,9 @@ class _LiveWorkoutScreenState extends State<LiveWorkoutScreen>
                 ),
             ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget? _buildRestBottomBar(
