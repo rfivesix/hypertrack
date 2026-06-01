@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [0.9.17] -2026-05-2x
+## [0.9.17] - 2026-06-01
 ### Added
 - **iOS Keyboard Done Accessory Bar**: Implemented a custom keyboard accessory overlay bar for iOS numeric inputs, aligning a localized **"Done" / "Fertig"** button (`doneButtonLabel`) above the soft keyboard for quick dismissal.
 - **Global Keyboard Tap-to-Dismiss**: Wrapped the root of the app in a global translucent `GestureDetector` that automatically closes the keyboard on tapping any non-interactive empty background space.
